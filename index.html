@@ -268,7 +268,7 @@
       <!-- TAB 2 -->
       <div id="tabContentTheoDoi" class="hidden space-y-6">
         <div class="bg-white p-5 rounded-lg shadow-sm border space-y-3">
-          <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Tình Trạng Tiếp Nhận & Phân Việc Cho Chuyên Viên</h3>
+          <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Tình Trạng Tiếp Nhận & Phân Việc Cho Chuyên Viên</h3><input type="text" id="ldvpTrackSearch" oninput="filterTrackingRows()" placeholder="🔍 Tìm theo tên nhiệm vụ, số nghị quyết, chuyên viên..." class="w-full border rounded-lg p-2 text-xs mt-2 focus:ring-1 focus:ring-red-600 focus:outline-none">
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
@@ -367,7 +367,7 @@
         <div class="flex justify-between items-center border-b pb-3">
           <div>
             <h3 class="text-xs font-bold text-slate-900 uppercase">Danh Sách Nhiệm Vụ Được Giao (Ưu Tiên Theo Tiến Độ & Hạn Chót)</h3>
-            <p class="text-[11px] text-slate-500">Nhiệm vụ quá hạn và sắp đến hạn được ưu tiên hiển thị lên hàng đầu</p>
+            <p class="text-[11px] text-slate-500">Nhiệm vụ quá hạn và sắp đến hạn được ưu tiên hiển thị lên hàng đầu</p><input type="text" id="cvTaskSearch" oninput="filterCVRows()" placeholder="🔍 Tìm theo tên nhiệm vụ, số nghị quyết, sản phẩm..." class="w-full border rounded-lg p-2 text-xs mt-2 focus:ring-1 focus:ring-red-600 focus:outline-none">
           </div>
           <button onclick="loadChuyenVienData()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Tải lại</button>
         </div>
@@ -950,7 +950,7 @@
             <td class="p-2 font-medium">${t.title} <br><span class="text-[10px] text-slate-500">${t.resolution_code}</span></td>
             <td class="p-2 text-slate-600">${t.expected_product}</td>
             <td class="p-2 text-slate-600">${new Date(t.deadline).toLocaleString('vi-VN')}</td>
-            <td class="p-2 text-center font-semibold">${t.status}</td>
+            <td class="p-2 text-center font-semibold">${taskStatusLabel(t.status)}</td>
             <td class="p-2 text-center">${progressBadge}</td>
           </tr>
         `;
@@ -997,7 +997,7 @@
           }
 
           return `
-            <tr class="border-b hover:bg-slate-50">
+            <tr class="border-b hover:bg-slate-50" data-search="${(t.title + ' ' + t.resolution_code + ' ' + (t.assigned?.full_name || '')).toLowerCase()}">
               <td class="p-2 font-medium">${t.title} <br><span class="text-[10px] text-slate-500">${t.resolution_code}</span></td>
               <td class="p-2">${t.assigned?.full_name ? `${t.assigned.full_name} <br><span class="text-[10px] text-slate-500">${t.assigned.position_title}</span>` : '<span class="text-red-600 font-bold">Chưa có người nhận</span>'}</td>
               <td class="p-2 text-center">${sttBadge}</td>
@@ -1147,7 +1147,7 @@
         return a.deadlineTime - b.deadlineTime;
       });
 
-      tbody.innerHTML = sortedTasks.map(t => {
+      ensureCVStatsBar(); document.getElementById('cvStatTotal').innerText = myTasks.length; document.getElementById('cvStatOverdue').innerText = sortedTasks.filter(x => x.priorityWeight === 1).length; document.getElementById('cvStatSoon').innerText = sortedTasks.filter(x => x.priorityWeight === 2).length; document.getElementById('cvStatDone').innerText = sortedTasks.filter(x => x.priorityWeight === 4).length; tbody.innerHTML = sortedTasks.map(t => {
         let priorityBadge = "";
         let rowClass = "border-b hover:bg-slate-50";
 
@@ -1171,7 +1171,7 @@
         else if (t.status === 'TU_CHOI_TIEP_NHAN') actionCell = `<span class="text-rose-600 font-semibold">Đã từ chối (Chờ xét)</span>`;
 
         return `
-          <tr class="${rowClass}">
+          <tr class="${rowClass}" data-search="${(t.title + ' ' + t.resolution_code + ' ' + (t.expected_product || '')).toLowerCase()}">
             <td class="p-3 text-center">${priorityBadge}</td>
             <td class="p-3 font-medium text-slate-800">${t.title} <br><span class="text-[10px] text-slate-500">${t.resolution_code}</span></td>
             <td class="p-3 font-medium text-slate-700">${t.leader?.full_name || 'Chưa chỉ định'}</td>
@@ -1441,7 +1441,7 @@
       loadChuyenVienData();
     }
 
-    function taskStatusLabel(status) { const map = {'CHUA_GIAO':'Chưa giao việc','CHO_TIEP_NHAN':'Chờ tiếp nhận','TU_CHOI_TIEP_NHAN':'Đã từ chối (chờ xét)','DANG_THUC_HIEN':'Đang thực hiện','CHO_DUYET':'Đã nộp - chờ duyệt','HOAN_THANH':'Đã hoàn thành'}; return map[status] || status; } function escapeHtml(text) {
+    function filterTrackingRows() { const kw = document.getElementById("ldvpTrackSearch").value.trim().toLowerCase(); document.querySelectorAll("#trackingTableBody tr").forEach(tr => { const s = tr.getAttribute("data-search") || ""; tr.classList.toggle("hidden", !!kw && !s.includes(kw)); }); } function filterCVRows() { const kw = document.getElementById("cvTaskSearch").value.trim().toLowerCase(); document.querySelectorAll("#chuyenVienTableBody tr").forEach(tr => { const s = tr.getAttribute("data-search") || ""; tr.classList.toggle("hidden", !!kw && !s.includes(kw)); }); } function ensureCVStatsBar() { if (!document.getElementById('cvStatsBar')) { const card = document.querySelector('#viewChuyenVien > div'); card.insertAdjacentHTML('beforebegin', '<div id="cvStatsBar" class="grid grid-cols-2 sm:grid-cols-4 gap-3"><div class="bg-white p-3 rounded-lg shadow-sm border-l-4 border-slate-400"><p class="text-[10px] font-semibold text-slate-500 uppercase">Tổng số việc</p><p id="cvStatTotal" class="text-xl font-bold text-slate-800 mt-0.5">0</p></div><div class="bg-white p-3 rounded-lg shadow-sm border-l-4 border-red-500"><p class="text-[10px] font-semibold text-red-600 uppercase">Quá hạn</p><p id="cvStatOverdue" class="text-xl font-bold text-red-600 mt-0.5">0</p></div><div class="bg-white p-3 rounded-lg shadow-sm border-l-4 border-amber-500"><p class="text-[10px] font-semibold text-amber-600 uppercase">Gần đến hạn</p><p id="cvStatSoon" class="text-xl font-bold text-amber-600 mt-0.5">0</p></div><div class="bg-white p-3 rounded-lg shadow-sm border-l-4 border-green-600"><p class="text-[10px] font-semibold text-green-700 uppercase">Đã hoàn thành</p><p id="cvStatDone" class="text-xl font-bold text-green-700 mt-0.5">0</p></div></div>'); } } function taskStatusLabel(status) { const map = {'CHUA_GIAO':'Chưa giao việc','CHO_TIEP_NHAN':'Chờ tiếp nhận','TU_CHOI_TIEP_NHAN':'Đã từ chối (chờ xét)','DANG_THUC_HIEN':'Đang thực hiện','CHO_DUYET':'Đã nộp - chờ duyệt','HOAN_THANH':'Đã hoàn thành'}; return map[status] || status; } function escapeHtml(text) {
       if (!text) return "";
       return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
