@@ -9,29 +9,29 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-  <!-- MÀN HÌNH ĐĂNG NHẬP (LOGIN MODAL/VIEW) -->
+  <!-- MÀN HÌNH ĐĂNG NHẬP -->
   <div id="loginSection" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-5 border border-slate-200">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200">
       <div class="text-center space-y-1">
         <div class="w-12 h-12 bg-red-800 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">★</div>
         <h2 class="text-lg font-bold text-slate-900 uppercase">Văn Phòng Tỉnh Ủy Cao Bằng</h2>
-        <p class="text-xs text-slate-500">Hệ thống Quản trị Ngoại lệ Nhiệm vụ NQ Trung ương</p>
+        <p class="text-xs text-slate-500">Hệ thống Quản trị Nhiệm vụ theo Kết quả (1-1-1-1-3)</p>
       </div>
 
-      <form onsubmit="handleLogin(event)" class="space-y-4 text-xs">
+      <form onsubmit="handleLogin(event)" class="space-y-3 text-xs">
         <div>
           <label class="font-semibold text-slate-700">Tài khoản đăng nhập *</label>
-          <input type="text" id="loginUsername" required class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Nhập tài khoản (vd: lanhdao1, ldvp1, cv1)">
+          <input type="text" id="loginUsername" required class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Tài khoản (vd: lanhdao1, ldvp1, cv1)">
         </div>
         <div>
           <label class="font-semibold text-slate-700">Mật khẩu *</label>
-          <input type="password" id="loginPassword" required class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Nhập mật khẩu (mặc định: 123456)">
+          <input type="password" id="loginPassword" required class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Mật khẩu (mặc định: 123456)">
         </div>
-        <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded-lg shadow transition">Đăng Nhập Hệ Thống</button>
+        <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded-lg shadow transition">Đăng Nhập</button>
       </form>
 
       <div class="bg-slate-50 p-3 rounded-lg border text-[11px] text-slate-600 space-y-1">
-        <p class="font-semibold text-slate-700">Tài khoản thử nghiệm (Mật khẩu chung: 123456):</p>
+        <p class="font-semibold text-slate-700">Tài khoản thử nghiệm (Mật khẩu: 123456):</p>
         <p>• <b>Thường trực Tỉnh ủy:</b> <code class="bg-slate-200 px-1 rounded">lanhdao1</code> (Đ/c Triệu Đình Lê)</p>
         <p>• <b>Lãnh đạo Văn phòng Tỉnh ủy:</b> <code class="bg-slate-200 px-1 rounded">ldvp1</code> (Đ/c Nguyễn Văn Nam)</p>
         <p>• <b>Chuyên viên Văn phòng:</b> <code class="bg-slate-200 px-1 rounded">cv1</code> (Chuyên viên Lê Hồng Thái)</p>
@@ -39,7 +39,7 @@
     </div>
   </div>
 
-  <!-- HEADER HỆ THỐNG (HIỂN THỊ KHI ĐÃ ĐĂNG NHẬP) -->
+  <!-- HEADER -->
   <header id="mainHeader" class="bg-red-800 text-white shadow-md hidden">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
       <div>
@@ -58,14 +58,63 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- 1. GIAO DIỆN THƯỜNG TRỰC TỈNH ỦY (DASHBOARD NGOẠI LỆ) -->
+    <!-- 1. GIAO DIỆN THƯỜNG TRỰC TỈNH ỦY -->
     <section id="viewThuongTruc" class="space-y-6 hidden">
       <div class="flex justify-between items-center border-b pb-3">
         <div>
           <h2 class="text-base md:text-lg font-bold text-slate-900 uppercase">Dashboard Quản Trị Ngoại Lệ (Thường Trực Tỉnh Ủy)</h2>
-          <p class="text-xs text-slate-500">Chỉ hiển thị các điểm nghẽn, nhiệm vụ chậm tiến độ hoặc bị từ chối tiếp nhận</p>
+          <p class="text-xs text-slate-500">Theo dõi điểm nghẽn, giao việc trực tiếp và gửi ý kiến chỉ đạo trực tuyến</p>
         </div>
-        <button onclick="loadLeaderDashboard()" class="text-xs bg-slate-200 hover:bg-slate-300 font-semibold px-3 py-1.5 rounded">Làm mới dữ liệu</button>
+        <div class="flex gap-2">
+          <button onclick="toggleTTGiaoViec()" class="text-xs bg-red-800 hover:bg-red-900 text-white font-semibold px-3 py-1.5 rounded shadow">+ Thường Trực Giao Việc</button>
+          <button onclick="loadLeaderDashboard()" class="text-xs bg-slate-200 hover:bg-slate-300 font-semibold px-3 py-1.5 rounded">Làm mới</button>
+        </div>
+      </div>
+
+      <!-- FORM THƯỜNG TRỰC GIAO VIỆC TRỰC TIẾP (ẨN/HIỆN) -->
+      <div id="ttGiaoViecBox" class="hidden bg-white p-5 rounded-lg shadow border border-red-200">
+        <h3 class="text-xs font-bold text-red-800 uppercase mb-3 border-b pb-2">Thường Trực Tỉnh Ủy Phân Công Nhiệm Vụ</h3>
+        <form onsubmit="handleTTGiaoViec(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+          <div class="md:col-span-2">
+            <label class="font-semibold">Nội dung nhiệm vụ *</label>
+            <input type="text" id="ttTitle" required class="w-full border rounded p-2 mt-1" placeholder="Nhiệm vụ cần thực hiện...">
+          </div>
+          <div>
+            <label class="font-semibold">Số / Ký hiệu Nghị quyết *</label>
+            <input type="text" id="ttResCode" required class="w-full border rounded p-2 mt-1" placeholder="VD: NQ 57-NQ/TW">
+          </div>
+          <div>
+            <label class="font-semibold">Phương thức phân công *</label>
+            <select id="ttAssignMode" onchange="handleTTModeChange(this.value)" class="w-full border rounded p-2 mt-1 bg-white">
+              <option value="TO_LEADER">Giao cho Lãnh đạo Văn phòng Tỉnh ủy</option>
+              <option value="TO_CV">Giao trực tiếp cho Chuyên viên</option>
+            </select>
+          </div>
+          <div id="ttLeaderSelectDiv">
+            <label class="font-semibold">Lãnh đạo Văn phòng phụ trách *</label>
+            <select id="ttLeaderSelect" class="w-full border rounded p-2 mt-1 bg-white"></select>
+          </div>
+          <div id="ttCVSelectDiv" class="hidden">
+            <label class="font-semibold">Chuyên viên thực hiện (Tự động gán LĐ phụ trách) *</label>
+            <select id="ttCVSelect" class="w-full border rounded p-2 mt-1 bg-white"></select>
+          </div>
+          <div>
+            <label class="font-semibold">01 Sản phẩm đầu ra bắt buộc *</label>
+            <input type="text" id="ttProduct" required class="w-full border rounded p-2 mt-1" placeholder="VD: Báo cáo tham mưu...">
+          </div>
+          <div>
+            <label class="font-semibold">Hạn hoàn thành (Deadline) *</label>
+            <input type="datetime-local" id="ttDeadline" required class="w-full border rounded p-2 mt-1">
+          </div>
+          <div>
+            <label class="font-semibold">Kích hoạt Đỏ Đặc Biệt (ngày trễ) *</label>
+            <input type="number" id="ttCriticalDays" min="1" value="3" required class="w-full border rounded p-2 mt-1">
+          </div>
+          <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t">
+            <button type="button" onclick="toggleTTGiaoViec()" class="px-3 py-1.5 bg-slate-200 rounded">Đóng</button>
+            <button type="submit" class="px-4 py-1.5 bg-red-800 text-white font-bold rounded">Phát Hành Chỉ Đạo</button>
+          </div>
+        </form>
       </div>
 
       <!-- 4 THẺ THỐNG KÊ -->
@@ -90,32 +139,33 @@
 
       <!-- BẢNG NGOẠI LỆ 4 CỘT -->
       <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="p-4 bg-slate-50 border-b">
-          <h3 class="text-xs font-bold text-red-700 uppercase">Danh Sách Điểm Nghẽn Cần Thường Trực Chỉ Đạo Tháo Gỡ</h3>
+        <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+          <h3 class="text-xs font-bold text-red-700 uppercase">Danh Sách Điểm Nghẽn & Chỉ Đạo Tháo Gỡ</h3>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100 text-slate-600 uppercase">
-                <th class="p-3 border-b">1. Chuyên viên / Cá nhân chịu trách nhiệm</th>
-                <th class="p-3 border-b text-center">2. Số ngày trễ hạn</th>
-                <th class="p-3 border-b">3. Sản phẩm còn thiếu (Product)</th>
-                <th class="p-3 border-b">4. Cấp cần quyết định tháo gỡ</th>
+                <th class="p-3 border-b">1. Chuyên viên thực hiện</th>
+                <th class="p-3 border-b">Lãnh đạo phụ trách</th>
+                <th class="p-3 border-b text-center">2. Trễ hạn</th>
+                <th class="p-3 border-b">3. Sản phẩm thiếu</th>
                 <th class="p-3 border-b text-center">Cấp độ cảnh báo</th>
+                <th class="p-3 border-b text-center">Ý kiến chỉ đạo</th>
               </tr>
             </thead>
             <tbody id="exceptionTableBody" class="divide-y divide-slate-200">
-              <tr><td colspan="5" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
+              <tr><td colspan="6" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- 2. GIAO DIỆN LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY (GIAO VIỆC & GIÁM SÁT TIẾP NHẬN) -->
+    <!-- 2. GIAO DIỆN LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY -->
     <section id="viewLanhDaoVP" class="space-y-6 hidden">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- FORM GIAO VIỆC CHO CHUYÊN VIÊN -->
+        <!-- FORM GIAO VIỆC -->
         <div class="bg-white p-5 rounded-lg shadow-sm border lg:col-span-1">
           <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Lãnh Đạo Văn Phòng Giao Việc</h3>
           <form id="formGiaoViec" onsubmit="handleGiaoViec(event)" class="space-y-3 text-xs">
@@ -128,7 +178,7 @@
               <input type="text" id="taskResCode" required class="w-full border rounded p-2 mt-1" placeholder="VD: NQ 57-NQ/TW">
             </div>
             <div>
-              <label class="font-semibold text-slate-700">Phân công Chuyên viên thực hiện *</label>
+              <label class="font-semibold text-slate-700">Chuyên viên thực hiện *</label>
               <select id="taskAssignSelect" required class="w-full border rounded p-2 mt-1 bg-white"></select>
             </div>
             <div>
@@ -136,7 +186,7 @@
               <input type="text" id="taskProduct" required class="w-full border rounded p-2 mt-1" placeholder="VD: Dự thảo Tờ trình BTV...">
             </div>
             <div>
-              <label class="font-semibold text-slate-700">Mốc nhận V-Office (Tính giờ T=0) *</label>
+              <label class="font-semibold text-slate-700">Mốc nhận V-Office (T=0) *</label>
               <input type="datetime-local" id="taskVOfficeDate" required class="w-full border rounded p-2 mt-1">
             </div>
             <div>
@@ -144,30 +194,29 @@
               <input type="datetime-local" id="taskDeadline" required class="w-full border rounded p-2 mt-1">
             </div>
             <div>
-              <label class="font-semibold text-slate-700">Số ngày quá hạn kích hoạt ĐỎ ĐẶC BIỆT *</label>
+              <label class="font-semibold text-slate-700">Kích hoạt ĐỎ ĐẶC BIỆT (ngày trễ) *</label>
               <input type="number" id="taskCriticalDays" min="1" max="30" required value="3" class="w-full border rounded p-2 mt-1">
             </div>
             <div>
-              <label class="font-semibold text-slate-700">Cấp có thẩm quyền tháo gỡ điểm nghẽn *</label>
+              <label class="font-semibold text-slate-700">Cấp có thẩm quyền tháo gỡ *</label>
               <input type="text" id="taskAuthority" required class="w-full border rounded p-2 mt-1" value="Thường trực Tỉnh ủy">
             </div>
-            <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded shadow">Phát Hành Giao Cho Chuyên Viên</button>
+            <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded shadow">Phát Hành Giao Việc</button>
           </form>
         </div>
 
-        <!-- BẢNG GIÁM SÁT TIẾN ĐỘ, TIẾP NHẬN & DUYỆT -->
+        <!-- THEO DÕI TIẾP NHẬN & DUYỆT -->
         <div class="bg-white p-5 rounded-lg shadow-sm border lg:col-span-2 space-y-6">
-          <!-- Bảng 1: Theo dõi tiếp nhận và đôn đốc -->
           <div>
-            <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Tình Trạng Tiếp Nhận & Xử Lý Của Chuyên Viên</h3>
+            <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Theo Dõi Tiếp Nhận & Phân Việc Lại</h3>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr class="bg-slate-100 text-slate-600">
                     <th class="p-2 border-b">Nhiệm vụ</th>
-                    <th class="p-2 border-b">Chuyên viên phụ trách</th>
+                    <th class="p-2 border-b">Chuyên viên nhận việc</th>
                     <th class="p-2 border-b text-center">Trạng thái</th>
-                    <th class="p-2 border-b text-center">Thao tác Lãnh đạo VP</th>
+                    <th class="p-2 border-b text-center">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody id="trackingTableBody" class="divide-y divide-slate-200">
@@ -177,9 +226,8 @@
             </div>
           </div>
 
-          <!-- Bảng 2: Duyệt minh chứng hoàn thành -->
           <div>
-            <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Hồ Sơ Chuyên Viên Đã Nộp Cần Thẩm Tra Để Đóng Việc</h3>
+            <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Hồ Sơ Đã Nộp Chờ Duyệt Đóng Việc</h3>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
                 <thead>
@@ -203,12 +251,13 @@
     <!-- 3. GIAO DIỆN CHUYÊN VIÊN VĂN PHÒNG -->
     <section id="viewChuyenVien" class="space-y-6 hidden">
       <div class="bg-white p-5 rounded-lg shadow-sm border">
-        <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Danh Sách Nhiệm Vụ Được Giao Thực Hiện</h3>
+        <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-3">Danh Sách Nhiệm Vụ Phân Công Cho Tôi</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="bg-slate-100 text-slate-600 uppercase">
                 <th class="p-3 border-b">Nhiệm vụ</th>
+                <th class="p-3 border-b">Lãnh đạo phụ trách</th>
                 <th class="p-3 border-b">Sản phẩm đầu ra</th>
                 <th class="p-3 border-b">Hạn chót</th>
                 <th class="p-3 border-b text-center">Trạng thái</th>
@@ -216,7 +265,7 @@
               </tr>
             </thead>
             <tbody id="chuyenVienTableBody" class="divide-y divide-slate-200">
-              <tr><td colspan="5" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
+              <tr><td colspan="6" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
             </tbody>
           </table>
         </div>
@@ -225,14 +274,14 @@
 
   </main>
 
-  <!-- MODAL BẮT BUỘC: THÔNG BÁO TIẾP NHẬN NHIỆM VỤ MỚI CHO CHUYÊN VIÊN -->
+  <!-- MODAL BẮT BUỘC: TIẾP NHẬN NHIỆM VỤ MỚI CHO CHUYÊN VIÊN -->
   <div id="mandatoryAcceptModal" class="fixed inset-0 bg-slate-950/85 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 border-2 border-red-600">
       <div class="flex items-center gap-3 text-red-700">
         <div class="p-2 bg-red-100 rounded-full font-bold text-lg">⚠</div>
         <div>
-          <h3 class="text-sm font-bold uppercase">Nhiệm Vụ Mới Do Lãnh Đạo Văn Phòng Giao</h3>
-          <p class="text-[11px] text-slate-500">Đồng chí bắt buộc phải kiểm tra nội dung và xác nhận tiếp nhận</p>
+          <h3 class="text-sm font-bold uppercase">Nhiệm Vụ Mới Cần Tiếp Nhận</h3>
+          <p class="text-[11px] text-slate-500">Đồng chí bắt buộc phải kiểm tra và xác nhận tiếp nhận để tiếp tục</p>
         </div>
       </div>
 
@@ -240,15 +289,14 @@
         <input type="hidden" id="mandatoryTaskId">
         <div><span class="font-semibold text-slate-600">Nội dung:</span> <p id="mandatoryTaskTitle" class="font-bold text-slate-800 text-sm mt-0.5">--</p></div>
         <div><span class="font-semibold text-slate-600">Nghị quyết:</span> <span id="mandatoryTaskRes" class="font-medium text-slate-800">--</span></div>
-        <div><span class="font-semibold text-slate-600">Sản phẩm đầu ra:</span> <span id="mandatoryTaskProduct" class="font-medium text-slate-800">--</span></div>
+        <div><span class="font-semibold text-slate-600">Sản phẩm bắt buộc:</span> <span id="mandatoryTaskProduct" class="font-medium text-slate-800">--</span></div>
         <div><span class="font-semibold text-slate-600">Hạn hoàn thành:</span> <span id="mandatoryTaskDeadline" class="font-bold text-red-600">--</span></div>
         <div id="warningNoticeDiv" class="hidden text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200"></div>
       </div>
 
-      <!-- Khung nhập lý do nếu từ chối -->
       <div id="rejectReasonBox" class="hidden space-y-1">
-        <label class="text-xs font-semibold text-slate-700">Lý do từ chối nhận việc (Bắt buộc gửi Lãnh đạo VP xem xét) *</label>
-        <textarea id="rejectReasonInput" rows="2" class="w-full border rounded p-2 text-xs focus:ring-1 focus:ring-red-600 focus:outline-none" placeholder="Nêu rõ căn cứ từ chối..."></textarea>
+        <label class="text-xs font-semibold text-slate-700">Lý do từ chối nhận việc (Bắt buộc) *</label>
+        <textarea id="rejectReasonInput" rows="2" class="w-full border rounded p-2 text-xs focus:ring-1 focus:ring-red-600 focus:outline-none" placeholder="Nêu rõ lý do..."></textarea>
       </div>
 
       <div class="flex justify-end gap-2 pt-2 border-t">
@@ -259,35 +307,78 @@
     </div>
   </div>
 
+  <!-- MODAL PHÂN VIỆC LẠI & ĐÔN ĐỐC ĐÍCH DANH (LÃNH ĐẠO VP) -->
+  <div id="reassignModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-3">
+      <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Phân Công / Đôn Đốc Chuyên Viên</h3>
+      <input type="hidden" id="reassignTaskId">
+      <div>
+        <label class="text-xs font-semibold text-slate-700">Chọn Chuyên viên nhận việc *</label>
+        <select id="reassignCVSelect" class="w-full border rounded p-2 text-xs mt-1 bg-white"></select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t">
+        <button onclick="closeReassignModal()" class="px-3 py-1.5 rounded bg-slate-200 text-xs">Hủy</button>
+        <button onclick="submitReassign()" class="px-3 py-1.5 rounded bg-blue-700 text-white text-xs font-semibold">Lưu Phân Việc</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CHAT Ý KIẾN CHỈ ĐẠO TRỰC TUYẾN -->
+  <div id="directiveModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full p-5 space-y-3 flex flex-col h-[520px]">
+      <div class="flex justify-between items-center border-b pb-2">
+        <div>
+          <h3 class="text-xs font-bold text-red-800 uppercase">Ý Kiến Chỉ Đạo & Phản Hồi Trực Tuyến</h3>
+          <p id="directiveTaskTitle" class="text-[11px] text-slate-500 truncate max-w-md">--</p>
+        </div>
+        <button onclick="closeDirectiveModal()" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+      </div>
+
+      <!-- Khung hiển thị nội dung chat -->
+      <div id="directiveChatBox" class="flex-1 overflow-y-auto space-y-3 p-3 bg-slate-50 rounded-lg border text-xs">
+        <p class="text-center text-slate-400">Đang tải ý kiến chỉ đạo...</p>
+      </div>
+
+      <!-- Khung gửi ý kiến mới -->
+      <form onsubmit="handleSendDirective(event)" class="space-y-2 pt-2 border-t">
+        <input type="hidden" id="directiveTaskId">
+        <div class="flex gap-2">
+          <input type="text" id="directiveInput" required class="flex-1 border rounded-lg p-2 text-xs focus:ring-1 focus:ring-red-600 focus:outline-none" placeholder="Nhập ý kiến chỉ đạo hoặc ý kiến giải trình/phản hồi...">
+          <button type="submit" class="bg-red-800 hover:bg-red-900 text-white px-4 py-2 rounded-lg text-xs font-bold">Gửi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL NỘP MINH CHỨNG HOÀN THÀNH -->
   <div id="evidenceModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
     <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-3">
-      <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Nộp Minh Chứng Hoàn Thành Nhiệm Vụ</h3>
+      <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Nộp Minh Chứng Hoàn Thành</h3>
       <input type="hidden" id="evidenceTaskId">
       <div>
         <label class="text-xs font-semibold text-slate-700">Trích yếu văn bản / Tờ trình *</label>
-        <input type="text" id="evidenceTitle" required class="w-full border rounded p-2 text-xs mt-1" placeholder="VD: Tờ trình số 42/TTr-VP ngày...">
+        <input type="text" id="evidenceTitle" required class="w-full border rounded p-2 text-xs mt-1" placeholder="VD: Tờ trình số 42/TTr-VP...">
       </div>
       <div>
-        <label class="text-xs font-semibold text-slate-700">Đường dẫn tài liệu (Drive / V-Office Link) *</label>
+        <label class="text-xs font-semibold text-slate-700">Đường dẫn tài liệu đính kèm *</label>
         <input type="text" id="evidenceLink" required class="w-full border rounded p-2 text-xs mt-1" placeholder="https://...">
       </div>
       <div class="flex justify-end gap-2 pt-2 border-t">
         <button onclick="closeEvidenceModal()" class="px-3 py-1.5 rounded bg-slate-200 text-xs">Hủy</button>
-        <button onclick="submitEvidence()" class="px-3 py-1.5 rounded bg-green-700 hover:bg-green-800 text-white text-xs font-bold">Gửi Lãnh Đạo Duyệt</button>
+        <button onclick="submitEvidence()" class="px-3 py-1.5 rounded bg-green-700 hover:bg-green-800 text-white text-xs font-bold">Gửi Duyệt</button>
       </div>
     </div>
   </div>
 
   <script>
-    // CẤU HÌNH SUPABASE
     const SUPABASE_URL = "https://frwyxcmbonjaimziiuqr.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3l4Y21ib25qYWltemlpdXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjY4NzAsImV4cCI6MjEwNDYwMjg3MH0.X1QzQn39OhCis8wvDsU_l6npGFCCFhGScxBMPKQANHg";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let loggedInUser = null;
+    let globalAccounts = [];
 
-    // 1. XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
+    // 1. ĐĂNG NHẬP & PHIÊN LÀM VIỆC
     async function handleLogin(e) {
       e.preventDefault();
       const u = document.getElementById("loginUsername").value.trim();
@@ -295,12 +386,13 @@
 
       const { data, error } = await dbClient.from('accounts').select('*').eq('username', u).eq('password', p).single();
       if (error || !data) {
-        alert("Sai tên đăng nhập hoặc mật khẩu! Vui lòng thử lại.");
+        alert("Sai tên đăng nhập hoặc mật khẩu!");
         return;
       }
 
       loggedInUser = data;
       sessionStorage.setItem('vptu_session_user', JSON.stringify(data));
+      await loadAccountsCache();
       initUserInterface();
     }
 
@@ -308,6 +400,11 @@
       sessionStorage.removeItem('vptu_session_user');
       loggedInUser = null;
       location.reload();
+    }
+
+    async function loadAccountsCache() {
+      const { data } = await dbClient.from('accounts').select('*');
+      if (data) globalAccounts = data;
     }
 
     function initUserInterface() {
@@ -325,27 +422,87 @@
       document.getElementById("viewLanhDaoVP").classList.toggle("hidden", loggedInUser.role_group !== 'LANH_DAO_VP');
       document.getElementById("viewChuyenVien").classList.toggle("hidden", loggedInUser.role_group !== 'CHUYEN_VIEN');
 
-      if (loggedInUser.role_group === 'THUONG_TRUC') loadLeaderDashboard();
+      if (loggedInUser.role_group === 'THUONG_TRUC') {
+        populateTTSelects();
+        loadLeaderDashboard();
+      }
       if (loggedInUser.role_group === 'LANH_DAO_VP') loadLanhDaoVPData();
       if (loggedInUser.role_group === 'CHUYEN_VIEN') loadChuyenVienData();
     }
 
-    // 2. NGHIỆP VỤ THƯỜNG TRỰC TỈNH ỦY (DASHBOARD NGOẠI LỆ)
+    // 2. NGHIỆP VỤ THƯỜNG TRỰC TỈNH ỦY
+    function toggleTTGiaoViec() {
+      document.getElementById("ttGiaoViecBox").classList.toggle("hidden");
+      const now = new Date();
+      now.setDate(now.getDate() + 5);
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById("ttDeadline").value = now.toISOString().slice(0,16);
+    }
+
+    function populateTTSelects() {
+      const leaders = globalAccounts.filter(a => a.role_group === 'LANH_DAO_VP');
+      const cvs = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
+      document.getElementById("ttLeaderSelect").innerHTML = leaders.map(l => `<option value="${l.id}">${l.full_name} (${l.position_title})</option>`).join('');
+      document.getElementById("ttCVSelect").innerHTML = cvs.map(c => {
+        const mgr = globalAccounts.find(m => m.id === c.manager_id);
+        const mgrName = mgr ? mgr.full_name : 'Chưa có LĐ phụ trách';
+        return `<option value="${c.id}">${c.full_name} (LĐ phụ trách: ${mgrName})</option>`;
+      }).join('');
+    }
+
+    function handleTTModeChange(mode) {
+      document.getElementById("ttLeaderSelectDiv").classList.toggle("hidden", mode !== 'TO_LEADER');
+      document.getElementById("ttCVSelectDiv").classList.toggle("hidden", mode !== 'TO_CV');
+    }
+
+    async function handleTTGiaoViec(e) {
+      e.preventDefault();
+      const mode = document.getElementById("ttAssignMode").value;
+      let assigned_to = null;
+      let leader_in_charge = null;
+
+      if (mode === 'TO_LEADER') {
+        leader_in_charge = document.getElementById("ttLeaderSelect").value;
+      } else {
+        assigned_to = document.getElementById("ttCVSelect").value;
+        const cvObj = globalAccounts.find(a => a.id === assigned_to);
+        leader_in_charge = cvObj?.manager_id || null;
+      }
+
+      const payload = {
+        title: document.getElementById("ttTitle").value,
+        resolution_code: document.getElementById("ttResCode").value,
+        assigned_to: assigned_to,
+        leader_in_charge: leader_in_charge,
+        created_by: loggedInUser.id,
+        expected_product: document.getElementById("ttProduct").value,
+        voffice_received_at: new Date().toISOString(),
+        deadline: new Date(document.getElementById("ttDeadline").value).toISOString(),
+        critical_overdue_days: parseInt(document.getElementById("ttCriticalDays").value),
+        competent_authority: 'Thường trực Tỉnh ủy',
+        status: assigned_to ? 'CHO_TIEP_NHAN' : 'CHUA_GIAO',
+        warning_count: 0
+      };
+
+      const { error } = await dbClient.from('tasks').insert([payload]);
+      if (error) alert("Lỗi: " + error.message);
+      else {
+        alert("Thường trực Tỉnh ủy đã ban hành phân công nhiệm vụ thành công!");
+        toggleTTGiaoViec();
+        loadLeaderDashboard();
+      }
+    }
+
     async function loadLeaderDashboard() {
       const { data, error } = await dbClient.from('view_exception_dashboard').select('*');
       if (error) { console.error(error); return; }
 
       let total = data ? data.length : 0;
       let yellow = 0, red = 0, specialRed = 0;
-      const exceptionRows = [];
-
       data.forEach(t => {
         if (t.alert_level === 'VANG') yellow++;
         if (t.alert_level === 'DO') red++;
         if (t.alert_level === 'DO_DAC_BIET') specialRed++;
-        if (['VANG', 'DO', 'DO_DAC_BIET', 'TU_CHOI', 'CHUA_GIAO'].includes(t.alert_level)) {
-          exceptionRows.push(t);
-        }
       });
 
       document.getElementById("kpiTotal").innerText = total;
@@ -354,25 +511,30 @@
       document.getElementById("kpiSpecialRed").innerText = specialRed;
 
       const tbody = document.getElementById("exceptionTableBody");
-      if (exceptionRows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-green-700 font-medium">Toàn bộ tiến độ các nhiệm vụ đang đảm bảo an toàn!</td></tr>`;
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-green-700 font-medium">Toàn bộ nhiệm vụ đang đảm bảo an toàn tiến độ.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = exceptionRows.map(r => {
+      tbody.innerHTML = data.map(r => {
         let badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-yellow-100 text-yellow-800">Sắp đến hạn</span>`;
         if (r.alert_level === 'DO') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-800 font-bold">Quá hạn</span>`;
         if (r.alert_level === 'DO_DAC_BIET') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-900 font-bold animate-pulse">ĐỎ ĐẶC BIỆT</span>`;
-        if (r.alert_level === 'TU_CHOI') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-900 font-bold">Chuyên viên từ chối</span>`;
+        if (r.alert_level === 'TU_CHOI') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">Từ chối tiếp nhận</span>`;
         if (r.alert_level === 'CHUA_GIAO') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-800 font-bold">Chưa phân công</span>`;
+        if (r.alert_level === 'XANH') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800">Trong hạn</span>`;
+        if (r.alert_level === 'HOAN_THANH') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">Đã hoàn thành</span>`;
 
         return `
           <tr class="hover:bg-slate-50 border-b">
             <td class="p-3 font-semibold">${r.owner_name} <br><span class="text-[10px] text-slate-500 font-normal">${r.owner_org}</span></td>
+            <td class="p-3 font-medium text-slate-700">${r.leader_name}</td>
             <td class="p-3 text-center font-bold ${r.days_overdue > 0 ? 'text-red-600' : 'text-slate-600'}">${r.days_overdue > 0 ? r.days_overdue + ' ngày' : 'Trong hạn'}</td>
             <td class="p-3 font-medium">${r.expected_product}</td>
-            <td class="p-3">${r.competent_authority}</td>
             <td class="p-3 text-center">${badge}</td>
+            <td class="p-3 text-center">
+              <button onclick="openDirectiveModal('${r.task_id}', '${escapeHtml(r.task_title)}')" class="bg-red-800 hover:bg-red-900 text-white px-2.5 py-1 rounded text-[11px] font-semibold">Chỉ đạo / Chat</button>
+            </td>
           </tr>
         `;
       }).join('');
@@ -380,63 +542,58 @@
 
     // 3. NGHIỆP VỤ LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY
     async function loadLanhDaoVPData() {
-      // Tải danh sách Chuyên viên để giao việc
-      const { data: cvList } = await dbClient.from('accounts').select('*').eq('role_group', 'CHUYEN_VIEN');
-      const select = document.getElementById("taskAssignSelect");
-      if (cvList) {
-        select.innerHTML = cvList.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
-      }
+      const cvList = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
+      document.getElementById("taskAssignSelect").innerHTML = cvList.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
 
-      // Đặt giờ V-Office mặc định
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       document.getElementById("taskVOfficeDate").value = now.toISOString().slice(0,16);
 
-      // Tải danh sách giám sát trạng thái tiếp nhận
-      const { data: tasks } = await dbClient.from('tasks').select('*, accounts:assigned_to(full_name, position_title)').order('created_at', { ascending: false });
-      const tbodyTracking = document.getElementById("trackingTableBody");
+      const { data: tasks } = await dbClient.from('tasks')
+        .select('*, assigned:assigned_to(full_name, position_title), leader:leader_in_charge(full_name)')
+        .order('created_at', { ascending: false });
 
+      const tbodyTracking = document.getElementById("trackingTableBody");
       if (!tasks || tasks.length === 0) {
-        tbodyTracking.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">Chưa có nhiệm vụ nào được giao.</td></tr>`;
+        tbodyTracking.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">Chưa có nhiệm vụ nào.</td></tr>`;
       } else {
         tbodyTracking.innerHTML = tasks.map(t => {
           let sttBadge = "";
-          let actionBtn = "";
+          let actionBtns = [];
 
           if (t.status === 'CHO_TIEP_NHAN') {
             sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 font-semibold">Chờ CV tiếp nhận</span>`;
-            actionBtn = `<button onclick="sendWarning('${t.id}')" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-semibold">Đôn đốc (${t.warning_count || 0})</button>`;
+            actionBtns.push(`<button onclick="sendTargetedWarning('${t.id}', '${t.assigned_to}')" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-semibold">Đôn đốc (${t.warning_count || 0})</button>`);
+            actionBtns.push(`<button onclick="openReassignModal('${t.id}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded text-[11px]">Đổi CV</button>`);
           } else if (t.status === 'DANG_THUC_HIEN') {
             sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-800 font-semibold">CV đang thực hiện</span>`;
-            actionBtn = `<span class="text-slate-400 text-[11px]">Đã nhận việc</span>`;
+            actionBtns.push(`<button onclick="openDirectiveModal('${t.id}', '${escapeHtml(t.title)}')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2 py-1 rounded text-[11px]">Chỉ đạo</button>`);
           } else if (t.status === 'TU_CHOI_TIEP_NHAN') {
             sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">Từ chối: ${t.reject_reason || ''}</span>`;
-            actionBtn = `<button onclick="approveReject('${t.id}')" class="bg-slate-800 hover:bg-black text-white px-2 py-1 rounded text-[11px]">Đồng ý từ chối</button>`;
+            actionBtns.push(`<button onclick="approveReject('${t.id}')" class="bg-slate-800 hover:bg-black text-white px-2 py-1 rounded text-[11px]">Đồng ý từ chối</button>`);
           } else if (t.status === 'CHUA_GIAO') {
-            sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-gray-200 text-gray-800 font-bold">Chưa giao (Cần giao lại)</span>`;
-            actionBtn = `<span class="text-red-600 font-semibold text-[11px]">Cần phân công lại</span>`;
+            sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-gray-200 text-gray-800 font-bold">Chưa phân công</span>`;
+            actionBtns.push(`<button onclick="openReassignModal('${t.id}')" class="bg-red-700 hover:bg-red-800 text-white px-2 py-1 rounded text-[11px] font-bold">Phân việc ngay</button>`);
           } else if (t.status === 'CHO_DUYET') {
             sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-800 font-bold">Đã nộp minh chứng</span>`;
-            actionBtn = `<span class="text-purple-700 font-semibold text-[11px]">Xem bảng duyệt dưới</span>`;
           } else if (t.status === 'HOAN_THANH') {
             sttBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800 font-semibold">✓ Đã Hoàn Thành</span>`;
-            actionBtn = `<span class="text-green-700 text-[11px]">Đã đóng việc</span>`;
           }
 
           return `
             <tr class="border-b hover:bg-slate-50">
               <td class="p-2 font-medium">${t.title} <br><span class="text-[10px] text-slate-500">${t.resolution_code}</span></td>
-              <td class="p-2">${t.accounts?.full_name || '<span class="text-red-500 font-semibold">Chưa có người nhận</span>'}</td>
+              <td class="p-2">${t.assigned?.full_name ? `${t.assigned.full_name} <br><span class="text-[10px] text-slate-500">${t.assigned.position_title}</span>` : '<span class="text-red-600 font-bold">Chưa có người nhận</span>'}</td>
               <td class="p-2 text-center">${sttBadge}</td>
-              <td class="p-2 text-center">${actionBtn}</td>
+              <td class="p-2 text-center space-x-1">${actionBtns.join(' ')}</td>
             </tr>
           `;
         }).join('');
       }
 
-      // Tải danh sách chờ duyệt minh chứng
+      // Hồ sơ chờ duyệt
       const { data: pendingApprovals } = await dbClient.from('tasks')
-        .select('id, title, expected_product, accounts:assigned_to(full_name), task_evidences(id, document_title, file_url)')
+        .select('id, title, expected_product, assigned:assigned_to(full_name), task_evidences(id, document_title, file_url)')
         .eq('status', 'CHO_DUYET');
 
       const tbodyApproval = document.getElementById("approvalTableBody");
@@ -446,7 +603,7 @@
         tbodyApproval.innerHTML = pendingApprovals.map(t => `
           <tr class="border-b">
             <td class="p-2 font-medium">${t.title}</td>
-            <td class="p-2">${t.accounts?.full_name || 'N/A'}</td>
+            <td class="p-2">${t.assigned?.full_name || 'N/A'}</td>
             <td class="p-2"><a href="${t.task_evidences?.[0]?.file_url || '#'}" target="_blank" class="text-blue-600 underline font-semibold">${t.task_evidences?.[0]?.document_title || 'Xem tài liệu'}</a></td>
             <td class="p-2 text-center">
               <button onclick="approveComplete('${t.id}')" class="bg-green-700 hover:bg-green-800 text-white px-2 py-1 rounded text-xs font-semibold">Duyệt Đóng Việc</button>
@@ -458,10 +615,12 @@
 
     async function handleGiaoViec(e) {
       e.preventDefault();
+      const cvId = document.getElementById("taskAssignSelect").value;
       const payload = {
         title: document.getElementById("taskTitle").value,
         resolution_code: document.getElementById("taskResCode").value,
-        assigned_to: document.getElementById("taskAssignSelect").value,
+        assigned_to: cvId,
+        leader_in_charge: loggedInUser.id,
         created_by: loggedInUser.id,
         expected_product: document.getElementById("taskProduct").value,
         voffice_received_at: new Date(document.getElementById("taskVOfficeDate").value).toISOString(),
@@ -473,25 +632,56 @@
       };
 
       const { error } = await dbClient.from('tasks').insert([payload]);
-      if (error) alert("Lỗi khi giao việc: " + error.message);
+      if (error) alert("Lỗi: " + error.message);
       else {
-        alert("Đã phát hành giao nhiệm vụ tới Chuyên viên! Nhiệm vụ chuyển sang trạng thái CHỜ TIẾP NHẬN.");
+        alert("Đã phát hành giao nhiệm vụ tới Chuyên viên thành công!");
         document.getElementById("formGiaoViec").reset();
         loadLanhDaoVPData();
       }
     }
 
-    async function sendWarning(taskId) {
+    function openReassignModal(taskId) {
+      document.getElementById("reassignTaskId").value = taskId;
+      const cvList = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
+      document.getElementById("reassignCVSelect").innerHTML = cvList.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
+      document.getElementById("reassignModal").classList.remove("hidden");
+    }
+
+    function closeReassignModal() {
+      document.getElementById("reassignModal").classList.add("hidden");
+    }
+
+    async function submitReassign() {
+      const taskId = document.getElementById("reassignTaskId").value;
+      const cvId = document.getElementById("reassignCVSelect").value;
+      await dbClient.from('tasks').update({
+        assigned_to: cvId,
+        leader_in_charge: loggedInUser.id,
+        status: 'CHO_TIEP_NHAN',
+        warning_count: 0,
+        reject_reason: null
+      }).eq('id', taskId);
+
+      alert("Đã phân công nhiệm vụ cho Chuyên viên! Chuyển trạng thái sang CHỜ TIẾP NHẬN.");
+      closeReassignModal();
+      loadLanhDaoVPData();
+    }
+
+    async function sendTargetedWarning(taskId, cvId) {
+      if (!cvId || cvId === 'null') {
+        alert("Nhiệm vụ này chưa được phân công chuyên viên! Hãy bấm 'Phân việc' trước.");
+        return;
+      }
       const { data } = await dbClient.from('tasks').select('warning_count').eq('id', taskId).single();
       const newCount = (data?.warning_count || 0) + 1;
       await dbClient.from('tasks').update({ warning_count: newCount, last_warned_at: new Date().toISOString() }).eq('id', taskId);
-      alert(`Đã gửi cảnh báo đôn đốc lần ${newCount} tới Chuyên viên!`);
+      alert(`Đã gửi đôn đốc lần ${newCount} tới Chuyên viên tiếp nhận!`);
       loadLanhDaoVPData();
     }
 
     async function approveReject(taskId) {
       await dbClient.from('tasks').update({ status: 'CHUA_GIAO', assigned_to: null }).eq('id', taskId);
-      alert("Lãnh đạo đã đồng ý cho từ chối. Nhiệm vụ chuyển về trạng thái 'CHƯA GIAO' để phân công lại!");
+      alert("Đã đồng ý cho từ chối. Nhiệm vụ chuyển về trạng thái CHƯA PHÂN CÔNG để giao lại!");
       loadLanhDaoVPData();
     }
 
@@ -503,33 +693,37 @@
 
     // 4. NGHIỆP VỤ CHUYÊN VIÊN VĂN PHÒNG
     async function loadChuyenVienData() {
-      const { data: myTasks } = await dbClient.from('tasks').select('*').eq('assigned_to', loggedInUser.id).order('created_at', { ascending: false });
+      const { data: myTasks } = await dbClient.from('tasks')
+        .select('*, leader:leader_in_charge(full_name)')
+        .eq('assigned_to', loggedInUser.id)
+        .order('created_at', { ascending: false });
 
-      // KIỂM TRA NHIỆM VỤ MỚI CƯỠNG BỨC (MANDATORY MODAL)
-      const pendingAcceptTask = myTasks ? myTasks.find(t => t.status === 'CHO_TIEP_NHAN') : null;
-      if (pendingAcceptTask) {
-        showMandatoryModal(pendingAcceptTask);
+      // MODAL CƯỠNG BỨC TIẾP NHẬN
+      const pendingTask = myTasks ? myTasks.find(t => t.status === 'CHO_TIEP_NHAN') : null;
+      if (pendingTask) {
+        showMandatoryModal(pendingTask);
       } else {
         document.getElementById("mandatoryAcceptModal").classList.add("hidden");
       }
 
       const tbody = document.getElementById("chuyenVienTableBody");
       if (!myTasks || myTasks.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Đồng chí hiện chưa được phân công nhiệm vụ nào.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Đồng chí chưa có nhiệm vụ nào được phân công.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = myTasks.map(t => {
         let actionCell = "";
-        if (t.status === 'CHO_TIEP_NHAN') actionCell = `<button onclick='showMandatoryModal(${JSON.stringify(t)})' class="bg-amber-600 text-white px-2 py-1 rounded font-bold">Xác nhận nhận việc</button>`;
-        else if (t.status === 'DANG_THUC_HIEN') actionCell = `<button onclick="openEvidenceModal('${t.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded font-semibold">Nộp Minh Chứng</button>`;
+        if (t.status === 'CHO_TIEP_NHAN') actionCell = `<button onclick='showMandatoryModal(${JSON.stringify(t)})' class="bg-amber-600 text-white px-2 py-1 rounded font-bold">Xác nhận việc</button>`;
+        else if (t.status === 'DANG_THUC_HIEN') actionCell = `<button onclick="openEvidenceModal('${t.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded font-semibold">Nộp Minh Chứng</button> <button onclick="openDirectiveModal('${t.id}', '${escapeHtml(t.title)}')" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2 py-1 rounded text-xs ml-1">Ý kiến</button>`;
         else if (t.status === 'CHO_DUYET') actionCell = `<span class="text-purple-600 font-semibold">Đã nộp - Chờ duyệt</span>`;
-        else if (t.status === 'HOAN_THANH') actionCell = `<span class="text-green-600 font-bold">✓ Đã Hoàn Thành</span>`;
-        else if (t.status === 'TU_CHOI_TIEP_NHAN') actionCell = `<span class="text-rose-600 font-semibold">Đã gửi từ chối (Chờ LĐ xét)</span>`;
+        else if (t.status === 'HOAN_THANH') actionCell = `<span class="text-green-600 font-bold">✓ Hoàn thành</span>`;
+        else if (t.status === 'TU_CHOI_TIEP_NHAN') actionCell = `<span class="text-rose-600 font-semibold">Đã từ chối (Chờ xét)</span>`;
 
         return `
           <tr class="border-b hover:bg-slate-50">
             <td class="p-3 font-medium text-slate-800">${t.title} <br><span class="text-[10px] text-slate-500">${t.resolution_code}</span></td>
+            <td class="p-3 font-medium text-slate-700">${t.leader?.full_name || 'Chưa chỉ định'}</td>
             <td class="p-3 text-slate-600">${t.expected_product}</td>
             <td class="p-3 text-slate-600">${new Date(t.deadline).toLocaleString('vi-VN')}</td>
             <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'DANG_THUC_HIEN' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}">${t.status}</span></td>
@@ -549,7 +743,7 @@
       const warnDiv = document.getElementById("warningNoticeDiv");
       if (task.warning_count && task.warning_count > 0) {
         warnDiv.classList.remove("hidden");
-        warnDiv.innerText = `CẢNH BÁO: Lãnh đạo Văn phòng đã gửi đôn đốc tiếp nhận ${task.warning_count} lần! Đề nghị đồng chí xử lý ngay.`;
+        warnDiv.innerText = `CẢNH BÁO ĐÔN ĐỐC (${task.warning_count} lần): Đề nghị đồng chí khẩn trương tiếp nhận nhiệm vụ!`;
       } else {
         warnDiv.classList.add("hidden");
       }
@@ -557,13 +751,14 @@
       document.getElementById("rejectReasonBox").classList.add("hidden");
       document.getElementById("btnConfirmReject").classList.add("hidden");
       document.getElementById("btnAcceptTask").classList.remove("hidden");
+      document.getElementById("btnRejectToggle").classList.remove("hidden");
       document.getElementById("mandatoryAcceptModal").classList.remove("hidden");
     }
 
     async function acceptTask() {
       const taskId = document.getElementById("mandatoryTaskId").value;
       await dbClient.from('tasks').update({ status: 'DANG_THUC_HIEN' }).eq('id', taskId);
-      alert("Đồng chí đã tiếp nhận nhiệm vụ thành công! Bắt đầu chu trình tính thời hạn xử lý.");
+      alert("Đã tiếp nhận nhiệm vụ thành công! Bắt đầu tính giờ thực hiện.");
       document.getElementById("mandatoryAcceptModal").classList.add("hidden");
       loadChuyenVienData();
     }
@@ -581,11 +776,83 @@
       if (!reason) { alert("Bắt buộc phải nhập lý do từ chối!"); return; }
 
       await dbClient.from('tasks').update({ status: 'TU_CHOI_TIEP_NHAN', reject_reason: reason }).eq('id', taskId);
-      alert("Đã gửi lý do từ chối nhận việc tới Lãnh đạo Văn phòng xem xét phê chuẩn.");
+      alert("Đã gửi lý do từ chối nhận việc tới Lãnh đạo Văn phòng phê chuẩn.");
       document.getElementById("mandatoryAcceptModal").classList.add("hidden");
       loadChuyenVienData();
     }
 
+    // 5. CHỨC NĂNG Ý KIẾN CHỈ ĐẠO & PHẢN HỒI TRỰC TUYẾN (CHAT DIRECTIVES)
+    async function openDirectiveModal(taskId, taskTitle) {
+      document.getElementById("directiveTaskId").value = taskId;
+      document.getElementById("directiveTaskTitle").innerText = "Nhiệm vụ: " + taskTitle;
+      document.getElementById("directiveModal").classList.remove("hidden");
+      await loadDirectives(taskId);
+
+      // Đánh dấu đã xem nếu người mở là người nhận chỉ đạo
+      await dbClient.from('task_directives')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('task_id', taskId)
+        .neq('sender_id', loggedInUser.id);
+    }
+
+    function closeDirectiveModal() {
+      document.getElementById("directiveModal").classList.add("hidden");
+    }
+
+    async function loadDirectives(taskId) {
+      const { data } = await dbClient.from('task_directives')
+        .select('*, sender:sender_id(full_name, role_group)')
+        .eq('task_id', taskId)
+        .order('created_at', { ascending: true });
+
+      const box = document.getElementById("directiveChatBox");
+      if (!data || data.length === 0) {
+        box.innerHTML = `<p class="text-center text-slate-400">Chưa có ý kiến chỉ đạo nào cho nhiệm vụ này.</p>`;
+        return;
+      }
+
+      box.innerHTML = data.map(d => {
+        const isMe = d.sender_id === loggedInUser.id;
+        let roleBadge = d.sender?.role_group === 'THUONG_TRUC' ? 'Thường trực' : (d.sender?.role_group === 'LANH_DAO_VP' ? 'LĐ Văn phòng' : 'Chuyên viên');
+        let readStatus = isMe ? (d.is_read ? '<span class="text-blue-500">✓✓ Đã xem</span>' : '<span class="text-slate-400">✓ Đã gửi</span>') : '';
+
+        return `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+            <span class="text-[10px] text-slate-500 font-semibold mb-0.5">${d.sender?.full_name || 'N/A'} (${roleBadge})</span>
+            <div class="p-2.5 rounded-lg max-w-[85%] ${isMe ? 'bg-red-800 text-white rounded-br-none' : 'bg-white border text-slate-800 rounded-bl-none shadow-sm'}">
+              <p class="leading-relaxed">${escapeHtml(d.content)}</p>
+            </div>
+            <div class="flex items-center gap-2 mt-0.5 text-[9px] text-slate-400">
+              <span>${new Date(d.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
+              ${readStatus}
+            </div>
+          </div>
+        `;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function handleSendDirective(e) {
+      e.preventDefault();
+      const taskId = document.getElementById("directiveTaskId").value;
+      const input = document.getElementById("directiveInput");
+      const content = input.value.trim();
+      if (!content) return;
+
+      const { error } = await dbClient.from('task_directives').insert([{
+        task_id: taskId,
+        sender_id: loggedInUser.id,
+        content: content,
+        is_read: false
+      }]);
+
+      if (!error) {
+        input.value = "";
+        await loadDirectives(taskId);
+      }
+    }
+
+    // 6. NỘP MINH CHỨNG
     function openEvidenceModal(taskId) {
       document.getElementById("evidenceTaskId").value = taskId;
       document.getElementById("evidenceModal").classList.remove("hidden");
@@ -593,13 +860,11 @@
     function closeEvidenceModal() {
       document.getElementById("evidenceModal").classList.add("hidden");
     }
-
     async function submitEvidence() {
       const taskId = document.getElementById("evidenceTaskId").value;
       const title = document.getElementById("evidenceTitle").value.trim();
       const link = document.getElementById("evidenceLink").value.trim();
-
-      if (!title || !link) { alert("Vui lòng điền đủ trích yếu và link tài liệu!"); return; }
+      if (!title || !link) { alert("Vui lòng nhập đủ thông tin!"); return; }
 
       await dbClient.from('task_evidences').insert([{
         task_id: taskId,
@@ -609,13 +874,19 @@
       }]);
       await dbClient.from('tasks').update({ status: 'CHO_DUYET' }).eq('id', taskId);
 
-      alert("Đã nộp minh chứng thành công! Hồ sơ đã gửi đến Lãnh đạo Văn phòng chờ thẩm tra duyệt.");
+      alert("Đã nộp minh chứng thành công!");
       closeEvidenceModal();
       loadChuyenVienData();
     }
 
-    // Tự động kiểm tra phiên đăng nhập khi tải trang
-    window.onload = () => {
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Tự động kiểm tra phiên khi tải trang
+    window.onload = async () => {
+      await loadAccountsCache();
       const session = sessionStorage.getItem('vptu_session_user');
       if (session) {
         loggedInUser = JSON.parse(session);
