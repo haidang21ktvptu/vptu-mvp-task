@@ -7,7 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative">
+
+  <!-- TOAST THÔNG BÁO TIN NHẮN CHỈ ĐẠO ĐẾN REAL-TIME -->
+  <div id="realtimeToast" class="fixed top-5 right-5 z-[100] hidden max-w-sm w-full bg-white border-l-4 border-red-700 rounded-lg shadow-2xl p-4 transition-all transform duration-300">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-start gap-2.5">
+        <span class="text-xl">🔔</span>
+        <div>
+          <h4 id="toastSender" class="text-xs font-bold text-red-800 uppercase">Ý kiến chỉ đạo mới</h4>
+          <p id="toastTaskTitle" class="text-[11px] font-semibold text-slate-700 mt-0.5 line-clamp-1">--</p>
+          <p id="toastContent" class="text-xs text-slate-600 mt-1 italic bg-slate-50 p-2 rounded border">--</p>
+        </div>
+      </div>
+      <button onclick="closeToast()" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+    </div>
+    <div class="mt-2.5 flex justify-end">
+      <button id="toastActionBtn" class="bg-red-800 hover:bg-red-900 text-white text-[11px] font-bold px-3 py-1 rounded shadow">Xem và phản hồi</button>
+    </div>
+  </div>
 
   <!-- MÀN HÌNH ĐĂNG NHẬP -->
   <div id="loginSection" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
@@ -60,10 +78,10 @@
 
     <!-- 1. GIAO DIỆN THƯỜNG TRỰC TỈNH ỦY -->
     <section id="viewThuongTruc" class="space-y-6 hidden">
-      <div class="flex justify-between items-center border-b pb-3">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
         <div>
           <h2 class="text-base md:text-lg font-bold text-slate-900 uppercase">Dashboard Quản Trị Ngoại Lệ (Thường Trực Tỉnh Ủy)</h2>
-          <p class="text-xs text-slate-500">Phân công trực tiếp, can thiệp xử lý ngay trên từng nhiệm vụ và chỉ đạo trực tuyến</p>
+          <p class="text-xs text-slate-500">Giám sát điểm nghẽn, lọc theo tiến độ, giao việc can thiệp và chỉ đạo trực tuyến</p>
         </div>
         <div class="flex gap-2">
           <button onclick="toggleTTGiaoViec()" class="text-xs bg-red-800 hover:bg-red-900 text-white font-semibold px-3 py-1.5 rounded shadow">+ Thường Trực Giao Việc Mới</button>
@@ -137,34 +155,58 @@
         </div>
       </div>
 
-      <!-- BẢNG NGOẠI LỆ -->
+      <!-- BỘ LỌC PHÂN LOẠI ĐIỂM NGHẼN CHO THƯỜNG TRỰC -->
+      <div class="bg-white p-4 rounded-lg shadow-sm border flex flex-col md:flex-row gap-3 items-center text-xs">
+        <div class="flex-1 w-full">
+          <input type="text" id="ttSearchInput" oninput="applyLeaderFilter()" placeholder="🔍 Tìm nhanh theo tên nhiệm vụ, số nghị quyết, chuyên viên..." class="w-full border rounded-lg p-2 focus:ring-1 focus:ring-red-600 focus:outline-none">
+        </div>
+        <div class="w-full md:w-56">
+          <select id="ttFilterAlert" onchange="applyLeaderFilter()" class="w-full border rounded-lg p-2 bg-white">
+            <option value="ALL">-- Tất cả cấp độ cảnh báo --</option>
+            <option value="DO_DAC_BIET">🚨 Đỏ đặc biệt</option>
+            <option value="DO">Quá hạn (Đỏ)</option>
+            <option value="VANG">Sắp đến hạn (≤ 3 ngày)</option>
+            <option value="TU_CHOI">Chuyên viên từ chối</option>
+            <option value="CHUA_GIAO">Chưa phân công chuyên viên</option>
+            <option value="XANH">Trong hạn bình thường</option>
+          </select>
+        </div>
+        <div class="w-full md:w-56">
+          <select id="ttFilterLeader" onchange="applyLeaderFilter()" class="w-full border rounded-lg p-2 bg-white">
+            <option value="ALL">-- Tất cả Lãnh đạo phụ trách --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- BẢNG NGOẠI LỆ ĐÃ BỔ SUNG CỘT NHIỆM VỤ & CHI TIẾT ĐIỂM NGHẼN -->
       <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="p-4 bg-slate-50 border-b">
+        <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
           <h3 class="text-xs font-bold text-red-700 uppercase">Danh Sách Điểm Nghẽn & Chỉ Đạo Tháo Gỡ</h3>
+          <span id="ttFilterCount" class="text-[11px] text-slate-500 font-medium">Hiển thị 0 nhiệm vụ</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100 text-slate-600 uppercase">
-                <th class="p-3 border-b">1. Chuyên viên thực hiện</th>
+                <th class="p-3 border-b">Nhiệm vụ & Điểm nghẽn</th>
+                <th class="p-3 border-b">Chuyên viên thực hiện</th>
                 <th class="p-3 border-b">Lãnh đạo phụ trách</th>
-                <th class="p-3 border-b text-center">2. Trễ hạn</th>
-                <th class="p-3 border-b">3. Sản phẩm thiếu</th>
+                <th class="p-3 border-b text-center">Trễ hạn</th>
+                <th class="p-3 border-b">Sản phẩm thiếu (Product)</th>
                 <th class="p-3 border-b text-center">Cấp độ cảnh báo</th>
                 <th class="p-3 border-b text-center">Thao tác Thường trực</th>
               </tr>
             </thead>
             <tbody id="exceptionTableBody" class="divide-y divide-slate-200">
-              <tr><td colspan="6" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
+              <tr><td colspan="7" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- 2. GIAO DIỆN LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY (HỆ THỐNG 3 TAB) -->
+    <!-- 2. GIAO DIỆN LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY (3 TAB) -->
     <section id="viewLanhDaoVP" class="space-y-6 hidden">
-      <!-- THANH ĐIỀU HƯỚNG TAB -->
       <div class="flex border-b border-slate-200 gap-2">
         <button id="tabBtnGiaoViec" onclick="switchLanhDaoTab('giaoViec')" class="py-2.5 px-4 text-xs font-bold border-b-2 border-red-800 text-red-800 focus:outline-none flex items-center gap-1.5">
           <span>📝</span> Tab 1: Giao Nhiệm Vụ Mới
@@ -177,7 +219,7 @@
         </button>
       </div>
 
-      <!-- NỘI DUNG TAB 1: GIAO NHIỆM VỤ MỚI -->
+      <!-- TAB 1 -->
       <div id="tabContentGiaoViec" class="bg-white p-6 rounded-lg shadow-sm border max-w-2xl">
         <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-4">Lãnh Đạo Văn Phòng Giao Việc Cho Chuyên Viên</h3>
         <form id="formGiaoViec" onsubmit="handleGiaoViec(event)" class="space-y-3.5 text-xs">
@@ -223,7 +265,7 @@
         </form>
       </div>
 
-      <!-- NỘI DUNG TAB 2: THEO DÕI & THẨM TRA DUYỆT -->
+      <!-- TAB 2 -->
       <div id="tabContentTheoDoi" class="hidden space-y-6">
         <div class="bg-white p-5 rounded-lg shadow-sm border space-y-3">
           <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Tình Trạng Tiếp Nhận & Phân Việc Cho Chuyên Viên</h3>
@@ -264,7 +306,7 @@
         </div>
       </div>
 
-      <!-- NỘI DUNG TAB 3: THEO DÕI KPI CHUYÊN VIÊN -->
+      <!-- TAB 3 -->
       <div id="tabContentKPI" class="hidden space-y-6">
         <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
@@ -296,7 +338,6 @@
           </div>
         </div>
 
-        <!-- Khung chi tiết danh sách nhiệm vụ của chuyên viên được chọn -->
         <div id="kpiDetailBox" class="hidden bg-white p-5 rounded-lg shadow-sm border space-y-3">
           <div class="flex justify-between items-center border-b pb-2">
             <h4 id="kpiDetailTitle" class="text-xs font-bold text-red-800 uppercase">Danh Sách Nhiệm Vụ Của Chuyên Viên</h4>
@@ -320,7 +361,7 @@
       </div>
     </section>
 
-    <!-- 3. GIAO DIỆN CHUYÊN VIÊN VĂN PHÒNG (TAB & SẮP XẾP DEADLINE) -->
+    <!-- 3. GIAO DIỆN CHUYÊN VIÊN VĂN PHÒNG -->
     <section id="viewChuyenVien" class="space-y-6 hidden">
       <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
         <div class="flex justify-between items-center border-b pb-3">
@@ -491,10 +532,55 @@
 
     let loggedInUser = null;
     let globalAccounts = [];
+    let leaderDashboardRawData = [];
     let currentChatTaskId = null;
     let currentChatTaskTitle = "";
     let realtimeChannel = null;
     let unreadChatCount = 0;
+
+    // Âm thanh thông báo nhẹ bằng Web Audio API
+    function playNotificationSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } catch (e) {
+        console.warn("Audio Context blocked:", e);
+      }
+    }
+
+    // Hiển thị Toast thông báo tin nhắn
+    function showNotificationToast(senderName, taskTitle, content, taskId) {
+      playNotificationSound();
+      const toast = document.getElementById("realtimeToast");
+      document.getElementById("toastSender").innerText = `💬 Chỉ đạo mới từ ${senderName}`;
+      document.getElementById("toastTaskTitle").innerText = `Nhiệm vụ: ${taskTitle}`;
+      document.getElementById("toastContent").innerText = `"${content}"`;
+
+      const btn = document.getElementById("toastActionBtn");
+      btn.onclick = () => {
+        closeToast();
+        openDirectiveModal(taskId, taskTitle);
+      };
+
+      toast.classList.remove("hidden");
+      setTimeout(() => {
+        closeToast();
+      }, 9000);
+    }
+
+    function closeToast() {
+      document.getElementById("realtimeToast").classList.add("hidden");
+    }
 
     // 1. ĐĂNG NHẬP & PHIÊN LÀM VIỆC
     async function handleLogin(e) {
@@ -552,7 +638,192 @@
       if (loggedInUser.role_group === 'CHUYEN_VIEN') loadChuyenVienData();
     }
 
-    // 2. NGHIỆP VỤ LÃNH ĐẠO VĂN PHÒNG (TAB SWITCHING & KPI)
+    // 2. NGHIỆP VỤ THƯỜNG TRỰC TỈNH ỦY
+    function toggleTTGiaoViec() {
+      document.getElementById("ttGiaoViecBox").classList.toggle("hidden");
+      const now = new Date();
+      now.setDate(now.getDate() + 5);
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById("ttDeadline").value = now.toISOString().slice(0,16);
+    }
+
+    function populateTTSelects() {
+      const leaders = globalAccounts.filter(a => a.role_group === 'LANH_DAO_VP');
+      const cvs = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
+      document.getElementById("ttLeaderSelect").innerHTML = leaders.map(l => `<option value="${l.id}">${l.full_name} (${l.position_title})</option>`).join('');
+      document.getElementById("ttCVSelect").innerHTML = cvs.map(c => {
+        const mgr = globalAccounts.find(m => m.id === c.manager_id);
+        const mgrName = mgr ? mgr.full_name : 'Chưa có LĐ phụ trách';
+        return `<option value="${c.id}">${c.full_name} (LĐ phụ trách: ${mgrName})</option>`;
+      }).join('');
+
+      // Nạp danh sách Lãnh đạo vào ô lọc
+      const filterLeader = document.getElementById("ttFilterLeader");
+      filterLeader.innerHTML = `<option value="ALL">-- Tất cả Lãnh đạo phụ trách --</option>` +
+        leaders.map(l => `<option value="${l.full_name}">${l.full_name}</option>`).join('');
+    }
+
+    function handleTTModeChange(mode) {
+      document.getElementById("ttLeaderSelectDiv").classList.toggle("hidden", mode !== 'TO_LEADER');
+      document.getElementById("ttCVSelectDiv").classList.toggle("hidden", mode !== 'TO_CV');
+    }
+
+    async function handleTTGiaoViec(e) {
+      e.preventDefault();
+      const mode = document.getElementById("ttAssignMode").value;
+      let assigned_to = null;
+      let leader_in_charge = null;
+
+      if (mode === 'TO_LEADER') {
+        leader_in_charge = document.getElementById("ttLeaderSelect").value;
+      } else {
+        assigned_to = document.getElementById("ttCVSelect").value;
+        const cvObj = globalAccounts.find(a => a.id === assigned_to);
+        leader_in_charge = cvObj?.manager_id || null;
+      }
+
+      const payload = {
+        title: document.getElementById("ttTitle").value,
+        resolution_code: document.getElementById("ttResCode").value,
+        assigned_to: assigned_to,
+        leader_in_charge: leader_in_charge,
+        created_by: loggedInUser.id,
+        expected_product: document.getElementById("ttProduct").value,
+        voffice_received_at: new Date().toISOString(),
+        deadline: new Date(document.getElementById("ttDeadline").value).toISOString(),
+        critical_overdue_days: parseInt(document.getElementById("ttCriticalDays").value),
+        competent_authority: 'Thường trực Tỉnh ủy',
+        status: assigned_to ? 'CHO_TIEP_NHAN' : 'CHUA_GIAO',
+        warning_count: 0
+      };
+
+      const { error } = await dbClient.from('tasks').insert([payload]);
+      if (error) alert("Lỗi: " + error.message);
+      else {
+        alert("Thường trực Tỉnh ủy đã phát hành chỉ đạo giao việc!");
+        toggleTTGiaoViec();
+        loadLeaderDashboard();
+      }
+    }
+
+    async function loadLeaderDashboard() {
+      const { data, error } = await dbClient.from('view_exception_dashboard').select('*');
+      if (error) { console.error(error); return; }
+
+      leaderDashboardRawData = data || [];
+
+      let total = leaderDashboardRawData.length;
+      let yellow = 0, red = 0, specialRed = 0;
+      leaderDashboardRawData.forEach(t => {
+        if (t.alert_level === 'VANG') yellow++;
+        if (t.alert_level === 'DO') red++;
+        if (t.alert_level === 'DO_DAC_BIET') specialRed++;
+      });
+
+      document.getElementById("kpiTotal").innerText = total;
+      document.getElementById("kpiYellow").innerText = yellow;
+      document.getElementById("kpiRed").innerText = red;
+      document.getElementById("kpiSpecialRed").innerText = specialRed;
+
+      applyLeaderFilter();
+    }
+
+    function applyLeaderFilter() {
+      const keyword = document.getElementById("ttSearchInput").value.trim().toLowerCase();
+      const alertFilter = document.getElementById("ttFilterAlert").value;
+      const leaderFilter = document.getElementById("ttFilterLeader").value;
+
+      const filtered = leaderDashboardRawData.filter(r => {
+        // Lọc từ khóa
+        const matchKeyword = !keyword ||
+          (r.task_title && r.task_title.toLowerCase().includes(keyword)) ||
+          (r.resolution_code && r.resolution_code.toLowerCase().includes(keyword)) ||
+          (r.owner_name && r.owner_name.toLowerCase().includes(keyword)) ||
+          (r.expected_product && r.expected_product.toLowerCase().includes(keyword));
+
+        // Lọc cấp độ cảnh báo
+        const matchAlert = (alertFilter === 'ALL') || (r.alert_level === alertFilter);
+
+        // Lọc lãnh đạo phụ trách
+        const matchLeader = (leaderFilter === 'ALL') || (r.leader_name === leaderFilter);
+
+        return matchKeyword && matchAlert && matchLeader;
+      });
+
+      document.getElementById("ttFilterCount").innerText = `Hiển thị ${filtered.length} / ${leaderDashboardRawData.length} nhiệm vụ`;
+      renderLeaderTable(filtered);
+    }
+
+    function renderLeaderTable(list) {
+      const tbody = document.getElementById("exceptionTableBody");
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Không có nhiệm vụ nào phù hợp điều kiện lọc.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(r => {
+        let badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-yellow-100 text-yellow-800">Sắp đến hạn</span>`;
+        if (r.alert_level === 'DO') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-800 font-bold">Quá hạn</span>`;
+        if (r.alert_level === 'DO_DAC_BIET') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-900 font-bold animate-pulse">ĐỎ ĐẶC BIỆT</span>`;
+        if (r.alert_level === 'TU_CHOI') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">Từ chối: ${r.reject_reason || ''}</span>`;
+        if (r.alert_level === 'CHUA_GIAO') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-800 font-bold">Chưa phân công</span>`;
+        if (r.alert_level === 'XANH') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800">Trong hạn</span>`;
+        if (r.alert_level === 'HOAN_THANH') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">Đã hoàn thành</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50 border-b">
+            <td class="p-3 max-w-[260px]">
+              <div class="font-bold text-slate-800 text-xs">${escapeHtml(r.task_title)}</div>
+              <div class="text-[10px] text-red-700 font-semibold mt-0.5">Nghị quyết: ${escapeHtml(r.resolution_code)}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Hạn: ${new Date(r.deadline).toLocaleString('vi-VN')}</div>
+            </td>
+            <td class="p-3 font-semibold">${r.owner_name} <br><span class="text-[10px] text-slate-500 font-normal">${r.owner_org}</span></td>
+            <td class="p-3 font-medium text-slate-700">${r.leader_name}</td>
+            <td class="p-3 text-center font-bold ${r.days_overdue > 0 ? 'text-red-600' : 'text-slate-600'}">${r.days_overdue > 0 ? r.days_overdue + ' ngày' : 'Trong hạn'}</td>
+            <td class="p-3 font-medium text-slate-700 max-w-[200px] truncate" title="${escapeHtml(r.expected_product)}">${escapeHtml(r.expected_product)}</td>
+            <td class="p-3 text-center">${badge}</td>
+            <td class="p-3 text-center space-x-1 whitespace-nowrap">
+              <button onclick="openTTInterveneModal('${r.task_id}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded text-[11px]">Can thiệp</button>
+              <button onclick="openDirectiveModal('${r.task_id}', '${escapeHtml(r.task_title)}')" class="bg-red-800 hover:bg-red-900 text-white px-2.5 py-1 rounded text-[11px] font-semibold">Chỉ đạo trực tuyến</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openTTInterveneModal(taskId) {
+      document.getElementById("ttInterveneTaskId").value = taskId;
+      const cvs = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
+      const leaders = globalAccounts.filter(a => a.role_group === 'LANH_DAO_VP');
+      
+      document.getElementById("ttInterveneCVSelect").innerHTML = cvs.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
+      document.getElementById("ttInterveneLeaderSelect").innerHTML = leaders.map(l => `<option value="${l.id}">${l.full_name} (${l.position_title})</option>`).join('');
+      document.getElementById("ttInterveneModal").classList.remove("hidden");
+    }
+
+    function closeTTInterveneModal() {
+      document.getElementById("ttInterveneModal").classList.add("hidden");
+    }
+
+    async function submitTTIntervene() {
+      const taskId = document.getElementById("ttInterveneTaskId").value;
+      const cvId = document.getElementById("ttInterveneCVSelect").value;
+      const leaderId = document.getElementById("ttInterveneLeaderSelect").value;
+
+      await dbClient.from('tasks').update({
+        assigned_to: cvId,
+        leader_in_charge: leaderId,
+        status: 'CHO_TIEP_NHAN',
+        warning_count: 0,
+        reject_reason: null
+      }).eq('id', taskId);
+
+      alert("Thường trực Tỉnh ủy đã can thiệp giao việc trực tiếp!");
+      closeTTInterveneModal();
+      loadLeaderDashboard();
+    }
+
+    // 3. NGHIỆP VỤ LÃNH ĐẠO VĂN PHÒNG (TAB SWITCHING & KPI)
     function switchLanhDaoTab(tab) {
       const btnGiaoViec = document.getElementById("tabBtnGiaoViec");
       const btnTheoDoi = document.getElementById("tabBtnTheoDoi");
@@ -565,7 +836,6 @@
       const activeClasses = ["border-red-800", "text-red-800", "font-bold"];
       const inactiveClasses = ["border-transparent", "text-slate-500", "font-semibold"];
 
-      // Reset
       [btnGiaoViec, btnTheoDoi, btnKPI].forEach(b => {
         b.classList.remove(...activeClasses);
         b.classList.add(...inactiveClasses);
@@ -687,7 +957,6 @@
       }).join('');
     }
 
-    // 3. NGHIỆP VỤ LÃNH ĐẠO VĂN PHÒNG (GIAO VIỆC & DUYỆT)
     async function loadLanhDaoVPData() {
       const cvList = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
       document.getElementById("taskAssignSelect").innerHTML = cvList.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
@@ -838,7 +1107,7 @@
       loadLanhDaoVPData();
     }
 
-    // 4. NGHIỆP VỤ CHUYÊN VIÊN (ƯU TIÊN DEADLINE & CẢNH BÁO)
+    // 4. NGHIỆP VỤ CHUYÊN VIÊN
     async function loadChuyenVienData() {
       const { data: myTasks } = await dbClient.from('tasks')
         .select('*, leader:leader_in_charge(full_name)')
@@ -858,8 +1127,6 @@
       }
 
       const now = new Date();
-
-      // Phân nhóm và sắp xếp ưu tiên: Quá hạn (1) -> Sắp đến hạn (2) -> Trong hạn (3) -> Hoàn thành (4)
       const sortedTasks = myTasks.map(t => {
         let priorityWeight = 3;
         let diffHours = (new Date(t.deadline) - now) / (1000 * 60 * 60);
@@ -867,9 +1134,9 @@
         if (t.status === 'HOAN_THANH') {
           priorityWeight = 4;
         } else if (now > new Date(t.deadline)) {
-          priorityWeight = 1; // Quá hạn ưu tiên số 1
+          priorityWeight = 1;
         } else if (diffHours <= 72) {
-          priorityWeight = 2; // Sắp đến hạn ưu tiên số 2
+          priorityWeight = 2;
         } else {
           priorityWeight = 3;
         }
@@ -877,7 +1144,7 @@
         return { ...t, priorityWeight, deadlineTime: new Date(t.deadline).getTime() };
       }).sort((a, b) => {
         if (a.priorityWeight !== b.priorityWeight) return a.priorityWeight - b.priorityWeight;
-        return a.deadlineTime - b.deadlineTime; // Sắp xếp theo hạn chót gần nhất
+        return a.deadlineTime - b.deadlineTime;
       });
 
       tbody.innerHTML = sortedTasks.map(t => {
@@ -965,162 +1232,34 @@
       loadChuyenVienData();
     }
 
-    // 5. NGHIỆP VỤ THƯỜNG TRỰC TỈNH ỦY
-    function toggleTTGiaoViec() {
-      document.getElementById("ttGiaoViecBox").classList.toggle("hidden");
-      const now = new Date();
-      now.setDate(now.getDate() + 5);
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById("ttDeadline").value = now.toISOString().slice(0,16);
-    }
-
-    function populateTTSelects() {
-      const leaders = globalAccounts.filter(a => a.role_group === 'LANH_DAO_VP');
-      const cvs = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
-      document.getElementById("ttLeaderSelect").innerHTML = leaders.map(l => `<option value="${l.id}">${l.full_name} (${l.position_title})</option>`).join('');
-      document.getElementById("ttCVSelect").innerHTML = cvs.map(c => {
-        const mgr = globalAccounts.find(m => m.id === c.manager_id);
-        const mgrName = mgr ? mgr.full_name : 'Chưa có LĐ phụ trách';
-        return `<option value="${c.id}">${c.full_name} (LĐ phụ trách: ${mgrName})</option>`;
-      }).join('');
-    }
-
-    function handleTTModeChange(mode) {
-      document.getElementById("ttLeaderSelectDiv").classList.toggle("hidden", mode !== 'TO_LEADER');
-      document.getElementById("ttCVSelectDiv").classList.toggle("hidden", mode !== 'TO_CV');
-    }
-
-    async function handleTTGiaoViec(e) {
-      e.preventDefault();
-      const mode = document.getElementById("ttAssignMode").value;
-      let assigned_to = null;
-      let leader_in_charge = null;
-
-      if (mode === 'TO_LEADER') {
-        leader_in_charge = document.getElementById("ttLeaderSelect").value;
-      } else {
-        assigned_to = document.getElementById("ttCVSelect").value;
-        const cvObj = globalAccounts.find(a => a.id === assigned_to);
-        leader_in_charge = cvObj?.manager_id || null;
-      }
-
-      const payload = {
-        title: document.getElementById("ttTitle").value,
-        resolution_code: document.getElementById("ttResCode").value,
-        assigned_to: assigned_to,
-        leader_in_charge: leader_in_charge,
-        created_by: loggedInUser.id,
-        expected_product: document.getElementById("ttProduct").value,
-        voffice_received_at: new Date().toISOString(),
-        deadline: new Date(document.getElementById("ttDeadline").value).toISOString(),
-        critical_overdue_days: parseInt(document.getElementById("ttCriticalDays").value),
-        competent_authority: 'Thường trực Tỉnh ủy',
-        status: assigned_to ? 'CHO_TIEP_NHAN' : 'CHUA_GIAO',
-        warning_count: 0
-      };
-
-      const { error } = await dbClient.from('tasks').insert([payload]);
-      if (error) alert("Lỗi: " + error.message);
-      else {
-        alert("Thường trực Tỉnh ủy đã phát hành chỉ đạo giao việc!");
-        toggleTTGiaoViec();
-        loadLeaderDashboard();
-      }
-    }
-
-    async function loadLeaderDashboard() {
-      const { data, error } = await dbClient.from('view_exception_dashboard').select('*');
-      if (error) { console.error(error); return; }
-
-      let total = data ? data.length : 0;
-      let yellow = 0, red = 0, specialRed = 0;
-      data.forEach(t => {
-        if (t.alert_level === 'VANG') yellow++;
-        if (t.alert_level === 'DO') red++;
-        if (t.alert_level === 'DO_DAC_BIET') specialRed++;
-      });
-
-      document.getElementById("kpiTotal").innerText = total;
-      document.getElementById("kpiYellow").innerText = yellow;
-      document.getElementById("kpiRed").innerText = red;
-      document.getElementById("kpiSpecialRed").innerText = specialRed;
-
-      const tbody = document.getElementById("exceptionTableBody");
-      if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-green-700 font-medium">Toàn bộ nhiệm vụ đang đảm bảo an toàn tiến độ.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.map(r => {
-        let badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-yellow-100 text-yellow-800">Sắp đến hạn</span>`;
-        if (r.alert_level === 'DO') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-800 font-bold">Quá hạn</span>`;
-        if (r.alert_level === 'DO_DAC_BIET') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-900 font-bold animate-pulse">ĐỎ ĐẶC BIỆT</span>`;
-        if (r.alert_level === 'TU_CHOI') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">Từ chối tiếp nhận</span>`;
-        if (r.alert_level === 'CHUA_GIAO') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-800 font-bold">Chưa phân công</span>`;
-        if (r.alert_level === 'XANH') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800">Trong hạn</span>`;
-        if (r.alert_level === 'HOAN_THANH') badge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">Đã hoàn thành</span>`;
-
-        return `
-          <tr class="hover:bg-slate-50 border-b">
-            <td class="p-3 font-semibold">${r.owner_name} <br><span class="text-[10px] text-slate-500 font-normal">${r.owner_org}</span></td>
-            <td class="p-3 font-medium text-slate-700">${r.leader_name}</td>
-            <td class="p-3 text-center font-bold ${r.days_overdue > 0 ? 'text-red-600' : 'text-slate-600'}">${r.days_overdue > 0 ? r.days_overdue + ' ngày' : 'Trong hạn'}</td>
-            <td class="p-3 font-medium">${r.expected_product}</td>
-            <td class="p-3 text-center">${badge}</td>
-            <td class="p-3 text-center space-x-1">
-              <button onclick="openTTInterveneModal('${r.task_id}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded text-[11px]">Can thiệp / Giao việc</button>
-              <button onclick="openDirectiveModal('${r.task_id}', '${escapeHtml(r.task_title)}')" class="bg-red-800 hover:bg-red-900 text-white px-2.5 py-1 rounded text-[11px] font-semibold">Chỉ đạo trực tuyến</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function openTTInterveneModal(taskId) {
-      document.getElementById("ttInterveneTaskId").value = taskId;
-      const cvs = globalAccounts.filter(a => a.role_group === 'CHUYEN_VIEN');
-      const leaders = globalAccounts.filter(a => a.role_group === 'LANH_DAO_VP');
-      
-      document.getElementById("ttInterveneCVSelect").innerHTML = cvs.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
-      document.getElementById("ttInterveneLeaderSelect").innerHTML = leaders.map(l => `<option value="${l.id}">${l.full_name} (${l.position_title})</option>`).join('');
-      document.getElementById("ttInterveneModal").classList.remove("hidden");
-    }
-
-    function closeTTInterveneModal() {
-      document.getElementById("ttInterveneModal").classList.add("hidden");
-    }
-
-    async function submitTTIntervene() {
-      const taskId = document.getElementById("ttInterveneTaskId").value;
-      const cvId = document.getElementById("ttInterveneCVSelect").value;
-      const leaderId = document.getElementById("ttInterveneLeaderSelect").value;
-
-      await dbClient.from('tasks').update({
-        assigned_to: cvId,
-        leader_in_charge: leaderId,
-        status: 'CHO_TIEP_NHAN',
-        warning_count: 0,
-        reject_reason: null
-      }).eq('id', taskId);
-
-      alert("Thường trực Tỉnh ủy đã can thiệp giao việc trực tiếp!");
-      closeTTInterveneModal();
-      loadLeaderDashboard();
-    }
-
-    // 6. CHAT REAL-TIME
+    // 5. CHAT REAL-TIME & THÔNG BÁO TỨC THÌ (TOAST + BUBBLE)
     function setupRealtimeDirectives() {
       if (realtimeChannel) realtimeChannel.unsubscribe();
 
-      realtimeChannel = dbClient.channel('realtime_directives')
+      realtimeChannel = dbClient.channel('realtime_directives_feed')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'task_directives' }, async (payload) => {
           if (payload.eventType === 'INSERT') {
             const newMsg = payload.new;
-            if (currentChatTaskId === newMsg.task_id) {
-              await loadDirectives(currentChatTaskId, false);
-            } else if (newMsg.sender_id !== loggedInUser.id) {
+
+            // Nếu tin nhắn do người khác gửi đến
+            if (newMsg.sender_id !== loggedInUser.id) {
+              const sender = globalAccounts.find(a => a.id === newMsg.sender_id);
+              const senderName = sender ? sender.full_name : "Cán bộ cấp trên";
+
+              // Tìm tên nhiệm vụ liên quan
+              const { data: tData } = await dbClient.from('tasks').select('title').eq('id', newMsg.task_id).single();
+              const taskTitle = tData ? tData.title : "Nhiệm vụ Tỉnh ủy";
+
+              // Hiển thị Toast thông báo nổi kèm âm thanh
+              showNotificationToast(senderName, taskTitle, newMsg.content, newMsg.task_id);
+
               unreadChatCount++;
               updateChatBubbleBadge();
+            }
+
+            // Nếu đang mở đúng ô chat nhiệm vụ đó thì nạp thêm tin nhắn tức thì
+            if (currentChatTaskId === newMsg.task_id) {
+              await loadDirectives(currentChatTaskId, false);
             }
           } else if (payload.eventType === 'UPDATE') {
             if (currentChatTaskId === payload.new.task_id) {
@@ -1275,7 +1414,7 @@
       }
     }
 
-    // 7. NỘP MINH CHỨNG
+    // 6. NỘP MINH CHỨNG
     function openEvidenceModal(taskId) {
       document.getElementById("evidenceTaskId").value = taskId;
       document.getElementById("evidenceModal").classList.remove("hidden");
