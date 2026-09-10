@@ -670,7 +670,7 @@
 
     async function handleTTGiaoViec(e) {
       e.preventDefault();
-      const mode = document.getElementById("ttAssignMode").value;
+      if (!document.getElementById("ttDeadline").value || new Date(document.getElementById("ttDeadline").value) <= new Date()) { alert("Hạn hoàn thành phải là một thời điểm ở tương lai (sau thời điểm hiện tại). Vui lòng kiểm tra lại Hạn hoàn thành (Deadline)."); return; } const mode = document.getElementById("ttAssignMode").value;
       let assigned_to = null;
       let leader_in_charge = null;
 
@@ -779,7 +779,7 @@
             </td>
             <td class="p-3 font-semibold">${r.owner_name} <br><span class="text-[10px] text-slate-500 font-normal">${r.owner_org}</span></td>
             <td class="p-3 font-medium text-slate-700">${r.leader_name}</td>
-            <td class="p-3 text-center font-bold ${r.days_overdue > 0 ? 'text-red-600' : 'text-slate-600'}">${r.days_overdue > 0 ? r.days_overdue + ' ngày' : 'Trong hạn'}</td>
+            <td class="p-3 text-center font-bold ${new Date(r.deadline) < new Date() ? 'text-red-600' : 'text-slate-600'}">${new Date(r.deadline) < new Date() ? Math.max(1, Math.ceil((new Date() - new Date(r.deadline)) / (1000 * 60 * 60 * 24))) + ' ngày' : 'Trong hạn'}</td>
             <td class="p-3 font-medium text-slate-700 max-w-[200px] truncate" title="${escapeHtml(r.expected_product)}">${escapeHtml(r.expected_product)}</td>
             <td class="p-3 text-center">${badge}</td>
             <td class="p-3 text-center space-x-1 whitespace-nowrap">
@@ -1030,7 +1030,7 @@
 
     async function handleGiaoViec(e) {
       e.preventDefault();
-      const cvId = document.getElementById("taskAssignSelect").value;
+      if (!document.getElementById("taskDeadline").value || new Date(document.getElementById("taskDeadline").value) <= new Date()) { alert("Hạn hoàn thành phải là một thời điểm ở tương lai (sau thời điểm hiện tại). Vui lòng kiểm tra lại Hạn hoàn thành (Deadline)."); return; } const cvId = document.getElementById("taskAssignSelect").value;
       const payload = {
         title: document.getElementById("taskTitle").value,
         resolution_code: document.getElementById("taskResCode").value,
@@ -1177,7 +1177,7 @@
             <td class="p-3 font-medium text-slate-700">${t.leader?.full_name || 'Chưa chỉ định'}</td>
             <td class="p-3 text-slate-600">${t.expected_product}</td>
             <td class="p-3 font-bold ${t.priorityWeight === 1 ? 'text-red-700' : (t.priorityWeight === 2 ? 'text-amber-700' : 'text-slate-700')}">${new Date(t.deadline).toLocaleString('vi-VN')}</td>
-            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'DANG_THUC_HIEN' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}">${t.status}</span></td>
+            <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'DANG_THUC_HIEN' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}">${taskStatusLabel(t.status)}</span></td>
             <td class="p-3 text-center">${actionCell}</td>
           </tr>
         `;
@@ -1199,7 +1199,7 @@
         warnDiv.classList.add("hidden");
       }
 
-      document.getElementById("rejectReasonBox").classList.add("hidden");
+      if (new Date(task.deadline) < new Date()) { const wd = document.getElementById("warningNoticeDiv"); const extra = "LƯU Ý: Hạn hoàn thành của nhiệm vụ này đã ở trong quá khứ (đã quá hạn ngay từ khi giao việc) — đề nghị phản ánh lại với Lãnh đạo để xác nhận hạn chót chính xác."; wd.innerText = wd.classList.contains("hidden") ? extra : (extra + " " + wd.innerText); wd.classList.remove("hidden"); } document.getElementById("rejectReasonBox").classList.add("hidden");
       document.getElementById("btnConfirmReject").classList.add("hidden");
       document.getElementById("btnAcceptTask").classList.remove("hidden");
       document.getElementById("btnRejectToggle").classList.remove("hidden");
@@ -1426,7 +1426,7 @@
       const taskId = document.getElementById("evidenceTaskId").value;
       const title = document.getElementById("evidenceTitle").value.trim();
       const link = document.getElementById("evidenceLink").value.trim();
-      if (!title || !link) { alert("Vui lòng nhập đủ thông tin!"); return; }
+      if (!title || !link) { alert("Vui lòng nhập đủ thông tin!"); return; } if (!/^https?:\/\/.+/i.test(link)) { alert("Đường dẫn tài liệu đính kèm không hợp lệ. Vui lòng nhập đường dẫn bắt đầu bằng http:// hoặc https://"); return; }
 
       await dbClient.from('task_evidences').insert([{
         task_id: taskId,
@@ -1441,7 +1441,7 @@
       loadChuyenVienData();
     }
 
-    function escapeHtml(text) {
+    function taskStatusLabel(status) { const map = {'CHUA_GIAO':'Chưa giao việc','CHO_TIEP_NHAN':'Chờ tiếp nhận','TU_CHOI_TIEP_NHAN':'Đã từ chối (chờ xét)','DANG_THUC_HIEN':'Đang thực hiện','CHO_DUYET':'Đã nộp - chờ duyệt','HOAN_THANH':'Đã hoàn thành'}; return map[status] || status; } function escapeHtml(text) {
       if (!text) return "";
       return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
