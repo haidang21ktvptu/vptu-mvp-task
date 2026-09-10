@@ -474,7 +474,7 @@
   </div>
 
   <!-- BONG BÓNG NHẮN TIN RIÊNG (TÁCH BIỆT VỚI CHỈ ĐẠO TRỰC TIẾP) -->
-  <div id="dmBubbleLauncher" onclick="openDMPicker()" class="fixed bottom-24 right-5 z-40 cursor-pointer bg-slate-700 hover:bg-slate-800 text-white p-3 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white transition-all transform hover:scale-105">
+  <div id="dmBubbleLauncher" onclick="openDMPicker()" class="fixed bottom-24 right-5 z-40 hidden cursor-pointer bg-slate-700 hover:bg-slate-800 text-white p-3 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white transition-all transform hover:scale-105"
     <span class="text-base">✉️</span>
     <span class="text-xs font-bold">Nhắn tin</span>
     <span id="dmBubbleBadge" class="hidden bg-yellow-400 text-slate-900 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full animate-bounce">0</span>
@@ -685,6 +685,7 @@
     function initUserInterface() {
       document.getElementById("loginSection").classList.add("hidden");
       document.getElementById("mainHeader").classList.remove("hidden");
+      document.getElementById("dmBubbleLauncher").classList.remove("hidden");
       document.getElementById("currentUserDisplay").innerText = loggedInUser.full_name + " (" + loggedInUser.position_title + ")";
       
       let roleLabel = "";
