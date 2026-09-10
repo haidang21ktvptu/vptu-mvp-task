@@ -9,7 +9,6 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-  <!-- HEADER -->
   <header class="bg-red-800 text-white shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
@@ -29,7 +28,7 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- 1. PHÂN HỆ DASHBOARD NGOẠI LỆ CHO LÃNH ĐẠO -->
+    <!-- 1. DASHBOARD LÃNH ĐẠO -->
     <section id="viewLeader" class="space-y-6">
       <div class="flex justify-between items-center border-b pb-3">
         <div>
@@ -39,7 +38,6 @@
         <button onclick="loadLeaderDashboard()" class="text-xs bg-slate-200 hover:bg-slate-300 font-semibold px-3 py-1.5 rounded">Làm mới dữ liệu</button>
       </div>
 
-      <!-- 4 THẺ CHỈ SỐ -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-slate-400">
           <p class="text-xs font-semibold text-slate-500 uppercase">Tổng số việc</p>
@@ -59,7 +57,6 @@
         </div>
       </div>
 
-      <!-- BẢNG NGOẠI LỆ 4 CỘT -->
       <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div class="p-4 bg-slate-50 border-b">
           <h3 class="text-sm font-bold text-red-700 uppercase">Danh Sách Điểm Nghẽn / Ngoại Lệ Cần Thường Trực Chỉ Đạo</h3>
@@ -85,10 +82,9 @@
       </div>
     </section>
 
-    <!-- 2. PHÂN HỆ VĂN PHÒNG TỈNH ỦY (GIAO VIỆC & DUYỆT) -->
+    <!-- 2. VĂN PHÒNG TỈNH ỦY -->
     <section id="viewAdmin" class="space-y-6 hidden">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Form giao việc -->
         <div class="bg-white p-5 rounded-lg shadow-sm border lg:col-span-1">
           <h3 class="text-sm font-bold text-slate-900 uppercase border-b pb-2 mb-4">Giao Nhiệm Vụ Mới</h3>
           <form id="createTaskForm" onsubmit="handleCreateTask(event)" class="space-y-3 text-xs">
@@ -109,7 +105,7 @@
               <input type="text" id="taskProduct" required class="w-full border rounded p-2 mt-1" placeholder="VD: Tờ trình Ban Thường vụ...">
             </div>
             <div>
-              <label class="font-medium text-slate-700">Mốc nhận V-Office (Bắt đầu tính giờ) *</label>
+              <label class="font-medium text-slate-700">Mốc nhận V-Office *</label>
               <input type="datetime-local" id="taskVOfficeDate" required class="w-full border rounded p-2 mt-1">
             </div>
             <div>
@@ -128,7 +124,6 @@
           </form>
         </div>
 
-        <!-- Danh sách chờ duyệt -->
         <div class="bg-white p-5 rounded-lg shadow-sm border lg:col-span-2 space-y-4">
           <h3 class="text-sm font-bold text-slate-900 uppercase border-b pb-2">Danh Sách Chờ Duyệt Minh Chứng Để Đóng Việc</h3>
           <div class="overflow-x-auto">
@@ -150,7 +145,7 @@
       </div>
     </section>
 
-    <!-- 3. PHÂN HỆ ĐƠN VỊ THỰC HIỆN -->
+    <!-- 3. ĐƠN VỊ THỰC HIỆN -->
     <section id="viewExecutor" class="space-y-6 hidden">
       <div class="bg-white p-5 rounded-lg shadow-sm border">
         <h3 class="text-sm font-bold text-slate-900 uppercase border-b pb-2 mb-4">Nhiệm Vụ Được Giao & Nộp Sản Phẩm Đầu Ra</h3>
@@ -175,7 +170,6 @@
 
   </main>
 
-  <!-- MODAL NỘP MINH CHỨNG -->
   <div id="evidenceModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50 p-4">
     <div class="bg-white rounded-lg max-w-md w-full p-5 space-y-3">
       <h3 class="text-sm font-bold text-slate-900 uppercase">Nộp Minh Chứng Hoàn Thành</h3>
@@ -196,13 +190,11 @@
   </div>
 
   <script>
-    // CẤU HÌNH SUPABASE ĐÃ ĐƯỢC ĐIỀN CHUẨN XÁC VỚI KEY CỦA BẠN
     const SUPABASE_URL = "https://frwyxcmbonjaimziiuqr.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyd3l4Y21ib25qYWltemlpdXFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMjY4NzAsImV4cCI6MjEwNDYwMjg3MH0.X1QzQn39OhCis8wvDsU_l6npGFCCFhGScxBMPKQANHg";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // CHUYỂN ĐỔI VAI TRÒ
     function switchRole(role) {
       document.getElementById("viewLeader").classList.toggle("hidden", role !== "LEADER");
       document.getElementById("viewAdmin").classList.toggle("hidden", role !== "VPTU_ADMIN");
@@ -212,9 +204,8 @@
       if (role === "EXECUTOR") loadExecutorTasks();
     }
 
-    // 1. TẢI DASHBOARD LÃNH ĐẠO
     async function loadLeaderDashboard() {
-      const { data, error } = await supabase.from('view_exception_dashboard').select('*');
+      const { data, error } = await dbClient.from('view_exception_dashboard').select('*');
       if (error) {
         console.error("Lỗi:", error);
         return;
@@ -251,9 +242,8 @@
       `).join('');
     }
 
-    // 2. TẢI DỮ LIỆU VĂN PHÒNG TỈNH ỦY
     async function loadAdminData() {
-      let { data: users } = await supabase.from('users_departments').select('*');
+      let { data: users } = await dbClient.from('users_departments').select('*');
       const select = document.getElementById("taskOwnerSelect");
       if (users && users.length > 0) {
         select.innerHTML = users.map(u => `<option value="${u.id}">${u.organization_name} - ${u.full_name}</option>`).join('');
@@ -261,7 +251,7 @@
         select.innerHTML = `<option value="">Chưa có danh mục đơn vị</option>`;
       }
 
-      const { data: pendingTasks } = await supabase.from('tasks').select('*, users_departments(organization_name), task_evidences(*)').eq('status', 'PENDING_APPROVAL');
+      const { data: pendingTasks } = await dbClient.from('tasks').select('*, users_departments(organization_name), task_evidences(*)').eq('status', 'PENDING_APPROVAL');
       const tbody = document.getElementById("approvalTableBody");
       if (!pendingTasks || pendingTasks.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">Không có hồ sơ nào chờ duyệt.</td></tr>`;
@@ -290,7 +280,7 @@
         competent_authority: document.getElementById("taskAuthority").value,
         status: 'IN_PROGRESS'
       };
-      const { error } = await supabase.from('tasks').insert([payload]);
+      const { error } = await dbClient.from('tasks').insert([payload]);
       if (error) {
         alert("Lỗi: " + error.message);
       } else {
@@ -301,14 +291,13 @@
     }
 
     async function approveTask(id) {
-      await supabase.from('tasks').update({ status: 'COMPLETED', completed_at: new Date().toISOString() }).eq('id', id);
+      await dbClient.from('tasks').update({ status: 'COMPLETED', completed_at: new Date().toISOString() }).eq('id', id);
       alert("Đã duyệt minh chứng hợp lệ. Nhiệm vụ đã chính thức ĐÓNG!");
       loadAdminData();
     }
 
-    // 3. TẢI DỮ LIỆU ĐƠN VỊ THỰC HIỆN
     async function loadExecutorTasks() {
-      const { data: tasks } = await supabase.from('tasks').select('*');
+      const { data: tasks } = await dbClient.from('tasks').select('*');
       const tbody = document.getElementById("executorTableBody");
       if (!tasks || tasks.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Chưa có nhiệm vụ nào.</td></tr>`;
@@ -337,15 +326,14 @@
       const id = document.getElementById("modalTaskId").value;
       const title = document.getElementById("modalDocTitle").value;
       const link = document.getElementById("modalDocLink").value;
-      const { data: u } = await supabase.from('users_departments').select('id').limit(1);
-      await supabase.from('task_evidences').insert([{ task_id: id, uploaded_by: u?.[0]?.id, document_title: title, file_url: link }]);
-      await supabase.from('tasks').update({ status: 'PENDING_APPROVAL' }).eq('id', id);
+      const { data: u } = await dbClient.from('users_departments').select('id').limit(1);
+      await dbClient.from('task_evidences').insert([{ task_id: id, uploaded_by: u?.[0]?.id, document_title: title, file_url: link }]);
+      await dbClient.from('tasks').update({ status: 'PENDING_APPROVAL' }).eq('id', id);
       alert("Đã gửi minh chứng thành công! Chờ duyệt.");
       closeModal();
       loadExecutorTasks();
     }
 
-    // Khởi chạy khi load trang
     window.onload = () => {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
