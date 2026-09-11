@@ -335,3 +335,14 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
   * Tự động xác định danh sách cán bộ thuộc quyền quản lý: Chánh Văn phòng thấy 48 cán bộ trong cơ quan; Phó Chánh Văn phòng chỉ thấy cán bộ thuộc khối phụ trách liên kết qua `manager_id`.
   * Bảng thống kê tiến độ cán bộ: Hiển thị các chỉ số KPI trực quan: *Tổng nhận, Trong hạn, Gần hạn (≤ 3 ngày), Quá hạn, Đang làm, Hoàn thành*.
   * Tương tác chi tiết nhiệm vụ: Nhấp vào tên cán bộ (hoặc nút "Chi tiết việc") sẽ mở rộng bảng chi tiết bên dưới (`#a1StaffDetailBox`), hiển thị danh sách toàn bộ các nhiệm vụ, số hiệu văn bản, sản phẩm đầu ra, deadline, thanh trạng thái và cho phép can thiệp / trao đổi chỉ đạo trực tiếp.
+---
+
+### 6.5. Tái cấu trúc Tab 2 của Lãnh đạo Văn phòng (A1) sang Cây Phân Cấp Trực Thuộc 1 Cấp (N+1 Tree View)
+
+- **Nguyên lý hiển thị:** Triệt tiêu việc liệt kê phẳng 48 cán bộ cùng lúc; chuyển sang mô hình cây phân cấp đúng 1 cấp trực tiếp.
+- **Trải nghiệm phân cấp:**
+  * **Chánh Văn phòng (`levanmieu`):** Mặc định chỉ hiển thị 4 đồng chí Phó Chánh Văn phòng (A1) phụ trách từng khối chuyên môn kèm KPI tổng của cả khối.
+  * **Tương tác mở rộng tầng 1:** Nhấp vào Phó Chánh Văn phòng bất kỳ $\rightarrow$ bung ra các Trưởng phòng chuyên môn (A2) thuộc khối đó.
+  * **Tương tác mở rộng tầng 2:** Nhấp vào Trưởng phòng bất kỳ $\rightarrow$ bung ra danh sách Cán bộ/Chuyên viên (A3) trong phòng.
+  * **Phó Chánh Văn phòng:** Khi đăng nhập vào Tab 2 sẽ thấy trực tiếp danh sách các Trưởng phòng thuộc khối quản lý của mình.
+  * **Xem chi tiết nhiệm vụ:** Bấm vào tên cán bộ bất kỳ để mở bảng chi tiết nhiệm vụ bên dưới (`#a1StaffDetailBox`).
