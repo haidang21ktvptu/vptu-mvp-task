@@ -274,3 +274,48 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 ---
 
 *File này được Claude tạo trực tiếp trên GitHub theo yêu cầu của người dùng, tổng hợp từ lịch sử commit thật (`git log`/`git diff`) và trạng thái schema Supabase thật tại thời điểm viết (truy vấn trực tiếp `information_schema`, `pg_tables`, `pg_publication_tables`, `pg_get_viewdef`) — không phải suy diễn từ trí nhớ hội thoại.*
+---
+
+## 6. Nhật ký cập nhật chuyển đổi mô hình phân quyền 3 tầng nội bộ VPTU (Commit bởi Gemini)
+
+> Mốc thời gian: 11/09/2026  
+> Phạm vi: Dọn dẹp toàn bộ dữ liệu mẫu, chuẩn hóa cơ sở dữ liệu cho 49 cán bộ Văn phòng Tỉnh ủy và tái cấu trúc cây phân quyền 3 tầng (A1, A2, A3).
+
+### 6.1. Dọn dẹp CSDL và Tái cấu trúc Schema Supabase
+
+1. **Làm sạch CSDL (Truncate Data):**
+   - Đã xóa sạch toàn bộ dữ liệu mẫu thử nghiệm trên các bảng: `tasks`, `task_directives`, `direct_messages`, `task_evidences`, và `accounts`.
+   - Đã xóa vĩnh viễn bảng rác `users_departments` (bảng tàn dư không còn được sử dụng trong hệ thống).
+2. **Cập nhật cấu trúc bảng `accounts`:**
+   - Thêm cột `department` (`TEXT`) để phân định ranh giới quản lý của các phòng ban.
+   - Cập nhật ràng buộc vai trò: `role_group IN ('A1', 'A2', 'A3')`.
+   - Nạp đủ danh mục 49 cán bộ Văn phòng Tỉnh ủy (mật khẩu mặc định: `123456`).
+   - Cập nhật trường `manager_id` trỏ về đúng các đồng chí Phó Chánh Văn phòng phụ trách từng khối chuyên môn:
+     * Khối Tổng hợp (`TONG_HOP`): phụ trách bởi Đ/c Hoàng Thị Thu Trang (`hoangthithutrang`).
+     * Khối Hành chính - Lưu trữ (`HC_LT`): phụ trách bởi Đ/c Hoàng Văn Kiên (`hoangvankien`).
+     * Khối CĐS - Cơ yếu & Tài chính Đảng (`CDS_CY`, `TAI_CHINH_DANG`): phụ trách bởi Đ/c Phạm Xuân Tùng (`phamxuantung`).
+     * Khối Quản trị (`QUAN_TRI`): phụ trách bởi Đ/c Nông Thị Thùy Trang (`nongthithuytrang`).
+3. **Cập nhật View `view_exception_dashboard`:**
+   - Bổ sung trường `owner_department` để hỗ trợ Lãnh đạo Văn phòng lọc điểm nghẽn theo từng phòng ban.
+
+---
+
+### 6.2. Thay đổi Logic và Giao diện trên `index.html`
+
+1. **Tái cấu trúc 3 tầng phân cấp vai trò:**
+   - **Tầng 1 - Lãnh đạo Văn phòng Tỉnh ủy (`A1` - 5 đồng chí):**
+     * Thay thế vai trò Thường trực Tỉnh ủy cũ.
+     * Chánh Văn phòng (`levanmieu`): Giám sát Dashboard ngoại lệ và điều phối toàn bộ 5 phòng ban.
+     * Các Phó Chánh Văn phòng: Tự động khoanh vùng phạm vi giám sát điểm nghẽn, bảng ngoại lệ và chỉ giao việc trong đúng khối mình phụ trách.
+   - **Tầng 2 - Trưởng phòng chuyên môn (`A2` - 5 đồng chí):**
+     * Thay thế vai trò Lãnh đạo Văn phòng cũ.
+     * Sử dụng giao diện 3 Tab (Giao việc / Theo dõi & Thẩm tra / KPI phòng).
+     * Tab Giao việc: Danh sách cán bộ nhận việc chỉ hiển thị cán bộ thuộc đúng phòng mình.
+     * Tab KPI: Chỉ thống kê khối lượng công việc và tiến độ nội bộ của các cán bộ trong phòng.
+   - **Tầng 3 - Cán bộ / Chuyên viên thực hiện (`A3` - 39 đồng chí):**
+     * Giữ nguyên cơ chế tiếp nhận việc cưỡng bức qua Modal viền đỏ khi đăng nhập.
+     * Danh sách công việc tự động sắp xếp ưu tiên theo Deadline (Quá hạn lên đầu, Gần đến hạn highlight vàng).
+     * Nộp đường dẫn minh chứng sản phẩm để Trưởng phòng thẩm định.
+2. **Kế thừa và bảo toàn các tính năng trước đó:**
+   - Giữ nguyên luồng bình luận chỉ đạo trực tuyến kiểu inline Facebook trực tiếp dưới từng dòng nhiệm vụ (`directiveThreadRowHtml`).
+   - Giữ nguyên hệ thống Nhắn tin riêng tư 1-1 qua bảng `direct_messages`, danh bạ chọn người và bong bóng nhắn tin nổi ở góc dưới.
