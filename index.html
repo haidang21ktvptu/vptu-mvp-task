@@ -83,7 +83,7 @@
           <span>📊</span> Tab 1: Dashboard Quản Trị Ngoại Lệ & Điểm Nghẽn
         </button>
         <button id="tabBtnA1Staffs" onclick="switchA1Tab('staffs')" class="py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none flex items-center gap-1.5">
-          <span>👥</span> Tab 2: Giám Sát Cán Bộ Thuộc Quyền
+          <span>👥</span> Tab 2: Giám Sát Cây Phân Cấp Trực Thuộc
         </button>
       </div>
 
@@ -221,44 +221,25 @@
         </div>
       </div>
 
-      <!-- NỘI DUNG TAB 2: GIÁM SÁT CÁN BỘ THUỘC QUYỀN (MỚI) -->
+      <!-- NỘI DUNG TAB 2: CÂY PHÂN CẤP QUẢN TRỊ TRỰC THUỘC (THIẾT KẾ MỚI) -->
       <div id="tabContentA1Staffs" class="hidden space-y-6">
         <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
             <div>
-              <h3 class="text-xs font-bold text-slate-900 uppercase">Danh Sách Cán Bộ Thuộc Quyền Phụ Trách</h3>
-              <p class="text-[11px] text-slate-500">Bấm vào tên cán bộ để theo dõi tiến độ chi tiết từng nhiệm vụ</p>
+              <h3 class="text-xs font-bold text-slate-900 uppercase" id="a1TreeHeaderTitle">Cây Phân Cấp Trực Thuộc Quản Trị</h3>
+              <p class="text-[11px] text-slate-500" id="a1TreeHeaderDesc">Bấm vào từng cấp để mở rộng danh sách thuộc cấp và chi tiết công việc</p>
             </div>
-            <div class="flex items-center gap-2">
-              <input type="text" id="a1StaffSearch" oninput="filterA1StaffRows()" placeholder="🔍 Tìm tên cán bộ, phòng ban..." class="border rounded px-2.5 py-1 text-xs w-56 focus:outline-none">
-              <button onclick="loadA1StaffsTab()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Làm mới</button>
-            </div>
+            <button onclick="loadA1StaffsTab()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Tải lại cây</button>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr class="bg-slate-100 text-slate-700 uppercase">
-                  <th class="p-3 border-b">Cán bộ thuộc quyền</th>
-                  <th class="p-3 border-b">Phòng ban</th>
-                  <th class="p-3 border-b text-center">Tổng nhận</th>
-                  <th class="p-3 border-b text-center text-green-700">Trong hạn</th>
-                  <th class="p-3 border-b text-center text-amber-600 font-semibold">Gần hạn (≤ 3 ngày)</th>
-                  <th class="p-3 border-b text-center text-red-600 font-bold">Quá hạn</th>
-                  <th class="p-3 border-b text-center">Đang làm</th>
-                  <th class="p-3 border-b text-center text-blue-700 font-bold">Hoàn thành</th>
-                  <th class="p-3 border-b text-center">Hành động</th>
-                </tr>
-              </thead>
-              <tbody id="a1StaffTableBody" class="divide-y divide-slate-200">
-                <tr><td colspan="9" class="p-4 text-center text-slate-400">Đang tổng hợp dữ liệu cán bộ...</td></tr>
-              </tbody>
-            </table>
+          <!-- DANH SÁCH CÂY THƯ MỤC CÁC CẤP -->
+          <div id="a1TreeContainer" class="space-y-3 text-xs">
+            <p class="text-center text-slate-400 py-6">Đang dựng cây phân cấp...</p>
           </div>
         </div>
 
         <!-- BẢNG CHI TIẾT NHIỆM VỤ CỦA CÁN BỘ ĐƯỢC CHỌN (A1) -->
-        <div id="a1StaffDetailBox" class="hidden bg-white p-5 rounded-lg shadow-sm border border-red-200 space-y-3">
+        <div id="a1StaffDetailBox" class="hidden bg-white p-5 rounded-lg shadow-sm border-2 border-red-600 space-y-3">
           <div class="flex justify-between items-center border-b pb-2">
             <div>
               <h4 id="a1StaffDetailTitle" class="text-xs font-bold text-red-800 uppercase">Chi Tiết Nhiệm Vụ Của Cán Bộ</h4>
@@ -269,10 +250,10 @@
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
-                <tr class="bg-slate-50 text-slate-600">
+                <tr class="bg-slate-50 text-slate-600 uppercase">
                   <th class="p-2.5 border-b">Nhiệm vụ & Văn bản</th>
                   <th class="p-2.5 border-b">Sản phẩm đầu ra</th>
-                  <th class="p-2.5 border-b">Hạn chót (Deadline)</th>
+                  <th class="p-2.5 border-b">Hạn chót</th>
                   <th class="p-2.5 border-b text-center">Trạng thái</th>
                   <th class="p-2.5 border-b text-center">Tiến độ hạn</th>
                   <th class="p-2.5 border-b text-center">Thao tác</th>
@@ -617,8 +598,8 @@
 
     let loggedInUser = null;
     let globalAccounts = [];
+    let globalAllTasks = [];
     let a1DashboardRawData = [];
-    let a1SubordinatesList = [];
     let taskPartiesMap = {};
     let directiveUnreadMap = {};
     let dmUnreadMap = {};
@@ -905,34 +886,67 @@
       }).join('');
     }
 
-    // 2.2. NGHIỆP VỤ TAB 2: GIÁM SÁT CÁN BỘ THUỘC QUYỀN (A1)
+    // 2.2. NGHIỆP VỤ TAB 2: CÂY PHÂN CẤP TRỰC THUỘC (HIỂN THỊ CHUẨN 1 CẤP)
     async function loadA1StaffsTab() {
-      const isChief = (loggedInUser.username === 'levanmieu');
-      
-      // Xác định cán bộ thuộc quyền:
-      // Chánh Văn phòng thấy 48 cán bộ còn lại (A2, A3)
-      // Phó Chánh VP thấy các cán bộ có manager_id là mình
-      a1SubordinatesList = globalAccounts.filter(a => {
-        if (a.id === loggedInUser.id) return false;
-        return isChief || a.manager_id === loggedInUser.id;
-      });
-
       const { data: allTasks } = await dbClient.from('tasks').select('*');
-      const now = new Date();
-      const tbody = document.getElementById("a1StaffTableBody");
+      globalAllTasks = allTasks || [];
+      const container = document.getElementById("a1TreeContainer");
+      const isChief = (loggedInUser.username === 'levanmieu');
 
-      if (a1SubordinatesList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Không có cán bộ thuộc khối phụ trách trực tiếp.</td></tr>`;
-        return;
+      if (isChief) {
+        // Chánh Văn phòng: Hiển thị 4 Phó Chánh Văn phòng (Cấp N+1 trực tiếp)
+        document.getElementById("a1TreeHeaderTitle").innerText = "Cây Phân Cấp: Khối Các Phó Chánh Văn Phòng Phụ Trách";
+        document.getElementById("a1TreeHeaderDesc").innerText = "Nhấp vào đồng chí Phó Chánh Văn phòng để xem các Trưởng phòng chuyên môn và phòng ban phụ trách";
+
+        const pcvpList = globalAccounts.filter(a => a.role_group === 'A1' && a.id !== loggedInUser.id);
+        
+        container.innerHTML = pcvpList.map(pcvp => {
+          // Tính tổng KPI toàn khối do PCVP này quản lý
+          const blockStaffs = globalAccounts.filter(a => a.manager_id === pcvp.id);
+          const kpi = calculateGroupKPI(blockStaffs.map(s => s.id));
+
+          return `
+            <div class="border rounded-lg overflow-hidden bg-white shadow-sm">
+              <div onclick="toggleTreeBlock('pcvpBlock-${pcvp.id}', '${pcvp.id}')" class="p-3.5 bg-slate-100 hover:bg-slate-200 cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center gap-2 transition">
+                <div class="flex items-center gap-2">
+                  <span id="icon-pcvpBlock-${pcvp.id}" class="text-sm font-bold text-red-800">▶</span>
+                  <div>
+                    <span class="font-bold text-slate-800 text-xs text-red-900">${pcvp.full_name}</span>
+                    <span class="text-[11px] text-slate-600 font-medium"> — ${pcvp.position_title}</span>
+                  </div>
+                </div>
+                <div class="flex gap-2 text-[10px] items-center">
+                  <span class="px-2 py-0.5 bg-white rounded border font-bold text-slate-700">Tổng việc: ${kpi.total}</span>
+                  <span class="px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded font-semibold">Trong hạn: ${kpi.onTime}</span>
+                  <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-semibold">Gần hạn: ${kpi.warningSoon}</span>
+                  <span class="px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded font-bold">Quá hạn: ${kpi.overdue}</span>
+                  <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-semibold">Hoàn thành: ${kpi.completed}</span>
+                </div>
+              </div>
+              <div id="pcvpBlock-${pcvp.id}" class="hidden p-3 bg-slate-50 border-t space-y-3">
+                <!-- Nội dung các phòng do PCVP này phụ trách sẽ được sinh động khi bấm -->
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        // Phó Chánh Văn phòng: Hiển thị ngay các Trưởng phòng (A2) thuộc khối mình phụ trách
+        document.getElementById("a1TreeHeaderTitle").innerText = "Cây Phân Cấp: Các Trưởng Phòng Chuyên Môn Trực Thuộc Khối";
+        document.getElementById("a1TreeHeaderDesc").innerText = "Nhấp vào Trưởng phòng để theo dõi cán bộ trong phòng và chi tiết nhiệm vụ";
+
+        const myLeaders = globalAccounts.filter(a => a.role_group === 'A2' && a.manager_id === loggedInUser.id);
+        renderDeptLeaderNodes(container, myLeaders);
       }
+    }
 
-      tbody.innerHTML = a1SubordinatesList.map(st => {
-        const staffTasks = (allTasks || []).filter(t => t.assigned_to === st.id);
-        const total = staffTasks.length;
+    // Tính toán KPI cho 1 danh sách ID cán bộ
+    function calculateGroupKPI(staffIds) {
+      let total = 0, onTime = 0, warningSoon = 0, overdue = 0, inProgress = 0, completed = 0;
+      const now = new Date();
 
-        let onTime = 0, warningSoon = 0, overdue = 0, inProgress = 0, completed = 0;
-
-        staffTasks.forEach(t => {
+      globalAllTasks.forEach(t => {
+        if (staffIds.includes(t.assigned_to)) {
+          total++;
           if (t.status === 'HOAN_THANH') {
             completed++;
           } else {
@@ -945,40 +959,117 @@
               else onTime++;
             }
           }
-        });
+        }
+      });
+      return { total, onTime, warningSoon, overdue, inProgress, completed };
+    }
 
-        const searchData = (st.full_name + " " + (DEPT_NAMES[st.department] || '') + " " + st.position_title).toLowerCase();
+    // Toggle khối PCVP (Dành cho Chánh VP)
+    function toggleTreeBlock(blockId, pcvpId) {
+      const block = document.getElementById(blockId);
+      const icon = document.getElementById(`icon-${blockId}`);
+      const isHidden = block.classList.contains("hidden");
+      block.classList.toggle("hidden");
+      icon.innerText = isHidden ? "▼" : "▶";
+
+      if (isHidden) {
+        // Sinh danh sách các Trưởng phòng trực thuộc PCVP này
+        const myLeaders = globalAccounts.filter(a => a.role_group === 'A2' && a.manager_id === pcvpId);
+        renderDeptLeaderNodes(block, myLeaders);
+      }
+    }
+
+    // Hiển thị danh sách các Trưởng phòng (A2)
+    function renderDeptLeaderNodes(targetElement, leadersList) {
+      if (!leadersList || leadersList.length === 0) {
+        targetElement.innerHTML = `<p class="text-slate-400 py-2 italic">Không có phòng ban phụ trách trực thuộc.</p>`;
+        return;
+      }
+
+      targetElement.innerHTML = leadersList.map(ld => {
+        const deptStaffs = globalAccounts.filter(a => a.department === ld.department);
+        const kpi = calculateGroupKPI(deptStaffs.map(s => s.id));
 
         return `
-          <tr data-search="${searchData}" class="hover:bg-slate-50 border-b">
-            <td class="p-3">
-              <a href="javascript:void(0)" onclick='showA1StaffDetail("${st.id}", "${escapeHtml(st.full_name)}", "${escapeHtml(st.position_title)}", "${st.department}")' class="font-bold text-red-800 hover:underline text-xs">
-                ${st.full_name}
-              </a>
-              <div class="text-[10px] text-slate-500">${st.position_title}</div>
-            </td>
-            <td class="p-3 text-slate-600 font-medium">${DEPT_NAMES[st.department] || ''}</td>
-            <td class="p-3 text-center font-bold text-slate-800">${total}</td>
-            <td class="p-3 text-center font-semibold text-green-700">${onTime}</td>
-            <td class="p-3 text-center font-semibold text-amber-600">${warningSoon}</td>
-            <td class="p-3 text-center font-bold text-red-600">${overdue}</td>
-            <td class="p-3 text-center font-medium">${inProgress}</td>
-            <td class="p-3 text-center font-bold text-blue-700">${completed}</td>
-            <td class="p-3 text-center">
-              <button onclick='showA1StaffDetail("${st.id}", "${escapeHtml(st.full_name)}", "${escapeHtml(st.position_title)}", "${st.department}")' class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[11px] font-semibold">
-                Chi tiết việc
-              </button>
-            </td>
-          </tr>
+          <div class="border rounded-lg bg-white overflow-hidden shadow-xs">
+            <div onclick="toggleDeptStaffBlock('deptBlock-${ld.id}', '${ld.department}')" class="p-3 bg-white hover:bg-slate-100 cursor-pointer flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-l-4 border-red-700">
+              <div class="flex items-center gap-2">
+                <span id="icon-deptBlock-${ld.id}" class="text-xs font-bold text-slate-700">▶</span>
+                <div>
+                  <span class="font-bold text-slate-800 text-xs">${DEPT_NAMES[ld.department]}</span>
+                  <span class="text-[11px] text-slate-500"> (Trưởng phòng: <b>${ld.full_name}</b>)</span>
+                </div>
+              </div>
+              <div class="flex gap-2 text-[10px] items-center">
+                <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-bold">Tổng việc: ${kpi.total}</span>
+                <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded font-semibold">Trong hạn: ${kpi.onTime}</span>
+                <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded font-semibold">Gần hạn: ${kpi.warningSoon}</span>
+                <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded font-bold">Quá hạn: ${kpi.overdue}</span>
+                <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-semibold">Hoàn thành: ${kpi.completed}</span>
+              </div>
+            </div>
+            <div id="deptBlock-${ld.id}" class="hidden p-3 bg-slate-50/50 border-t">
+              <!-- Bảng cán bộ trong phòng sẽ được nạp khi bấm -->
+            </div>
+          </div>
         `;
       }).join('');
     }
 
-    function filterA1StaffRows() {
-      const kw = document.getElementById("a1StaffSearch").value.trim().toLowerCase();
-      document.querySelectorAll("#a1StaffTableBody tr[data-search]").forEach(tr => {
-        tr.classList.toggle("hidden", kw && !tr.getAttribute("data-search").includes(kw));
-      });
+    // Toggle danh sách cán bộ trong phòng (A3)
+    function toggleDeptStaffBlock(blockId, department) {
+      const block = document.getElementById(blockId);
+      const icon = document.getElementById(`icon-${blockId}`);
+      const isHidden = block.classList.contains("hidden");
+      block.classList.toggle("hidden");
+      icon.innerText = isHidden ? "▼" : "▶";
+
+      if (isHidden) {
+        const staffs = globalAccounts.filter(a => a.department === department);
+        block.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse bg-white rounded border">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase text-[11px]">
+                  <th class="p-2.5 border-b">Cán bộ / Chuyên viên</th>
+                  <th class="p-2.5 border-b">Chức vụ</th>
+                  <th class="p-2.5 border-b text-center">Tổng việc</th>
+                  <th class="p-2.5 border-b text-center text-green-700">Trong hạn</th>
+                  <th class="p-2.5 border-b text-center text-amber-600">Gần hạn</th>
+                  <th class="p-2.5 border-b text-center text-red-600 font-bold">Quá hạn</th>
+                  <th class="p-2.5 border-b text-center text-blue-700 font-bold">Hoàn thành</th>
+                  <th class="p-2.5 border-b text-center">Hành động</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${staffs.map(st => {
+                  const kpi = calculateGroupKPI([st.id]);
+                  return `
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-2 font-bold text-slate-800">
+                        <a href="javascript:void(0)" onclick='showA1StaffDetail("${st.id}", "${escapeHtml(st.full_name)}", "${escapeHtml(st.position_title)}", "${st.department}")' class="text-red-800 hover:underline">
+                          ${st.full_name}
+                        </a>
+                      </td>
+                      <td class="p-2 text-slate-500">${st.position_title}</td>
+                      <td class="p-2 text-center font-bold">${kpi.total}</td>
+                      <td class="p-2 text-center text-green-700 font-semibold">${kpi.onTime}</td>
+                      <td class="p-2 text-center text-amber-600 font-semibold">${kpi.warningSoon}</td>
+                      <td class="p-2 text-center text-red-600 font-bold">${kpi.overdue}</td>
+                      <td class="p-2 text-center text-blue-700 font-bold">${kpi.completed}</td>
+                      <td class="p-2 text-center">
+                        <button onclick='showA1StaffDetail("${st.id}", "${escapeHtml(st.full_name)}", "${escapeHtml(st.position_title)}", "${st.department}")' class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-0.5 rounded text-[11px]">
+                          Chi tiết việc
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
     }
 
     async function showA1StaffDetail(staffId, staffName, positionTitle, department) {
@@ -991,7 +1082,7 @@
       const tbody = document.getElementById("a1StaffDetailTableBody");
 
       title.innerText = `Danh Sách Nhiệm Vụ Của: ${staffName}`;
-      sub.innerText = `Chức danh: ${positionTitle} — Đơn vị: ${DEPT_NAMES[department] || ''} (Tổng số: ${tasks ? tasks.length : 0} nhiệm vụ)`;
+      sub.innerText = `Chức vụ: ${positionTitle} — Đơn vị: ${DEPT_NAMES[department] || ''} (Tổng số: ${tasks ? tasks.length : 0} nhiệm vụ)`;
       box.classList.remove("hidden");
       box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
