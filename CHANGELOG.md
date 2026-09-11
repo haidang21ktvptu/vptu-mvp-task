@@ -319,3 +319,11 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 2. **Kế thừa và bảo toàn các tính năng trước đó:**
    - Giữ nguyên luồng bình luận chỉ đạo trực tuyến kiểu inline Facebook trực tiếp dưới từng dòng nhiệm vụ (`directiveThreadRowHtml`).
    - Giữ nguyên hệ thống Nhắn tin riêng tư 1-1 qua bảng `direct_messages`, danh bạ chọn người và bong bóng nhắn tin nổi ở góc dưới.
+---
+
+### 6.3. Cập nhật phân quyền Danh bạ Nhắn tin riêng tư (Direct Messages)
+
+- **Quy tắc hiển thị danh bạ (`renderDMPickerList`):**
+  * `A1` (Lãnh đạo Văn phòng): Toàn quyền nhắn tin tới tất cả 48 cán bộ trong cơ quan.
+  * `A2` (Trưởng phòng): Chỉ hiển thị nhóm Lãnh đạo Văn phòng (`A1`) và toàn bộ cán bộ/chuyên viên thuộc phòng mình (`department === loggedInUser.department`). Triệt tiêu việc hiển thị cán bộ phòng khác.
+  * `A3` (Chuyên viên): Chỉ hiển thị các cán bộ và Trưởng phòng trong cùng một phòng (`department === loggedInUser.department`).
