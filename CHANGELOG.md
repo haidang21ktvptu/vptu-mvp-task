@@ -356,3 +356,13 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - **Cơ chế Inline Accordion toàn diện (Không cuộn trang):**
   * **Tại Tab 2 (A1):** Danh sách Cán bộ/Chuyên viên trong phòng khi bấm "Xem chi tiết việc" sẽ bung bảng chi tiết nhiệm vụ **ngay dưới dòng cán bộ đó**. Bấm lần nữa chuyển thành **"✕ Đóng chi tiết"** và thu gọn lại.
   * **Tại Tab 3 KPI (A2 - Trưởng phòng):** Đồng bộ hoàn toàn theo phong cách mới. Thay thế bảng phẳng bằng danh mục cán bộ kèm thanh thống kê KPI (Tổng, Trong hạn, Gần hạn, Quá hạn, Xong); bấm "Xem chi tiết việc" để mở/đóng chi tiết nhiệm vụ ngay tại chỗ dưới chân mỗi cán bộ.
+---
+
+### 6.7. Chuẩn hóa Cơ chế Xem Nhiệm vụ Trực tiếp (Inline Accordion) & Thêm Nút Theo Dõi PCVP
+
+- **Bổ sung quyền theo dõi nhiệm vụ trực tiếp của PCVP:**
+  * Tại Tab 2 (Giám sát cây phân cấp) của Chánh Văn phòng (`levanmieu`): Bổ sung nút **`📌 Việc trực tiếp PCVP (N)`** ngay trên thanh tiêu đề của từng đồng chí Phó Chánh Văn phòng.
+  * Khi bấm vào, hệ thống bung mở ngay khung nhiệm vụ do chính đồng chí PCVP đó phụ trách trực tiếp (`assigned_to === pcvp.id`), giúp Chánh Văn phòng theo dõi tức thời mà không cần điều hướng.
+- **Tái cấu trúc cơ chế xem chi tiết nhiệm vụ sang Accordion Row (Không cuộn trang):**
+  * **Tại Tab 2 của Lãnh đạo VP (A1):** Triệt tiêu việc mở bảng cố định ở đáy trang. Khi bấm **"Chi tiết việc"** của bất kỳ cán bộ nào, dòng nhiệm vụ chi tiết (`<tr id="treeDetailRow-{id}">`) sẽ được chèn và bung mở **ngay sát bên dưới dòng cán bộ đó**. Nút bấm đổi sang trạng thái màu đỏ **"✕ Đóng việc"** để thu gọn khi không còn nhu cầu xem.
+  * **Tại Tab 3 KPI của Trưởng phòng (A2):** Đồng bộ hoàn toàn logic Accordion Row. Thay thế bảng phẳng rời ở đáy bằng cơ chế chèn dòng chi tiết `<tr id="a2KpiDetailRow-{id}">` ngay dưới chân mỗi cán bộ trong phòng, bấm "Chi tiết việc" / "✕ Đóng việc" trực tiếp tại chỗ.
