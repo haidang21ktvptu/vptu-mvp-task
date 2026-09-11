@@ -346,3 +346,13 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
   * **Tương tác mở rộng tầng 2:** Nhấp vào Trưởng phòng bất kỳ $\rightarrow$ bung ra danh sách Cán bộ/Chuyên viên (A3) trong phòng.
   * **Phó Chánh Văn phòng:** Khi đăng nhập vào Tab 2 sẽ thấy trực tiếp danh sách các Trưởng phòng thuộc khối quản lý của mình.
   * **Xem chi tiết nhiệm vụ:** Bấm vào tên cán bộ bất kỳ để mở bảng chi tiết nhiệm vụ bên dưới (`#a1StaffDetailBox`).
+---
+
+### 6.6. Hoàn thiện Trải nghiệm Xem Nhiệm Vụ Inline và Bổ sung quyền theo dõi PCVP
+
+- **Theo dõi nhiệm vụ trực tiếp của PCVP:**
+  * Tại khối của mỗi đồng chí Phó Chánh Văn phòng trên Tab 2 của CVP (`levanmieu`), bổ sung nút **`📌 Việc trực tiếp PCVP (N việc)`**.
+  * Bấm nút này sẽ bung ngay danh sách các nhiệm vụ do chính đ/c PCVP đó phụ trách trực tiếp (`assigned_to === pcvp.id`) mà không cần giao quyền hay ủy quyền.
+- **Cơ chế Inline Accordion toàn diện (Không cuộn trang):**
+  * **Tại Tab 2 (A1):** Danh sách Cán bộ/Chuyên viên trong phòng khi bấm "Xem chi tiết việc" sẽ bung bảng chi tiết nhiệm vụ **ngay dưới dòng cán bộ đó**. Bấm lần nữa chuyển thành **"✕ Đóng chi tiết"** và thu gọn lại.
+  * **Tại Tab 3 KPI (A2 - Trưởng phòng):** Đồng bộ hoàn toàn theo phong cách mới. Thay thế bảng phẳng bằng danh mục cán bộ kèm thanh thống kê KPI (Tổng, Trong hạn, Gần hạn, Quá hạn, Xong); bấm "Xem chi tiết việc" để mở/đóng chi tiết nhiệm vụ ngay tại chỗ dưới chân mỗi cán bộ.
