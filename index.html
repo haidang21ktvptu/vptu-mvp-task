@@ -220,13 +220,13 @@
         </div>
       </div>
 
-      <!-- NỘI DUNG TAB 2: CÂY PHÂN CẤP 1 CẤP (ACCORDION INLINE) -->
+      <!-- NỘI DUNG TAB 2: CÂY PHÂN CẤP 1 CẤP (INLINE ACCORDION) -->
       <div id="tabContentA1Staffs" class="hidden space-y-6">
         <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
             <div>
               <h3 class="text-xs font-bold text-slate-900 uppercase" id="a1TreeHeaderTitle">Cây Phân Cấp Trực Thuộc Quản Trị</h3>
-              <p class="text-[11px] text-slate-500" id="a1TreeHeaderDesc">Nhấp trực tiếp vào cán bộ để mở/đóng chi tiết nhiệm vụ ngay tại chỗ</p>
+              <p class="text-[11px] text-slate-500" id="a1TreeHeaderDesc">Bấm vào cán bộ để mở/đóng chi tiết nhiệm vụ trực tiếp ngay tại chỗ</p>
             </div>
             <button onclick="loadA1StaffsTab()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Tải lại cây</button>
           </div>
@@ -342,19 +342,35 @@
         </div>
       </div>
 
-      <!-- TAB 3: THEO DÕI KPI NỘI BỘ PHÒNG (ACCORDION INLINE MỚI) -->
+      <!-- TAB 3: THEO DÕI KPI NỘI BỘ PHÒNG (ACCORDION ROW TRỰC TIẾP) -->
       <div id="tabContentKPI" class="hidden space-y-6">
         <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
               <h3 class="text-xs font-bold text-slate-900 uppercase" id="kpiSectionTitle">Bảng Tổng Hợp KPI Tiến Độ Phòng</h3>
-              <p class="text-[11px] text-slate-500">Nhấp vào cán bộ để mở/đóng chi tiết nhiệm vụ ngay tại chỗ bên dưới</p>
+              <p class="text-[11px] text-slate-500">Nhấp "Chi tiết việc" để mở xem nhiệm vụ ngay sát bên dưới cán bộ đó</p>
             </div>
             <button onclick="renderKPITab()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Làm mới KPI</button>
           </div>
 
-          <div id="a2KpiListContainer" class="space-y-3 text-xs">
-            <p class="text-center text-slate-400 py-4">Đang tổng hợp dữ liệu KPI...</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 uppercase">
+                  <th class="p-3 border-b">Cán bộ</th>
+                  <th class="p-3 border-b text-center">Tổng nhận</th>
+                  <th class="p-3 border-b text-center text-green-700">Trong hạn</th>
+                  <th class="p-3 border-b text-center text-amber-600">Gần hạn (≤ 3 ngày)</th>
+                  <th class="p-3 border-b text-center text-red-600 font-bold">Quá hạn</th>
+                  <th class="p-3 border-b text-center">Đang làm</th>
+                  <th class="p-3 border-b text-center text-blue-700 font-bold">Đã hoàn thành</th>
+                  <th class="p-3 border-b text-center">Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="a2KpiTableBody" class="divide-y divide-slate-200">
+                <tr><td colspan="8" class="p-4 text-center text-slate-400">Đang tổng hợp dữ liệu KPI...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -382,7 +398,7 @@
       </div>
 
       <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
+        <div class="flex flex-col sm:row justify-between items-start sm:items-center border-b pb-3 gap-2">
           <div>
             <h3 class="text-xs font-bold text-slate-900 uppercase">Danh Sách Nhiệm Vụ Phân Công Cho Tôi</h3>
             <p class="text-[11px] text-slate-500">Sắp xếp ưu tiên: Nhiệm vụ quá hạn và gần đến hạn được hiển thị lên đầu</p>
@@ -820,7 +836,7 @@
       }).join('');
     }
 
-    // 2.2. NGHIỆP VỤ TAB 2: CÂY PHÂN CẤP CỦA A1 (CƠ CHẾ INLINE TOÀN DIỆN)
+    // 2.2. NGHIỆP VỤ TAB 2: CÂY PHÂN CẤP CỦA A1 (CÓ NÚT VIỆC TRỰC TIẾP PCVP & INLINE ACCORDION)
     async function loadA1StaffsTab() {
       const { data: allTasks } = await dbClient.from('tasks').select('*');
       globalAllTasks = allTasks || [];
@@ -829,7 +845,7 @@
 
       if (isChief) {
         document.getElementById("a1TreeHeaderTitle").innerText = "Cây Phân Cấp: Khối Các Phó Chánh Văn Phòng Phụ Trách";
-        document.getElementById("a1TreeHeaderDesc").innerText = "Bấm trực tiếp để xem/đóng Trưởng phòng hoặc xem nhiệm vụ trực tiếp của PCVP";
+        document.getElementById("a1TreeHeaderDesc").innerText = "Nhấp vào đồng chí PCVP để xem Trưởng phòng, hoặc bấm nút đỏ để xem việc trực tiếp của PCVP";
 
         const pcvpList = globalAccounts.filter(a => a.role_group === 'A1' && a.id !== loggedInUser.id);
         
@@ -849,18 +865,20 @@
                   </div>
                 </div>
                 <div class="flex flex-wrap gap-2 text-[10px] items-center">
-                  <span class="px-2 py-0.5 bg-white rounded border font-bold text-slate-700">Khối phụ trách: ${kpiBlock.total} việc</span>
+                  <span class="px-2 py-0.5 bg-white rounded border font-bold text-slate-700">Khối: ${kpiBlock.total} việc</span>
                   <span class="px-2 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded font-semibold">Trong hạn: ${kpiBlock.onTime}</span>
+                  <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-semibold">Gần hạn: ${kpiBlock.warningSoon}</span>
                   <span class="px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded font-bold">Quá hạn: ${kpiBlock.overdue}</span>
-                  <!-- NÚT XEM NHIỆM VỤ TRỰC TIẾP CỦA PCVP (INLINE) -->
-                  <button onclick="toggleInlinePersonalTask('pcvpTaskBox-${pcvp.id}', '${pcvp.id}', '${escapeHtml(pcvp.full_name)}')" class="bg-red-800 hover:bg-red-900 text-white font-bold px-2.5 py-1 rounded shadow-xs ml-1">
+                  <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-semibold">Xong: ${kpiBlock.completed}</span>
+                  <!-- NÚT XEM NHIỆM VỤ TRỰC TIẾP CỦA PCVP (BẬT/TẮT INLINE) -->
+                  <button id="btnPcvpDirect-${pcvp.id}" onclick="toggleInlinePersonalTask('pcvpDirectBox-${pcvp.id}', '${pcvp.id}', '${escapeHtml(pcvp.full_name)}')" class="bg-red-800 hover:bg-red-900 text-white font-bold px-2.5 py-1 rounded shadow ml-1">
                     📌 Việc trực tiếp PCVP (${kpiPersonal.total})
                   </button>
                 </div>
               </div>
 
-              <!-- KHUNG NHIỆM VỤ TRỰC TIẾP CỦA Đ/C PCVP (BẬT/TẮT NGAY DƯỚI) -->
-              <div id="pcvpTaskBox-${pcvp.id}" class="hidden p-3 bg-red-50/40 border-t border-red-200"></div>
+              <!-- KHUNG NHIỆM VỤ TRỰC TIẾP CỦA Đ/C PCVP (BUNG NGAY DƯỚI) -->
+              <div id="pcvpDirectBox-${pcvp.id}" class="hidden p-3 bg-red-50/50 border-t border-red-200"></div>
 
               <!-- KHUNG DANH SÁCH CÁC TRƯỞNG PHÒNG THUỘC KHỐI PCVP -->
               <div id="pcvpBlock-${pcvp.id}" class="hidden p-3 bg-slate-50 border-t space-y-3"></div>
@@ -869,21 +887,27 @@
         }).join('');
       } else {
         document.getElementById("a1TreeHeaderTitle").innerText = "Cây Phân Cấp: Các Trưởng Phòng Chuyên Môn Trực Thuộc Khối";
-        document.getElementById("a1TreeHeaderDesc").innerText = "Bấm trực tiếp để mở/đóng danh sách cán bộ trong phòng";
+        document.getElementById("a1TreeHeaderDesc").innerText = "Nhấp để mở xem cán bộ trong phòng và theo dõi nhiệm vụ trực tiếp";
 
         const myLeaders = globalAccounts.filter(a => a.role_group === 'A2' && a.manager_id === loggedInUser.id);
         renderDeptLeaderNodes(container, myLeaders);
       }
     }
 
-    // Toggle khung nhiệm vụ trực tiếp của PCVP
     async function toggleInlinePersonalTask(containerId, staffId, staffName) {
       const box = document.getElementById(containerId);
+      const btn = document.getElementById(`btnPcvpDirect-${staffId}`);
       const isHidden = box.classList.contains("hidden");
       box.classList.toggle("hidden");
 
+      if (btn) {
+        btn.innerText = isHidden ? "✕ Đóng việc PCVP" : `📌 Việc trực tiếp PCVP (${calculateGroupKPI([staffId]).total})`;
+        btn.classList.toggle("bg-slate-700", isHidden);
+        btn.classList.toggle("bg-red-800", !isHidden);
+      }
+
       if (isHidden) {
-        box.innerHTML = `<p class="text-slate-400 text-center py-2">Đang tải nhiệm vụ trực tiếp...</p>`;
+        box.innerHTML = `<p class="text-slate-400 text-center py-2">Đang tải nhiệm vụ trực tiếp của PCVP...</p>`;
         const staffObj = globalAccounts.find(a => a.id === staffId);
         const html = await generateInlineTasksHtml(staffId, staffName, staffObj?.position_title, staffObj?.department);
         box.innerHTML = html;
@@ -955,9 +979,7 @@
                 <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-semibold">Hoàn thành: ${kpi.completed}</span>
               </div>
             </div>
-            <div id="deptBlock-${ld.id}" class="hidden p-3 bg-slate-50/50 border-t space-y-2">
-              <!-- Bảng danh sách cán bộ dạng Inline -->
-            </div>
+            <div id="deptBlock-${ld.id}" class="hidden p-3 bg-slate-50/50 border-t"></div>
           </div>
         `;
       }).join('');
@@ -972,63 +994,78 @@
 
       if (isHidden) {
         const staffs = globalAccounts.filter(a => a.department === department);
-        block.innerHTML = staffs.map(st => {
-          const kpi = calculateGroupKPI([st.id]);
-          return `
-            <div class="border rounded bg-white overflow-hidden shadow-2xs">
-              <div class="p-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-slate-50">
-                <div>
-                  <span class="font-bold text-slate-800 text-xs">${st.full_name}</span>
-                  <span class="text-[11px] text-slate-500"> — ${st.position_title}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <div class="flex gap-1.5 text-[10px]">
-                    <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-700 font-bold">Tổng: ${kpi.total}</span>
-                    <span class="px-1.5 py-0.5 bg-green-50 text-green-700 rounded">Trong hạn: ${kpi.onTime}</span>
-                    <span class="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded">Gần hạn: ${kpi.warningSoon}</span>
-                    <span class="px-1.5 py-0.5 bg-red-50 text-red-700 rounded font-bold">Quá hạn: ${kpi.overdue}</span>
-                    <span class="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded">Xong: ${kpi.completed}</span>
-                  </div>
-                  <!-- NÚT BẤM BẬT/TẮT CHI TIẾT NGAY TẠI CHỖ -->
-                  <button id="btnToggle-${st.id}" onclick="toggleInlineStaffTask('staffInlineBox-${st.id}', '${st.id}', '${escapeHtml(st.full_name)}', '${escapeHtml(st.position_title)}', '${st.department}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[11px] font-semibold">
-                    Xem chi tiết việc
-                  </button>
-                </div>
-              </div>
-              <div id="staffInlineBox-${st.id}" class="hidden p-3 bg-slate-50 border-t border-slate-200">
-                <!-- Danh sách việc chi tiết của cán bộ xuất hiện ngay đây -->
-              </div>
-            </div>
-          `;
-        }).join('');
+        block.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse bg-white rounded border">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase text-[11px]">
+                  <th class="p-2.5 border-b">Cán bộ / Chuyên viên</th>
+                  <th class="p-2.5 border-b">Chức vụ</th>
+                  <th class="p-2.5 border-b text-center">Tổng việc</th>
+                  <th class="p-2.5 border-b text-center text-green-700">Trong hạn</th>
+                  <th class="p-2.5 border-b text-center text-amber-600">Gần hạn</th>
+                  <th class="p-2.5 border-b text-center text-red-600 font-bold">Quá hạn</th>
+                  <th class="p-2.5 border-b text-center text-blue-700 font-bold">Hoàn thành</th>
+                  <th class="p-2.5 border-b text-center">Hành động</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${staffs.map(st => {
+                  const kpi = calculateGroupKPI([st.id]);
+                  return `
+                    <tr class="hover:bg-slate-50">
+                      <td class="p-2 font-bold text-slate-800">${st.full_name}</td>
+                      <td class="p-2 text-slate-500">${st.position_title}</td>
+                      <td class="p-2 text-center font-bold">${kpi.total}</td>
+                      <td class="p-2 text-center text-green-700 font-semibold">${kpi.onTime}</td>
+                      <td class="p-2 text-center text-amber-600 font-semibold">${kpi.warningSoon}</td>
+                      <td class="p-2 text-center text-red-600 font-bold">${kpi.overdue}</td>
+                      <td class="p-2 text-center text-blue-700 font-bold">${kpi.completed}</td>
+                      <td class="p-2 text-center">
+                        <button id="btnToggleTree-${st.id}" onclick="toggleTableRowAccordion('treeDetailRow-${st.id}', '${st.id}', '${escapeHtml(st.full_name)}', '${escapeHtml(st.position_title)}', '${st.department}', 'btnToggleTree-${st.id}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[11px] font-semibold">
+                          Chi tiết việc
+                        </button>
+                      </td>
+                    </tr>
+                    <!-- DÒNG INLINE BUNG RA NGAY DƯỚI CÁN BỘ ĐÓ -->
+                    <tr id="treeDetailRow-${st.id}" class="hidden bg-slate-50/80">
+                      <td colspan="8" class="p-3 border-b" id="treeDetailContainer-${st.id}"></td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
       }
     }
 
-    // Toggle hiển thị chi tiết nhiệm vụ của Cán bộ (Inline)
-    async function toggleInlineStaffTask(containerId, staffId, staffName, posTitle, dept) {
-      const box = document.getElementById(containerId);
-      const btn = document.getElementById(`btnToggle-${staffId}`);
-      const isHidden = box.classList.contains("hidden");
-      box.classList.toggle("hidden");
+    // Toggle dòng Accordion trong Table (dùng chung cho cả CVP và Trưởng phòng)
+    async function toggleTableRowAccordion(rowId, staffId, staffName, posTitle, dept, btnId) {
+      const row = document.getElementById(rowId);
+      const btn = document.getElementById(btnId);
+      const isHidden = row.classList.contains("hidden");
+      row.classList.toggle("hidden");
 
       if (btn) {
-        btn.innerText = isHidden ? "✕ Đóng chi tiết" : "Xem chi tiết việc";
+        btn.innerText = isHidden ? "✕ Đóng việc" : "Chi tiết việc";
         btn.classList.toggle("bg-red-800", isHidden);
         btn.classList.toggle("bg-slate-700", !isHidden);
       }
 
       if (isHidden) {
-        box.innerHTML = `<p class="text-slate-400 text-center py-2">Đang tải nhiệm vụ...</p>`;
+        const container = row.querySelector("td");
+        container.innerHTML = `<p class="text-slate-400 text-center py-2">Đang tải nhiệm vụ của cán bộ...</p>`;
         const html = await generateInlineTasksHtml(staffId, staffName, posTitle, dept);
-        box.innerHTML = html;
+        container.innerHTML = html;
       }
     }
 
-    // Hàm chung tạo bảng chi tiết nhiệm vụ Inline
+    // Hàm tạo bảng chi tiết nhiệm vụ
     async function generateInlineTasksHtml(staffId, staffName, positionTitle, department) {
       const { data: tasks } = await dbClient.from('tasks').select('*').eq('assigned_to', staffId).order('deadline', { ascending: true });
       if (!tasks || tasks.length === 0) {
-        return `<p class="text-slate-400 text-center py-3 italic">Cán bộ hiện chưa có nhiệm vụ nào được phân công.</p>`;
+        return `<p class="text-slate-400 text-center py-3 italic bg-white rounded border">Cán bộ hiện chưa có nhiệm vụ nào được phân công.</p>`;
       }
 
       const now = new Date();
@@ -1070,16 +1107,20 @@
       }).join('');
 
       return `
-        <div class="overflow-x-auto bg-white rounded border">
+        <div class="overflow-x-auto bg-white rounded border p-2 shadow-inner">
+          <div class="text-[11px] font-bold text-slate-700 uppercase mb-1.5 flex justify-between items-center">
+            <span>Danh sách nhiệm vụ: <b class="text-red-800">${staffName}</b> (${positionTitle} - ${DEPT_NAMES[department] || ''})</span>
+            <span class="text-slate-500 font-normal">Tổng: ${tasks.length} nhiệm vụ</span>
+          </div>
           <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="bg-slate-100 text-slate-600 uppercase text-[11px]">
-                <th class="p-2.5 border-b">Nhiệm vụ & Văn bản</th>
-                <th class="p-2.5 border-b">Sản phẩm đầu ra</th>
-                <th class="p-2.5 border-b">Hạn chót</th>
-                <th class="p-2.5 border-b text-center">Trạng thái</th>
-                <th class="p-2.5 border-b text-center">Tiến độ hạn</th>
-                <th class="p-2.5 border-b text-center">Thao tác</th>
+              <tr class="bg-slate-100 text-slate-600 uppercase text-[10px]">
+                <th class="p-2 border-b">Nhiệm vụ & Văn bản</th>
+                <th class="p-2 border-b">Sản phẩm đầu ra</th>
+                <th class="p-2 border-b">Hạn chót</th>
+                <th class="p-2 border-b text-center">Trạng thái</th>
+                <th class="p-2 border-b text-center">Tiến độ hạn</th>
+                <th class="p-2 border-b text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">${rows}</tbody>
@@ -1244,64 +1285,61 @@
       }
     }
 
-    // Tab 3 KPI của Trưởng phòng: Áp dụng Accordion Inline
+    // Tab 3 KPI của Trưởng phòng: Chuẩn hóa Accordion Row ngay dưới chân cán bộ
     async function renderKPITab() {
       const myStaffs = globalAccounts.filter(a => a.department === loggedInUser.department && a.id !== loggedInUser.id);
       const { data: allTasks } = await dbClient.from('tasks').select('*');
       globalAllTasks = allTasks || [];
-      const container = document.getElementById("a2KpiListContainer");
+      const tbody = document.getElementById("a2KpiTableBody");
 
       if (myStaffs.length === 0) {
-        container.innerHTML = `<p class="text-center text-slate-400 py-4 italic">Phòng chưa có cán bộ trực thuộc.</p>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400">Phòng chưa có cán bộ trực thuộc.</td></tr>`;
         return;
       }
 
-      container.innerHTML = myStaffs.map(st => {
-        const kpi = calculateGroupKPI([st.id]);
+      tbody.innerHTML = myStaffs.map(st => {
+        const staffTasks = globalAllTasks.filter(t => t.assigned_to === st.id);
+        const total = staffTasks.length;
+        const now = new Date();
+
+        let onTime = 0, warningSoon = 0, overdue = 0, inProgress = 0, completed = 0;
+
+        staffTasks.forEach(t => {
+          if (t.status === 'HOAN_THANH') {
+            completed++;
+          } else {
+            inProgress++;
+            const dead = new Date(t.deadline);
+            if (now > dead) overdue++;
+            else {
+              const diffDays = (dead - now) / 86400000;
+              if (diffDays <= 3) warningSoon++;
+              else onTime++;
+            }
+          }
+        });
+
         return `
-          <div class="border rounded-lg bg-white overflow-hidden shadow-xs">
-            <div class="p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-slate-50 border-l-4 border-slate-700">
-              <div>
-                <span class="font-bold text-slate-900 text-xs">${st.full_name}</span>
-                <span class="text-[11px] text-slate-500"> — ${st.position_title}</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <div class="flex gap-1.5 text-[10px]">
-                  <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-bold">Tổng: ${kpi.total}</span>
-                  <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded font-semibold">Trong hạn: ${kpi.onTime}</span>
-                  <span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded font-semibold">Gần hạn: ${kpi.warningSoon}</span>
-                  <span class="px-2 py-0.5 bg-red-50 text-red-700 rounded font-bold">Quá hạn: ${kpi.overdue}</span>
-                  <span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-bold">Xong: ${kpi.completed}</span>
-                </div>
-                <!-- NÚT BẬT/TẮT CHI TIẾT NGAY TẠI CHỖ CHO TRƯỞNG PHÒNG -->
-                <button id="btnToggleA2-${st.id}" onclick="toggleInlineStaffTaskA2('a2StaffBox-${st.id}', '${st.id}', '${escapeHtml(st.full_name)}', '${escapeHtml(st.position_title)}', '${st.department}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[11px] font-semibold">
-                  Xem chi tiết việc
-                </button>
-              </div>
-            </div>
-            <div id="a2StaffBox-${st.id}" class="hidden p-3 bg-slate-50 border-t border-slate-200"></div>
-          </div>
+          <tr class="hover:bg-slate-50 border-b">
+            <td class="p-3 font-semibold">${st.full_name} <br><span class="text-[10px] text-slate-500 font-normal">${st.position_title}</span></td>
+            <td class="p-3 text-center font-bold text-slate-800">${total}</td>
+            <td class="p-3 text-center font-semibold text-green-700">${onTime}</td>
+            <td class="p-3 text-center font-semibold text-amber-600">${warningSoon}</td>
+            <td class="p-3 text-center font-bold text-red-600">${overdue}</td>
+            <td class="p-3 text-center font-medium">${inProgress}</td>
+            <td class="p-3 text-center font-bold text-blue-700">${completed}</td>
+            <td class="p-3 text-center">
+              <button id="btnA2Kpi-${st.id}" onclick="toggleTableRowAccordion('a2KpiDetailRow-${st.id}', '${st.id}', '${escapeHtml(st.full_name)}', '${escapeHtml(st.position_title)}', '${st.department}', 'btnA2Kpi-${st.id}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[11px] font-semibold">
+                Chi tiết việc
+              </button>
+            </td>
+          </tr>
+          <!-- DÒNG INLINE BUNG CHI TIẾT NGAY DƯỚI CÁN BỘ ĐÓ (TRƯỞNG PHÒNG) -->
+          <tr id="a2KpiDetailRow-${st.id}" class="hidden bg-slate-50/80">
+            <td colspan="8" class="p-3 border-b"></td>
+          </tr>
         `;
       }).join('');
-    }
-
-    async function toggleInlineStaffTaskA2(containerId, staffId, staffName, posTitle, dept) {
-      const box = document.getElementById(containerId);
-      const btn = document.getElementById(`btnToggleA2-${staffId}`);
-      const isHidden = box.classList.contains("hidden");
-      box.classList.toggle("hidden");
-
-      if (btn) {
-        btn.innerText = isHidden ? "✕ Đóng chi tiết" : "Xem chi tiết việc";
-        btn.classList.toggle("bg-red-800", isHidden);
-        btn.classList.toggle("bg-slate-700", !isHidden);
-      }
-
-      if (isHidden) {
-        box.innerHTML = `<p class="text-slate-400 text-center py-2">Đang tải nhiệm vụ...</p>`;
-        const html = await generateInlineTasksHtml(staffId, staffName, posTitle, dept);
-        box.innerHTML = html;
-      }
     }
 
     // 4. NGHIỆP VỤ TẦNG 3: CÁN BỘ / CHUYÊN VIÊN (A3)
