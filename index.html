@@ -38,7 +38,7 @@
       <form onsubmit="handleLogin(event)" class="space-y-3 text-xs">
         <div>
           <label class="font-semibold text-slate-700">Tài khoản đăng nhập *</label>
-          <input type="text" id="loginUsername" required class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Tài khoản (VD: levanmieu, macthuylinh, buibahaidang)">
+          <input type="text" id="loginUsername" required class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Tài khoản (VD: levanmieu, hoangthithutrang, buivanhau)">
         </div>
         <div>
           <label class="font-semibold text-slate-700">Mật khẩu *</label>
@@ -77,134 +77,210 @@
 
     <!-- 1. TẦNG 1: GIAO DIỆN LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY (A1) -->
     <section id="viewThuongTruc" class="space-y-6 hidden">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-3 gap-3">
-        <div>
-          <h2 class="text-base md:text-lg font-bold text-slate-900 uppercase">Dashboard Quản Trị Ngoại Lệ (Lãnh Đạo Văn Phòng)</h2>
-          <p class="text-xs text-slate-500">Giám sát các điểm nghẽn, giao việc chỉ đạo và can thiệp điều chuyển nhiệm vụ</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="toggleA1GiaoViec()" class="text-xs bg-red-800 hover:bg-red-900 text-white font-semibold px-3 py-1.5 rounded shadow">+ Giao Việc Mới</button>
-          <button onclick="loadA1Dashboard()" class="text-xs bg-slate-200 hover:bg-slate-300 font-semibold px-3 py-1.5 rounded">Làm mới</button>
-        </div>
+      <!-- THANH ĐIỀU HƯỚNG TAB CỦA LÃNH ĐẠO VP -->
+      <div class="flex border-b border-slate-200 gap-2">
+        <button id="tabBtnA1Dashboard" onclick="switchA1Tab('dashboard')" class="py-2.5 px-4 text-xs font-bold border-b-2 border-red-800 text-red-800 focus:outline-none flex items-center gap-1.5">
+          <span>📊</span> Tab 1: Dashboard Quản Trị Ngoại Lệ & Điểm Nghẽn
+        </button>
+        <button id="tabBtnA1Staffs" onclick="switchA1Tab('staffs')" class="py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none flex items-center gap-1.5">
+          <span>👥</span> Tab 2: Giám Sát Cán Bộ Thuộc Quyền
+        </button>
       </div>
 
-      <!-- FORM LÃNH ĐẠO VP GIAO VIỆC MỚI -->
-      <div id="a1GiaoViecBox" class="hidden bg-white p-5 rounded-lg shadow border border-red-200">
-        <h3 class="text-xs font-bold text-red-800 uppercase mb-3 border-b pb-2">Lãnh Đạo Văn Phòng Giao Việc Mới</h3>
-        <form onsubmit="handleA1GiaoViec(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-          <div class="md:col-span-2">
-            <label class="font-semibold">Nội dung nhiệm vụ *</label>
-            <input type="text" id="a1Title" required class="w-full border rounded p-2 mt-1" placeholder="Nhiệm vụ cần thực hiện...">
-          </div>
+      <!-- NỘI DUNG TAB 1: DASHBOARD NGOẠI LỆ CŨ -->
+      <div id="tabContentA1Dashboard" class="space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-1 gap-3">
           <div>
-            <label class="font-semibold">Số / Ký hiệu Nghị quyết/Văn bản *</label>
-            <input type="text" id="a1ResCode" required class="w-full border rounded p-2 mt-1" placeholder="VD: NQ 57-NQ/TW">
+            <h2 class="text-sm md:text-base font-bold text-slate-900 uppercase">Tình Hình Điểm Nghẽn & Chỉ Đạo Tháo Gỡ</h2>
+            <p class="text-xs text-slate-500">Tự động nhận diện nhiệm vụ chậm tiến độ hoặc từ chối tiếp nhận</p>
           </div>
-          <div>
-            <label class="font-semibold">Phương thức phân công *</label>
-            <select id="a1AssignMode" onchange="handleA1ModeChange(this.value)" class="w-full border rounded p-2 mt-1 bg-white">
-              <option value="TO_LEADER">Giao cho Trưởng phòng chuyên môn</option>
-              <option value="TO_STAFF">Giao trực tiếp cho Cán bộ / Chuyên viên</option>
+          <div class="flex gap-2">
+            <button onclick="toggleA1GiaoViec()" class="text-xs bg-red-800 hover:bg-red-900 text-white font-semibold px-3 py-1.5 rounded shadow">+ Giao Việc Mới</button>
+            <button onclick="loadA1Dashboard()" class="text-xs bg-slate-200 hover:bg-slate-300 font-semibold px-3 py-1.5 rounded">Làm mới</button>
+          </div>
+        </div>
+
+        <!-- FORM LÃNH ĐẠO VP GIAO VIỆC MỚI -->
+        <div id="a1GiaoViecBox" class="hidden bg-white p-5 rounded-lg shadow border border-red-200">
+          <h3 class="text-xs font-bold text-red-800 uppercase mb-3 border-b pb-2">Lãnh Đạo Văn Phòng Giao Việc Mới</h3>
+          <form onsubmit="handleA1GiaoViec(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div class="md:col-span-2">
+              <label class="font-semibold">Nội dung nhiệm vụ *</label>
+              <input type="text" id="a1Title" required class="w-full border rounded p-2 mt-1" placeholder="Nhiệm vụ cần thực hiện...">
+            </div>
+            <div>
+              <label class="font-semibold">Số / Ký hiệu Nghị quyết/Văn bản *</label>
+              <input type="text" id="a1ResCode" required class="w-full border rounded p-2 mt-1" placeholder="VD: NQ 57-NQ/TW">
+            </div>
+            <div>
+              <label class="font-semibold">Phương thức phân công *</label>
+              <select id="a1AssignMode" onchange="handleA1ModeChange(this.value)" class="w-full border rounded p-2 mt-1 bg-white">
+                <option value="TO_LEADER">Giao cho Trưởng phòng chuyên môn</option>
+                <option value="TO_STAFF">Giao trực tiếp cho Cán bộ / Chuyên viên</option>
+              </select>
+            </div>
+            <div id="a1LeaderSelectDiv">
+              <label class="font-semibold">Trưởng phòng phụ trách *</label>
+              <select id="a1LeaderSelect" class="w-full border rounded p-2 mt-1 bg-white"></select>
+            </div>
+            <div id="a1StaffSelectDiv" class="hidden">
+              <label class="font-semibold">Cán bộ / Chuyên viên thực hiện *</label>
+              <select id="a1StaffSelect" class="w-full border rounded p-2 mt-1 bg-white"></select>
+            </div>
+            <div>
+              <label class="font-semibold">01 Sản phẩm đầu ra bắt buộc *</label>
+              <input type="text" id="a1Product" required class="w-full border rounded p-2 mt-1" placeholder="VD: Báo cáo tham mưu, Tờ trình...">
+            </div>
+            <div>
+              <label class="font-semibold">Hạn hoàn thành (Deadline) *</label>
+              <input type="datetime-local" id="a1Deadline" required class="w-full border rounded p-2 mt-1">
+            </div>
+            <div>
+              <label class="font-semibold">Kích hoạt Đỏ Đặc Biệt (ngày trễ) *</label>
+              <input type="number" id="a1CriticalDays" min="1" value="3" required class="w-full border rounded p-2 mt-1">
+            </div>
+            <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t">
+              <button type="button" onclick="toggleA1GiaoViec()" class="px-3 py-1.5 bg-slate-200 rounded">Đóng</button>
+              <button type="submit" class="px-4 py-1.5 bg-red-800 text-white font-bold rounded">Phát Hành Chỉ Đạo</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 4 THẺ THỐNG KÊ -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-slate-400">
+            <p class="text-xs font-semibold text-slate-500 uppercase">Tổng số việc</p>
+            <p id="kpiTotal" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
+            <p class="text-xs font-semibold text-yellow-600 uppercase">Sắp đến hạn (≤ 3 ngày)</p>
+            <p id="kpiYellow" class="text-2xl font-bold text-yellow-600 mt-1">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
+            <p class="text-xs font-semibold text-red-600 uppercase">Quá hạn (Đỏ)</p>
+            <p id="kpiRed" class="text-2xl font-bold text-red-600 mt-1">0</p>
+          </div>
+          <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-700">
+            <p class="text-xs font-semibold text-purple-700 uppercase">Đỏ đặc biệt</p>
+            <p id="kpiSpecialRed" class="text-2xl font-bold text-purple-700 mt-1">0</p>
+          </div>
+        </div>
+
+        <!-- BỘ LỌC ĐIỂM NGHẼN -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border flex flex-col md:flex-row gap-3 items-center text-xs">
+          <div class="flex-1 w-full">
+            <input type="text" id="a1SearchInput" oninput="applyA1Filter()" placeholder="🔍 Tìm nhanh theo tên nhiệm vụ, số văn bản, người thực hiện..." class="w-full border rounded-lg p-2 focus:ring-1 focus:ring-red-600 focus:outline-none">
+          </div>
+          <div class="w-full md:w-56">
+            <select id="a1FilterAlert" onchange="applyA1Filter()" class="w-full border rounded-lg p-2 bg-white">
+              <option value="ALL">-- Tất cả cấp độ cảnh báo --</option>
+              <option value="DO_DAC_BIET">🚨 Đỏ đặc biệt</option>
+              <option value="DO">Quá hạn (Đỏ)</option>
+              <option value="VANG">Sắp đến hạn (≤ 3 ngày)</option>
+              <option value="TU_CHOI">Từ chối tiếp nhận</option>
+              <option value="CHUA_GIAO">Chưa phân công</option>
+              <option value="XANH">Trong hạn bình thường</option>
             </select>
           </div>
-          <div id="a1LeaderSelectDiv">
-            <label class="font-semibold">Trưởng phòng phụ trách *</label>
-            <select id="a1LeaderSelect" class="w-full border rounded p-2 mt-1 bg-white"></select>
+          <div class="w-full md:w-56">
+            <select id="a1FilterDept" onchange="applyA1Filter()" class="w-full border rounded-lg p-2 bg-white">
+              <option value="ALL">-- Tất cả Phòng ban --</option>
+              <option value="TONG_HOP">Phòng Tổng hợp</option>
+              <option value="HC_LT">Phòng HC - LT</option>
+              <option value="CDS_CY">Phòng CĐS - Cơ yếu</option>
+              <option value="TAI_CHINH_DANG">Phòng Tài chính Đảng</option>
+              <option value="QUAN_TRI">Phòng Quản trị</option>
+            </select>
           </div>
-          <div id="a1StaffSelectDiv" class="hidden">
-            <label class="font-semibold">Cán bộ / Chuyên viên thực hiện *</label>
-            <select id="a1StaffSelect" class="w-full border rounded p-2 mt-1 bg-white"></select>
-          </div>
-          <div>
-            <label class="font-semibold">01 Sản phẩm đầu ra bắt buộc *</label>
-            <input type="text" id="a1Product" required class="w-full border rounded p-2 mt-1" placeholder="VD: Báo cáo tham mưu, Tờ trình...">
-          </div>
-          <div>
-            <label class="font-semibold">Hạn hoàn thành (Deadline) *</label>
-            <input type="datetime-local" id="a1Deadline" required class="w-full border rounded p-2 mt-1">
-          </div>
-          <div>
-            <label class="font-semibold">Kích hoạt Đỏ Đặc Biệt (ngày trễ) *</label>
-            <input type="number" id="a1CriticalDays" min="1" value="3" required class="w-full border rounded p-2 mt-1">
-          </div>
-          <div class="md:col-span-3 flex justify-end gap-2 pt-2 border-t">
-            <button type="button" onclick="toggleA1GiaoViec()" class="px-3 py-1.5 bg-slate-200 rounded">Đóng</button>
-            <button type="submit" class="px-4 py-1.5 bg-red-800 text-white font-bold rounded">Phát Hành Chỉ Đạo</button>
-          </div>
-        </form>
-      </div>
+        </div>
 
-      <!-- 4 THẺ THỐNG KÊ -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-slate-400">
-          <p class="text-xs font-semibold text-slate-500 uppercase">Tổng số việc</p>
-          <p id="kpiTotal" class="text-2xl font-bold text-slate-800 mt-1">0</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
-          <p class="text-xs font-semibold text-yellow-600 uppercase">Sắp đến hạn (≤ 3 ngày)</p>
-          <p id="kpiYellow" class="text-2xl font-bold text-yellow-600 mt-1">0</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-red-500">
-          <p class="text-xs font-semibold text-red-600 uppercase">Quá hạn (Đỏ)</p>
-          <p id="kpiRed" class="text-2xl font-bold text-red-600 mt-1">0</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-700">
-          <p class="text-xs font-semibold text-purple-700 uppercase">Đỏ đặc biệt</p>
-          <p id="kpiSpecialRed" class="text-2xl font-bold text-purple-700 mt-1">0</p>
+        <!-- BẢNG NGOẠI LỆ CỦA LÃNH ĐẠO VP -->
+        <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+            <h3 class="text-xs font-bold text-red-700 uppercase">Danh Sách Điểm Nghẽn & Chỉ Đạo Tháo Gỡ</h3>
+            <span id="a1FilterCount" class="text-[11px] text-slate-500 font-medium">Hiển thị 0 nhiệm vụ</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase">
+                  <th class="p-3 border-b">Nhiệm vụ & Điểm nghẽn</th>
+                  <th class="p-3 border-b">Cán bộ thực hiện</th>
+                  <th class="p-3 border-b">Trưởng phòng / LĐ phụ trách</th>
+                  <th class="p-3 border-b text-center">Trễ hạn</th>
+                  <th class="p-3 border-b">Sản phẩm thiếu</th>
+                  <th class="p-3 border-b text-center">Cấp độ cảnh báo</th>
+                  <th class="p-3 border-b text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="exceptionTableBody" class="divide-y divide-slate-200">
+                <tr><td colspan="7" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- BỘ LỌC ĐIỂM NGHẼN -->
-      <div class="bg-white p-4 rounded-lg shadow-sm border flex flex-col md:flex-row gap-3 items-center text-xs">
-        <div class="flex-1 w-full">
-          <input type="text" id="a1SearchInput" oninput="applyA1Filter()" placeholder="🔍 Tìm nhanh theo tên nhiệm vụ, số văn bản, người thực hiện..." class="w-full border rounded-lg p-2 focus:ring-1 focus:ring-red-600 focus:outline-none">
-        </div>
-        <div class="w-full md:w-56">
-          <select id="a1FilterAlert" onchange="applyA1Filter()" class="w-full border rounded-lg p-2 bg-white">
-            <option value="ALL">-- Tất cả cấp độ cảnh báo --</option>
-            <option value="DO_DAC_BIET">🚨 Đỏ đặc biệt</option>
-            <option value="DO">Quá hạn (Đỏ)</option>
-            <option value="VANG">Sắp đến hạn (≤ 3 ngày)</option>
-            <option value="TU_CHOI">Từ chối tiếp nhận</option>
-            <option value="CHUA_GIAO">Chưa phân công</option>
-            <option value="XANH">Trong hạn bình thường</option>
-          </select>
-        </div>
-        <div class="w-full md:w-56">
-          <select id="a1FilterDept" onchange="applyA1Filter()" class="w-full border rounded-lg p-2 bg-white">
-            <option value="ALL">-- Tất cả Phòng ban --</option>
-            <option value="TONG_HOP">Phòng Tổng hợp</option>
-            <option value="HC_LT">Phòng HC - LT</option>
-            <option value="CDS_CY">Phòng CĐS - Cơ yếu</option>
-            <option value="TAI_CHINH_DANG">Phòng Tài chính Đảng</option>
-            <option value="QUAN_TRI">Phòng Quản trị</option>
-          </select>
-        </div>
-      </div>
+      <!-- NỘI DUNG TAB 2: GIÁM SÁT CÁN BỘ THUỘC QUYỀN (MỚI) -->
+      <div id="tabContentA1Staffs" class="hidden space-y-6">
+        <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-slate-900 uppercase">Danh Sách Cán Bộ Thuộc Quyền Phụ Trách</h3>
+              <p class="text-[11px] text-slate-500">Bấm vào tên cán bộ để theo dõi tiến độ chi tiết từng nhiệm vụ</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="a1StaffSearch" oninput="filterA1StaffRows()" placeholder="🔍 Tìm tên cán bộ, phòng ban..." class="border rounded px-2.5 py-1 text-xs w-56 focus:outline-none">
+              <button onclick="loadA1StaffsTab()" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Làm mới</button>
+            </div>
+          </div>
 
-      <!-- BẢNG NGOẠI LỆ CỦA LÃNH ĐẠO VP -->
-      <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-          <h3 class="text-xs font-bold text-red-700 uppercase">Danh Sách Điểm Nghẽn & Chỉ Đạo Tháo Gỡ</h3>
-          <span id="a1FilterCount" class="text-[11px] text-slate-500 font-medium">Hiển thị 0 nhiệm vụ</span>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 uppercase">
+                  <th class="p-3 border-b">Cán bộ thuộc quyền</th>
+                  <th class="p-3 border-b">Phòng ban</th>
+                  <th class="p-3 border-b text-center">Tổng nhận</th>
+                  <th class="p-3 border-b text-center text-green-700">Trong hạn</th>
+                  <th class="p-3 border-b text-center text-amber-600 font-semibold">Gần hạn (≤ 3 ngày)</th>
+                  <th class="p-3 border-b text-center text-red-600 font-bold">Quá hạn</th>
+                  <th class="p-3 border-b text-center">Đang làm</th>
+                  <th class="p-3 border-b text-center text-blue-700 font-bold">Hoàn thành</th>
+                  <th class="p-3 border-b text-center">Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="a1StaffTableBody" class="divide-y divide-slate-200">
+                <tr><td colspan="9" class="p-4 text-center text-slate-400">Đang tổng hợp dữ liệu cán bộ...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-100 text-slate-600 uppercase">
-                <th class="p-3 border-b">Nhiệm vụ & Điểm nghẽn</th>
-                <th class="p-3 border-b">Cán bộ thực hiện</th>
-                <th class="p-3 border-b">Trưởng phòng / LĐ phụ trách</th>
-                <th class="p-3 border-b text-center">Trễ hạn</th>
-                <th class="p-3 border-b">Sản phẩm thiếu</th>
-                <th class="p-3 border-b text-center">Cấp độ cảnh báo</th>
-                <th class="p-3 border-b text-center">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="exceptionTableBody" class="divide-y divide-slate-200">
-              <tr><td colspan="7" class="p-4 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
-            </tbody>
-          </table>
+
+        <!-- BẢNG CHI TIẾT NHIỆM VỤ CỦA CÁN BỘ ĐƯỢC CHỌN (A1) -->
+        <div id="a1StaffDetailBox" class="hidden bg-white p-5 rounded-lg shadow-sm border border-red-200 space-y-3">
+          <div class="flex justify-between items-center border-b pb-2">
+            <div>
+              <h4 id="a1StaffDetailTitle" class="text-xs font-bold text-red-800 uppercase">Chi Tiết Nhiệm Vụ Của Cán Bộ</h4>
+              <p id="a1StaffDetailSubtitle" class="text-[11px] text-slate-500 mt-0.5">--</p>
+            </div>
+            <button onclick="document.getElementById('a1StaffDetailBox').classList.add('hidden')" class="text-xs text-slate-400 hover:text-slate-600 font-bold">✕ Đóng chi tiết</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600">
+                  <th class="p-2.5 border-b">Nhiệm vụ & Văn bản</th>
+                  <th class="p-2.5 border-b">Sản phẩm đầu ra</th>
+                  <th class="p-2.5 border-b">Hạn chót (Deadline)</th>
+                  <th class="p-2.5 border-b text-center">Trạng thái</th>
+                  <th class="p-2.5 border-b text-center">Tiến độ hạn</th>
+                  <th class="p-2.5 border-b text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="a1StaffDetailTableBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -542,6 +618,7 @@
     let loggedInUser = null;
     let globalAccounts = [];
     let a1DashboardRawData = [];
+    let a1SubordinatesList = [];
     let taskPartiesMap = {};
     let directiveUnreadMap = {};
     let dmUnreadMap = {};
@@ -621,6 +698,7 @@
 
       if (loggedInUser.role_group === 'A1') {
         populateA1Selects();
+        switchA1Tab('dashboard');
         loadA1Dashboard();
       } else if (loggedInUser.role_group === 'A2') {
         switchA2Tab('giaoViec');
@@ -631,6 +709,35 @@
     }
 
     // 2. NGHIỆP VỤ TẦNG 1: LÃNH ĐẠO VĂN PHÒNG TỈNH ỦY (A1)
+    function switchA1Tab(tab) {
+      const btnDashboard = document.getElementById("tabBtnA1Dashboard");
+      const btnStaffs = document.getElementById("tabBtnA1Staffs");
+      const contentDashboard = document.getElementById("tabContentA1Dashboard");
+      const contentStaffs = document.getElementById("tabContentA1Staffs");
+
+      const activeCls = ["border-red-800", "text-red-800", "font-bold"];
+      const inactiveCls = ["border-transparent", "text-slate-500", "font-semibold"];
+
+      [btnDashboard, btnStaffs].forEach(b => {
+        b.classList.remove(...activeCls);
+        b.classList.add(...inactiveCls);
+      });
+      contentDashboard.classList.add("hidden");
+      contentStaffs.classList.add("hidden");
+
+      if (tab === 'dashboard') {
+        btnDashboard.classList.add(...activeCls);
+        btnDashboard.classList.remove(...inactiveCls);
+        contentDashboard.classList.remove("hidden");
+        loadA1Dashboard();
+      } else if (tab === 'staffs') {
+        btnStaffs.classList.add(...activeCls);
+        btnStaffs.classList.remove(...inactiveCls);
+        contentStaffs.classList.remove("hidden");
+        loadA1StaffsTab();
+      }
+    }
+
     function toggleA1GiaoViec() {
       document.getElementById("a1GiaoViecBox").classList.toggle("hidden");
       const now = new Date();
@@ -646,7 +753,6 @@
 
     function populateA1Selects() {
       const isChief = (loggedInUser.username === 'levanmieu');
-      
       const leaders = globalAccounts.filter(a => a.role_group === 'A2' && (isChief || a.manager_id === loggedInUser.id));
       const staffs = globalAccounts.filter(a => a.role_group === 'A3' && (isChief || a.manager_id === loggedInUser.id));
 
@@ -795,6 +901,140 @@
             </td>
           </tr>
           ${directiveThreadRowHtml(r.task_id, 7)}
+        `;
+      }).join('');
+    }
+
+    // 2.2. NGHIỆP VỤ TAB 2: GIÁM SÁT CÁN BỘ THUỘC QUYỀN (A1)
+    async function loadA1StaffsTab() {
+      const isChief = (loggedInUser.username === 'levanmieu');
+      
+      // Xác định cán bộ thuộc quyền:
+      // Chánh Văn phòng thấy 48 cán bộ còn lại (A2, A3)
+      // Phó Chánh VP thấy các cán bộ có manager_id là mình
+      a1SubordinatesList = globalAccounts.filter(a => {
+        if (a.id === loggedInUser.id) return false;
+        return isChief || a.manager_id === loggedInUser.id;
+      });
+
+      const { data: allTasks } = await dbClient.from('tasks').select('*');
+      const now = new Date();
+      const tbody = document.getElementById("a1StaffTableBody");
+
+      if (a1SubordinatesList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-slate-400">Không có cán bộ thuộc khối phụ trách trực tiếp.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = a1SubordinatesList.map(st => {
+        const staffTasks = (allTasks || []).filter(t => t.assigned_to === st.id);
+        const total = staffTasks.length;
+
+        let onTime = 0, warningSoon = 0, overdue = 0, inProgress = 0, completed = 0;
+
+        staffTasks.forEach(t => {
+          if (t.status === 'HOAN_THANH') {
+            completed++;
+          } else {
+            inProgress++;
+            const dead = new Date(t.deadline);
+            if (now > dead) overdue++;
+            else {
+              const diffDays = (dead - now) / 86400000;
+              if (diffDays <= 3) warningSoon++;
+              else onTime++;
+            }
+          }
+        });
+
+        const searchData = (st.full_name + " " + (DEPT_NAMES[st.department] || '') + " " + st.position_title).toLowerCase();
+
+        return `
+          <tr data-search="${searchData}" class="hover:bg-slate-50 border-b">
+            <td class="p-3">
+              <a href="javascript:void(0)" onclick='showA1StaffDetail("${st.id}", "${escapeHtml(st.full_name)}", "${escapeHtml(st.position_title)}", "${st.department}")' class="font-bold text-red-800 hover:underline text-xs">
+                ${st.full_name}
+              </a>
+              <div class="text-[10px] text-slate-500">${st.position_title}</div>
+            </td>
+            <td class="p-3 text-slate-600 font-medium">${DEPT_NAMES[st.department] || ''}</td>
+            <td class="p-3 text-center font-bold text-slate-800">${total}</td>
+            <td class="p-3 text-center font-semibold text-green-700">${onTime}</td>
+            <td class="p-3 text-center font-semibold text-amber-600">${warningSoon}</td>
+            <td class="p-3 text-center font-bold text-red-600">${overdue}</td>
+            <td class="p-3 text-center font-medium">${inProgress}</td>
+            <td class="p-3 text-center font-bold text-blue-700">${completed}</td>
+            <td class="p-3 text-center">
+              <button onclick='showA1StaffDetail("${st.id}", "${escapeHtml(st.full_name)}", "${escapeHtml(st.position_title)}", "${st.department}")' class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1 rounded text-[11px] font-semibold">
+                Chi tiết việc
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterA1StaffRows() {
+      const kw = document.getElementById("a1StaffSearch").value.trim().toLowerCase();
+      document.querySelectorAll("#a1StaffTableBody tr[data-search]").forEach(tr => {
+        tr.classList.toggle("hidden", kw && !tr.getAttribute("data-search").includes(kw));
+      });
+    }
+
+    async function showA1StaffDetail(staffId, staffName, positionTitle, department) {
+      await loadDirectiveUnreadMap();
+      const { data: tasks } = await dbClient.from('tasks').select('*').eq('assigned_to', staffId).order('deadline', { ascending: true });
+      
+      const box = document.getElementById("a1StaffDetailBox");
+      const title = document.getElementById("a1StaffDetailTitle");
+      const sub = document.getElementById("a1StaffDetailSubtitle");
+      const tbody = document.getElementById("a1StaffDetailTableBody");
+
+      title.innerText = `Danh Sách Nhiệm Vụ Của: ${staffName}`;
+      sub.innerText = `Chức danh: ${positionTitle} — Đơn vị: ${DEPT_NAMES[department] || ''} (Tổng số: ${tasks ? tasks.length : 0} nhiệm vụ)`;
+      box.classList.remove("hidden");
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      if (!tasks || tasks.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Cán bộ hiện chưa có nhiệm vụ nào được phân công.</td></tr>`;
+        return;
+      }
+
+      const now = new Date();
+      tbody.innerHTML = tasks.map(t => {
+        let progressBadge = "";
+        const dead = new Date(t.deadline);
+
+        if (t.status === 'HOAN_THANH') {
+          progressBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-800 font-bold">Đã hoàn thành</span>`;
+        } else if (now > dead) {
+          const diffDays = Math.ceil((now - dead) / 86400000);
+          progressBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-800 font-bold">Quá hạn ${diffDays} ngày</span>`;
+        } else {
+          const diffDays = Math.ceil((dead - now) / 86400000);
+          if (diffDays <= 3) progressBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-yellow-100 text-yellow-800 font-semibold">Còn ${diffDays} ngày</span>`;
+          else progressBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800">Trong hạn (còn ${diffDays} ngày)</span>`;
+        }
+
+        taskPartiesMap[t.id] = { assigned_to: t.assigned_to, leader_in_charge: t.leader_in_charge, created_by: t.created_by };
+        const hasDirective = canAccessDirectiveThread(taskPartiesMap[t.id]);
+
+        return `
+          <tr id="taskRow-${t.id}" class="hover:bg-slate-50 border-b">
+            <td class="p-2.5 max-w-[260px]">
+              <div class="font-bold text-slate-800 text-xs">${escapeHtml(t.title)}</div>
+              <div class="text-[10px] text-red-700 font-semibold mt-0.5">Số hiệu: ${escapeHtml(t.resolution_code)}</div>
+            </td>
+            <td class="p-2.5 text-slate-700 max-w-[200px] truncate" title="${escapeHtml(t.expected_product)}">${escapeHtml(t.expected_product)}</td>
+            <td class="p-2.5 text-slate-600 font-semibold">${dead.toLocaleString('vi-VN')}</td>
+            <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">${taskStatusLabel(t.status)}</span></td>
+            <td class="p-2.5 text-center">${progressBadge}</td>
+            <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+              <button onclick="openReassignModal('${t.id}')" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded text-[11px]">Can thiệp</button>
+              ${directiveToggleBtnHtml(t.id, hasDirective)}
+            </td>
+          </tr>
+          ${directiveThreadRowHtml(t.id, 6)}
         `;
       }).join('');
     }
@@ -1359,7 +1599,7 @@
       });
     }
 
-    // 6. NHẮN TIN RIÊNG 1-1 (PHÂN QUYỀN DANH BẠ CHẶT CHẼ)
+    // 6. NHẮN TIN RIÊNG 1-1 (PHÂN QUYỀN DANH BẠ)
     async function loadDMUnreadMap() {
       const { data } = await dbClient.from('direct_messages')
         .select('sender_id')
@@ -1395,21 +1635,16 @@
       const listDiv = document.getElementById("dmContactList");
       
       const filtered = globalAccounts.filter(a => {
-        // Không hiển thị chính mình
         if (a.id === loggedInUser.id) return false;
 
-        // Phân quyền liên lạc
         let canChat = false;
         if (loggedInUser.role_group === 'A1') {
-          // Lãnh đạo VP (A1): nhắn tin được cho tất cả cán bộ
           canChat = true;
         } else if (loggedInUser.role_group === 'A2') {
-          // Trưởng phòng (A2): nhắn cho Lãnh đạo VP (A1) và cán bộ trong phòng mình
           if (a.role_group === 'A1' || a.department === loggedInUser.department) {
             canChat = true;
           }
         } else if (loggedInUser.role_group === 'A3') {
-          // Chuyên viên (A3): chỉ nhắn trong nội bộ phòng mình (bao gồm cả Trưởng phòng)
           if (a.department === loggedInUser.department) {
             canChat = true;
           }
@@ -1417,7 +1652,6 @@
 
         if (!canChat) return false;
 
-        // Lọc từ khóa
         if (!filterKw) return true;
         const text = (a.full_name + " " + (DEPT_NAMES[a.department] || '') + " " + a.position_title).toLowerCase();
         return text.includes(filterKw);
@@ -1619,8 +1853,14 @@
 
       alert("Đã phân công lại cán bộ thực hiện thành công!");
       closeReassignModal();
-      if (loggedInUser.role_group === 'A1') loadA1Dashboard();
-      else if (loggedInUser.role_group === 'A2') loadA2Data();
+      if (loggedInUser.role_group === 'A1') {
+        loadA1Dashboard();
+        if (!document.getElementById("tabContentA1Staffs").classList.contains("hidden")) {
+          loadA1StaffsTab();
+        }
+      } else if (loggedInUser.role_group === 'A2') {
+        loadA2Data();
+      }
     }
 
     async function sendTargetedWarning(taskId, staffId) {
