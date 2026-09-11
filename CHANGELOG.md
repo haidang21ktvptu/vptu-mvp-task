@@ -327,3 +327,11 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
   * `A1` (Lãnh đạo Văn phòng): Toàn quyền nhắn tin tới tất cả 48 cán bộ trong cơ quan.
   * `A2` (Trưởng phòng): Chỉ hiển thị nhóm Lãnh đạo Văn phòng (`A1`) và toàn bộ cán bộ/chuyên viên thuộc phòng mình (`department === loggedInUser.department`). Triệt tiêu việc hiển thị cán bộ phòng khác.
   * `A3` (Chuyên viên): Chỉ hiển thị các cán bộ và Trưởng phòng trong cùng một phòng (`department === loggedInUser.department`).
+---
+
+### 6.4. Bổ sung Tab Giám sát Cán bộ thuộc quyền cho Lãnh đạo Văn phòng (A1)
+
+- **Giao diện Tab 2 của A1 (`#tabContentA1Staffs`):**
+  * Tự động xác định danh sách cán bộ thuộc quyền quản lý: Chánh Văn phòng thấy 48 cán bộ trong cơ quan; Phó Chánh Văn phòng chỉ thấy cán bộ thuộc khối phụ trách liên kết qua `manager_id`.
+  * Bảng thống kê tiến độ cán bộ: Hiển thị các chỉ số KPI trực quan: *Tổng nhận, Trong hạn, Gần hạn (≤ 3 ngày), Quá hạn, Đang làm, Hoàn thành*.
+  * Tương tác chi tiết nhiệm vụ: Nhấp vào tên cán bộ (hoặc nút "Chi tiết việc") sẽ mở rộng bảng chi tiết bên dưới (`#a1StaffDetailBox`), hiển thị danh sách toàn bộ các nhiệm vụ, số hiệu văn bản, sản phẩm đầu ra, deadline, thanh trạng thái và cho phép can thiệp / trao đổi chỉ đạo trực tiếp.
