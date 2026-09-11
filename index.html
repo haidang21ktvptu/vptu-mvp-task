@@ -645,8 +645,6 @@
     }
 
     function populateA1Selects() {
-      // Nếu là Chánh Văn phòng: được chọn mọi Trưởng phòng/Cán bộ
-      // Nếu là Phó Chánh Văn phòng: chỉ chọn trong khối mình phụ trách (dựa vào manager_id)
       const isChief = (loggedInUser.username === 'levanmieu');
       
       const leaders = globalAccounts.filter(a => a.role_group === 'A2' && (isChief || a.manager_id === loggedInUser.id));
@@ -706,9 +704,6 @@
       const { data, error } = await dbClient.from('view_exception_dashboard').select('*');
       if (error) { console.error(error); return; }
 
-      // Phân quyền dữ liệu cho Lãnh đạo VP:
-      // Chánh Văn phòng: xem toàn bộ 5 phòng
-      // Phó Chánh Văn phòng: chỉ xem phòng thuộc khối mình phụ trách
       const isChief = (loggedInUser.username === 'levanmieu');
       a1DashboardRawData = (data || []).filter(r => {
         if (isChief) return true;
@@ -845,7 +840,6 @@
     async function loadA2Data() {
       await loadDirectiveUnreadMap();
       
-      // Trưởng phòng chỉ được chọn cán bộ thuộc ĐÚNG PHÒNG MÌNH
       const myStaffs = globalAccounts.filter(a => a.department === loggedInUser.department && a.id !== loggedInUser.id);
       document.getElementById("taskAssignSelect").innerHTML = myStaffs.map(c => `<option value="${c.id}">${c.full_name} (${c.position_title})</option>`).join('');
 
@@ -853,7 +847,6 @@
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       document.getElementById("taskVOfficeDate").value = now.toISOString().slice(0,16);
 
-      // Nhiệm vụ thuộc phòng mình (do Trưởng phòng phụ trách hoặc chuyên viên phòng mình làm)
       const { data: tasks } = await dbClient.from('tasks')
         .select('*, assigned:assigned_to(full_name, position_title, department), leader:leader_in_charge(full_name)')
         .order('created_at', { ascending: false });
@@ -907,7 +900,6 @@
         }).join('');
       }
 
-      // Hồ sơ chờ duyệt trong phòng
       const { data: pendingApprovals } = await dbClient.from('tasks')
         .select('id, title, expected_product, assigned:assigned_to(full_name, department), task_evidences(id, document_title, file_url)')
         .eq('status', 'CHO_DUYET');
@@ -964,7 +956,6 @@
     }
 
     async function renderKPITab() {
-      // Chỉ tổng hợp KPI của cán bộ THUỘC PHÒNG MÌNH
       const myStaffs = globalAccounts.filter(a => a.department === loggedInUser.department && a.id !== loggedInUser.id);
       const { data: allTasks } = await dbClient.from('tasks').select('*');
       const tbody = document.getElementById("kpiTableBody");
@@ -1206,7 +1197,7 @@
     // 5. CHỈ ĐẠO BÌNH LUẬN KIỂU FACEBOOK TRÊN TỪNG DÒNG NHIỆM VỤ
     function canAccessDirectiveThread(parties) {
       if (!parties) return false;
-      if (loggedInUser.role_group === 'A1') return true; // Lãnh đạo VP được xem toàn bộ
+      if (loggedInUser.role_group === 'A1') return true;
       const myId = loggedInUser.id;
       return (parties.assigned_to === myId || parties.leader_in_charge === myId || parties.created_by === myId);
     }
@@ -1271,7 +1262,6 @@
         .eq('task_id', taskId)
         .order('created_at', { ascending: true });
 
-      // Cán bộ A3 chỉ được gửi khi đã có ý kiến từ A1 hoặc A2
       if (loggedInUser.role_group === 'A3') {
         const hasLeaderMsg = (data || []).some(d => d.sender?.role_group === 'A1' || d.sender?.role_group === 'A2');
         if (!hasLeaderMsg) {
@@ -1369,7 +1359,7 @@
       });
     }
 
-    // 6. NHẮN TIN RIÊNG 1-1 (DIRECT MESSAGES)
+    // 6. NHẮN TIN RIÊNG 1-1 (PHÂN QUYỀN DANH BẠ CHẶT CHẼ)
     async function loadDMUnreadMap() {
       const { data } = await dbClient.from('direct_messages')
         .select('sender_id')
@@ -1403,12 +1393,40 @@
 
     function renderDMPickerList(filterKw = "") {
       const listDiv = document.getElementById("dmContactList");
+      
       const filtered = globalAccounts.filter(a => {
+        // Không hiển thị chính mình
         if (a.id === loggedInUser.id) return false;
+
+        // Phân quyền liên lạc
+        let canChat = false;
+        if (loggedInUser.role_group === 'A1') {
+          // Lãnh đạo VP (A1): nhắn tin được cho tất cả cán bộ
+          canChat = true;
+        } else if (loggedInUser.role_group === 'A2') {
+          // Trưởng phòng (A2): nhắn cho Lãnh đạo VP (A1) và cán bộ trong phòng mình
+          if (a.role_group === 'A1' || a.department === loggedInUser.department) {
+            canChat = true;
+          }
+        } else if (loggedInUser.role_group === 'A3') {
+          // Chuyên viên (A3): chỉ nhắn trong nội bộ phòng mình (bao gồm cả Trưởng phòng)
+          if (a.department === loggedInUser.department) {
+            canChat = true;
+          }
+        }
+
+        if (!canChat) return false;
+
+        // Lọc từ khóa
         if (!filterKw) return true;
-        const text = (a.full_name + " " + DEPT_NAMES[a.department] + " " + a.position_title).toLowerCase();
+        const text = (a.full_name + " " + (DEPT_NAMES[a.department] || '') + " " + a.position_title).toLowerCase();
         return text.includes(filterKw);
       });
+
+      if (filtered.length === 0) {
+        listDiv.innerHTML = `<p class="text-center text-slate-400 py-6">Không có cán bộ phù hợp trong phạm vi liên lạc cho phép.</p>`;
+        return;
+      }
 
       listDiv.innerHTML = filtered.map(a => {
         const unread = dmUnreadMap[a.id] || 0;
@@ -1416,7 +1434,7 @@
           <div onclick="openDMChat('${a.id}')" class="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition">
             <div>
               <div class="font-bold text-slate-800">${a.full_name}</div>
-              <div class="text-[10px] text-slate-500">${a.position_title} — ${DEPT_NAMES[a.department]}</div>
+              <div class="text-[10px] text-slate-500">${a.position_title} — ${DEPT_NAMES[a.department] || ''}</div>
             </div>
             ${unread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${unread} mới</span>` : ''}
           </div>
@@ -1507,7 +1525,6 @@
       if (realtimeChannel) realtimeChannel.unsubscribe();
 
       realtimeChannel = dbClient.channel('realtime_feed')
-        // Lắng nghe Ý kiến chỉ đạo theo nhiệm vụ
         .on('postgres_changes', { event: '*', schema: 'public', table: 'task_directives' }, async (payload) => {
           if (payload.eventType === 'INSERT') {
             const newMsg = payload.new;
@@ -1524,7 +1541,6 @@
             }
           }
         })
-        // Lắng nghe Tin nhắn riêng tư 1-1
         .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, async (payload) => {
           if (payload.eventType === 'INSERT') {
             const dm = payload.new;
@@ -1579,8 +1595,6 @@
 
     function openReassignModal(taskId) {
       document.getElementById("reassignTaskId").value = taskId;
-      // Nếu A1 đổi: được chọn toàn bộ cán bộ
-      // Nếu A2 đổi: chỉ được chọn cán bộ trong phòng mình
       const staffList = (loggedInUser.role_group === 'A1') 
         ? globalAccounts.filter(a => a.role_group === 'A3')
         : globalAccounts.filter(a => a.department === loggedInUser.department && a.id !== loggedInUser.id);
