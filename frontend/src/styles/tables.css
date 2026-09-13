@@ -28,7 +28,7 @@
     border-bottom: 1px solid var(--cb-vien); white-space: nowrap; }
   .bang td { padding: 8px 12px; height: 44px; border-bottom: 1px solid var(--cb-vien); vertical-align: middle; }
   .bang tbody tr:last-child > td { border-bottom: 0; }
-  .bang td:first-child, .bang th:first-child { padding-left: 16px; }
+  .bang td:first-child, .bang th:first-child { padding-left: 20px; } /* 4px dải + 16px */
   .bang th.so, .bang td.so { text-align: center; }
   .bang th.phai, .bang td.phai { text-align: right; }
   .bang .trong { text-align: center; color: var(--cb-muc-nhat); padding: 24px 16px; }
@@ -71,7 +71,9 @@
     .bang tr.r-vang { box-shadow: inset 4px 0 0 var(--muc-vang); }
     .bang tr.r-xanh, .bang tr.r-ht { box-shadow: inset 4px 0 0 var(--muc-xanh); }
     .bang td { height: auto; padding: 2px 0; border: 0; }
-    .bang td:first-child { box-shadow: none; padding-left: 0; }
+    /* Dải màu chuyển từ ô đầu sang cả thẻ (tr); đủ độ ưu tiên để thắng quy tắc desktop tr.r-* > td:first-child. */
+    .bang tr > td:first-child { box-shadow: none; padding-left: 0; font-weight: 600; }
+    .bang tr > td:first-child small { font-weight: 400; }
     .bang td.so, .bang td.phai { text-align: left; }
     .bang td[data-nhan]::before { content: attr(data-nhan) ": "; color: var(--cb-muc-nhat); font-size: 12px; }
     .bang td .thao-tac { justify-content: flex-start; flex-wrap: wrap; padding-top: 6px; }

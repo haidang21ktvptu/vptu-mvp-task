@@ -5,7 +5,7 @@ export const a1Template = `
     <div class="dau-trang">
       <h1>Bảng điều khiển ngoại lệ<small>Nhiệm vụ chậm tiến độ hoặc bị từ chối, cần lãnh đạo quan tâm hôm nay</small></h1>
       <div class="flex gap-2 shrink-0">
-        <button type="button" data-action="loadA1Dashboard" class="btn btn-phu">Làm mới</button>
+        <button type="button" data-action="loadA1Dashboard" class="btn btn-phu an-dien-thoai">Làm mới</button>
         <button type="button" data-action="toggleA1GiaoViec" class="btn btn-chinh">Giao việc</button>
       </div>
     </div>
