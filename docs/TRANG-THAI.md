@@ -1,10 +1,10 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ4 (tách frontend Vite) hoàn thành** — PR #13/#14/#15 merge, Pages đã chuyển sang GitHub Actions, bản live là build Vite, kiểm tra 3 vai trò xong. Còn PR dọn dẹp (xoá `index.html` gốc + ESLint) chờ merge. Sẵn sàng **GĐ5 (giao diện mới theo DESIGN.md, Plan mode)**.
+**GĐ4 (tách frontend Vite) hoàn thành (2026-09-13)** — PR #13/#14/#15/#16 merge, `main` = `b9808a4`; Pages nguồn GitHub Actions, bản live là build Vite từ `main` (kiểm tra 3 vai trò, không lỗi console); `index.html` gốc đã xoá; ESLint + giới hạn 300 dòng trong CI; 4 nhánh `feature/gd4*` đã xoá. Sẵn sàng **GĐ5 (giao diện mới theo DESIGN.md, Plan mode)**.
 
 ## Nhánh & PR đang mở
-- PR dọn dẹp `feature/gd4-don-dep` → main: xoá `index.html` gốc, bỏ ngoại lệ `check-line-limit`, ESLint tối thiểu trong CI (lint sạch), tài liệu.
+- Không có.
 
 ## Đã xong
 - GĐ1: RLS tạm + chặn `accounts.password`. GĐ2: Supabase Auth (0004–0006). GĐ3: RLS đầy đủ (0007–0010), 48 test RLS pass.
