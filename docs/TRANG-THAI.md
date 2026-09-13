@@ -22,7 +22,7 @@ Không có PR nào đang mở. PR #2–#5 đều đã merge vào `main` (xem lư
 - Q3: Gói Supabase đang dùng (Free/Pro) — quyết định cách backup GĐ7.
 
 ## Lưu ý quy trình (đã ghi chi tiết ở CHANGELOG mục 8)
-PR #2 bị đóng (`closed`) trên GitHub chứ không phải `merged` — merge-commit bị đẩy thẳng lên `main` ngoài cổng PR. Nội dung đã qua đủ nhánh + review + duyệt nên không có rủi ro code, nhưng bước chốt cuối lệch CLAUDE.md mục 4. PR #3-#5 sau đó merge đúng chuẩn.
+PR #2 bị đóng (`closed`) trên GitHub chứ không phải `merged` — merge-commit bị đẩy thẳng lên `main` ngoài cổng PR. Sau đó có 2 lần commit thẳng lên `main` cho thay đổi docs-only (CLAUDE.md, file này) — nay coi là sai quy trình, không phải ngoại lệ hợp lệ. Đã bật ruleset GitHub trên `main` (bắt buộc PR, CI xanh, chặn force-push) để việc này không thể tái diễn nữa, kể cả cho thay đổi chỉ sửa tài liệu.
 
 ## 3 lệnh để tiếp tục
 ```
