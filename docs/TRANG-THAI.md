@@ -1,17 +1,16 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-GĐ1 (Chặn rò rỉ khẩn cấp) đã xong về kỹ thuật trên cả staging và production. Chưa bắt đầu GĐ2 (Supabase Auth).
+**GĐ1 (Chặn rò rỉ khẩn cấp) đã hoàn thành** trên cả staging và production. Chưa bắt đầu GĐ2 (Supabase Auth).
 
 ## Nhánh & PR đang mở
-- PR #3 `docs/gd1-qa-staging` — chỉ CHANGELOG.md, chờ duyệt.
-- PR #4 `fix/xoa-goi-y-mat-khau-dang-nhap` — xoá tài khoản mẫu/gợi ý mật khẩu ở màn đăng nhập, chờ duyệt.
-- Nhánh `chore/gd1-seed-va-doc` (PR này) — seed.sql, CLAUDE.md, file này.
+Không có PR nào đang mở. PR #2–#5 đều đã merge vào `main` (xem lưu ý PR #2 bên dưới).
 
 ## Đã xong
-- Migration 0001-0003 áp trên cả staging (`vojmrjezspdftovzinek`) và **production** (`frwyxcmbonjaimziiuqr`, vá khẩn cấp sau khi PR #2 merge).
-- RLS bật 5 bảng; `accounts.password` bị chặn ở tầng quyền cột; `accounts_public` + `verify_login()` thay thế truy vấn cũ.
-- Staging: 48 tài khoản thật đã xoá, thay bằng 5 tài khoản giả trong `supabase/seed.sql`.
+- Migration 0001-0003 áp trên cả staging (`vojmrjezspdftovzinek`) và **production** (`frwyxcmbonjaimziiuqr`, vá khẩn cấp ngoài CI ngay sau khi PR #2 merge).
+- RLS bật 5 bảng; `accounts.password` bị chặn ở tầng quyền cột (không chỉ ẩn bằng view); `accounts_public` + `verify_login()` thay thế truy vấn cũ, đã QA thật với 3 vai trò.
+- Staging: 48 tài khoản thật đã xoá, thay bằng 5 tài khoản giả trong `supabase/seed.sql` (rule 11, CLAUDE.md).
+- Rule 10 (CLAUDE.md): cập nhật file này cuối phiên/khi context gần đầy.
 
 ## Đang dở
 - RLS theo vai trò thật (RLS-2…8) — GĐ3.
@@ -22,6 +21,9 @@ GĐ1 (Chặn rò rỉ khẩn cấp) đã xong về kỹ thuật trên cả stagi
 - Q2: Ai duyệt PR lên production (tên GitHub)?
 - Q3: Gói Supabase đang dùng (Free/Pro) — quyết định cách backup GĐ7.
 
+## Lưu ý quy trình (đã ghi chi tiết ở CHANGELOG mục 8)
+PR #2 bị đóng (`closed`) trên GitHub chứ không phải `merged` — merge-commit bị đẩy thẳng lên `main` ngoài cổng PR. Nội dung đã qua đủ nhánh + review + duyệt nên không có rủi ro code, nhưng bước chốt cuối lệch CLAUDE.md mục 4. PR #3-#5 sau đó merge đúng chuẩn.
+
 ## 3 lệnh để tiếp tục
 ```
 Đọc docs/SPEC.md mục 10, trả lời Q1-Q3 trước khi vào GĐ2.
@@ -30,5 +32,5 @@ GĐ1 (Chặn rò rỉ khẩn cấp) đã xong về kỹ thuật trên cả stagi
 Pull main mới nhất rồi làm Giai đoạn 2 theo docs/PROMPTS.md.
 ```
 ```
-supabase migration list --project-ref frwyxcmbonjaimziiuqr
+supabase db lint --project-ref frwyxcmbonjaimziiuqr
 ```
