@@ -107,7 +107,8 @@ Ký hiệu: **[Giữ]** = đã có ở MVP, giữ nguyên hành vi. **[Mới]** 
 
 Giữ 5 bảng hiện có, thay đổi:
 - `accounts`: bỏ `password`, `assigned_domain`; `id` = `auth.users.id`; thêm `must_change_password boolean default true`.
-- `tasks`: bỏ `owner_id` (mồ côi); default `status = 'CHUA_GIAO'`; thêm FK `task_directives.task_id`, `task_evidences.task_id` → `tasks.id`.
+  - **Quy ước bắt buộc (từ migration `0002`):** quyền đọc/ghi cột trên `accounts` cho `anon`/`authenticated` cấp theo **cột tường minh** (`GRANT SELECT (danh sách cột)`), không cấp theo bảng. Mọi cột mới thêm vào `accounts` mặc định **không** lộ ra cho tới khi được liệt kê tường minh trong `GRANT`. Tuyệt đối không chạy lại `GRANT ALL`/`GRANT SELECT` không giới hạn cột trên bảng `accounts` — làm vậy sẽ vô hiệu hoá toàn bộ việc chặn `password` của GĐ1.
+- `tasks`: bỏ `owner_id` (mồ côi); default `status = 'CHUA_GIAO'` (đã sửa ở migration `0003`). FK `task_directives.task_id` / `task_evidences.task_id` → `tasks.id` (`ON DELETE CASCADE`) đã có sẵn từ baseline `0001`, không cần thêm.
 - `task_directives`: bỏ `recipient_id`, `is_read`, `read_at`.
 - Thêm `task_directive_reads`, `task_status_log`.
 - View `view_exception_dashboard` giữ, thêm `owner_department` (đã có).
