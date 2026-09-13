@@ -107,7 +107,7 @@ Ký hiệu: **[Giữ]** = đã có ở MVP, giữ nguyên hành vi. **[Mới]** 
 
 Giữ 5 bảng hiện có, thay đổi:
 - `accounts`: bỏ `password`, `assigned_domain`; `id` = `auth.users.id`; thêm `must_change_password boolean default true`.
-- `tasks`: bỏ `owner_id` (mồ côi); default `status = 'CHUA_GIAO'`; thêm FK `task_directives.task_id`, `task_evidences.task_id` → `tasks.id`.
+- `tasks`: bỏ `owner_id` (mồ côi); default `status = 'CHUA_GIAO'` (đã sửa ở migration `0003`). FK `task_directives.task_id` / `task_evidences.task_id` → `tasks.id` (`ON DELETE CASCADE`) đã có sẵn từ baseline `0001`, không cần thêm.
 - `task_directives`: bỏ `recipient_id`, `is_read`, `read_at`.
 - Thêm `task_directive_reads`, `task_status_log`.
 - View `view_exception_dashboard` giữ, thêm `owner_department` (đã có).

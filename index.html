@@ -583,14 +583,15 @@
       const u = document.getElementById("loginUsername").value.trim().toLowerCase();
       const p = document.getElementById("loginPassword").value.trim();
 
-      const { data, error } = await dbClient.from('accounts').select('*').eq('username', u).eq('password', p).single();
-      if (error || !data) {
+      const { data, error } = await dbClient.rpc('verify_login', { p_username: u, p_password: p });
+      const account = data?.[0];
+      if (error || !account) {
         alert("Sai tên đăng nhập hoặc mật khẩu!");
         return;
       }
 
-      loggedInUser = data;
-      sessionStorage.setItem('vptu_session_user', JSON.stringify(data));
+      loggedInUser = account;
+      sessionStorage.setItem('vptu_session_user', JSON.stringify(account));
       await loadAccountsCache();
       initUserInterface();
       setupRealtimeSubscriptions();
@@ -603,7 +604,7 @@
     }
 
     async function loadAccountsCache() {
-      const { data } = await dbClient.from('accounts').select('*');
+      const { data } = await dbClient.from('accounts_public').select('*');
       if (data) globalAccounts = data;
     }
 
