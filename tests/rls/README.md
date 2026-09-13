@@ -1,5 +1,13 @@
-# tests/rls/
+# tests/rls — kiểm thử RLS bằng token thật (SPEC RLS-2…8)
 
-Test chứng minh chính sách Row Level Security (RLS-2…8 trong `docs/SPEC.md` mục 3.2) sẽ được thêm ở **Giai đoạn 3**.
+Mỗi dòng RLS-2…7 có ít nhất một test "được phép" và một test "bị chặn"; RLS-8 test từng hàm `security definer`; `anon` bị chặn mọi nơi. Chạy trên **staging** với 6 tài khoản seed (`supabase/seed.sql`, mật khẩu `123456`), dữ liệu mẫu `RLS-TEST` do service_role tạo và tự dọn.
 
-Mỗi quy tắc phân quyền cần ít nhất một test "được phép" và một test "bị chặn", chạy bằng anon key + token thật của 4 tài khoản mẫu (CVP, PCVP, A2, A3) trên project staging — xem `docs/PROMPTS.md` mục "Giai đoạn 3".
+```
+cd tests/rls && npm install
+npm test                 # staging (RLS_PROJECT_REF mặc định vojmrjezspdftovzinek)
+RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset` + scripts/create-auth-users.mjs --local --default-password 123456)
+```
+
+- Key lấy qua Supabase CLI đã `supabase login` (không có `.env` chứa service_role).
+- Chạy chung tiến trình (`--test-isolation=none`) để 6 phiên đăng nhập dùng lại giữa các file (giới hạn 30 lượt/5 phút/IP).
+- Không chạy trong CI (cần staging + CLI đăng nhập) — đưa vào pipeline ở GĐ6.

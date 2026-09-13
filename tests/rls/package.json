@@ -1,0 +1,13 @@
+{
+  "name": "vptu-rls-tests",
+  "private": true,
+  "type": "module",
+  "description": "Test RLS bằng token thật trên staging (SPEC RLS-2…8)",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test --test-isolation=none --test-concurrency=1 ./*.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.58.0"
+  }
+}
