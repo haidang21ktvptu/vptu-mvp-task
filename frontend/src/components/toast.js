@@ -14,7 +14,7 @@ function container() {
   if (!box) {
     box = document.createElement('div');
     box.id = 'toastContainer';
-    box.className = 'fixed bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-[calc(100%-40px)] pointer-events-none';
+    box.className = 'fixed bottom-20 md:bottom-5 right-5 z-[100] flex flex-col gap-2 max-w-sm w-[calc(100%-40px)] pointer-events-none' // ≤768px: nằm trên thanh điều hướng dưới;
     document.body.appendChild(box);
   }
   return box;
