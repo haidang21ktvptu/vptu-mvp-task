@@ -1,123 +1,123 @@
-// Markup tầng A2 (Trưởng phòng); chuyển mục bằng thanh bên (views/a2/index.js), onclick inline → data-action.
+// Markup tầng A2 (Trưởng phòng) theo DESIGN mục 4; chuyển mục bằng thanh bên (views/a2/index.js).
 export const a2Template = `
-
-  <!-- TAB 1: TRƯỞNG PHÒNG GIAO VIỆC -->
-  <div id="tabContentGiaoViec" class="bg-white p-6 rounded-lg shadow-sm border max-w-2xl">
-    <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2 mb-4" id="a2GiaoViecTitle">Giao Việc Cho Cán Bộ Trong Phòng</h3>
-    <form id="formGiaoViec" data-submit="handleA2GiaoViec" class="space-y-3.5 text-xs">
-      <div>
-        <label class="font-semibold text-slate-700">Nội dung nhiệm vụ *</label>
-        <textarea id="taskTitle" required rows="2" class="w-full border rounded p-2.5 mt-1 focus:outline-none focus:ring-1 focus:ring-red-600" placeholder="Nhập tên nhiệm vụ..."></textarea>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="font-semibold text-slate-700">Số / Ký hiệu văn bản *</label>
-          <input type="text" id="taskResCode" required class="w-full border rounded p-2 mt-1" placeholder="VD: NQ 57-NQ/TW">
+  <!-- GIAO VIỆC TRONG PHÒNG (TASK-1/2) -->
+  <div id="tabContentGiaoViec" class="hidden">
+    <div class="dau-trang">
+      <h1>Giao việc<small>Giao nhiệm vụ cho cán bộ trong phòng, mỗi việc một sản phẩm đầu ra</small></h1>
+    </div>
+    <section class="the p-5 max-w-2xl">
+      <form id="formGiaoViec" data-submit="handleA2GiaoViec" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+        <div class="sm:col-span-2">
+          <label for="taskTitle" class="nhan">Nội dung nhiệm vụ</label>
+          <textarea id="taskTitle" required rows="2" class="input"></textarea>
         </div>
         <div>
-          <label class="font-semibold text-slate-700">Cán bộ thực hiện trong phòng *</label>
-          <select id="taskAssignSelect" required class="w-full border rounded p-2 mt-1 bg-white"></select>
-        </div>
-      </div>
-      <div>
-        <label class="font-semibold text-slate-700">01 Sản phẩm đầu ra bắt buộc *</label>
-        <input type="text" id="taskProduct" required class="w-full border rounded p-2 mt-1" placeholder="VD: Dự thảo Tờ trình, Báo cáo...">
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="font-semibold text-slate-700">Mốc nhận V-Office (T=0) *</label>
-          <input type="datetime-local" id="taskVOfficeDate" required class="w-full border rounded p-2 mt-1">
+          <label for="taskResCode" class="nhan">Số, ký hiệu văn bản</label>
+          <input type="text" id="taskResCode" required class="input" placeholder="Ví dụ: 57-NQ/TW">
         </div>
         <div>
-          <label class="font-semibold text-slate-700">Hạn hoàn thành (Deadline) *</label>
-          <input type="datetime-local" id="taskDeadline" required class="w-full border rounded p-2 mt-1">
+          <label for="taskAssignSelect" class="nhan">Cán bộ thực hiện</label>
+          <select id="taskAssignSelect" required class="input"></select>
         </div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label class="font-semibold text-slate-700">Kích hoạt ĐỎ ĐẶC BIỆT (ngày trễ) *</label>
-          <input type="number" id="taskCriticalDays" min="1" max="30" required value="3" class="w-full border rounded p-2 mt-1">
+        <div class="sm:col-span-2">
+          <label for="taskProduct" class="nhan">Sản phẩm đầu ra bắt buộc</label>
+          <input type="text" id="taskProduct" required class="input" placeholder="Ví dụ: Dự thảo Tờ trình, Báo cáo">
         </div>
         <div>
-          <label class="font-semibold text-slate-700">Cấp có thẩm quyền tháo gỡ *</label>
-          <input type="text" id="taskAuthority" required class="w-full border rounded p-2 mt-1" value="Lãnh đạo Văn phòng">
+          <label for="taskVOfficeDate" class="nhan">Mốc nhận văn bản trên V-Office</label>
+          <input type="datetime-local" id="taskVOfficeDate" required class="input">
         </div>
-      </div>
-      <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded shadow mt-2">Phát Hành Giao Việc</button>
-    </form>
+        <div>
+          <label for="taskDeadline" class="nhan">Hạn hoàn thành</label>
+          <input type="datetime-local" id="taskDeadline" required class="input">
+        </div>
+        <div>
+          <label for="taskCriticalDays" class="nhan">Số ngày trễ kích hoạt đỏ đặc biệt</label>
+          <input type="number" id="taskCriticalDays" min="1" max="30" required value="3" class="input">
+        </div>
+        <div>
+          <label for="taskAuthority" class="nhan">Cấp có thẩm quyền tháo gỡ</label>
+          <input type="text" id="taskAuthority" required class="input" value="Lãnh đạo Văn phòng">
+        </div>
+        <div class="sm:col-span-2 modal-chan">
+          <button type="submit" class="btn btn-chinh">Phát hành giao việc</button>
+        </div>
+      </form>
+    </section>
   </div>
 
-  <!-- TAB 2: THEO DÕI TIẾP NHẬN & DUYỆT -->
-  <div id="tabContentTheoDoi" class="hidden space-y-6">
-    <div class="bg-white p-5 rounded-lg shadow-sm border space-y-3">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-xs font-bold text-slate-900 uppercase">Tình Trạng Nhận Việc Của Cán Bộ</h3>
-        <input type="text" id="ldvpTrackSearch" placeholder="🔍 Tìm nhanh..." class="border rounded px-2 py-1 text-xs w-48 focus:outline-none">
+  <!-- THEO DÕI TIẾP NHẬN VÀ DUYỆT MINH CHỨNG (TASK-6/7, DASH-3) -->
+  <div id="tabContentTheoDoi" class="hidden space-y-5">
+    <div class="dau-trang">
+      <h1>Theo dõi và duyệt<small>Tình trạng nhận việc của cán bộ trong phòng và hồ sơ chờ duyệt</small></h1>
+    </div>
+    <div class="bang">
+      <div class="bang-dau">
+        <h2>Tình trạng nhận việc</h2>
+        <div class="bo-loc">
+          <input type="search" id="ldvpTrackSearch" class="input input-nho" placeholder="Tìm theo tên việc, số văn bản, cán bộ" aria-label="Tìm nhiệm vụ">
+        </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
+      <div class="bang-cuon">
+        <table>
           <thead>
-            <tr class="bg-slate-100 text-slate-600">
-              <th class="p-2.5 border-b">Nhiệm vụ</th>
-              <th class="p-2.5 border-b">Cán bộ nhận việc</th>
-              <th class="p-2.5 border-b text-center">Trạng thái</th>
-              <th class="p-2.5 border-b text-center">Thao tác</th>
+            <tr>
+              <th>Nhiệm vụ</th>
+              <th>Cán bộ nhận việc</th>
+              <th>Trạng thái</th>
+              <th class="phai">Thao tác</th>
             </tr>
           </thead>
-          <tbody id="trackingTableBody" class="divide-y divide-slate-200">
-            <tr><td colspan="4" class="p-3 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
+          <tbody id="trackingTableBody">
+            <tr><td colspan="4" class="trong">Đang tải dữ liệu</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <div class="bg-white p-5 rounded-lg shadow-sm border space-y-3">
-      <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Hồ Sơ Chờ Thẩm Tra Để Đóng Việc</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
+    <div class="bang">
+      <div class="bang-dau"><h2>Hồ sơ chờ duyệt hoàn thành</h2></div>
+      <div class="bang-cuon">
+        <table>
           <thead>
-            <tr class="bg-slate-100 text-slate-600">
-              <th class="p-2.5 border-b">Nhiệm vụ</th>
-              <th class="p-2.5 border-b">Cán bộ nộp</th>
-              <th class="p-2.5 border-b">Minh chứng sản phẩm</th>
-              <th class="p-2.5 border-b text-center">Xử lý</th>
+            <tr>
+              <th>Nhiệm vụ</th>
+              <th>Cán bộ nộp</th>
+              <th>Minh chứng</th>
+              <th class="phai">Thao tác</th>
             </tr>
           </thead>
-          <tbody id="approvalTableBody" class="divide-y divide-slate-200">
-            <tr><td colspan="4" class="p-3 text-center text-slate-400">Không có hồ sơ nào chờ duyệt.</td></tr>
+          <tbody id="approvalTableBody">
+            <tr><td colspan="4" class="trong">Không có hồ sơ nào chờ duyệt.</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- TAB 3: THEO DÕI KPI NỘI BỘ PHÒNG (ACCORDION ROW TRỰC TIẾP) -->
-  <div id="tabContentKPI" class="hidden space-y-6">
-    <div class="bg-white p-5 rounded-lg shadow-sm border space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <div>
-          <h3 class="text-xs font-bold text-slate-900 uppercase" id="kpiSectionTitle">Bảng Tổng Hợp KPI Tiến Độ Phòng</h3>
-          <p class="text-[11px] text-slate-500">Nhấp "Chi tiết việc" để mở xem nhiệm vụ ngay sát bên dưới cán bộ đó</p>
-        </div>
-        <button data-action="renderKPITab" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded font-semibold">Làm mới KPI</button>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
+  <!-- CÁN BỘ TRONG PHÒNG: KPI TỪNG NGƯỜI, MỞ CHI TIẾT INLINE (DASH-3) -->
+  <div id="tabContentKPI" class="hidden">
+    <div class="dau-trang">
+      <h1>Cán bộ trong phòng<small>Tiến độ từng người; bấm "Chi tiết việc" để mở nhiệm vụ ngay dưới</small></h1>
+      <button type="button" data-action="renderKPITab" class="btn btn-phu shrink-0">Làm mới</button>
+    </div>
+    <div class="bang">
+      <div class="bang-cuon">
+        <table>
           <thead>
-            <tr class="bg-slate-100 text-slate-700 uppercase">
-              <th class="p-3 border-b">Cán bộ</th>
-              <th class="p-3 border-b text-center">Tổng nhận</th>
-              <th class="p-3 border-b text-center text-green-700">Trong hạn</th>
-              <th class="p-3 border-b text-center text-amber-600">Gần hạn (≤ 3 ngày)</th>
-              <th class="p-3 border-b text-center text-red-600 font-bold">Quá hạn</th>
-              <th class="p-3 border-b text-center">Đang làm</th>
-              <th class="p-3 border-b text-center text-blue-700 font-bold">Đã hoàn thành</th>
-              <th class="p-3 border-b text-center">Hành động</th>
+            <tr>
+              <th>Cán bộ</th>
+              <th class="so">Tổng nhận</th>
+              <th class="so">Trong hạn</th>
+              <th class="so">Gần hạn (3 ngày)</th>
+              <th class="so">Quá hạn</th>
+              <th class="so">Đang làm</th>
+              <th class="so">Đã hoàn thành</th>
+              <th class="phai">Thao tác</th>
             </tr>
           </thead>
-          <tbody id="a2KpiTableBody" class="divide-y divide-slate-200">
-            <tr><td colspan="8" class="p-4 text-center text-slate-400">Đang tổng hợp dữ liệu KPI...</td></tr>
+          <tbody id="a2KpiTableBody">
+            <tr><td colspan="8" class="trong">Đang tổng hợp dữ liệu</td></tr>
           </tbody>
         </table>
       </div>

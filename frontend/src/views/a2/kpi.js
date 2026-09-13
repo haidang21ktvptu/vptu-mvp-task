@@ -9,19 +9,19 @@ import { staffDetailButtonHtml } from '../shared/inline-tasks.js';
 function staffKpiRowHtml(st) {
   const k = calculateGroupKPI([st.id]);
   return `
-    <tr class="hover:bg-slate-50 border-b">
-      <td class="p-3 font-semibold">${escapeHtml(st.full_name)} <br><span class="text-[10px] text-slate-500 font-normal">${escapeHtml(st.position_title)}</span></td>
-      <td class="p-3 text-center font-bold text-slate-800">${k.total}</td>
-      <td class="p-3 text-center font-semibold text-green-700">${k.onTime}</td>
-      <td class="p-3 text-center font-semibold text-amber-600">${k.warningSoon}</td>
-      <td class="p-3 text-center font-bold text-red-600">${k.overdue}</td>
-      <td class="p-3 text-center font-medium">${k.inProgress}</td>
-      <td class="p-3 text-center font-bold text-blue-700">${k.completed}</td>
-      <td class="p-3 text-center">${staffDetailButtonHtml(`btnA2Kpi-${st.id}`, `a2KpiDetailRow-${st.id}`, st.id)}</td>
+    <tr>
+      <td class="nguoi">${escapeHtml(st.full_name)}<small>${escapeHtml(st.position_title)}</small></td>
+      <td class="so" data-nhan="Tổng nhận">${k.total}</td>
+      <td class="so" data-nhan="Trong hạn">${k.onTime}</td>
+      <td class="so" data-nhan="Gần hạn">${k.warningSoon}</td>
+      <td class="so" data-nhan="Quá hạn">${k.overdue}</td>
+      <td class="so" data-nhan="Đang làm">${k.inProgress}</td>
+      <td class="so" data-nhan="Đã hoàn thành">${k.completed}</td>
+      <td><div class="thao-tac">${staffDetailButtonHtml(`btnA2Kpi-${st.id}`, `a2KpiDetailRow-${st.id}`, st.id)}</div></td>
     </tr>
-    <!-- DÒNG INLINE BUNG CHI TIẾT NGAY DƯỚI CÁN BỘ ĐÓ (TRƯỞNG PHÒNG) -->
-    <tr id="a2KpiDetailRow-${st.id}" class="hidden bg-slate-50/80">
-      <td colspan="8" class="p-3 border-b"></td>
+    <!-- Dòng chi tiết bung ngay dưới cán bộ đó -->
+    <tr id="a2KpiDetailRow-${st.id}" class="hidden">
+      <td colspan="8"></td>
     </tr>
   `;
 }
@@ -34,7 +34,7 @@ export async function renderKPITab() {
 
   const tbody = $('a2KpiTableBody');
   tbody.innerHTML = myStaffs.length === 0
-    ? `<tr><td colspan="8" class="p-4 text-center text-slate-400">Phòng chưa có cán bộ trực thuộc.</td></tr>`
+    ? `<tr><td colspan="8" class="trong">Phòng chưa có cán bộ trực thuộc.</td></tr>`
     : myStaffs.map(staffKpiRowHtml).join('');
 }
 

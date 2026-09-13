@@ -66,13 +66,16 @@
       font-size: 12px; text-align: center; border-left: 0; border-top: 2px solid transparent; opacity: .75; }
     .nav-item.on { background: transparent; border-top-color: var(--cb-vang); opacity: 1; }
     .nav-item .huy-hieu { margin-left: 0; position: absolute; transform: translate(22px, -6px); }
-    .top { padding: 10px 16px; }
-    .top .cq { font-size: 15px; }
+    .top { padding: 10px 12px; gap: 6px 10px; }
+    .top .cq { font-size: 14px; }
     .top .ngay { display: none; }
-    .top .phong { flex-basis: 100%; padding-left: 0; border-left: 0; }
+    .top .phong { order: 3; flex-basis: 100%; padding-left: 0; border-left: 0; font-size: 13px; }
     .noi-dung { padding: 16px 16px 84px; }
-    .dau-trang { flex-wrap: wrap; }
-    .dau-trang h1 { font-size: 20px; }
+    /* Tiêu đề và nút cùng một hàng, nút căn phải, gọn hơn. */
+    .dau-trang { flex-wrap: nowrap; align-items: flex-start; gap: 10px; }
+    .dau-trang h1 { font-size: 20px; flex: 1; min-width: 0; }
+    .dau-trang .btn { height: 36px; padding: 0 12px; font-size: 14px; }
+    .an-dien-thoai { display: none; } /* nút phụ không cần trên điện thoại (ví dụ Làm mới: bấm mục thanh dưới cũng nạp lại) */
     .the-dang-nhap { --card-px: 20px; padding-top: 24px; }
     .man-dang-nhap { padding: 16px 16px 64px; }
     .modal { padding: 20px 16px; }

@@ -42,11 +42,11 @@ Màu mức cảnh báo (khớp `alert_level` của view):
 
 | Mức | Hex nền | Hex chữ/viền | Cách hiển thị |
 |---|---|---|---|
-| XANH | `#E6F2EF` | `#2E7D6E` | Dải màu 4px bên trái dòng |
+| XANH | `#E6F2EF` | `#2A7365` | Dải màu 4px bên trái dòng. Chữ/viền đậm hơn ngọc một bậc vì `#2E7D6E` trên nền nhạt chỉ đạt 4.28:1 với chữ 12px |
 | VANG | `#FBF3DF` | `#8A6512` | Dải màu bên trái |
 | DO | `#FBE9E7` | `#B42318` | Dải màu bên trái |
 | DO_DAC_BIET | `#F6DCE0` | `#7A0C1E` | Dải bên trái + chữ đậm + biểu tượng ‼ |
-| HOAN_THANH | `#E6F2EF` | `#2E7D6E` | Chữ gạch nhẹ, dải ngọc |
+| HOAN_THANH | `#E6F2EF` | `#2A7365` | Chữ mực nhạt, dải ngọc |
 
 Quy tắc: **màu là thông tin, không phải trang trí.** Mỗi màu xuất hiện vì nó nói lên trạng thái hoặc vai trò, không vì "cho đẹp".
 

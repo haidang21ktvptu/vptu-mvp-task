@@ -23,7 +23,7 @@ async function submitEvidence() {
   const link = $('evidenceLink').value.trim();
 
   if (!title || !link) {
-    notifyError('Vui lòng nhập đủ thông tin!');
+    notifyError('Nhập trích yếu và đường dẫn tài liệu.');
     return;
   }
   if (!/^https?:\/\/.+/i.test(link)) {
@@ -36,7 +36,7 @@ async function submitEvidence() {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã nộp minh chứng thành công! Đang chờ thẩm tra.');
+  notifySuccess('Đã nộp minh chứng. Đang chờ Trưởng phòng duyệt.');
   closeEvidenceModal();
   afterSubmit();
 }

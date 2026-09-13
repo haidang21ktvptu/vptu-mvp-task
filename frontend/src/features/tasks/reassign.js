@@ -40,7 +40,7 @@ async function submitReassign() {
     return;
   }
 
-  notifySuccess('Đã phân công lại cán bộ thực hiện thành công!');
+  notifySuccess('Đã phân công lại cán bộ thực hiện.');
   closeReassignModal();
   reloadCurrentView();
 }

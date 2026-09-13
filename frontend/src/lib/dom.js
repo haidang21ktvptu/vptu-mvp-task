@@ -41,8 +41,11 @@ export function toDatetimeLocalValue(date) {
   return d.toISOString().slice(0, 16);
 }
 
+// "18/9/2026 23:31" — ngày trước, giờ sau, không giây.
 export function formatDateTime(value) {
-  return new Date(value).toLocaleString('vi-VN');
+  const d = new Date(value);
+  const time = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  return `${d.toLocaleDateString('vi-VN')} ${time}`;
 }
 
 export function formatTime(value) {

@@ -1,19 +1,16 @@
-// Modal phân công / đổi cán bộ thực hiện (A1 & A2), lấy nguyên từ index.html cũ.
+// Modal phân công / đổi cán bộ thực hiện (A1 & A2, DESIGN mục 5).
 export const reassignModalTemplate = `
-<!-- MODAL CAN THIỆP / ĐỔI NGƯỜI LÀM (A1 & A2) -->
-<div id="reassignModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
-  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-3">
-    <h3 class="text-xs font-bold text-slate-900 uppercase border-b pb-2">Phân Công / Đổi Cán Bộ Thực Hiện</h3>
+<div id="reassignModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="reassignTitle">
+  <div class="modal">
+    <h2 id="reassignTitle" class="modal-tieu-de mb-4">Phân công cán bộ thực hiện</h2>
     <input type="hidden" id="reassignTaskId">
-    <div>
-      <label class="text-xs font-semibold text-slate-700">Chọn Cán bộ nhận việc *</label>
-      <select id="reassignStaffSelect" class="w-full border rounded p-2 text-xs mt-1 bg-white"></select>
-    </div>
-    <div class="flex justify-end gap-2 pt-2 border-t">
-      <button data-action="closeReassignModal" class="px-3 py-1.5 rounded bg-slate-200 text-xs">Hủy</button>
-      <button data-action="submitReassign" class="px-3 py-1.5 rounded bg-red-800 text-white text-xs font-semibold">Lưu Phân Việc</button>
+    <label for="reassignStaffSelect" class="nhan">Cán bộ nhận việc</label>
+    <select id="reassignStaffSelect" class="input"></select>
+    <p class="chu-phu mt-2">Nhiệm vụ chuyển về trạng thái chờ nhận việc; số lần đôn đốc và lý do từ chối được xoá.</p>
+    <div class="modal-chan">
+      <button type="button" data-action="closeReassignModal" class="btn btn-phu">Huỷ</button>
+      <button type="button" data-action="submitReassign" class="btn btn-chinh">Lưu phân công</button>
     </div>
   </div>
 </div>
-
 `;

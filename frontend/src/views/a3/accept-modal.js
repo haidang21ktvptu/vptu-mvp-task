@@ -18,8 +18,8 @@ export function showMandatoryModal(task) {
 
   const isPast = new Date(task.deadline) <= new Date();
   let msg = '';
-  if (task.warning_count > 0) msg += `CẢNH BÁO ĐÔN ĐỐC (${task.warning_count} lần): Đề nghị đồng chí khẩn trương nhận việc! `;
-  if (isPast) msg += '[LƯU Ý: Nhiệm vụ này có hạn hoàn thành ở quá khứ]';
+  if (task.warning_count > 0) msg += `Đã đôn đốc ${task.warning_count} lần. Đề nghị đồng chí khẩn trương tiếp nhận. `;
+  if (isPast) msg += 'Hạn hoàn thành của nhiệm vụ này đã qua.';
   setText('warningNoticeDiv', msg);
   show('warningNoticeDiv', Boolean(msg));
 
@@ -37,7 +37,7 @@ async function acceptTask() {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã tiếp nhận nhiệm vụ thành công!');
+  notifySuccess('Đã tiếp nhận nhiệm vụ.');
   show('mandatoryAcceptModal', false);
   afterChange();
 }
@@ -53,7 +53,7 @@ async function submitRejectTask() {
   const taskId = $('mandatoryTaskId').value;
   const reason = $('rejectReasonInput').value.trim();
   if (!reason) {
-    notifyError('Bắt buộc phải nhập lý do từ chối!');
+    notifyError('Nhập lý do từ chối trước khi gửi.');
     return;
   }
   const { error } = await supabase.from('tasks')
@@ -62,7 +62,7 @@ async function submitRejectTask() {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã gửi lý do từ chối nhận việc!');
+  notifySuccess('Đã gửi lý do từ chối nhận việc.');
   show('mandatoryAcceptModal', false);
   afterChange();
 }

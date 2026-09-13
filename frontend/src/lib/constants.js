@@ -22,8 +22,8 @@ const STATUS_LABELS = {
   CHO_TIEP_NHAN: 'Chờ nhận việc',
   TU_CHOI_TIEP_NHAN: 'Đã từ chối',
   DANG_THUC_HIEN: 'Đang thực hiện',
-  CHO_DUYET: 'Đã nộp chờ duyệt',
-  HOAN_THANH: '✓ Hoàn thành',
+  CHO_DUYET: 'Chờ duyệt',
+  HOAN_THANH: 'Hoàn thành',
 };
 
 export function taskStatusLabel(status) {

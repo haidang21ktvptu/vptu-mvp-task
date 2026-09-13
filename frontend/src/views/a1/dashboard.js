@@ -35,7 +35,7 @@ export function populateA1Selects() {
 export async function handleA1GiaoViec() {
   const deadlineVal = $('a1Deadline').value;
   if (!deadlineVal || new Date(deadlineVal) <= new Date()) {
-    notifyError('Thời hạn hoàn thành phải ở tương lai!');
+    notifyError('Hạn hoàn thành phải sau thời điểm hiện tại. Chọn lại ngày.');
     return;
   }
 
@@ -72,7 +72,7 @@ export async function handleA1GiaoViec() {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã phát hành giao nhiệm vụ thành công!');
+  notifySuccess('Đã phát hành giao việc.');
   toggleA1GiaoViec();
   loadA1Dashboard();
 }
@@ -117,22 +117,26 @@ export function applyA1Filter() {
   renderA1Table(filtered);
 }
 
-function alertBadgeHtml(r) {
-  switch (r.alert_level) {
-    case 'DO': return `<span class="px-2 py-0.5 rounded text-[10px] bg-red-100 text-red-800 font-bold">Quá hạn</span>`;
-    case 'DO_DAC_BIET': return `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-900 font-bold animate-pulse">ĐỎ ĐẶC BIỆT</span>`;
-    case 'TU_CHOI': return `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">Từ chối: ${escapeHtml(r.reject_reason || '')}</span>`;
-    case 'CHUA_GIAO': return `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-200 text-slate-800 font-bold">Chưa phân công</span>`;
-    case 'XANH': return `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800">Trong hạn</span>`;
-    case 'HOAN_THANH': return `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-bold">Đã hoàn thành</span>`;
-    default: return `<span class="px-2 py-0.5 rounded text-[10px] bg-yellow-100 text-yellow-800">Sắp đến hạn</span>`;
-  }
+// Mức cảnh báo (DESIGN mục 2): nhãn màu mức + dải 4px bên trái dòng (lớp r-*).
+const ALERT = {
+  DO: { row: 'r-do', cls: 'muc-do', label: (d) => `Quá hạn · ${d} ngày` },
+  DO_DAC_BIET: { row: 'r-dodb', cls: 'muc-dodb', label: (d) => `‼ Đỏ đặc biệt · ${d} ngày` },
+  TU_CHOI: { row: 'r-do', cls: 'muc-do', label: () => 'Từ chối nhận việc' },
+  CHUA_GIAO: { row: '', cls: '', label: () => 'Chưa phân công' },
+  XANH: { row: 'r-xanh', cls: 'muc-xanh', label: () => 'Trong hạn' },
+  HOAN_THANH: { row: 'r-ht', cls: 'muc-xanh', label: () => 'Đã hoàn thành' },
+  VANG: { row: 'r-vang', cls: 'muc-vang', label: () => 'Gần đến hạn' },
+};
+
+function alertBadgeHtml(r, daysOverdue) {
+  const a = ALERT[r.alert_level] || ALERT.VANG;
+  return `<span class="muc ${a.cls}">${a.label(daysOverdue)}</span>`;
 }
 
 function renderA1Table(list) {
   const tbody = $('exceptionTableBody');
   if (!list || list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Không có nhiệm vụ nào phù hợp điều kiện lọc.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="trong">Không có nhiệm vụ nào phù hợp điều kiện lọc.</td></tr>`;
     return;
   }
 
@@ -149,22 +153,19 @@ function renderA1Table(list) {
     };
     const hasDirectiveAccess = canAccessDirectiveThread(state.taskParties[r.task_id]);
 
+    const rejectHtml = r.alert_level === 'TU_CHOI' && r.reject_reason ? `<small>Lý do: ${escapeHtml(r.reject_reason)}</small>` : '';
     return `
-      <tr id="taskRow-${r.task_id}" class="hover:bg-slate-50 border-b">
-        <td class="p-3 max-w-[260px]">
-          <div class="font-bold text-slate-800 text-xs">${escapeHtml(r.task_title)}</div>
-          <div class="text-[10px] text-red-700 font-semibold mt-0.5">Văn bản: ${escapeHtml(r.resolution_code)}</div>
-          <div class="text-[10px] text-slate-400 mt-0.5">Hạn: ${formatDateTime(r.deadline)}</div>
-        </td>
-        <td class="p-3 font-semibold">${escapeHtml(r.owner_name)} <br><span class="text-[10px] text-slate-500 font-normal">${DEPT_NAMES[r.owner_department] || escapeHtml(r.owner_org)}</span></td>
-        <td class="p-3 font-medium text-slate-700">${escapeHtml(r.leader_name)}</td>
-        <td class="p-3 text-center font-bold ${daysOverdue > 0 ? 'text-red-600' : 'text-slate-600'}">${daysOverdue > 0 ? daysOverdue + ' ngày' : 'Trong hạn'}</td>
-        <td class="p-3 font-medium text-slate-700 max-w-[180px] truncate" title="${escapeHtml(r.expected_product)}">${escapeHtml(r.expected_product)}</td>
-        <td class="p-3 text-center">${alertBadgeHtml(r)}</td>
-        <td class="p-3 text-center space-x-1 whitespace-nowrap">
-          <button data-action="openReassignModal" data-task-id="${r.task_id}" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded text-[11px]">Can thiệp</button>
+      <tr id="taskRow-${r.task_id}" class="${(ALERT[r.alert_level] || ALERT.VANG).row}">
+        <td class="tieude">${escapeHtml(r.task_title)}<small>Văn bản: ${escapeHtml(r.resolution_code)}</small>${rejectHtml}</td>
+        <td class="nguoi" data-nhan="Người thực hiện">${escapeHtml(r.owner_name)}<small>${DEPT_NAMES[r.owner_department] || escapeHtml(r.owner_org)}</small></td>
+        <td data-nhan="Lãnh đạo phụ trách">${escapeHtml(r.leader_name)}</td>
+        <td data-nhan="Hạn" class="whitespace-nowrap">${formatDateTime(r.deadline)}</td>
+        <td data-nhan="Sản phẩm">${escapeHtml(r.expected_product)}</td>
+        <td data-nhan="Mức">${alertBadgeHtml(r, daysOverdue)}</td>
+        <td><div class="thao-tac">
+          <button type="button" data-action="openReassignModal" data-task-id="${r.task_id}" class="btn btn-phu btn-nho">Can thiệp</button>
           ${directiveToggleBtnHtml(r.task_id, hasDirectiveAccess)}
-        </td>
+        </div></td>
       </tr>
       ${directiveThreadRowHtml(r.task_id, 7)}
     `;
