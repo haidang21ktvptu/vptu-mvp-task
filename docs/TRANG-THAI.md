@@ -4,7 +4,7 @@
 **GĐ3 (RLS đầy đủ) hoàn thành** — PR #11 merge, production 0007–0010, bản live kiểm tra 4 tài khoản (CVP/PCVP/A2/A3) đúng view. Còn PR #12 (2 commit bổ sung: 0010 + tài liệu) chờ merge. Sẵn sàng GĐ4 (Plan mode).
 
 ## Nhánh & PR đang mở
-- PR #11 `feature/gd3-rls`: migration 0007–0010, 6 hàm RLS-8, `index.html` gọi RPC, `tests/rls` (48 test). Production đã áp migration (có xác nhận trong phiên) → chủ dự án merge → kiểm tra 3 vai trò trên live → ghi CHANGELOG.
+- PR #12 `feature/gd3-rls-bo-sung`: migration 0010 (đã áp staging + production), test "A2 phòng khác bị chặn", SPEC RLS-5, CLAUDE.md rule 12, TRANG-THAI — chỉ chờ merge code.
 
 ## Đã xong
 - GĐ1: RLS tạm + chặn `accounts.password`. GĐ2: Supabase Auth (0004–0006), giữ mật khẩu hiện có, công tắc `admin_set_must_change_password()`.
