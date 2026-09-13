@@ -1,0 +1,11 @@
+{
+  "name": "vptu-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Script vận hành VPTU-TASK (chạy tay, không deploy)",
+  "engines": { "node": ">=20.11" },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
+    "exceljs": "^4.4.0"
+  }
+}
