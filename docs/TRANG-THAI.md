@@ -1,18 +1,18 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ2 (Supabase Auth) — PR-A xong và QA đạt trên staging; đang phát hành production** theo `docs/KE-HOACH-PHAT-HANH-GD2.md`. GĐ1 đã xong.
+**GĐ2 (Supabase Auth) — đã phát hành production** (PR #7 merge, bản live đăng nhập 3 vai trò đạt). Còn PR #8 (phần commit sau merge) và PR-B (0006 xoá `password`) chờ duyệt. GĐ1 đã xong.
 
 ## Nhánh & PR đang mở
-- PR #7 `feature/gd2-supabase-auth` (PR-A): migration 0004–0005, script nạp Auth, config, `index.html`, kế hoạch phát hành. Bước 1–6 kế hoạch do Claude Code chạy; **bước 7 (merge) chủ dự án bấm** sau khi bước 1–6 báo xong.
-- Sắp mở: PR-B `feature/gd2-don-dep` — migration 0006 xoá `accounts.password` + `verify_login`, sửa `seed.sql` (ngay sau khi bản live kiểm tra xong).
+- PR #8 `feature/gd2-supabase-auth`: giữ mật khẩu hiện có (script bcrypt), migration 0005 công tắc quản trị, config `site_url`, SPEC/CHANGELOG — production đã áp đủ, chỉ chờ merge code.
+- PR-B `feature/gd2-don-dep` (xếp trên PR #8): migration 0006 xoá `verify_login` + cột `password`, `seed.sql` bỏ cột. Đã áp staging; **áp production ngay sau khi merge** (`supabase link` prod → `db push` → link lại staging).
 
 ## Đã xong
 - Quyết định: giữ nguyên mật khẩu hiện có (nạp Auth dạng bcrypt), cờ `must_change_password = false`; quản trị bật sau bằng `admin_set_must_change_password()` (SPEC AUTH-2). Q1 xoá dữ liệu nhiệm vụ khi lên v2; Q2 `haidang21ktvptu`; Q3 Free → Pro ở GĐ7.
 - Staging: 0004–0005 + config + 5 auth user; 3 vai trò đăng nhập như cũ; bật cờ → modal bắt buộc đổi hoạt động; trigger tự tắt cờ.
 
 ## Đang dở
-- Production: bước 1–6 kế hoạch phát hành (backup, migration, config, nạp 49 tài khoản), rồi merge, kiểm tra live 3 vai trò, PR-B.
+- Production: chỉ còn áp 0006 sau khi PR-B merge (backup pg_dump 2026-09-13 tại ).
 - GĐ3: RLS theo vai trò thật (RLS-2…8), FK `accounts.id → auth.users.id`, xoá `assigned_domain`, `DROP` các policy `_tam_thoi_`.
 
 ## Theo dõi tuần đầu sau phát hành
