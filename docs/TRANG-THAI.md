@@ -1,7 +1,7 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ3 (RLS đầy đủ) — code xong, staging QA đạt, production đã áp 0007–0010; chờ merge PR #11 và kiểm tra bản live.** GĐ1, GĐ2 đã xong.
+**GĐ3 (RLS đầy đủ) hoàn thành** — PR #11 merge, production 0007–0010, bản live kiểm tra 4 tài khoản (CVP/PCVP/A2/A3) đúng view. Còn PR #12 (2 commit bổ sung: 0010 + tài liệu) chờ merge. Sẵn sàng GĐ4 (Plan mode).
 
 ## Nhánh & PR đang mở
 - PR #11 `feature/gd3-rls`: migration 0007–0010, 6 hàm RLS-8, `index.html` gọi RPC, `tests/rls` (48 test). Production đã áp migration (có xác nhận trong phiên) → chủ dự án merge → kiểm tra 3 vai trò trên live → ghi CHANGELOG.
