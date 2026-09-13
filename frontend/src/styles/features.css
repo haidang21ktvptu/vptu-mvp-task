@@ -43,7 +43,8 @@
   .chat-gui .input { flex: 1; }
 
   /* Toast tin nhắn mới: cùng kiểu toast (chàm), có nút mở hội thoại. */
-  .toast-tin { position: fixed; right: 20px; bottom: 20px; z-index: 100; width: 360px; max-width: calc(100% - 40px); }
+  /* Nằm trên hộp toast thông báo (#toastContainer, bottom 20px) để hai loại không đè nhau. */
+  .toast-tin { position: fixed; right: 20px; bottom: 96px; z-index: 100; width: 360px; max-width: calc(100% - 40px); }
   .toast-tin p { color: rgba(255, 255, 255, .85); margin-top: 2px; }
   .btn-sang { border-color: rgba(255, 255, 255, .7); color: #fff; }
   .btn-sang:hover:not(:disabled) { background: rgba(255, 255, 255, .12); }
@@ -56,7 +57,7 @@
     .luong-dau h3 { font-size: 14px; }
     .luong-feed { max-height: 220px; }
     .khung-chat { right: 0; bottom: 0; left: 0; width: 100%; max-width: 100%; height: 75vh; border-radius: var(--radius-card) var(--radius-card) 0 0; }
-    .toast-tin { bottom: 80px; }
+    .toast-tin { bottom: 156px; }
     .danh-ba { margin-left: -16px; margin-right: -16px; margin-bottom: -20px; }
     .danh-ba .lien-he { padding-left: 16px; padding-right: 16px; }
   }
