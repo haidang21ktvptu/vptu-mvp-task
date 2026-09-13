@@ -19,8 +19,14 @@ describe('RLS-5 task_directives', () => {
     const seen = await seenDirectives('demo_cv1');
     assert.ok(seen.includes(fx.d1) && !seen.includes(fx.d2));
   });
-  test('được phép: A2 (leader) đọc; PCVP đọc trong khối; bị chặn: khối khác', async () => {
-    assert.ok((await seenDirectives('demo_truongphong')).includes(fx.d1));
+  test('được phép: A2 đọc mọi luồng trong phòng (kể cả task không phải leader); bị chặn: phòng khác', async () => {
+    const a2 = await seenDirectives('demo_truongphong');
+    assert.ok(a2.includes(fx.d1) && a2.includes(fx.d3) && !a2.includes(fx.d2));
+    const tp = await userClient('demo_truongphong');
+    assertOk(await tp.from('task_directives').insert({ task_id: fx.t3, sender_id: IDS.truongphong, content: 'RLS-TEST A2 phòng', is_read: false }).select('id'), 'A2 insert task trong phòng');
+    assertDenied(await tp.from('task_directives').insert({ task_id: fx.t2, sender_id: IDS.truongphong, content: 'RLS-TEST A2 phòng khác', is_read: false }).select('id'), 'A2 insert phòng khác');
+  });
+  test('được phép: PCVP đọc trong khối; bị chặn: khối khác', async () => {
     const pcvp = await seenDirectives('demo_pcvp');
     assert.ok(pcvp.includes(fx.d1) && !pcvp.includes(fx.d2));
   });
