@@ -1,39 +1,34 @@
 # Kế hoạch phát hành Giai đoạn 2 — Supabase Auth lên production
 
-Áp dụng cho project production `frwyxcmbonjaimziiuqr`. Ngày chuyển đổi: **ngay khi web app hoàn thành** (quyết định của chủ dự án) = ngày merge PR-A. Mọi bước dưới đây do người vận hành chạy tay, có chủ dự án xác nhận từng bước; không chạy tự động.
+Áp dụng cho project production `frwyxcmbonjaimziiuqr`. Quyết định của chủ dự án (2026-09-13): **giữ nguyên mật khẩu hiện có** (nạp vào Auth dạng băm bcrypt), `must_change_password = false` cho tất cả → người dùng đăng nhập như cũ, không phát mật khẩu tạm; phát hành **ngay sau khi QA staging không còn lỗi** (hệ thống đang là bản demo). Bước 1–6 do Claude Code chạy, bước 7 (merge) chủ dự án bấm.
 
 ## Nguyên tắc
-- Hai PR tách rời để có cửa sổ quay lui: **PR-A** chỉ *thêm* (migration `0004`, script, config, frontend); **PR-B** mới *xoá* (migration `0005`: cột `password`, hàm `verify_login`) và chỉ mở sau khi production ổn định ≥ 24 giờ.
-- Trong cửa sổ 24 giờ, đăng nhập cũ (`verify_login` + cột `password`) vẫn còn nguyên trong DB → quay lui chỉ cần đưa frontend cũ lên lại.
-- Chỉ chạy các lệnh dưới đây khi `supabase/.temp/project-ref` đúng project; luôn `supabase config diff` trước `config push`.
+- **PR-A** chỉ *thêm* (migration `0004`, `0005`, script, config, frontend). **PR-B** mới *xoá* (migration `0006`: cột `password`, hàm `verify_login`) — mở ngay sau khi bản live đã kiểm tra đăng nhập 3 vai trò.
+- Trước khi PR-B áp lên production, đăng nhập cũ (`verify_login` + cột `password`) vẫn còn nguyên trong DB → quay lui chỉ cần đưa frontend cũ lên lại.
+- Chỉ chạy lệnh khi `supabase/.temp/project-ref` đúng project; luôn `supabase config diff` và trình diff trước `config push`.
 
-## Điều kiện trước khi phát hành
-1. PR-A đã QA đủ trên staging (3 vai trò đăng nhập bằng mật khẩu tạm → bị bắt đổi → vào đúng view), CI xanh, `/code-review` không còn cảnh báo cao, **đã được duyệt trên GitHub nhưng chưa merge**.
-2. Văn thư/Chánh Văn phòng sẵn sàng nhận file Excel mật khẩu tạm và phát cho 49 cán bộ trong ngày (kênh nội bộ, không gửi email).
-3. Đã thông báo cho cán bộ: từ giờ G, đăng nhập bằng mật khẩu tạm được phát, phải đổi ngay lần đầu (≥ 8 ký tự, có chữ và số).
-
-## Thứ tự thực hiện (migration → merge)
+## Thứ tự thực hiện (backup → migration → config → nạp Auth → merge → kiểm tra live)
 | Bước | Lệnh / việc | Kiểm tra sau bước | Ảnh hưởng người dùng |
 |---|---|---|---|
-| 1. Backup | `supabase db dump --data-only --project-ref frwyxcmbonjaimziiuqr -f <thư mục ngoài git>/prod-<ngày>.sql` (giữ 7 ngày, đây là bản còn cột `password`) | File tồn tại, có `INSERT INTO "public"."accounts"` | Không |
-| 2. Migration 0004 | `git checkout feature/gd2-supabase-auth` → `supabase link --project-ref frwyxcmbonjaimziiuqr` → `supabase db push --dry-run` (chỉ thấy `0004`) → `supabase db push` | REST: `POST /rest/v1/rpc/verify_login` vẫn trả 200; `GET /rest/v1/accounts_public?select=must_change_password&limit=1` có cột mới | Không (chỉ thêm) |
-| 3. Config Auth | `supabase config diff` (xem kỹ) → `supabase config push` | `POST /auth/v1/signup` trả `signup_disabled` | Không |
-| 4. Tạo 49 auth user | `cd scripts && node create-auth-users.mjs --project-ref frwyxcmbonjaimziiuqr` → file `scripts/out/mat-khau-tam-frwyxcmbonjaimziiuqr-*.xlsx` | Console: "Tạo mới: 49"; `supabase db query --linked "select count(*) from auth.users"` = số `accounts`; chủ dự án tự thử `POST /auth/v1/token?grant_type=password` bằng tài khoản của mình | Không (app cũ chưa dùng Auth) |
-| 5. Bàn giao mật khẩu | Chuyển file Excel cho Văn thư/Chánh VP; **xoá file khỏi máy** sau khi bàn giao (`scripts/out/` không commit) | — | — |
+| 1. Backup | `supabase db dump --project-ref frwyxcmbonjaimziiuqr -f <ngoài git>/prod-<ngày>-schema.sql` và `--data-only -f <ngoài git>/prod-<ngày>-data.sql` (pg_dump; bản data còn cột `password`; giữ ≥ 7 ngày) | 2 file tồn tại, data có `INSERT INTO "public"."accounts"` | Không |
+| 2. Migration | `git checkout feature/gd2-supabase-auth` → `supabase link --project-ref frwyxcmbonjaimziiuqr` → `supabase db push --dry-run` (chỉ `0004`, `0005`) → `supabase db push` | REST: `rpc/verify_login` vẫn 200; `accounts_public` có cột `must_change_password` | Không (chỉ thêm) |
+| 3. Config Auth | `supabase config diff` → trình diff (chỉ được có: `enable_signup`, `minimum_password_length`, `password_requirements`, `site_url` = `https://haidang21ktvptu.github.io/vptu-mvp-task`, `additional_redirect_urls`, MFA/OTP tắt, `enable_confirmations`) → `supabase config push` | `POST /auth/v1/signup` trả `signup_disabled` | Không |
+| 4. Nạp 49 tài khoản vào Auth | `cd scripts && node create-auth-users.mjs --project-ref frwyxcmbonjaimziiuqr --dry-run` rồi bỏ `--dry-run` | Console "Tạo mới: 49"; `supabase db query --linked "select count(*) from auth.users"` = số `accounts`; REST đăng nhập thử 1 tài khoản mỗi vai trò bằng mật khẩu hiện có | Không (app cũ chưa dùng Auth) |
+| 5. Kiểm tra cờ | `supabase db query --linked "select count(*) from accounts where must_change_password"` = 0 | — | — |
 | 6. Link lại staging | `supabase link --project-ref vojmrjezspdftovzinek` | `cat supabase/.temp/project-ref` = staging | — |
-| 7. **Merge PR-A** | Bấm Merge trên GitHub (ruleset: CI xanh) → GitHub Pages deploy ~1–2 phút | Mở trang live: màn đăng nhập mới, đăng nhập bằng mật khẩu tạm → bắt đổi → vào view | **Giờ G**: mật khẩu cũ `123456` không còn dùng được |
-| 8. Theo dõi 24h | Supabase Dashboard → Auth → Logs; phản ánh của cán bộ; `select count(*) from auth.users where last_sign_in_at is not null` | Không có lỗi hàng loạt | — |
-| 9. PR-B (sau ≥ 24h) | Nhánh `feature/gd2-don-dep`: migration `0005` (`DROP FUNCTION verify_login`, `ALTER TABLE accounts DROP COLUMN password`), sửa `supabase/seed.sql` bỏ cột `password`; áp staging → CI → duyệt → merge → `db push` production | `GET /rest/v1/rpc/verify_login` trả 404; `accounts.password` không còn | Không |
+| 7. **Merge PR-A** (chủ dự án) | Bấm Merge trên GitHub (ruleset: CI xanh) → GitHub Pages deploy ~1–2 phút | — | Người dùng đăng nhập như cũ (mật khẩu không đổi) |
+| 8. Kiểm tra bản live | Mở `https://haidang21ktvptu.github.io/vptu-mvp-task/`: đăng nhập 3 vai trò (A1, A2, A3) bằng mật khẩu hiện có → vào đúng view; F5 giữ phiên; đăng xuất | Không lỗi console; ghi `CHANGELOG.md` | — |
+| 9. PR-B (ngay sau bước 8) | Nhánh `feature/gd2-don-dep`: migration `0006` (`DROP FUNCTION verify_login`, `ALTER TABLE accounts DROP COLUMN password`), `supabase/seed.sql` bỏ cột `password`; áp staging → CI → duyệt → merge → `db push` production | `rpc/verify_login` 404; `accounts.password` không còn | Không |
 
-## Quay lui trong 24 giờ (trước bước 9)
+## Quay lui (trước bước 9)
 | Tình huống | Cách quay lui | Thời gian |
 |---|---|---|
-| Cán bộ không đăng nhập được hàng loạt sau bước 7 | **R1**: mở PR `git revert -m 1 <merge-commit PR-A>` → merge → Pages deploy lại bản cũ. Đăng nhập cũ (`verify_login`, mật khẩu cũ) hoạt động ngay vì DB chưa xoá gì. | ≈ 5 phút |
-| Cần xoá luôn tài khoản Auth đã tạo | **R2** (tuỳ chọn): `node create-auth-users.mjs --project-ref frwyxcmbonjaimziiuqr --rollback` (xoá 49 `auth.users`, `accounts` giữ nguyên). Config Auth có thể để nguyên (không ảnh hưởng app cũ). | ≈ 2 phút |
-| Cần bỏ schema 0004 | **R3**: không cần — 0004 chỉ thêm cột/bảng/trigger, app cũ không đụng. Nếu bắt buộc, viết migration `0006` mới để xoá (không sửa 0004 đã commit). | — |
+| Đăng nhập lỗi hàng loạt sau bước 7 | **R1**: PR `git revert -m 1 <merge-commit PR-A>` → merge → Pages deploy lại bản cũ; `verify_login` + cột `password` còn nguyên nên đăng nhập cũ chạy ngay. | ≈ 5 phút |
+| Cần xoá tài khoản Auth đã tạo | **R2**: `node create-auth-users.mjs --project-ref frwyxcmbonjaimziiuqr --rollback` (xoá 49 `auth.users`, `accounts` giữ nguyên). | ≈ 2 phút |
+| Cần bỏ schema 0004/0005 | **R3**: không cần — chỉ thêm cột/bảng/hàm. Nếu bắt buộc: migration mới để xoá (không sửa migration đã commit). | — |
 
-**Sau bước 9 (đã xoá cột `password`)**: quay lui phải khôi phục từ backup bước 1 (`supabase db query --linked -f prod-<ngày>.sql` sau khi tạo lại cột) — coi đây là **điểm không quay lui nhanh**; chỉ làm bước 9 khi thật ổn định.
+**Sau bước 9 (đã xoá cột `password`)**: quay lui phải khôi phục dữ liệu `accounts` từ backup bước 1 sau khi tạo lại cột — coi đây là **điểm không quay lui nhanh**.
 
-## Hạn chế đã biết (cần quyết định)
-- Khoá tài khoản 15 phút sau 5 lần sai (AUTH-3) đã có sẵn trong DB (hook `hook_password_verification_attempt`) nhưng **gói Supabase Free không cho bật hook** (API trả 402). Hiện chỉ có giới hạn theo IP (30 lần/5 phút/IP). Bật lại khi lên gói Pro: `enabled = true` trong `config.toml` → `supabase config push`.
-- `config push` cũng đồng bộ một số mục Auth phụ (site_url, redirect, MFA, OTP) theo `config.toml`; các mục này không dùng trong luồng email + mật khẩu, đã xem diff trên staging.
+## Sau phát hành — theo dõi tuần đầu
+- Giới hạn IP của Supabase (30 lượt/5 phút/IP, gói Free): cả cơ quan chung IP nên giờ cao điểm có thể bị chặn oan (giao diện báo "vui lòng chờ 5 phút"). Theo dõi Supabase Dashboard → Auth → Logs (`over_request_rate_limit`) trong tuần đầu; nếu xảy ra, cân nhắc nâng `sign_in_sign_ups` hoặc lên gói Pro sớm hơn GĐ7.
+- Bật bắt buộc đổi mật khẩu (khi chủ dự án quyết, sau 7 giai đoạn): `supabase db query --linked "SELECT public.admin_set_must_change_password();"`.

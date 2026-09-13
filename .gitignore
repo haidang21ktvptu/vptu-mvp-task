@@ -5,6 +5,5 @@ dist/
 .env.*.local
 *.log
 .DS_Store
-# Mật khẩu tạm xuất từ scripts/create-auth-users.mjs — không bao giờ commit
+# Kết xuất tạm của script vận hành — không bao giờ commit
 scripts/out/
-*.xlsx

@@ -44,9 +44,9 @@ Ký hiệu: **[Giữ]** = đã có ở MVP, giữ nguyên hành vi. **[Mới]** 
 
 ### 3.1 Đăng nhập — AUTH
 - **AUTH-1 [Sửa]** Đăng nhập bằng Supabase Auth (email + mật khẩu). Email quy ước `username@vptu.caobang.local` để không đổi username hiện có.
-- **AUTH-2 [Mới]** Lần đăng nhập đầu sau nâng cấp bắt buộc đổi mật khẩu. Mật khẩu ≥ 8 ký tự, có chữ và số.
-- **AUTH-3 [Mới]** Khoá 15 phút sau 5 lần sai (dùng rate-limit của Supabase Auth).
-- **AUTH-4 [Sửa]** Bảng `accounts` không còn cột `password`. Liên kết `accounts.id = auth.users.id`.
+- **AUTH-2 [Mới]** Cờ `accounts.must_change_password` do quản trị bật — hàng loạt hoặc từng người, bằng hàm `admin_set_must_change_password()` (chỉ `service_role`/SQL Editor gọi được). Khi cờ bật, người dùng bị bắt đổi mật khẩu ngay lần đăng nhập kế tiếp (màn hình bắt buộc, không có nút đóng); đổi xong cờ tự tắt (trigger trên `auth.users`). Khi chuyển đổi ở GĐ2: **giữ nguyên mật khẩu hiện có** (nạp vào Auth dạng băm bcrypt), cờ = `false` cho tất cả; chủ dự án tự bật sau khi hoàn thành 7 giai đoạn. Mật khẩu mới ≥ 8 ký tự, có chữ và số.
+- **AUTH-3 [Mới]** Khoá 15 phút sau 5 lần sai. **Tạm (GĐ2, gói Free):** chỉ dùng giới hạn theo IP của Supabase (30 lượt/5 phút/IP — cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm; giao diện báo "vui lòng chờ 5 phút"). Hook khoá theo từng tài khoản đã có sẵn trong DB (`hook_password_verification_attempt`), bật khi lên gói Pro ở GĐ7.
+- **AUTH-4 [Sửa]** Bảng `accounts` không còn cột `password` (xoá ngay sau khi đã nạp toàn bộ vào Auth). Liên kết `accounts.id = auth.users.id` (tạo `auth.users` trùng id).
 - **AUTH-5 [Giữ]** Sau đăng nhập, điều hướng theo vai trò A1/A2/A3.
 
 ### 3.2 Phân quyền dữ liệu — RLS
@@ -179,5 +179,5 @@ Một giai đoạn được coi là xong khi:
 | # | Câu hỏi | Cần trước GĐ |
 |---|---|---|
 | Q1 | Dữ liệu nhiệm vụ hiện tại trên production có cần giữ, hay bắt đầu sạch khi lên v2? — **Đã trả lời (2026-09-13): xoá sạch khi lên v2** (chỉ giữ 49 tài khoản; bước xoá làm riêng, không thuộc GĐ2). | 2 |
-| Q2 | Ai là người duyệt PR lên production (tên GitHub)? | 6 |
-| Q3 | Gói Supabase đang dùng (Free/Pro)? Quyết định cách backup. | 7 |
+| Q2 | Ai là người duyệt PR lên production (tên GitHub)? — **Đã trả lời: `haidang21ktvptu`.** | 6 |
+| Q3 | Gói Supabase đang dùng (Free/Pro)? Quyết định cách backup. — **Đã trả lời: Free; kế hoạch lên Pro ở GĐ7** (khi đó bật hook khoá tài khoản AUTH-3). | 7 |
