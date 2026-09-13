@@ -28,7 +28,8 @@ components/        toast.js (thay alert()), modal dùng chung
 views/             shell.js (header + hiện view theo vai trò), registry.js, index.js (gắn view/modal)
                    a1/ (template, dashboard ngoại lệ, cây phân cấp) · a2/ (template, giao việc, theo dõi/duyệt, KPI)
                    a3/ (template, danh sách, modal tiếp nhận, modal minh chứng) · shared/ (KPI nhóm, bảng việc inline)
-features/          tasks/reassign (modal phân công lại), directives/render (nút Ý kiến); logic directives, messages, realtime ở PR c
+features/          tasks/reassign (modal phân công lại) · directives/ (render: nút Ý kiến + huy hiệu; index: mở/nạp/gửi luồng)
+                   messages/ (template, index: danh bạ + huy hiệu, chat: khung chat + toast) · realtime.js (kênh postgres_changes)
 styles/            main.css (Tailwind)
 ```
 

@@ -1,17 +1,19 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ4 (tách frontend Vite) đang làm, auto mode, 3 PR xếp chồng.** PR (a) #13 khung Vite + auth: CI xanh, chờ merge. PR (b) views A1/A2/A3: xong, e2e 12/12. PR (c) directives + messages + realtime: đang làm.
+**GĐ4 (tách frontend Vite) — mã nguồn xong, 3 PR xếp chồng chờ merge theo thứ tự (a) → (b) → (c).** e2e 16/16 (7 kịch bản × 2 kích thước) trên staging. Chưa đổi nguồn GitHub Pages, chưa áp 0011 lên production.
 
 ## Nhánh & PR đang mở
 - PR (a) #13 `feature/gd4a-vite-khung` → main: khung Vite, auth, toast, migration 0011 (đã áp staging), seed tạo auth user, e2e kịch bản 1–3, CI job frontend, `deploy-pages.yml` (chưa deploy tới khi đổi nguồn Pages).
-- PR (b) `feature/gd4b-views` → `feature/gd4a-vite-khung`: views A1/A2/A3 + 3 modal, e2e kịch bản 4–6. Merge (a) trước rồi GitHub tự chuyển base của (b) sang main.
+- PR (b) #14 `feature/gd4b-views` → `feature/gd4a-vite-khung`: views A1/A2/A3 + 3 modal, e2e kịch bản 4–6.
+- PR (c) `feature/gd4c-directives-messages-realtime` → `feature/gd4b-views`: ý kiến chỉ đạo, nhắn tin, realtime, e2e kịch bản 7.
+- Thứ tự merge: #13 → #14 (GitHub tự chuyển base sang main) → PR (c). Sau đó: thêm 2 secret, chuyển Pages sang GitHub Actions, kiểm tra live, rồi PR xoá `index.html` gốc.
 
 ## Đã xong
 - GĐ1: RLS tạm + chặn `accounts.password`. GĐ2: Supabase Auth (0004–0006). GĐ3: RLS đầy đủ (0007–0010), 48 test RLS pass, production đã áp và kiểm tra live.
 
 ## Đang dở
-- GĐ4 PR (c): features/directives, features/messages, features/realtime; xoá `index.html` gốc **chỉ sau khi** Pages đã chuyển nguồn sang GitHub Actions và bản live kiểm tra xong (PR riêng).
+- GĐ4 việc còn lại sau merge: xoá `index.html` gốc **chỉ sau khi** Pages đã chuyển nguồn sang GitHub Actions và bản live kiểm tra 3 vai trò xong (PR riêng, kèm bỏ ngoại lệ trong `scripts/check-line-limit.mjs`).
 - GĐ6: đưa `tests/rls` + `tests/e2e` vào CI với secret staging. GĐ7: lên Pro, bật hook khoá tài khoản (AUTH-3).
 
 ## Chờ quyết định (chủ dự án)

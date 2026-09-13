@@ -14,8 +14,16 @@ export async function loginAs(page, role, password = SEED_PASSWORD) {
   await page.goto('./');
   await page.locator('#loginUsername').fill(user.username);
   await page.locator('#loginPassword').fill(password);
+  // A2: loadA2Data chạy ngay khi vào app; chờ nó xong để thao tác sau không bị vẽ lại đè lên.
+  const settled = role === 'A2' ? waitForA2Tracking(page) : null;
   await page.locator('#loginSubmitBtn').click();
   await expectLoggedIn(page, role);
+  if (settled) await settled;
+}
+
+// Truy vấn cuối của loadA2Data là hồ sơ CHO_DUYET; có phản hồi = bảng theo dõi đã vẽ xong.
+function waitForA2Tracking(page) {
+  return page.waitForResponse((r) => r.url().includes('/rest/v1/tasks') && r.url().includes('CHO_DUYET'));
 }
 
 export async function expectLoggedIn(page, role) {
@@ -35,4 +43,12 @@ export async function logout(page) {
   await page.locator('#logoutBtn').click();
   await expect(page.locator('#loginSection')).toBeVisible();
   await expect(page.locator('#mainHeader')).toBeHidden();
+}
+
+// Mở tab "Theo dõi & duyệt" của A2 và chờ loadA2Data vẽ xong bảng (truy vấn cuối là hồ sơ CHO_DUYET),
+// tránh bấm vào dòng cũ rồi bị vẽ lại đè lên.
+export async function openA2TrackingTab(page) {
+  const loaded = waitForA2Tracking(page);
+  await page.locator('#tabBtnTheoDoi').click();
+  await loaded;
 }

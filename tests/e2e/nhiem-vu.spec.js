@@ -1,7 +1,7 @@
 // Kịch bản 4–6 (SPEC GĐ4): A2 giao việc → A3 tiếp nhận + nộp minh chứng → A2 duyệt hoàn thành.
 // Chạy tuần tự trong một project; nhiệm vụ đặt tên E2E-TEST để global-setup dọn lần sau.
 import { test, expect } from '@playwright/test';
-import { loginAs, logout } from './lib/app.js';
+import { loginAs, logout, openA2TrackingTab } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 
 function deadlineInDays(days) {
@@ -67,7 +67,7 @@ test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứ
 
   test('Kịch bản 6: A2 duyệt minh chứng → nhiệm vụ hoàn thành', async ({ page }) => {
     await loginAs(page, 'A2');
-    await page.locator('#tabBtnTheoDoi').click();
+    await openA2TrackingTab(page);
     const approvalRow = page.locator('#approvalTableBody tr', { hasText: title });
     await expect(approvalRow).toContainText('Demo Chuyên viên Một');
     await expect(approvalRow.locator('a')).toHaveAttribute('href', 'https://example.org/bao-cao-15.pdf');
