@@ -37,13 +37,10 @@ function canChatWith(a) {
 function contactHtml(a) {
   const unread = state.dmUnread[a.id] || 0;
   return `
-    <div data-action="openDMChat" data-peer-id="${a.id}" class="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition">
-      <div>
-        <div class="font-bold text-slate-800">${escapeHtml(a.full_name)}</div>
-        <div class="text-[10px] text-slate-500">${escapeHtml(a.position_title)} — ${DEPT_NAMES[a.department] || ''}</div>
-      </div>
-      ${unread > 0 ? `<span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${unread} mới</span>` : ''}
-    </div>
+    <button type="button" data-action="openDMChat" data-peer-id="${a.id}" class="lien-he">
+      <span class="nguoi">${escapeHtml(a.full_name)}<small>${escapeHtml(a.position_title)} · ${DEPT_NAMES[a.department] || ''}</small></span>
+      ${unread > 0 ? `<span class="huy-hieu" aria-label="${unread} tin chưa đọc">${unread}</span>` : ''}
+    </button>
   `;
 }
 
@@ -57,7 +54,7 @@ function renderDMPickerList(filterKw = '') {
   });
 
   listDiv.innerHTML = filtered.length === 0
-    ? `<p class="text-center text-slate-400 py-6">Không có cán bộ phù hợp trong phạm vi liên lạc cho phép.</p>`
+    ? `<p class="chu-phu text-center py-6">Không có cán bộ phù hợp trong phạm vi liên lạc cho phép.</p>`
     : filtered.map(contactHtml).join('');
 }
 

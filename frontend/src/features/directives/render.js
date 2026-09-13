@@ -30,27 +30,23 @@ export function directiveToggleBtnHtml(taskId, hasAccess) {
   return `<button type="button" data-action="toggleDirectiveThread" data-task-id="${taskId}" class="btn btn-phu btn-nho yk">Ý kiến${badgeHtml}</button>`;
 }
 
+// Dòng luồng ý kiến ẩn dưới mỗi nhiệm vụ; mở ra trượt dọc 160ms (DESIGN mục 7).
 export function directiveThreadRowHtml(taskId, colspan) {
   return `
-    <tr id="directiveRow-${taskId}" class="hidden bg-slate-50 border-b">
-      <td colspan="${colspan}" class="p-4">
-        <div class="max-w-2xl bg-white border border-slate-200 rounded-lg p-3 space-y-3 shadow-inner">
-          <div class="flex justify-between items-center border-b pb-1.5">
-            <span class="text-xs font-bold text-red-800 uppercase flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              Luồng Chỉ Đạo & Phản Hồi Trực Tuyến
-            </span>
-            <button data-action="toggleDirectiveThread" data-task-id="${taskId}" class="text-slate-400 hover:text-slate-600 text-xs font-bold">✕ Đóng</button>
+    <tr id="directiveRow-${taskId}" class="hidden dong-y-kien">
+      <td colspan="${colspan}" class="o-y-kien">
+        <div class="luong">
+          <div class="luong-dau">
+            <h3>Ý kiến chỉ đạo và phản hồi</h3>
+            <button type="button" data-action="toggleDirectiveThread" data-task-id="${taskId}" class="btn btn-phu btn-nho">Đóng</button>
           </div>
-          <div id="directiveFeed-${taskId}" class="max-h-60 overflow-y-auto space-y-2.5 p-2 bg-slate-50 rounded border text-xs">
-            <p class="text-center text-slate-400">Đang tải ý kiến...</p>
+          <div id="directiveFeed-${taskId}" class="luong-feed" aria-live="polite">
+            <p class="chu-phu text-center">Đang tải ý kiến</p>
           </div>
-          <div id="directiveWarn-${taskId}" class="hidden p-2 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium text-center">
-            Cán bộ chỉ có thể phản hồi khi nhiệm vụ đã nhận được ý kiến chỉ đạo từ Lãnh đạo.
-          </div>
-          <form id="directiveForm-${taskId}" data-submit="handleSendDirectiveInline" data-task-id="${taskId}" class="flex gap-2 pt-1 border-t">
-            <input type="text" id="directiveInput-${taskId}" required class="flex-1 border rounded p-2 text-xs focus:ring-1 focus:ring-red-600 focus:outline-none" placeholder="Nhập ý kiến chỉ đạo hoặc báo cáo phản hồi...">
-            <button type="submit" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded text-xs font-bold whitespace-nowrap">Gửi</button>
+          <p id="directiveWarn-${taskId}" class="hidden luong-canh-bao">Đồng chí có thể phản hồi sau khi nhận được ý kiến chỉ đạo của Lãnh đạo hoặc Trưởng phòng.</p>
+          <form id="directiveForm-${taskId}" data-submit="handleSendDirectiveInline" data-task-id="${taskId}" class="luong-gui">
+            <input type="text" id="directiveInput-${taskId}" required class="input input-nho" placeholder="Nhập ý kiến chỉ đạo hoặc báo cáo phản hồi" aria-label="Nội dung ý kiến">
+            <button type="submit" class="btn btn-cham btn-nho">Gửi</button>
           </form>
         </div>
       </td>

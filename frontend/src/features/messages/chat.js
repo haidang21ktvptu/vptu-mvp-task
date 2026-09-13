@@ -10,14 +10,9 @@ const TOAST_MS = 8000;
 
 function messageHtml(m) {
   const isMe = m.sender_id === state.user.id;
-  const bubble = isMe ? 'bg-slate-800 text-white rounded-br-none' : 'bg-white border text-slate-800 rounded-bl-none shadow-sm';
   return `
-    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-      <div class="p-2.5 rounded-lg max-w-[85%] ${bubble}">
-        <p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(m.content)}</p>
-      </div>
-      <span class="text-[9px] text-slate-400 mt-0.5">${formatTime(m.created_at)}</span>
-    </div>
+    <div class="tin ${isMe ? 'tin-cua-toi' : ''}">${escapeHtml(m.content)}</div>
+    <span class="tin-gio">${formatTime(m.created_at)}</span>
   `;
 }
 
@@ -30,7 +25,7 @@ export async function loadDirectMessages(peerId, markAsRead = false) {
     .order('created_at', { ascending: true });
 
   if (!data || data.length === 0) {
-    chatBox.innerHTML = `<p class="text-center text-slate-400 py-4">Chưa có tin nhắn nào giữa hai đồng chí.</p>`;
+    chatBox.innerHTML = `<p class="chu-phu text-center py-4">Chưa có tin nhắn nào giữa hai đồng chí.</p>`;
   } else {
     chatBox.innerHTML = data.map(messageHtml).join('');
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -48,7 +43,7 @@ export async function openChatWith(peerId) {
   const peer = findAccount(peerId);
   closeDMPicker();
   setText('dmChatHeaderName', peer ? peer.full_name : 'Đồng chí');
-  setText('dmChatHeaderRole', peer ? `${peer.position_title} — ${DEPT_NAMES[peer.department]}` : '');
+  setText('dmChatHeaderRole', peer ? `${peer.position_title} · ${DEPT_NAMES[peer.department]}` : '');
   show('dmModal', true);
   await loadDirectMessages(peerId, true);
 }
@@ -85,8 +80,8 @@ export async function handleSendDM() {
 let toastTimer = null;
 
 export function showDMToast(senderName, content, senderId) {
-  setText('toastSender', `✉️ Tin nhắn từ ${senderName}`);
-  setText('toastContent', `"${content}"`);
+  setText('toastSender', `Tin nhắn từ ${senderName}`);
+  setText('toastContent', content);
   $('toastActionBtn').onclick = () => {
     closeToast();
     openChatWith(senderId);

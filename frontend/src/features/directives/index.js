@@ -7,18 +7,15 @@ import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { updateDirectiveRowBadge } from './render.js';
 
+// Một ý kiến: viền trái chàm nếu của tôi, vàng nếu của Lãnh đạo/Trưởng phòng (màu là thông tin).
 function directiveItemHtml(d) {
   const name = d.sender?.full_name || 'Cán bộ';
+  const role = d.sender?.role_group;
+  const cls = d.sender_id === state.user.id ? 'cua-toi' : (role === 'A1' || role === 'A2' ? 'lanh-dao' : '');
   return `
-    <div class="flex gap-2.5 items-start">
-      <div class="w-6 h-6 rounded-full bg-slate-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">${escapeHtml(name.charAt(0))}</div>
-      <div class="flex-1 bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
-        <div class="flex justify-between items-center mb-1">
-          <span class="font-bold text-[11px] text-slate-800">${escapeHtml(name)} <span class="text-slate-400 font-normal">(${senderRoleTag(d.sender?.role_group)})</span></span>
-          <span class="text-[9px] text-slate-400">${formatTime(d.created_at)}</span>
-        </div>
-        <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">${escapeHtml(d.content)}</p>
-      </div>
+    <div class="yk-muc ${cls}">
+      <div class="yk-dau"><b>${escapeHtml(name)}</b><span class="chu-nho">${senderRoleTag(role)} · ${formatTime(d.created_at)}</span></div>
+      <p class="yk-noi-dung">${escapeHtml(d.content)}</p>
     </div>
   `;
 }
@@ -42,7 +39,7 @@ export async function loadDirectiveThread(taskId, markAsRead = false) {
   show(`directiveForm-${taskId}`, canReply);
 
   if (items.length === 0) {
-    feed.innerHTML = `<p class="text-center text-slate-400 py-2">Chưa có ý kiến nào cho nhiệm vụ này.</p>`;
+    feed.innerHTML = `<p class="chu-phu text-center">Chưa có ý kiến nào cho nhiệm vụ này.</p>`;
   } else {
     feed.innerHTML = items.map(directiveItemHtml).join('');
     feed.scrollTop = feed.scrollHeight;

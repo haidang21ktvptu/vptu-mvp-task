@@ -5,6 +5,7 @@
 @import './layout.css';
 @import './components.css';
 @import './tables.css';
+@import './features.css';
 
 @tailwind base;
 @tailwind components;

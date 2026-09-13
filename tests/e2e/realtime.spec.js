@@ -62,7 +62,7 @@ test.describe.serial('Realtime ý kiến chỉ đạo và nhắn tin 1-1', () =>
     // A3 nhận realtime: huy hiệu = 1, dòng nhiệm vụ được viền nổi bật (DIR-4).
     await expect(badge).toBeVisible(RT);
     await expect(badge).toHaveText('1');
-    await expect(a3Page.locator(`#taskRow-${taskId}`)).toHaveClass(/ring-2/);
+    await expect(a3Page.locator(`#taskRow-${taskId}`)).toHaveClass(/dong-moi/);
 
     // A3 mở luồng: đọc ý kiến, huy hiệu về 0, được phép phản hồi vì đã có ý kiến của Lãnh đạo (DIR-2).
     await a3Page.locator(`#taskRow-${taskId}`).getByRole('button', { name: 'Ý kiến' }).click();

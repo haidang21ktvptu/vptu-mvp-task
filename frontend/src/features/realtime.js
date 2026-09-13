@@ -19,8 +19,8 @@ async function onDirectiveInsert(newMsg) {
   if (newMsg.sender_id === state.user.id) return;
   state.directiveUnread[newMsg.task_id] = (state.directiveUnread[newMsg.task_id] || 0) + 1;
   updateDirectiveRowBadge(newMsg.task_id);
-  // Viền nổi bật dòng nhiệm vụ có ý kiến mới.
-  $(`taskRow-${newMsg.task_id}`)?.classList.add('ring-2', 'ring-red-400', 'bg-red-50/60');
+  // Tô nền vàng nhạt dòng nhiệm vụ có ý kiến mới (lớp dong-moi, features.css).
+  $(`taskRow-${newMsg.task_id}`)?.classList.add('dong-moi');
 }
 
 async function onMessageInsert(dm) {

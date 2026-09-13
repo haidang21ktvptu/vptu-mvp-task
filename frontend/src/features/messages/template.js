@@ -1,55 +1,47 @@
-// Toast tin nhắn, danh bạ và khung chat 1-1 (MSG-1/2), lấy nguyên từ index.html cũ.
+// Toast tin nhắn mới, danh bạ và khung chat 1-1 (MSG-1/2) theo DESIGN mục 5.
+// Mục "Nhắn tin" (#dmBubbleLauncher + huy hiệu #dmBubbleBadge) nằm ở thanh bên, do views/shell.js vẽ.
 export const messagesTemplate = `
-<!-- TOAST THÔNG BÁO TIN NHẮN RIÊNG TƯ (DM) -->
-<div id="realtimeToast" class="fixed top-5 right-5 z-[100] hidden max-w-sm w-full bg-white border-l-4 border-slate-700 rounded-lg shadow-2xl p-4 transition-all transform duration-300">
-  <div class="flex items-start justify-between gap-3">
-    <div class="flex items-start gap-2.5">
-      <span class="text-xl">✉️</span>
-      <div>
-        <h4 id="toastSender" class="text-xs font-bold text-slate-800 uppercase">Tin nhắn riêng mới</h4>
-        <p id="toastContent" class="text-xs text-slate-600 mt-1 italic bg-slate-50 p-2 rounded border">--</p>
-      </div>
-    </div>
-    <button data-action="closeToast" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+<!-- TOAST TIN NHẮN MỚI (realtime) -->
+<div id="realtimeToast" class="toast toast-tin hidden" role="status">
+  <div class="flex-1 min-w-0">
+    <b id="toastSender" class="font-medium">Tin nhắn mới</b>
+    <p id="toastContent" class="whitespace-pre-wrap">--</p>
+    <div class="mt-2"><button type="button" id="toastActionBtn" class="btn btn-phu btn-nho btn-sang">Mở hội thoại</button></div>
   </div>
-  <div class="mt-2.5 flex justify-end">
-    <button id="toastActionBtn" class="bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold px-3 py-1 rounded shadow">Mở cuộc trò chuyện</button>
+  <button type="button" data-action="closeToast" class="toast-dong" aria-label="Đóng thông báo">✕</button>
+</div>
+
+<!-- DANH BẠ CHỌN NGƯỜI NHẮN TIN -->
+<div id="dmPickerModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="dmPickerTitle">
+  <div class="modal">
+    <div class="flex items-start justify-between gap-3 mb-3">
+      <h2 id="dmPickerTitle" class="modal-tieu-de">Danh bạ nhắn tin</h2>
+      <button type="button" data-action="closeDMPicker" class="btn btn-phu btn-nho">Đóng</button>
+    </div>
+    <label for="dmSearchContact" class="nhan">Tìm cán bộ</label>
+    <input type="search" id="dmSearchContact" class="input input-nho" placeholder="Tên, chức vụ hoặc phòng">
+    <div id="dmContactList" class="danh-ba"></div>
   </div>
 </div>
 
-<!-- Mục "Nhắn tin" (#dmBubbleLauncher + huy hiệu #dmBubbleBadge) nằm ở thanh bên, do views/shell.js vẽ. -->
-
-<!-- MODAL DANH BẠ CHỌN NGƯỜI NHẮN TIN -->
-<div id="dmPickerModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
-  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 space-y-3 max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center border-b pb-2">
-      <h3 class="text-xs font-bold text-slate-900 uppercase">Danh Bạ Nhắn Tin Nội Bộ</h3>
-      <button data-action="closeDMPicker" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+<!-- KHUNG CHAT 1-1 -->
+<div id="dmModal" class="khung-chat hidden" role="dialog" aria-labelledby="dmChatHeaderName">
+  <div class="chat-dau">
+    <div class="nguoi">
+      <b id="dmChatHeaderName">--</b>
+      <small id="dmChatHeaderRole">--</small>
     </div>
-    <input type="text" id="dmSearchContact" placeholder="🔍 Tìm tên cán bộ, phòng ban..." class="border rounded p-2 text-xs w-full focus:outline-none focus:ring-1 focus:ring-slate-700">
-    <div id="dmContactList" class="flex-1 overflow-y-auto divide-y divide-slate-100 text-xs"></div>
-  </div>
-</div>
-
-<!-- KHUNG CHAT RIÊNG TƯ 1-1 -->
-<div id="dmModal" class="fixed bottom-5 right-5 z-50 hidden bg-white rounded-xl shadow-2xl max-w-md w-full sm:w-[420px] p-4 space-y-3 flex flex-col h-[500px] border-2 border-slate-700">
-  <div class="flex justify-between items-center border-b pb-2">
-    <div class="truncate">
-      <h3 id="dmChatHeaderName" class="text-xs font-bold text-slate-800 uppercase truncate">--</h3>
-      <p id="dmChatHeaderRole" class="text-[10px] text-slate-500">--</p>
-    </div>
-    <div class="flex items-center gap-1">
-      <button data-action="openDMPicker" title="Đổi người chat" class="p-1 hover:bg-slate-100 rounded text-slate-500 text-xs px-2">Danh bạ</button>
-      <button data-action="closeDMModal" title="Đóng" class="p-1 hover:bg-slate-100 rounded text-slate-500 font-bold text-sm px-2">✕</button>
+    <div class="flex gap-2 shrink-0">
+      <button type="button" data-action="openDMPicker" class="btn btn-phu btn-nho">Danh bạ</button>
+      <button type="button" data-action="closeDMModal" class="btn btn-phu btn-nho" aria-label="Đóng khung chat">Đóng</button>
     </div>
   </div>
-  <div id="dmChatBox" class="flex-1 overflow-y-auto space-y-3 p-3 bg-slate-50 rounded-lg border text-xs">
-    <p class="text-center text-slate-400">Đang tải tin nhắn...</p>
+  <div id="dmChatBox" class="chat-hop" aria-live="polite">
+    <p class="chu-phu text-center">Đang tải tin nhắn</p>
   </div>
-  <form data-submit="handleSendDM" class="flex gap-2 pt-2 border-t">
-    <input type="text" id="dmInput" required class="flex-1 border rounded-lg p-2 text-xs focus:ring-1 focus:ring-slate-700 focus:outline-none" placeholder="Nhập tin nhắn riêng...">
-    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold">Gửi</button>
+  <form data-submit="handleSendDM" class="chat-gui">
+    <input type="text" id="dmInput" required class="input input-nho" placeholder="Nhập tin nhắn" aria-label="Nội dung tin nhắn">
+    <button type="submit" class="btn btn-cham btn-nho">Gửi</button>
   </form>
 </div>
-
 `;
