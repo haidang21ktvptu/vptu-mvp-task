@@ -25,8 +25,10 @@ main.js            điểm vào: nối module, không chứa nghiệp vụ
 lib/               supabase.js (client), constants.js, state.js (trạng thái chung), dom.js, actions.js (uỷ quyền sự kiện data-action)
 auth/              login.js, change-password.js (AUTH-2), session.js (đăng xuất, khôi phục phiên)
 components/        toast.js (thay alert()), modal dùng chung
-views/             shell.js (header + hiện view theo vai trò), registry.js, a1/ a2/ a3/ (PR b)
-features/          directives, messages, realtime (PR c)
+views/             shell.js (header + hiện view theo vai trò), registry.js, index.js (gắn view/modal)
+                   a1/ (template, dashboard ngoại lệ, cây phân cấp) · a2/ (template, giao việc, theo dõi/duyệt, KPI)
+                   a3/ (template, danh sách, modal tiếp nhận, modal minh chứng) · shared/ (KPI nhóm, bảng việc inline)
+features/          tasks/reassign (modal phân công lại), directives/render (nút Ý kiến); logic directives, messages, realtime ở PR c
 styles/            main.css (Tailwind)
 ```
 
