@@ -1,18 +1,17 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ2 (Supabase Auth) — đã phát hành production** (PR #7 merge, bản live đăng nhập 3 vai trò đạt). Còn PR #8 (phần commit sau merge) và PR-B (0006 xoá `password`) chờ duyệt. GĐ1 đã xong.
+**GĐ2 (Supabase Auth) hoàn thành** trên cả staging và production (0001–0006 đã áp, bản live đăng nhập 3 vai trò bằng mật khẩu hiện có). Sẵn sàng GĐ3 (RLS đầy đủ) — chủ dự án yêu cầu làm GĐ3 bằng Plan mode.
 
 ## Nhánh & PR đang mở
-- PR #8 `feature/gd2-supabase-auth`: giữ mật khẩu hiện có (script bcrypt), migration 0005 công tắc quản trị, config `site_url`, SPEC/CHANGELOG — production đã áp đủ, chỉ chờ merge code.
-- PR-B `feature/gd2-don-dep` (xếp trên PR #8): migration 0006 xoá `verify_login` + cột `password`, `seed.sql` bỏ cột. Đã áp staging; **áp production ngay sau khi merge** (`supabase link` prod → `db push` → link lại staging).
+Không có (PR #7, #8, #9 đều đã merge).
 
 ## Đã xong
 - Quyết định: giữ nguyên mật khẩu hiện có (nạp Auth dạng bcrypt), cờ `must_change_password = false`; quản trị bật sau bằng `admin_set_must_change_password()` (SPEC AUTH-2). Q1 xoá dữ liệu nhiệm vụ khi lên v2; Q2 `haidang21ktvptu`; Q3 Free → Pro ở GĐ7.
-- Staging: 0004–0005 + config + 5 auth user; 3 vai trò đăng nhập như cũ; bật cờ → modal bắt buộc đổi hoạt động; trigger tự tắt cờ.
+- Staging + production: 0004–0006, config Auth, auth user trùng id (5 giả / 48 thật), cột `password` và `verify_login` đã xoá; bật cờ → modal bắt buộc đổi hoạt động; trigger tự tắt cờ.
 
 ## Đang dở
-- Production: chỉ còn áp 0006 sau khi PR-B merge (backup pg_dump 2026-09-13 tại thư mục `vptu-backup` cạnh repo, ngoài git).
+- Không còn việc dở của GĐ2. Backup pg_dump 2026-09-13 (còn cột `password`) tại thư mục `vptu-backup` cạnh repo, ngoài git — giữ ≥ 7 ngày.
 - GĐ3: RLS theo vai trò thật (RLS-2…8), FK `accounts.id → auth.users.id`, xoá `assigned_domain`, `DROP` các policy `_tam_thoi_`.
 
 ## Theo dõi tuần đầu sau phát hành
@@ -27,10 +26,10 @@
 
 ## 3 lệnh để tiếp tục
 ```
-Đọc docs/KE-HOACH-PHAT-HANH-GD2.md; kiểm tra bước nào đã xong trong CHANGELOG mục 9 rồi làm tiếp.
+Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/PROMPTS.md "Giai đoạn 3" rồi làm GĐ3 bằng Plan mode.
 ```
 ```
-Sau khi live OK: nhánh feature/gd2-don-dep, migration 0006 + seed.sql (PR-B).
+supabase db query --linked "SELECT public.admin_set_must_change_password();"   # khi muốn bắt buộc đổi mật khẩu
 ```
 ```
 supabase migration list --project-ref frwyxcmbonjaimziiuqr
