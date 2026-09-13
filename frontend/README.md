@@ -1,6 +1,6 @@
 # frontend/ — VPTU-TASK v2 (Vite + JavaScript thuần + Tailwind)
 
-Bản tách từ `index.html` gốc ở Giai đoạn 4, **giữ nguyên giao diện và hành vi** (giao diện mới là GĐ5).
+Tách từ `index.html` gốc ở Giai đoạn 4; giao diện theo `docs/DESIGN.md` từ Giai đoạn 5.
 
 ## Chạy
 
@@ -30,7 +30,9 @@ views/             shell.js (thanh bên theo view.nav + đầu trang + hiện vi
                    a3/ (template, danh sách, modal tiếp nhận, modal minh chứng) · shared/ (KPI nhóm, bảng việc inline)
 features/          tasks/reassign (modal phân công lại) · directives/ (render: nút Ý kiến + huy hiệu; index: mở/nạp/gửi luồng)
                    messages/ (template, index: danh bạ + huy hiệu, chat: khung chat + toast) · realtime.js (kênh postgres_changes)
-styles/            tokens.css (biến) · base.css (chữ, tiêu điểm, thổ cẩm) · layout.css (đăng nhập, khung, mobile) · components.css (nút, input, modal, toast)
+styles/            tokens.css (biến) · fonts.css (@font-face tự host) · base.css (chữ, tiêu điểm, thổ cẩm) · layout.css (đăng nhập, khung, mobile)
+                   components.css (nút, input, huy hiệu, modal, toast) · tables.css (thanh số liệu, bảng, thẻ mobile) · features.css (luồng ý kiến, chat, in)
+public/            fonts/ (woff2 subset vi + latin) · brand/ (logo tỉnh Cao Bằng, favicon — xem brand/README.md)
 ```
 
 Quy ước: ESLint sạch (`npm run lint` ở gốc repo, cấu hình tối thiểu `eslint.config.js`); không file nào trên 300 dòng (`node scripts/check-line-limit.mjs`); phần tử sinh động dùng `data-action` thay cho `onclick` inline; chuỗi hiển thị tiếng Việt có dấu.
