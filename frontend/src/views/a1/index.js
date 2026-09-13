@@ -1,29 +1,27 @@
-// View A1 — Lãnh đạo Văn phòng: gắn markup, 2 tab (dashboard ngoại lệ, cây phân cấp).
+// View A1 — Lãnh đạo Văn phòng: gắn markup, 2 mục thanh bên (dashboard ngoại lệ, cây phân cấp).
 import { $ } from '../../lib/dom.js';
 import { registerActions } from '../../lib/actions.js';
 import { registerView } from '../registry.js';
+import { setActiveNav } from '../shell.js';
 import { a1Template } from './template.js';
 import { populateA1Selects, loadA1Dashboard, applyA1Filter, toggleA1GiaoViec, handleA1ModeChange, handleA1GiaoViec } from './dashboard.js';
 import { loadA1StaffsTab, isStaffsTabVisible } from './tree.js';
 
-const ACTIVE_CLS = ['border-red-800', 'text-red-800', 'font-bold'];
-const INACTIVE_CLS = ['border-transparent', 'text-slate-500', 'font-semibold'];
+// Hai "tab" cũ nay là hai mục ở thanh bên (id nút giữ nguyên cho e2e).
 const TABS = {
   dashboard: { btn: 'tabBtnA1Dashboard', content: 'tabContentA1Dashboard', load: loadA1Dashboard },
   staffs: { btn: 'tabBtnA1Staffs', content: 'tabContentA1Staffs', load: loadA1StaffsTab },
 };
+const NAV = [
+  { id: TABS.dashboard.btn, label: 'Bảng điều khiển', action: 'switchA1Tab', data: { tab: 'dashboard' } },
+  { id: TABS.staffs.btn, label: 'Cán bộ thuộc quyền', action: 'switchA1Tab', data: { tab: 'staffs' } },
+];
 
 function switchA1Tab({ tab }) {
-  Object.values(TABS).forEach((t) => {
-    $(t.btn).classList.remove(...ACTIVE_CLS);
-    $(t.btn).classList.add(...INACTIVE_CLS);
-    $(t.content).classList.add('hidden');
-  });
   const active = TABS[tab];
   if (!active) return;
-  $(active.btn).classList.add(...ACTIVE_CLS);
-  $(active.btn).classList.remove(...INACTIVE_CLS);
-  $(active.content).classList.remove('hidden');
+  Object.values(TABS).forEach((t) => $(t.content).classList.toggle('hidden', t !== active));
+  setActiveNav(active.btn);
   active.load();
 }
 
@@ -39,6 +37,7 @@ function mount() {
 export function registerA1View() {
   mount();
   registerView('A1', {
+    nav: NAV,
     init() {
       populateA1Selects();
       switchA1Tab({ tab: 'dashboard' });

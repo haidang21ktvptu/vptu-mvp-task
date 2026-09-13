@@ -18,7 +18,7 @@ Ba nguồn hình ảnh, mỗi nguồn cho đúng một thứ:
 
 **Điểm nhấn duy nhất:** trang đăng nhập với hình núi đá vôi xếp lớp bằng SVG màu chàm và dải hoa văn thổ cẩm. Toàn bộ phần bên trong (dashboard, bảng, form) giữ yên tĩnh để dữ liệu nổi lên.
 
-**Biểu tượng Đảng (búa liềm) và Quốc huy:** không tự vẽ, không tải từ nguồn không rõ. Dùng file chính thức do Văn phòng cung cấp, đặt tại `frontend/public/brand/`. Trong mockup để ô trống có nhãn "Biểu tượng chính thức".
+**Biểu tượng tỉnh Cao Bằng** (`frontend/public/brand/logo-cao-bang.png`, PNG nền trong suốt 1280×819, do Văn phòng cung cấp): không tự vẽ, **không đổi màu, không kéo méo tỷ lệ**. Dùng ở đúng 3 chỗ: trang đăng nhập (rộng 112px, căn giữa, phía trên tên cơ quan), thanh bên (rộng 40px trong ô nền trắng bo 4px để đủ tương phản trên nền chàm, cạnh chữ "Văn phòng Tỉnh ủy") và favicon (`favicon-32.png`, `apple-touch-icon-180.png` nền trắng — xuất từ file gốc bằng script, không vẽ lại). Biểu tượng Đảng (búa liềm) và Quốc huy: không tự vẽ, không tải từ nguồn không rõ; chỉ dùng khi Văn phòng cung cấp file chính thức. Trong mockup còn để ô trống có nhãn "Biểu tượng chính thức".
 
 ---
 
@@ -54,7 +54,7 @@ Quy tắc: **màu là thông tin, không phải trang trí.** Mỗi màu xuất 
 
 ## 3. Chữ
 
-Hai họ chữ, vai trò rõ ràng, đều có bộ dấu tiếng Việt đầy đủ trên Google Fonts:
+Hai họ chữ, vai trò rõ ràng, đều có bộ dấu tiếng Việt đầy đủ; **tự host** tại `frontend/public/fonts/` (woff2, subset Vietnamese + Latin, khai báo ở `src/styles/fonts.css`) vì mạng cơ quan có thể chặn Google Fonts:
 
 | Họ chữ | Vai trò | Lý do |
 |---|---|---|

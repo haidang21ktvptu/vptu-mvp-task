@@ -20,6 +20,11 @@ async function handleLogin(e) {
   const password = $('loginPassword').value;
   const btn = $('loginSubmitBtn');
   showInlineError('loginError', '');
+  if (!username || !password) {
+    // Form có novalidate để thông báo luôn bằng tiếng Việt thay vì câu của trình duyệt.
+    showInlineError('loginError', 'Nhập tên đăng nhập và mật khẩu rồi bấm Đăng nhập.');
+    return;
+  }
   btn.disabled = true;
   try {
     const { data, error } = await supabase.auth.signInWithPassword({

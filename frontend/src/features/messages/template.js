@@ -1,4 +1,4 @@
-// Toast tin nhắn, bong bóng, danh bạ và khung chat 1-1 (MSG-1/2), lấy nguyên từ index.html cũ.
+// Toast tin nhắn, danh bạ và khung chat 1-1 (MSG-1/2), lấy nguyên từ index.html cũ.
 export const messagesTemplate = `
 <!-- TOAST THÔNG BÁO TIN NHẮN RIÊNG TƯ (DM) -->
 <div id="realtimeToast" class="fixed top-5 right-5 z-[100] hidden max-w-sm w-full bg-white border-l-4 border-slate-700 rounded-lg shadow-2xl p-4 transition-all transform duration-300">
@@ -17,12 +17,7 @@ export const messagesTemplate = `
   </div>
 </div>
 
-<!-- BONG BÓNG NHẮN TIN RIÊNG 1-1 -->
-<div id="dmBubbleLauncher" data-action="openDMPicker" class="fixed bottom-5 right-5 z-40 hidden cursor-pointer bg-slate-700 hover:bg-slate-800 text-white p-3 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white transition-all transform hover:scale-105">
-  <span class="text-base">✉️</span>
-  <span class="text-xs font-bold">Nhắn tin riêng</span>
-  <span id="dmBubbleBadge" class="hidden bg-red-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">0</span>
-</div>
+<!-- Mục "Nhắn tin" (#dmBubbleLauncher + huy hiệu #dmBubbleBadge) nằm ở thanh bên, do views/shell.js vẽ. -->
 
 <!-- MODAL DANH BẠ CHỌN NGƯỜI NHẮN TIN -->
 <div id="dmPickerModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">

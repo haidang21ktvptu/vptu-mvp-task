@@ -6,6 +6,7 @@ import { taskStatusLabel } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { registerView } from '../registry.js';
+import { setActiveNav } from '../shell.js';
 import { canAccessDirectiveThread, rememberTaskParties, directiveToggleBtnHtml, directiveThreadRowHtml, loadDirectiveUnreadMap } from '../../features/directives/render.js';
 import { a3Template } from './template.js';
 import { mountAcceptModal, showMandatoryModal } from './accept-modal.js';
@@ -102,5 +103,12 @@ function mount() {
 
 export function registerA3View() {
   mount();
-  registerView('A3', { init: loadChuyenVienData, reload: loadChuyenVienData });
+  registerView('A3', {
+    nav: [{ id: 'navA3Tasks', label: 'Nhiệm vụ của tôi', action: 'loadChuyenVienData' }],
+    init() {
+      setActiveNav('navA3Tasks');
+      loadChuyenVienData();
+    },
+    reload: loadChuyenVienData,
+  });
 }

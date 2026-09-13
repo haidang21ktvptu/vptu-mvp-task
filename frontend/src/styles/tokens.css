@@ -1,0 +1,32 @@
+/* Token thiết kế VPTU-TASK (docs/DESIGN.md mục 2–3). Chỉ khai báo biến; không có quy tắc trình bày. */
+:root {
+  /* Màu chính */
+  --cb-do: #A6192E;        /* Đỏ Đảng: nút chính, tiêu đề quan trọng, viền trên thẻ đăng nhập (≤ 2 chỗ/màn hình) */
+  --cb-do-dam: #8E1527;    /* Đỏ khi rê chuột */
+  --cb-vang: #C9A227;      /* Vàng sao: gạch nhấn, hoa văn thổ cẩm, huy hiệu số */
+  --cb-cham: #1C2A44;      /* Chàm Tày–Nùng: thanh bên, đầu trang, nền núi */
+  --cb-cham-sang: #26375A; /* Chàm sáng: mục đang chọn ở thanh bên */
+  --cb-ngoc: #2E7D6E;      /* Ngọc Pác Bó: hoàn thành, thành công */
+  --cb-da: #F4F2ED;        /* Đá vôi: nền trang */
+  --cb-giay: #FFFFFF;      /* Giấy: nền bảng, thẻ, form */
+  --cb-muc: #1D2433;       /* Mực: chữ chính */
+  --cb-muc-nhat: #5B6474;  /* Mực nhạt: chữ phụ, nhãn cột */
+  --cb-vien: #DDD8CE;      /* Viền: kẻ bảng, viền input */
+
+  /* Mức cảnh báo (khớp alert_level của view_exception_dashboard) */
+  --muc-xanh-bg: #E6F2EF; --muc-xanh: #2E7D6E;
+  --muc-vang-bg: #FBF3DF; --muc-vang: #8A6512;
+  --muc-do-bg: #FBE9E7;   --muc-do: #B42318;
+  --muc-dodb-bg: #F6DCE0; --muc-dodb: #7A0C1E;
+
+  /* Chữ */
+  --font-serif: "Noto Serif", Georgia, "Times New Roman", serif;
+  --font-sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Kích thước */
+  --side-w: 240px;
+  --radius-input: 4px;
+  --radius-card: 6px;
+  --shadow-modal: 0 8px 24px rgba(28, 42, 68, .18);
+  --nui-dao: 160ms; /* chuyển động mở/đóng inline */
+}
