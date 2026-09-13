@@ -1,8 +1,8 @@
 name: CI
 
+# pull_request không giới hạn nhánh đích để PR xếp chồng (feature → feature) vẫn được kiểm tra.
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
