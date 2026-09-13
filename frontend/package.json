@@ -1,0 +1,22 @@
+{
+  "name": "vptu-task-frontend",
+  "private": true,
+  "version": "2.0.0",
+  "description": "VPTU-TASK — frontend Vite + JavaScript thuần + Tailwind (GĐ4)",
+  "type": "module",
+  "engines": { "node": ">=20.19" },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.116.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "10.6.0",
+    "postcss": "8.5.28",
+    "tailwindcss": "3.4.19",
+    "vite": "8.3.0"
+  }
+}
