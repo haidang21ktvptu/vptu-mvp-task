@@ -26,7 +26,7 @@ export function directiveToggleBtnHtml(taskId, hasAccess) {
   if (!hasAccess) return '';
   const unreadCount = state.directiveUnread[taskId] || 0;
   // Huy hiệu số chưa đọc: tròn 18px vàng sao (DESIGN mục 5), ẩn khi bằng 0.
-  const badgeHtml = `<span id="directiveBadge-${taskId}" class="huy-hieu${unreadCount > 0 ? '' : ' hidden'}" aria-label="${unreadCount} ý kiến chưa đọc">${unreadCount}</span>`;
+  const badgeHtml = `<span id="directiveBadge-${taskId}" class="huy-hieu${unreadCount > 0 ? '' : ' hidden'}">${unreadCount}</span>`;
   return `<button type="button" data-action="toggleDirectiveThread" data-task-id="${taskId}" class="btn btn-phu btn-nho yk">Ý kiến${badgeHtml}</button>`;
 }
 
