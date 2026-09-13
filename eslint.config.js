@@ -6,7 +6,7 @@ import globals from 'globals';
 export default [
   js.configs.recommended,
   {
-    ignores: ['**/node_modules/**', 'frontend/dist/**', 'tests/e2e/playwright-report/**', 'tests/e2e/test-results/**'],
+    ignores: ['**/node_modules/**', 'frontend/dist/**', 'tests/e2e/playwright-report/**', 'tests/e2e/test-results/**', 'tests/e2e/playwright-report-smoke/**'],
   },
   {
     files: ['frontend/src/**/*.js'],

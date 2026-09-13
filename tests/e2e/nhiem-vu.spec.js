@@ -1,7 +1,8 @@
 // Kịch bản 4–6 (SPEC GĐ4): A2 giao việc → A3 tiếp nhận + nộp minh chứng → A2 duyệt hoàn thành.
 // Chạy tuần tự trong một project; nhiệm vụ đặt tên E2E-TEST để global-setup dọn lần sau.
+// Mỗi kịch bản mở phiên sẵn của vai trò (pageAs, không tốn lượt đăng nhập) và đóng context khi xong.
 import { test, expect } from '@playwright/test';
-import { loginAs, logout, openA2TrackingTab } from './lib/app.js';
+import { pageAs, openA2TrackingTab } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 
 function deadlineInDays(days) {
@@ -19,8 +20,8 @@ test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứ
     title = `${E2E_TAG} ${testInfo.project.name} ${Date.now()}`;
   });
 
-  test('Kịch bản 4: A2 giao việc cho chuyên viên trong phòng', async ({ page }) => {
-    await loginAs(page, 'A2');
+  test('Kịch bản 4: A2 giao việc cho chuyên viên trong phòng', async ({ browser }, testInfo) => {
+    const page = await pageAs(browser, 'A2', testInfo);
     await page.locator('#tabBtnGiaoViec').click();
     await page.locator('#taskTitle').fill(title);
     await page.locator('#taskResCode').fill('NQ 57-NQ/TW');
@@ -34,11 +35,11 @@ test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứ
     const row = page.locator('#trackingTableBody tr', { hasText: title });
     await expect(row).toContainText('Chờ nhận việc');
     await expect(row).toContainText('Demo Chuyên viên Một');
-    await logout(page);
+    await page.context().close();
   });
 
-  test('Kịch bản 5: A3 bắt buộc tiếp nhận rồi nộp minh chứng', async ({ page }) => {
-    await loginAs(page, 'A3');
+  test('Kịch bản 5: A3 bắt buộc tiếp nhận rồi nộp minh chứng', async ({ browser }, testInfo) => {
+    const page = await pageAs(browser, 'A3', testInfo);
     const modal = page.locator('#mandatoryAcceptModal');
     await expect(modal).toBeVisible();
     await expect(page.locator('#mandatoryTaskTitle')).toHaveText(title);
@@ -64,11 +65,11 @@ test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứ
     await expect(page.locator('#toastContainer')).toContainText('Đã nộp minh chứng.');
     await expect(page.locator('#evidenceModal')).toBeHidden();
     await expect(row).toContainText('Chờ duyệt');
-    await logout(page);
+    await page.context().close();
   });
 
-  test('Kịch bản 6: A2 duyệt minh chứng → nhiệm vụ hoàn thành', async ({ page }) => {
-    await loginAs(page, 'A2');
+  test('Kịch bản 6: A2 duyệt minh chứng → nhiệm vụ hoàn thành', async ({ browser }, testInfo) => {
+    const page = await pageAs(browser, 'A2', testInfo);
     await openA2TrackingTab(page);
     const approvalRow = page.locator('#approvalTableBody tr', { hasText: title });
     await expect(approvalRow).toContainText('Demo Chuyên viên Một');
@@ -83,6 +84,6 @@ test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứ
     await page.locator('#tabBtnKPI').click();
     const kpiRow = page.locator('#a2KpiTableBody tr', { hasText: 'Demo Chuyên viên Một' }).first();
     await expect(kpiRow.locator('td').nth(6)).not.toHaveText('0');
-    await logout(page);
+    await page.context().close();
   });
 });

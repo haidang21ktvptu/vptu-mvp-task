@@ -1,0 +1,92 @@
+# Dựng artifact GitHub Pages gồm HAI bản frontend (Pages chỉ có một site cho mỗi repo):
+#   site/           bản production, build từ `prod-ref`   (base /vptu-mvp-task/)
+#   site/staging/   bản staging,    build từ `staging-ref` (base /vptu-mvp-task/staging/)
+# Mỗi bản có phien-ban.json ghi ref + commit + giờ build để kiểm tra sau khi deploy.
+# Dùng chung cho deploy-staging.yml (push main) và deploy-prod.yml (tag v*) để cả hai luôn đẩy
+# đủ hai bản — deploy bản này không làm mất bản kia.
+name: Build hai bản frontend cho Pages
+description: Build production + staging vào một artifact Pages
+
+inputs:
+  prod-ref:
+    description: Ref git (tag/sha/nhánh) để build bản production
+    required: true
+  prod-version:
+    description: Tên phiên bản production ghi vào phien-ban.json (ví dụ v2.0.0)
+    required: true
+  prod-url:
+    description: VITE_SUPABASE_URL của production
+    required: true
+  prod-anon-key:
+    description: Anon key của production
+    required: true
+  staging-ref:
+    description: Ref git để build bản staging
+    required: true
+  staging-url:
+    description: VITE_SUPABASE_URL của staging
+    required: true
+  staging-anon-key:
+    description: Anon key của staging
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.prod-ref }}
+        path: src-prod
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.staging-ref }}
+        path: src-staging
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: |
+          src-prod/frontend/package-lock.json
+          src-staging/frontend/package-lock.json
+
+    - name: Build bản production
+      shell: bash
+      working-directory: src-prod/frontend
+      env:
+        BASE_PATH: /vptu-mvp-task/
+        VITE_SUPABASE_URL: ${{ inputs.prod-url }}
+        VITE_SUPABASE_ANON_KEY: ${{ inputs.prod-anon-key }}
+      run: |
+        npm ci
+        npm run build
+
+    - name: Build bản staging
+      shell: bash
+      working-directory: src-staging/frontend
+      env:
+        BASE_PATH: /vptu-mvp-task/staging/
+        VITE_SUPABASE_URL: ${{ inputs.staging-url }}
+        VITE_SUPABASE_ANON_KEY: ${{ inputs.staging-anon-key }}
+      run: |
+        npm ci
+        npm run build
+
+    - name: Ghép hai bản + phien-ban.json
+      shell: bash
+      run: |
+        rm -rf site
+        cp -r src-prod/frontend/dist site
+        cp -r src-staging/frontend/dist site/staging
+        NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        PROD_SHA=$(git -C src-prod rev-parse HEAD)
+        STAGING_SHA=$(git -C src-staging rev-parse HEAD)
+        printf '{"moi_truong":"production","phien_ban":"%s","commit":"%s","build_luc":"%s"}\n' \
+          "${{ inputs.prod-version }}" "$PROD_SHA" "$NOW" > site/phien-ban.json
+        printf '{"moi_truong":"staging","phien_ban":"%s","commit":"%s","build_luc":"%s"}\n' \
+          "${{ inputs.staging-ref }}" "$STAGING_SHA" "$NOW" > site/staging/phien-ban.json
+        echo "Production: ${{ inputs.prod-version }} ($PROD_SHA) — Staging: ${{ inputs.staging-ref }} ($STAGING_SHA)"
+        cat site/phien-ban.json site/staging/phien-ban.json
+
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: site

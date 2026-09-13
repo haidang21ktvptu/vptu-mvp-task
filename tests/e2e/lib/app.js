@@ -1,14 +1,27 @@
 // Thao tác giao diện dùng chung cho các kịch bản e2e.
 import { expect } from '@playwright/test';
 import { SEED_PASSWORD } from './keys.mjs';
+import { USERS, storageStatePath } from './roles.mjs';
 
-export const USERS = {
-  A1: { username: 'demo_cvp', fullName: 'Demo Chánh Văn phòng', section: '#viewThuongTruc', roleLabel: 'Lãnh đạo Văn phòng (A1)' },
-  A2: { username: 'demo_truongphong', fullName: 'Demo Trưởng phòng', section: '#viewLanhDaoVP', roleLabel: 'Trưởng phòng chuyên môn (A2)' },
-  A3: { username: 'demo_cv1', fullName: 'Demo Chuyên viên Một', section: '#viewChuyenVien', roleLabel: 'Cán bộ thực hiện (A3)' },
-};
+export { USERS };
 
-// Đăng nhập qua form (SPEC AUTH-1) và chờ vào đúng view theo vai trò (AUTH-5).
+// Mở trang với phiên đăng nhập sẵn của vai trò (storageState do global-setup tạo) — không tốn lượt
+// đăng nhập. Context mới theo đúng kích thước/thiết bị của project hiện tại; người gọi tự đóng context.
+export async function pageAs(browser, role, testInfo) {
+  const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
+  const context = await browser.newContext({
+    viewport, isMobile, hasTouch, baseURL, locale, storageState: storageStatePath(role),
+  });
+  const page = await context.newPage();
+  const settled = role === 'A2' ? waitForA2Tracking(page) : null;
+  await page.goto('./');
+  await expectLoggedIn(page, role);
+  if (settled) await settled;
+  return page;
+}
+
+// Đăng nhập qua form (SPEC AUTH-1) và chờ vào đúng view theo vai trò (AUTH-5). Tốn 1 lượt đăng nhập —
+// chỉ dùng trong kịch bản kiểm tra chính việc đăng nhập (dang-nhap.spec.js).
 export async function loginAs(page, role, password = SEED_PASSWORD) {
   const user = USERS[role];
   await page.goto('./');
@@ -39,6 +52,8 @@ export async function expectLoggedIn(page, role) {
   }
 }
 
+// Đăng xuất qua nút — supabase-js huỷ phiên ở mọi thiết bị của tài khoản (scope global), nên chỉ
+// gọi trong kịch bản đăng nhập (chạy sau cùng), không gọi ở kịch bản dùng phiên chung.
 export async function logout(page) {
   await page.locator('#logoutBtn').click();
   await expect(page.locator('#loginSection')).toBeVisible();

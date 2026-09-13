@@ -1,6 +1,6 @@
 # CLAUDE.md — VPTU-TASK (Hệ thống quản trị nhiệm vụ, Văn phòng Tỉnh ủy Cao Bằng)
 
-Đọc file này trước mọi việc. Đặc tả chi tiết ở `docs/SPEC.md`, thiết kế ở `docs/DESIGN.md`. Hiện trạng cũ ở `CHANGELOG.md` (chỉ đọc khi cần tra lịch sử).
+Đọc file này trước mọi việc. Đặc tả chi tiết ở `docs/SPEC.md`, thiết kế ở `docs/DESIGN.md`, pipeline CI/CD và cách phát hành ở `docs/kien-truc.md`. Hiện trạng cũ ở `CHANGELOG.md` (chỉ đọc khi cần tra lịch sử).
 
 ## Dự án là gì
 Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao việc → tiếp nhận → thực hiện → nộp minh chứng → duyệt, theo 3 tầng vai trò A1 (Lãnh đạo VP), A2 (Trưởng phòng), A3 (Chuyên viên), phân theo `department`. Có luồng ý kiến chỉ đạo theo nhiệm vụ và nhắn tin 1-1.
@@ -33,7 +33,8 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 - `npm run lint` (ở gốc repo) — ESLint cho `frontend/src`, `tests/e2e`, `scripts`; `npm run check:lines` — kiểm tra 300 dòng
 - `npx playwright test` — e2e
 - `supabase db diff -f ten-migration` — sinh migration từ thay đổi local
-- `supabase db push` — đẩy migration lên project (chỉ staging; production qua CI)
+- `supabase db push` — đẩy migration lên project (chỉ staging; production qua `deploy-prod.yml` khi đẩy tag `v*`, có người duyệt)
+- `git tag v2.x.y && git push origin v2.x.y` — phát hành production (xem `docs/kien-truc.md` mục 7)
 
 ## Quy ước code
 - File nhỏ, một trách nhiệm. Không file nào trên 300 dòng.

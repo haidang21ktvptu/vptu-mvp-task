@@ -1,8 +1,9 @@
 // Tiện ích chung cho test RLS: client theo từng tài khoản seed (token thật), client
 // service_role để dựng dữ liệu mẫu, và các hàm khẳng định "bị chặn".
 //
-// Môi trường: RLS_PROJECT_REF (mặc định staging vojmrjezspdftovzinek) hoặc RLS_LOCAL=1.
-// Key lấy qua Supabase CLI đã `supabase login` (không có .env chứa service_role).
+// Key lấy theo thứ tự: biến môi trường SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
+// (CI: GitHub Secrets của staging) → RLS_LOCAL=1 (Supabase cục bộ) → Supabase CLI đã `supabase login`
+// (RLS_PROJECT_REF mặc định staging). Không có .env chứa service_role; luôn từ chối production.
 // Chạy với --test-isolation=none để phiên đăng nhập dùng chung giữa các file
 // (tránh vượt giới hạn 30 lượt đăng nhập/5 phút/IP của Supabase).
 
@@ -11,6 +12,7 @@ import { spawnSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
 
 export const STAGING_REF = 'vojmrjezspdftovzinek';
+export const PRODUCTION_REF = 'frwyxcmbonjaimziiuqr';
 export const SEED_PASSWORD = '123456';
 export const EMAIL_DOMAIN = 'vptu.caobang.local';
 
@@ -34,17 +36,22 @@ function runCli(args) {
 let keys = null;
 export function getKeys() {
   if (keys) return keys;
-  if (process.env.RLS_LOCAL === '1') {
+  const env = process.env;
+  if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY && env.SUPABASE_SERVICE_ROLE_KEY) {
+    keys = { url: env.SUPABASE_URL, anon: env.SUPABASE_ANON_KEY, service: env.SUPABASE_SERVICE_ROLE_KEY };
+  } else if (env.RLS_LOCAL === '1') {
     const s = runCli(['status', '-o', 'json']);
     keys = { url: s.API_URL, anon: s.ANON_KEY || s.PUBLISHABLE_KEY, service: s.SERVICE_ROLE_KEY || s.SECRET_KEY };
-    return keys;
+  } else {
+    const ref = env.RLS_PROJECT_REF || STAGING_REF;
+    const data = runCli(['projects', 'api-keys', '--project-ref', ref, '-o', 'json']);
+    const list = Array.isArray(data) ? data : data.keys;
+    const pick = (id) => list.find((k) => k.id === id || k.name === id)?.api_key;
+    keys = { url: `https://${ref}.supabase.co`, anon: pick('anon'), service: pick('service_role') };
   }
-  const ref = process.env.RLS_PROJECT_REF || STAGING_REF;
-  const data = runCli(['projects', 'api-keys', '--project-ref', ref, '-o', 'json']);
-  const list = Array.isArray(data) ? data : data.keys;
-  const pick = (id) => list.find((k) => k.id === id || k.name === id)?.api_key;
-  keys = { url: `https://${ref}.supabase.co`, anon: pick('anon'), service: pick('service_role') };
-  if (!keys.anon || !keys.service) throw new Error('Không lấy được anon/service_role key qua CLI.');
+  if (!keys.anon || !keys.service) throw new Error('Không lấy được anon/service_role key.');
+  // Test tạo/xoá dữ liệu bằng service_role nên tuyệt đối không được trỏ vào production.
+  if (keys.url.includes(PRODUCTION_REF)) throw new Error('Từ chối chạy test trên project production.');
   return keys;
 }
 

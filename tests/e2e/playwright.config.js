@@ -1,14 +1,21 @@
 // Playwright chạy trên bản build Vite (vite preview) trỏ tới staging; 2 kích thước màn hình
 // (1280px máy tính, 360px điện thoại — SPEC NF-4). Chạy tuần tự vì dữ liệu dùng chung.
-import { defineConfig, devices } from '@playwright/test';
+//
+// Tiết kiệm lượt đăng nhập (giới hạn 30 lượt/5 phút/IP): project `desktop` và `mobile` dùng phiên
+// sẵn (storageState) do global-setup tạo; project `dang-nhap` (kịch bản 1–3: đăng nhập thật qua form
+// rồi đăng xuất) chạy SAU CÙNG vì đăng xuất huỷ phiên ở mọi thiết bị của tài khoản đó.
+import { defineConfig } from '@playwright/test';
 import { getKeys } from './lib/keys.mjs';
+import { BASE_URL } from './global-setup.mjs';
+import { DESKTOP, MOBILE } from './lib/devices.mjs';
 
 const keys = getKeys();
-export const BASE_URL = 'http://127.0.0.1:4173/vptu-mvp-task/';
+
 
 export default defineConfig({
   testDir: '.',
   testMatch: /.*\.spec\.js/,
+  testIgnore: ['**/smoke/**'],
   fullyParallel: false,
   workers: 1,
   retries: 0,
@@ -23,8 +30,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
-    { name: 'mobile', use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true } },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/smoke/**'] },
+    { name: 'mobile', use: MOBILE, testIgnore: ['**/dang-nhap.spec.js', '**/smoke/**'] },
+    { name: 'dang-nhap', use: DESKTOP, testMatch: /dang-nhap\.spec\.js/, dependencies: ['desktop', 'mobile'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',
