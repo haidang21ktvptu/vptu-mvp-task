@@ -11,7 +11,7 @@ export default {
           ngoc: '#2E7D6E', da: '#F4F2ED', giay: '#FFFFFF', muc: '#1D2433', 'muc-nhat': '#5B6474', vien: '#DDD8CE',
         },
         muc: {
-          xanh: '#2E7D6E', 'xanh-bg': '#E6F2EF', vang: '#8A6512', 'vang-bg': '#FBF3DF',
+          xanh: '#2A7365', 'xanh-bg': '#E6F2EF', vang: '#8A6512', 'vang-bg': '#FBF3DF',
           do: '#B42318', 'do-bg': '#FBE9E7', dodb: '#7A0C1E', 'dodb-bg': '#F6DCE0',
         },
       },

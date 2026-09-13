@@ -7,47 +7,49 @@ import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
 import { canAccessDirectiveThread, rememberTaskParties, directiveToggleBtnHtml, directiveThreadRowHtml, loadDirectiveUnreadMap } from '../../features/directives/render.js';
 
-const STATUS_BADGE = {
-  CHO_TIEP_NHAN: `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 font-semibold">Chờ nhận việc</span>`,
-  DANG_THUC_HIEN: `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-100 text-blue-800 font-semibold">Đang thực hiện</span>`,
-  CHUA_GIAO: `<span class="px-2 py-0.5 rounded text-[10px] bg-gray-200 text-gray-800 font-bold">Chưa phân công</span>`,
-  CHO_DUYET: `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-800 font-bold">Chờ duyệt minh chứng</span>`,
-  HOAN_THANH: `<span class="px-2 py-0.5 rounded text-[10px] bg-green-100 text-green-800 font-semibold">✓ Đã Hoàn Thành</span>`,
+// Trạng thái nhận việc: nhãn màu mức (DESIGN mục 2) + lớp dòng cho dải màu bên trái.
+const STATUS = {
+  CHO_TIEP_NHAN: { row: 'r-vang', badge: `<span class="muc muc-vang">Chờ nhận việc</span>` },
+  DANG_THUC_HIEN: { row: 'r-xanh', badge: `<span class="muc">Đang thực hiện</span>` },
+  CHUA_GIAO: { row: '', badge: `<span class="muc">Chưa phân công</span>` },
+  CHO_DUYET: { row: 'r-vang', badge: `<span class="muc muc-vang">Chờ duyệt minh chứng</span>` },
+  HOAN_THANH: { row: 'r-ht', badge: `<span class="muc muc-xanh">Đã hoàn thành</span>` },
+  TU_CHOI_TIEP_NHAN: { row: 'r-do', badge: `<span class="muc muc-do">Từ chối nhận việc</span>` },
 };
 
-function statusBadgeHtml(t) {
-  if (t.status === 'TU_CHOI_TIEP_NHAN') {
-    return `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">Từ chối: ${escapeHtml(t.reject_reason || '')}</span>`;
-  }
-  return STATUS_BADGE[t.status] || '';
+function statusOf(t) {
+  return STATUS[t.status] || { row: '', badge: '' };
 }
 
 function actionButtonsHtml(t, hasDirective) {
   const btns = [];
+  const btn = (action, label) => `<button type="button" data-action="${action}" data-task-id="${t.id}" class="btn btn-phu btn-nho">${label}</button>`;
   if (t.status === 'CHO_TIEP_NHAN') {
-    btns.push(`<button data-action="sendTargetedWarning" data-task-id="${t.id}" class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[11px] font-semibold">Đôn đốc (${t.warning_count || 0})</button>`);
-    btns.push(`<button data-action="openReassignModal" data-task-id="${t.id}" class="bg-slate-700 hover:bg-slate-800 text-white px-2 py-1 rounded text-[11px]">Đổi người</button>`);
+    btns.push(btn('sendTargetedWarning', `Đôn đốc (${t.warning_count || 0})`));
+    btns.push(btn('openReassignModal', 'Đổi người'));
   } else if (t.status === 'TU_CHOI_TIEP_NHAN') {
-    btns.push(`<button data-action="approveReject" data-task-id="${t.id}" class="bg-slate-800 hover:bg-black text-white px-2 py-1 rounded text-[11px]">Đồng ý từ chối</button>`);
+    btns.push(btn('approveReject', 'Đồng ý từ chối'));
   } else if (t.status === 'CHUA_GIAO') {
-    btns.push(`<button data-action="openReassignModal" data-task-id="${t.id}" class="bg-red-700 hover:bg-red-800 text-white px-2 py-1 rounded text-[11px] font-bold">Phân việc ngay</button>`);
+    btns.push(btn('openReassignModal', 'Phân công'));
   }
   if (hasDirective) btns.push(directiveToggleBtnHtml(t.id, true));
-  return btns.join(' ');
+  return `<div class="thao-tac">${btns.join('')}</div>`;
 }
 
 function trackingRowHtml(t) {
   const hasDirective = canAccessDirectiveThread(rememberTaskParties(t));
   const searchData = `${t.title} ${t.resolution_code} ${t.assigned?.full_name || ''}`.toLowerCase();
   const assignedHtml = t.assigned?.full_name
-    ? `${escapeHtml(t.assigned.full_name)} <br><span class="text-[10px] text-slate-500">${escapeHtml(t.assigned.position_title)}</span>`
-    : '<span class="text-red-600 font-bold">Chưa có người nhận</span>';
+    ? `${escapeHtml(t.assigned.full_name)}<small>${escapeHtml(t.assigned.position_title)}</small>`
+    : '<span class="chu-phu">Chưa có người nhận</span>';
+  const s = statusOf(t);
+  const rejectHtml = t.status === 'TU_CHOI_TIEP_NHAN' && t.reject_reason ? `<small>Lý do: ${escapeHtml(t.reject_reason)}</small>` : '';
   return `
-    <tr id="taskRow-${t.id}" data-search="${escapeHtml(searchData)}" class="border-b hover:bg-slate-50">
-      <td class="p-2 font-medium">${escapeHtml(t.title)} <br><span class="text-[10px] text-slate-500">${escapeHtml(t.resolution_code)}</span></td>
-      <td class="p-2">${assignedHtml}</td>
-      <td class="p-2 text-center">${statusBadgeHtml(t)}</td>
-      <td class="p-2 text-center space-x-1">${actionButtonsHtml(t, hasDirective)}</td>
+    <tr id="taskRow-${t.id}" data-search="${escapeHtml(searchData)}" class="${s.row}">
+      <td class="tieude">${escapeHtml(t.title)}<small>Văn bản: ${escapeHtml(t.resolution_code)}</small>${rejectHtml}</td>
+      <td class="nguoi" data-nhan="Cán bộ">${assignedHtml}</td>
+      <td data-nhan="Trạng thái">${s.badge}</td>
+      <td>${actionButtonsHtml(t, hasDirective)}</td>
     </tr>
     ${directiveThreadRowHtml(t.id, 4)}
   `;
@@ -56,13 +58,13 @@ function trackingRowHtml(t) {
 function approvalRowHtml(t) {
   const ev = t.task_evidences?.[0];
   return `
-    <tr class="border-b">
-      <td class="p-2 font-medium">${escapeHtml(t.title)}</td>
-      <td class="p-2">${escapeHtml(t.assigned?.full_name) || 'N/A'}</td>
-      <td class="p-2"><a href="${escapeHtml(ev?.file_url) || '#'}" target="_blank" rel="noopener" class="text-blue-600 underline font-semibold">${escapeHtml(ev?.document_title) || 'Xem tài liệu'}</a></td>
-      <td class="p-2 text-center">
-        <button data-action="approveComplete" data-task-id="${t.id}" class="bg-green-700 hover:bg-green-800 text-white px-2 py-1 rounded text-xs font-semibold">Duyệt Đóng Việc</button>
-      </td>
+    <tr class="r-vang">
+      <td class="tieude">${escapeHtml(t.title)}</td>
+      <td data-nhan="Cán bộ nộp">${escapeHtml(t.assigned?.full_name) || 'Chưa rõ'}</td>
+      <td data-nhan="Minh chứng"><a href="${escapeHtml(ev?.file_url) || '#'}" target="_blank" rel="noopener">${escapeHtml(ev?.document_title) || 'Xem tài liệu'}</a></td>
+      <td><div class="thao-tac">
+        <button type="button" data-action="approveComplete" data-task-id="${t.id}" class="btn btn-cham btn-nho">Duyệt hoàn thành</button>
+      </div></td>
     </tr>
   `;
 }
@@ -78,7 +80,7 @@ export async function loadA2Data() {
 
   const tbodyTracking = $('trackingTableBody');
   tbodyTracking.innerHTML = deptTasks.length === 0
-    ? `<tr><td colspan="4" class="p-3 text-center text-slate-400">Chưa có nhiệm vụ nào trong phòng.</td></tr>`
+    ? `<tr><td colspan="4" class="trong">Chưa có nhiệm vụ nào trong phòng.</td></tr>`
     : deptTasks.map(trackingRowHtml).join('');
 
   const { data: pendingApprovals } = await supabase.from('tasks')
@@ -88,7 +90,7 @@ export async function loadA2Data() {
 
   const tbodyApproval = $('approvalTableBody');
   tbodyApproval.innerHTML = myPending.length === 0
-    ? `<tr><td colspan="4" class="p-3 text-center text-slate-400">Không có hồ sơ nào chờ duyệt.</td></tr>`
+    ? `<tr><td colspan="4" class="trong">Không có hồ sơ nào chờ duyệt.</td></tr>`
     : myPending.map(approvalRowHtml).join('');
 }
 
@@ -99,7 +101,7 @@ async function sendTargetedWarning({ taskId }) {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess(`Đã gửi đôn đốc lần ${newCount} tới cán bộ!`);
+  notifySuccess(`Đã gửi đôn đốc lần ${newCount} tới cán bộ.`);
   loadA2Data();
 }
 
@@ -109,7 +111,7 @@ async function approveReject({ taskId }) {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã chấp thuận từ chối. Nhiệm vụ chuyển về trạng thái CHƯA PHÂN CÔNG!');
+  notifySuccess('Đã chấp thuận từ chối. Nhiệm vụ chuyển về chưa phân công.');
   loadA2Data();
 }
 
@@ -120,7 +122,7 @@ async function approveComplete({ taskId }) {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã duyệt minh chứng hợp lệ. Nhiệm vụ đã HOÀN THÀNH!');
+  notifySuccess('Đã duyệt minh chứng. Nhiệm vụ hoàn thành.');
   loadA2Data();
 }
 

@@ -25,11 +25,9 @@ export function rememberTaskParties(task) {
 export function directiveToggleBtnHtml(taskId, hasAccess) {
   if (!hasAccess) return '';
   const unreadCount = state.directiveUnread[taskId] || 0;
-  const badgeHtml = unreadCount > 0
-    ? `<span id="directiveBadge-${taskId}" class="bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full animate-pulse">${unreadCount}</span>`
-    : `<span id="directiveBadge-${taskId}" class="hidden bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">0</span>`;
-
-  return `<button data-action="toggleDirectiveThread" data-task-id="${taskId}" class="bg-slate-100 hover:bg-slate-200 text-slate-800 border px-2 py-1 rounded text-[11px] font-semibold inline-flex items-center gap-1">💬 Ý kiến ${badgeHtml}</button>`;
+  // Huy hiệu số chưa đọc: tròn 18px vàng sao (DESIGN mục 5), ẩn khi bằng 0.
+  const badgeHtml = `<span id="directiveBadge-${taskId}" class="huy-hieu${unreadCount > 0 ? '' : ' hidden'}" aria-label="${unreadCount} ý kiến chưa đọc">${unreadCount}</span>`;
+  return `<button type="button" data-action="toggleDirectiveThread" data-task-id="${taskId}" class="btn btn-phu btn-nho yk">Ý kiến${badgeHtml}</button>`;
 }
 
 export function directiveThreadRowHtml(taskId, colspan) {

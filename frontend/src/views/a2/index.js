@@ -44,7 +44,7 @@ function prepareAssignForm() {
 async function handleA2GiaoViec() {
   const deadlineVal = $('taskDeadline').value;
   if (!deadlineVal || new Date(deadlineVal) <= new Date()) {
-    notifyError('Thời hạn hoàn thành phải ở tương lai!');
+    notifyError('Hạn hoàn thành phải sau thời điểm hiện tại. Chọn lại ngày.');
     return;
   }
 
@@ -69,7 +69,7 @@ async function handleA2GiaoViec() {
     notifyError('Lỗi: ' + error.message);
     return;
   }
-  notifySuccess('Đã phát hành giao việc cho cán bộ thành công!');
+  notifySuccess('Đã phát hành giao việc cho cán bộ.');
   $('formGiaoViec').reset();
   prepareAssignForm();
   switchA2Tab({ tab: 'theoDoi' });

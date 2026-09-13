@@ -14,7 +14,7 @@
   --cb-vien: #DDD8CE;      /* Viền: kẻ bảng, viền input */
 
   /* Mức cảnh báo (khớp alert_level của view_exception_dashboard) */
-  --muc-xanh-bg: #E6F2EF; --muc-xanh: #2E7D6E;
+  --muc-xanh-bg: #E6F2EF; --muc-xanh: #2A7365; /* đậm hơn ngọc một bậc để chữ 12px trên nền nhạt đạt 4.5:1 (Lighthouse) */
   --muc-vang-bg: #FBF3DF; --muc-vang: #8A6512;
   --muc-do-bg: #FBE9E7;   --muc-do: #B42318;
   --muc-dodb-bg: #F6DCE0; --muc-dodb: #7A0C1E;

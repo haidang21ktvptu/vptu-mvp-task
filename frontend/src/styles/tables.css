@@ -1,0 +1,85 @@
+/* Thanh số liệu một hàng và bảng dữ liệu (DESIGN mục 4): kẻ ngang mảnh, không kẻ dọc, mức cảnh báo là
+   dải 4px bên trái dòng; ≤ 768px bảng thành danh sách thẻ, mỗi thẻ vẫn có dải màu. */
+@layer components {
+  /* ---- Thanh số liệu: một hàng, kẻ dọc phân cách ---- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--cb-giay);
+    border: 1px solid var(--cb-vien); border-radius: var(--radius-card); margin-bottom: 20px; }
+  .stats > div { padding: 14px 18px; border-right: 1px solid var(--cb-vien); }
+  .stats > div:last-child { border-right: 0; }
+  .stats b { display: block; font-size: 26px; font-weight: 600; line-height: 1.1; }
+  .stats span { font-size: 13px; color: var(--cb-muc-nhat); }
+  .stats .s-do b { color: var(--muc-do); }
+  .stats .s-dodb b { color: var(--muc-dodb); }
+  .stats .s-vang b { color: var(--muc-vang); }
+  .stats .s-xanh b { color: var(--muc-xanh); }
+
+  /* ---- Bảng ---- */
+  .bang { background: var(--cb-giay); border: 1px solid var(--cb-vien); border-radius: var(--radius-card); overflow: hidden; }
+  .bang-dau { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap;
+    padding: 12px 16px; border-bottom: 1px solid var(--cb-vien); }
+  .bang-dau h2 .chu-phu { font-weight: 400; margin-left: 6px; }
+  .bo-loc { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bo-loc .input { width: auto; min-width: 180px; }
+  .bo-loc input[type="search"] { min-width: 260px; }
+  .bang td.tieude { min-width: 220px; }
+  .bang-cuon { overflow-x: auto; }
+  .bang table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .bang th { text-align: left; font-weight: 500; color: var(--cb-muc-nhat); font-size: 13px; padding: 10px 12px;
+    border-bottom: 1px solid var(--cb-vien); white-space: nowrap; }
+  .bang td { padding: 8px 12px; height: 44px; border-bottom: 1px solid var(--cb-vien); vertical-align: middle; }
+  .bang tbody tr:last-child > td { border-bottom: 0; }
+  .bang td:first-child, .bang th:first-child { padding-left: 16px; }
+  .bang th.so, .bang td.so { text-align: center; }
+  .bang th.phai, .bang td.phai { text-align: right; }
+  .bang .trong { text-align: center; color: var(--cb-muc-nhat); padding: 24px 16px; }
+
+  /* Mức cảnh báo: dải 4px bên trái dòng. */
+  tr.r-do > td:first-child { box-shadow: inset 4px 0 0 var(--muc-do); }
+  tr.r-dodb > td:first-child { box-shadow: inset 4px 0 0 var(--muc-dodb); }
+  tr.r-vang > td:first-child { box-shadow: inset 4px 0 0 var(--muc-vang); }
+  tr.r-xanh > td:first-child, tr.r-ht > td:first-child { box-shadow: inset 4px 0 0 var(--muc-xanh); }
+  tr.r-dodb .tieude { font-weight: 600; color: var(--muc-dodb); }
+  tr.r-ht .tieude { color: var(--cb-muc-nhat); }
+  .tieude { font-weight: 500; }
+  .tieude small, .nguoi small { display: block; font-size: 12px; font-weight: 400; color: var(--cb-muc-nhat); }
+  .thao-tac { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: nowrap; white-space: nowrap; }
+
+  /* Nút "Ý kiến" kèm huy hiệu chưa đọc ở góc. */
+  .yk { position: relative; }
+  .yk .huy-hieu { position: absolute; top: -7px; right: -7px; }
+
+  /* Nút cây phân cấp (A1): dòng tiêu đề bấm được. */
+  .nut-dau { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap;
+    padding: 12px 16px; }
+  .nut-dau button:hover .nguoi { text-decoration: underline; text-underline-offset: 3px; }
+  .nut-dau .mui { display: inline-block; width: 14px; color: var(--cb-muc-nhat); font-size: 12px; }
+  .chip-kpi { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .nut-con { border-top: 1px solid var(--cb-vien); padding: 12px 16px; background: var(--cb-da); }
+
+  @media (max-width: 768px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stats > div { border-bottom: 1px solid var(--cb-vien); }
+    .stats > div:nth-child(even) { border-right: 0; }
+    .stats > div:nth-last-child(-n+2) { border-bottom: 0; }
+    .bo-loc, .bo-loc .input { width: 100%; }
+    .bang table thead { display: none; }
+    .bang table, .bang tbody, .bang tr, .bang td { display: block; }
+    .bang tr { border-bottom: 1px solid var(--cb-vien); padding: 10px 12px 10px 20px; }
+    .bang tbody tr:last-child { border-bottom: 0; }
+    .bang tr.r-do { box-shadow: inset 4px 0 0 var(--muc-do); }
+    .bang tr.r-dodb { box-shadow: inset 4px 0 0 var(--muc-dodb); }
+    .bang tr.r-vang { box-shadow: inset 4px 0 0 var(--muc-vang); }
+    .bang tr.r-xanh, .bang tr.r-ht { box-shadow: inset 4px 0 0 var(--muc-xanh); }
+    .bang td { height: auto; padding: 2px 0; border: 0; }
+    .bang td:first-child { box-shadow: none; padding-left: 0; }
+    .bang td.so, .bang td.phai { text-align: left; }
+    .bang td[data-nhan]::before { content: attr(data-nhan) ": "; color: var(--cb-muc-nhat); font-size: 12px; }
+    .bang td .thao-tac { justify-content: flex-start; flex-wrap: wrap; padding-top: 6px; }
+  }
+}
+
+/* Lớp .hidden của Tailwind phải thắng cả quy tắc "td/tr thành block" ở trên (mọi nơi trong app đều
+   ẩn/hiện bằng .hidden qua lib/dom.js). Không dùng kiểu "hidden md:block" trong dự án này. */
+@layer utilities {
+  .hidden { display: none !important; }
+}
