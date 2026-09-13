@@ -41,7 +41,7 @@ export async function handleA1GiaoViec() {
 
   const mode = $('a1AssignMode').value;
   let assignedTo = null;
-  let leaderInCharge = null;
+  let leaderInCharge;
   if (mode === 'TO_LEADER') {
     leaderInCharge = $('a1LeaderSelect').value;
   } else {

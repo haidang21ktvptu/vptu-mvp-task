@@ -30,6 +30,7 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 ## Lệnh thường dùng
 - `cd frontend && npm run dev` — chạy local
 - `npm run build` — build
+- `npm run lint` (ở gốc repo) — ESLint cho `frontend/src`, `tests/e2e`, `scripts`; `npm run check:lines` — kiểm tra 300 dòng
 - `npx playwright test` — e2e
 - `supabase db diff -f ten-migration` — sinh migration từ thay đổi local
 - `supabase db push` — đẩy migration lên project (chỉ staging; production qua CI)
