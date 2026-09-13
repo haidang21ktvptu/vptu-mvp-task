@@ -23,6 +23,8 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 7. **Chuyên viên (A3) không được xem việc của người khác.** Trưởng phòng (A2) chỉ trong phòng mình. Chánh VP thấy tất cả; Phó Chánh VP chỉ khối mình phụ trách. Đây là quy tắc nghiệp vụ cốt lõi, kiểm tra bằng test RLS.
 8. Trước việc trên 3 file: dùng Plan mode, trình kế hoạch, chờ duyệt.
 9. Kết thúc mỗi việc: cập nhật `CHANGELOG.md` (3–6 dòng, tiếng Việt), không viết dài.
+10. Cuối mỗi phiên hoặc trước khi context gần đầy, cập nhật `docs/TRANG-THAI.md`.
+11. Dữ liệu tài khoản trên project **staging** chỉ được nạp từ `supabase/seed.sql` (dữ liệu giả). Không sao chép dữ liệu thật (họ tên, chức danh, phòng ban) từ production sang staging.
 
 ## Lệnh thường dùng
 - `cd frontend && npm run dev` — chạy local
