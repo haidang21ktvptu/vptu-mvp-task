@@ -12,7 +12,7 @@
 - Staging: 0004–0005 + config + 5 auth user; 3 vai trò đăng nhập như cũ; bật cờ → modal bắt buộc đổi hoạt động; trigger tự tắt cờ.
 
 ## Đang dở
-- Production: chỉ còn áp 0006 sau khi PR-B merge (backup pg_dump 2026-09-13 tại ).
+- Production: chỉ còn áp 0006 sau khi PR-B merge (backup pg_dump 2026-09-13 tại thư mục `vptu-backup` cạnh repo, ngoài git).
 - GĐ3: RLS theo vai trò thật (RLS-2…8), FK `accounts.id → auth.users.id`, xoá `assigned_domain`, `DROP` các policy `_tam_thoi_`.
 
 ## Theo dõi tuần đầu sau phát hành
