@@ -5,7 +5,7 @@ Mỗi dòng RLS-2…7 có ít nhất một test "được phép" và một test 
 ```
 cd tests/rls && npm install
 npm test                 # staging (RLS_PROJECT_REF mặc định vojmrjezspdftovzinek)
-RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset` + scripts/create-auth-users.mjs --local --default-password 123456)
+RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset`; seed.sql đã tạo sẵn auth user)
 ```
 
 - Key lấy qua Supabase CLI đã `supabase login` (không có `.env` chứa service_role).

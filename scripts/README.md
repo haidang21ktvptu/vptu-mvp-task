@@ -14,7 +14,11 @@ node create-auth-users.mjs --project-ref <ref> --rollback
 
 - `service_role` key lấy tự động qua Supabase CLI đã `supabase login` (hoặc `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` trong môi trường). Không có file `.env` nào chứa key; không in mật khẩu/key ra console.
 - `--rollback` xoá `auth.users` của mọi `accounts.id` (dùng khi quay lui, xem `docs/KE-HOACH-PHAT-HANH-GD2.md`).
-- Script chỉ dùng cho lần chuyển đổi (cần cột `accounts.password`, cột này bị xoá ở migration 0006). Tài khoản mới sau này tạo qua Supabase Dashboard → Authentication (chọn id trùng `accounts.id`) hoặc Admin API.
+- Script chỉ dùng cho lần chuyển đổi (cần cột `accounts.password`, cột này bị xoá ở migration 0006). Từ migration 0011 `accounts.id` là FK tới `auth.users.id` (ON DELETE RESTRICT) nên **tạo tài khoản mới phải theo thứ tự**: tạo auth user trước (Dashboard → Authentication hoặc Admin API, email `<username>@vptu.caobang.local`) → `INSERT accounts` cùng id. Xoá cán bộ: xoá dòng `accounts` trước rồi mới xoá auth user. Tài khoản giả local/staging do `supabase/seed.sql` tạo sẵn cả auth user, không cần chạy script `--local` nữa.
+
+## `check-line-limit.mjs` — quy ước không file nào trên 300 dòng
+
+Chạy trong CI (`node scripts/check-line-limit.mjs`), quét file git theo dõi; ngoại lệ: `*.md`, lockfile, `supabase/config.toml`, `index.html` gốc (bản cũ), `mockup/`.
 
 ## Bật/tắt bắt buộc đổi mật khẩu (SPEC AUTH-2)
 

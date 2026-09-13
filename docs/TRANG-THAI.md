@@ -1,35 +1,32 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ3 (RLS đầy đủ) hoàn thành** — PR #11 merge, production 0007–0010, bản live kiểm tra 4 tài khoản (CVP/PCVP/A2/A3) đúng view. Còn PR #12 (2 commit bổ sung: 0010 + tài liệu) chờ merge. Sẵn sàng GĐ4 (Plan mode).
+**GĐ4 (tách frontend Vite) đang làm, auto mode, 3 PR.** PR (a) khung Vite + auth + main.js: xong, chờ CI/merge. PR (b) views A1/A2/A3 và PR (c) directives + messages + realtime: làm tiếp trên nhánh nối tiếp.
 
 ## Nhánh & PR đang mở
-- PR #12 `feature/gd3-rls-bo-sung`: migration 0010 (đã áp staging + production), test "A2 phòng khác bị chặn", SPEC RLS-5, CLAUDE.md rule 12, TRANG-THAI — chỉ chờ merge code.
+- PR (a) `feature/gd4a-vite-khung`: frontend/ khung Vite, auth, toast, migration 0011 (đã áp staging), seed tạo auth user, e2e kịch bản 1–3 (6/6 pass), CI job frontend, `deploy-pages.yml` (chưa deploy tới khi đổi nguồn Pages).
 
 ## Đã xong
-- GĐ1: RLS tạm + chặn `accounts.password`. GĐ2: Supabase Auth (0004–0006), giữ mật khẩu hiện có, công tắc `admin_set_must_change_password()`.
-- GĐ3: policy theo vai trò (ma trận SPEC §3.2), `is_chief` (CVP), khối PCVP 2 cấp qua `manager_id`, RLS-5 mở cho A2 cả phòng (0010), 6 hàm `security definer`, 48 test token thật pass local + staging, QA giao diện A3/A2/PCVP/CVP đúng phạm vi.
+- GĐ1: RLS tạm + chặn `accounts.password`. GĐ2: Supabase Auth (0004–0006). GĐ3: RLS đầy đủ (0007–0010), 48 test RLS pass, production đã áp và kiểm tra live.
 
 ## Đang dở
-- GĐ4 (tách frontend Vite): kèm FK `accounts.id → auth.users.id` ON DELETE RESTRICT + seed tạo auth user; ghim phiên bản supabase-js; bỏ `alert()`.
-- GĐ6: đưa `tests/rls` vào CI với secret staging. GĐ7: lên Pro, bật hook khoá tài khoản (AUTH-3).
+- GĐ4 PR (b): views/a1 (dashboard ngoại lệ, cây phân cấp), views/a2 (giao việc, theo dõi/duyệt, KPI), views/a3 (danh sách, modal tiếp nhận, nộp minh chứng), modal phân công lại; e2e kịch bản 4–6.
+- GĐ4 PR (c): features/directives, features/messages, features/realtime; xoá `index.html` gốc **chỉ sau khi** Pages đã chuyển nguồn sang GitHub Actions và bản live kiểm tra xong (PR riêng).
+- GĐ6: đưa `tests/rls` + `tests/e2e` vào CI với secret staging. GĐ7: lên Pro, bật hook khoá tài khoản (AUTH-3).
 
-## Theo dõi tuần đầu sau phát hành
-- Giới hạn IP 30 lượt/5 phút (gói Free) — cơ quan chung IP; xem Supabase Dashboard → Auth → Logs `over_request_rate_limit`; nếu xảy ra: nâng `sign_in_sign_ups` hoặc lên Pro sớm.
-
-## Chờ quyết định
-- Không còn câu hỏi mở của GĐ3.
+## Chờ quyết định (chủ dự án)
+- Xem danh sách câu hỏi ở cuối báo cáo phiên GĐ4 (thời điểm đổi nguồn Pages, áp 0011 lên production, thay `alert()` bằng toast).
 
 ## Lưu ý quy trình
-`main` có ruleset (PR bắt buộc, CI xanh, chặn force-push), không ngoại lệ. Production: luôn backup pg_dump, trình `config diff` trước khi push, và **mỗi lần áp migration production cần xác nhận của chủ dự án trong phiên (CLAUDE.md rule 12)**; CI/CD production là GĐ6. Backup mới nhất: `vptu-backup/prod-20260913-1936-gd3-*` (ngoài git).
+`main` có ruleset (PR bắt buộc, CI xanh, chặn force-push), không ngoại lệ. Production: luôn backup pg_dump, trình `config diff` trước khi push, và **mỗi lần áp migration production cần xác nhận của chủ dự án trong phiên (CLAUDE.md rule 12)** — migration 0011 **chưa** áp production. Backup mới nhất: `vptu-backup/prod-20260913-1936-gd3-*` (ngoài git).
 
 ## 3 lệnh để tiếp tục
 ```
-Sau khi PR #11 merge: kiểm tra 3 vai trò trên https://haidang21ktvptu.github.io/vptu-mvp-task/ rồi ghi CHANGELOG.
+cd tests/e2e && npm test          # 6 kịch bản × 2 kích thước trên staging (build + preview tự chạy)
 ```
 ```
-cd tests/rls && npm test    # 48 test RLS trên staging
+cd tests/rls && npm test          # 48 test RLS trên staging
 ```
 ```
-Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/PROMPTS.md "Giai đoạn 4" rồi làm GĐ4 bằng Plan mode.
+Đọc CLAUDE.md, docs/TRANG-THAI.md rồi tiếp tục GĐ4 PR (b)/(c) từ nhánh PR (a).
 ```

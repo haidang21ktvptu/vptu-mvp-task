@@ -1,0 +1,17 @@
+{
+  "name": "vptu-e2e-tests",
+  "private": true,
+  "type": "module",
+  "description": "Kịch bản Playwright end-to-end trên staging (SPEC GĐ4, NF-4)",
+  "engines": { "node": ">=20.19" },
+  "scripts": {
+    "test": "playwright test",
+    "test:desktop": "playwright test --project=desktop",
+    "test:mobile": "playwright test --project=mobile",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@supabase/supabase-js": "2.116.0"
+  }
+}

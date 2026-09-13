@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Theo Dõi Nhiệm Vụ Nghị Quyết - Văn Phòng Tỉnh Ủy Cao Bằng</title>
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative pb-12">
+
+  <!-- MÀN HÌNH ĐĂNG NHẬP -->
+  <div id="loginSection" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200">
+      <div class="text-center space-y-1">
+        <div class="w-12 h-12 bg-red-800 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">★</div>
+        <h2 class="text-lg font-bold text-slate-900 uppercase">Văn Phòng Tỉnh Ủy Cao Bằng</h2>
+        <p class="text-xs text-slate-500">Hệ thống Quản trị Nhiệm vụ theo Kết quả (1-1-1-1-3)</p>
+      </div>
+
+      <form id="loginForm" class="space-y-3 text-xs">
+        <div>
+          <label for="loginUsername" class="font-semibold text-slate-700">Tài khoản đăng nhập *</label>
+          <input type="text" id="loginUsername" required autocomplete="username" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Tài khoản (VD: levanmieu, hoangthithutrang, buivanhau)">
+        </div>
+        <div>
+          <label for="loginPassword" class="font-semibold text-slate-700">Mật khẩu *</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Mật khẩu">
+        </div>
+        <div id="loginError" class="hidden text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200"></div>
+        <button type="submit" id="loginSubmitBtn" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded-lg shadow transition">Đăng Nhập</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ĐỔI MẬT KHẨU LẦN ĐẦU (bắt buộc, không có nút đóng) -->
+  <div id="changePasswordModal" class="fixed inset-0 bg-slate-950/85 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border-2 border-red-600">
+      <div class="flex items-center gap-3 text-red-700">
+        <div class="p-2 bg-red-100 rounded-full font-bold text-lg">🔒</div>
+        <div>
+          <h3 class="text-sm font-bold uppercase">Đổi mật khẩu lần đầu</h3>
+          <p class="text-[11px] text-slate-500">Đồng chí đang dùng mật khẩu tạm. Vui lòng đặt mật khẩu mới để tiếp tục.</p>
+        </div>
+      </div>
+      <form id="changePasswordForm" class="space-y-3 text-xs">
+        <div>
+          <label for="newPassword" class="font-semibold text-slate-700">Mật khẩu mới * <span class="font-normal text-slate-500">(tối thiểu 8 ký tự, có chữ và số)</span></label>
+          <input type="password" id="newPassword" required autocomplete="new-password" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none">
+        </div>
+        <div>
+          <label for="newPasswordConfirm" class="font-semibold text-slate-700">Nhập lại mật khẩu mới *</label>
+          <input type="password" id="newPasswordConfirm" required autocomplete="new-password" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none">
+        </div>
+        <div id="changePasswordError" class="hidden text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200"></div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="submit" id="changePasswordBtn" class="px-4 py-2 rounded bg-red-800 hover:bg-red-900 text-white text-xs font-bold shadow">Đổi mật khẩu và tiếp tục</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- HEADER HỆ THỐNG -->
+  <header id="mainHeader" class="bg-red-800 text-white shadow-md hidden">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+      <div>
+        <h1 class="text-base md:text-lg font-bold uppercase tracking-wide">Văn Phòng Tỉnh Ủy Cao Bằng</h1>
+        <p class="text-[11px] text-red-200" id="headerDeptDisplay">Hệ Thống Quản Trị Ngoại Lệ 1-1-1-1-3</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <div id="currentUserDisplay" class="text-xs font-bold text-white">--</div>
+          <div id="currentRoleDisplay" class="text-[10px] text-red-200 uppercase tracking-wider font-semibold">--</div>
+        </div>
+        <button type="button" id="logoutBtn" class="text-xs bg-red-950 hover:bg-black/40 text-white px-3 py-1.5 rounded border border-red-700">Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Markup của từng view và modal được các module trong src/views, src/features gắn vào lúc khởi động -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <section id="viewThuongTruc" class="space-y-6 hidden"></section>
+    <section id="viewLanhDaoVP" class="space-y-6 hidden"></section>
+    <section id="viewChuyenVien" class="space-y-6 hidden"></section>
+  </main>
+  <div id="modalRoot"></div>
+
+</body>
+</html>
