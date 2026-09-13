@@ -5,6 +5,12 @@ import { DEPT_NAMES, ROLE_LABELS } from '../lib/constants.js';
 import { state } from '../lib/state.js';
 import { getView } from './registry.js';
 
+// "Thứ Hai, 14/9/2026" — ngày ở đầu trang (ẩn trên điện thoại).
+function formatLongDate(d) {
+  const s = d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 const SECTION_BY_ROLE = { A1: 'viewThuongTruc', A2: 'viewLanhDaoVP', A3: 'viewChuyenVien' };
 
 // Mỗi mục: { id, label, action, tab } — id giữ nguyên tên nút tab cũ để kịch bản e2e không đổi.
@@ -35,6 +41,7 @@ export function initUserInterface() {
   setText('currentUserDisplay', `${user.full_name} (${user.position_title})`);
   setText('currentRoleDisplay', ROLE_LABELS[user.role_group] || '');
   setText('headerDeptDisplay', DEPT_NAMES[user.department] || 'Văn phòng Tỉnh ủy Cao Bằng');
+  setText('headerDate', formatLongDate(new Date()));
   renderNav(view?.nav || []);
 
   Object.entries(SECTION_BY_ROLE).forEach(([role, id]) => show(id, user.role_group === role));

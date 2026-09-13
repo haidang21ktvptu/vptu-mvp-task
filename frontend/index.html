@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1C2A44">
   <title>Hệ thống quản trị nhiệm vụ — Văn phòng Tỉnh ủy Cao Bằng</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Noto+Serif:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png">
   <script type="module" src="/src/main.js"></script>
 </head>
 <body>
@@ -22,8 +21,8 @@
 
     <form id="loginForm" class="the-dang-nhap" novalidate>
       <div class="thuong-hieu">
-        <!-- Biểu tượng chính thức do Văn phòng cung cấp, đặt tại public/brand/ (DESIGN mục 1). -->
-        <div class="bieu-tuong" aria-hidden="true">Biểu tượng<br>chính thức</div>
+        <!-- Biểu tượng tỉnh Cao Bằng do Văn phòng cung cấp (DESIGN mục 1): không đổi màu, không kéo méo. -->
+        <img class="logo-dang-nhap" src="/brand/logo-cao-bang.png" width="112" height="72" alt="Biểu tượng tỉnh Cao Bằng">
         <h1 class="co-quan">Tỉnh ủy Cao Bằng<small>Văn phòng Tỉnh ủy</small></h1>
         <div class="gach-vang" aria-hidden="true"></div>
         <p class="he-thong">Hệ thống quản trị nhiệm vụ</p>
@@ -62,7 +61,10 @@
   <!-- ================= KHUNG ỨNG DỤNG (sau đăng nhập, DESIGN mục 4) ================= -->
   <div id="appShell" class="khung hidden">
     <aside class="side">
-      <div class="side-logo"><b>Văn phòng Tỉnh ủy</b><span>Cao Bằng · Quản trị nhiệm vụ</span></div>
+      <div class="side-logo">
+        <span class="logo-o"><img src="/brand/logo-cao-bang.png" width="40" height="26" alt=""></span>
+        <div><b>Văn phòng Tỉnh ủy</b><span>Cao Bằng · Quản trị nhiệm vụ</span></div>
+      </div>
       <nav id="mainNav" class="nav" aria-label="Điều hướng chính"></nav>
       <div class="side-user">
         <b id="currentUserDisplay">--</b>
@@ -73,8 +75,9 @@
     <div class="main">
       <header id="mainHeader" class="top">
         <span class="cq">Tỉnh ủy Cao Bằng<i>·</i>Văn phòng</span>
+        <span id="headerDeptDisplay" class="phong">--</span>
         <div class="phai">
-          <span id="headerDeptDisplay">--</span>
+          <span id="headerDate" class="ngay"></span>
           <button type="button" id="logoutBtn" class="btn btn-phu btn-nho">Đăng xuất</button>
         </div>
       </header>
