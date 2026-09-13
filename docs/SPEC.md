@@ -36,7 +36,7 @@ Phiên bản 1.0 · Chủ dự án: Văn phòng Tỉnh ủy Cao Bằng · Trạn
 
 Khối và phòng: TONG_HOP, HC_LT, CDS_CY, TAI_CHINH_DANG, QUAN_TRI. Danh sách 49 người lấy từ bảng `accounts` hiện có, không nhập lại.
 
-Xác định vai trò ở tầng DB (GĐ3): CVP = `role_group = 'A1'` và `is_chief = true` (cột riêng, vì cả 5 A1 đều `manager_id NULL`); PCVP = A1 còn lại. **Khối PCVP phụ trách** = các tài khoản có `manager_id` = PCVP, hoặc `manager_id` trỏ tới một A2 mà A2 đó có `manager_id` = PCVP (2 cấp), cộng chính PCVP (`in_my_block()`). Phòng của A2/A3 = `department`.
+Xác định vai trò ở tầng DB (GĐ3, đã chốt 2026-09-13): CVP = `role_group = 'A1'` và `accounts.is_chief = true` (cột riêng, đúng 1 dòng; vì cả 5 A1 đều `manager_id NULL` nên không suy ra được cách khác); PCVP = A1 còn lại. Frontend cũng đọc `is_chief`, không hardcode username. **Khối PCVP phụ trách** = các tài khoản có `manager_id` = PCVP, hoặc `manager_id` trỏ tới một A2 mà A2 đó có `manager_id` = PCVP (2 cấp), cộng chính PCVP (`in_my_block()`). Phòng của A2/A3 = `department`.
 
 ---
 
@@ -56,7 +56,7 @@ Ký hiệu: **[Giữ]** = đã có ở MVP, giữ nguyên hành vi. **[Mới]** 
 - **RLS-2** `accounts`: mọi người đã đăng nhập đọc được các cột công khai (họ tên, chức danh, phòng, vai trò). Chỉ A1 sửa được. Không ai đọc được `auth.users`.
 - **RLS-3** `tasks` — đọc: A3 chỉ `assigned_to = auth.uid()`; A2 chỉ tasks có `assigned_to` thuộc phòng mình hoặc `leader_in_charge = auth.uid()`; A1-PCVP chỉ tasks thuộc khối mình; A1-CVP tất cả.
 - **RLS-4** `tasks` — ghi: A1 và A2 tạo/sửa trong phạm vi đọc của mình; A3 chỉ cập nhật `status` (tiếp nhận/từ chối/nộp) trên task của mình, không sửa trường khác.
-- **RLS-5** `task_directives`: đọc/ghi nếu là A1 hoặc là `assigned_to` / `leader_in_charge` / `created_by` của task đó.
+- **RLS-5** `task_directives`: đọc/ghi nếu (a) là A1 trong phạm vi đọc task (CVP tất cả, PCVP khối mình), (b) là **A2 và task thuộc phòng mình** (mọi task trong phòng, không chỉ task mình là leader/creator — quyết định 2026-09-13), hoặc (c) là `assigned_to` / `leader_in_charge` / `created_by` của task đó (A3 chỉ task của mình).
 - **RLS-6** `direct_messages`: chỉ `sender_id` hoặc `receiver_id` = `auth.uid()`.
 - **RLS-7** `task_evidences`: A3 chỉ thêm cho task của mình; A2/A1 đọc và duyệt trong phạm vi.
 - **RLS-8** Mọi thao tác nhiều bước (giao việc, duyệt hoàn thành, đánh dấu đã đọc) là Postgres function `security definer`, có kiểm tra quyền bên trong: `assign_task`, `approve_task`, `submit_evidence`, `warn_task`, `mark_directives_read`, `mark_messages_read` (migration 0009). Mọi hàm `security definer` đều `SET search_path = public`, REVOKE khỏi `anon`/`public`.
@@ -72,7 +72,7 @@ Ma trận policy đã áp (migration 0007–0009; "—" = không có policy/quy�
 | tasks | INSERT (`assign_task`) | mọi người | trong khối hoặc NULL | trong phòng hoặc NULL | — |
 | tasks | UPDATE | scope đọc; người được giao mới phải trong scope ghi | như CVP, trong khối | như CVP, trong phòng | task của mình; trigger `tasks_guard_a3` chỉ cho đổi `status`/`reject_reason` theo CHO_TIEP_NHAN→DANG_THUC_HIEN/TU_CHOI_TIEP_NHAN, DANG_THUC_HIEN→CHO_DUYET |
 | tasks | DELETE | — | — | — | — |
-| task_directives | SELECT / INSERT (sender = mình) | task trong scope | task trong khối | là party | là party |
+| task_directives | SELECT / INSERT (sender = mình) | task trong scope | task trong khối | mọi task trong phòng | là party (task của mình) |
 | task_directives | UPDATE (đã đọc) | chỉ `mark_directives_read()` | | | |
 | task_evidences | SELECT | scope | khối | phòng | task của mình |
 | task_evidences | INSERT | — | — | — | task của mình (`submit_evidence` hoặc trực tiếp) |

@@ -25,6 +25,7 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 9. Kết thúc mỗi việc: cập nhật `CHANGELOG.md` (3–6 dòng, tiếng Việt), không viết dài.
 10. Cuối mỗi phiên hoặc trước khi context gần đầy, cập nhật `docs/TRANG-THAI.md`.
 11. Dữ liệu tài khoản trên project **staging** chỉ được nạp từ `supabase/seed.sql` (dữ liệu giả). Không sao chép dữ liệu thật (họ tên, chức danh, phòng ban) từ production sang staging.
+12. Áp migration lên production luôn cần một câu xác nhận của chủ dự án **trong phiên đó**, kể cả khi `docs/TRANG-THAI.md` ghi "phát hành ngay".
 
 ## Lệnh thường dùng
 - `cd frontend && npm run dev` — chạy local
