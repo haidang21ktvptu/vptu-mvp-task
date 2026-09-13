@@ -1,32 +1,31 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ4 (tách frontend Vite) hoàn thành** — PR #13/#14/#15 merge, Pages đã chuyển sang GitHub Actions, bản live là build Vite, kiểm tra 3 vai trò xong. Còn PR dọn dẹp (xoá `index.html` gốc + ESLint) chờ merge. Sẵn sàng **GĐ5 (giao diện mới theo DESIGN.md, Plan mode)**.
+**GĐ5 (giao diện mới theo DESIGN.md) đang làm, đã qua điểm dừng 1 (đăng nhập + khung: đạt) và đang ở điểm dừng 2 (3 view A1/A2/A3 chờ duyệt bằng mắt).** Còn PR (c): luồng ý kiến chỉ đạo, nhắn tin 1-1 (danh bạ, khung chat, toast tin nhắn), rà lại responsive mobile cho các phần đó; cập nhật `frontend/README.md`, dải thổ cẩm chỗ thứ 3 (chân trang in).
 
 ## Nhánh & PR đang mở
-- PR dọn dẹp `feature/gd4-don-dep` → main: xoá `index.html` gốc, bỏ ngoại lệ `check-line-limit`, ESLint tối thiểu trong CI (lint sạch), tài liệu.
+- PR #18 `feature/gd5a-tokens-dang-nhap-khung` → main: token, phông tự host, đăng nhập, khung, logo Cao Bằng. CI xanh, chủ dự án đã duyệt ảnh.
+- PR #19 `feature/gd5b-views-bang-modal` → **base = nhánh PR #18** (xếp chồng): views, bảng, thanh số liệu, modal. CI xanh. Sau khi #18 merge: `gh pr edit 19 --base main` rồi merge `main` vào nhánh.
 
 ## Đã xong
-- GĐ1: RLS tạm + chặn `accounts.password`. GĐ2: Supabase Auth (0004–0006). GĐ3: RLS đầy đủ (0007–0010), 48 test RLS pass.
-- GĐ4: `frontend/` Vite + JS thuần + Tailwind build, 57 file ≤ 185 dòng, `data-action` thay onclick, toast thay `alert()`; 0011 FK `accounts.id → auth.users.id` (staging + production); seed tạo auth user; e2e 16/16 (7 kịch bản × 1280/360px); `deploy-pages.yml` (secrets `VITE_SUPABASE_*`); production live = Vite.
+- GĐ1–GĐ4 (xem CHANGELOG mục 8–11). GĐ5 PR (a), (b) như trên; Lighthouse Accessibility đăng nhập/A1/A2/A3 = 100; e2e 16/16.
 
 ## Đang dở
-- GĐ5: giao diện mới theo `docs/DESIGN.md` (bắt đầu từ tokens.css + trang đăng nhập, duyệt bằng mắt); tiện thể bỏ gọi `loadA2Data` 2 lần khi A2 vào app.
-- GĐ6: đưa `tests/rls` + `tests/e2e` vào CI với secret staging (quyết định 2026-09-13). GĐ7: lên Pro, bật hook khoá tài khoản (AUTH-3).
+- GĐ5 PR (c) (chưa bắt đầu). GĐ6: `tests/rls` + `tests/e2e` vào CI với secret staging. GĐ7: lên Pro, bật hook khoá tài khoản (AUTH-3).
 
 ## Chờ quyết định (chủ dự án)
-- Không còn câu hỏi mở của GĐ4.
+- Duyệt 6 ảnh điểm dừng 2 (trong PR #19) rồi nói "tiếp" để làm PR (c).
 
 ## Lưu ý quy trình
-`main` có ruleset (PR bắt buộc, CI xanh, chặn force-push), không ngoại lệ. Production: luôn backup pg_dump, trình `config diff` trước khi push, và **mỗi lần áp migration production cần xác nhận của chủ dự án trong phiên (CLAUDE.md rule 12)** — 0011 đã áp production sau xác nhận. Backup mới nhất: `vptu-backup/prod-20260913-2206-gd4-*` (ngoài git).
+`main` có ruleset (PR bắt buộc, CI xanh, chặn force-push), không ngoại lệ. Production: luôn backup pg_dump, trình `config diff` trước khi push, và **mỗi lần áp migration production cần xác nhận của chủ dự án trong phiên (CLAUDE.md rule 12)**. GĐ5 không có migration. Ảnh màn hình: `docs/anh-man-hinh/gd5/`, mỗi giai đoạn chỉ giữ bộ mới nhất. Chụp ảnh/Lighthouse: script tạm ngoài repo (Playwright của `tests/e2e`, `lighthouse@12` + `sharp` cài trong thư mục tạm), không thêm phụ thuộc vào repo.
 
 ## 3 lệnh để tiếp tục
 ```
-cd tests/e2e && npm test          # 7 kịch bản × 2 kích thước trên staging (build + preview tự chạy); npm run lint ở gốc repo
+cd tests/e2e && npm test          # 8 kịch bản × 2 kích thước trên staging (build + preview tự chạy); npm run lint ở gốc repo
 ```
 ```
 cd tests/rls && npm test          # 48 test RLS trên staging
 ```
 ```
-Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/DESIGN.md, docs/PROMPTS.md "Giai đoạn 5" rồi làm GĐ5 bằng Plan mode.
+Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/DESIGN.md; checkout feature/gd5b-views-bang-modal, tạo nhánh feature/gd5c-... và làm PR (c) GĐ5.
 ```
