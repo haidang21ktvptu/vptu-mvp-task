@@ -366,3 +366,12 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - **Tái cấu trúc cơ chế xem chi tiết nhiệm vụ sang Accordion Row (Không cuộn trang):**
   * **Tại Tab 2 của Lãnh đạo VP (A1):** Triệt tiêu việc mở bảng cố định ở đáy trang. Khi bấm **"Chi tiết việc"** của bất kỳ cán bộ nào, dòng nhiệm vụ chi tiết (`<tr id="treeDetailRow-{id}">`) sẽ được chèn và bung mở **ngay sát bên dưới dòng cán bộ đó**. Nút bấm đổi sang trạng thái màu đỏ **"✕ Đóng việc"** để thu gọn khi không còn nhu cầu xem.
   * **Tại Tab 3 KPI của Trưởng phòng (A2):** Đồng bộ hoàn toàn logic Accordion Row. Thay thế bảng phẳng rời ở đáy bằng cơ chế chèn dòng chi tiết `<tr id="a2KpiDetailRow-{id}">` ngay dưới chân mỗi cán bộ trong phòng, bấm "Chi tiết việc" / "✕ Đóng việc" trực tiếp tại chỗ.
+
+---
+
+## 7. Giai đoạn 0 (v2) — Khởi tạo cấu trúc dự án (Claude)
+
+- Đưa `CLAUDE.md`, `docs/` (SPEC, DESIGN, PROMPTS), `mockup/index.html` vào version control (trước đó chỉ nằm cục bộ, chưa từng lên GitHub).
+- Dựng khung thư mục đích theo `docs/SPEC.md` mục 6: `frontend/`, `supabase/`, `tests/e2e/`, `tests/rls/`, `scripts/` (đều còn trống, có README ghi rõ sẽ hoàn thiện ở giai đoạn nào), `.gitignore`.
+- Thêm `supabase/migrations/0001_baseline.sql`: dump đúng schema thật hiện tại (không kèm data) bằng `supabase db dump --linked`, đã áp thử thành công lên Postgres trắng cục bộ và lint sạch. Dump xác nhận `users_departments` đã bị xoá, `accounts` đã có cột `department`, nhưng cũng xác nhận lại nợ kỹ thuật đã biết: RLS vẫn tắt, `anon`/`authenticated` vẫn có `GRANT ALL` trên mọi bảng kể cả `accounts.password` — sẽ xử lý ở GĐ1.
+- Thêm `.github/workflows/ci.yml`: job gitleaks (NF-2) và job áp migration + `supabase db lint` trên Postgres trắng cục bộ (đúng điều kiện xong của GĐ0). Chưa đụng `index.html`.

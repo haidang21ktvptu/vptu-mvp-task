@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VPTU-TASK — Bản mẫu giao diện</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Noto+Serif:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cb-do:#A6192E; --cb-vang:#C9A227; --cb-cham:#1C2A44; --cb-cham-sang:#26375A;
+  --cb-ngoc:#2E7D6E; --cb-da:#F4F2ED; --cb-giay:#FFFFFF; --cb-muc:#1D2433;
+  --cb-muc-nhat:#5B6474; --cb-vien:#DDD8CE;
+  --xanh-bg:#E6F2EF; --xanh:#2E7D6E; --vang-bg:#FBF3DF; --vang:#8A6512;
+  --do-bg:#FBE9E7; --do:#B42318; --dodb-bg:#F6DCE0; --dodb:#7A0C1E;
+  --serif:"Noto Serif",Georgia,serif; --sans:"Be Vietnam Pro",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--cb-muc);background:var(--cb-da)}
+button,input{font:inherit}
+.thocam{height:6px;background:var(--cb-cham) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='6'><path d='M0 3 L4 0 L8 3 L4 6 Z M8 3 L12 0 L16 3 L12 6 Z' fill='none' stroke='%23C9A227' stroke-opacity='.6' stroke-width='1'/></svg>") repeat-x}
+
+/* ---- chuyển màn hình mẫu ---- */
+.switch{position:fixed;top:10px;right:10px;z-index:99;display:flex;gap:4px;background:var(--cb-giay);border:1px solid var(--cb-vien);border-radius:6px;padding:4px}
+.switch button{border:0;background:transparent;padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--cb-muc-nhat)}
+.switch button.on{background:var(--cb-cham);color:#fff}
+.screen{display:none;min-height:100vh}.screen.on{display:block}
+
+/* ================= ĐĂNG NHẬP ================= */
+#login{background:var(--cb-cham);position:relative;overflow:hidden;display:none;align-items:center;justify-content:center;padding:24px}
+#login .nui{position:absolute;inset:auto 0 0 0;height:52vh;width:100%;opacity:0;animation:hien .6s ease-out .1s forwards}
+@keyframes hien{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#login .nui{animation:none;opacity:1}}
+.card{position:relative;background:var(--cb-giay);width:100%;max-width:420px;border-radius:6px;border-top:4px solid var(--cb-do);box-shadow:0 8px 24px rgba(28,42,68,.18);padding:32px 36px 28px}
+.brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.emblem{width:64px;height:64px;border:1px dashed var(--cb-vien);border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--cb-muc-nhat);line-height:1.2}
+.coquan{font-family:var(--serif);font-weight:700;font-size:20px;letter-spacing:.02em;color:var(--cb-do)}
+.coquan small{display:block;font-weight:400;font-size:15px;color:var(--cb-muc);letter-spacing:0}
+.hethong{font-family:var(--serif);font-size:16px;color:var(--cb-muc-nhat)}
+.brand .gach{width:56px;height:2px;background:var(--cb-vang);margin-top:2px}
+.card .thocam{margin:20px -36px 22px}
+label{display:block;font-size:13px;font-weight:500;color:var(--cb-muc-nhat);margin-bottom:6px}
+.input{width:100%;height:40px;border:1px solid var(--cb-vien);border-radius:4px;padding:0 12px;background:#fff;color:var(--cb-muc);margin-bottom:16px}
+.input:focus{outline:2px solid var(--cb-cham);outline-offset:-1px;border-color:transparent}
+.btn{height:40px;border-radius:4px;padding:0 18px;font-weight:500;cursor:pointer;border:1px solid transparent}
+.btn-chinh{background:var(--cb-do);color:#fff;width:100%}
+.btn-chinh:hover{background:#8E1527}
+.btn-phu{background:transparent;border-color:var(--cb-muc-nhat);color:var(--cb-muc)}
+.btn:focus-visible{outline:2px solid var(--cb-vang);outline-offset:2px}
+.chantrang{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:13px;color:rgba(255,255,255,.7)}
+
+/* ================= KHUNG ỨNG DỤNG ================= */
+#app{display:none;grid-template-columns:240px 1fr;min-height:100vh}
+#login.on{display:flex}#app.on{display:grid}
+.side{background:var(--cb-cham);color:rgba(255,255,255,.9);display:flex;flex-direction:column;padding:20px 0}
+.side .logo{padding:0 20px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+.side .logo b{font-family:var(--serif);font-size:15px;display:block;color:#fff}
+.side .logo span{font-size:12px;color:rgba(255,255,255,.6)}
+.nav{padding:12px 0;flex:1}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:inherit;text-decoration:none;font-size:14px;border-left:3px solid transparent}
+.nav a.on{background:var(--cb-cham-sang);border-left-color:var(--cb-vang);color:#fff}
+.nav a .n{margin-left:auto;background:var(--cb-vang);color:var(--cb-muc);font-size:12px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 5px}
+.side .user{padding:16px 20px 0;border-top:1px solid rgba(255,255,255,.12);font-size:13px}
+.side .user b{display:block;color:#fff;font-weight:500}
+.side .user span{color:rgba(255,255,255,.6)}
+.main{min-width:0}
+.top{background:var(--cb-giay);padding:14px 32px;display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--cb-vien)}
+.top .cq{font-family:var(--serif);font-weight:600;font-size:17px;letter-spacing:.02em;color:var(--cb-cham)}
+.top .cq i{font-style:normal;color:var(--cb-muc-nhat);font-weight:400;margin:0 8px}
+.top .ngay{margin-left:auto;font-size:13px;color:var(--cb-muc-nhat)}
+.content{padding:24px 32px;max-width:1280px}
+.head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font-size:24px;font-weight:600;line-height:1.3}
+h1 small{display:block;font-size:14px;font-weight:400;color:var(--cb-muc-nhat)}
+.head .btn-chinh{width:auto;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);background:var(--cb-giay);border:1px solid var(--cb-vien);border-radius:6px;margin-bottom:20px}
+.stats div{padding:14px 18px;border-right:1px solid var(--cb-vien)}
+.stats div:last-child{border-right:0}
+.stats b{display:block;font-size:26px;font-weight:600;line-height:1.1}
+.stats span{font-size:13px;color:var(--cb-muc-nhat)}
+.stats .do b{color:var(--do)}.stats .dodb b{color:var(--dodb)}.stats .vang b{color:var(--vang)}.stats .xanh b{color:var(--xanh)}
+.bang{background:var(--cb-giay);border:1px solid var(--cb-vien);border-radius:6px;overflow:hidden}
+.bang .tb-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--cb-vien)}
+.bang h2{font-size:17px;font-weight:600}
+.search{height:36px;width:260px;border:1px solid var(--cb-vien);border-radius:4px;padding:0 10px;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;color:var(--cb-muc-nhat);font-size:13px;padding:10px 12px;border-bottom:1px solid var(--cb-vien)}
+td{padding:0 12px;height:46px;border-bottom:1px solid var(--cb-vien);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td:first-child,th:first-child{padding-left:16px}
+tr.r-do td:first-child{box-shadow:inset 4px 0 0 var(--do)}
+tr.r-dodb td:first-child{box-shadow:inset 4px 0 0 var(--dodb)}
+tr.r-vang td:first-child{box-shadow:inset 4px 0 0 var(--vang)}
+tr.r-xanh td:first-child{box-shadow:inset 4px 0 0 var(--xanh)}
+tr.r-dodb td.tieude{font-weight:600;color:var(--dodb)}
+.muc{display:inline-block;white-space:nowrap;font-size:12px;font-weight:500;padding:2px 8px;border-radius:3px}
+.muc.do{background:var(--do-bg);color:var(--do)}.muc.dodb{background:var(--dodb-bg);color:var(--dodb)}
+.muc.vang{background:var(--vang-bg);color:var(--vang)}.muc.xanh{background:var(--xanh-bg);color:var(--xanh)}
+.yk{white-space:nowrap;border:1px solid var(--cb-vien);background:#fff;border-radius:4px;padding:4px 10px;font-size:13px;cursor:pointer;position:relative}
+.yk .n{position:absolute;top:-7px;right:-7px;background:var(--cb-vang);color:var(--cb-muc);font-size:11px;font-weight:600;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center}
+.nguoi{color:var(--cb-muc);}.nguoi small{display:block;font-size:12px;color:var(--cb-muc-nhat)}
+.bottom-nav{display:none}
+@media (max-width:768px){
+  #app.on{grid-template-columns:1fr}
+  .side{display:none}
+  .content{padding:16px}
+  .tb-head{flex-wrap:wrap;gap:8px}.search{width:100%}
+  h1{font-size:20px}
+  .top{padding:12px 16px}.top .ngay{display:none}
+  .stats{grid-template-columns:repeat(2,1fr)}.stats div{border-bottom:1px solid var(--cb-vien)}
+  table thead{display:none}
+  table,tbody,tr,td{display:block}
+  tr{border-bottom:1px solid var(--cb-vien);padding:10px 12px 10px 16px}
+  tr.r-do,tr.r-dodb,tr.r-vang,tr.r-xanh{box-shadow:inset 4px 0 0 currentColor}
+  tr.r-do{color:var(--do)}tr.r-dodb{color:var(--dodb)}tr.r-vang{color:var(--vang)}tr.r-xanh{color:var(--xanh)}
+  td{height:auto;padding:2px 0;border:0;color:var(--cb-muc)}
+  td:first-child{box-shadow:none!important}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--cb-cham);color:#fff;justify-content:space-around;padding:8px 0;font-size:12px}
+  .bottom-nav span{opacity:.75}.bottom-nav span.on{opacity:1;border-top:2px solid var(--cb-vang);padding-top:4px}
+  .content{padding-bottom:70px}
+}
+</style>
+</head>
+<body>
+
+<div class="switch">
+  <button class="on" data-s="login">Đăng nhập</button>
+  <button data-s="app">Bảng điều khiển A1</button>
+</div>
+
+<!-- ================= ĐĂNG NHẬP ================= -->
+<section id="login" class="screen on">
+  <svg class="nui" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 400 L0 300 C120 260 180 180 300 190 C380 196 420 250 500 240 C600 228 640 120 760 130 C860 138 900 210 1000 200 C1100 190 1150 90 1260 100 C1340 108 1390 170 1440 160 L1440 400 Z" fill="#26375A"/>
+    <path d="M0 400 L0 330 C100 320 160 270 260 280 C360 290 400 340 520 320 C640 300 700 230 820 240 C920 248 960 300 1060 290 C1160 280 1220 210 1320 220 C1400 226 1420 260 1440 250 L1440 400 Z" fill="#30436B"/>
+    <path d="M0 400 L0 360 C150 350 220 330 360 340 C500 350 560 370 700 355 C840 340 900 320 1040 330 C1180 340 1260 360 1440 340 L1440 400 Z" fill="#3B5080"/>
+  </svg>
+
+  <form class="card" onsubmit="return false">
+    <div class="brand">
+      <div class="emblem">Biểu tượng<br>chính thức</div>
+      <div class="coquan">Tỉnh ủy Cao Bằng<small>Văn phòng Tỉnh ủy</small></div>
+      <div class="gach"></div>
+      <div class="hethong">Hệ thống quản trị nhiệm vụ</div>
+    </div>
+    <div class="thocam"></div>
+    <label for="u">Tên đăng nhập</label>
+    <input class="input" id="u" autocomplete="username">
+    <label for="p">Mật khẩu</label>
+    <input class="input" id="p" type="password" autocomplete="current-password">
+    <button class="btn btn-chinh" type="submit">Đăng nhập</button>
+  </form>
+  <div class="chantrang">Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy Cao Bằng · Hỗ trợ: 0869 134 298</div>
+</section>
+
+<!-- ================= BẢNG ĐIỀU KHIỂN A1 ================= -->
+<section id="app" class="screen">
+  <aside class="side">
+    <div class="logo"><b>Văn phòng Tỉnh ủy</b><span>Cao Bằng · VPTU-TASK</span></div>
+    <nav class="nav">
+      <a class="on" href="#">Bảng điều khiển</a>
+      <a href="#">Cán bộ thuộc quyền</a>
+      <a href="#">Ý kiến chỉ đạo <span class="n">3</span></a>
+      <a href="#">Nhắn tin <span class="n">1</span></a>
+      <a href="#">Giao việc</a>
+    </nav>
+    <div class="user"><b>Lê Văn Miêu</b><span>Chánh Văn phòng · A1</span></div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <span class="cq">Tỉnh ủy Cao Bằng<i>·</i>Văn phòng</span>
+      <span class="ngay">Thứ Hai, 14/9/2026</span>
+    </header>
+    <div class="thocam"></div>
+
+    <div class="content">
+      <div class="head">
+        <h1>Bảng điều khiển ngoại lệ<small>Những nhiệm vụ cần lãnh đạo quan tâm hôm nay</small></h1>
+        <button class="btn btn-chinh">Giao việc</button>
+      </div>
+
+      <div class="stats">
+        <div><b>38</b><span>Nhiệm vụ đang theo dõi</span></div>
+        <div class="dodb"><b>2</b><span>Đỏ đặc biệt</span></div>
+        <div class="do"><b>5</b><span>Quá hạn</span></div>
+        <div class="vang"><b>7</b><span>Gần đến hạn</span></div>
+        <div class="xanh"><b>24</b><span>Trong hạn</span></div>
+      </div>
+
+      <div class="bang">
+        <div class="tb-head">
+          <h2>Nhiệm vụ cần xử lý</h2>
+          <input class="search" placeholder="Tìm theo tên việc, số văn bản">
+        </div>
+        <table>
+          <thead><tr>
+            <th>Nhiệm vụ</th><th>Số văn bản</th><th>Người thực hiện</th><th>Hạn</th><th>Mức</th><th>Ý kiến</th>
+          </tr></thead>
+          <tbody>
+            <tr class="r-dodb">
+              <td class="tieude">Báo cáo rà soát hạ tầng CNTT theo Công văn 4504-CV/VPTW</td>
+              <td>4504-CV/VPTW</td>
+              <td class="nguoi">Bùi Bá Hải Đăng<small>CĐS – Cơ yếu</small></td>
+              <td>05/9/2026</td>
+              <td><span class="muc dodb">Đỏ đặc biệt · 9 ngày</span></td>
+              <td><button class="yk">Ý kiến<span class="n">2</span></button></td>
+            </tr>
+            <tr class="r-do">
+              <td>Tổng hợp tiến độ số hoá tài liệu lưu trữ quý III</td>
+              <td>128-KH/VPTU</td>
+              <td class="nguoi">Nông Thị Oanh<small>Hành chính – Lưu trữ</small></td>
+              <td>10/9/2026</td>
+              <td><span class="muc do">Quá hạn · 4 ngày</span></td>
+              <td><button class="yk">Ý kiến</button></td>
+            </tr>
+            <tr class="r-vang">
+              <td>Dự thảo kế hoạch tập huấn chữ ký số cho cán bộ</td>
+              <td>77-CV/VPTU</td>
+              <td class="nguoi">Trần Thị Mai<small>Tổng hợp</small></td>
+              <td>16/9/2026</td>
+              <td><span class="muc vang">Còn 2 ngày</span></td>
+              <td><button class="yk">Ý kiến<span class="n">1</span></button></td>
+            </tr>
+            <tr class="r-xanh">
+              <td>Chuẩn bị tài liệu phục vụ Hội nghị giao ban tháng 9</td>
+              <td>131-CV/VPTU</td>
+              <td class="nguoi">Hoàng Xuân Ánh<small>Quản trị</small></td>
+              <td>25/9/2026</td>
+              <td><span class="muc xanh">Trong hạn</span></td>
+              <td><button class="yk">Ý kiến</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <nav class="bottom-nav"><span class="on">Bảng điều khiển</span><span>Cán bộ</span><span>Ý kiến</span><span>Nhắn tin</span></nav>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.switch button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');document.getElementById(b.dataset.s).classList.add('on');
+});
+</script>
+</body>
+</html>
