@@ -14,8 +14,13 @@ const files = execSync('git ls-files', { encoding: 'utf8' })
   .split('\n')
   .filter((f) => f && !EXCLUDED.some((re) => re.test(f)));
 
+// Không tính dấu xuống dòng cuối file là một dòng.
+function countLines(content) {
+  return content.split('\n').length - (content.endsWith('\n') ? 1 : 0);
+}
+
 const offenders = files
-  .map((file) => ({ file, lines: readFileSync(file, 'utf8').split('\n').length }))
+  .map((file) => ({ file, lines: countLines(readFileSync(file, 'utf8')) }))
   .filter(({ lines }) => lines > LIMIT);
 
 if (offenders.length > 0) {
