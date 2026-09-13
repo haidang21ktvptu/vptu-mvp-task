@@ -3,85 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Theo Dõi Nhiệm Vụ Nghị Quyết - Văn Phòng Tỉnh Ủy Cao Bằng</title>
+  <meta name="theme-color" content="#1C2A44">
+  <title>Hệ thống quản trị nhiệm vụ — Văn phòng Tỉnh ủy Cao Bằng</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Noto+Serif:wght@400;600;700&display=swap" rel="stylesheet">
   <script type="module" src="/src/main.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen relative pb-12">
+<body>
 
-  <!-- MÀN HÌNH ĐĂNG NHẬP -->
-  <div id="loginSection" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200">
-      <div class="text-center space-y-1">
-        <div class="w-12 h-12 bg-red-800 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">★</div>
-        <h2 class="text-lg font-bold text-slate-900 uppercase">Văn Phòng Tỉnh Ủy Cao Bằng</h2>
-        <p class="text-xs text-slate-500">Hệ thống Quản trị Nhiệm vụ theo Kết quả (1-1-1-1-3)</p>
+  <!-- ================= TRANG ĐĂNG NHẬP (DESIGN mục 4) ================= -->
+  <section id="loginSection" class="man-dang-nhap">
+    <svg class="nui" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M0 400 L0 300 C120 260 180 180 300 190 C380 196 420 250 500 240 C600 228 640 120 760 130 C860 138 900 210 1000 200 C1100 190 1150 90 1260 100 C1340 108 1390 170 1440 160 L1440 400 Z" fill="#26375A"/>
+      <path d="M0 400 L0 330 C100 320 160 270 260 280 C360 290 400 340 520 320 C640 300 700 230 820 240 C920 248 960 300 1060 290 C1160 280 1220 210 1320 220 C1400 226 1420 260 1440 250 L1440 400 Z" fill="#30436B"/>
+      <path d="M0 400 L0 360 C150 350 220 330 360 340 C500 350 560 370 700 355 C840 340 900 320 1040 330 C1180 340 1260 360 1440 340 L1440 400 Z" fill="#3B5080"/>
+    </svg>
+
+    <form id="loginForm" class="the-dang-nhap" novalidate>
+      <div class="thuong-hieu">
+        <!-- Biểu tượng chính thức do Văn phòng cung cấp, đặt tại public/brand/ (DESIGN mục 1). -->
+        <div class="bieu-tuong" aria-hidden="true">Biểu tượng<br>chính thức</div>
+        <h1 class="co-quan">Tỉnh ủy Cao Bằng<small>Văn phòng Tỉnh ủy</small></h1>
+        <div class="gach-vang" aria-hidden="true"></div>
+        <p class="he-thong">Hệ thống quản trị nhiệm vụ</p>
       </div>
+      <div class="thocam" aria-hidden="true"></div>
 
-      <form id="loginForm" class="space-y-3 text-xs">
-        <div>
-          <label for="loginUsername" class="font-semibold text-slate-700">Tài khoản đăng nhập *</label>
-          <input type="text" id="loginUsername" required autocomplete="username" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Tài khoản (VD: levanmieu, hoangthithutrang, buivanhau)">
-        </div>
-        <div>
-          <label for="loginPassword" class="font-semibold text-slate-700">Mật khẩu *</label>
-          <input type="password" id="loginPassword" required autocomplete="current-password" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="Mật khẩu">
-        </div>
-        <div id="loginError" class="hidden text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200"></div>
-        <button type="submit" id="loginSubmitBtn" class="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-2.5 rounded-lg shadow transition">Đăng Nhập</button>
-      </form>
-    </div>
+      <label for="loginUsername" class="nhan">Tên đăng nhập</label>
+      <input type="text" id="loginUsername" class="input mb-4" required autocomplete="username" autocapitalize="none" spellcheck="false">
+      <label for="loginPassword" class="nhan">Mật khẩu</label>
+      <input type="password" id="loginPassword" class="input mb-4" required autocomplete="current-password">
+      <div id="loginError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
+      <button type="submit" id="loginSubmitBtn" class="btn btn-chinh w-full">Đăng nhập</button>
+    </form>
+
+    <p class="chan-trang">Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy Cao Bằng · Hỗ trợ: 0869 134 298</p>
+  </section>
+
+  <!-- ================= ĐỔI MẬT KHẨU LẦN ĐẦU (bắt buộc, không có nút đóng — AUTH-2) ================= -->
+  <div id="changePasswordModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
+    <form id="changePasswordForm" class="modal modal-bat-buoc" novalidate>
+      <h2 id="changePasswordTitle" class="modal-tieu-de">Đổi mật khẩu lần đầu</h2>
+      <p class="chu-phu mt-1 mb-5">Đồng chí đang dùng mật khẩu tạm. Đặt mật khẩu mới để tiếp tục.</p>
+
+      <label for="newPassword" class="nhan">Mật khẩu mới <span class="font-normal">(tối thiểu 8 ký tự, có chữ và số)</span></label>
+      <input type="password" id="newPassword" class="input mb-4" required autocomplete="new-password">
+      <label for="newPasswordConfirm" class="nhan">Nhập lại mật khẩu mới</label>
+      <input type="password" id="newPasswordConfirm" class="input mb-4" required autocomplete="new-password">
+      <div id="changePasswordError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
+
+      <div class="modal-chan">
+        <button type="submit" id="changePasswordBtn" class="btn btn-chinh">Đổi mật khẩu và tiếp tục</button>
+      </div>
+    </form>
   </div>
 
-  <!-- ĐỔI MẬT KHẨU LẦN ĐẦU (bắt buộc, không có nút đóng) -->
-  <div id="changePasswordModal" class="fixed inset-0 bg-slate-950/85 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 border-2 border-red-600">
-      <div class="flex items-center gap-3 text-red-700">
-        <div class="p-2 bg-red-100 rounded-full font-bold text-lg">🔒</div>
-        <div>
-          <h3 class="text-sm font-bold uppercase">Đổi mật khẩu lần đầu</h3>
-          <p class="text-[11px] text-slate-500">Đồng chí đang dùng mật khẩu tạm. Vui lòng đặt mật khẩu mới để tiếp tục.</p>
-        </div>
+  <!-- ================= KHUNG ỨNG DỤNG (sau đăng nhập, DESIGN mục 4) ================= -->
+  <div id="appShell" class="khung hidden">
+    <aside class="side">
+      <div class="side-logo"><b>Văn phòng Tỉnh ủy</b><span>Cao Bằng · Quản trị nhiệm vụ</span></div>
+      <nav id="mainNav" class="nav" aria-label="Điều hướng chính"></nav>
+      <div class="side-user">
+        <b id="currentUserDisplay">--</b>
+        <span id="currentRoleDisplay">--</span>
       </div>
-      <form id="changePasswordForm" class="space-y-3 text-xs">
-        <div>
-          <label for="newPassword" class="font-semibold text-slate-700">Mật khẩu mới * <span class="font-normal text-slate-500">(tối thiểu 8 ký tự, có chữ và số)</span></label>
-          <input type="password" id="newPassword" required autocomplete="new-password" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none">
+    </aside>
+
+    <div class="main">
+      <header id="mainHeader" class="top">
+        <span class="cq">Tỉnh ủy Cao Bằng<i>·</i>Văn phòng</span>
+        <div class="phai">
+          <span id="headerDeptDisplay">--</span>
+          <button type="button" id="logoutBtn" class="btn btn-phu btn-nho">Đăng xuất</button>
         </div>
-        <div>
-          <label for="newPasswordConfirm" class="font-semibold text-slate-700">Nhập lại mật khẩu mới *</label>
-          <input type="password" id="newPasswordConfirm" required autocomplete="new-password" class="w-full border rounded-lg p-2.5 mt-1 focus:ring-2 focus:ring-red-600 focus:outline-none">
-        </div>
-        <div id="changePasswordError" class="hidden text-red-600 font-bold bg-red-50 p-2 rounded border border-red-200"></div>
-        <div class="flex justify-end gap-2 pt-2 border-t">
-          <button type="submit" id="changePasswordBtn" class="px-4 py-2 rounded bg-red-800 hover:bg-red-900 text-white text-xs font-bold shadow">Đổi mật khẩu và tiếp tục</button>
-        </div>
-      </form>
+      </header>
+      <div class="thocam" aria-hidden="true"></div>
+
+      <!-- Markup của từng view và modal được các module trong src/views, src/features gắn vào lúc khởi động -->
+      <main class="noi-dung">
+        <section id="viewThuongTruc" class="hidden"></section>
+        <section id="viewLanhDaoVP" class="hidden"></section>
+        <section id="viewChuyenVien" class="hidden"></section>
+      </main>
     </div>
   </div>
-
-  <!-- HEADER HỆ THỐNG -->
-  <header id="mainHeader" class="bg-red-800 text-white shadow-md hidden">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
-      <div>
-        <h1 class="text-base md:text-lg font-bold uppercase tracking-wide">Văn Phòng Tỉnh Ủy Cao Bằng</h1>
-        <p class="text-[11px] text-red-200" id="headerDeptDisplay">Hệ Thống Quản Trị Ngoại Lệ 1-1-1-1-3</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <div class="text-right">
-          <div id="currentUserDisplay" class="text-xs font-bold text-white">--</div>
-          <div id="currentRoleDisplay" class="text-[10px] text-red-200 uppercase tracking-wider font-semibold">--</div>
-        </div>
-        <button type="button" id="logoutBtn" class="text-xs bg-red-950 hover:bg-black/40 text-white px-3 py-1.5 rounded border border-red-700">Đăng xuất</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Markup của từng view và modal được các module trong src/views, src/features gắn vào lúc khởi động -->
-  <main class="max-w-7xl mx-auto px-4 py-6">
-    <section id="viewThuongTruc" class="space-y-6 hidden"></section>
-    <section id="viewLanhDaoVP" class="space-y-6 hidden"></section>
-    <section id="viewChuyenVien" class="space-y-6 hidden"></section>
-  </main>
   <div id="modalRoot"></div>
 
 </body>

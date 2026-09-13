@@ -1,16 +1,5 @@
-// Markup tầng A2 (Trưởng phòng), lấy nguyên từ index.html cũ; onclick inline → data-action.
+// Markup tầng A2 (Trưởng phòng); chuyển mục bằng thanh bên (views/a2/index.js), onclick inline → data-action.
 export const a2Template = `
-  <div class="flex border-b border-slate-200 gap-2">
-    <button id="tabBtnGiaoViec" data-action="switchA2Tab" data-tab="giaoViec" class="py-2.5 px-4 text-xs font-bold border-b-2 border-red-800 text-red-800 focus:outline-none flex items-center gap-1.5">
-      <span>📝</span> Tab 1: Giao Nhiệm Vụ Trong Phòng
-    </button>
-    <button id="tabBtnTheoDoi" data-action="switchA2Tab" data-tab="theoDoi" class="py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none flex items-center gap-1.5">
-      <span>📊</span> Tab 2: Theo Dõi & Duyệt Minh Chứng
-    </button>
-    <button id="tabBtnKPI" data-action="switchA2Tab" data-tab="kpi" class="py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none flex items-center gap-1.5">
-      <span>🏆</span> Tab 3: Theo Dõi KPI Cán Bộ Trong Phòng
-    </button>
-  </div>
 
   <!-- TAB 1: TRƯỞNG PHÒNG GIAO VIỆC -->
   <div id="tabContentGiaoViec" class="bg-white p-6 rounded-lg shadow-sm border max-w-2xl">

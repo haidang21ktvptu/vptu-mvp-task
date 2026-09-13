@@ -1,13 +1,5 @@
-// Markup tầng A1 (Lãnh đạo Văn phòng), lấy nguyên từ index.html cũ; onclick inline → data-action.
+// Markup tầng A1 (Lãnh đạo Văn phòng); chuyển mục bằng thanh bên (views/a1/index.js), onclick inline → data-action.
 export const a1Template = `
-  <div class="flex border-b border-slate-200 gap-2">
-    <button id="tabBtnA1Dashboard" data-action="switchA1Tab" data-tab="dashboard" class="py-2.5 px-4 text-xs font-bold border-b-2 border-red-800 text-red-800 focus:outline-none flex items-center gap-1.5">
-      <span>📊</span> Tab 1: Dashboard Quản Trị Ngoại Lệ & Điểm Nghẽn
-    </button>
-    <button id="tabBtnA1Staffs" data-action="switchA1Tab" data-tab="staffs" class="py-2.5 px-4 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none flex items-center gap-1.5">
-      <span>👥</span> Tab 2: Giám Sát Cây Phân Cấp Trực Thuộc
-    </button>
-  </div>
 
   <!-- NỘI DUNG TAB 1: DASHBOARD NGOẠI LỆ -->
   <div id="tabContentA1Dashboard" class="space-y-6">

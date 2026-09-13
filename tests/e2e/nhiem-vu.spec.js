@@ -13,7 +13,9 @@ function deadlineInDays(days) {
 test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứng → duyệt', () => {
   let title;
 
-  test.beforeAll((_fixtures, testInfo) => {
+  // Playwright bắt buộc tham số đầu là mẫu huỷ cấu trúc đối tượng (kể cả rỗng); tắt no-empty-pattern tại chỗ.
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeAll(({}, testInfo) => {
     title = `${E2E_TAG} ${testInfo.project.name} ${Date.now()}`;
   });
 

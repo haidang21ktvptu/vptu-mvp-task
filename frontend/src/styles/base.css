@@ -1,0 +1,44 @@
+/* Nền tảng: chữ, nền trang, tiêu điểm bàn phím, chuyển động (DESIGN mục 3, 7). */
+@layer base {
+  html { font-size: 15px; }
+  body {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--cb-muc);
+    background: var(--cb-da);
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  h1 { font-size: 24px; font-weight: 600; line-height: 1.3; }
+  h2 { font-size: 17px; font-weight: 600; line-height: 1.4; }
+  h3 { font-size: 15px; font-weight: 600; line-height: 1.4; }
+  a { color: var(--cb-cham); text-decoration: underline; text-underline-offset: 2px; }
+
+  /* Tiêu điểm bàn phím luôn nhìn thấy (DESIGN mục 9). */
+  :focus-visible { outline: 2px solid var(--cb-cham); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+}
+
+@layer components {
+  /* Hoa văn thổ cẩm Tày–Nùng (DESIGN mục 6): dải 6px, hình thoi lồng nhau, vàng sao 60% trên nền chàm.
+     Chỉ dùng đúng 3 chỗ: dưới đầu trang, trên form đăng nhập, chân trang in. */
+  .thocam {
+    height: 6px;
+    background: var(--cb-cham) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='6'><path d='M0 3 L4 0 L8 3 L4 6 Z M8 3 L12 0 L16 3 L12 6 Z' fill='none' stroke='%23C9A227' stroke-opacity='.6' stroke-width='1'/></svg>") repeat-x;
+  }
+
+  /* Nhãn phụ: 13/500, mực nhạt, viết hoa chữ đầu (không viết hoa toàn bộ). */
+  .nhan { display: block; font-size: 13px; font-weight: 500; color: var(--cb-muc-nhat); margin-bottom: 6px; }
+  .chu-phu { font-size: 13px; color: var(--cb-muc-nhat); }
+  .chu-nho { font-size: 12px; color: var(--cb-muc-nhat); }
+
+  /* Ô lỗi inline dưới form (đăng nhập, đổi mật khẩu): nói rõ việc gì và làm gì tiếp. */
+  .loi-inline {
+    font-size: 14px; color: var(--muc-do); background: var(--muc-do-bg);
+    border-left: 4px solid var(--muc-do); padding: 8px 12px; border-radius: var(--radius-input); margin-bottom: 16px;
+  }
+}

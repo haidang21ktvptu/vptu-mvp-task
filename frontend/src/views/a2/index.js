@@ -1,34 +1,33 @@
-// View A2 — Trưởng phòng: gắn markup, 3 tab Giao việc / Theo dõi & duyệt / KPI phòng (DASH-3),
-// form giao việc trong phòng (TASK-1/2) qua hàm assign_task (RLS-8).
+// View A2 — Trưởng phòng: gắn markup, 3 mục thanh bên Giao việc / Theo dõi và duyệt / Cán bộ trong
+// phòng (DASH-3), form giao việc trong phòng (TASK-1/2) qua hàm assign_task (RLS-8).
 import { supabase } from '../../lib/supabase.js';
 import { $, escapeHtml, toDatetimeLocalValue, filterRowsByKeyword } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
 import { registerView } from '../registry.js';
+import { setActiveNav } from '../shell.js';
 import { a2Template } from './template.js';
 import { loadA2Data } from './tracking.js';
 import { renderKPITab } from './kpi.js';
 
-const ACTIVE_CLS = ['border-red-800', 'text-red-800', 'font-bold'];
-const INACTIVE_CLS = ['border-transparent', 'text-slate-500', 'font-semibold'];
+// Ba "tab" cũ nay là ba mục ở thanh bên (id nút giữ nguyên cho e2e).
 const TABS = {
   giaoViec: { btn: 'tabBtnGiaoViec', content: 'tabContentGiaoViec', load: null },
   theoDoi: { btn: 'tabBtnTheoDoi', content: 'tabContentTheoDoi', load: loadA2Data },
   kpi: { btn: 'tabBtnKPI', content: 'tabContentKPI', load: renderKPITab },
 };
+const NAV = [
+  { id: TABS.theoDoi.btn, label: 'Theo dõi và duyệt', action: 'switchA2Tab', data: { tab: 'theoDoi' } },
+  { id: TABS.giaoViec.btn, label: 'Giao việc', action: 'switchA2Tab', data: { tab: 'giaoViec' } },
+  { id: TABS.kpi.btn, label: 'Cán bộ trong phòng', action: 'switchA2Tab', data: { tab: 'kpi' } },
+];
 
 function switchA2Tab({ tab }) {
-  Object.values(TABS).forEach((t) => {
-    $(t.btn).classList.remove(...ACTIVE_CLS);
-    $(t.btn).classList.add(...INACTIVE_CLS);
-    $(t.content).classList.add('hidden');
-  });
   const active = TABS[tab];
   if (!active) return;
-  $(active.btn).classList.add(...ACTIVE_CLS);
-  $(active.btn).classList.remove(...INACTIVE_CLS);
-  $(active.content).classList.remove('hidden');
+  Object.values(TABS).forEach((t) => $(t.content).classList.toggle('hidden', t !== active));
+  setActiveNav(active.btn);
   if (active.load) active.load();
 }
 
@@ -85,10 +84,12 @@ function mount() {
 export function registerA2View() {
   mount();
   registerView('A2', {
+    nav: NAV,
+    // Vào app mở thẳng "Theo dõi và duyệt": loadA2Data chạy đúng một lần (trước đây gọi khi vào app
+    // rồi lại gọi khi bấm tab Theo dõi).
     init() {
       prepareAssignForm();
-      switchA2Tab({ tab: 'giaoViec' });
-      loadA2Data();
+      switchA2Tab({ tab: 'theoDoi' });
     },
     // Sau khi phân công lại: nạp lại bảng theo dõi và KPI như bản cũ.
     reload() {
