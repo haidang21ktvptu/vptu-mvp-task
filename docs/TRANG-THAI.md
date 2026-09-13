@@ -8,10 +8,10 @@ Không có (PR #7, #8, #9 đều đã merge).
 
 ## Đã xong
 - Quyết định: giữ nguyên mật khẩu hiện có (nạp Auth dạng bcrypt), cờ `must_change_password = false`; quản trị bật sau bằng `admin_set_must_change_password()` (SPEC AUTH-2). Q1 xoá dữ liệu nhiệm vụ khi lên v2; Q2 `haidang21ktvptu`; Q3 Free → Pro ở GĐ7.
-- Staging + production: 0004–0006, config Auth, auth user trùng id (5 giả / 48 thật), cột  và  đã xoá; bật cờ → modal bắt buộc đổi hoạt động; trigger tự tắt cờ.
+- Staging + production: 0004–0006, config Auth, auth user trùng id (5 giả / 48 thật), cột `password` và `verify_login` đã xoá; bật cờ → modal bắt buộc đổi hoạt động; trigger tự tắt cờ.
 
 ## Đang dở
-- Production: chỉ còn áp 0006 sau khi PR-B merge (backup pg_dump 2026-09-13 tại thư mục `vptu-backup` cạnh repo, ngoài git).
+- Không còn việc dở của GĐ2. Backup pg_dump 2026-09-13 (còn cột `password`) tại thư mục `vptu-backup` cạnh repo, ngoài git — giữ ≥ 7 ngày.
 - GĐ3: RLS theo vai trò thật (RLS-2…8), FK `accounts.id → auth.users.id`, xoá `assigned_domain`, `DROP` các policy `_tam_thoi_`.
 
 ## Theo dõi tuần đầu sau phát hành
