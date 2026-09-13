@@ -608,7 +608,8 @@
     }
 
     function loginErrorMessage(error) {
-      if (error.code === 'over_request_rate_limit') return 'Quá nhiều lần thử đăng nhập. Đồng chí vui lòng đợi ít phút rồi thử lại.';
+      // Giới hạn theo IP của Supabase (30 lượt/5 phút): cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm.
+      if (error.code === 'over_request_rate_limit') return 'Hệ thống đang nhận quá nhiều lượt đăng nhập từ mạng cơ quan. Đồng chí vui lòng chờ 5 phút rồi thử lại.';
       // Thông báo khoá 15 phút do hook password_verification_attempt trả về (tiếng Việt).
       if (error.code === 'invalid_credentials' && /khoá/.test(error.message)) return error.message;
       if (error.code === 'invalid_credentials') return 'Sai tên đăng nhập hoặc mật khẩu.';

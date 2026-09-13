@@ -1,38 +1,35 @@
-// Tạo tài khoản Supabase Auth cho mọi dòng trong public.accounts (GĐ2, SPEC AUTH-1…4).
+// Chuyển mọi dòng public.accounts sang Supabase Auth (GĐ2, SPEC AUTH-1…4), GIỮ NGUYÊN mật khẩu.
 //
-//   node create-auth-users.mjs --project-ref <ref> [--dry-run] [--out <file.xlsx>]
+//   node create-auth-users.mjs --project-ref <ref> [--dry-run]
 //   node create-auth-users.mjs --local
 //   node create-auth-users.mjs --project-ref <ref> --rollback   # xoá auth.users vừa tạo
 //
 // - auth.users.id được tạo TRÙNG accounts.id (Admin API nhận `id`), email quy ước
-//   <username>@vptu.caobang.local, mật khẩu tạm ngẫu nhiên, must_change_password = true.
+//   <username>@vptu.caobang.local.
+// - Mật khẩu hiện có trong accounts.password được băm bcrypt tại máy chạy script và
+//   gửi lên dưới dạng `password_hash` (không gửi plaintext qua API, không bị chặn bởi
+//   chính sách độ dài mật khẩu mới). Người dùng đăng nhập như cũ.
+// - must_change_password = false cho tất cả; quản trị bật sau bằng
+//   public.admin_set_must_change_password() (migration 0005).
 // - Chạy lại an toàn: tài khoản đã có auth.users thì bỏ qua.
 // - service_role key lấy qua Supabase CLI đã `supabase login` (hoặc biến môi trường
-//   SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY). Không bao giờ ghi key ra file/log.
-// - Mật khẩu tạm chỉ ghi vào file Excel ở scripts/out/ (đã gitignore), không in ra console.
+//   SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY). Không ghi key hay mật khẩu ra log.
 
 import { spawnSync } from 'node:child_process';
-import { randomInt } from 'node:crypto';
-import { mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
-import ExcelJS from 'exceljs';
 
 const EMAIL_DOMAIN = 'vptu.caobang.local';
-// Bỏ các ký tự dễ nhầm khi đọc trên giấy: 0/O, 1/l/I.
-const PW_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
-const PW_DIGITS = '23456789';
-const PW_LENGTH = 12;
+const BCRYPT_COST = 10; // bằng bcrypt.DefaultCost của GoTrue
 
 function parseArgs(argv) {
-  const args = { dryRun: false, rollback: false, local: false, projectRef: null, out: null };
+  const args = { dryRun: false, rollback: false, local: false, projectRef: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') args.dryRun = true;
     else if (a === '--rollback') args.rollback = true;
     else if (a === '--local') args.local = true;
     else if (a === '--project-ref') args.projectRef = argv[++i];
-    else if (a === '--out') args.out = argv[++i];
     else throw new Error(`Tham số không hợp lệ: ${a}`);
   }
   if (!args.local && !args.projectRef && !process.env.SUPABASE_URL) {
@@ -64,21 +61,11 @@ function resolveCredentials(args) {
   return { url: `https://${args.projectRef}.supabase.co`, key: svc.api_key, env: args.projectRef };
 }
 
-function generateTempPassword() {
-  const all = PW_LETTERS + PW_DIGITS;
-  for (;;) {
-    let pw = '';
-    for (let i = 0; i < PW_LENGTH; i++) pw += all[randomInt(all.length)];
-    if (/[A-Za-z]/.test(pw) && /[0-9]/.test(pw)) return pw;
-  }
-}
-
 async function fetchAccounts(db) {
   const { data, error } = await db
     .from('accounts')
-    .select('id, username, full_name, position_title, department, role_group')
-    .order('role_group')
-    .order('full_name');
+    .select('id, username, full_name, password')
+    .order('username');
   if (error) throw new Error(`Không đọc được accounts: ${error.message}`);
   return data;
 }
@@ -89,27 +76,28 @@ async function authUserExists(db, id) {
   return Boolean(data?.user);
 }
 
-async function createUsers(db, accounts, dryRun) {
-  const created = [];
+async function migrateUsers(db, accounts, dryRun) {
+  let created = 0;
   let skipped = 0;
+  const missingPassword = [];
   for (const acc of accounts) {
     if (await authUserExists(db, acc.id)) { skipped++; continue; }
-    const password = generateTempPassword();
+    if (!acc.password) { missingPassword.push(acc.username); continue; }
     if (!dryRun) {
       const { error } = await db.auth.admin.createUser({
         id: acc.id,
         email: `${acc.username}@${EMAIL_DOMAIN}`,
-        password,
+        password_hash: bcrypt.hashSync(acc.password, BCRYPT_COST),
         email_confirm: true,
         user_metadata: { username: acc.username, full_name: acc.full_name },
       });
       if (error) throw new Error(`Tạo auth user cho ${acc.username} thất bại: ${error.message}`);
-      const { error: e2 } = await db.from('accounts').update({ must_change_password: true }).eq('id', acc.id);
+      const { error: e2 } = await db.from('accounts').update({ must_change_password: false }).eq('id', acc.id);
       if (e2) throw new Error(`Đặt cờ must_change_password cho ${acc.username} thất bại: ${e2.message}`);
     }
-    created.push({ ...acc, password });
+    created++;
   }
-  return { created, skipped };
+  return { created, skipped, missingPassword };
 }
 
 async function rollbackUsers(db, accounts, dryRun) {
@@ -125,39 +113,6 @@ async function rollbackUsers(db, accounts, dryRun) {
   return deleted;
 }
 
-async function writeExcel(rows, outPath) {
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Mật khẩu tạm');
-  ws.columns = [
-    { header: 'STT', key: 'stt', width: 6 },
-    { header: 'Họ và tên', key: 'full_name', width: 28 },
-    { header: 'Chức danh', key: 'position_title', width: 34 },
-    { header: 'Phòng', key: 'department', width: 20 },
-    { header: 'Tên đăng nhập', key: 'username', width: 22 },
-    { header: 'Mật khẩu tạm', key: 'password', width: 18 },
-    { header: 'Ghi chú', key: 'note', width: 44 },
-  ];
-  ws.getRow(1).font = { bold: true };
-  rows.forEach((r, i) => ws.addRow({
-    stt: i + 1,
-    full_name: r.full_name,
-    position_title: r.position_title,
-    department: r.department,
-    username: r.username,
-    password: r.password,
-    note: 'Bắt buộc đổi mật khẩu ngay lần đăng nhập đầu tiên.',
-  }));
-  mkdirSync(dirname(outPath), { recursive: true });
-  await wb.xlsx.writeFile(outPath);
-}
-
-function defaultOutPath(env) {
-  const d = new Date();
-  const p = (n) => String(n).padStart(2, '0');
-  const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
-  return resolve(import.meta.dirname, 'out', `mat-khau-tam-${env}-${stamp}.xlsx`);
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const cred = resolveCredentials(args);
@@ -171,12 +126,11 @@ async function main() {
     return;
   }
 
-  const { created, skipped } = await createUsers(db, accounts, args.dryRun);
-  console.log(`Tạo mới: ${created.length}; bỏ qua (đã có auth user): ${skipped}.`);
-  if (created.length > 0 && !args.dryRun) {
-    const outPath = args.out ? resolve(args.out) : defaultOutPath(cred.env);
-    await writeExcel(created, outPath);
-    console.log(`Mật khẩu tạm đã ghi vào: ${outPath} (KHÔNG commit file này).`);
+  const { created, skipped, missingPassword } = await migrateUsers(db, accounts, args.dryRun);
+  console.log(`Tạo mới: ${created}; bỏ qua (đã có auth user): ${skipped}.`);
+  if (missingPassword.length > 0) {
+    console.log(`Không có mật khẩu, chưa tạo: ${missingPassword.join(', ')}`);
+    process.exitCode = 2;
   }
 }
 
