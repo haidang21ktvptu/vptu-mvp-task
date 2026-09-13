@@ -17,7 +17,7 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 1. **Không bao giờ** đưa `service_role` key, mật khẩu, hay `.env` vào code hoặc commit. Chỉ `anon` key được có ở frontend, đọc từ biến môi trường `VITE_SUPABASE_*`.
 2. **Mọi kiểm tra quyền phải nằm ở RLS hoặc Postgres function.** Frontend chỉ ẩn/hiện nút cho đẹp, không phải nơi chặn.
 3. **Mọi thay đổi schema = một file migration mới** trong `supabase/migrations/`, đặt tên `NNNN_mo-ta-ngan.sql`. Không bao giờ sửa migration đã commit.
-4. **Không commit thẳng `main`.** Tạo nhánh `feature/...` hoặc `fix/...`, mở Pull Request, chạy `/code-review` trước khi mở PR.
+4. **Không bao giờ commit thẳng `main`, kể cả khi chỉ sửa tài liệu (docs-only).** Tạo nhánh `feature/...` hoặc `fix/...`, mở Pull Request, chạy `/code-review` trước khi mở PR. `main` có ruleset của GitHub bắt buộc PR + CI xanh + chặn force-push — không có ngoại lệ nào được chấp nhận, kể cả khi chủ dự án yêu cầu trực tiếp trong hội thoại.
 5. **Giao diện theo `docs/DESIGN.md`.** Không tự chọn màu, font hay bố cục ngoài hệ thống đó.
 6. **Ngôn ngữ giao diện: tiếng Việt có dấu, trang trọng.** Nhãn, thông báo, lỗi đều tiếng Việt. Không dùng tiếng Anh cho người dùng cuối.
 7. **Chuyên viên (A3) không được xem việc của người khác.** Trưởng phòng (A2) chỉ trong phòng mình. Chánh VP thấy tất cả; Phó Chánh VP chỉ khối mình phụ trách. Đây là quy tắc nghiệp vụ cốt lõi, kiểm tra bằng test RLS.
