@@ -1,36 +1,35 @@
 # TRẠNG THÁI DỰ ÁN (cập nhật: 2026-09-13)
 
 ## Giai đoạn hiện tại
-**GĐ1 (Chặn rò rỉ khẩn cấp) đã hoàn thành** trên cả staging và production. Chưa bắt đầu GĐ2 (Supabase Auth).
+**GĐ2 (Supabase Auth) — PR-A hoàn thành, đã QA trên staging, chưa phát hành production.** GĐ1 đã xong trên cả staging và production.
 
 ## Nhánh & PR đang mở
-Không có PR nào đang mở. PR #2–#5 đều đã merge vào `main` (xem lưu ý PR #2 bên dưới).
+- PR-A `feature/gd2-supabase-auth` — migration 0004, script tạo auth user, config Auth, `index.html` đăng nhập mới, kế hoạch phát hành. Chờ duyệt; **merge = ngày chuyển đổi production** (xem `docs/KE-HOACH-PHAT-HANH-GD2.md`, làm đủ bước 1–6 trước khi merge).
 
 ## Đã xong
-- Migration 0001-0003 áp trên cả staging (`vojmrjezspdftovzinek`) và **production** (`frwyxcmbonjaimziiuqr`, vá khẩn cấp ngoài CI ngay sau khi PR #2 merge).
-- RLS bật 5 bảng; `accounts.password` bị chặn ở tầng quyền cột (không chỉ ẩn bằng view); `accounts_public` + `verify_login()` thay thế truy vấn cũ, đã QA thật với 3 vai trò.
-- Staging: 48 tài khoản thật đã xoá, thay bằng 5 tài khoản giả trong `supabase/seed.sql` (rule 11, CLAUDE.md).
-- Rule 10 (CLAUDE.md): cập nhật file này cuối phiên/khi context gần đầy.
+- GĐ1: migration 0001–0003 trên staging + production; `accounts.password` bị chặn; 5 tài khoản giả trong `seed.sql` trên staging.
+- GĐ2 trên staging: 0004 + config Auth + 5 auth user (id trùng `accounts.id`); 3 vai trò đăng nhập mật khẩu tạm → bị bắt đổi → vào đúng view; signup bị chặn; mật khẩu ≥ 8 chữ+số; trigger tự xoá cờ; không còn `verify_login`/`sessionStorage` ở client.
 
 ## Đang dở
-- RLS theo vai trò thật (RLS-2…8) — GĐ3.
-- `verify_login` chưa chống brute-force — chờ Supabase Auth (GĐ2).
+- PR-B (sau khi production ổn định 24h): migration 0005 xoá `password` + `verify_login`, sửa `seed.sql`.
+- RLS theo vai trò thật (RLS-2…8) — GĐ3; FK `accounts.id → auth.users.id` và xoá `assigned_domain` gộp vào GĐ3.
 
-## Chờ quyết định (SPEC mục 10)
-- Q1: Dữ liệu nhiệm vụ thật trên production giữ hay xoá sạch khi lên GĐ2?
-- Q2: Ai duyệt PR lên production (tên GitHub)?
-- Q3: Gói Supabase đang dùng (Free/Pro) — quyết định cách backup GĐ7.
+## Chờ quyết định (tổng hợp sau GĐ2)
+1. **Khoá tài khoản 5 lần/15 phút (AUTH-3)**: hook đã viết + test local, nhưng gói Free trả 402 khi bật. Chọn: lên gói Pro (bật `enabled = true` rồi `config push`) hay chấp nhận chỉ giới hạn IP (30 lần/5 phút) cho tới GĐ7?
+2. **Ngày phát hành production**: chạy `docs/KE-HOACH-PHAT-HANH-GD2.md` khi nào, ai nhận file Excel mật khẩu tạm để phát cho 49 cán bộ?
+3. Q2 (SPEC §10): ai duyệt PR lên production (tên GitHub)? Q3: gói Supabase (Free/Pro) — liên quan trực tiếp câu 1 và backup GĐ7.
+4. Ghim phiên bản supabase-js CDN (`@2` đang trôi) ở GĐ4 hay ngay bây giờ?
 
-## Lưu ý quy trình (đã ghi chi tiết ở CHANGELOG mục 8)
-PR #2 bị đóng (`closed`) trên GitHub chứ không phải `merged` — merge-commit bị đẩy thẳng lên `main` ngoài cổng PR. Sau đó có 2 lần commit thẳng lên `main` cho thay đổi docs-only (CLAUDE.md, file này) — nay coi là sai quy trình, không phải ngoại lệ hợp lệ. Đã bật ruleset GitHub trên `main` (bắt buộc PR, CI xanh, chặn force-push) để việc này không thể tái diễn nữa, kể cả cho thay đổi chỉ sửa tài liệu.
+## Lưu ý quy trình
+`main` có ruleset (bắt buộc PR, CI xanh, chặn force-push); không có ngoại lệ docs-only. Production migration hiện chạy tay theo kế hoạch phát hành (CI/CD production là GĐ6).
 
 ## 3 lệnh để tiếp tục
 ```
-Đọc docs/SPEC.md mục 10, trả lời Q1-Q3 trước khi vào GĐ2.
+Đọc docs/KE-HOACH-PHAT-HANH-GD2.md, chạy bước 1–6 rồi merge PR-A (ngày chuyển đổi).
 ```
 ```
-Pull main mới nhất rồi làm Giai đoạn 2 theo docs/PROMPTS.md.
+Sau 24h ổn định: tạo nhánh feature/gd2-don-dep, migration 0005 + sửa seed.sql (PR-B).
 ```
 ```
-supabase db lint --project-ref frwyxcmbonjaimziiuqr
+cd scripts && node create-auth-users.mjs --project-ref frwyxcmbonjaimziiuqr --dry-run
 ```

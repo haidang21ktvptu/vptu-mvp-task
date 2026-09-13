@@ -178,6 +178,6 @@ Một giai đoạn được coi là xong khi:
 
 | # | Câu hỏi | Cần trước GĐ |
 |---|---|---|
-| Q1 | Dữ liệu nhiệm vụ hiện tại trên production có cần giữ, hay bắt đầu sạch khi lên v2? | 2 |
+| Q1 | Dữ liệu nhiệm vụ hiện tại trên production có cần giữ, hay bắt đầu sạch khi lên v2? — **Đã trả lời (2026-09-13): xoá sạch khi lên v2** (chỉ giữ 49 tài khoản; bước xoá làm riêng, không thuộc GĐ2). | 2 |
 | Q2 | Ai là người duyệt PR lên production (tên GitHub)? | 6 |
 | Q3 | Gói Supabase đang dùng (Free/Pro)? Quyết định cách backup. | 7 |
