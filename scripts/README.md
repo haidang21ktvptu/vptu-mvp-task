@@ -8,7 +8,7 @@ Tạo `auth.users` cho mọi dòng `public.accounts`, **giữ nguyên id** (`aut
 
 ```
 node create-auth-users.mjs --project-ref <ref> [--dry-run]
-node create-auth-users.mjs --local
+node create-auth-users.mjs --local --default-password 123456   # tài khoản giả (không còn cột password)
 node create-auth-users.mjs --project-ref <ref> --rollback
 ```
 

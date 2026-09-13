@@ -786,7 +786,7 @@
     }
 
     function populateA1Selects() {
-      const isChief = (loggedInUser.username === 'levanmieu');
+      const isChief = loggedInUser.is_chief === true; // cùng nguồn với RLS (accounts.is_chief)
       const leaders = globalAccounts.filter(a => a.role_group === 'A2' && (isChief || a.manager_id === loggedInUser.id));
       const staffs = globalAccounts.filter(a => a.role_group === 'A3' && (isChief || a.manager_id === loggedInUser.id));
 
@@ -830,7 +830,8 @@
         warning_count: 0
       };
 
-      const { error } = await dbClient.from('tasks').insert([payload]);
+      // RLS-8: hàm assign_task tự kiểm tra phạm vi giao việc, đặt created_by/status.
+      const { error } = await dbClient.rpc('assign_task', { p: payload });
       if (error) alert("Lỗi: " + error.message);
       else {
         alert("Đã phát hành giao nhiệm vụ thành công!");
@@ -844,7 +845,7 @@
       const { data, error } = await dbClient.from('view_exception_dashboard').select('*');
       if (error) { console.error(error); return; }
 
-      const isChief = (loggedInUser.username === 'levanmieu');
+      const isChief = loggedInUser.is_chief === true; // cùng nguồn với RLS (accounts.is_chief)
       a1DashboardRawData = (data || []).filter(r => {
         if (isChief) return true;
         const staffObj = globalAccounts.find(a => a.full_name === r.owner_name);
@@ -944,7 +945,7 @@
       const { data: allTasks } = await dbClient.from('tasks').select('*');
       globalAllTasks = allTasks || [];
       const container = document.getElementById("a1TreeContainer");
-      const isChief = (loggedInUser.username === 'levanmieu');
+      const isChief = loggedInUser.is_chief === true; // cùng nguồn với RLS (accounts.is_chief)
 
       if (isChief) {
         document.getElementById("a1TreeHeaderTitle").innerText = "Cây Phân Cấp: Khối Các Phó Chánh Văn Phòng Phụ Trách";
@@ -1379,7 +1380,8 @@
         warning_count: 0
       };
 
-      const { error } = await dbClient.from('tasks').insert([payload]);
+      // RLS-8: hàm assign_task tự kiểm tra phạm vi giao việc (trong phòng), đặt created_by/status.
+      const { error } = await dbClient.rpc('assign_task', { p: payload });
       if (error) alert("Lỗi: " + error.message);
       else {
         alert("Đã phát hành giao việc cho cán bộ thành công!");
@@ -1703,11 +1705,8 @@
       }
 
       if (markAsRead) {
-        await dbClient.from('task_directives')
-          .update({ is_read: true, read_at: new Date().toISOString() })
-          .eq('task_id', taskId)
-          .neq('sender_id', loggedInUser.id)
-          .eq('is_read', false);
+        // RLS-8: đánh dấu đã đọc qua hàm (bảng task_directives không cho UPDATE trực tiếp).
+        await dbClient.rpc('mark_directives_read', { p_task_id: taskId });
 
         directiveUnreadMap[taskId] = 0;
         updateDirectiveRowBadge(taskId);
@@ -1881,11 +1880,8 @@
       }
 
       if (markAsRead) {
-        await dbClient.from('direct_messages')
-          .update({ is_read: true, read_at: new Date().toISOString() })
-          .eq('sender_id', peerId)
-          .eq('receiver_id', loggedInUser.id)
-          .eq('is_read', false);
+        // RLS-8: đánh dấu đã đọc qua hàm (bảng direct_messages không cho UPDATE trực tiếp).
+        await dbClient.rpc('mark_messages_read', { p_peer_id: peerId });
 
         dmUnreadMap[peerId] = 0;
         loadDMUnreadMap();
@@ -2023,9 +2019,9 @@
     }
 
     async function sendTargetedWarning(taskId, staffId) {
-      const { data } = await dbClient.from('tasks').select('warning_count').eq('id', taskId).single();
-      const newCount = (data?.warning_count || 0) + 1;
-      await dbClient.from('tasks').update({ warning_count: newCount, last_warned_at: new Date().toISOString() }).eq('id', taskId);
+      // RLS-8: tăng warning_count nguyên tử trong DB, hàm tự kiểm tra phạm vi.
+      const { data: newCount, error } = await dbClient.rpc('warn_task', { p_task_id: taskId });
+      if (error) { alert("Lỗi: " + error.message); return; }
       alert(`Đã gửi đôn đốc lần ${newCount} tới cán bộ!`);
       loadA2Data();
     }
@@ -2037,7 +2033,9 @@
     }
 
     async function approveComplete(taskId) {
-      await dbClient.from('tasks').update({ status: 'HOAN_THANH', completed_at: new Date().toISOString() }).eq('id', taskId);
+      // RLS-8: duyệt hoàn thành + đánh dấu minh chứng đã duyệt trong một giao dịch.
+      const { error } = await dbClient.rpc('approve_task', { p_task_id: taskId });
+      if (error) { alert("Lỗi: " + error.message); return; }
       alert("Đã duyệt minh chứng hợp lệ. Nhiệm vụ đã HOÀN THÀNH!");
       loadA2Data();
     }
@@ -2062,13 +2060,9 @@
         return;
       }
 
-      await dbClient.from('task_evidences').insert([{
-        task_id: taskId,
-        uploaded_by: loggedInUser.id,
-        document_title: title,
-        file_url: link
-      }]);
-      await dbClient.from('tasks').update({ status: 'CHO_DUYET' }).eq('id', taskId);
+      // RLS-8: thêm minh chứng + chuyển CHO_DUYET trong một giao dịch, hàm tự kiểm tra task của mình.
+      const { error } = await dbClient.rpc('submit_evidence', { p_task_id: taskId, p_title: title, p_url: link });
+      if (error) { alert("Lỗi: " + error.message); return; }
 
       alert("Đã nộp minh chứng thành công! Đang chờ thẩm tra.");
       closeEvidenceModal();

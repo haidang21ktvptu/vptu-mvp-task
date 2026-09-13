@@ -1,7 +1,7 @@
 // Chuyển mọi dòng public.accounts sang Supabase Auth (GĐ2, SPEC AUTH-1…4), GIỮ NGUYÊN mật khẩu.
 //
 //   node create-auth-users.mjs --project-ref <ref> [--dry-run]
-//   node create-auth-users.mjs --local
+//   node create-auth-users.mjs --local --default-password 123456   # tài khoản giả (không còn cột password)
 //   node create-auth-users.mjs --project-ref <ref> --rollback   # xoá auth.users vừa tạo
 //
 // - auth.users.id được tạo TRÙNG accounts.id (Admin API nhận `id`), email quy ước
@@ -23,13 +23,14 @@ const EMAIL_DOMAIN = 'vptu.caobang.local';
 const BCRYPT_COST = 10; // bằng bcrypt.DefaultCost của GoTrue
 
 function parseArgs(argv) {
-  const args = { dryRun: false, rollback: false, local: false, projectRef: null };
+  const args = { dryRun: false, rollback: false, local: false, projectRef: null, defaultPassword: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') args.dryRun = true;
     else if (a === '--rollback') args.rollback = true;
     else if (a === '--local') args.local = true;
     else if (a === '--project-ref') args.projectRef = argv[++i];
+    else if (a === '--default-password') args.defaultPassword = argv[++i];
     else throw new Error(`Tham số không hợp lệ: ${a}`);
   }
   if (!args.local && !args.projectRef && !process.env.SUPABASE_URL) {
@@ -61,13 +62,14 @@ function resolveCredentials(args) {
   return { url: `https://${args.projectRef}.supabase.co`, key: svc.api_key, env: args.projectRef };
 }
 
-async function fetchAccounts(db) {
+// Sau migration 0006 không còn cột password: dùng --default-password (chỉ cho tài khoản giả).
+async function fetchAccounts(db, defaultPassword, needPassword) {
   const { data, error } = await db
     .from('accounts')
-    .select('id, username, full_name, password')
+    .select(needPassword ? 'id, username, full_name, password' : 'id, username, full_name')
     .order('username');
   if (error) throw new Error(`Không đọc được accounts: ${error.message}`);
-  return data;
+  return defaultPassword ? data.map((a) => ({ ...a, password: defaultPassword })) : data;
 }
 
 async function authUserExists(db, id) {
@@ -117,7 +119,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const cred = resolveCredentials(args);
   const db = createClient(cred.url, cred.key, { auth: { autoRefreshToken: false, persistSession: false } });
-  const accounts = await fetchAccounts(db);
+  const accounts = await fetchAccounts(db, args.defaultPassword, !args.rollback && !args.defaultPassword);
   console.log(`Môi trường: ${cred.env} — ${accounts.length} tài khoản trong accounts${args.dryRun ? ' (dry-run, không ghi gì)' : ''}.`);
 
   if (args.rollback) {

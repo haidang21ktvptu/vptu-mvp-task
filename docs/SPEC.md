@@ -36,6 +36,8 @@ Phiên bản 1.0 · Chủ dự án: Văn phòng Tỉnh ủy Cao Bằng · Trạn
 
 Khối và phòng: TONG_HOP, HC_LT, CDS_CY, TAI_CHINH_DANG, QUAN_TRI. Danh sách 49 người lấy từ bảng `accounts` hiện có, không nhập lại.
 
+Xác định vai trò ở tầng DB (GĐ3): CVP = `role_group = 'A1'` và `is_chief = true` (cột riêng, vì cả 5 A1 đều `manager_id NULL`); PCVP = A1 còn lại. **Khối PCVP phụ trách** = các tài khoản có `manager_id` = PCVP, hoặc `manager_id` trỏ tới một A2 mà A2 đó có `manager_id` = PCVP (2 cấp), cộng chính PCVP (`in_my_block()`). Phòng của A2/A3 = `department`.
+
 ---
 
 ## 3. Yêu cầu chức năng
@@ -57,7 +59,28 @@ Ký hiệu: **[Giữ]** = đã có ở MVP, giữ nguyên hành vi. **[Mới]** 
 - **RLS-5** `task_directives`: đọc/ghi nếu là A1 hoặc là `assigned_to` / `leader_in_charge` / `created_by` của task đó.
 - **RLS-6** `direct_messages`: chỉ `sender_id` hoặc `receiver_id` = `auth.uid()`.
 - **RLS-7** `task_evidences`: A3 chỉ thêm cho task của mình; A2/A1 đọc và duyệt trong phạm vi.
-- **RLS-8** Mọi thao tác nhiều bước (giao việc, duyệt hoàn thành, đánh dấu đã đọc) là Postgres function `security definer`, có kiểm tra quyền bên trong.
+- **RLS-8** Mọi thao tác nhiều bước (giao việc, duyệt hoàn thành, đánh dấu đã đọc) là Postgres function `security definer`, có kiểm tra quyền bên trong: `assign_task`, `approve_task`, `submit_evidence`, `warn_task`, `mark_directives_read`, `mark_messages_read` (migration 0009). Mọi hàm `security definer` đều `SET search_path = public`, REVOKE khỏi `anon`/`public`.
+
+Ma trận policy đã áp (migration 0007–0009; "—" = không có policy/quyền, bị chặn qua API):
+
+| Bảng | Thao tác | CVP | PCVP | A2 | A3 |
+|---|---|---|---|---|---|
+| accounts / accounts_public | SELECT | tất cả | tất cả | tất cả | tất cả |
+| accounts | UPDATE (cột full_name, position_title, department, manager_id) | ✔ | ✔ | — | — |
+| accounts | INSERT / DELETE | — (Dashboard/service_role) | — | — | — |
+| tasks | SELECT | tất cả | assigned/leader/creator trong khối | assigned cùng phòng, hoặc leader/creator/assigned = mình | assigned = mình |
+| tasks | INSERT (`assign_task`) | mọi người | trong khối hoặc NULL | trong phòng hoặc NULL | — |
+| tasks | UPDATE | scope đọc; người được giao mới phải trong scope ghi | như CVP, trong khối | như CVP, trong phòng | task của mình; trigger `tasks_guard_a3` chỉ cho đổi `status`/`reject_reason` theo CHO_TIEP_NHAN→DANG_THUC_HIEN/TU_CHOI_TIEP_NHAN, DANG_THUC_HIEN→CHO_DUYET |
+| tasks | DELETE | — | — | — | — |
+| task_directives | SELECT / INSERT (sender = mình) | task trong scope | task trong khối | là party | là party |
+| task_directives | UPDATE (đã đọc) | chỉ `mark_directives_read()` | | | |
+| task_evidences | SELECT | scope | khối | phòng | task của mình |
+| task_evidences | INSERT | — | — | — | task của mình (`submit_evidence` hoặc trực tiếp) |
+| task_evidences | UPDATE (duyệt) | chỉ `approve_task()` | | | — |
+| direct_messages | SELECT / INSERT | sender/receiver = mình; INSERT sender = mình | | | |
+| direct_messages | UPDATE (đã đọc) | chỉ `mark_messages_read()` | | | |
+| view_exception_dashboard | SELECT | `security_invoker` → theo RLS `tasks` | | | |
+| `anon` | mọi bảng/view/hàm | REVOKE ALL (kể cả default privileges) | | | |
 
 ### 3.3 Nhiệm vụ — TASK
 - **TASK-1 [Giữ]** A1/A2 giao việc: tiêu đề, số/ký hiệu văn bản, sản phẩm đầu ra, hạn, ngưỡng "đỏ đặc biệt", cấp có thẩm quyền, người thực hiện, lãnh đạo phụ trách.
@@ -106,7 +129,7 @@ Ký hiệu: **[Giữ]** = đã có ở MVP, giữ nguyên hành vi. **[Mới]** 
 ## 5. Mô hình dữ liệu (đích)
 
 Giữ 5 bảng hiện có, thay đổi:
-- `accounts`: bỏ `password`, `assigned_domain`; `id` = `auth.users.id`; thêm `must_change_password boolean default true`.
+- `accounts`: bỏ `password` (0006), `assigned_domain` (0007); `id` = `auth.users.id`; thêm `must_change_password boolean default true` (0004), `is_chief boolean default false` (0007, đúng 1 dòng true = Chánh Văn phòng).
   - **Quy ước bắt buộc (từ migration `0002`):** quyền đọc/ghi cột trên `accounts` cho `anon`/`authenticated` cấp theo **cột tường minh** (`GRANT SELECT (danh sách cột)`), không cấp theo bảng. Mọi cột mới thêm vào `accounts` mặc định **không** lộ ra cho tới khi được liệt kê tường minh trong `GRANT`. Tuyệt đối không chạy lại `GRANT ALL`/`GRANT SELECT` không giới hạn cột trên bảng `accounts` — làm vậy sẽ vô hiệu hoá toàn bộ việc chặn `password` của GĐ1.
 - `tasks`: bỏ `owner_id` (mồ côi); default `status = 'CHUA_GIAO'` (đã sửa ở migration `0003`). FK `task_directives.task_id` / `task_evidences.task_id` → `tasks.id` (`ON DELETE CASCADE`) đã có sẵn từ baseline `0001`, không cần thêm.
 - `task_directives`: bỏ `recipient_id`, `is_read`, `read_at`.
