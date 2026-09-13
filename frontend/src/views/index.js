@@ -1,4 +1,12 @@
-// Gắn markup từng view vào <main> và đăng ký view theo vai trò.
-// PR (a) của GĐ4 chỉ có khung; view A1/A2/A3 được thêm ở PR (b).
+// Gắn markup từng view/modal vào trang và đăng ký view theo vai trò (gọi một lần lúc khởi động).
+import { registerA1View } from './a1/index.js';
+import { registerA2View } from './a2/index.js';
+import { registerA3View } from './a3/index.js';
+import { mountReassignModal } from '../features/tasks/reassign.js';
 
-export function registerViews() {}
+export function registerViews() {
+  registerA1View();
+  registerA2View();
+  registerA3View();
+  mountReassignModal();
+}
