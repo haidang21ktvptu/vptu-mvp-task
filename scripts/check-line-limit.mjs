@@ -1,7 +1,7 @@
 // Kiểm tra quy ước "không file nào trên 300 dòng" (CLAUDE.md, SPEC NF-7) trên các file
 // đã theo dõi trong git. Chạy trong CI: node scripts/check-line-limit.mjs
 //
-// Ngoại lệ (không phải mã nguồn): tài liệu *.md, lockfile, supabase/config.toml (CLI sinh), mockup/.
+// Ngoại lệ (không phải mã nguồn): tài liệu *.md, lockfile, supabase/config.toml (CLI sinh), mockup/, ảnh và phông.
 
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
