@@ -11,7 +11,6 @@
 - GĐ3: policy theo vai trò (ma trận SPEC §3.2), `is_chief` (CVP), khối PCVP 2 cấp qua `manager_id`, RLS-5 mở cho A2 cả phòng (0010), 6 hàm `security definer`, 48 test token thật pass local + staging, QA giao diện A3/A2/PCVP/CVP đúng phạm vi.
 
 ## Đang dở
-- GĐ3: sau khi PR #11 merge → kiểm tra live 3 vai trò, ghi CHANGELOG.
 - GĐ4 (tách frontend Vite): kèm FK `accounts.id → auth.users.id` ON DELETE RESTRICT + seed tạo auth user; ghim phiên bản supabase-js; bỏ `alert()`.
 - GĐ6: đưa `tests/rls` vào CI với secret staging. GĐ7: lên Pro, bật hook khoá tài khoản (AUTH-3).
 
