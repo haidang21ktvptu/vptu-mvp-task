@@ -33,4 +33,4 @@ features/          tasks/reassign (modal phân công lại) · directives/ (rend
 styles/            main.css (Tailwind)
 ```
 
-Quy ước: không file nào trên 300 dòng (`node scripts/check-line-limit.mjs`); phần tử sinh động dùng `data-action` thay cho `onclick` inline; chuỗi hiển thị tiếng Việt có dấu.
+Quy ước: ESLint sạch (`npm run lint` ở gốc repo, cấu hình tối thiểu `eslint.config.js`); không file nào trên 300 dòng (`node scripts/check-line-limit.mjs`); phần tử sinh động dùng `data-action` thay cho `onclick` inline; chuỗi hiển thị tiếng Việt có dấu.

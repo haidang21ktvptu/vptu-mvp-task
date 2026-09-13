@@ -13,7 +13,7 @@ function deadlineInDays(days) {
 test.describe.serial('Luồng giao việc → tiếp nhận → nộp minh chứng → duyệt', () => {
   let title;
 
-  test.beforeAll(({}, testInfo) => {
+  test.beforeAll((_fixtures, testInfo) => {
     title = `${E2E_TAG} ${testInfo.project.name} ${Date.now()}`;
   });
 

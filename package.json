@@ -1,0 +1,16 @@
+{
+  "name": "vptu-mvp-task",
+  "private": true,
+  "description": "Gốc repo: chỉ chứa ESLint dùng chung cho frontend/, tests/e2e và scripts/ (NF-7). Ứng dụng ở frontend/.",
+  "type": "module",
+  "engines": { "node": ">=20.19" },
+  "scripts": {
+    "lint": "eslint frontend/src frontend/*.js tests/e2e scripts eslint.config.js",
+    "check:lines": "node scripts/check-line-limit.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.10.0",
+    "globals": "17.12.0"
+  }
+}
