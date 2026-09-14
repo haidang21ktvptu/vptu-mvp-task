@@ -53,3 +53,12 @@ bash scripts/backup-db.sh --local  /  bash scripts/restore-db.sh <file> --local 
 
 - Bí mật chỉ qua biến môi trường hoặc hỏi ẩn (`BACKUP_PASSPHRASE`, `RESTORE_DB_URL`), không bao giờ qua tham số; mật khẩu DB không cần vì CLI dùng login role qua token (`supabase login` / `SUPABASE_ACCESS_TOKEN`).
 - `restore-db.sh` **từ chối trong code** production `frwyxcmbonjaimziiuqr` và staging `vojmrjezspdftovzinek`; schema áp bằng `supabase db push` từ `supabase/migrations` (không dùng `schema.sql` vì thiếu trigger trên `auth.users` và lịch sử migration); dữ liệu nạp trong một transaction với `session_replication_role = replica` rồi kiểm chứng FK `accounts → auth.users` và số dòng. Cần `psql` (`scoop install postgresql`).
+
+## `tai-backup.sh` / `tai-backup.cmd` — tải artifact backup về máy (GĐ7 PR B)
+
+```
+bash scripts/tai-backup.sh [--thu-muc <thư mục>] [--giu N] [--repo owner/repo]   # mặc định ../vptu-backup
+scripts\tai-backup.cmd                                                            # bản cho Task Scheduler, log vào ../vptu-backup/tai-backup.log
+```
+
+Tải mọi artifact `prod-*` chưa hết hạn (deploy-prod + backup định kỳ) chưa có ở thư mục đích, bỏ qua bản đã có; cần `gh auth login`. **Không xoá gì theo mặc định** — `--giu N` chỉ xoá khi người dùng ghi rõ. Đăng ký chạy mỗi lần đăng nhập Windows: `docs/sao-luu-khoi-phuc.md` mục 3.

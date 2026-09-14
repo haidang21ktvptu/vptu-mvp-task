@@ -104,24 +104,23 @@ jobs:
             if [ -z "${!v}" ]; then echo "::error::Thiếu secret cho $v (xem docs/kien-truc.md)."; exit 1; fi
           done
 
-      - name: Backup pg_dump production (schema + data), mã hoá AES-256
+      # Cùng script với backup-dinh-ky.yml (một nguồn duy nhất). Login role qua token nên không cần -p;
+      # passphrase đi qua env → fd, không qua tham số. Tên artifact vẫn prod-<ngày>-<tag>.
+      - name: Backup production bằng scripts/backup-db.sh (schema + data, AES-256)
         env:
-          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          mkdir -p backup
-          supabase db dump --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD" -f backup/schema.sql
-          supabase db dump --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD" --data-only -f backup/data.sql
-          NAME="prod-$(date -u +%Y%m%d-%H%M)-${{ github.ref_name }}"
+          FILE=$(bash scripts/backup-db.sh --project-ref "$PROD_REF" --nhan "${{ github.ref_name }}" --thu-muc backup 2> backup.log) \
+            || { cat backup.log; echo "::error::backup-db.sh thất bại — production chưa đổi gì."; exit 1; }
+          NAME=$(basename "$FILE" .tar.gz.gpg)
           echo "BACKUP_NAME=$NAME" >> "$GITHUB_ENV"
-          tar czf - -C backup schema.sql data.sql \
-            | gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 --passphrase "$PASSPHRASE" -o "$NAME.tar.gz.gpg"
-          rm -rf backup
-          ls -l "$NAME.tar.gz.gpg"
+          { echo "### Backup $NAME"; echo '```'; grep -vE '^(Dumping|Dumped|Initialising|Connecting)' backup.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          cat backup.log
       - name: Lưu backup thành artifact (90 ngày)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BACKUP_NAME }}
-          path: ${{ env.BACKUP_NAME }}.tar.gz.gpg
+          path: backup/${{ env.BACKUP_NAME }}.tar.gz.gpg
           retention-days: 90
           if-no-files-found: error
 

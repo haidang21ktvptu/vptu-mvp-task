@@ -2,7 +2,7 @@
 
 Hướng dẫn cho chủ dự án tự làm trên máy Windows bằng **Git Bash** (chuột phải trong thư mục → *Open Git Bash here*, hoặc mở Git Bash rồi `cd`). Mọi lệnh dưới đây gõ trong Git Bash, không phải PowerShell/CMD. Hai script: `scripts/backup-db.sh` (sao lưu) và `scripts/restore-db.sh` (khôi phục); chi tiết kỹ thuật ở đầu mỗi file.
 
-**Chính sách đã chốt:** backup tự động **3 ngày/lần** (workflow ở PR B) → **cửa sổ mất dữ liệu tối đa là 3 ngày**; ngoài ra mỗi lần phát hành production có một bản (deploy-prod). Artifact trên GitHub giữ 90 ngày; bản trên máy cá nhân giữ ít nhất 2 bản gần nhất, chỉ xoá tay.
+**Chính sách đã chốt:** backup tự động **3 ngày/lần** (`backup-dinh-ky.yml`) → **cửa sổ mất dữ liệu tối đa là 3 ngày**; ngoài ra mỗi lần phát hành production có một bản (deploy-prod). Artifact trên GitHub giữ 90 ngày; bản trên máy cá nhân giữ ít nhất 2 bản gần nhất, chỉ xoá tay.
 
 ## 1. Chuẩn bị máy (một lần)
 
@@ -11,8 +11,9 @@ Hướng dẫn cho chủ dự án tự làm trên máy Windows bằng **Git Bash
 | Git Bash, `gpg`, `tar` | chạy script, mã hoá/giải mã | có sẵn cùng Git for Windows: `gpg --version` |
 | Docker Desktop **đang mở** | `supabase db dump` chạy pg_dump trong Docker | biểu tượng cá voi ở khay hệ thống ổn định; `docker info` không báo lỗi |
 | Supabase CLI đã đăng nhập | dump, áp migration (không cần mật khẩu DB) | `supabase --version` (đã có qua scoop); `supabase login` nếu chưa |
+| `gh` đã `gh auth login` | `tai-backup.sh` tải artifact về máy | `gh auth status` (đã có) |
 | `psql` (chỉ khi khôi phục) | nạp dữ liệu vào project đích | **PowerShell**: `scoop install postgresql` → mở Git Bash **mới** → `psql --version` |
-| Passphrase backup | mở mọi file backup | cùng giá trị với secret `BACKUP_PASSPHRASE` trên GitHub; **lưu trong trình quản lý mật khẩu — mất passphrase là mất toàn bộ backup** |
+| Passphrase backup | mở mọi file backup | cùng giá trị với secret `BACKUP_PASSPHRASE` trên GitHub (có ở **hai nơi**: repository secret cho `backup-dinh-ky.yml`, environment `production` cho `deploy-prod.yml` — đổi thì đổi cả hai); **lưu trong trình quản lý mật khẩu — mất passphrase là mất toàn bộ backup** |
 
 ## 2. Sao lưu về máy cá nhân (cơ chế lưu local chính)
 
@@ -26,9 +27,29 @@ Script hỏi passphrase hai lần (chữ không hiện khi gõ), mất ~30 giây
 
 Trong file có: `schema.sql` (tham khảo), `data.sql` (dữ liệu, không gồm bảng phiên/nhật ký đăng nhập), `migrations.txt`, `so-dong.txt`, `thong-tin.txt`. File đã mã hoá AES-256 — để trên ổ D hoặc chép sang USB đều an toàn nếu passphrase không đi kèm.
 
-## 3. Bản dự phòng thứ hai: artifact trên GitHub
+## 3. Bản dự phòng thứ hai: artifact trên GitHub và tải về máy tự động
 
-Mỗi lần phát hành (`deploy-prod.yml`) và mỗi 3 ngày (PR B) có một artifact `prod-…tar.gz.gpg` giữ 90 ngày: GitHub → **Actions** → chọn run → cuộn xuống **Artifacts** → tải về (file zip, giải nén ra `.tar.gz.gpg`). Script tải tự động + lịch Task Scheduler làm ở PR B. Cùng passphrase, cùng cách khôi phục.
+**Ai tạo artifact:** `deploy-prod.yml` mỗi lần phát hành (`prod-<ngày>-<tag>`) và `backup-dinh-ky.yml` **3 ngày/lần** (`prod-<ngày>-dinh-ky`, chạy 03:00 giờ Việt Nam các ngày 1, 4, 7, …, 28, 31; có nút *Run workflow* để chạy tay). Artifact giữ **90 ngày**, mã hoá bằng cùng passphrase. Xem tay: GitHub → **Actions** → *Backup định kỳ production* → chọn run → **Artifacts**.
+
+Hạn chế của lịch GitHub (đã chấp nhận): đầu tháng hai bản có thể cách nhau 1–3 ngày (không bao giờ quá 3); GitHub có thể chạy trễ khi tải cao; **GitHub tự tắt lịch sau 60 ngày repo không có commit** — mỗi tháng nhìn Actions xem có run mới không, nếu thấy dòng "This scheduled workflow is disabled" thì bấm *Enable workflow*.
+
+**Tải về máy — `scripts/tai-backup.sh`:** tải mọi artifact `prod-*` chưa có về `D:\TU 2026\Project\vptu-backup\` (thư mục mặc định, bản đã có thì bỏ qua). Cần `gh` đã đăng nhập (`gh auth status`). Chạy tay:
+
+```bash
+cd "/d/TU 2026/Project/vptu-mvp-task" && bash scripts/tai-backup.sh
+```
+
+**Script không bao giờ tự xoá file.** Chỉ khi ghi rõ `--giu 20` nó mới xoá các bản `prod-*` cũ hơn 20 bản mới nhất (in từng file trước khi xoá); các file `.sql` cũ và file khác không bị động tới.
+
+**Tự động bằng Windows Task Scheduler** (chạy `scripts\tai-backup.cmd`, log vào `vptu-backup\tai-backup.log`). Mở **PowerShell** (không cần quyền quản trị) và dán:
+
+```
+schtasks /Create /TN "VPTU tai backup" /SC ONLOGON /DELAY 0002:00 /TR "\"D:\TU 2026\Project\vptu-mvp-task\scripts\tai-backup.cmd\"" /F
+```
+
+Lịch chạy **mỗi lần đăng nhập Windows** (trễ 2 phút cho mạng lên). Chọn cách này thay vì giờ cố định vì máy cá nhân không bật cố định giờ. **Hạn chế:** nếu không đăng nhập máy nhiều ngày (nghỉ phép, công tác) thì trong thời gian đó không có bản nào được tải về, trong khi artifact vẫn tích luỹ trên GitHub — **không mất gì** vì artifact giữ 90 ngày, chỉ là bản local bị chậm; lần đăng nhập kế tiếp script tải bù toàn bộ bản còn thiếu. Muốn thêm giờ cố định, tạo thêm một task với `/SC DAILY /ST 08:30` và cùng `/TR`.
+
+Kiểm tra đã chạy: `schtasks /Query /TN "VPTU tai backup" /V /FO LIST` (xem *Last Run Time*, *Last Result* phải là `0`), mở `D:\TU 2026\Project\vptu-backup\tai-backup.log` (mỗi lần chạy có dòng `===== <giờ>` và `Kết quả: … bản mới`), và nhìn thư mục có file mới. Chạy thử ngay không cần đăng nhập lại: `schtasks /Run /TN "VPTU tai backup"`. Gỡ lịch: `schtasks /Delete /TN "VPTU tai backup" /F`.
 
 ## 4. Khôi phục thử lên Supabase local (diễn tập — điều kiện xong GĐ7)
 
@@ -102,3 +123,15 @@ Chỉ làm khi không "sửa tiến" được (xem `kien-truc.md` mục 6). Dữ
 - Thời gian từ lúc bắt đầu tới khi đăng nhập được: <phút>.
 - Sự cố/ghi chú: <nếu có>. Đã `supabase db reset` trả local về dữ liệu giả và xoá `frontend/.env` lúc <giờ>.
 ```
+
+## 9. Giám sát bản live (uptime monitor ngoài)
+
+Dùng **UptimeRobot** (uptimerobot.com, gói miễn phí: kiểm tra 5 phút/lần, cảnh báo qua email) — dịch vụ ngoài, không cần tài khoản GitHub/Supabase, không thêm code. Chỉ theo dõi **một điểm công khai không cần key**:
+
+1. Đăng ký tài khoản bằng email cơ quan → *New Monitor*.
+2. *Monitor type*: **HTTP(s) – Keyword**. *URL*: `https://haidang21ktvptu.github.io/vptu-mvp-task/phien-ban.json`. *Keyword*: `phien_ban`, *Alert when*: keyword **not exists**. *Interval*: 5 phút. *Friendly name*: `VPTU-TASK bản live`.
+3. *Alert contacts*: email của chủ dự án (thêm số điện thoại nếu muốn nhận SMS — có phí). Lưu.
+
+Vì sao chỉ `phien-ban.json`: nó chứng minh GitHub Pages đang phục vụ đúng site (trang 404 của GitHub không có từ khoá này) và còn cho biết phiên bản đang chạy. **Không** tạo monitor gọi thẳng backend Supabase kèm API key trong URL — không đặt key của hệ thống, kể cả key công khai, vào dịch vụ bên thứ ba; và khi xoay key, monitor sẽ âm thầm hỏng. Backend theo dõi **thủ công** khi cần: Supabase Dashboard → chọn project → trang đầu hiện trạng thái (*Healthy* / *Paused* / *Restoring*), *Reports* (CPU, kết nối), *Logs* (Auth, Postgres). Kiểm tra khi UptimeRobot báo lỗi hoặc khi cán bộ báo không đăng nhập được.
+
+Khi nhận cảnh báo: (a) mở bản live trên trình duyệt — nếu chỉ chậm rồi tự lên lại thì là GitHub Pages sự cố ngắn (xem status.github.com), không làm gì; (b) nếu bản live lên nhưng không đăng nhập được → xem Dashboard Supabase; project **Free bị tự tạm dừng sau 7 ngày không có truy vấn** (kỳ nghỉ dài) → bấm *Restore project*, chờ vài phút; (c) tình huống khác: `docs/xu-ly-su-co.md` (PR C).
