@@ -22,20 +22,20 @@ flowchart LR
     A3[Build frontend + 300 dòng<br/>vite build · eslint]
     A4[Kiểm thử RLS + e2e trên staging<br/>48 test RLS · 13 test e2e<br/>13 lượt đăng nhập]
   end
-  PR -->|merge| M((main))
+  PR -->|merge (merge commit, SAU khi phát hành)| M((main))
   M --> S1
   subgraph ST["push main  (deploy-staging.yml)"]
-    S1[db push → staging] --> S2[build 2 bản:<br/>production = tag `production`<br/>staging = main] --> S3[deploy Pages<br/>version main-sha-run<br/>kiểm tra /staging/phien-ban.json]
+    S1[db push → staging] --> S2[build 2 bản:<br/>production = tag `production`<br/>staging = main] --> S3[deploy Pages<br/>actions/deploy-pages<br/>kiểm tra /staging/phien-ban.json]
   end
-  M -->|git tag v*| T((tag v2.x))
-  T --> P0
+  PR -->|git tag v* lên commit ĐẦU NHÁNH<br/>khi CI xanh, chưa merge| T((tag v2.x))
+  T --> PK
   subgraph PD["tag v*  (deploy-prod.yml)"]
-    P0{{environment production<br/>haidang21ktvptu duyệt}} --> P1[backup pg_dump<br/>mã hoá → artifact 90 ngày] --> P2[db push → production] --> P3[build 2 bản] --> P4[deploy Pages<br/>version tag-run] --> P5[smoke: đăng nhập 1 tài khoản<br/>trên bản live] --> P6[gắn tag `production`]
+    PK[kiem-tra: CI của commit xanh đủ 4 check<br/>sha chưa có Pages deployment] --> P0{{environment production<br/>haidang21ktvptu duyệt}} --> P1[backup pg_dump<br/>mã hoá → artifact 90 ngày] --> P2[db push → production] --> P3[build 2 bản] --> P4[deploy Pages<br/>actions/deploy-pages] --> P5[smoke: đăng nhập 1 tài khoản<br/>trên bản live] --> P6[gắn tag `production`]
     P5 -.lỗi.-> P7[quay-lui: hướng dẫn trong Summary]
   end
 ```
 
-Nguyên tắc cố định: **migration luôn chạy trước deploy frontend** trong cùng workflow (bài học GĐ1: frontend mới gọi hàm chưa có trong DB → toàn bộ cán bộ không đăng nhập được).
+Hai nguyên tắc cố định: (1) **migration luôn chạy trước deploy frontend** trong cùng workflow (bài học GĐ1: frontend mới gọi hàm chưa có trong DB → toàn bộ cán bộ không đăng nhập được); (2) **tag `v*` gắn lên commit đầu nhánh phát hành khi PR đã CI xanh nhưng chưa merge** — vì GitHub Pages chỉ nhận mỗi commit một lần (mục 3, "Vì sao tag trước khi merge").
 
 ## 3. Từng workflow
 
@@ -52,15 +52,16 @@ Nguyên tắc cố định: **migration luôn chạy trước deploy frontend** 
 ### `deploy-staging.yml` — push main
 1. `supabase db push --project-ref <staging>` (dry-run trước, rồi `--yes`), ghi `migration list` vào Summary.
 2. Build hai bản (composite action `.github/actions/build-pages-site`): **production** từ commit của tag `production` (commit phát hành gần nhất — chưa có tag thì lấy `main`, kèm cảnh báo), **staging** từ `main` với `BASE_PATH=/vptu-mvp-task/staging/` và anon key staging. Mỗi bản có `phien-ban.json` (`{moi_truong, phien_ban, commit, build_luc}`).
-3. Deploy bằng composite `.github/actions/deploy-pages-versioned` với `pages_build_version = main-<sha>-<run_id>-<run_attempt>`, rồi curl `/staging/phien-ban.json` tới khi thấy đúng commit (tối đa 3 phút).
+3. `actions/deploy-pages@v4`, rồi curl `/staging/phien-ban.json` tới khi thấy đúng commit (tối đa 3 phút). Mỗi push main là một sha mới nên luôn deploy được; re-run cùng commit sẽ "thành công" nhưng không đổi gì (xem dưới).
 
-**Vì sao không dùng `actions/deploy-pages`:** action đó luôn gửi `pages_build_version = GITHUB_SHA` (không có input đổi; `GITHUB_*` không ghi đè được bằng `env:`). GitHub Pages dùng `pages_build_version` làm khoá idempotent — POST lại cùng version thì trả deployment cũ và **không thay artifact**. Mọi tag `v*` đều trỏ vào commit mà deploy-staging đã xuất bản với đúng SHA đó, nên phát hành `v2.0.0-rc1` bị bỏ qua (job deploy "xanh" sau 5 giây, bản live vẫn `main@…`). Composite gọi thẳng REST `POST /repos/{r}/pages/deployments` (`artifact_id` từ output của `upload-pages-artifact`, OIDC token lấy như `core.getIDToken()` không audience), poll `GET …/deployments/{id}` tới `succeed` (≤ 10 phút, quá thì `cancel`), và ghi `pages_build_version` + `deployment_id` vào Summary của job để tra cứu sự cố không cần mở log. Gọi API bằng `curl` (`api.sh` cạnh action) với header giống hệt octokit của deploy-pages (`Accept: application/vnd.github.v3+json`, `Authorization: token`, không `X-GitHub-Api-Version`), `--max-time`, và **in HTTP code + body phản hồi của mọi lời gọi** (lời gọi lỗi in ngoài `::group::`) — sau sự cố run staging #3 chỉ thấy `gh: Not Found (HTTP 404)` mà không có thân phản hồi. Job deploy vẫn ở environment `github-pages` với `pages: write` + `id-token: write` khai báo ở cấp job.
+**Vì sao tag trước khi merge — kết luận sau sự cố `v2.0.0-rc1` (2026-09-14):** `actions/deploy-pages` gửi `pages_build_version = GITHUB_SHA` và **GitHub Pages bắt version này phải bằng claim `sha` trong OIDC token của job** (không đặt tuỳ ý được), đồng thời dùng nó làm khoá idempotent: POST lại cùng sha → trả deployment cũ, không thay artifact. Hệ quả: một commit chỉ deploy Pages được **đúng một lần**. Tag rc1 gắn lên commit đã lên `main` (deploy-staging đã deploy sha đó) nên job deploy "xanh" sau 5 giây mà bản live không đổi. Ba vòng thử để đi tới kết luận: PR #24 composite tự gọi REST với version `<tag>-<run>` → 404; PR #25 in HTTP code + body → `{"message":"Not Found"}` (route đúng); PR #26 chẩn đoán trong một run: version tuỳ ý 404, **version = GITHUB_SHA thành công**, deploy-pages thành công ⇒ H1. Cách giải: tag lên commit đầu nhánh phát hành (chưa từng deploy vì deploy-staging chỉ chạy trên main), deploy-prod dùng `actions/deploy-pages` nguyên bản; merge sau. Job `kiem-tra` chặn tag gắn nhầm lên commit đã deploy.
 
 ### `deploy-prod.yml` — tag `v*`
 | Job | Nội dung |
 |---|---|
+| `kiem-tra` (không cần duyệt) | (a) commit của tag có đủ 4 check CI `success` (đọc `check-runs`, cần `checks: read`); (b) `GET /pages/deployments/<sha>` — in HTTP code + body; chỉ cho qua khi **200 và `status` rỗng** (quan sát: chưa có deployment), **200 và `status` có giá trị** → dừng "commit đã deploy, tag nhầm lên main?"; mọi dạng khác (không 200, không JSON, thiếu trường) → dừng "phản hồi ngoài dự kiến", không tự cho qua. |
 | `phat-hanh` (environment **production**) | **Dừng chờ duyệt** (required reviewer haidang21ktvptu). Sau khi duyệt: `supabase db dump` schema + data → `tar` + `gpg --symmetric AES-256` bằng `BACKUP_PASSPHRASE` → artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày; phải mã hoá vì artifact của repo public tải được công khai) → `db push --dry-run` (vào Summary) → `db push --yes` → build hai bản (production = tag, staging = main). |
-| `deploy` (environment github-pages) | `deploy-pages-versioned` với `pages_build_version = <tag>-<run_id>-<run_attempt>` (duy nhất dù tag trỏ vào commit đã deploy từ main); Summary ghi version + deployment_id. |
+| `deploy` (environment github-pages) | `actions/deploy-pages@v4` — deploy được vì sha của tag chưa từng deploy (tag trước khi merge). |
 | `smoke` | Đợi `phien-ban.json` bản live ghi đúng tag (≤ 3 phút) → Playwright `tests/e2e/smoke/` đăng nhập tài khoản hệ thống `smoke_test` (`SMOKE_USERNAME/PASSWORD`), vào app, không lỗi console, đăng xuất → **gắn tag `production`** vào commit vừa phát hành. Tài khoản này là A3 thật về quyền (RLS không đổi) nhưng `is_system = true` nên frontend không hiện ở danh bạ/cây/KPI; trên staging do `seed.sql` tạo (mật khẩu `123456`), trên production do script tạo với mật khẩu ngẫu nhiên. |
 | `quay-lui` (chỉ khi lỗi) | Ghi hướng dẫn quay lui vào Summary theo bước bị lỗi (mục 6). |
 
@@ -106,17 +107,26 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 
 ## 6. Quay lui
 
-- **Nguyên tắc:** production luôn là một tag `v*`; tag `production` (di động) đánh dấu commit đang chạy. Quay lui frontend = **gắn tag `v*` mới cao hơn trỏ vào commit cũ** (`git tag v2.0.2 production && git push origin v2.0.2`) → deploy-prod chạy lại, chờ duyệt; migration không áp gì thêm. Không xoá/đổi tag cũ.
+- **Nguyên tắc:** production luôn là một tag `v*`; tag `production` (di động) đánh dấu commit đang chạy. Quay lui frontend **không phải** tag lại commit cũ (sha đó đã deploy Pages → bị bỏ qua) mà là một commit mới có cùng nội dung: `git checkout -b hotfix/quay-lui-v2.0.1 v2.0.1 && git commit --allow-empty -m "Quay lui về v2.0.1" && git push -u origin HEAD` → mở PR (CI xanh) → `git tag v2.0.2 && git push origin v2.0.2` → deploy-prod chạy lại, chờ duyệt; migration không áp gì thêm → merge PR sau. Không xoá/đổi tag cũ.
 - **Lỗi trước `db push`** (backup, secrets): production chưa đổi gì.
 - **Lỗi ở `db push`:** `supabase migration list --project-ref frwyxcmbonjaimziiuqr` xem migration nào đã áp; ưu tiên sửa tiến bằng migration mới; chỉ khôi phục từ backup khi không sửa tiến được.
-- **Lỗi ở deploy:** DB đã mới, frontend cũ — Re-run failed jobs (mỗi lần chạy lại có version mới nên deploy thật, không bị Pages bỏ qua).
+- **Tag bị chặn ở `kiem-tra`:** chưa đổi gì; sửa theo thông báo (CI chưa xanh, hoặc tag nhầm lên commit đã deploy → nhánh mới + commit rỗng + tag mới như trên).
+- **Lỗi ở deploy:** DB đã mới, frontend cũ — Re-run failed jobs (job deploy chưa tạo được deployment nên sha vẫn chưa "dùng"; nếu deployment đã tạo rồi mới lỗi thì sha đã bị dùng → cần commit mới như quay lui).
 - **Smoke lỗi:** frontend mới đã lên — quay lui frontend như trên; nếu do migration, khôi phục DB.
 - **Khôi phục từ backup:** tải artifact `prod-<ngày>-<tag>.tar.gz.gpg` → `gpg -d --batch --pinentry-mode loopback --passphrase "<BACKUP_PASSPHRASE>" file.tar.gz.gpg | tar xz` → `schema.sql` + `data.sql` (có `auth.users`, `auth.identities`) → chạy `scripts/restore-db.sh` (GĐ7). Dữ liệu ghi sau lúc backup sẽ mất.
 
 ## 7. Cách phát hành một phiên bản
 
+Thứ tự bắt buộc — tag gắn lên **commit đầu nhánh phát hành**, trước khi merge:
+
 ```
-git checkout main && git pull
-git tag v2.0.0-rc1 && git push origin v2.0.0-rc1     # → deploy-prod dừng ở "Review deployments"
+git checkout feature/ten-nhanh && git pull           # (1) ĐÚNG NHÁNH PHÁT HÀNH — không đứng ở main
+gh pr checks                                         # (2) PR đã mở, CI xanh đủ 4 check trên commit đầu nhánh
+git tag v2.0.0-rc2 && git push origin v2.0.0-rc2     # (3) tag lên HEAD của nhánh → deploy-prod chạy: kiem-tra → chờ duyệt
 ```
-Vào Actions → run của tag → *Review deployments* → duyệt. Theo dõi Summary (danh sách migration, backup, kết quả smoke). Bản live: `https://haidang21ktvptu.github.io/vptu-mvp-task/phien-ban.json` ghi tag vừa phát hành.
+(4) Actions → run của tag → *Review deployments* → duyệt → theo dõi Summary (kiem-tra, backup, migration, smoke). (5) Bản live `https://haidang21ktvptu.github.io/vptu-mvp-task/phien-ban.json` ghi tag vừa phát hành; tag `production` được gắn. (6) **Merge PR bằng merge commit** (không squash/rebase, để commit tag là tổ tiên của `main`) → deploy-staging dựng bản production từ tag `production` (nội dung không đổi, nhãn vẫn là tag).
+
+Cảnh báo:
+- **Không gắn tag khi đang ở `main`** (commit đã lên main thì deploy-staging đã deploy sha đó — `kiem-tra` sẽ chặn; nếu lọt, bản live không đổi như sự cố rc1).
+- **Sau khi đã gắn tag, KHÔNG push thêm commit lên nhánh đó cho tới khi phát hành xong** — nếu không, commit được phát hành (tag) sẽ khác commit được merge, và bản production dựng từ tag `production` sẽ không khớp với `main`. Cần sửa gì thì huỷ phát hành (từ chối ở Review deployments), push, đợi CI, tag số mới.
+- Tag đã đẩy thì không xoá/đổi; sai thì tag số mới.

@@ -1,15 +1,18 @@
-# Phát hành production khi đẩy tag v* (ví dụ v2.0.0-rc1). Thứ tự:
-#   1. `phat-hanh` (environment "production", CHỜ NGƯỜI DUYỆT haidang21ktvptu):
+# Phát hành production khi đẩy tag v* (ví dụ v2.0.0-rc2). Tag phải gắn lên COMMIT ĐẦU NHÁNH PHÁT HÀNH
+# (PR đã CI xanh, CHƯA merge): GitHub Pages bắt pages_build_version = sha của commit chạy workflow, mỗi sha
+# chỉ deploy được một lần (kết luận chẩn đoán GĐ6, sự cố rc1) — commit đã lên main thì deploy-staging đã
+# deploy sha đó rồi. Merge PR (merge commit) sau khi phát hành xong. Thứ tự:
+#   1. `kiem-tra` (không cần duyệt): CI của commit tag phải xanh đủ 4 check; sha chưa có Pages deployment.
+#   2. `phat-hanh` (environment "production", CHỜ NGƯỜI DUYỆT haidang21ktvptu):
 #      backup pg_dump production (mã hoá, lưu artifact 90 ngày) → supabase db push production
 #      → build hai bản frontend (production từ tag, staging từ main).
-#   2. `deploy`: đưa artifact lên GitHub Pages (migration đã xong TRƯỚC — bài học GĐ1) bằng
-#      .github/actions/deploy-pages-versioned, pages_build_version = <tag>-<run>-<attempt> — vì tag luôn
-#      trỏ vào commit deploy-staging đã xuất bản, actions/deploy-pages (version = SHA) bị GitHub bỏ qua (sự cố rc1).
-#   3. `smoke`: đợi bản mới lan tới Pages, đăng nhập 1 tài khoản bằng Playwright; đạt thì gắn tag
+#   3. `deploy`: actions/deploy-pages@v4 (migration đã xong TRƯỚC — bài học GĐ1).
+#   4. `smoke`: đợi bản mới lan tới Pages, đăng nhập 1 tài khoản bằng Playwright; đạt thì gắn tag
 #      `production` vào commit vừa phát hành (deploy-staging dùng tag này để build lại bản production).
-#   4. `quay-lui`: chỉ chạy khi có bước lỗi — ghi hướng dẫn quay lui vào Summary.
-# Không có workflow_dispatch: production luôn = một tag v*; quay lui = gắn tag v* mới cao hơn trỏ vào
-# commit cũ (xem docs/kien-truc.md). Cấu hình Auth (supabase config push) vẫn làm tay sau khi trình diff.
+#   5. `quay-lui`: chỉ chạy khi có bước lỗi — ghi hướng dẫn quay lui vào Summary.
+# Không có workflow_dispatch: production luôn = một tag v*. Quay lui = nhánh mới từ commit cũ + commit rỗng
+# + tag v* mới (sha cũ đã deploy nên tag lại không có tác dụng — xem docs/kien-truc.md). Cấu hình Auth
+# (supabase config push) vẫn làm tay sau khi trình diff.
 #
 # Secrets: repository — SUPABASE_ACCESS_TOKEN, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY,
 # STAGING_SUPABASE_ANON_KEY, SMOKE_USERNAME, SMOKE_PASSWORD; environment "production" —
@@ -24,6 +27,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  checks: read # đọc check-runs của commit tag (job kiem-tra)
 
 concurrency:
   group: pages
@@ -40,11 +44,47 @@ defaults:
     shell: bash
 
 jobs:
+  # Chạy TRƯỚC bước duyệt để tag sai bị chặn sớm, không tốn một lượt duyệt.
+  kiem-tra:
+    name: Kiểm tra tag (CI xanh, sha chưa deploy Pages)
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: CI của commit ${{ github.sha }} phải xanh đủ 4 check bắt buộc
+        run: |
+          RUNS=$(mktemp)
+          gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?per_page=100" > "$RUNS"
+          echo "Check-runs của commit:"; jq -r '.check_runs[] | "  \(.name): \(.status)/\(.conclusion)"' "$RUNS"
+          FAIL=0
+          for NAME in "Quét rò rỉ bí mật" "Áp migration + lint schema" "Build frontend + giới hạn 300 dòng" "Kiểm thử RLS + e2e trên staging"; do
+            OK=$(jq -r --arg n "$NAME" '[.check_runs[] | select(.name == $n and .conclusion == "success")] | length' "$RUNS")
+            if [ "$OK" = "0" ]; then echo "::error::Check \"$NAME\" chưa xanh trên commit này (chưa mở PR hoặc CI chưa xong/đỏ)."; FAIL=1; fi
+          done
+          [ "$FAIL" = 0 ] || exit 1
+          echo "CI xanh đủ 4 check."
+      - name: Commit chưa từng deploy Pages (nếu đã deploy, Pages sẽ bỏ qua bản mới)
+        run: |
+          # Không phải hợp đồng API: quan sát GET /pages/deployments/<sha> trả 200 với status rỗng khi chưa có,
+          # 200 với status có giá trị khi đã có. In HTTP code + body và chỉ cho qua đúng dạng "200 + status rỗng";
+          # mọi dạng khác DỪNG (cho qua nhầm sẽ tái diễn sự cố rc1).
+          BODY=$(mktemp)
+          CODE=$(curl -sS --max-time 60 -o "$BODY" -w '%{http_code}' -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages/deployments/$GITHUB_SHA") || CODE=000
+          echo "GET /pages/deployments/$GITHUB_SHA → HTTP $CODE"; echo "Body:"; cat "$BODY"; echo
+          STATUS=$(jq -r 'if type == "object" then (.status // "__khong_co_truong__") else "__khong_phai_object__" end' "$BODY" 2>/dev/null || echo "__khong_phai_json__")
+          if [ "$CODE" = "200" ] && [ "$STATUS" = "" ]; then
+            echo "Chưa có Pages deployment cho sha này — được phép phát hành."
+          elif [ "$CODE" = "200" ] && [ -n "$STATUS" ] && [ "${STATUS#__}" = "$STATUS" ]; then
+            echo "::error::Commit $GITHUB_SHA ĐÃ có Pages deployment (status=$STATUS). Tag đang trỏ vào commit đã lên main sau merge? Tạo nhánh mới + commit rỗng + tag v* mới (docs/kien-truc.md mục 7)."; exit 1
+          else
+            echo "::error::Phản hồi ngoài dự kiến (HTTP $CODE, status=$STATUS) — không tự cho qua. Kiểm tra lại API/quyền rồi chạy lại."; exit 1
+          fi
+
   phat-hanh:
     name: Backup + migration production + build (chờ duyệt)
+    needs: kiem-tra
     runs-on: ubuntu-latest
-    outputs:
-      artifact_id: ${{ steps.site.outputs.artifact-id }}
     environment:
       name: production
       url: https://haidang21ktvptu.github.io/vptu-mvp-task/
@@ -92,7 +132,6 @@ jobs:
           supabase db push --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD" --yes
 
       - uses: ./.github/actions/build-pages-site
-        id: site
         with:
           prod-ref: ${{ github.sha }}
           prod-version: ${{ github.ref_name }}
@@ -114,12 +153,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
       - id: deployment
-        uses: ./.github/actions/deploy-pages-versioned
-        with:
-          artifact-id: ${{ needs.phat-hanh.outputs.artifact_id }}
-          version: ${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+        uses: actions/deploy-pages@v4
 
   smoke:
     name: Smoke test bản live + gắn tag production
@@ -173,11 +208,12 @@ jobs:
   quay-lui:
     name: Hướng dẫn quay lui (chỉ khi lỗi)
     if: failure()
-    needs: [phat-hanh, deploy, smoke]
+    needs: [kiem-tra, phat-hanh, deploy, smoke]
     runs-on: ubuntu-latest
     steps:
       - name: Ghi hướng dẫn vào Summary
         env:
+          R0: ${{ needs.kiem-tra.result }}
           R1: ${{ needs.phat-hanh.result }}
           R2: ${{ needs.deploy.result }}
           R3: ${{ needs.smoke.result }}
@@ -185,15 +221,17 @@ jobs:
         run: |
           {
             echo "## Phát hành $TAG THẤT BẠI — cách quay lui"
-            echo "Kết quả: phat-hanh=$R1, deploy=$R2, smoke=$R3."
+            echo "Kết quả: kiem-tra=$R0, phat-hanh=$R1, deploy=$R2, smoke=$R3."
             echo
-            if [ "$R1" != "success" ]; then
+            if [ "$R0" != "success" ]; then
+              echo "- **Tag bị chặn ở bước kiểm tra** (CI chưa xanh hoặc commit đã deploy Pages). Production CHƯA đổi gì. Sửa theo thông báo của job *kiem-tra* rồi tag lại lên commit hợp lệ (docs/kien-truc.md mục 7)."
+            elif [ "$R1" != "success" ]; then
               echo "- **Lỗi ở bước backup/migration/build.** Xem log job *phat-hanh*: nếu dừng trước 'supabase db push' thì production CHƯA đổi gì; tag production vẫn trỏ bản cũ, bản live không đổi."
               echo "- Nếu 'db push' đã chạy một phần: kiểm tra \`supabase migration list --project-ref frwyxcmbonjaimziiuqr\` rồi quyết định sửa tiến (migration mới) hoặc khôi phục từ backup artifact của lần chạy này (docs/kien-truc.md mục Quay lui)."
             elif [ "$R2" != "success" ]; then
               echo "- **Migration đã áp, frontend chưa lên.** Bản live vẫn là bản cũ (thường vẫn chạy được vì migration chỉ thêm). Chạy lại job *deploy* (Re-run failed jobs) hoặc đẩy lại tag."
             else
-              echo "- **Frontend mới đã lên nhưng smoke test lỗi.** Quay lui frontend: gắn tag v* mới cao hơn trỏ vào commit production cũ, ví dụ \`git tag v<mới> production && git push origin v<mới>\` (deploy-prod chạy lại, chờ duyệt; migration không áp gì thêm vì đã có)."
+              echo "- **Frontend mới đã lên nhưng smoke test lỗi.** Quay lui frontend: KHÔNG tag lại commit cũ (sha đã deploy, Pages bỏ qua). Làm: \`git checkout -b hotfix/quay-lui <commit cũ> && git commit --allow-empty -m 'Quay lui về v<cũ>' && git push -u origin HEAD && git tag v<mới> && git push origin v<mới>\` → deploy-prod chạy lại (chờ duyệt; migration không áp gì thêm) → mở PR nhánh đó, merge sau."
               echo "- Nếu lỗi do dữ liệu/migration: tải artifact backup của lần chạy này, giải mã \`gpg -d --batch --pinentry-mode loopback --passphrase <BACKUP_PASSPHRASE> <file>.tar.gz.gpg | tar xz\`, rồi khôi phục theo hướng dẫn GĐ7 (scripts/restore-db.sh) — dữ liệu ghi sau lúc backup sẽ mất, chỉ làm khi không sửa tiến được."
             fi
             echo
