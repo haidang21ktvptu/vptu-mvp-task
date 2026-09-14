@@ -47,7 +47,7 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Test trên staging (CI hoặc tay) tối đa ~2 lần/5 phút (giới hạn 30 lượt đăng nhập/IP).
 
 ## 6. Việc còn lại
-1. **Phát hành thử `v2.0.0-rc1`** (kết thúc GĐ6): `git checkout main && git pull && git tag v2.0.0-rc1 && git push origin v2.0.0-rc1` → Actions → Review deployments → duyệt → theo dõi Summary (backup, `db push` no-op vì 0012 đã áp, smoke) → kiểm tra `phien-ban.json` bản live ghi `v2.0.0-rc1` và tag `production` được gắn → kiểm tra 3 vai trò → ghi "GĐ6 hoàn thành" vào CHANGELOG mục 13.
+1. **Phát hành thử `v2.0.0-rc2`** (kết thúc GĐ6; rc1 thất bại ở smoke vì `actions/deploy-pages` gửi version = SHA trùng bản deploy-staging → Pages không thay artifact; đã thay bằng composite `deploy-pages-versioned`, tag rc1 giữ làm lịch sử): `git checkout main && git pull && git tag v2.0.0-rc2 && git push origin v2.0.0-rc2` → Actions → Review deployments → duyệt → theo dõi Summary (backup, `db push` no-op vì 0012 đã áp, smoke) → kiểm tra `phien-ban.json` bản live ghi `v2.0.0-rc2` và tag `production` được gắn → kiểm tra 3 vai trò → ghi "GĐ6 hoàn thành" vào CHANGELOG mục 13.
 2. **GĐ7** theo `docs/PROMPTS.md`: `scripts/backup-db.sh` + `restore-db.sh` (khôi phục từ artifact gpg hoặc dump tay), workflow backup hằng đêm, `docs/xu-ly-su-co.md` (10 tình huống), hướng dẫn uptime monitor, lên Pro + bật hook AUTH-3. "Xong khi" chủ dự án tự restore lên project trắng thành công.
 3. Tồn đọng nhỏ: bản live production hiện build từ `main` (chưa có tag `production`) — tự hết sau bước 1.
 

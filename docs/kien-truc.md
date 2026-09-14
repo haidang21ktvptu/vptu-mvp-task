@@ -25,12 +25,12 @@ flowchart LR
   PR -->|merge| M((main))
   M --> S1
   subgraph ST["push main  (deploy-staging.yml)"]
-    S1[db push → staging] --> S2[build 2 bản:<br/>production = tag `production`<br/>staging = main] --> S3[deploy Pages<br/>kiểm tra /staging/phien-ban.json]
+    S1[db push → staging] --> S2[build 2 bản:<br/>production = tag `production`<br/>staging = main] --> S3[deploy Pages<br/>version main-sha-run<br/>kiểm tra /staging/phien-ban.json]
   end
   M -->|git tag v*| T((tag v2.x))
   T --> P0
   subgraph PD["tag v*  (deploy-prod.yml)"]
-    P0{{environment production<br/>haidang21ktvptu duyệt}} --> P1[backup pg_dump<br/>mã hoá → artifact 90 ngày] --> P2[db push → production] --> P3[build 2 bản] --> P4[deploy Pages] --> P5[smoke: đăng nhập 1 tài khoản<br/>trên bản live] --> P6[gắn tag `production`]
+    P0{{environment production<br/>haidang21ktvptu duyệt}} --> P1[backup pg_dump<br/>mã hoá → artifact 90 ngày] --> P2[db push → production] --> P3[build 2 bản] --> P4[deploy Pages<br/>version tag-run] --> P5[smoke: đăng nhập 1 tài khoản<br/>trên bản live] --> P6[gắn tag `production`]
     P5 -.lỗi.-> P7[quay-lui: hướng dẫn trong Summary]
   end
 ```
@@ -52,13 +52,15 @@ Nguyên tắc cố định: **migration luôn chạy trước deploy frontend** 
 ### `deploy-staging.yml` — push main
 1. `supabase db push --project-ref <staging>` (dry-run trước, rồi `--yes`), ghi `migration list` vào Summary.
 2. Build hai bản (composite action `.github/actions/build-pages-site`): **production** từ commit của tag `production` (commit phát hành gần nhất — chưa có tag thì lấy `main`, kèm cảnh báo), **staging** từ `main` với `BASE_PATH=/vptu-mvp-task/staging/` và anon key staging. Mỗi bản có `phien-ban.json` (`{moi_truong, phien_ban, commit, build_luc}`).
-3. `actions/deploy-pages`, rồi curl `/staging/phien-ban.json` tới khi thấy đúng commit (tối đa 3 phút).
+3. Deploy bằng composite `.github/actions/deploy-pages-versioned` với `pages_build_version = main-<sha>-<run_id>-<run_attempt>`, rồi curl `/staging/phien-ban.json` tới khi thấy đúng commit (tối đa 3 phút).
+
+**Vì sao không dùng `actions/deploy-pages`:** action đó luôn gửi `pages_build_version = GITHUB_SHA` (không có input đổi; `GITHUB_*` không ghi đè được bằng `env:`). GitHub Pages dùng `pages_build_version` làm khoá idempotent — POST lại cùng version thì trả deployment cũ và **không thay artifact**. Mọi tag `v*` đều trỏ vào commit mà deploy-staging đã xuất bản với đúng SHA đó, nên phát hành `v2.0.0-rc1` bị bỏ qua (job deploy "xanh" sau 5 giây, bản live vẫn `main@…`). Composite gọi thẳng REST `POST /repos/{r}/pages/deployments` (`artifact_id` từ output của `upload-pages-artifact`, OIDC token lấy như `core.getIDToken()` không audience), poll `GET …/deployments/{id}` tới `succeed` (≤ 10 phút, quá thì `cancel`), và ghi `pages_build_version` + `deployment_id` vào Summary của job để tra cứu sự cố không cần mở log. Job deploy vẫn ở environment `github-pages` với `pages: write` + `id-token: write` khai báo ở cấp job.
 
 ### `deploy-prod.yml` — tag `v*`
 | Job | Nội dung |
 |---|---|
 | `phat-hanh` (environment **production**) | **Dừng chờ duyệt** (required reviewer haidang21ktvptu). Sau khi duyệt: `supabase db dump` schema + data → `tar` + `gpg --symmetric AES-256` bằng `BACKUP_PASSPHRASE` → artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày; phải mã hoá vì artifact của repo public tải được công khai) → `db push --dry-run` (vào Summary) → `db push --yes` → build hai bản (production = tag, staging = main). |
-| `deploy` (environment github-pages) | `actions/deploy-pages`. |
+| `deploy` (environment github-pages) | `deploy-pages-versioned` với `pages_build_version = <tag>-<run_id>-<run_attempt>` (duy nhất dù tag trỏ vào commit đã deploy từ main); Summary ghi version + deployment_id. |
 | `smoke` | Đợi `phien-ban.json` bản live ghi đúng tag (≤ 3 phút) → Playwright `tests/e2e/smoke/` đăng nhập tài khoản hệ thống `smoke_test` (`SMOKE_USERNAME/PASSWORD`), vào app, không lỗi console, đăng xuất → **gắn tag `production`** vào commit vừa phát hành. Tài khoản này là A3 thật về quyền (RLS không đổi) nhưng `is_system = true` nên frontend không hiện ở danh bạ/cây/KPI; trên staging do `seed.sql` tạo (mật khẩu `123456`), trên production do script tạo với mật khẩu ngẫu nhiên. |
 | `quay-lui` (chỉ khi lỗi) | Ghi hướng dẫn quay lui vào Summary theo bước bị lỗi (mục 6). |
 
@@ -107,7 +109,7 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 - **Nguyên tắc:** production luôn là một tag `v*`; tag `production` (di động) đánh dấu commit đang chạy. Quay lui frontend = **gắn tag `v*` mới cao hơn trỏ vào commit cũ** (`git tag v2.0.2 production && git push origin v2.0.2`) → deploy-prod chạy lại, chờ duyệt; migration không áp gì thêm. Không xoá/đổi tag cũ.
 - **Lỗi trước `db push`** (backup, secrets): production chưa đổi gì.
 - **Lỗi ở `db push`:** `supabase migration list --project-ref frwyxcmbonjaimziiuqr` xem migration nào đã áp; ưu tiên sửa tiến bằng migration mới; chỉ khôi phục từ backup khi không sửa tiến được.
-- **Lỗi ở deploy:** DB đã mới, frontend cũ — Re-run failed jobs.
+- **Lỗi ở deploy:** DB đã mới, frontend cũ — Re-run failed jobs (mỗi lần chạy lại có version mới nên deploy thật, không bị Pages bỏ qua).
 - **Smoke lỗi:** frontend mới đã lên — quay lui frontend như trên; nếu do migration, khôi phục DB.
 - **Khôi phục từ backup:** tải artifact `prod-<ngày>-<tag>.tar.gz.gpg` → `gpg -d --batch --pinentry-mode loopback --passphrase "<BACKUP_PASSPHRASE>" file.tar.gz.gpg | tar xz` → `schema.sql` + `data.sql` (có `auth.users`, `auth.identities`) → chạy `scripts/restore-db.sh` (GĐ7). Dữ liệu ghi sau lúc backup sẽ mất.
 
