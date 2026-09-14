@@ -134,6 +134,7 @@ Giữ 5 bảng hiện có, thay đổi:
 - `tasks`: bỏ `owner_id` (mồ côi); default `status = 'CHUA_GIAO'` (đã sửa ở migration `0003`). FK `task_directives.task_id` / `task_evidences.task_id` → `tasks.id` (`ON DELETE CASCADE`) đã có sẵn từ baseline `0001`, không cần thêm.
 - `task_directives`: bỏ `recipient_id`, `is_read`, `read_at`.
 - Thêm `task_directive_reads`, `task_status_log`.
+- **GĐ8 (0013, PR 8A-1)** — quản trị đặc quyền theo `docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 5: `accounts.quan_tri_kl`, `accounts.quan_tri_he_thong` (chỉ GRANT SELECT cột; đổi chỉ qua `admin_dat_co()` / migration; cờ không kế thừa vai trò); `quyen_lich_su` (nhật ký cấp quyền, chỉ hàm ghi, chỉ `quan_tri_he_thong` đọc); `phu_trach_phong` (PCVP ↔ phòng, `tu_ngay`/`den_ngay`, EXCLUDE chống chồng kỳ, bảng tạo rỗng — chủ dự án nhập tay trên màn hình Quản trị) + `phu_trach(lanh_dao, phong, ngay)` + `admin_phan_cong_phong()`. Module KL (`kl_*`, 0014–0016) ở PR 8A-2.
 - View `view_exception_dashboard` giữ, thêm `owner_department` (đã có).
 
 Sơ đồ:
@@ -178,6 +179,7 @@ vptu-mvp-task/
 | 5 | Giao diện mới | DESIGN.md áp dụng toàn bộ | Duyệt bằng mắt trên staging + Lighthouse |
 | 6 | CI/CD + staging | Workflows, tag phiên bản, migrations tự động | Một PR đi hết pipeline |
 | 7 | Vận hành | Backup, uptime monitor, docs xử lý sự cố | Biên bản khôi phục thử |
+| 8–11 | Theo dõi Kết luận BTVTU | Theo `docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4: GĐ8 mô hình dữ liệu + nhập liệu (8A-1 quản trị đặc quyền, 8A-2 schema KL + hàm `kl_trang_thai`, 8B script nhập), GĐ9 dashboard chạy song song, GĐ10 vòng chỉ đạo + tắt Excel, GĐ11 xuất PDF | Điều kiện xong ghi ở từng GĐ trong tài liệu thiết kế |
 
 ---
 

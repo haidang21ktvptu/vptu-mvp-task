@@ -12,6 +12,10 @@ function formatLongDate(d) {
 }
 
 const SECTION_BY_ROLE = { A1: 'viewThuongTruc', A2: 'viewLanhDaoVP', A3: 'viewChuyenVien' };
+// Mục dùng chung ngoài vai trò (GĐ8): chỉ hiện khi tài khoản có cờ tương ứng; mục khai báo data-section
+// tự hiện section của mình, các mục còn lại đưa về section theo vai trò.
+const EXTRA_SECTIONS = ['viewQuanTri'];
+const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị hệ thống', action: 'openQuanTri', data: { section: 'viewQuanTri' } };
 
 // Mỗi mục: { id, label, action, tab } — id giữ nguyên tên nút tab cũ để kịch bản e2e không đổi.
 function navItemHtml(item) {
@@ -24,7 +28,17 @@ function navItemHtml(item) {
 const MESSAGES_NAV = { id: 'dmBubbleLauncher', label: 'Nhắn tin', action: 'openDMPicker', badgeId: 'dmBubbleBadge' };
 
 export function renderNav(items) {
-  $('mainNav').innerHTML = [...items, MESSAGES_NAV].map(navItemHtml).join('');
+  const extra = state.user?.quan_tri_he_thong ? [QUAN_TRI_NAV] : [];
+  $('mainNav').innerHTML = [...items, ...extra, MESSAGES_NAV].map(navItemHtml).join('');
+}
+
+// Hiện đúng một section trong vùng nội dung (theo vai trò hoặc mục dùng chung).
+export function showSection(id) {
+  [...Object.values(SECTION_BY_ROLE), ...EXTRA_SECTIONS].forEach((s) => show(s, s === id));
+}
+
+export function showRoleSection() {
+  showSection(SECTION_BY_ROLE[state.user?.role_group]);
 }
 
 // Đánh dấu mục đang chọn ở thanh bên.
@@ -44,7 +58,7 @@ export function initUserInterface() {
   setText('headerDate', formatLongDate(new Date()));
   renderNav(view?.nav || []);
 
-  Object.entries(SECTION_BY_ROLE).forEach(([role, id]) => show(id, user.role_group === role));
+  showRoleSection();
   view?.init();
 }
 
@@ -52,3 +66,12 @@ export function initUserInterface() {
 export function reloadCurrentView() {
   getView(state.user?.role_group)?.reload();
 }
+
+// Bấm mục theo vai trò (không có data-section) khi đang ở mục dùng chung → về section vai trò.
+// Chạy trước uỷ quyền data-action ở body (bắt ở mainNav, giai đoạn nổi bọt) nên view đã hiện khi nạp.
+$('mainNav').addEventListener('click', (event) => {
+  const el = event.target.closest('.nav-item');
+  if (!el || el.dataset.section || el.id === MESSAGES_NAV.id) return;
+  showRoleSection();
+  setActiveNav(el.id); // view theo vai trò có thể không tự đánh dấu (ví dụ A3 chỉ có một mục)
+});

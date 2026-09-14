@@ -7,3 +7,5 @@ dist/
 .DS_Store
 # Kết xuất tạm của script vận hành — không bao giờ commit
 scripts/out/
+# Cấu hình chạy local của Claude Code (chứa URL/key Supabase local) — không commit
+.claude/
