@@ -1,0 +1,72 @@
+# Backup production định kỳ: 3 ngày/lần (SPEC NF-6 — chấp nhận mất tối đa 3 ngày dữ liệu) hoặc chạy tay.
+# Gọi scripts/backup-db.sh (cùng nguồn với deploy-prod.yml) → artifact prod-<ngày>-dinh-ky.tar.gz.gpg, 90 ngày.
+# Tải về máy cá nhân: scripts/tai-backup.sh (docs/sao-luu-khoi-phuc.md mục 3).
+#
+# Cron GitHub không có "mỗi 3 ngày": dùng bước ngày-trong-tháng */3 → chạy ngày 1, 4, 7, …, 28, 31 lúc 20:00 UTC
+# (03:00 giờ Việt Nam, vắng người → so-dong.txt "chinh-xac"). Hạn chế: đầu tháng cách nhau 1–3 ngày (không bao
+# giờ quá 3); GitHub có thể chạy trễ khi tải cao; GitHub TỰ TẮT schedule sau 60 ngày repo không có commit —
+# xem Actions mỗi tháng, bấm "Enable workflow" nếu bị tắt (docs/TRANG-THAI.md mục 5).
+#
+# Secrets (repository): SUPABASE_ACCESS_TOKEN, BACKUP_PASSPHRASE (cùng giá trị với environment production —
+# workflow tự động không dùng environment đó được vì có required reviewer). Không cần mật khẩu DB (login role).
+name: Backup định kỳ production
+
+on:
+  schedule:
+    - cron: '0 20 */3 * *'
+  workflow_dispatch:
+    inputs:
+      nhan:
+        description: 'Nhãn đặt vào tên file (chữ, số, . _ -)'
+        default: dinh-ky
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-production
+  cancel-in-progress: false
+
+env:
+  PROD_REF: frwyxcmbonjaimziiuqr
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  sao-luu:
+    name: Sao lưu production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Kiểm tra secrets
+        run: |
+          for v in SUPABASE_ACCESS_TOKEN BACKUP_PASSPHRASE; do
+            if [ -z "${!v}" ]; then echo "::error::Thiếu repository secret $v (xem docs/sao-luu-khoi-phuc.md mục 1)."; exit 1; fi
+          done
+      - name: Chạy scripts/backup-db.sh
+        env:
+          NHAN: ${{ inputs.nhan || 'dinh-ky' }}
+        run: |
+          FILE=$(bash scripts/backup-db.sh --project-ref "$PROD_REF" --nhan "$NHAN" --thu-muc backup 2> backup.log) \
+            || { cat backup.log; echo "::error::backup-db.sh thất bại — xem log trên."; exit 1; }
+          NAME=$(basename "$FILE" .tar.gz.gpg)
+          echo "BACKUP_NAME=$NAME" >> "$GITHUB_ENV"
+          { echo "### Backup $NAME"; echo '```'; grep -vE '^(Dumping|Dumped|Initialising|Connecting)' backup.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          cat backup.log
+      - name: Lưu artifact (90 ngày)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: backup/${{ env.BACKUP_NAME }}.tar.gz.gpg
+          retention-days: 90
+          if-no-files-found: error

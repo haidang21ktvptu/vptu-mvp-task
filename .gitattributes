@@ -1,2 +1,4 @@
 # Script bash phải giữ LF kể cả khi checkout trên Windows (core.autocrlf=true sẽ làm bash lỗi "\r").
 *.sh text eol=lf
+# File .cmd cho cmd.exe cần CRLF.
+*.cmd text eol=crlf
