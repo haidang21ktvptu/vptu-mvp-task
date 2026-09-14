@@ -49,7 +49,7 @@ while IFS=$'\t' read -r RUN_ID TEN KICH_THUOC NGAY; do
   if [ -s "$DICH" ]; then DA_CO=$((DA_CO + 1)); continue; fi
   printf '  Tải %s (%s byte, tạo %s)…\n' "$TEN" "$KICH_THUOC" "$NGAY" >&2
   rm -rf "$TMP/a"
-  gh run download "$RUN_ID" -R "$REPO" -n "$TEN" -D "$TMP/a" >/dev/null 2>&1 \
+  gh run download "$RUN_ID" -R "$REPO" -n "$TEN" -D "$TMP/a" </dev/null >/dev/null 2>&1 \
     || { canh_bao "Không tải được $TEN (run $RUN_ID) — bỏ qua, lần sau thử lại."; continue; }
   FILE="$(find "$TMP/a" -name '*.tar.gz.gpg' -type f | head -1)"
   [ -n "$FILE" ] || { canh_bao "Artifact $TEN không chứa file .tar.gz.gpg — bỏ qua."; continue; }

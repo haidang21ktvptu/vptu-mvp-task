@@ -110,7 +110,7 @@ jobs:
         env:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          FILE=$(bash scripts/backup-db.sh --project-ref "$PROD_REF" --nhan "${{ github.ref_name }}" --thu-muc backup 2> backup.log) \
+          FILE=$(bash scripts/backup-db.sh --project-ref "$PROD_REF" --nhan "$GITHUB_REF_NAME" --thu-muc backup 2> backup.log) \
             || { cat backup.log; echo "::error::backup-db.sh thất bại — production chưa đổi gì."; exit 1; }
           NAME=$(basename "$FILE" .tar.gz.gpg)
           echo "BACKUP_NAME=$NAME" >> "$GITHUB_ENV"
