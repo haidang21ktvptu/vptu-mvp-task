@@ -37,7 +37,7 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Giữ mật khẩu cũ khi chuyển sang Auth; `must_change_password` bật tay bằng `admin_set_must_change_password()`. Hook khoá 15 phút (AUTH-3) tạm tắt vì gói Free — bật ở GĐ7 khi lên Pro.
 - Staging chỉ dữ liệu giả từ `seed.sql` (rule 11). Mọi migration production cần xác nhận trong phiên (rule 12); từ GĐ6 = duyệt environment `production`. `supabase config push` vẫn làm tay sau khi trình `config diff` (kỳ vọng: `site_url` GitHub Pages, MFA/OTP tắt).
 - Không merge thẳng `main`, kể cả docs; chỉ báo "mời merge" sau khi CI xanh trên commit cuối; chủ dự án tự merge.
-- GĐ6: phương án A (`/staging/` cùng artifact Pages); tài khoản hệ thống `smoke_test` (A3, CDS_CY, ẩn khỏi mọi danh sách qua `loadAccountsCache`); `SMOKE_*` ở repository secret; RLS chạy thêm trên Supabase local trong CI; production = tag `v*`, quay lui = tag mới cao hơn trỏ commit cũ.
+- GĐ6: phương án A (`/staging/` cùng artifact Pages); tài khoản hệ thống `smoke_test` (A3, CDS_CY, ẩn khỏi mọi danh sách qua `loadAccountsCache`); `SMOKE_*` ở repository secret; RLS chạy thêm trên Supabase local trong CI; production = tag `v*`. **Tag `v*` gắn lên commit đầu nhánh phát hành khi PR đã CI xanh, TRƯỚC khi merge; merge bằng merge commit** (GitHub Pages chỉ nhận mỗi commit một lần — kết luận H1 sau sự cố rc1); quay lui = nhánh mới từ commit cũ + commit rỗng + tag mới (không tag lại commit cũ).
 - Giữ toast thay `alert()`; không file nào trên 300 dòng; giao diện tiếng Việt có dấu; DESIGN.md là nguồn duy nhất về màu/phông/bố cục.
 
 ## 5. Việc định kỳ
@@ -47,7 +47,7 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Test trên staging (CI hoặc tay) tối đa ~2 lần/5 phút (giới hạn 30 lượt đăng nhập/IP).
 
 ## 6. Việc còn lại
-1. **Phát hành thử `v2.0.0-rc2`** (kết thúc GĐ6; rc1 thất bại ở smoke vì `actions/deploy-pages` gửi version = SHA trùng bản deploy-staging → Pages không thay artifact; đã thay bằng composite `deploy-pages-versioned`, tag rc1 giữ làm lịch sử): `git checkout main && git pull && git tag v2.0.0-rc2 && git push origin v2.0.0-rc2` → Actions → Review deployments → duyệt → theo dõi Summary (backup, `db push` no-op vì 0012 đã áp, smoke) → kiểm tra `phien-ban.json` bản live ghi `v2.0.0-rc2` và tag `production` được gắn → kiểm tra 3 vai trò → ghi "GĐ6 hoàn thành" vào CHANGELOG mục 13.
+1. **Phát hành thử `v2.0.0-rc2`** (kết thúc GĐ6; rc1 thất bại vì tag gắn lên commit đã lên main — Pages chỉ nhận mỗi commit một lần, xem `kien-truc.md` mục 3/7; tag rc1 giữ làm lịch sử). Nhánh phát hành = nhánh của PR khắc phục `fix/phat-hanh-tag-truoc-merge` (chưa merge): `git checkout fix/phat-hanh-tag-truoc-merge && git pull` → CI xanh → `git tag v2.0.0-rc2 && git push origin v2.0.0-rc2` → deploy-prod: `kiem-tra` → Review deployments → duyệt → Summary (backup, `db push` no-op vì 0012 đã áp, smoke) → `phien-ban.json` bản live ghi `v2.0.0-rc2`, tag `production` gắn → **merge PR bằng merge commit** → deploy-staging dựng production từ tag → kiểm tra 3 vai trò → ghi "GĐ6 hoàn thành" vào CHANGELOG mục 13. Không push thêm commit lên nhánh sau khi đã tag.
 2. **GĐ7** theo `docs/PROMPTS.md`: `scripts/backup-db.sh` + `restore-db.sh` (khôi phục từ artifact gpg hoặc dump tay), workflow backup hằng đêm, `docs/xu-ly-su-co.md` (10 tình huống), hướng dẫn uptime monitor, lên Pro + bật hook AUTH-3. "Xong khi" chủ dự án tự restore lên project trắng thành công.
 3. Tồn đọng nhỏ: bản live production hiện build từ `main` (chưa có tag `production`) — tự hết sau bước 1.
 

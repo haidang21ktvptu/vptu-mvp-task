@@ -5,8 +5,9 @@
 #   /vptu-mvp-task/          production — build lại từ tag `production` (commit đã phát hành gần nhất,
 #                            do deploy-prod.yml gắn sau khi smoke test đạt); chưa có tag thì lấy main.
 #   /vptu-mvp-task/staging/  staging — build từ main, trỏ project Supabase staging.
-# Deploy bằng .github/actions/deploy-pages-versioned với pages_build_version = main-<sha>-<run_id>-<run_attempt>
-# (actions/deploy-pages dùng GITHUB_SHA làm version nên re-run/tag cùng commit bị GitHub bỏ qua).
+# Pages bắt pages_build_version = sha của commit chạy workflow (OIDC), mỗi sha chỉ deploy được một lần
+# (kết luận chẩn đoán GĐ6) — mỗi push main là một sha mới nên ở đây không thành vấn đề; re-run cùng
+# commit sẽ "thành công" mà không đổi gì.
 #
 # Secrets (Settings → Secrets and variables → Actions, repository): SUPABASE_ACCESS_TOKEN,
 # STAGING_DB_PASSWORD, STAGING_SUPABASE_ANON_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
@@ -69,8 +70,6 @@ jobs:
     name: Build hai bản frontend
     needs: migration
     runs-on: ubuntu-latest
-    outputs:
-      artifact_id: ${{ steps.site.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
       - name: Xác định commit production đang phát hành (tag `production`)
@@ -100,7 +99,6 @@ jobs:
             exit 1
           fi
       - uses: ./.github/actions/build-pages-site
-        id: site
         with:
           prod-ref: ${{ steps.prod.outputs.ref }}
           prod-version: ${{ steps.prod.outputs.version }}
@@ -110,10 +108,6 @@ jobs:
           staging-url: ${{ env.STAGING_URL }}
           staging-anon-key: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
 
-  # [CHẨN ĐOÁN — TẠM, gỡ ở PR khắc phục] POST /pages/deployments của composite trả 404 (run #3, #4) trong
-  # khi actions/deploy-pages cùng token/OIDC từng thành công. Job chạy lần lượt: đối chứng GET → thử A
-  # (version tuỳ ý) → thử B (version = GITHUB_SHA) → đối chứng actions/deploy-pages@v4, ghi bảng kết quả
-  # vào Summary. Quyền thật của GITHUB_TOKEN xem ở khối "GITHUB_TOKEN Permissions" của bước "Set up job".
   deploy:
     name: Deploy Pages (staging + production giữ nguyên)
     needs: build
@@ -124,66 +118,13 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: https://haidang21ktvptu.github.io/vptu-mvp-task/staging/
-    env:
-      GH_TOKEN: ${{ github.token }}
+      url: ${{ steps.deployment.outputs.page_url }}staging/
     steps:
-      - uses: actions/checkout@v4
-
-      - name: "[CHẨN ĐOÁN 1] Đối chứng GET /repos/{r}/pages + header x-accepted-github-permissions"
-        id: get-pages
-        continue-on-error: true
-        run: |
-          source .github/actions/deploy-pages-versioned/api.sh
-          HDR=$(mktemp)
-          # Khi thiếu quyền, GitHub trả header x-accepted-github-permissions (quyền cần có) — in ra để đối chiếu.
-          curl -sS --max-time 60 -D "$HDR" -o /dev/null -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages" || true
-          echo "Header phản hồi GET /pages (lọc):"
-          grep -i "^HTTP/\|x-accepted-github-permissions\|x-oauth-scopes\|x-github-request-id" "$HDR" || true
-          # || true: shell là bash -e, api() trả 1 khi non-2xx — vẫn phải ghi mã HTTP ra output cho bảng Summary.
-          api GET "repos/$GITHUB_REPOSITORY/pages" || true
-          echo "code=${API_CODE:-000}" >> "$GITHUB_OUTPUT"
-
-      - name: "[CHẨN ĐOÁN 2] Thử A — version tuỳ ý (như hiện nay)"
-        id: thu-a
-        continue-on-error: true
-        uses: ./.github/actions/deploy-pages-versioned
-        with:
-          artifact-id: ${{ needs.build.outputs.artifact_id }}
-          version: main-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: "[CHẨN ĐOÁN 3] Thử B — version = GITHUB_SHA (Pages có đối chiếu version với sha OIDC?)"
-        id: thu-b
-        continue-on-error: true
-        uses: ./.github/actions/deploy-pages-versioned
-        with:
-          artifact-id: ${{ needs.build.outputs.artifact_id }}
-          version: ${{ github.sha }}
-
-      - name: "[CHẨN ĐOÁN 4] Đối chứng — actions/deploy-pages@v4 cùng token, cùng OIDC"
-        id: control
-        continue-on-error: true
+      - id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: "[CHẨN ĐOÁN 5] Bảng kết quả vào Summary"
-        run: |
-          {
-            echo "### Chẩn đoán POST /pages/deployments (run ${{ github.run_id }}, commit ${{ github.sha }})"
-            echo "| Bước | Kết quả |"
-            echo "|---|---|"
-            echo "| GET /repos/{r}/pages | HTTP ${{ steps.get-pages.outputs.code }} |"
-            echo "| Thử A: version tuỳ ý (composite) | ${{ steps.thu-a.outcome }} |"
-            echo "| Thử B: version = GITHUB_SHA (composite) | ${{ steps.thu-b.outcome }} |"
-            echo "| Đối chứng actions/deploy-pages@v4 | ${{ steps.control.outcome }} |"
-            echo
-            echo "Đọc: B thành công → Pages bắt version = sha của OIDC (H1). A và B lỗi, đối chứng thành công → request khác byte (H2). Cả ba lỗi → ngoài code (H3). HTTP code + body ở log từng bước."
-          } >> "$GITHUB_STEP_SUMMARY"
-          cat "$GITHUB_STEP_SUMMARY"
-
       - name: Kiểm tra bản staging đã lên
         run: |
-          URL="https://haidang21ktvptu.github.io/vptu-mvp-task/staging/phien-ban.json"
+          URL="${{ steps.deployment.outputs.page_url }}staging/phien-ban.json"
           for i in $(seq 1 18); do
             if curl -fsS "$URL" | grep -q "${{ github.sha }}"; then echo "Staging đã lên: $URL"; exit 0; fi
             sleep 10

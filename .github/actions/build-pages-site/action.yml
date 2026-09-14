@@ -30,11 +30,6 @@ inputs:
     description: Anon key của staging
     required: true
 
-outputs:
-  artifact-id:
-    description: ID artifact Pages vừa tải lên (đưa vào deploy-pages-versioned)
-    value: ${{ steps.upload.outputs.artifact_id }}
-
 runs:
   using: composite
   steps:
@@ -93,6 +88,5 @@ runs:
         cat site/phien-ban.json site/staging/phien-ban.json
 
     - uses: actions/upload-pages-artifact@v3
-      id: upload
       with:
         path: site
