@@ -30,47 +30,75 @@ Trong file có: `schema.sql` (tham khảo), `data.sql` (dữ liệu, không gồ
 
 Mỗi lần phát hành (`deploy-prod.yml`) và mỗi 3 ngày (PR B) có một artifact `prod-…tar.gz.gpg` giữ 90 ngày: GitHub → **Actions** → chọn run → cuộn xuống **Artifacts** → tải về (file zip, giải nén ra `.tar.gz.gpg`). Script tải tự động + lịch Task Scheduler làm ở PR B. Cùng passphrase, cùng cách khôi phục.
 
-## 4. Khôi phục thử lên project trắng (diễn tập — điều kiện xong GĐ7)
+## 4. Khôi phục thử lên Supabase local (diễn tập — điều kiện xong GĐ7)
 
-Không bao giờ diễn tập trên production hay staging — script **từ chối trong code** hai project đó. Làm trên một project mới:
+Gói Free chỉ cho 2 project hoạt động (production + staging đã dùng hết) nên diễn tập trên **Supabase local** — bản Postgres + Auth chạy trong Docker trên chính máy này bằng `supabase start`. Không bao giờ diễn tập trên production hay staging — script **từ chối trong code** hai project đó, kể cả khi gõ nhầm.
 
-1. **Tạo project**: supabase.com → *New project* → tên `vptu-restore-test`, Region **Southeast Asia (Singapore)** (cùng production), *Database password*: tự đặt ≥ 16 ký tự **chỉ gồm chữ và số** (ký tự đặc biệt làm hỏng chuỗi kết nối), lưu vào trình quản lý mật khẩu. Đợi ~2 phút tới khi Dashboard hết "Setting up". Gói Free chỉ cho 2 project hoạt động mỗi Organization — nếu bị từ chối, tạo trong một Organization mới (Free) hoặc tạm *Pause* staging rồi *Restore* sau.
-2. **Lấy chuỗi kết nối**: nút **Connect** trên đầu Dashboard → *Method: Session pooler* → sao chép dòng `postgresql://postgres.<ref>:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres` → thay `[YOUR-PASSWORD]` bằng mật khẩu vừa đặt. `<ref>` là 20 chữ trong URL Dashboard (`supabase.com/dashboard/project/<ref>`). Không dùng *Direct connection* (`db.<ref>.supabase.co`, chỉ IPv6) hay cổng 6543.
-3. **Chạy** (repo ở `main` mới nhất; file backup chọn bản mới nhất trong `vptu-backup`):
+1. **Mở Docker Desktop**, đợi biểu tượng cá voi ổn định. Mở Git Bash và khởi động Supabase local (lần đầu tải image ~2–5 phút; đã chạy rồi thì báo "already running", cứ tiếp tục):
    ```bash
-   cd "/d/TU 2026/Project/vptu-mvp-task" && git checkout main && git pull && ls -t "/d/TU 2026/Project/vptu-backup/"*.gpg | head -3
+   cd "/d/TU 2026/Project/vptu-mvp-task" && git checkout main && git pull && supabase start
    ```
+   Xong thì hiện `Started supabase local development setup`. Script đã biết sẵn chuỗi kết nối local (`127.0.0.1:54322`) nên **không phải dán gì**.
+2. **Chọn file backup** mới nhất trong `vptu-backup` (bản do mục 2 tạo):
    ```bash
-   bash scripts/restore-db.sh "/d/TU 2026/Project/vptu-backup/<tên file>.tar.gz.gpg" --project-ref <ref>
+   ls -t "/d/TU 2026/Project/vptu-backup/"*.gpg | head -3
    ```
-   Script hỏi lần lượt: passphrase → chuỗi kết nối (dán bằng chuột phải hoặc Shift+Insert; chữ không hiện) → in tóm tắt → gõ `khoi phuc`. Các bước tự chạy: giải mã, đối chiếu migration, kiểm tra quyền, áp toàn bộ migration của repo (`supabase db push`), nạp dữ liệu trong một transaction, kiểm chứng số dòng và khoá ngoại `accounts → auth.users`. Kết thúc phải thấy **`KHÔI PHỤC XONG`** và dòng `Số dòng khớp so-dong.txt`. Mất ~1–2 phút.
-4. **Kiểm tra bằng mắt**: Dashboard project mới → *Table Editor* → `accounts` có 49 dòng (48 cán bộ + `smoke_test`); *Authentication → Users* có 49 người. Đăng nhập thử: Dashboard → *Project Settings → API Keys* lấy URL và `anon` key → trong `frontend/` tạo file `.env` theo `.env.example` với hai giá trị đó → `cd frontend && npm run dev` → mở địa chỉ hiện ra, đăng nhập bằng tài khoản của chính mình với **mật khẩu hiện dùng** (hash được nạp lại nên mật khẩu không đổi). Xong thì xoá `.env`.
-5. **Ghi biên bản** theo mẫu mục 7 vào `docs/bien-ban-khoi-phuc-<ngày>.md` (qua PR), rồi **xoá project** `vptu-restore-test` (*Project Settings → General → Delete project*) vì nó chứa dữ liệu thật.
+3. **Chạy khôi phục** (`--ghi-de` vì local đang có 7 tài khoản giả từ `seed.sql`):
+   ```bash
+   bash scripts/restore-db.sh "/d/TU 2026/Project/vptu-backup/<tên file>.tar.gz.gpg" --local --ghi-de
+   ```
+   Script hỏi lần lượt: passphrase (chữ không hiện) → liệt kê dữ liệu giả sắp xoá và bắt gõ `local` → in tóm tắt → gõ `khoi phuc`. Các bước tự chạy: giải mã, đối chiếu migration, kiểm tra quyền, xoá schema `public` + dữ liệu auth + lịch sử migration trong một transaction, áp toàn bộ migration của repo (`supabase db push --local`), nạp dữ liệu trong một transaction, kiểm chứng số dòng và khoá ngoại `accounts → auth.users`. Kết thúc phải thấy **`KHÔI PHỤC XONG lên local`** và dòng `Số dòng khớp so-dong.txt` với `public.accounts 49`, `auth.users 49`. Mất ~1–2 phút.
+4. **Đăng nhập thử bằng tài khoản thật**: lấy địa chỉ và anon key của local:
+   ```bash
+   supabase status -o env | grep -E '^(API_URL|ANON_KEY)='
+   ```
+   Trong thư mục `frontend/` tạo file `.env` (đã bị .gitignore) gồm hai dòng `VITE_SUPABASE_URL=http://127.0.0.1:54321` và `VITE_SUPABASE_ANON_KEY=<giá trị ANON_KEY, bắt đầu bằng eyJ>`, rồi:
+   ```bash
+   cd "/d/TU 2026/Project/vptu-mvp-task/frontend" && npm install && npm run dev
+   ```
+   Mở địa chỉ hiện ra (`http://localhost:5173/vptu-mvp-task/`), đăng nhập bằng tài khoản của chính mình với **mật khẩu hiện dùng** (hash được nạp lại nên mật khẩu không đổi), xem danh bạ/nhiệm vụ có đúng dữ liệu thật không. Nhấn Ctrl+C để dừng.
+5. **Ghi biên bản** theo mẫu mục 8 (ghi rõ đích là **local**) vào `docs/bien-ban-khoi-phuc-<ngày>.md` qua PR; rồi **dọn dữ liệu thật khỏi máy**: xoá `frontend/.env` và trả local về dữ liệu giả:
+   ```bash
+   cd "/d/TU 2026/Project/vptu-mvp-task" && supabase db reset
+   ```
 
-Chạy lại được: nếu dừng giữa chừng ở bước nạp dữ liệu, transaction đã huỷ, chạy lại lệnh y hệt; nếu project đã có dữ liệu, thêm `--ghi-de` (script hỏi gõ đúng ref rồi xoá schema `public`, dữ liệu auth và lịch sử migration trong một transaction trước khi áp lại migrations và nạp).
+Chạy lại được: dừng giữa chừng ở bước nạp thì transaction đã huỷ, chạy lại lệnh y hệt (vẫn `--ghi-de`). Với project hosted trắng (khi có), lệnh là `--project-ref <ref>` và script hỏi thêm chuỗi kết nối Session pooler (Dashboard → Connect, thay `[YOUR-PASSWORD]`, cổng 5432, mật khẩu DB chỉ chữ và số).
 
-## 5. Khôi phục thật khi production hỏng
+## 5. Local khác hosted ở đâu — khi nào thử lại trên hosted
+
+Diễn tập local chứng minh: file backup đọc được, migrations + dữ liệu + mật khẩu khôi phục đúng, các chốt an toàn hoạt động. Nó **chưa** chứng minh những điểm chỉ có trên hosted:
+
+| Khác biệt | Local | Hosted | Script xử lý |
+|---|---|---|---|
+| Quyền user `postgres` | superuser, lệnh nào cũng qua | không superuser; `SET session_replication_role`, `TRUNCATE auth.*`, `DROP SCHEMA public` dựa vào grant của Supabase | preflight `SET … ROLLBACK` trước khi ghi; bước xoá sạch trong một transaction — lỗi thì chưa đổi gì |
+| Kết nối | `127.0.0.1:54322`, không SSL, script tự biết | Session pooler + SSL, phải dán chuỗi kết nối; mạng/mã hoá ký tự có thể sai | từ chối cổng 6543, IPv6, `[YOUR-PASSWORD]`; dừng ngay nếu `select 1` không chạy |
+| Phiên bản Auth (GoTrue, `auth.schema_migrations`) | theo image của CLI trên máy | theo project, có thể cũ/mới hơn lúc backup | so `auth_schema_version` trong `thong-tin.txt`; đích cũ hơn thì dừng |
+| Áp migrations | `db push --local` | `db push --project-ref` qua login role (cần `supabase login`) | đã thử `--dry-run` lên project chưa link: chạy được |
+
+Nên diễn tập lại trên hosted khi: (a) nâng gói Pro để bật AUTH-3 — lúc đó tạo project tạm `vptu-restore-test`, làm theo đoạn cuối mục 4, xoá project ngay sau; (b) có một project trắng dùng được (Organization khác); (c) Supabase nâng phiên bản Postgres/Auth lớn. Mỗi lần đều ghi biên bản mới.
+
+## 6. Khôi phục thật khi production hỏng
 
 Chỉ làm khi không "sửa tiến" được (xem `kien-truc.md` mục 6). Dữ liệu sau thời điểm backup sẽ mất — báo cán bộ trước.
 
-1. Không xoá project cũ. Tạo project mới (mục 4 bước 1–2), khôi phục từ bản backup **mới nhất** (`ls -t`), kiểm tra như bước 4.
+1. Không xoá project cũ. Tạo project mới trên supabase.com (tên tuỳ ý, Region Southeast Asia (Singapore) như production, mật khẩu DB ≥ 16 ký tự chỉ chữ và số), lấy chuỗi kết nối Session pooler (Connect → Session pooler, thay `[YOUR-PASSWORD]`), rồi `bash scripts/restore-db.sh <bản backup mới nhất> --project-ref <ref mới>`; kiểm tra như mục 4 bước 4 nhưng trỏ `.env` vào URL/anon key của project mới (Project Settings → API Keys).
 2. Project mới trở thành production: cập nhật ref ở mọi nơi bằng một PR — `scripts/lib-sao-luu.sh` (`PRODUCTION_REF`), `.github/workflows/deploy-prod.yml` (`PROD_REF`), `tests/rls/lib.mjs`, `tests/e2e/lib/keys.mjs`, `frontend/.env.example`, `docs/`; GitHub Secrets `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, environment `production` → `PROD_DB_PASSWORD`.
 3. `supabase config diff --project-ref <ref mới>` → trình diff → `config push` (site_url GitHub Pages, MFA/OTP tắt). Tài khoản `smoke_test` đã nằm trong dữ liệu khôi phục nên `SMOKE_*` giữ nguyên.
 4. Phát hành lại bằng tag `v*` (kien-truc.md mục 7); kiểm tra bản live bằng 3 vai trò; ghi CHANGELOG và biên bản.
 
-## 6. Khi nào script từ chối chạy (cố ý)
+## 7. Khi nào script từ chối chạy (cố ý)
 
 `restore-db.sh` dừng, chưa đổi gì, nếu: `--project-ref` hoặc chuỗi kết nối trỏ production/staging; chuỗi kết nối không cùng ref với `--project-ref`; còn `[YOUR-PASSWORD]`; cổng 6543 hoặc host `db.<ref>.supabase.co`; sai passphrase; migration trong backup khác repo (→ `git checkout production` rồi chạy lại); Auth của project đích cũ hơn lúc backup; project đích đã có dữ liệu mà không có `--ghi-de`. `backup-db.sh` dừng nếu Docker chưa chạy, chưa `supabase login`, hoặc hai lần passphrase không khớp.
 
-## 7. Mẫu biên bản khôi phục thử
+## 8. Mẫu biên bản khôi phục thử
 
 ```
 # Biên bản khôi phục thử — <ngày>
 - Người thực hiện: <họ tên>. Máy: Windows 10, Git Bash, supabase CLI <phiên bản>, psql <phiên bản>.
 - File backup: <tên file> (tạo lúc <luc_viet_nam trong thong-tin.txt>, nguồn production, migration 0001–0012).
-- Project đích: vptu-restore-test (<ref>), tạo mới, trắng.
+- Đích: Supabase LOCAL (`supabase start`, Docker trên máy cá nhân) — KHÔNG phải project hosted; xem mục 5 về khác biệt.
 - Kết quả: KHÔI PHỤC XONG lúc <giờ>; số dòng khớp so-dong.txt (accounts 49, auth.users 49, tasks <n>, …); FK mồ côi 0.
 - Đăng nhập thử bằng <username> trên frontend local: thành công / thất bại (lý do).
 - Thời gian từ lúc bắt đầu tới khi đăng nhập được: <phút>.
-- Sự cố/ghi chú: <nếu có>. Project đích đã xoá lúc <giờ>.
+- Sự cố/ghi chú: <nếu có>. Đã `supabase db reset` trả local về dữ liệu giả và xoá `frontend/.env` lúc <giờ>.
 ```

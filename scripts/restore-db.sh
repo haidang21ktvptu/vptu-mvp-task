@@ -147,6 +147,6 @@ Việc sau khôi phục:
   - Mật khẩu cán bộ giữ nguyên (hash được nạp lại). Phiên đăng nhập cũ mất vì JWT secret của project mới khác.
   - Thử đăng nhập: chạy frontend local với VITE_SUPABASE_URL/ANON_KEY của project đích (docs/sao-luu-khoi-phuc.md mục 4).
   - Nếu là khôi phục THẬT (production chuyển sang project này): đổi ref/secret ở mọi nơi theo checklist
-    docs/sao-luu-khoi-phuc.md mục 5, `supabase config diff` rồi `config push`, phát hành lại bằng tag v*.
-  - Ghi biên bản khôi phục vào docs/ (mẫu ở mục 7).
+    docs/sao-luu-khoi-phuc.md mục 6, `supabase config diff` rồi `config push`, phát hành lại bằng tag v*.
+  - Ghi biên bản khôi phục vào docs/ (mẫu ở mục 8).
 HET
