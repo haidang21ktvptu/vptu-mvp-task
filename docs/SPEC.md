@@ -120,7 +120,7 @@ Ma trận policy đã áp (migration 0007–0009; "—" = không có policy/quy�
 | NF-3 Hiệu năng | Trang chính tải < 2 giây trên mạng cơ quan | Lighthouse Performance ≥ 85 |
 | NF-4 Responsive | Dùng được trên màn hình 360px | Playwright chạy ở 3 kích thước |
 | NF-5 Truy cập | Tương phản chữ ≥ 4.5:1, điều hướng bàn phím | Lighthouse Accessibility ≥ 90 |
-| NF-6 Vận hành | Có backup hằng đêm, đã khôi phục thử | Biên bản khôi phục trong `docs/` |
+| NF-6 Vận hành | Có backup định kỳ 3 ngày/lần (chấp nhận mất tối đa 3 ngày dữ liệu) + backup mỗi lần phát hành, đã khôi phục thử | Biên bản khôi phục trong `docs/` |
 | NF-7 Chất lượng | Không file > 300 dòng; lint sạch | CI |
 | NF-8 Ngôn ngữ | 100% giao diện tiếng Việt có dấu | Review |
 

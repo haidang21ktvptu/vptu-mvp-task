@@ -41,6 +41,15 @@ supabase db query --linked "SELECT public.admin_set_must_change_password();"    
 supabase db query --linked "SELECT public.admin_set_must_change_password(ARRAY['levanmieu']);"  -- từng người
 ```
 
-## Sẽ thêm ở Giai đoạn 7
+## `backup-db.sh` / `restore-db.sh` — sao lưu và khôi phục (GĐ7)
 
-`backup-db.sh`, `restore-db.sh` — sau khi chốt cách backup phù hợp gói Supabase (SPEC mục 10, Q3).
+Bash thuần, chạy trong Git Bash (Windows) và GitHub Actions; hàm chung ở `lib-sao-luu.sh`. Hướng dẫn từng bước cho chủ dự án: `docs/sao-luu-khoi-phuc.md`.
+
+```
+bash scripts/backup-db.sh --project-ref <ref> [--nhan <nhãn>] [--thu-muc <thư mục>]   # → <tên>-<ngày giờ>-<nhãn>.tar.gz.gpg
+bash scripts/restore-db.sh <file.tar.gz.gpg> --project-ref <ref đích> [--ghi-de] [--yes]
+bash scripts/backup-db.sh --local  /  bash scripts/restore-db.sh <file> --local --ghi-de --yes  # thử trên `supabase start`
+```
+
+- Bí mật chỉ qua biến môi trường hoặc hỏi ẩn (`BACKUP_PASSPHRASE`, `RESTORE_DB_URL`), không bao giờ qua tham số; mật khẩu DB không cần vì CLI dùng login role qua token (`supabase login` / `SUPABASE_ACCESS_TOKEN`).
+- `restore-db.sh` **từ chối trong code** production `frwyxcmbonjaimziiuqr` và staging `vojmrjezspdftovzinek`; schema áp bằng `supabase db push` từ `supabase/migrations` (không dùng `schema.sql` vì thiếu trigger trên `auth.users` và lịch sử migration); dữ liệu nạp trong một transaction với `session_replication_role = replica` rồi kiểm chứng FK `accounts → auth.users` và số dòng. Cần `psql` (`scoop install postgresql`).

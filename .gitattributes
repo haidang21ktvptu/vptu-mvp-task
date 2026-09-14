@@ -1,0 +1,2 @@
+# Script bash phải giữ LF kể cả khi checkout trên Windows (core.autocrlf=true sẽ làm bash lỗi "\r").
+*.sh text eol=lf
