@@ -5,6 +5,8 @@
 #   /vptu-mvp-task/          production — build lại từ tag `production` (commit đã phát hành gần nhất,
 #                            do deploy-prod.yml gắn sau khi smoke test đạt); chưa có tag thì lấy main.
 #   /vptu-mvp-task/staging/  staging — build từ main, trỏ project Supabase staging.
+# Deploy bằng .github/actions/deploy-pages-versioned với pages_build_version = main-<sha>-<run_id>-<run_attempt>
+# (actions/deploy-pages dùng GITHUB_SHA làm version nên re-run/tag cùng commit bị GitHub bỏ qua).
 #
 # Secrets (Settings → Secrets and variables → Actions, repository): SUPABASE_ACCESS_TOKEN,
 # STAGING_DB_PASSWORD, STAGING_SUPABASE_ANON_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
@@ -67,6 +69,8 @@ jobs:
     name: Build hai bản frontend
     needs: migration
     runs-on: ubuntu-latest
+    outputs:
+      artifact_id: ${{ steps.site.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
       - name: Xác định commit production đang phát hành (tag `production`)
@@ -96,6 +100,7 @@ jobs:
             exit 1
           fi
       - uses: ./.github/actions/build-pages-site
+        id: site
         with:
           prod-ref: ${{ steps.prod.outputs.ref }}
           prod-version: ${{ steps.prod.outputs.version }}
@@ -109,12 +114,20 @@ jobs:
     name: Deploy Pages (staging + production giữ nguyên)
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}staging/
     steps:
+      - uses: actions/checkout@v4
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: ./.github/actions/deploy-pages-versioned
+        with:
+          artifact-id: ${{ needs.build.outputs.artifact_id }}
+          version: main-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Kiểm tra bản staging đã lên
         run: |
           URL="${{ steps.deployment.outputs.page_url }}staging/phien-ban.json"

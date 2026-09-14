@@ -2,7 +2,9 @@
 #   1. `phat-hanh` (environment "production", CHỜ NGƯỜI DUYỆT haidang21ktvptu):
 #      backup pg_dump production (mã hoá, lưu artifact 90 ngày) → supabase db push production
 #      → build hai bản frontend (production từ tag, staging từ main).
-#   2. `deploy`: đưa artifact lên GitHub Pages (migration đã xong TRƯỚC — bài học GĐ1).
+#   2. `deploy`: đưa artifact lên GitHub Pages (migration đã xong TRƯỚC — bài học GĐ1) bằng
+#      .github/actions/deploy-pages-versioned, pages_build_version = <tag>-<run>-<attempt> — vì tag luôn
+#      trỏ vào commit deploy-staging đã xuất bản, actions/deploy-pages (version = SHA) bị GitHub bỏ qua (sự cố rc1).
 #   3. `smoke`: đợi bản mới lan tới Pages, đăng nhập 1 tài khoản bằng Playwright; đạt thì gắn tag
 #      `production` vào commit vừa phát hành (deploy-staging dùng tag này để build lại bản production).
 #   4. `quay-lui`: chỉ chạy khi có bước lỗi — ghi hướng dẫn quay lui vào Summary.
@@ -41,6 +43,8 @@ jobs:
   phat-hanh:
     name: Backup + migration production + build (chờ duyệt)
     runs-on: ubuntu-latest
+    outputs:
+      artifact_id: ${{ steps.site.outputs.artifact-id }}
     environment:
       name: production
       url: https://haidang21ktvptu.github.io/vptu-mvp-task/
@@ -88,6 +92,7 @@ jobs:
           supabase db push --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD" --yes
 
       - uses: ./.github/actions/build-pages-site
+        id: site
         with:
           prod-ref: ${{ github.sha }}
           prod-version: ${{ github.ref_name }}
@@ -101,12 +106,20 @@ jobs:
     name: Deploy Pages
     needs: phat-hanh
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: ./.github/actions/deploy-pages-versioned
+        with:
+          artifact-id: ${{ needs.phat-hanh.outputs.artifact_id }}
+          version: ${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
   smoke:
     name: Smoke test bản live + gắn tag production
