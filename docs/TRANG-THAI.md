@@ -11,7 +11,7 @@
 | 3 | RLS đầy đủ theo vai trò (0007–0010), hàm nghiệp vụ, `tests/rls` 48 test | Xong |
 | 4 | Vite + module hoá (`frontend/`), 0011 FK `accounts.id → auth.users.id`, `tests/e2e` | Xong |
 | 5 | Giao diện mới theo DESIGN.md, phông tự host, responsive, in, Lighthouse A11y 100 | Xong |
-| 6 | CI/CD: test trên staging trong CI, deploy-staging, deploy-prod có duyệt, 0012 `is_system` + `smoke_test` | **PR #22 merged; còn phát hành thử `v2.0.0-rc1`** |
+| 6 | CI/CD: test trên staging trong CI, deploy-staging, deploy-prod có duyệt (tag trước merge), 0012 `is_system` + `smoke_test` | Xong — `v2.0.0-rc2` phát hành 2026-09-14, tag `production` = `2e90a89` |
 | 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | Chưa làm |
 
 ## 2. Kiến trúc (tóm tắt)
@@ -19,7 +19,7 @@
 - Backend chỉ Supabase: Auth (email quy ước `<username>@vptu.caobang.local`), Postgres + RLS + hàm `security definer` (`assign_task`, `approve_task`, `submit_evidence`, `warn_task`, `mark_*_read`), Realtime `postgres_changes`. Schema = `supabase/migrations/0001–0012`, không sửa tay Dashboard.
 - Project: **production** `frwyxcmbonjaimziiuqr` (48 cán bộ thật + `smoke_test`), **staging** `vojmrjezspdftovzinek` (7 tài khoản giả từ `seed.sql`, mật khẩu `123456`). CLI local luôn link staging; production dùng `--project-ref`.
 - Hosting: một site GitHub Pages chứa 2 bản — `/` production (build từ tag `production`; chưa có tag thì từ `main`), `/staging/` (build từ `main`). `phien-ban.json` ở mỗi bản ghi ref/commit.
-- Pipeline: `ci.yml` (PR: gitleaks, migration+lint+RLS local, build+lint+300 dòng, RLS+e2e trên staging — 13 lượt đăng nhập/lần) → `deploy-staging.yml` (push main: db push staging → build 2 bản → Pages) → `deploy-prod.yml` (tag `v*`: duyệt → backup gpg → db push production → build → Pages → smoke `smoke_test` → gắn tag `production`).
+- Pipeline: `ci.yml` (PR: gitleaks, migration+lint+RLS local, build+lint+300 dòng, RLS+e2e trên staging — 13 lượt đăng nhập/lần) → `deploy-staging.yml` (push main: db push staging → build 2 bản → Pages) → `deploy-prod.yml` (tag `v*` trên đầu nhánh phát hành: `kiem-tra` → duyệt → backup gpg → db push production → build → Pages → smoke `smoke_test` → gắn tag `production`). GitHub Pages chỉ nhận mỗi commit một lần (`pages_build_version` = sha OIDC) — vì thế tag phải gắn trước khi merge.
 
 ## 3. Secret và environment (GitHub → Settings)
 | Nơi | Tên | Ghi chú |
@@ -45,16 +45,22 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Backup: mỗi lần phát hành có artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày); backup tay ngoài git ở `D:\TU 2026\Project\vptu-backup\`. GĐ7 sẽ thêm backup hằng đêm.
 - Sau mỗi lần phát hành: kiểm tra bản live bằng 3 vai trò (A1 `levanmieu`, A2 `macthuylinh`, A3 `buibahaidang`); ghi CHANGELOG 3–6 dòng.
 - Test trên staging (CI hoặc tay) tối đa ~2 lần/5 phút (giới hạn 30 lượt đăng nhập/IP).
+- `supabase/setup-cli@v1` có thể lỗi "rate limit exceeded" (tải CLI từ GitHub releases) khi chạy nhiều workflow trong ngày — chờ 30–60 phút rồi *Re-run failed jobs*; không phải lỗi cấu hình.
 
 ## 6. Việc còn lại
-1. **Phát hành thử `v2.0.0-rc2`** (kết thúc GĐ6; rc1 thất bại vì tag gắn lên commit đã lên main — Pages chỉ nhận mỗi commit một lần, xem `kien-truc.md` mục 3/7; tag rc1 giữ làm lịch sử). Nhánh phát hành = nhánh của PR khắc phục `fix/phat-hanh-tag-truoc-merge` (chưa merge): `git checkout fix/phat-hanh-tag-truoc-merge && git pull` → CI xanh → `git tag v2.0.0-rc2 && git push origin v2.0.0-rc2` → deploy-prod: `kiem-tra` → Review deployments → duyệt → Summary (backup, `db push` no-op vì 0012 đã áp, smoke) → `phien-ban.json` bản live ghi `v2.0.0-rc2`, tag `production` gắn → **merge PR bằng merge commit** → deploy-staging dựng production từ tag → kiểm tra 3 vai trò → ghi "GĐ6 hoàn thành" vào CHANGELOG mục 13. Không push thêm commit lên nhánh sau khi đã tag.
-2. **GĐ7** theo `docs/PROMPTS.md`: `scripts/backup-db.sh` + `restore-db.sh` (khôi phục từ artifact gpg hoặc dump tay), workflow backup hằng đêm, `docs/xu-ly-su-co.md` (10 tình huống), hướng dẫn uptime monitor, lên Pro + bật hook AUTH-3. "Xong khi" chủ dự án tự restore lên project trắng thành công.
-3. Tồn đọng nhỏ: bản live production hiện build từ `main` (chưa có tag `production`) — tự hết sau bước 1.
+1. **GĐ7 — Vận hành** theo `docs/PROMPTS.md` "Giai đoạn 7" (Plan mode): `scripts/backup-db.sh` + `restore-db.sh` (pg_dump qua connection string trong secret; khôi phục từ artifact gpg của deploy-prod hoặc dump tay), workflow backup hằng đêm đẩy lên nơi lưu do chủ dự án chọn, `docs/xu-ly-su-co.md` (10 tình huống × 5 dòng), hướng dẫn cài uptime monitor ngoài, lên gói Pro + bật hook khoá tài khoản (AUTH-3, migration 0004). "Xong khi" chủ dự án tự chạy `restore-db.sh` lên project trắng theo hướng dẫn và thành công.
+2. Sau mỗi phát hành: kiểm tra bản live 3 vai trò, CHANGELOG 3–6 dòng (mục 5).
 
 ## 7. Lệnh để tiếp tục
 ```
 cd tests/e2e && npm test      # 13 test e2e trên staging (7 lượt đăng nhập); cd tests/rls && npm test (48 test, 6 lượt); npm run lint ở gốc
 ```
+Phát hành production (chi tiết + cảnh báo: `docs/kien-truc.md` mục 7) — tag TRƯỚC khi merge, trên đầu nhánh của PR đã CI xanh:
 ```
-Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md; làm mục 6.1 (phát hành v2.0.0-rc1) rồi GĐ7 theo docs/PROMPTS.md bằng Plan mode.
+git checkout feature/ten-nhanh && git pull && gh pr checks     # đúng nhánh phát hành, 4 check xanh
+git tag v2.x.y && git push origin v2.x.y                        # → deploy-prod: kiem-tra → Review deployments → smoke → tag production
+# duyệt trên GitHub, đợi 4 job xanh, rồi merge PR bằng merge commit; không push thêm commit lên nhánh sau khi tag
+```
+```
+Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md rồi làm GĐ7 theo docs/PROMPTS.md "Giai đoạn 7" bằng Plan mode.
 ```
