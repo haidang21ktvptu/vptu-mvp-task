@@ -37,6 +37,18 @@ jobs:
         run: supabase start
       - name: Lint schema
         run: supabase db lint --local --fail-on error
+      # Test RLS trên Postgres cục bộ vừa áp migration của chính PR (staging chỉ có schema đã merge);
+      # không tốn lượt đăng nhập Supabase Auth hosted. seed.sql đã tạo sẵn auth user.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/rls/package-lock.json
+      - name: Test RLS trên Supabase cục bộ (migration của PR)
+        working-directory: tests/rls
+        env:
+          RLS_LOCAL: '1'
+        run: npm ci && npm test
 
   frontend:
     name: Build frontend + giới hạn 300 dòng

@@ -73,6 +73,8 @@ test.describe.serial('Realtime ý kiến chỉ đạo và nhắn tin 1-1', () =>
     await expect(a3Page.locator('#dmBubbleBadge')).toBeHidden();
 
     await a2Page.locator('#dmBubbleLauncher').click();
+    // Tài khoản hệ thống (is_system) không có trong danh bạ.
+    await expect(a2Page.locator('#dmContactList')).not.toContainText('Tài khoản kiểm thử hệ thống');
     await a2Page.locator('#dmContactList [data-action=openDMChat]', { hasText: 'Demo Chuyên viên Một' }).click();
     await a2Page.locator('#dmInput').fill('Đồng chí lên phòng gặp tôi (e2e)');
     await a2Page.locator('#dmInput').press('Enter');

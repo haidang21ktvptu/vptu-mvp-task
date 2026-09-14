@@ -7,8 +7,8 @@ Tài liệu này mô tả cách mã đi từ PR tới production. Đặc tả ng
 | Môi trường | Supabase project | Frontend | Dữ liệu | Ai được ghi |
 |---|---|---|---|---|
 | Local | `supabase start` (Docker) | `npm run dev` | `supabase/seed.sql` | Dev |
-| Staging | `vojmrjezspdftovzinek` (vptu-task-staging) | `https://haidang21ktvptu.github.io/vptu-mvp-task/staging/` | 6 tài khoản giả từ `seed.sql`; test RLS/e2e tự tạo và tự dọn | `deploy-staging.yml` (push main); test trong CI |
-| Production | `frwyxcmbonjaimziiuqr` (vptu-mvp-task) | `https://haidang21ktvptu.github.io/vptu-mvp-task/` | 48 tài khoản thật | Chỉ `deploy-prod.yml` sau khi haidang21ktvptu duyệt |
+| Staging | `vojmrjezspdftovzinek` (vptu-task-staging) | `https://haidang21ktvptu.github.io/vptu-mvp-task/staging/` | 7 tài khoản giả từ `seed.sql` (6 demo + `smoke_test`); test RLS/e2e tự tạo và tự dọn | `deploy-staging.yml` (push main); test trong CI |
+| Production | `frwyxcmbonjaimziiuqr` (vptu-mvp-task) | `https://haidang21ktvptu.github.io/vptu-mvp-task/` | 48 tài khoản thật + `smoke_test` (is_system) | Chỉ `deploy-prod.yml` sau khi haidang21ktvptu duyệt |
 
 Cả hai frontend nằm trong **một** artifact GitHub Pages (repo chỉ có một site) — xem mục 4.
 
@@ -18,7 +18,7 @@ Cả hai frontend nằm trong **một** artifact GitHub Pages (repo chỉ có m�
 flowchart LR
   subgraph PR["Pull request → main  (ci.yml)"]
     A1[Quét rò rỉ bí mật<br/>gitleaks] 
-    A2[Áp migration + lint schema<br/>supabase start · db lint]
+    A2[Áp migration + lint schema<br/>supabase start · db lint · RLS local]
     A3[Build frontend + 300 dòng<br/>vite build · eslint]
     A4[Kiểm thử RLS + e2e trên staging<br/>48 test RLS · 13 test e2e<br/>13 lượt đăng nhập]
   end
@@ -43,7 +43,7 @@ Nguyên tắc cố định: **migration luôn chạy trước deploy frontend** 
 | Job (tên check) | Làm gì |
 |---|---|
 | Quét rò rỉ bí mật | gitleaks toàn bộ lịch sử |
-| Áp migration + lint schema | `supabase start` trên Postgres trắng (áp đủ migrations) + `supabase db lint --fail-on error` |
+| Áp migration + lint schema | `supabase start` trên Postgres trắng (áp đủ migrations + `seed.sql`) + `supabase db lint --fail-on error` + **`tests/rls` với `RLS_LOCAL=1`** (kiểm tra RLS trên migration của chính PR, không tốn lượt đăng nhập hosted) |
 | Build frontend + giới hạn 300 dòng | `vite build` với giá trị giả, ESLint, `scripts/check-line-limit.mjs` |
 | Kiểm thử RLS + e2e trên staging | *Chỉ pull_request.* Một job: `tests/rls` (48 test, token thật của 6 tài khoản seed) rồi `tests/e2e` (Playwright, build Vite trỏ staging, 13 test ở 2 kích thước). Dọn dữ liệu bằng service_role **của staging** (secret). |
 
@@ -59,7 +59,7 @@ Nguyên tắc cố định: **migration luôn chạy trước deploy frontend** 
 |---|---|
 | `phat-hanh` (environment **production**) | **Dừng chờ duyệt** (required reviewer haidang21ktvptu). Sau khi duyệt: `supabase db dump` schema + data → `tar` + `gpg --symmetric AES-256` bằng `BACKUP_PASSPHRASE` → artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày; phải mã hoá vì artifact của repo public tải được công khai) → `db push --dry-run` (vào Summary) → `db push --yes` → build hai bản (production = tag, staging = main). |
 | `deploy` (environment github-pages) | `actions/deploy-pages`. |
-| `smoke` | Đợi `phien-ban.json` bản live ghi đúng tag (≤ 3 phút) → Playwright `tests/e2e/smoke/` đăng nhập 1 tài khoản (`SMOKE_USERNAME/PASSWORD`), vào app, không lỗi console, đăng xuất → **gắn tag `production`** vào commit vừa phát hành. |
+| `smoke` | Đợi `phien-ban.json` bản live ghi đúng tag (≤ 3 phút) → Playwright `tests/e2e/smoke/` đăng nhập tài khoản hệ thống `smoke_test` (`SMOKE_USERNAME/PASSWORD`), vào app, không lỗi console, đăng xuất → **gắn tag `production`** vào commit vừa phát hành. Tài khoản này là A3 thật về quyền (RLS không đổi) nhưng `is_system = true` nên frontend không hiện ở danh bạ/cây/KPI; trên staging do `seed.sql` tạo (mật khẩu `123456`), trên production do script tạo với mật khẩu ngẫu nhiên. |
 | `quay-lui` (chỉ khi lỗi) | Ghi hướng dẫn quay lui vào Summary theo bước bị lỗi (mục 6). |
 
 Cấu hình Auth (`supabase config push`) **không** nằm trong pipeline — vẫn làm tay sau khi trình `config diff` (quy tắc phát hành hiện hành).
@@ -87,7 +87,7 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 | `STAGING_SUPABASE_ANON_KEY` | Dashboard staging → Project Settings → API Keys → `anon` (hoặc `supabase projects api-keys --project-ref vojmrjezspdftovzinek`) | ci (e2e), build bản staging |
 | `STAGING_SUPABASE_SERVICE_ROLE_KEY` | cùng trang, `service_role` — **chỉ staging**, dùng dọn dữ liệu test | ci |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | *đã có* (production, chỉ anon key) | build bản production (ở cả hai workflow deploy) |
-| `SMOKE_USERNAME`, `SMOKE_PASSWORD` | một tài khoản production dùng cho smoke test (đề xuất: tài khoản A3 của chính chủ dự án) | deploy-prod job smoke |
+| `SMOKE_USERNAME`, `SMOKE_PASSWORD` | `smoke_test` — tài khoản hệ thống (`accounts.is_system = true`, A3, phòng CDS_CY, ẩn khỏi mọi danh sách cán bộ) tạo bằng `scripts/create-system-account.mjs --project-ref <ref>`; script in mật khẩu ngẫu nhiên đúng một lần | deploy-prod job smoke |
 
 **Environment `production`** (Settings → Environments → New environment): Required reviewers = `haidang21ktvptu`; Deployment branches and tags → *Selected* → thêm tag pattern `v*`. Secrets của environment:
 
@@ -100,7 +100,7 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 
 **Ruleset `main`** (Settings → Rules → main → Require status checks): thêm check **`Kiểm thử RLS + e2e trên staging`** bên cạnh 3 check hiện có (`Quét rò rỉ bí mật`, `Áp migration + lint schema`, `Build frontend + giới hạn 300 dòng`).
 
-`SMOKE_*` để ở repository (không phải environment) vì job smoke chạy *sau* job deploy; nếu đặt trong environment production thì GitHub yêu cầu duyệt lần thứ hai trước smoke.
+`SMOKE_*` để ở repository (không phải environment) vì job smoke chạy *sau* job deploy; nếu đặt trong environment production thì GitHub yêu cầu duyệt lần thứ hai trước smoke (chủ dự án chấp nhận, 2026-09-14). Tài khoản `smoke_test` chỉ là A3 không có nhiệm vụ nào — lộ mật khẩu chỉ cho phép đăng nhập xem màn hình trống.
 
 ## 6. Quay lui
 
