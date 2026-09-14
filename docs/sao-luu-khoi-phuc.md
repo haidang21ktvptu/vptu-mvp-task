@@ -47,7 +47,7 @@ Không bao giờ diễn tập trên production hay staging — script **từ ch�
 4. **Kiểm tra bằng mắt**: Dashboard project mới → *Table Editor* → `accounts` có 49 dòng (48 cán bộ + `smoke_test`); *Authentication → Users* có 49 người. Đăng nhập thử: Dashboard → *Project Settings → API Keys* lấy URL và `anon` key → trong `frontend/` tạo file `.env` theo `.env.example` với hai giá trị đó → `cd frontend && npm run dev` → mở địa chỉ hiện ra, đăng nhập bằng tài khoản của chính mình với **mật khẩu hiện dùng** (hash được nạp lại nên mật khẩu không đổi). Xong thì xoá `.env`.
 5. **Ghi biên bản** theo mẫu mục 7 vào `docs/bien-ban-khoi-phuc-<ngày>.md` (qua PR), rồi **xoá project** `vptu-restore-test` (*Project Settings → General → Delete project*) vì nó chứa dữ liệu thật.
 
-Chạy lại được: nếu dừng giữa chừng ở bước nạp dữ liệu, transaction đã huỷ, chạy lại lệnh y hệt; nếu project đã có dữ liệu, thêm `--ghi-de` (script hỏi gõ đúng ref rồi `supabase db reset` xoá sạch trước khi nạp).
+Chạy lại được: nếu dừng giữa chừng ở bước nạp dữ liệu, transaction đã huỷ, chạy lại lệnh y hệt; nếu project đã có dữ liệu, thêm `--ghi-de` (script hỏi gõ đúng ref rồi xoá schema `public`, dữ liệu auth và lịch sử migration trong một transaction trước khi áp lại migrations và nạp).
 
 ## 5. Khôi phục thật khi production hỏng
 

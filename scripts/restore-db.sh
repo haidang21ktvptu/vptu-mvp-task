@@ -91,7 +91,7 @@ fi
 TRANG="$(psql_dong "select not exists (select 1 from auth.users) and (to_regclass('public.accounts') is null or not exists (select 1 from public.accounts))")"
 if [ "$TRANG" != "t" ]; then
   [ "$GHI_DE" = 1 ] || loi "Project đích KHÔNG trắng (đã có dữ liệu trong accounts/auth.users). Muốn xoá sạch và nạp lại thì thêm --ghi-de."
-  canh_bao "Sẽ XOÁ TOÀN BỘ dữ liệu hiện có trên $REF (supabase db reset: xoá schema public, auth.users, storage, lịch sử migration):"
+  canh_bao "Sẽ XOÁ TOÀN BỘ dữ liệu hiện có trên $REF (xoá schema public, dữ liệu auth, lịch sử migration rồi áp lại migrations):"
   psql_dong "$SQL_DEM_DONG" >&2 || true
   if [ "$YES" = 0 ]; then
     printf 'Gõ đúng project ref (%s) để xác nhận xoá: ' "$REF" >&2; read -r GO
@@ -109,13 +109,15 @@ fi
 
 # ---- Schema từ migrations của repo ----
 cd "$REPO"
-if [ "$TRANG" = "t" ]; then
-  thong_bao "Áp migrations lên project trắng (supabase db push)"
-  supabase db push "${DICH[@]}" --skip-vault --yes
-else
-  thong_bao "Xoá sạch và áp lại migrations (supabase db reset --no-seed)"
-  supabase db reset "${DICH[@]}" --no-seed --yes
+if [ "$TRANG" != "t" ]; then
+  # Không dùng `supabase db reset --project-ref`: CLI 2.117 đòi --linked rồi nối thẳng IPv6 (lỗi trên mạng
+  # thường). Xoá bằng psql trong MỘT transaction (lỗi giữa chừng = huỷ hết), rồi db push áp lại từ đầu.
+  thong_bao "Xoá sạch dữ liệu cũ (một transaction)"
+  psql -q -v ON_ERROR_STOP=1 --single-transaction -c "$SQL_XOA_SACH" >/dev/null \
+    || loi "Xoá dữ liệu cũ thất bại — transaction đã huỷ, đích chưa đổi gì."
 fi
+thong_bao "Áp migrations (supabase db push)"
+supabase db push "${DICH[@]}" --skip-vault --yes
 MIG_DICH="$(sb_migration_remote "${DICH[@]}" | sort)"
 [ "$MIG_DICH" = "$MIG_REPO" ] || loi "Sau khi áp, đích có [$(tr '\n' ' ' <<<"$MIG_DICH")] ≠ repo [$(tr '\n' ' ' <<<"$MIG_REPO")]."
 

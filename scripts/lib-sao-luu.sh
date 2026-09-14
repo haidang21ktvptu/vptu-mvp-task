@@ -86,6 +86,10 @@ psql_dong() { psql -Atq -v ON_ERROR_STOP=1 -c "$1" | tr -d '\r'; }
 # SQL đếm chính xác số dòng mọi bảng public + auth.users/identities; mỗi dòng kết quả: "schema.bang so_dong".
 SQL_DEM_DONG="select n.nspname||'.'||c.relname||' '||(xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I.%I', n.nspname, c.relname), false, true, '')))[1]::text as dong from pg_class c join pg_namespace n on n.oid = c.relnamespace where c.relkind = 'r' and (n.nspname = 'public' or (n.nspname = 'auth' and c.relname in ('users','identities'))) order by 1"
 SQL_PHIEN_BAN_AUTH="select coalesce(max(version), '') as dong from auth.schema_migrations"
+# Xoá sạch trước khi nạp lại (--ghi-de): schema public (migrations tạo lại, kể cả trigger trên auth.users và
+# GRANT/DEFAULT PRIVILEGES trong 0001), dữ liệu auth (TRUNCATE users cascade kéo theo identities/sessions/
+# refresh_tokens/mfa/one_time_tokens), lịch sử migration để db push áp lại từ 0001.
+SQL_XOA_SACH="set client_min_messages = warning; drop schema if exists public cascade; create schema public; grant usage on schema public to postgres, anon, authenticated, service_role; truncate auth.users cascade; truncate auth.audit_log_entries, auth.flow_state cascade; do \$\$ begin if to_regclass('supabase_migrations.schema_migrations') is not null then delete from supabase_migrations.schema_migrations; end if; end \$\$;"
 
 # Chạy `supabase db query` (login role qua token, không cần mật khẩu DB) và in cột `dong`, mỗi giá trị một dòng.
 # Chỉ lấy stdout từ dấu { đầu tiên (CLI in "Initialising login role..." ra ngoài).
