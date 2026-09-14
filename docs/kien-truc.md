@@ -20,7 +20,7 @@ flowchart LR
     A1[Quét rò rỉ bí mật<br/>gitleaks] 
     A2[Áp migration + lint schema<br/>supabase start · db lint · RLS local]
     A3[Build frontend + 300 dòng<br/>vite build · eslint]
-    A4[Kiểm thử RLS + e2e trên staging<br/>59 test RLS · 17 test e2e<br/>15 lượt đăng nhập]
+    A4[Kiểm thử RLS + e2e trên staging<br/>84 test RLS · 17 test e2e<br/>15 lượt đăng nhập]
   end
   PR -->|merge (merge commit, SAU khi phát hành)| M((main))
   M --> S1
@@ -45,7 +45,7 @@ Hai nguyên tắc cố định: (1) **migration luôn chạy trước deploy fro
 | Quét rò rỉ bí mật | gitleaks toàn bộ lịch sử + bước `git ls-files` chặn file `.xlsx/.xls/.csv/.pdf` (repo public, dữ liệu thật để ngoài repo — thiết kế KL BTVTU mục 2.4b; gitleaks bỏ qua các đuôi này theo allowlist mặc định nên không dùng rule gitleaks) |
 | Áp migration + lint schema | `supabase start` trên Postgres trắng (áp đủ migrations + `seed.sql`) + `supabase db lint --fail-on error` + **`tests/rls` với `RLS_LOCAL=1`** (kiểm tra RLS trên migration của chính PR, không tốn lượt đăng nhập hosted) |
 | Build frontend + giới hạn 300 dòng | `vite build` với giá trị giả, ESLint, `scripts/check-line-limit.mjs` |
-| Kiểm thử RLS + e2e trên staging | *Chỉ pull_request.* Một job: `tests/rls` (59 test, token thật của 7 tài khoản seed) rồi `tests/e2e` (Playwright, build Vite trỏ staging, 17 test ở 2 kích thước). Dọn dữ liệu bằng service_role **của staging** (secret). |
+| Kiểm thử RLS + e2e trên staging | *Chỉ pull_request.* Một job: `tests/rls` (84 test, token thật của 7 tài khoản seed; test mốc 185 dòng tự bỏ qua khi chưa nhập dữ liệu) rồi `tests/e2e` (Playwright, build Vite trỏ staging, 17 test ở 2 kích thước). Dọn dữ liệu bằng service_role **của staging** (secret). |
 
 **Ngân sách đăng nhập** (Supabase Auth giới hạn 30 lượt/5 phút/IP): RLS 7 lượt (một tiến trình, `--test-isolation=none`) + e2e 8 lượt = **15 lượt/lần chạy**. e2e đạt 8 lượt nhờ `global-setup.mjs` đăng nhập A1/A2/A3 + `demo_qtht` qua API (4 lượt) và ghi phiên thành storageState (`.auth/*.json`, khoá `sb-<ref>-auth-token` trong localStorage); project `desktop`/`mobile` mở trang với phiên sẵn; chỉ project `dang-nhap` (chạy sau cùng, vì đăng xuất huỷ phiên toàn cục) đăng nhập thật qua form (4 lượt). Job có `concurrency: kiem-thu-staging` nên hai PR không chạy chồng nhau; nếu vẫn gặp `over_request_rate_limit` (3 PR trong 5 phút, cùng IP runner) — chờ 5 phút rồi Re-run job. Cả hai bộ test từ chối chạy khi URL chứa ref production.
 

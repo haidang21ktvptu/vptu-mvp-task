@@ -1,4 +1,4 @@
-# TRẠNG THÁI DỰ ÁN — bản bàn giao (cập nhật: 2026-09-15, GĐ8 PR 8A-1 mở)
+# TRẠNG THÁI DỰ ÁN — bản bàn giao (cập nhật: 2026-09-15, GĐ8 PR 8A-2 mở)
 
 Đọc trước: `CLAUDE.md` (quy tắc), `docs/SPEC.md` (nghiệp vụ), `docs/DESIGN.md` (giao diện), `docs/kien-truc.md` (pipeline, secret, quay lui), `docs/PROMPTS.md` (prompt theo giai đoạn). Lịch sử: `CHANGELOG.md` mục 7–13.
 
@@ -13,11 +13,11 @@
 | 5 | Giao diện mới theo DESIGN.md, phông tự host, responsive, in, Lighthouse A11y 100 | Xong |
 | 6 | CI/CD: test trên staging trong CI, deploy-staging, deploy-prod có duyệt (tag trước merge), 0012 `is_system` + `smoke_test` | Xong — `v2.0.0-rc2` phát hành 2026-09-14, tag `production` = `2e90a89` |
 | 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | **Xong** (2026-09-14): PR A #29, PR B #30, PR C; NF-6 đạt (biên bản khôi phục thử). Còn việc ngoài code: lên gói Pro + bật AUTH-3 |
-| 8 | Theo dõi KL BTVTU — mô hình dữ liệu và nhập liệu (`docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4) | **Đang làm**: PR 8A-1 (0013 quản trị đặc quyền + màn hình Quản trị) mở 2026-09-15; còn 8A-2 (0014–0016 KL, `kl_trang_thai`), 8B (script nhập) |
+| 8 | Theo dõi KL BTVTU — mô hình dữ liệu và nhập liệu (`docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4) | **Đang làm**: PR 8A-1 (0013 + màn hình Quản trị) merged #33; PR 8A-2 (0014–0016 KL, `kl_trang_thai`) mở 2026-09-15; còn 8B (script nhập) |
 
 ## 2. Kiến trúc (tóm tắt)
 - Frontend Vite + JS thuần + Tailwind build, `frontend/src/{auth,lib,views/{a1,a2,a3,shared},features/{directives,messages,tasks},components,styles}`; anon key qua `VITE_SUPABASE_*`; `base` = `/vptu-mvp-task/` (staging: `/vptu-mvp-task/staging/`).
-- Backend chỉ Supabase: Auth (email quy ước `<username>@vptu.caobang.local`), Postgres + RLS + hàm `security definer` (`assign_task`, `approve_task`, `submit_evidence`, `warn_task`, `mark_*_read`), Realtime `postgres_changes`. Schema = `supabase/migrations/0001–0013`, không sửa tay Dashboard.
+- Backend chỉ Supabase: Auth (email quy ước `<username>@vptu.caobang.local`), Postgres + RLS + hàm `security definer` (`assign_task`, `approve_task`, `submit_evidence`, `warn_task`, `mark_*_read`), Realtime `postgres_changes`. Schema = `supabase/migrations/0001–0016` (0014–0016 chờ merge PR 8A-2), không sửa tay Dashboard.
 - Project: **production** `frwyxcmbonjaimziiuqr` (48 cán bộ thật + `smoke_test`), **staging** `vojmrjezspdftovzinek` (8 tài khoản giả từ `seed.sql`, mật khẩu `123456`; `demo_qtht` giữ `quan_tri_he_thong`). CLI local luôn link staging; production dùng `--project-ref`.
 - Hosting: một site GitHub Pages chứa 2 bản — `/` production (build từ tag `production`; chưa có tag thì từ `main`), `/staging/` (build từ `main`). `phien-ban.json` ở mỗi bản ghi ref/commit.
 - Pipeline: `ci.yml` (PR: gitleaks, migration+lint+RLS local, build+lint+300 dòng, RLS+e2e trên staging — 13 lượt đăng nhập/lần) → `deploy-staging.yml` (push main: db push staging → build 2 bản → Pages) → `deploy-prod.yml` (tag `v*` trên đầu nhánh phát hành: `kiem-tra` → duyệt → backup gpg → db push production → build → Pages → smoke `smoke_test` → gắn tag `production`). GitHub Pages chỉ nhận mỗi commit một lần (`pages_build_version` = sha OIDC) — vì thế tag phải gắn trước khi merge.
@@ -53,8 +53,8 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Repo là public — không commit file `.xlsx`/`.pdf` chứa dữ liệu thật, không dán ảnh dashboard có tên thật vào PR/issue.
 
 ## 6. Việc còn lại
-1. **GĐ8 — đang làm** (`docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4, đã duyệt; kế hoạch duyệt 14/9 tách 3 PR): **PR 8A-1** (0013 quản trị đặc quyền, seed `demo_qtht`, `rls-9`, màn hình Quản trị, e2e kịch bản 8) — mở 2026-09-15, chờ CI/merge. **Việc kế tiếp: PR 8A-2** — 0014 bảng KL + danh mục (cần danh sách 12 ngành/13 cơ quan từ chủ dự án), 0015 hàm `kl_trang_thai` + trigger + đính chính, 0016 RLS + `v_kl_dashboard` + Realtime; test `rls-10-kl`, `kl-trang-thai`, `kl-moc-2026-09-14` (mốc: HT 146, TX 16, QH 8, ĐTH 6, CĐK 6, CĐH 3). Rồi **PR 8B** script nhập `scripts/nhap-kl-btvtu.mjs` (`--dry-run` mặc định) + bộ dữ liệu vàng ẩn danh. Xong GĐ8 khi nhập 185 dòng, 0 vi phạm cứng, số khớp mốc.
-2. **Sau khi PR 8A-1 merge**: `deploy-staging` áp 0013 lên staging → **nạp lại `supabase/seed.sql` lên staging** (tạo `demo_qtht` + 2 dòng phụ trách; `psql` với chuỗi kết nối staging, không qua `db query` vì nhiều câu lệnh) → chạy lại `tests/rls` và `tests/e2e` trên staging để hai bộ test GĐ8 không còn bị skip. **Sau khi phát hành 8A-1 lên production**: chủ dự án đăng nhập `buibahaidang` → Quản trị hệ thống → **nhập phân công PCVP ↔ phòng** (bảng `phu_trach_phong` production đang rỗng; module KL ở 8A-2 dựa vào bảng này) và cấp `quan_tri_kl` cho 2 người được chỉ định.
+1. **GĐ8 — đang làm** (`docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4, đã duyệt; tách 3 PR): **PR 8A-1 merged (#33, 2026-09-15)**; **PR 8A-2** (0014 bảng KL + danh mục, 0015 `kl_trang_thai` + trigger + đính chính, 0016 RLS + `v_kl_dashboard` + Realtime; test `rls-10-kl`, `kl-trang-thai`, `kl-moc-2026-09-14`) — mở 2026-09-15, chờ CI/merge. **Việc kế tiếp: PR 8B** — `scripts/nhap-kl-btvtu.mjs` (đọc xlsx ngoài repo → báo cáo vi phạm → `--dry-run` mặc định, `--ghi` mới ghi; ánh xạ chủ trì theo họ tên → `username`, 10 dòng "VPTU" → Trưởng phòng Tổng hợp; 3 dòng chờ chủ dự án sửa trên Excel; nhập 194 dòng nhật ký cũ vào `kl_lich_su` `nguon = excel`; giữ `cap_nhat_luc` Excel; bộ dữ liệu vàng ẩn danh `scripts/an-danh-kl-btvtu.mjs`) — sau đó test mốc `kl-moc-2026-09-14` phải chạy thật và xanh trên staging. Xong GĐ8 khi nhập 185 dòng, 0 vi phạm cứng, số khớp mốc.
+2. **Sau khi PR 8A-2 merge**: `deploy-staging` áp 0014–0016 lên staging → chạy lại `tests/rls` trên staging (`rls-10-kl`, `kl-trang-thai` không còn skip; `kl-moc` vẫn skip tới 8B). Staging đã có seed `demo_qtht` + 2 dòng phụ trách (nạp 2026-09-15 sau merge #33, `rls-9` 59/59). **Sau khi phát hành 8A-1/8A-2 lên production**: chủ dự án đăng nhập `buibahaidang` → Quản trị hệ thống → **nhập phân công PCVP ↔ phòng** (bảng `phu_trach_phong` production đang rỗng; RLS module KL dựa vào bảng này) và cấp `quan_tri_kl` cho 2 người được chỉ định.
 3. **GĐ9** — dashboard đọc và chạy song song: PR 9A màn hình A3/A2 (danh sách theo chủ trì, cập nhật nhanh, bộ lọc), PR 9B dashboard A1 (bố cục mục 3.2, chưa có nút chỉ đạo) + xuất HTML hai bản từ snapshot `kl_bao_cao`; chạy song song 2 kỳ báo cáo với Google Sheet, trùng số 2 kỳ + ≥ 9 chuyên viên tự cập nhật mới sang GĐ10.
 4. **GĐ10** — vòng chỉ đạo và tắt Excel: PR 10A 4 hành động chỉ đạo (mục 3.3), ô "Chỉ đạo chưa phản hồi", thông báo qua `direct_messages`; PR 10B chốt bắt buộc (minh chứng khi Hoàn thành, "Có hạn cụ thể ⇒ hạn" chuyển sang chặn), Google Sheet chuyển chỉ đọc; bổ sung 6 tình huống vào `docs/xu-ly-su-co.md`. Xong khi một kỳ báo cáo hoàn toàn từ app và một chỉ đạo thật đi hết vòng.
 5. **GĐ11** — xuất PDF hai bản trực tiếp từ app (có mã báo cáo), bảng chéo ngành × cơ quan trình, tuổi quá hạn theo bậc; sau 2 tháng vận hành rà lại ngưỡng 7 ngày, xem xét gộp ngành 1 và 12.
@@ -64,7 +64,7 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 
 ## 7. Lệnh để tiếp tục
 ```
-cd tests/e2e && npm test      # 17 test e2e trên staging (8 lượt đăng nhập); cd tests/rls && npm test (59 test, 7 lượt); RLS_LOCAL=1 / E2E_LOCAL=1 để chạy trên Supabase local; npm run lint ở gốc
+cd tests/e2e && npm test      # 17 test e2e trên staging (8 lượt đăng nhập); cd tests/rls && npm test (84 test, 7 lượt); RLS_LOCAL=1 / E2E_LOCAL=1 để chạy trên Supabase local; npm run lint ở gốc
 ```
 Phát hành production (chi tiết + cảnh báo: `docs/kien-truc.md` mục 7) — tag TRƯỚC khi merge, trên đầu nhánh của PR đã CI xanh:
 ```
@@ -72,4 +72,5 @@ git checkout feature/ten-nhanh && git pull && gh pr checks     # đúng nhánh p
 git tag v2.x.y && git push origin v2.x.y                        # → deploy-prod: kiem-tra → Review deployments → smoke → tag production
 # duyệt trên GitHub, đợi 4 job xanh, rồi merge PR bằng merge commit; không push thêm commit lên nhánh sau khi tag
 ```
-Mở phiên PR 8A-2: kế hoạch đã duyệt ở phiên 14/9 (bảng `kl_*`, hàm `kl_trang_thai` nguồn duy nhất, `nhom_dem` tách đính chính, RLS quyết định 7 dùng `phu_trach()` của 0013, test `rls-10-kl`, `kl-trang-thai` ≥ 8 case biên, `kl-moc-2026-09-14` tự skip khi chưa đủ 185 dòng excel) — dùng lệnh ở **Phụ lục** của `docs/thiet-ke-theo-doi-kl-btvtu.md`, thêm "PR 8A-2, 0013 đã có". **Cần chủ dự án gửi danh sách 12 ngành + 13 cơ quan trình** (`ten` nguyên văn kể cả số thứ tự, `ma` tự đặt, `thu_tu` = số đầu chuỗi) trước khi viết 0014. Plan mode, chờ duyệt.
+Mở phiên PR 8B: đọc CLAUDE.md, TRANG-THAI, tài liệu thiết kế Phần 2.4/2.4b/2.5 và quyết định 1, 6, 9; migration 0014–0016 (kiểu dữ liệu, danh mục `ten` nguyên văn); file Excel ở `D:TU 2026Projectptu-backup
+guon-kl-btvtu` (ngoài repo, script nhận đường dẫn qua tham số). Plan mode, chờ duyệt. Chưa nhập production cho tới khi chủ dự án xác nhận trong phiên.
