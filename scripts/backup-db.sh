@@ -33,7 +33,7 @@ else
   DICH=(--project-ref "$REF")
   case "$REF" in "$PRODUCTION_REF") TEN="prod" ;; "$STAGING_REF") TEN="staging" ;; *) TEN="$REF" ;; esac
 fi
-[[ "$NHAN" =~ ^[a-z0-9.-]+$ ]] || loi "--nhan chỉ gồm chữ thường, số, dấu chấm, gạch ngang (đi vào tên file)."
+[[ "$NHAN" =~ ^[A-Za-z0-9._-]+$ ]] || loi "--nhan chỉ gồm chữ, số, dấu chấm, gạch dưới, gạch ngang (đi vào tên file; tag v* hợp lệ)."
 
 can_cong_cu supabase gpg tar sha256sum mktemp
 docker info >/dev/null 2>&1 || loi "Docker chưa chạy — mở Docker Desktop, đợi biểu tượng cá voi ổn định rồi chạy lại (supabase db dump cần Docker)."

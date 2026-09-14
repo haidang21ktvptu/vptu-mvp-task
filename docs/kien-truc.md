@@ -60,10 +60,13 @@ Hai nguyên tắc cố định: (1) **migration luôn chạy trước deploy fro
 | Job | Nội dung |
 |---|---|
 | `kiem-tra` (không cần duyệt) | (a) commit của tag có đủ 4 check CI `success` (đọc `check-runs`, cần `checks: read`); (b) `GET /pages/deployments/<sha>` — in HTTP code + body; chỉ cho qua khi **200 và `status` rỗng** (quan sát: chưa có deployment), **200 và `status` có giá trị** → dừng "commit đã deploy, tag nhầm lên main?"; mọi dạng khác (không 200, không JSON, thiếu trường) → dừng "phản hồi ngoài dự kiến", không tự cho qua. |
-| `phat-hanh` (environment **production**) | **Dừng chờ duyệt** (required reviewer haidang21ktvptu). Sau khi duyệt: `supabase db dump` schema + data → `tar` + `gpg --symmetric AES-256` bằng `BACKUP_PASSPHRASE` → artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày; phải mã hoá vì artifact của repo public tải được công khai) → `db push --dry-run` (vào Summary) → `db push --yes` → build hai bản (production = tag, staging = main). |
+| `phat-hanh` (environment **production**) | **Dừng chờ duyệt** (required reviewer haidang21ktvptu). Sau khi duyệt: `scripts/backup-db.sh` (cùng script với `backup-dinh-ky.yml`: schema + data + `migrations.txt`/`so-dong.txt`/`thong-tin.txt`, gpg AES-256 bằng `BACKUP_PASSPHRASE`, login role qua token) → artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày; phải mã hoá vì artifact của repo public tải được công khai) → `db push --dry-run` (vào Summary) → `db push --yes` → build hai bản (production = tag, staging = main). |
 | `deploy` (environment github-pages) | `actions/deploy-pages@v4` — deploy được vì sha của tag chưa từng deploy (tag trước khi merge). |
 | `smoke` | Đợi `phien-ban.json` bản live ghi đúng tag (≤ 3 phút) → Playwright `tests/e2e/smoke/` đăng nhập tài khoản hệ thống `smoke_test` (`SMOKE_USERNAME/PASSWORD`), vào app, không lỗi console, đăng xuất → **gắn tag `production`** vào commit vừa phát hành. Tài khoản này là A3 thật về quyền (RLS không đổi) nhưng `is_system = true` nên frontend không hiện ở danh bạ/cây/KPI; trên staging do `seed.sql` tạo (mật khẩu `123456`), trên production do script tạo với mật khẩu ngẫu nhiên. |
 | `quay-lui` (chỉ khi lỗi) | Ghi hướng dẫn quay lui vào Summary theo bước bị lỗi (mục 6). |
+
+### `backup-dinh-ky.yml` — cron `0 20 */3 * *` (03:00 giờ VN, ngày 1, 4, …, 31) + `workflow_dispatch`
+Job `sao-luu`: `scripts/backup-db.sh --project-ref <prod> --nhan dinh-ky` → artifact `prod-<ngày>-dinh-ky` 90 ngày. Dùng repository secret `BACKUP_PASSPHRASE` (không dùng environment `production` vì có required reviewer). Hạn chế cron và cách tải về máy (`scripts/tai-backup.sh`, Task Scheduler): `docs/sao-luu-khoi-phuc.md` mục 3. GitHub tự tắt schedule sau 60 ngày repo không có commit.
 
 Cấu hình Auth (`supabase config push`) **không** nằm trong pipeline — vẫn làm tay sau khi trình `config diff` (quy tắc phát hành hiện hành).
 
@@ -97,7 +100,7 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 | Tên | Lấy ở đâu |
 |---|---|
 | `PROD_DB_PASSWORD` | Dashboard production → Project Settings → Database |
-| `BACKUP_PASSPHRASE` | Tự sinh, ví dụ `openssl rand -base64 32`; **lưu vào trình quản lý mật khẩu** — không có nó không giải mã được backup |
+| `BACKUP_PASSPHRASE` | Tự sinh, ví dụ `openssl rand -base64 32`; **lưu vào trình quản lý mật khẩu** — không có nó không giải mã được backup. **Cùng giá trị cũng đặt ở Repository secrets** (cho `backup-dinh-ky.yml`); đổi thì đổi cả hai |
 
 **Environment `github-pages`** (đã có, đang chỉ cho nhánh `main`): Deployment branches and tags → thêm tag pattern `v*` để `deploy-prod` được phép deploy từ tag.
 
