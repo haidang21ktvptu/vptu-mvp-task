@@ -24,6 +24,16 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Repo public: file Excel/CSV/PDF chứa dữ liệu thật (họ tên cán bộ, nội dung KL BTVTU) không được commit
+      # (docs/thiet-ke-theo-doi-kl-btvtu.md mục 2.4b). Gitleaks bỏ qua các đuôi này theo allowlist mặc định
+      # nên kiểm riêng bằng git ls-files.
+      - name: Không có file dữ liệu thật (.xlsx/.xls/.csv/.pdf) trong repo
+        run: |
+          if git ls-files | grep -Ei '\.(xlsx|xlsm|xls|csv|pdf)$'; then
+            echo "::error::Repo public — không commit file Excel/CSV/PDF chứa dữ liệu thật; để ngoài repo (vptu-backup/nguon-kl-btvtu)."
+            exit 1
+          fi
+          echo "Đạt: không có file dữ liệu thật."
 
   supabase-db:
     name: Áp migration + lint schema
@@ -77,8 +87,8 @@ jobs:
       - name: Không file nào trên 300 dòng
         run: node scripts/check-line-limit.mjs
 
-  # RLS (48 test, 6 lượt đăng nhập) rồi e2e (13 test, 7 lượt) chạy nối tiếp trong MỘT job — cùng một
-  # IP runner, tổng 13 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth. Nhóm
+  # RLS (59 test, 7 lượt đăng nhập) rồi e2e (17 test, 8 lượt) chạy nối tiếp trong MỘT job — cùng một
+  # IP runner, tổng 15 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth. Nhóm
   # concurrency để hai PR không cùng lúc ghi dữ liệu mẫu lên staging (không huỷ lượt đang chạy).
   kiem-thu-staging:
     name: Kiểm thử RLS + e2e trên staging
@@ -112,7 +122,7 @@ jobs:
           npm ci --prefix frontend
           npm ci --prefix tests/rls
           npm ci --prefix tests/e2e
-      - name: Test RLS (token thật, 6 tài khoản seed)
+      - name: Test RLS (token thật, 7 tài khoản seed)
         working-directory: tests/rls
         run: npm test
       - name: Cài Chromium cho Playwright

@@ -13,3 +13,9 @@ export const AUTH_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '.au
 export function storageStatePath(role) {
   return join(AUTH_DIR, `${role}.json`);
 }
+
+// Tài khoản ngoài 3 vai trò chuẩn, đăng nhập "nếu có": demo_qtht (A3 giữ quan_tri_he_thong, GĐ8) chỉ tồn tại
+// khi project đã có migration 0013 + seed mới. global-setup bỏ qua khi đăng nhập lỗi; kịch bản tự skip.
+export const OPTIONAL_USERS = {
+  QTHT: { username: 'demo_qtht', fullName: 'Demo Quản trị hệ thống', roleLabel: 'Cán bộ thực hiện (A3)' },
+};
