@@ -229,7 +229,7 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 - `kl_chi_dao`: mở rộng từ `task_directives` — loại (đôn đốc/gia hạn/giao lại/yêu cầu minh chứng), hạn phản hồi, phản hồi, trạng thái.
 - `kl_cau_hinh`: tham số (ngưỡng sắp đến hạn = 7, hạn phản hồi mặc định = 2).
 - Hàm `kl_trang_thai(nv, ngay date)` và view `v_kl_dashboard` — nguồn duy nhất của trạng thái.
-- RLS theo quyết định 7: A3 phòng Tổng hợp đọc/sửa việc mình chủ trì; lãnh đạo phòng Tổng hợp và PCVP phụ trách Tổng hợp (theo `phu_trach_phong` tại ngày hiện tại) đọc tất cả + ghi `kl_chi_dao`; Chánh Văn phòng đọc tất cả + ghi `kl_chi_dao`; `quan_tri_kl` đọc/sửa tất cả; người ngoài phạm vi không thấy gì. Test RLS thêm ~20 case, gồm case PCVP đổi phòng giữa chừng.
+- RLS theo quyết định 7: A3 phòng Tổng hợp đọc/sửa việc mình chủ trì; lãnh đạo phòng Tổng hợp và PCVP phụ trách Tổng hợp (theo `phu_trach_phong` tại ngày hiện tại) đọc tất cả + ghi `kl_chi_dao`; Chánh Văn phòng đọc tất cả + ghi `kl_chi_dao`; `quan_tri_kl` đọc/sửa tất cả; người ngoài phạm vi không thấy gì. Test RLS thêm ~20 case, gồm case PCVP đổi phòng giữa chừng. **Ghi chú khi triển khai (PR 8A-2, 15/9/2026):** quyền "đọc/sửa việc mình chủ trì" áp cho **mọi chủ trì**, không riêng A3 — vì 10 việc chuyển từ "VPTU" do Trưởng phòng Tổng hợp (A2) chủ trì cũng phải tự cập nhật được; giới hạn cột (tiến độ, hạn, lý do chưa có hạn, ngày hoàn thành, minh chứng, văn bản triển khai, ghi chú) như nhau cho mọi chủ trì không có `quan_tri_kl`. Mọi phép lấy "ngày" từ mốc giờ trong module KL tính theo giờ Việt Nam (`kl_hom_nay()`, `AT TIME ZONE 'Asia/Ho_Chi_Minh'`) vì Postgres trên Supabase chạy UTC.
 - Bảng `phu_trach_phong` + màn hình Quản trị phần "Phụ trách phòng" (Phần 5.4).
 
 **PR 8B — script nhập + kiểm chứng**:
