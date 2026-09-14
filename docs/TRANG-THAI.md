@@ -64,7 +64,7 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 
 ## 7. Lệnh để tiếp tục
 ```
-cd tests/e2e && npm test      # 17 test e2e trên staging (8 lượt đăng nhập); cd tests/rls && npm test (84 test, 7 lượt); RLS_LOCAL=1 / E2E_LOCAL=1 để chạy trên Supabase local; npm run lint ở gốc
+cd tests/e2e && npm test      # 17 test e2e trên staging (8 lượt đăng nhập); cd tests/rls && npm test (85 test, 7 lượt); RLS_LOCAL=1 / E2E_LOCAL=1 để chạy trên Supabase local; npm run lint ở gốc
 ```
 Phát hành production (chi tiết + cảnh báo: `docs/kien-truc.md` mục 7) — tag TRƯỚC khi merge, trên đầu nhánh của PR đã CI xanh:
 ```

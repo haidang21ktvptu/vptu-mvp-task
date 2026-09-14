@@ -80,7 +80,9 @@ CREATE POLICY "kl_hoi_nghi_insert_qtkl" ON "public"."kl_hoi_nghi" FOR INSERT TO 
 CREATE POLICY "kl_hoi_nghi_update_qtkl" ON "public"."kl_hoi_nghi" FOR UPDATE TO "authenticated"
   USING ((SELECT "public"."me_quan_tri_kl"())) WITH CHECK ((SELECT "public"."me_quan_tri_kl"()));
 
--- 3. Nhiệm vụ: đọc theo phạm vi; thêm chỉ quan_tri_kl; sửa = quan_tri_kl mọi dòng, hoặc A3 dòng mình chủ trì
+-- 3. Nhiệm vụ: đọc theo phạm vi; thêm chỉ quan_tri_kl; sửa = quan_tri_kl mọi dòng, hoặc CHỦ TRÌ dòng đó — policy
+--    kl_nhiem_vu_update_chu_tri áp cho MỌI chủ trì, không riêng A3 (khác câu chữ Phần 4 "A3 phòng Tổng hợp"): 10 việc
+--    chuyển từ "VPTU" do Trưởng phòng Tổng hợp (A2) chủ trì cũng phải tự cập nhật được, cùng giới hạn cột như A3
 --    (cột do trigger a_kl_nhiem_vu_guard_a3 giới hạn với mọi người không có quan_tri_kl; chủ trì không đổi được —
 --    "Giao lại" là hành động chỉ đạo, PR 10A).
 CREATE POLICY "kl_nhiem_vu_select" ON "public"."kl_nhiem_vu" FOR SELECT TO "authenticated"

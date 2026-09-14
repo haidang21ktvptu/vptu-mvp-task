@@ -48,7 +48,8 @@ LANGUAGE "sql" STABLE SET "search_path" = "public" AS $$
     kq.ket_qua,
     CASE WHEN kq.ket_qua = 'TRE' THEN ("nv"."ngay_hoan_thanh" - "nv"."han_xu_ly")::integer END,
     CASE WHEN "nv"."tien_do_ma" = 'HOAN_THANH' AND "nv"."ngay_hoan_thanh" IS NOT NULL AND "nv"."ghi_hoan_thanh_luc" IS NOT NULL
-         THEN ("nv"."ghi_hoan_thanh_luc"::date - "nv"."ngay_hoan_thanh")::integer END,
+         -- Lấy NGÀY theo giờ VN (cast ::date trần dùng múi giờ phiên = UTC → thiếu một ngày khi ghi nhận sau 17h UTC).
+         THEN (("nv"."ghi_hoan_thanh_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date - "nv"."ngay_hoan_thanh")::integer END,
     tt.dang_dinh_chinh,
     CASE WHEN tt.trang_thai = 'QUA_HAN' AND tt.dang_dinh_chinh THEN 'DANG_DINH_CHINH' ELSE tt.trang_thai END
   )::"public"."kl_trang_thai_kq"

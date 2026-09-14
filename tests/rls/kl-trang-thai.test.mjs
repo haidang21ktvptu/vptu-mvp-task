@@ -1,6 +1,7 @@
 // Hàm kl_trang_thai — nguồn duy nhất của trạng thái (thiết kế KL BTVTU Phần 2.2, 2.5, 6.2, 6.4).
 // Gọi qua kl_tinh_trang_thai(id, ngày) bằng service_role với NGÀY CỐ ĐỊNH để kết quả không phụ thuộc hôm nay.
-// Kèm ràng buộc/trigger của kl_nhiem_vu (Phần 2.3) — những gì phải chặn ngay khi ghi.
+// Kèm ràng buộc/trigger của kl_nhiem_vu (Phần 2.3) — những gì phải chặn ngay khi ghi. Hai dòng KL-TZ (múi giờ)
+// không mang tiền tố RLS-TEST để rls-10 đếm phạm vi không đổi; dọn theo hội nghị 999 ở teardown.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, assertOk, IDS } from './lib.mjs';
@@ -56,7 +57,21 @@ describe('kl_trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip:
     assert.equal(new Date(data.cap_nhat_luc).toISOString(), '2026-09-01T11:03:00.000Z');
     assert.equal(data.thieu_minh_chung, true, 'cờ cảnh báo thiếu minh chứng (chưa chặn — quyết định 3)');
   });
-  test('8. Bất biến: tổng nhom_dem của bộ mẫu = 7 dòng, đúng phân bố tại 14/09', async () => {
+  test('8. do_tre_nhap_lieu lấy NGÀY theo giờ Việt Nam: ghi nhận 18:30 UTC (= 01:30 hôm sau giờ VN) tính đủ ngày', async () => {
+    // Postgres trên Supabase chạy UTC; cast ::date trần sẽ cho 27/08 thay vì 28/08 → thiếu một ngày độ trễ.
+    const db = adminClient();
+    const base = { hoi_nghi_id: fx.hn, chu_tri_id: IDS.cv1, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20',
+      tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-25', minh_chung: 'CV', nguon: 'excel' };
+    const r = await db.from('kl_nhiem_vu').insert([
+      { ...base, ma: 'NV-T08', noi_dung: 'KL-TZ N8 ghi 18:30 UTC', ghi_hoan_thanh_luc: '2026-08-27T18:30:00Z' }, // 28/08 01:30 VN
+      { ...base, ma: 'NV-T09', noi_dung: 'KL-TZ N9 ghi 16:59 UTC', ghi_hoan_thanh_luc: '2026-08-27T16:59:00Z' }, // 27/08 23:59 VN
+    ]).select('id, ma');
+    assertOk(r, 'tạo dòng thử múi giờ');
+    const id = (ma) => r.data.find((x) => x.ma === ma).id;
+    assert.equal((await tt(id('NV-T08'), '2026-09-14')).do_tre_nhap_lieu, 3, '28/08 − 25/08 theo giờ VN');
+    assert.equal((await tt(id('NV-T09'), '2026-09-14')).do_tre_nhap_lieu, 2, '27/08 − 25/08');
+  });
+  test('9. Bất biến: tổng nhom_dem của bộ mẫu = 7 dòng, đúng phân bố tại 14/09', async () => {
     const dem = {};
     for (const id of [fx.n1, fx.n2, fx.n3, fx.n4, fx.n5, fx.n6, fx.n7]) {
       const r = await tt(id, '2026-09-14');
