@@ -8,6 +8,6 @@ npm test                 # staging (RLS_PROJECT_REF mặc định vojmrjezspdfto
 RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset`; seed.sql đã tạo sẵn auth user)
 ```
 
-- Key lấy qua Supabase CLI đã `supabase login` (không có `.env` chứa service_role).
+- Key lấy theo thứ tự: biến môi trường `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI dùng secret **staging**) → `RLS_LOCAL=1` → Supabase CLI đã `supabase login`. Không có `.env` chứa service_role; từ chối chạy nếu URL là project production.
 - Chạy chung tiến trình (`--test-isolation=none`) để 6 phiên đăng nhập dùng lại giữa các file (giới hạn 30 lượt/5 phút/IP).
-- Không chạy trong CI (cần staging + CLI đăng nhập) — đưa vào pipeline ở GĐ6.
+- Chạy trong CI ở job `Kiểm thử RLS + e2e trên staging` (`ci.yml`, mọi PR), trước `tests/e2e` trong cùng job (6 + 7 = 13 lượt đăng nhập) — xem `docs/kien-truc.md`.

@@ -9,9 +9,11 @@ const hooks = { onEnter: [], onLeave: [] };
 export function onSessionEnter(fn) { hooks.onEnter.push(fn); }
 export function onSessionLeave(fn) { hooks.onLeave.push(fn); }
 
+// Danh bạ dùng cho mọi danh sách cán bộ (chọn người, cây phân cấp, KPI, nhắn tin). Tài khoản hệ thống
+// (is_system, ví dụ smoke_test sau phát hành) bị lọc ngay tại đây nên không xuất hiện ở đâu cả.
 export async function loadAccountsCache() {
   const { data } = await supabase.from('accounts_public').select('*');
-  if (data) state.accounts = data;
+  if (data) state.accounts = data.filter((a) => !a.is_system);
 }
 
 export function enterApp() {

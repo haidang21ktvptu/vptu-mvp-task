@@ -2,7 +2,7 @@
 // riêng, A3 nhận realtime (huy hiệu chưa đọc, viền dòng nhiệm vụ, toast tin nhắn) rồi trả lời.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { loginAs, logout, openA2TrackingTab } from './lib/app.js';
+import { pageAs, openA2TrackingTab } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
@@ -32,20 +32,13 @@ test.describe.serial('Realtime ý kiến chỉ đạo và nhắn tin 1-1', () =>
     await db.from('direct_messages').delete()
       .or(`and(sender_id.eq.${TRUONGPHONG_ID},receiver_id.eq.${CV1_ID}),and(sender_id.eq.${CV1_ID},receiver_id.eq.${TRUONGPHONG_ID})`);
 
-    const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
-    const ctxOptions = { viewport, isMobile, hasTouch, baseURL, locale };
-    a3Page = await (await browser.newContext(ctxOptions)).newPage();
-    a2Page = await (await browser.newContext(ctxOptions)).newPage();
-    await loginAs(a3Page, 'A3');
-    await loginAs(a2Page, 'A2');
+    // Hai phiên sẵn A3 và A2 (storageState), không tốn lượt đăng nhập.
+    a3Page = await pageAs(browser, 'A3', testInfo);
+    a2Page = await pageAs(browser, 'A2', testInfo);
   });
 
   test.afterAll(async () => {
-    for (const p of [a3Page, a2Page]) {
-      if (!p) continue;
-      await logout(p).catch(() => {});
-      await p.context().close();
-    }
+    for (const p of [a3Page, a2Page]) await p?.context().close();
   });
 
   test('A2 gửi ý kiến → A3 thấy huy hiệu chưa đọc, mở luồng và phản hồi được', async () => {
@@ -80,6 +73,8 @@ test.describe.serial('Realtime ý kiến chỉ đạo và nhắn tin 1-1', () =>
     await expect(a3Page.locator('#dmBubbleBadge')).toBeHidden();
 
     await a2Page.locator('#dmBubbleLauncher').click();
+    // Tài khoản hệ thống (is_system) không có trong danh bạ.
+    await expect(a2Page.locator('#dmContactList')).not.toContainText('Tài khoản kiểm thử hệ thống');
     await a2Page.locator('#dmContactList [data-action=openDMChat]', { hasText: 'Demo Chuyên viên Một' }).click();
     await a2Page.locator('#dmInput').fill('Đồng chí lên phòng gặp tôi (e2e)');
     await a2Page.locator('#dmInput').press('Enter');

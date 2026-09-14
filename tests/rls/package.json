@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "description": "Test RLS bằng token thật trên staging (SPEC RLS-2…8)",
-  "engines": { "node": ">=22" },
+  "engines": { "node": ">=23" },
   "scripts": {
     "test": "node --test --test-isolation=none --test-concurrency=1 ./*.test.mjs"
   },
