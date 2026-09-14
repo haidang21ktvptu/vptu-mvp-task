@@ -13,6 +13,13 @@ GRANT SELECT ("quan_tri_kl", "quan_tri_he_thong") ON "public"."accounts" TO "aut
 -- Chủ dự án giữ quan_tri_he_thong (chỉ gán bằng migration). KHÔNG gán quan_tri_kl cho ai:
 -- chủ dự án tự cấp qua màn hình Quản trị sau khi phát hành, để có vết trong quyen_lich_su.
 UPDATE "public"."accounts" SET "quan_tri_he_thong" = true WHERE "username" = 'buibahaidang';
+-- Production (≥ 40 cán bộ thật) bắt buộc phải có đúng chủ dự án giữ cờ; local/staging (seed) không có tài khoản này.
+DO $$ BEGIN
+  IF (SELECT count(*) FROM "public"."accounts") >= 40
+     AND NOT EXISTS (SELECT 1 FROM "public"."accounts" WHERE "quan_tri_he_thong") THEN
+    RAISE EXCEPTION 'Không tìm thấy tài khoản chủ dự án để gán quan_tri_he_thong — kiểm tra username trước khi áp migration.';
+  END IF;
+END $$;
 
 CREATE OR REPLACE VIEW "public"."accounts_public"
 WITH ("security_invoker" = true) AS
@@ -156,9 +163,10 @@ BEGIN
     WHERE "lanh_dao_id" = v_id AND "phong" = v_phong AND "den_ngay" IS NULL AND "tu_ngay" < "p_tu_ngay";
     GET DIAGNOSTICS v_n = ROW_COUNT;
     IF v_n = 0 THEN
-      -- Bật và tắt cùng ngày: xoá dòng bắt đầu đúng ngày đó (chưa từng có hiệu lực).
+      -- Bật và tắt cùng ngày, hoặc kết thúc một phân công ghi trước cho tương lai: dòng đó chưa từng có
+      -- hiệu lực tại p_tu_ngay nên xoá (màn hình Quản trị hiện dòng den_ngay NULL là "đang phụ trách").
       DELETE FROM "public"."phu_trach_phong"
-      WHERE "lanh_dao_id" = v_id AND "phong" = v_phong AND "den_ngay" IS NULL AND "tu_ngay" = "p_tu_ngay";
+      WHERE "lanh_dao_id" = v_id AND "phong" = v_phong AND "den_ngay" IS NULL AND "tu_ngay" >= "p_tu_ngay";
       GET DIAGNOSTICS v_n = ROW_COUNT;
     END IF;
     IF v_n = 0 THEN
