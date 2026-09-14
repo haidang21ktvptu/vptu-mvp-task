@@ -12,6 +12,8 @@
 name: Backup định kỳ production
 
 on:
+  push: # TẠM — chỉ để chạy thử trên nhánh PR B (workflow_dispatch chỉ nhận workflow đã có trên main); gỡ trước khi merge
+    branches: ['feature/gd7-backup-dinh-ky']
   schedule:
     - cron: '0 20 */3 * *'
   workflow_dispatch:
