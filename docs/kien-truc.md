@@ -113,7 +113,7 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 - **Tag bị chặn ở `kiem-tra`:** chưa đổi gì; sửa theo thông báo (CI chưa xanh, hoặc tag nhầm lên commit đã deploy → nhánh mới + commit rỗng + tag mới như trên).
 - **Lỗi ở deploy:** DB đã mới, frontend cũ — Re-run failed jobs (job deploy chưa tạo được deployment nên sha vẫn chưa "dùng"; nếu deployment đã tạo rồi mới lỗi thì sha đã bị dùng → cần commit mới như quay lui).
 - **Smoke lỗi:** frontend mới đã lên — quay lui frontend như trên; nếu do migration, khôi phục DB.
-- **Khôi phục từ backup:** tải artifact `prod-<ngày>-<tag>.tar.gz.gpg` → `gpg -d --batch --pinentry-mode loopback --passphrase "<BACKUP_PASSPHRASE>" file.tar.gz.gpg | tar xz` → `schema.sql` + `data.sql` (có `auth.users`, `auth.identities`) → chạy `scripts/restore-db.sh` (GĐ7). Dữ liệu ghi sau lúc backup sẽ mất.
+- **Khôi phục từ backup:** lấy bản mới nhất trong `D:\TU 2026\Project\vptu-backup\` (hoặc tải artifact `prod-<ngày>-<tag>.tar.gz.gpg`) → tạo project trắng → `bash scripts/restore-db.sh <file> --project-ref <ref mới>` (script tự giải mã, áp migrations, nạp dữ liệu, kiểm chứng; từ chối production/staging) — chi tiết `docs/sao-luu-khoi-phuc.md` mục 6. Dữ liệu ghi sau lúc backup sẽ mất (tối đa 3 ngày với backup định kỳ).
 
 ## 7. Cách phát hành một phiên bản
 

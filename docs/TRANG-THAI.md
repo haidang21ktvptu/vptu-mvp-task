@@ -12,7 +12,7 @@
 | 4 | Vite + module hoá (`frontend/`), 0011 FK `accounts.id → auth.users.id`, `tests/e2e` | Xong |
 | 5 | Giao diện mới theo DESIGN.md, phông tự host, responsive, in, Lighthouse A11y 100 | Xong |
 | 6 | CI/CD: test trên staging trong CI, deploy-staging, deploy-prod có duyệt (tag trước merge), 0012 `is_system` + `smoke_test` | Xong — `v2.0.0-rc2` phát hành 2026-09-14, tag `production` = `2e90a89` |
-| 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | Chưa làm |
+| 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | **PR A xong** (`backup-db.sh`, `restore-db.sh`, `docs/sao-luu-khoi-phuc.md`, biên bản khôi phục thử 2026-09-14 trên local — NF-6 đạt); còn PR B, PR C, lên Pro |
 
 ## 2. Kiến trúc (tóm tắt)
 - Frontend Vite + JS thuần + Tailwind build, `frontend/src/{auth,lib,views/{a1,a2,a3,shared},features/{directives,messages,tasks},components,styles}`; anon key qua `VITE_SUPABASE_*`; `base` = `/vptu-mvp-task/` (staging: `/vptu-mvp-task/staging/`).
@@ -42,13 +42,13 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 
 ## 5. Việc định kỳ
 - **`SUPABASE_ACCESS_TOKEN` hết hạn ~2026-12-13** (90 ngày kể từ 2026-09-14): tạo token mới ở supabase.com → Account → Access Tokens, cập nhật secret; dấu hiệu hết hạn là job `Áp migration lên staging` / `phat-hanh` lỗi xác thực.
-- Backup: mỗi lần phát hành có artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày); backup tay ngoài git ở `D:\TU 2026\Project\vptu-backup\`. GĐ7 sẽ thêm backup hằng đêm.
+- Backup: mỗi lần phát hành có artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày); **bản local chính** = `bash scripts/backup-db.sh --project-ref frwyxcmbonjaimziiuqr --thu-muc "/d/TU 2026/Project/vptu-backup"` chạy trong Git Bash (Docker Desktop mở). Chu kỳ tự động **3 ngày/lần** (PR B) → chấp nhận mất tối đa 3 ngày dữ liệu. Khôi phục: `docs/sao-luu-khoi-phuc.md`.
 - Sau mỗi lần phát hành: kiểm tra bản live bằng 3 vai trò (A1 `levanmieu`, A2 `macthuylinh`, A3 `buibahaidang`); ghi CHANGELOG 3–6 dòng.
 - Test trên staging (CI hoặc tay) tối đa ~2 lần/5 phút (giới hạn 30 lượt đăng nhập/IP).
 - `supabase/setup-cli@v1` có thể lỗi "rate limit exceeded" (tải CLI từ GitHub releases) khi chạy nhiều workflow trong ngày — chờ 30–60 phút rồi *Re-run failed jobs*; không phải lỗi cấu hình.
 
 ## 6. Việc còn lại
-1. **GĐ7 — Vận hành** theo `docs/PROMPTS.md` "Giai đoạn 7" (Plan mode): `scripts/backup-db.sh` + `restore-db.sh` (pg_dump qua connection string trong secret; khôi phục từ artifact gpg của deploy-prod hoặc dump tay), workflow backup hằng đêm đẩy lên nơi lưu do chủ dự án chọn, `docs/xu-ly-su-co.md` (10 tình huống × 5 dòng), hướng dẫn cài uptime monitor ngoài, lên gói Pro + bật hook khoá tài khoản (AUTH-3, migration 0004). "Xong khi" chủ dự án tự chạy `restore-db.sh` lên project trắng theo hướng dẫn và thành công.
+1. **GĐ7 — Vận hành** (Plan mode từng PR). Đã xong PR A: `scripts/backup-db.sh` + `restore-db.sh` + `docs/sao-luu-khoi-phuc.md` (đã thử local + staging → local, 48 test RLS pass). Khôi phục thử đã xong trên Supabase local: `docs/bien-ban-khoi-phuc-2026-09-14.md` (gói Free hết 2 project nên không thử hosted; thử lại khi lên Pro — docs mục 5). **Việc kế tiếp**: (b) **PR B**: workflow backup định kỳ **3 ngày/lần** (artifact `prod-<ngày>-dinh-ky`, gọi `backup-db.sh`; cho `deploy-prod.yml` gọi luôn script), `scripts/tai-backup.sh` tải artifact về `vptu-backup` (**không tự xoá bản cũ trừ khi ghi rõ `--giu N`**) + hướng dẫn Task Scheduler, uptime monitor ngoài; (c) **PR C**: `docs/xu-ly-su-co.md` (10 tình huống × 5 dòng); (d) lên gói Pro + bật hook khoá tài khoản (AUTH-3, `config.toml` dòng ~300).
 2. Sau mỗi phát hành: kiểm tra bản live 3 vai trò, CHANGELOG 3–6 dòng (mục 5).
 
 ## 7. Lệnh để tiếp tục
@@ -62,5 +62,5 @@ git tag v2.x.y && git push origin v2.x.y                        # → deploy-pro
 # duyệt trên GitHub, đợi 4 job xanh, rồi merge PR bằng merge commit; không push thêm commit lên nhánh sau khi tag
 ```
 ```
-Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md rồi làm GĐ7 theo docs/PROMPTS.md "Giai đoạn 7" bằng Plan mode.
+Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md, docs/sao-luu-khoi-phuc.md rồi làm GĐ7 PR B (workflow backup 3 ngày/lần + tai-backup.sh + uptime) bằng Plan mode.
 ```
