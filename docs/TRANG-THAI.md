@@ -12,7 +12,7 @@
 | 4 | Vite + module hoá (`frontend/`), 0011 FK `accounts.id → auth.users.id`, `tests/e2e` | Xong |
 | 5 | Giao diện mới theo DESIGN.md, phông tự host, responsive, in, Lighthouse A11y 100 | Xong |
 | 6 | CI/CD: test trên staging trong CI, deploy-staging, deploy-prod có duyệt (tag trước merge), 0012 `is_system` + `smoke_test` | Xong — `v2.0.0-rc2` phát hành 2026-09-14, tag `production` = `2e90a89` |
-| 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | **PR A xong** (`backup-db.sh`, `restore-db.sh`, `docs/sao-luu-khoi-phuc.md`); còn biên bản khôi phục thử, PR B, PR C |
+| 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | **PR A xong** (`backup-db.sh`, `restore-db.sh`, `docs/sao-luu-khoi-phuc.md`, biên bản khôi phục thử 2026-09-14 trên local — NF-6 đạt); còn PR B, PR C, lên Pro |
 
 ## 2. Kiến trúc (tóm tắt)
 - Frontend Vite + JS thuần + Tailwind build, `frontend/src/{auth,lib,views/{a1,a2,a3,shared},features/{directives,messages,tasks},components,styles}`; anon key qua `VITE_SUPABASE_*`; `base` = `/vptu-mvp-task/` (staging: `/vptu-mvp-task/staging/`).
@@ -48,7 +48,7 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - `supabase/setup-cli@v1` có thể lỗi "rate limit exceeded" (tải CLI từ GitHub releases) khi chạy nhiều workflow trong ngày — chờ 30–60 phút rồi *Re-run failed jobs*; không phải lỗi cấu hình.
 
 ## 6. Việc còn lại
-1. **GĐ7 — Vận hành** (Plan mode từng PR). Đã xong PR A: `scripts/backup-db.sh` + `restore-db.sh` + `docs/sao-luu-khoi-phuc.md` (đã thử local + staging → local, 48 test RLS pass). **Việc kế tiếp**: (a) chủ dự án chạy thử `restore-db.sh --local --ghi-de` lên Supabase local theo docs mục 4 (gói Free hết 2 project, không tạo được project trắng; thử lại hosted khi lên Pro — docs mục 5) → viết `docs/bien-ban-khoi-phuc-<ngày>.md` (điều kiện xong GĐ7, SPEC NF-6); (b) **PR B**: workflow backup định kỳ **3 ngày/lần** (artifact `prod-<ngày>-dinh-ky`, gọi `backup-db.sh`; cho `deploy-prod.yml` gọi luôn script), `scripts/tai-backup.sh` tải artifact về `vptu-backup` (**không tự xoá bản cũ trừ khi ghi rõ `--giu N`**) + hướng dẫn Task Scheduler, uptime monitor ngoài; (c) **PR C**: `docs/xu-ly-su-co.md` (10 tình huống × 5 dòng); (d) lên gói Pro + bật hook khoá tài khoản (AUTH-3, `config.toml` dòng ~300).
+1. **GĐ7 — Vận hành** (Plan mode từng PR). Đã xong PR A: `scripts/backup-db.sh` + `restore-db.sh` + `docs/sao-luu-khoi-phuc.md` (đã thử local + staging → local, 48 test RLS pass). Khôi phục thử đã xong trên Supabase local: `docs/bien-ban-khoi-phuc-2026-09-14.md` (gói Free hết 2 project nên không thử hosted; thử lại khi lên Pro — docs mục 5). **Việc kế tiếp**: (b) **PR B**: workflow backup định kỳ **3 ngày/lần** (artifact `prod-<ngày>-dinh-ky`, gọi `backup-db.sh`; cho `deploy-prod.yml` gọi luôn script), `scripts/tai-backup.sh` tải artifact về `vptu-backup` (**không tự xoá bản cũ trừ khi ghi rõ `--giu N`**) + hướng dẫn Task Scheduler, uptime monitor ngoài; (c) **PR C**: `docs/xu-ly-su-co.md` (10 tình huống × 5 dòng); (d) lên gói Pro + bật hook khoá tài khoản (AUTH-3, `config.toml` dòng ~300).
 2. Sau mỗi phát hành: kiểm tra bản live 3 vai trò, CHANGELOG 3–6 dòng (mục 5).
 
 ## 7. Lệnh để tiếp tục
