@@ -1,4 +1,4 @@
-# TRẠNG THÁI DỰ ÁN — bản bàn giao (cập nhật: 2026-09-14)
+# TRẠNG THÁI DỰ ÁN — bản bàn giao (cập nhật: 2026-09-14, GĐ7 xong)
 
 Đọc trước: `CLAUDE.md` (quy tắc), `docs/SPEC.md` (nghiệp vụ), `docs/DESIGN.md` (giao diện), `docs/kien-truc.md` (pipeline, secret, quay lui), `docs/PROMPTS.md` (prompt theo giai đoạn). Lịch sử: `CHANGELOG.md` mục 7–13.
 
@@ -12,7 +12,7 @@
 | 4 | Vite + module hoá (`frontend/`), 0011 FK `accounts.id → auth.users.id`, `tests/e2e` | Xong |
 | 5 | Giao diện mới theo DESIGN.md, phông tự host, responsive, in, Lighthouse A11y 100 | Xong |
 | 6 | CI/CD: test trên staging trong CI, deploy-staging, deploy-prod có duyệt (tag trước merge), 0012 `is_system` + `smoke_test` | Xong — `v2.0.0-rc2` phát hành 2026-09-14, tag `production` = `2e90a89` |
-| 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | **PR A, PR B xong** (`backup-db.sh`/`restore-db.sh`, biên bản khôi phục thử 2026-09-14 trên local — NF-6 đạt; `backup-dinh-ky.yml` 3 ngày/lần, `tai-backup.sh` + Task Scheduler, uptime monitor docs); còn PR C `xu-ly-su-co.md`, lên Pro + AUTH-3 |
+| 7 | Vận hành: backup/restore script, uptime monitor, `docs/xu-ly-su-co.md`, lên Pro + bật hook khoá tài khoản | **Xong** (2026-09-14): PR A #29, PR B #30, PR C; NF-6 đạt (biên bản khôi phục thử). Còn việc ngoài code: lên gói Pro + bật AUTH-3 |
 
 ## 2. Kiến trúc (tóm tắt)
 - Frontend Vite + JS thuần + Tailwind build, `frontend/src/{auth,lib,views/{a1,a2,a3,shared},features/{directives,messages,tasks},components,styles}`; anon key qua `VITE_SUPABASE_*`; `base` = `/vptu-mvp-task/` (staging: `/vptu-mvp-task/staging/`).
@@ -42,15 +42,16 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Giữ toast thay `alert()`; không file nào trên 300 dòng; giao diện tiếng Việt có dấu; DESIGN.md là nguồn duy nhất về màu/phông/bố cục.
 
 ## 5. Việc định kỳ
-- **`SUPABASE_ACCESS_TOKEN` hết hạn ~2026-12-13** (90 ngày kể từ 2026-09-14): tạo token mới ở supabase.com → Account → Access Tokens, cập nhật secret; dấu hiệu hết hạn là job `Áp migration lên staging` / `phat-hanh` lỗi xác thực.
+- **Đầu tháng 12/2026: tạo `SUPABASE_ACCESS_TOKEN` mới và cập nhật secret TRƯỚC khi hết hạn (~2026-12-13, 90 ngày kể từ 2026-09-14)** — làm theo `docs/xu-ly-su-co.md` #11; nếu đã hết hạn (mọi workflow lỗi xác thực) → #7.
+- Khi có sự cố: mở `docs/xu-ly-su-co.md` (11 tình huống, lệnh copy-paste) trước khi làm gì khác.
 - Backup: mỗi lần phát hành có artifact `prod-<ngày>-<tag>.tar.gz.gpg` (90 ngày); **bản local chính** = `bash scripts/backup-db.sh --project-ref frwyxcmbonjaimziiuqr --thu-muc "/d/TU 2026/Project/vptu-backup"` chạy trong Git Bash (Docker Desktop mở). Chu kỳ tự động **3 ngày/lần** (PR B) → chấp nhận mất tối đa 3 ngày dữ liệu. Khôi phục: `docs/sao-luu-khoi-phuc.md`.
 - Sau mỗi lần phát hành: kiểm tra bản live bằng 3 vai trò (A1 `levanmieu`, A2 `macthuylinh`, A3 `buibahaidang`); ghi CHANGELOG 3–6 dòng.
 - Test trên staging (CI hoặc tay) tối đa ~2 lần/5 phút (giới hạn 30 lượt đăng nhập/IP).
-- **Backup định kỳ**: Actions → *Backup định kỳ production* phải có run mới mỗi ≤ 3 ngày; GitHub tự tắt schedule sau 60 ngày repo không có commit → bấm *Enable workflow*. Trên máy: `vptu-backup	ai-backup.log` có dòng mới mỗi lần đăng nhập Windows (Task Scheduler `VPTU tai backup`); UptimeRobot theo dõi `phien-ban.json` bản live (docs/sao-luu-khoi-phuc.md mục 3, 9).
+- **Backup định kỳ**: Actions → *Backup định kỳ production* phải có run mới mỗi ≤ 3 ngày; GitHub tự tắt schedule sau 60 ngày repo không có commit → bấm *Enable workflow*. Trên máy: `vptu-backup	ai-backup.log` có dòng mới mỗi lần đăng nhập Windows (Task Scheduler `VPTU tai backup`); UptimeRobot theo dõi `phien-ban.json` bản live (docs/sao-luu-khoi-phuc.md mục 3, 9). Đã đăng ký cả hai ngày 2026-09-14; hai secret `BACKUP_PASSPHRASE` (repository + environment) đã kiểm chứng trùng nhau (giải mã artifact CI bằng passphrase trong trình quản lý mật khẩu).
 - `supabase/setup-cli@v1` có thể lỗi "rate limit exceeded" (tải CLI từ GitHub releases) khi chạy nhiều workflow trong ngày — chờ 30–60 phút rồi *Re-run failed jobs*; không phải lỗi cấu hình.
 
 ## 6. Việc còn lại
-1. **GĐ7 — Vận hành** (Plan mode từng PR). Đã xong PR A: `scripts/backup-db.sh` + `restore-db.sh` + `docs/sao-luu-khoi-phuc.md` (đã thử local + staging → local, 48 test RLS pass). Khôi phục thử đã xong trên Supabase local: `docs/bien-ban-khoi-phuc-2026-09-14.md` (gói Free hết 2 project nên không thử hosted; thử lại khi lên Pro — docs mục 5). PR B xong (2026-09-14): `backup-dinh-ky.yml` (cron `*/3`, 03:00 VN, repository secret `BACKUP_PASSPHRASE`), `deploy-prod.yml` gọi `backup-db.sh`, `scripts/tai-backup.sh` + `.cmd` (không tự xoá; `--giu N` chỉ khi ghi rõ), Task Scheduler ONLOGON, UptimeRobot chỉ theo dõi `phien-ban.json` (không đặt key vào dịch vụ ngoài). **Việc kế tiếp**: (c) **PR C**: `docs/xu-ly-su-co.md` (10 tình huống × 5 dòng); (d) lên gói Pro + bật hook khoá tài khoản (AUTH-3, `config.toml` dòng ~300).
+1. **GĐ7 xong (2026-09-14)** — PR A #29 (`backup-db.sh`, `restore-db.sh`, biên bản khôi phục thử trên local), PR B #30 (`backup-dinh-ky.yml` 3 ngày/lần, `tai-backup.sh` + Task Scheduler, UptimeRobot), PR C (`docs/xu-ly-su-co.md` 11 tình huống). **Còn việc ngoài code:** lên gói Supabase Pro → bật hook khoá tài khoản AUTH-3 (`supabase/config.toml` `[auth.hook.password_verification_attempt] enabled = true`, `config diff` → `config push`, cần xác nhận trong phiên) → diễn tập lại khôi phục trên project hosted tạm (`docs/sao-luu-khoi-phuc.md` mục 5) → biên bản mới.
 2. Sau mỗi phát hành: kiểm tra bản live 3 vai trò, CHANGELOG 3–6 dòng (mục 5).
 
 ## 7. Lệnh để tiếp tục
@@ -64,5 +65,5 @@ git tag v2.x.y && git push origin v2.x.y                        # → deploy-pro
 # duyệt trên GitHub, đợi 4 job xanh, rồi merge PR bằng merge commit; không push thêm commit lên nhánh sau khi tag
 ```
 ```
-Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md, docs/sao-luu-khoi-phuc.md rồi làm GĐ7 PR C (docs/xu-ly-su-co.md: 10 tình huống × 5 dòng) bằng Plan mode.
+Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md, docs/sao-luu-khoi-phuc.md, docs/xu-ly-su-co.md. GĐ0–7 đã xong; việc kế tiếp do chủ dự án nêu (lên Pro + AUTH-3, hoặc yêu cầu mới ghi vào SPEC). Việc trên 3 file: Plan mode.
 ```
