@@ -49,10 +49,16 @@ Ruleset `main`: PR bắt buộc, chặn force-push, 4 check bắt buộc: `Quét
 - Test trên staging (CI hoặc tay) tối đa ~2 lần/5 phút (giới hạn 30 lượt đăng nhập/IP).
 - **Backup định kỳ**: Actions → *Backup định kỳ production* phải có run mới mỗi ≤ 3 ngày; GitHub tự tắt schedule sau 60 ngày repo không có commit → bấm *Enable workflow*. Trên máy: `vptu-backup	ai-backup.log` có dòng mới mỗi lần đăng nhập Windows (Task Scheduler `VPTU tai backup`); UptimeRobot theo dõi `phien-ban.json` bản live (docs/sao-luu-khoi-phuc.md mục 3, 9). Đã đăng ký cả hai ngày 2026-09-14; hai secret `BACKUP_PASSPHRASE` (repository + environment) đã kiểm chứng trùng nhau (giải mã artifact CI bằng passphrase trong trình quản lý mật khẩu).
 - `supabase/setup-cli@v1` có thể lỗi "rate limit exceeded" (tải CLI từ GitHub releases) khi chạy nhiều workflow trong ngày — chờ 30–60 phút rồi *Re-run failed jobs*; không phải lỗi cấu hình.
+- Repo là public — không commit file `.xlsx`/`.pdf` chứa dữ liệu thật, không dán ảnh dashboard có tên thật vào PR/issue.
 
 ## 6. Việc còn lại
-1. **GĐ7 xong (2026-09-14)** — PR A #29 (`backup-db.sh`, `restore-db.sh`, biên bản khôi phục thử trên local), PR B #30 (`backup-dinh-ky.yml` 3 ngày/lần, `tai-backup.sh` + Task Scheduler, UptimeRobot), PR C (`docs/xu-ly-su-co.md` 11 tình huống). **Còn việc ngoài code:** lên gói Supabase Pro → bật hook khoá tài khoản AUTH-3 (`supabase/config.toml` `[auth.hook.password_verification_attempt] enabled = true`, `config diff` → `config push`, cần xác nhận trong phiên) → diễn tập lại khôi phục trên project hosted tạm (`docs/sao-luu-khoi-phuc.md` mục 5) → biên bản mới.
-2. Sau mỗi phát hành: kiểm tra bản live 3 vai trò, CHANGELOG 3–6 dòng (mục 5).
+1. **GĐ8 — việc kế tiếp** (`docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4, đã duyệt): mô hình dữ liệu và nhập liệu module Theo dõi Kết luận BTVTU — PR 8A schema (migration 0013–0014: danh mục, `kl_hoi_nghi`, `kl_nhiem_vu`, `kl_lich_su`, `kl_chi_dao`, `kl_cau_hinh`, `phu_trach_phong`, hàm `kl_trang_thai` + view `v_kl_dashboard`, RLS theo quyết định 7, ~20 test RLS), PR 8B script nhập `scripts/nhap-kl-btvtu.mjs` (`--dry-run` mặc định) + bộ dữ liệu vàng ẩn danh. Xong khi nhập 185 dòng, 0 vi phạm cứng, số khớp mục 1.5. Mở phiên bằng lệnh ở Phụ lục của tài liệu; Plan mode, chờ duyệt.
+2. **GĐ9** — dashboard đọc và chạy song song: PR 9A màn hình A3/A2 (danh sách theo chủ trì, cập nhật nhanh, bộ lọc), PR 9B dashboard A1 (bố cục mục 3.2, chưa có nút chỉ đạo) + xuất HTML hai bản từ snapshot `kl_bao_cao`; chạy song song 2 kỳ báo cáo với Google Sheet, trùng số 2 kỳ + ≥ 9 chuyên viên tự cập nhật mới sang GĐ10.
+3. **GĐ10** — vòng chỉ đạo và tắt Excel: PR 10A 4 hành động chỉ đạo (mục 3.3), ô "Chỉ đạo chưa phản hồi", thông báo qua `direct_messages`; PR 10B chốt bắt buộc (minh chứng khi Hoàn thành, "Có hạn cụ thể ⇒ hạn" chuyển sang chặn), Google Sheet chuyển chỉ đọc; bổ sung 6 tình huống vào `docs/xu-ly-su-co.md`. Xong khi một kỳ báo cáo hoàn toàn từ app và một chỉ đạo thật đi hết vòng.
+4. **GĐ11** — xuất PDF hai bản trực tiếp từ app (có mã báo cáo), bảng chéo ngành × cơ quan trình, tuổi quá hạn theo bậc; sau 2 tháng vận hành rà lại ngưỡng 7 ngày, xem xét gộp ngành 1 và 12.
+5. **Áp phạm vi PCVP theo `phu_trach_phong` cho phần giao việc nội bộ** (tasks/RLS GĐ3) — PR riêng sau GĐ8, vì GĐ8 chỉ áp cho module KL (quyết định 7 trong tài liệu thiết kế).
+6. **GĐ7 xong (2026-09-14)** — PR A #29 (`backup-db.sh`, `restore-db.sh`, biên bản khôi phục thử trên local), PR B #30 (`backup-dinh-ky.yml` 3 ngày/lần, `tai-backup.sh` + Task Scheduler, UptimeRobot), PR C (`docs/xu-ly-su-co.md` 11 tình huống). **Còn việc ngoài code:** lên gói Supabase Pro → bật hook khoá tài khoản AUTH-3 (`supabase/config.toml` `[auth.hook.password_verification_attempt] enabled = true`, `config diff` → `config push`, cần xác nhận trong phiên) → diễn tập lại khôi phục trên project hosted tạm (`docs/sao-luu-khoi-phuc.md` mục 5) → biên bản mới.
+7. Sau mỗi phát hành: kiểm tra bản live 3 vai trò, CHANGELOG 3–6 dòng (mục 5).
 
 ## 7. Lệnh để tiếp tục
 ```
@@ -64,6 +70,4 @@ git checkout feature/ten-nhanh && git pull && gh pr checks     # đúng nhánh p
 git tag v2.x.y && git push origin v2.x.y                        # → deploy-prod: kiem-tra → Review deployments → smoke → tag production
 # duyệt trên GitHub, đợi 4 job xanh, rồi merge PR bằng merge commit; không push thêm commit lên nhánh sau khi tag
 ```
-```
-Đọc CLAUDE.md, docs/TRANG-THAI.md, docs/kien-truc.md, docs/sao-luu-khoi-phuc.md, docs/xu-ly-su-co.md. GĐ0–7 đã xong; việc kế tiếp do chủ dự án nêu (lên Pro + AUTH-3, hoặc yêu cầu mới ghi vào SPEC). Việc trên 3 file: Plan mode.
-```
+Mở phiên GĐ8 (PR 8A): dùng nguyên văn lệnh ở **Phụ lục** của `docs/thiet-ke-theo-doi-kl-btvtu.md` (đọc CLAUDE.md, TRANG-THAI, SPEC, kien-truc, 0001_baseline, tài liệu thiết kế; Plan mode, chờ duyệt). GĐ0–7 đã xong; việc ngoài code (lên Pro + AUTH-3) do chủ dự án nêu khi tới lượt.
