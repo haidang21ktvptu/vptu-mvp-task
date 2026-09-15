@@ -178,14 +178,16 @@ Thiếu, nhìn từ ghế người điều hành:
 - Sắp đến hạn 7 ngày: **n**
 - Cần điền hạn: **3** (tuổi lớn nhất: 290 ngày) — việc có hạn nhưng chưa xác định được; Chờ điều kiện: 6
 
-**Hàng 2 — Tình hình chung**: Tổng / Hoàn thành (tỷ lệ) / Đang thực hiện / Thường xuyên, mỗi ô ghi thêm thay đổi so với kỳ trước (+3, −1).
+**Hàng 2 — Tình hình chung**: Tổng / Hoàn thành (tỷ lệ) / Đang thực hiện / Thường xuyên. *(Điều chỉnh GĐ10, 15/9/2026: bỏ "thay đổi so với kỳ trước (+3, −1)" vì không có kỳ chốt — quyết định 8; xem lại ở GĐ13 nếu cần, tính từ `kl_lich_su`.)*
 
 **Hàng 3 — Hai biểu đồ có tác dụng điều hành**:
 
 - **Theo chủ trì, chỉ tính việc đang mở** (không tính Hoàn thành), phân màu quá hạn / sắp hạn / đang làm / không hạn. Đây mới là "ai đang gánh gì", khác với xếp hạng tổng số việc đã nhận từ đầu nhiệm kỳ.
 - **Theo hội nghị gần nhất (8 hội nghị)**: tỷ lệ hoàn thành từng hội nghị. Cho thấy kết luận nào đang "ì".
 
-**Hàng 4 — Theo ngành × cơ quan trình** dạng bảng chéo thu gọn, thay cho hai biểu đồ cột rời. Đảng ủy UBND tỉnh tách theo ngành ngay trong bảng.
+**Hàng 4 — Theo ngành → lĩnh vực** *(điều chỉnh GĐ10, 15/9/2026)*: bảng ngành, dưới mỗi ngành là các lĩnh vực và dòng **"Chưa phân loại"** (việc chưa gán `linh_vuc_ma` — 134 dòng production ngày 15/9, không bị bỏ khỏi tổng), cột Tổng / Quá hạn / Sắp hạn / Cần điền hạn / Khác / Hoàn thành, mỗi ô bấm ra danh sách. Bảng chéo ngành × cơ quan trình chuyển sang GĐ13 (Đảng ủy UBND tỉnh chiếm 50% nên vẫn cần tách theo ngành khi làm).
+
+**Chỉ báo hàng 1 "Chỉ đạo của tôi chưa được phản hồi"**: ẩn cho tới GĐ11 (chưa có hành động chỉ đạo); danh sách vẫn xếp việc có chỉ đạo chờ phản hồi lên đầu. **Ô số theo mốc hoàn thành**: GĐ10 không có ô nào đếm theo `ngay_hoan_thanh` (146 việc Hoàn thành hiện có đều không có ngày gốc); khối chất lượng nêu rõ "n việc Hoàn thành không có ngày hoàn thành gốc" và độ trễ nhập liệu chỉ tính trên việc hoàn thành ghi nhận trên hệ thống, ghi rõ mẫu số. Ô "đúng hạn / trễ hạn" (nếu thêm sau) phải chỉ tính trên việc có ngày hoàn thành thật và ghi mẫu số ngay trên ô.
 
 **Cuối trang — Chất lượng dữ liệu**: "n việc Hoàn thành chưa có minh chứng", "n việc chưa cập nhật > 30 ngày". Lãnh đạo nhìn thấy để yêu cầu, không phải để tự sửa.
 
@@ -253,7 +255,7 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 
 **Điều kiện xong GĐ9**: 9A và 9B merged; phát hành **`v2.2.0`** (0018–0020) lên production; người quản trị sheet duyệt xong CSV → chạy `--ghi --production` (bước riêng, có backup, xác nhận trong phiên) — mỗi dòng có `linh_vuc_chi_tiet` hoặc được ánh xạ hoặc để NULL có chủ ý; biên bản (không họ tên) vào `docs/bien-ban-nhap-kl-btvtu.md`; phân công kiêm nhiệm thật (nếu có) nhập trên màn hình Quản trị.
 
-### GĐ10 — Dashboard đọc và chạy song song (2 PR)
+### GĐ10 — Dashboard đọc và chạy song song (kế hoạch gốc 2 PR; thực hiện 15/9/2026 thành 6 PR, xem ghi chú cuối mục)
 
 **PR 10A — màn hình A3 và A2**: danh sách việc theo chủ trì, cập nhật nhanh, bộ lọc hội nghị/ngành/trạng thái. Mọi số đọc từ `v_kl_dashboard`. **Form nhập nhiệm vụ mới**: chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc** (`linh_vuc_ma`); `linh_vuc_chi_tiet` chỉ là ghi chú tự do.
 
@@ -263,11 +265,13 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 
 **Điều kiện xong GĐ10**: hai kỳ trùng số; 9 chuyên viên chủ trì đều đã tự cập nhật ít nhất một việc trên app (bằng chứng: `kl_lich_su` có ≥ 9 người sửa khác nhau).
 
+**Ghi chú khi triển khai (GĐ10, 15/9/2026 — chủ dự án chốt kế hoạch theo đề xuất, CHANGELOG mục 19):** tách thành 10A quy tắc minh chứng (migration 0021), 10B màn hình danh sách dùng chung A3/A2/A1 (phạm vi do RLS, ô số = nút lọc, cập nhật nhanh, ngăn truy vết 6.3), 10C dashboard A1 (3.2 đã điều chỉnh), 10D realtime + dự phòng 60 giây, 10F form nhập nhiệm vụ mới cho `quan_tri_kl` (ngành → lĩnh vực bắt buộc), 10E phát hành `v2.3.0`. Quyết định kèm theo: (a) **minh chứng bắt buộc khi chuyển Hoàn thành từ GĐ10** (quyết định 3 điều chỉnh), kể cả ngày hoàn thành thật cho dòng Excel đang mở — 146 việc Hoàn thành cũ không bị chặn ngược, không sửa; (b) minh chứng dạng văn bản (số hiệu/đường dẫn), chưa tải tệp; (c) bỏ "so với kỳ trước"; (d) hàng 4 = ngành → lĩnh vực; (e) chủ trì không đổi loại thời hạn (guard 0015 giữ nguyên — sai thì đính chính); (f) ô chỉ đạo, giao diện đính chính, xuất HTML/`kl_bao_cao` → GĐ11/GĐ13; (g) số liệu dashboard đếm phía client từ dòng `v_kl_dashboard` mà RLS trả về — một mảng cho cả ô số lẫn danh sách nên tổng các nhóm = tổng dòng là bất biến cấu trúc; (h) 134 dòng lĩnh vực NULL hiện thành "Chưa phân loại", chỉ `quan_tri_kl`/script/đính chính điền. Thời gian thực: kênh `kl_feed` (`postgres_changes` ba bảng KL), sự kiện chỉ kích hoạt đọc lại `v_kl_dashboard`; rớt kết nối → làm mới mỗi 60 giây có chỉ báo, nối lại tự chuyển về trực tiếp.
+
 ### GĐ11 — Vòng chỉ đạo và tắt Excel (2 PR)
 
 **PR 11A — chỉ đạo**: 4 hành động mục 3.3; ô "Chỉ đạo chưa phản hồi"; thông báo trong app (dùng `direct_messages` đã có) khi bị đôn đốc/giao lại.
 
-**PR 11B — chốt bắt buộc**: minh chứng bắt buộc khi Hoàn thành; ràng buộc "Có hạn cụ thể ⇒ hạn" chuyển từ cảnh báo sang chặn (nếu GĐ8 chưa làm được vì dữ liệu cũ). Tắt quyền sửa Google Sheet, chuyển sheet sang chế độ chỉ đọc làm lưu trữ.
+**PR 11B — chốt bắt buộc**: ~~minh chứng bắt buộc khi Hoàn thành~~ (đã làm ở GĐ10, migration 0021); ràng buộc "Có hạn cụ thể ⇒ hạn" chuyển từ cảnh báo sang chặn (nếu GĐ8 chưa làm được vì dữ liệu cũ). Tắt quyền sửa Google Sheet, chuyển sheet sang chế độ chỉ đọc làm lưu trữ.
 
 **Điều kiện xong GĐ11**: một kỳ báo cáo hoàn toàn từ app; ít nhất một chỉ đạo thật đi hết vòng đôn đốc → phản hồi → đóng.
 
@@ -296,7 +300,7 @@ Luân chuyển, bổ nhiệm, rời cơ quan: đổi phòng/chức vụ/vai trò
 
 1. **Chủ trì không bao giờ được trống hoặc chung chung.** 10 việc đang ghi "VPTU" gán cho tài khoản Trưởng phòng Tổng hợp, ghi chú "chuyển từ VPTU". Cột chủ trì `NOT NULL`, FK `accounts`, form không cho lưu khi trống.
 2. Ngưỡng "sắp đến hạn": **7 ngày**, đọc từ `kl_cau_hinh`.
-3. Minh chứng bắt buộc khi Hoàn thành: **cảnh báo từ GĐ8, chặn từ GĐ11** (đánh số lại 15/9/2026; trước là GĐ10).
+3. Minh chứng bắt buộc khi Hoàn thành: cảnh báo từ GĐ8, **chặn từ GĐ10** (migration 0021, chủ dự án chốt 15/9/2026 khi duyệt kế hoạch GĐ10; trước đó ghi GĐ11). Quy tắc: dòng ở trạng thái Hoàn thành *sau khi ghi* phải có minh chứng và ngày hoàn thành thật, trừ dòng đã Hoàn thành và đã thiếu từ trước mà không đổi tiến độ (dữ liệu Excel — không chặn ngược, chỉ không được xoá minh chứng) và `INSERT nguon = excel` (script nhập).
 4. Đặc quyền nhập/quản trị dữ liệu KL: **cờ `quan_tri_kl` gắn vào tài khoản cá nhân** của hai người được chỉ định (một phòng Tổng hợp, một phòng CĐS-CY). Không dùng tài khoản dùng chung. Cách quản lý: Phần 5.
 5. Bản PDF lãnh đạo: **hiện đơn vị chịu trách nhiệm (cơ quan trình), không hiện tên chuyên viên**; mọi số liệu **truy vết được ngay trên dashboard** tới nguồn nhập. Thiết kế: Phần 6.
 6. Nhân sự chủ trì: 8 người trong Excel đều còn công tác, có tài khoản. Script nhập đối chiếu theo họ tên; Trưởng phòng Tổng hợp hiện tại xác định từ `accounts` (phòng Tổng hợp, chức vụ Trưởng phòng) và hiện trong báo cáo dry-run để chủ dự án xác nhận trước khi ghi.
