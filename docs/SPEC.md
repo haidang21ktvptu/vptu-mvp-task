@@ -182,7 +182,7 @@ vptu-mvp-task/
 | 5 | Giao diện mới | DESIGN.md áp dụng toàn bộ | Duyệt bằng mắt trên staging + Lighthouse |
 | 6 | CI/CD + staging | Workflows, tag phiên bản, migrations tự động | Một PR đi hết pipeline |
 | 7 | Vận hành | Backup, uptime monitor, docs xử lý sự cố | Biên bản khôi phục thử |
-| 8–11 | Theo dõi Kết luận BTVTU | Theo `docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4: GĐ8 mô hình dữ liệu + nhập liệu (8A-1 quản trị đặc quyền, 8A-2 schema KL + hàm `kl_trang_thai`, 8B script nhập), GĐ9 dashboard chạy song song, GĐ10 vòng chỉ đạo + tắt Excel, GĐ11 xuất PDF | Điều kiện xong ghi ở từng GĐ trong tài liệu thiết kế |
+| 8–13 | Theo dõi Kết luận BTVTU | Theo `docs/thiet-ke-theo-doi-kl-btvtu.md` Phần 4 (đánh số lại 15/9/2026): GĐ8 mô hình dữ liệu + nhập liệu (8A-1 quản trị đặc quyền, 8A-2 schema KL + hàm `kl_trang_thai`, 8B script nhập), GĐ9 phân công theo lĩnh vực (9A schema + Quản trị, 9B ánh xạ dữ liệu cũ, phát hành `v2.2.0`), GĐ10 dashboard chạy song song, GĐ11 vòng chỉ đạo + tắt Excel, GĐ12 quản trị nhân sự (luân chuyển, bổ nhiệm, rời cơ quan), GĐ13 xuất PDF | Điều kiện xong ghi ở từng GĐ trong tài liệu thiết kế |
 
 ---
 

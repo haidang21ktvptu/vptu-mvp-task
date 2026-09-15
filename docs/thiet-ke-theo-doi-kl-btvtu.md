@@ -245,35 +245,43 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 
 **Rủi ro**: ban đầu tưởng phải dọn 65 dòng; sau khi tách theo tiến độ và chốt cách xử lý việc chưa có hạn, chỉ còn 3 dòng sửa tay. Rủi ro còn lại chuyển sang vận hành: "Cần điền hạn" phải được chuyên viên xử lý, dashboard đếm tuổi để không bị quên.
 
-### GĐ9 — Phân công lĩnh vực, dashboard đọc và chạy song song (4 PR)
+### GĐ9 — Phân công theo lĩnh vực (2 PR + phát hành `v2.2.0`)
 
 **PR 9A — phân công PCVP theo lĩnh vực (làm 15/9/2026)**: migration 0018 (`dm_linh_vuc`, `kl_nhiem_vu.linh_vuc_ma`, `phu_trach_phong.nganh_ma/linh_vuc_ma`, hai EXCLUDE, hàm quản trị) và 0019 (`kl_pham_vi` theo lĩnh vực, `v_kl_dashboard` thêm cột lĩnh vực); màn hình Quản trị có "Kiêm nhiệm lĩnh vực" và "Danh mục lĩnh vực"; `tests/rls/rls-11`. Chi tiết Phần 5.4.
 
-**PR 9B — ánh xạ lĩnh vực cho dữ liệu cũ**: `scripts/anh-xa-linh-vuc.mjs` đọc 82 giá trị `linh_vuc_chi_tiet` hiện có, đề xuất ánh xạ về `dm_linh_vuc`, xuất bảng cho người quản trị sheet duyệt (file ngoài repo), rồi `--ghi` áp lên production; dòng không ánh xạ được để NULL.
+**PR 9B — ánh xạ lĩnh vực cho dữ liệu cũ**: `scripts/anh-xa-linh-vuc.mjs` đọc 82 giá trị `linh_vuc_chi_tiet` hiện có, đề xuất ánh xạ về `dm_linh_vuc`, xuất bảng cho người quản trị sheet duyệt (file ngoài repo), rồi `--ghi` áp lên production; dòng không ánh xạ được để NULL. Cùng PR: thêm `linh_vuc_ma` vào danh sách cột được đính chính (`kl_dinh_chinh.cot`); thao tác thêm/sửa danh mục lĩnh vực chuyển từ ghi thẳng bảng sang hàm SQL có **nhật ký + lý do** (nguyên tắc "mọi thay đổi quản trị đều có vết" — chủ dự án nhắc 15/9).
 
-**PR 9C — màn hình A3 và A2**: danh sách việc theo chủ trì, cập nhật nhanh, bộ lọc hội nghị/ngành/trạng thái. Mọi số đọc từ `v_kl_dashboard`. **Form nhập nhiệm vụ mới**: chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc** (`linh_vuc_ma`); `linh_vuc_chi_tiet` chỉ là ghi chú tự do.
+**Điều kiện xong GĐ9**: 9A và 9B merged; phát hành **`v2.2.0`** (0018–0019 + migration của 9B) lên production; 82 dòng có `linh_vuc_chi_tiet` được ánh xạ hoặc ghi rõ để NULL; phân công kiêm nhiệm thật (nếu có) nhập trên màn hình Quản trị.
 
-**PR 9D — dashboard A1**: bố cục mục 3.2, chưa có nút chỉ đạo. Xuất HTML hai bản từ snapshot `kl_bao_cao`.
+### GĐ10 — Dashboard đọc và chạy song song (2 PR)
 
-**Chạy song song 2 kỳ báo cáo** (dự kiến tuần 38–39): phòng Tổng hợp cập nhật cả sheet và app; cuối mỗi kỳ chủ dự án đối chiếu 5 ô số tổng + danh sách quá hạn. Lệch → tìm nguyên nhân, ghi CHANGELOG. Trùng 2 kỳ → GĐ10.
+**PR 10A — màn hình A3 và A2**: danh sách việc theo chủ trì, cập nhật nhanh, bộ lọc hội nghị/ngành/trạng thái. Mọi số đọc từ `v_kl_dashboard`. **Form nhập nhiệm vụ mới**: chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc** (`linh_vuc_ma`); `linh_vuc_chi_tiet` chỉ là ghi chú tự do.
 
-**Điều kiện xong GĐ9**: hai kỳ trùng số; 9 chuyên viên chủ trì đều đã tự cập nhật ít nhất một việc trên app (bằng chứng: `kl_lich_su` có ≥ 9 người sửa khác nhau).
+**PR 10B — dashboard A1**: bố cục mục 3.2, chưa có nút chỉ đạo. Xuất HTML hai bản từ snapshot `kl_bao_cao`.
 
-### GĐ10 — Vòng chỉ đạo và tắt Excel (2 PR)
+**Chạy song song 2 kỳ báo cáo** (dự kiến tuần 38–39): phòng Tổng hợp cập nhật cả sheet và app; cuối mỗi kỳ chủ dự án đối chiếu 5 ô số tổng + danh sách quá hạn. Lệch → tìm nguyên nhân, ghi CHANGELOG. Trùng 2 kỳ → GĐ11.
 
-**PR 10A — chỉ đạo**: 4 hành động mục 3.3; ô "Chỉ đạo chưa phản hồi"; thông báo trong app (dùng `direct_messages` đã có) khi bị đôn đốc/giao lại.
+**Điều kiện xong GĐ10**: hai kỳ trùng số; 9 chuyên viên chủ trì đều đã tự cập nhật ít nhất một việc trên app (bằng chứng: `kl_lich_su` có ≥ 9 người sửa khác nhau).
 
-**PR 10B — chốt bắt buộc**: minh chứng bắt buộc khi Hoàn thành; ràng buộc "Có hạn cụ thể ⇒ hạn" chuyển từ cảnh báo sang chặn (nếu GĐ8 chưa làm được vì dữ liệu cũ). Tắt quyền sửa Google Sheet, chuyển sheet sang chế độ chỉ đọc làm lưu trữ.
+### GĐ11 — Vòng chỉ đạo và tắt Excel (2 PR)
 
-**Điều kiện xong GĐ10**: một kỳ báo cáo hoàn toàn từ app; ít nhất một chỉ đạo thật đi hết vòng đôn đốc → phản hồi → đóng.
+**PR 11A — chỉ đạo**: 4 hành động mục 3.3; ô "Chỉ đạo chưa phản hồi"; thông báo trong app (dùng `direct_messages` đã có) khi bị đôn đốc/giao lại.
 
-### GĐ11 — Xuất PDF và cải tiến (1 PR + việc định kỳ)
+**PR 11B — chốt bắt buộc**: minh chứng bắt buộc khi Hoàn thành; ràng buộc "Có hạn cụ thể ⇒ hạn" chuyển từ cảnh báo sang chặn (nếu GĐ8 chưa làm được vì dữ liệu cũ). Tắt quyền sửa Google Sheet, chuyển sheet sang chế độ chỉ đọc làm lưu trữ.
+
+**Điều kiện xong GĐ11**: một kỳ báo cáo hoàn toàn từ app; ít nhất một chỉ đạo thật đi hết vòng đôn đốc → phản hồi → đóng.
+
+### GĐ12 — Quản trị nhân sự (1–2 PR)
+
+Luân chuyển, bổ nhiệm, rời cơ quan: đổi phòng/chức vụ/vai trò của tài khoản có hiệu lực theo ngày và có nhật ký (cùng mẫu `phu_trach_phong`/`quyen_lich_su`); việc đang mở của người rời cơ quan → "Giao lại"; việc đã đóng giữ nguyên tên (không hồi tố); khoá tài khoản thay vì xoá. Phạm vi cụ thể chốt khi mở giai đoạn.
+
+### GĐ13 — Xuất PDF và cải tiến (1 PR + việc định kỳ)
 
 - Xuất PDF hai bản trực tiếp từ app (thay HTML dựng tay), có mã báo cáo.
 - Bảng chéo ngành × cơ quan trình; tuổi quá hạn theo bậc 1–7 / 8–30 / >30 ngày.
 - Sau 2 tháng vận hành: rà lại ngưỡng 7 ngày, xem xét gộp ngành 1 và 12 (ghi chú tồn đọng số 1 trong đặc tả cột).
 
-### Vận hành và xử lý lỗi (bổ sung vào `xu-ly-su-co.md` khi GĐ10 xong)
+### Vận hành và xử lý lỗi (bổ sung vào `xu-ly-su-co.md` khi GĐ11 xong)
 
 | Tình huống | Xử lý |
 |---|---|
@@ -288,7 +296,7 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 
 1. **Chủ trì không bao giờ được trống hoặc chung chung.** 10 việc đang ghi "VPTU" gán cho tài khoản Trưởng phòng Tổng hợp, ghi chú "chuyển từ VPTU". Cột chủ trì `NOT NULL`, FK `accounts`, form không cho lưu khi trống.
 2. Ngưỡng "sắp đến hạn": **7 ngày**, đọc từ `kl_cau_hinh`.
-3. Minh chứng bắt buộc khi Hoàn thành: **cảnh báo từ GĐ8, chặn từ GĐ10**.
+3. Minh chứng bắt buộc khi Hoàn thành: **cảnh báo từ GĐ8, chặn từ GĐ11** (đánh số lại 15/9/2026; trước là GĐ10).
 4. Đặc quyền nhập/quản trị dữ liệu KL: **cờ `quan_tri_kl` gắn vào tài khoản cá nhân** của hai người được chỉ định (một phòng Tổng hợp, một phòng CĐS-CY). Không dùng tài khoản dùng chung. Cách quản lý: Phần 5.
 5. Bản PDF lãnh đạo: **hiện đơn vị chịu trách nhiệm (cơ quan trình), không hiện tên chuyên viên**; mọi số liệu **truy vết được ngay trên dashboard** tới nguồn nhập. Thiết kế: Phần 6.
 6. Nhân sự chủ trì: 8 người trong Excel đều còn công tác, có tài khoản. Script nhập đối chiếu theo họ tên; Trưởng phòng Tổng hợp hiện tại xác định từ `accounts` (phòng Tổng hợp, chức vụ Trưởng phòng) và hiện trong báo cáo dry-run để chủ dự án xác nhận trước khi ghi.
@@ -354,7 +362,7 @@ Ví dụ tình huống bạn nêu: PCVP đang phụ trách CĐS-CY chuyển sang
   - Phần giao việc nội bộ (`tasks`) không có ngành → **không áp dụng**.
 - **Màn hình Quản trị**: mỗi dòng PCVP có nút **"Kiêm nhiệm lĩnh vực"** → chọn phòng → ngành → lĩnh vực (danh sách khoá theo ngành, chọn nhiều) → ngày hiệu lực → lý do → Lưu (`admin_kiem_nhiem_linh_vuc`, một transaction cho mọi lĩnh vực đã chọn). Ô bảng phân biệt rõ "Cả phòng" và chip "Kiêm nhiệm: <lĩnh vực> (ngành N)" kèm nút "Kết thúc". Hộp cảnh báo khi kiêm nhiệm chồng lên phạm vi PCVP khác (người phụ trách cả phòng sẽ không còn thấy việc thuộc lĩnh vực này; lĩnh vực đã có người kiêm nhiệm bị khoá). Nhật ký ghi `kiem_nhiem:<phòng>:<ngành>:<lĩnh vực>`.
 - **Thêm lĩnh vực vào ngành đang có PCVP kiêm nhiệm** (tình huống vận hành, `xu-ly-su-co.md` #12): phần Danh mục cảnh báo ngay khi chọn ngành — *"Ngành này đang có [tên PCVP] kiêm nhiệm N/M lĩnh vực. Lĩnh vực mới sẽ thuộc PCVP phụ trách phòng cho tới khi được phân công thêm."* Không chặn; muốn giao lĩnh vực mới cho người kiêm nhiệm thì chủ dự án phân công thêm bằng nút "Kiêm nhiệm lĩnh vực".
-- **Form nhập nhiệm vụ mới** (dashboard GĐ9, chưa làm ở PR 9A): chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc**. Dữ liệu cũ: PR 9B `scripts/anh-xa-linh-vuc.mjs` đọc 82 giá trị `linh_vuc_chi_tiet` hiện có, đề xuất ánh xạ về `dm_linh_vuc`, xuất bảng cho người quản trị sheet duyệt (file ngoài repo), rồi `--ghi` áp lên production; dòng không ánh xạ được để NULL.
+- **Form nhập nhiệm vụ mới** (dashboard GĐ10, chưa làm ở PR 9A): chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc**. Dữ liệu cũ: PR 9B `scripts/anh-xa-linh-vuc.mjs` đọc 82 giá trị `linh_vuc_chi_tiet` hiện có, đề xuất ánh xạ về `dm_linh_vuc`, xuất bảng cho người quản trị sheet duyệt (file ngoài repo), rồi `--ghi` áp lên production; dòng không ánh xạ được để NULL.
 - Kiểm chứng: `tests/rls/rls-11-linh-vuc` — (a) PCVP kiêm nhiệm thấy đúng việc (ngành, lĩnh vực) của phòng khác; (b) PCVP phụ trách phòng không thấy việc đã bị kiêm nhiệm; (c) việc lĩnh vực NULL vẫn thuộc PCVP phòng; (d) hai A1 kiêm nhiệm cùng lĩnh vực cùng kỳ bị EXCLUDE chặn; (e) PCVP phòng thứ 3 bị chặn; (f) kiêm nhiệm hết hiệu lực → việc trở về PCVP phòng; 85 test cũ vẫn xanh.
 
 ### 5.5 Tình huống thường gặp
@@ -450,14 +458,14 @@ Một khối nhỏ cuối dashboard và cuối PDF nội bộ:
 
 Ba số đầu đo phòng Tổng hợp, không đo đơn vị trình. Hiện công khai để lãnh đạo biết con số "quá hạn" đáng tin đến đâu — và để phòng Tổng hợp có động lực cập nhật lúc việc xảy ra thay vì gom cuối kỳ.
 
-### 6.8 Ngăn lỗi ngay trên form nhập (PR 9A, kiểm thử bắt buộc)
+### 6.8 Ngăn lỗi ngay trên form nhập (PR 10A, kiểm thử bắt buộc)
 
 | Ràng buộc trên form | Kiểm thử Playwright |
 |---|---|
 | Chọn "Có hạn cụ thể" → phải điền hạn HOẶC tích "chưa xác định được hạn" và ghi lý do | Test 3 nhánh: trống cả hai → chặn; có hạn → lưu; có lý do → lưu, trạng thái "Cần điền hạn" |
 | Chọn "Ký ban hành" → ô hạn tự điền = ngày BH + 10, khoá không sửa | Test đổi ngày BH → hạn tự đổi theo |
 | Hạn < ngày ban hành → chặn | Test nhập hạn trước ngày BH |
-| Chuyển sang "Hoàn thành" → bắt buộc ngày hoàn thành; ngày ≤ hôm nay; cảnh báo nếu minh chứng trống (chặn từ GĐ10) | Test 3 nhánh |
+| Chuyển sang "Hoàn thành" → bắt buộc ngày hoàn thành; ngày ≤ hôm nay; cảnh báo nếu minh chứng trống (chặn từ GĐ11) | Test 3 nhánh |
 | Ngày ban hành > hôm nay → chặn (lỗi năm 2025/2026) | Test nhập năm sai |
 | Nhập hạn → hiện ngay "còn N ngày" / "đã quá N ngày" bên cạnh ô | Test hiển thị đúng với 3 mốc |
 | Chủ trì trống → không lưu được; dropdown chỉ liệt kê tài khoản đang hoạt động | Test lưu khi trống |
