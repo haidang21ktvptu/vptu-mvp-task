@@ -11,7 +11,7 @@ const CV1_ID = '00000000-0000-4000-8000-000000000004';
 const SO_HOI_NGHI = 997;
 
 test.describe.serial('Kết luận BTVTU — màn hình chuyên viên', () => {
-  let db; let nvId; let page;
+  let db; let nvId; let nv2Id; let page;
 
   test.beforeAll(async ({ browser }, testInfo) => {
     const k = getKeys();
@@ -27,6 +27,13 @@ test.describe.serial('Kết luận BTVTU — màn hình chuyên viên', () => {
     }).select('id').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id;
+    // Dòng "Cần điền hạn" (app, có lý do, không hạn): hoàn thành mà không điền hạn vẫn phải lưu được (CHECK 0014).
+    const { data: nv2, error: e3 } = await db.from('kl_nhiem_vu').insert({
+      hoi_nghi_id: hn.id, chu_tri_id: CV1_ID, noi_dung: `${E2E_TAG} KL cần điền hạn ${Date.now()}`,
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)', nganh_ma: 'KINH_TE_TONG_HOP',
+    }).select('id').single();
+    if (e3) throw new Error(`Tạo nhiệm vụ mẫu 2 thất bại: ${e3.message}`);
+    nv2Id = nv2.id;
     page = await pageAs(browser, 'A3', testInfo);
   });
   test.afterAll(async () => {
@@ -69,6 +76,20 @@ test.describe.serial('Kết luận BTVTU — màn hình chuyên viên', () => {
     await expect(page.locator('#klSo-HOAN_THANH')).toHaveText(String(truoc + 1));
     const { data } = await db.from('kl_nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, thieu_minh_chung').eq('id', nvId).single();
     expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-05', thieu_minh_chung: false });
+  });
+
+  test('việc "Cần điền hạn" hoàn thành không cần điền hạn: lưu được, lý do chưa có hạn giữ nguyên', async () => {
+    const row = page.locator(`#klRow-${nv2Id}`);
+    await expect(row).toHaveAttribute('data-nhom', 'CAN_DIEN_HAN');
+    await row.getByRole('button', { name: 'Cập nhật' }).click();
+    await page.locator('#klCnTienDo').selectOption('HOAN_THANH');
+    await expect(page.locator('#klCnChuaCoHanWrap')).toBeHidden();
+    await page.locator('#klCnMinhChung').fill(`Công văn 20/CV-VPTU ngày 10/9/2026 (${E2E_TAG})`);
+    await page.locator('#klCnLuu').click();
+    await expect(page.locator('#klCapNhatModal')).toBeHidden();
+    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    const { data } = await db.from('kl_nhiem_vu').select('tien_do_ma, han_xu_ly, ly_do_chua_co_han').eq('id', nv2Id).single();
+    expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', han_xu_ly: null, ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)' });
   });
 
   test('ngăn chi tiết: tiến độ ghi "nhập bởi" chuyên viên, nguồn hệ thống, lịch sử có 3 thay đổi', async () => {

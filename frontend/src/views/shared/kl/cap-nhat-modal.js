@@ -64,16 +64,20 @@ function kiemTra(p) {
   } else if (row.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly && trong(p.ly_do_chua_co_han)) {
     return 'Loại "Có hạn cụ thể" phải có hạn xử lý, hoặc tích "Chưa xác định được hạn" và ghi lý do.';
   }
-  if (row.tien_do_ma === 'HOAN_THANH' && !trong(row.minh_chung) && trong(p.minh_chung)) return 'Không xoá minh chứng của việc đã Hoàn thành. Muốn sửa, ghi minh chứng mới.';
+  if (p.tien_do_ma === 'HOAN_THANH' && row.tien_do_ma === 'HOAN_THANH' && !trong(row.minh_chung) && trong(p.minh_chung)) return 'Không xoá minh chứng của việc đã Hoàn thành. Muốn sửa, ghi minh chứng mới.';
   return null;
 }
 
 async function luuKlCapNhat() {
   if (!row) return;
-  const chuaCoHan = !$('klCnChuaCoHan').closest('.hidden') && $('klCnChuaCoHan').checked;
+  // Ô "chưa xác định được hạn" chỉ có nghĩa khi đang hiện (Có hạn cụ thể, chưa Hoàn thành); khi ẩn thì KHÔNG gửi
+  // ly_do_chua_co_han — giữ giá trị DB (việc "Cần điền hạn" hoàn thành mà không có hạn vẫn thoả CHECK 0014;
+  // có hạn thì trigger 0015 tự xoá lý do).
+  const oChuaCoHanHien = !$('klCnChuaCoHan').closest('.hidden');
+  const chuaCoHan = oChuaCoHanHien && $('klCnChuaCoHan').checked;
   const p = {
     tien_do_ma: $('klCnTienDo').value,
-    ly_do_chua_co_han: chuaCoHan ? $('klCnLyDo').value.trim() || null : null,
+    ...(oChuaCoHanHien ? { ly_do_chua_co_han: chuaCoHan ? $('klCnLyDo').value.trim() || null : null } : {}),
     ngay_hoan_thanh: laHT() ? $('klCnNgayHT').value || null : null,
     minh_chung: $('klCnMinhChung').value.trim() || null,
     van_ban_trien_khai: $('klCnVanBan').value.trim() || null,
