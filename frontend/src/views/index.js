@@ -9,6 +9,7 @@ import { mountReassignModal } from '../features/tasks/reassign.js';
 import { initDirectives } from '../features/directives/index.js';
 import { mountMessages, loadDMUnreadMap } from '../features/messages/index.js';
 import { initRealtime } from '../features/realtime.js';
+import { initKlRealtime } from '../features/kl-realtime.js';
 import { onSessionEnter } from '../auth/session.js';
 
 export function registerViews() {
@@ -23,4 +24,5 @@ export function registerViews() {
   mountMessages();
   onSessionEnter(loadDMUnreadMap); // huy hiệu tin nhắn chưa đọc ngay khi vào app
   initRealtime();
+  initKlRealtime(); // kênh KL: bật khi mở màn hình KL, tắt khi đăng xuất (GĐ10)
 }

@@ -7,6 +7,7 @@ import { klTemplate } from './template.js';
 import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet } from './chi-tiet.js';
+import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 
 // Mở màn hình; loc (tuỳ chọn) = bộ lọc do dashboard A1 truyền sang (thay thế toàn bộ bộ lọc hiện có).
 export function openKl(loc) {
@@ -14,6 +15,8 @@ export function openKl(loc) {
   setActiveNav('navKl');
   if (loc) setKlLoc(loc, true);
   loadKl();
+  // Realtime: đọc lại danh sách khi có thay đổi, chỉ khi màn hình này đang hiện; chỉ báo kết nối ở #klKetNoi.
+  batKlRealtime(() => { if (!$('viewKl').classList.contains('hidden')) loadKl(); }, (m) => hienKetNoi('klKetNoi', m));
 }
 
 export function registerKlView() {
