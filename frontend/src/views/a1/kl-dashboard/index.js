@@ -49,7 +49,7 @@ export function openKlDashboard() {
 
 // Bấm một con số: mở danh sách 10B với bộ lọc ghi trong data-loc (JSON), thay toàn bộ bộ lọc cũ.
 function moKlDanhSach({ loc }) {
-  let bo = {};
+  let bo;
   try { bo = JSON.parse(loc || '{}'); } catch { bo = {}; }
   openKl({ ...bo, tuTongQuan: true });
 }
