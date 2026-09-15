@@ -1,13 +1,17 @@
-// Markup màn hình "Quản trị hệ thống" (GĐ8, thiết kế KL BTVTU Phần 5.2, 5.4) — chỉ hiện với tài khoản
-// có quan_tri_he_thong; mọi thao tác gọi hàm SQL admin_* (frontend chỉ ẩn/hiện, không phải nơi chặn).
+// Markup màn hình "Quản trị hệ thống" (GĐ8, thiết kế KL BTVTU Phần 5.2, 5.4) — khu hệ thống chỉ hiện với
+// quan_tri_he_thong, khu danh mục lĩnh vực với quan_tri_kl; mọi thao tác gọi hàm SQL admin_* hoặc đi qua RLS
+// (frontend chỉ ẩn/hiện, không phải nơi chặn).
+import { quanTriDanhMucTemplate } from './template-linh-vuc.js';
+
 export const quanTriTemplate = `
   <div class="dau-trang">
-    <h1>Quản trị hệ thống<small>Cấp quyền quản trị Kết luận BTVTU và phân công lãnh đạo phụ trách phòng</small></h1>
+    <h1>Quản trị hệ thống<small>Cấp quyền quản trị Kết luận BTVTU, phân công lãnh đạo phụ trách phòng và lĩnh vực, danh mục lĩnh vực</small></h1>
     <button type="button" data-action="loadQuanTri" class="btn btn-phu shrink-0">Tải lại</button>
   </div>
 
   <div id="qtCanhBao" class="luong-canh-bao mb-4 hidden" role="status"></div>
 
+  <div id="qtKhuHeThong">
   <div class="bang mb-6">
     <div class="bang-dau">
       <h2>Tài khoản và cờ đặc quyền<span class="chu-phu" id="qtSoNguoiKl"></span></h2>
@@ -34,7 +38,7 @@ export const quanTriTemplate = `
 
   <div class="bang mb-6">
     <div class="bang-dau">
-      <h2>Phó Chánh Văn phòng phụ trách phòng<span class="chu-phu">hiệu lực theo ngày, giữ lịch sử</span></h2>
+      <h2>Phó Chánh Văn phòng phụ trách phòng, kiêm nhiệm lĩnh vực<span class="chu-phu">hiệu lực theo ngày, giữ lịch sử; tối đa 2 phòng "cả phòng" mỗi người</span></h2>
     </div>
     <div class="bang-cuon">
       <table id="qtPhuTrachTable">
@@ -64,6 +68,9 @@ export const quanTriTemplate = `
       </table>
     </div>
   </div>
+  </div>
+
+  <div id="qtKhuDanhMuc" class="hidden">${quanTriDanhMucTemplate}</div>
 `;
 
 // Hộp xác nhận bắt gõ lý do (dùng chung cho cấp/thu cờ và phân công phụ trách).

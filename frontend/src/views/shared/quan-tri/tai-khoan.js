@@ -6,6 +6,7 @@ import { DEPT_NAMES, ROLE_LABELS } from '../../../lib/constants.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { askLyDo } from './ly-do-modal.js';
+import { nhanNganhLinhVuc } from './danh-muc.js';
 
 export const SO_NGUOI_QUAN_TRI_KL = 2; // quy định: đúng hai người (một Tổng hợp, một CĐS-CY)
 
@@ -51,12 +52,18 @@ export function renderTaiKhoan() {
   filterRowsByKeyword('qtTaiKhoanBody', $('qtTimTaiKhoan').value);
 }
 
+// Nhãn cột "Quyền": quan_tri_kl | phu_trach:<phòng> | kiem_nhiem:<phòng>:<ngành>:<lĩnh vực> (0013, 0018).
+function nhanQuyen(co) {
+  const [loai, phong, nganh, linhVuc] = co.split(':');
+  if (loai === 'phu_trach') return `Phụ trách cả ${DEPT_NAMES[phong] || phong}`;
+  if (loai === 'kiem_nhiem') return `Kiêm nhiệm ${nhanNganhLinhVuc(nganh, linhVuc)} — ${DEPT_NAMES[phong] || phong}`;
+  return co === 'quan_tri_kl' ? 'Quản trị KL BTVTU' : co;
+}
+
 function nhatKyRowHtml(r) {
   const nguoi = r.cap_boi ? findAccount(r.cap_boi)?.full_name || r.cap_boi : (r.cap_boi_ghi_chu || 'Hệ thống');
   const tk = findAccount(r.tai_khoan)?.full_name || r.tai_khoan;
-  const quyen = r.co.startsWith('phu_trach:')
-    ? `Phụ trách ${DEPT_NAMES[r.co.slice('phu_trach:'.length)] || r.co.slice('phu_trach:'.length)}`
-    : (r.co === 'quan_tri_kl' ? 'Quản trị KL BTVTU' : r.co);
+  const quyen = nhanQuyen(r.co);
   return `
     <tr>
       <td class="whitespace-nowrap">${formatDateTime(r.luc)}</td>

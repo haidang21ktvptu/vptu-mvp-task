@@ -7,6 +7,7 @@
 //   N5 cv1             Chờ quyết định, không hạn                 → CHO_DIEU_KIEN
 //   N6 cv1             Thường xuyên (có hạn 15/08 vẫn là TX)     → THUONG_XUYEN
 //   N7 cv1             Excel, Hoàn thành, không ngày, không hạn  → HOAN_THANH, ket_qua KHONG_DANH_GIA
+//   Lĩnh vực (0018, cho rls-11): N1, N3, N4 = LV08_TAI_CHINH; N2 = LV08_DAU_TU; N5–N7 NULL (thuộc PCVP phụ trách phòng).
 //   D1: chỉ đạo của truongphong trên N1.
 import { adminClient, IDS } from './lib.mjs';
 
@@ -24,6 +25,11 @@ export async function klSchemaReady() {
   const r = await adminClient().from('kl_nhiem_vu').select('id').limit(1);
   return !r.error;
 }
+// Trên staging trước khi merge 0018 chưa có dm_linh_vuc → fixture bỏ cột linh_vuc_ma, rls-11 tự bỏ qua.
+export async function linhVucReady() {
+  const r = await adminClient().from('dm_linh_vuc').select('ma').limit(1);
+  return !r.error;
+}
 
 async function createKlFixtures() {
   const db = adminClient();
@@ -35,16 +41,17 @@ async function createKlFixtures() {
 
   const base = { hoi_nghi_id: hn.id, nganh_ma: 'KINH_TE_TONG_HOP', co_quan_trinh_ma: 'DANG_UY_UBND' };
   const rows = [
-    { ...base, ma: 'NV-T01', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N1 quá hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15' },
-    { ...base, ma: 'NV-T02', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N2 hoàn thành trễ', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20',
+    { ...base, ma: 'NV-T01', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N1 quá hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', linh_vuc_ma: 'LV08_TAI_CHINH' },
+    { ...base, ma: 'NV-T02', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N2 hoàn thành trễ', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20', linh_vuc_ma: 'LV08_DAU_TU',
       tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-25', minh_chung: 'Công văn 12/CV-VPTU' },
-    { ...base, ma: 'NV-T03', chu_tri_id: IDS.truongphong, noi_dung: 'RLS-TEST N3 ký ban hành', loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: '2026-12-31' },
-    { ...base, ma: 'NV-T04', chu_tri_id: IDS.cv2, noi_dung: 'RLS-TEST N4 cần điền hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài' },
+    { ...base, ma: 'NV-T03', chu_tri_id: IDS.truongphong, noi_dung: 'RLS-TEST N3 ký ban hành', loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: '2026-12-31', linh_vuc_ma: 'LV08_TAI_CHINH' },
+    { ...base, ma: 'NV-T04', chu_tri_id: IDS.cv2, noi_dung: 'RLS-TEST N4 cần điền hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài', linh_vuc_ma: 'LV08_TAI_CHINH' },
     { ...base, ma: 'NV-T05', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N5 chờ điều kiện', loai_thoi_han_ma: 'CHO_QUYET_DINH' },
     { ...base, ma: 'NV-T06', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N6 thường xuyên', loai_thoi_han_ma: 'THUONG_XUYEN', han_xu_ly: '2026-08-15' },
     { ...base, ma: 'NV-T07', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N7 excel không ngày', loai_thoi_han_ma: 'CO_HAN_CU_THE',
       tien_do_ma: 'HOAN_THANH', nguon: 'excel', cap_nhat_luc: '2026-09-01T18:03:00+07:00' },
   ];
+  if (!(await linhVucReady())) rows.forEach((r) => delete r.linh_vuc_ma);
   // defaultToNull: false — khoá thiếu ở một số dòng (tien_do_ma, nguon...) lấy DEFAULT của bảng thay vì NULL.
   const { data: nv, error: e2 } = await db.from('kl_nhiem_vu').insert(rows, { defaultToNull: false }).select('id, ma');
   if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
