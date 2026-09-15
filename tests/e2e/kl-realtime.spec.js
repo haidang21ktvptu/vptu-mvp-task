@@ -31,7 +31,7 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     await expect(page.locator('#klBody tr[id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp xong (ô số đã có giá trị thật)
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT);
     // Chạy trên bản build (vite preview): lớp trong @layer components phải còn sau Tailwind — chấm xanh có màu ngọc.
-    expect(await page.locator('#klKetNoi').evaluate((el) => getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(46, 125, 110)');
+    expect(await page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(46, 125, 110)');
   });
   test.afterAll(async () => {
     await page?.context().close();
@@ -60,7 +60,7 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     test.setTimeout(150_000); // hai lần chờ heartbeat socket (~30 giây mỗi lần)
     await page.context().setOffline(true);
     await expect(page.locator('#klKetNoi')).toContainText('làm mới mỗi 60 giây', KN);
-    expect(await page.locator('#klKetNoi').evaluate((el) => getComputedStyle(el).color)).toBe('rgb(138, 101, 18)'); // chữ vàng --muc-vang trên bản build
+    expect(await page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(138, 101, 18)'); // chữ vàng --muc-vang trên bản build
     await page.context().setOffline(false);
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', KN);
   });
