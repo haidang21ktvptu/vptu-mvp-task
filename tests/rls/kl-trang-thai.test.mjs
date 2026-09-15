@@ -55,7 +55,7 @@ describe('kl_trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip:
     assert.equal(r.trang_thai, 'HOAN_THANH'); assert.equal(r.ket_qua, 'KHONG_DANH_GIA'); assert.equal(r.do_tre_nhap_lieu, null);
     const { data } = await adminClient().from('kl_nhiem_vu').select('cap_nhat_luc, thieu_minh_chung').eq('id', fx.n7).single();
     assert.equal(new Date(data.cap_nhat_luc).toISOString(), '2026-09-01T11:03:00.000Z');
-    assert.equal(data.thieu_minh_chung, true, 'cờ cảnh báo thiếu minh chứng (chưa chặn — quyết định 3)');
+    assert.equal(data.thieu_minh_chung, true, 'cờ thiếu minh chứng của dữ liệu cũ (0021 không chặn ngược)');
   });
   test('8. do_tre_nhap_lieu lấy NGÀY theo giờ Việt Nam: ghi nhận 18:30 UTC (= 01:30 hôm sau giờ VN) tính đủ ngày', async () => {
     // Postgres trên Supabase chạy UTC; cast ::date trần sẽ cho 27/08 thay vì 28/08 → thiếu một ngày độ trễ.
@@ -90,10 +90,11 @@ describe('kl_nhiem_vu — ràng buộc và trigger (Phần 2.3, 6.2)', { skip: S
     assert.ok((await db().from('kl_nhiem_vu').insert({ ...base, han_xu_ly: '2026-07-01' }).select('id')).error, 'hạn trước ngày BH');
     assert.ok((await db().from('kl_hoi_nghi').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST tương lai', ngay_ban_hanh: '2099-01-01' }).select('id')).error, 'ngày BH tương lai');
   });
-  test('Hoàn thành bắt buộc ngày hoàn thành (dòng app); ngày ngoài [ngày BH, hôm nay] bị chặn; quay lại đang làm thì xoá ngày', async () => {
-    assert.ok((await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH' }).eq('id', fx.n1).select('id')).error, 'thiếu ngày hoàn thành');
-    assert.ok((await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2099-01-01' }).eq('id', fx.n1).select('id')).error, 'ngày tương lai');
-    const ok = await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01' }).eq('id', fx.n1).select('ghi_hoan_thanh_luc');
+  test('Hoàn thành bắt buộc ngày hoàn thành (và minh chứng từ 0021); ngày ngoài [ngày BH, hôm nay] bị chặn; quay lại đang làm thì xoá ngày', async () => {
+    const mc = { minh_chung: 'RLS-TEST CV 01' };
+    assert.ok((await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ...mc }).eq('id', fx.n1).select('id')).error, 'thiếu ngày hoàn thành');
+    assert.ok((await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2099-01-01', ...mc }).eq('id', fx.n1).select('id')).error, 'ngày tương lai');
+    const ok = await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', ...mc }).eq('id', fx.n1).select('ghi_hoan_thanh_luc');
     assertOk(ok, 'hoàn thành'); assert.ok(ok.data[0].ghi_hoan_thanh_luc, 'ghi lúc chuyển sang Hoàn thành');
     const back = await db().from('kl_nhiem_vu').update({ tien_do_ma: 'DANG_THUC_HIEN' }).eq('id', fx.n1).select('ngay_hoan_thanh, ghi_hoan_thanh_luc');
     assertOk(back, 'quay lại'); assert.deepEqual(back.data[0], { ngay_hoan_thanh: null, ghi_hoan_thanh_luc: null });
