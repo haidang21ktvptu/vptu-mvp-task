@@ -13,6 +13,7 @@ export const klTemplate = `
       <span id="klTinhDen" class="chu-phu text-sm" aria-live="polite"></span>
       <span id="klKetNoi" class="ket-noi" role="status"></span>
       <button type="button" data-action="loadKl" class="btn btn-phu">Tải lại</button>
+      <button type="button" id="klNutThem" data-action="openKlThem" class="btn btn-chinh hidden">Thêm nhiệm vụ</button>
     </div>
   </div>
 
