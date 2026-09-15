@@ -9,6 +9,8 @@ import { userClient, anonClient, adminClient, assertDenied, assertOk, IDS } from
 import { setupKlFixtures, linhVucReady } from './fixtures-kl.mjs';
 
 const SKIP = (await linhVucReady()) ? false : 'Chưa có migration 0018–0019 trên project này (chạy lại sau khi merge).';
+// Phần danh mục qua hàm + đính chính linh_vuc_ma cần 0020 (dm_lich_su): staging trước khi merge PR 9B tự bỏ qua.
+const SKIP_0020 = SKIP || ((await adminClient().from('dm_lich_su').select('id').limit(1)).error ? 'Chưa có migration 0020 (dm_lich_su) trên project này.' : false);
 const LY_DO = 'RLS-TEST LV';
 const NGANH = 'KINH_TE_TONG_HOP';
 const BAY_VIEC = ['NV-T01', 'NV-T02', 'NV-T03', 'NV-T04', 'NV-T05', 'NV-T06', 'NV-T07'];
@@ -103,7 +105,7 @@ describe('RLS-11 giới hạn 2 phòng "cả phòng" mỗi PCVP', { skip: SKIP }
   });
 });
 
-describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký (0020), đọc chung, FK ghép', { skip: SKIP }, () => {
+describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính chính linh_vuc_ma (0020)', { skip: SKIP_0020 }, () => {
   const LY = 'RLS-TEST LV danh mục';
   let maMoi = null;
   after(async () => {
@@ -175,6 +177,9 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký (0020), �
     assert.equal(n6.linh_vuc_ma, null);
     assertOk(await cv2.rpc('kl_duyet_dinh_chinh', { p_id: sai.data, p_chap_nhan: false, p_ly_do: 'RLS-TEST bác' }), 'bác bỏ để dọn');
   });
+});
+
+describe('RLS-11 FK ghép lĩnh vực ↔ ngành (0018)', { skip: SKIP }, () => {
   test('FK ghép: lĩnh vực không thuộc ngành của dòng bị chặn (23503); có lĩnh vực mà bỏ ngành bị chặn (23514) — kể cả service_role', async () => {
     const db = adminClient();
     const r1 = await db.from('kl_nhiem_vu').update({ linh_vuc_ma: 'LV03_TU_PHAP' }).eq('id', fx.n7).select('id');
