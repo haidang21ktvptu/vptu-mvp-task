@@ -5,7 +5,7 @@
 import { NHOM, THU_TU_NHOM, nhomCua } from './nhan.js';
 import { ngayTruoc } from './ngay.js';
 
-export const CHUA_PHAN_LOAI = 'CHUA_PHAN_LOAI'; // lĩnh vực NULL (133 dòng production) — nhóm hiển thị, không bị lọc mất
+export const CHUA_PHAN_LOAI = 'CHUA_PHAN_LOAI'; // lĩnh vực NULL (134 dòng production 15/9) — nhóm hiển thị, không bị lọc mất
 export const CHUA_CO_NGANH = 'CHUA_CO_NGANH';
 
 const demTrong = () => Object.fromEntries(THU_TU_NHOM.map((k) => [k, 0]));

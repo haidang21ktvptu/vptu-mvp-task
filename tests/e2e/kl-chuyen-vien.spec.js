@@ -49,6 +49,7 @@ test.describe.serial('Kết luận BTVTU — màn hình chuyên viên', () => {
     const tong = Number(await page.locator('#klSo-TONG').innerText());
     await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(tong);
     await expect(page.locator('#klTinhDen')).toContainText('Số liệu tính đến');
+    await expect(page.locator('#klNutThem')).toBeHidden(); // chuyên viên không có quan_tri_kl → không có nút Thêm
     await page.locator('#klStats [data-nhom="DANG_THUC_HIEN"]').click();
     const dth = Number(await page.locator('#klSo-DANG_THUC_HIEN').innerText());
     await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(dth);

@@ -64,3 +64,18 @@ export async function capNhatNhiemVu(id, thayDoi) {
   if (r.error) throw new Error(r.error.message);
   if (!r.data || r.data.length === 0) throw new Error('Không có quyền cập nhật nhiệm vụ này.');
 }
+
+// Thêm mới (chỉ quan_tri_kl — policy INSERT 0016 là chốt; trigger 0015/0021 kiểm ràng buộc; lịch sử ghi dòng tạo).
+export async function loadHoiNghi() {
+  return loi(await supabase.from('kl_hoi_nghi').select('id, so_hoi_nghi, so_ket_luan, ngay_ban_hanh').order('so_hoi_nghi', { ascending: false }).order('so_ket_luan'), 'đọc hội nghị');
+}
+export async function themHoiNghi(hn) {
+  const r = await supabase.from('kl_hoi_nghi').insert(hn).select('id, so_hoi_nghi, so_ket_luan, ngay_ban_hanh').single();
+  if (r.error) throw new Error(r.error.code === '23505' ? 'Hội nghị với số kết luận này đã có — chọn trong danh sách.' : r.error.message);
+  return r.data;
+}
+export async function themNhiemVu(nv) {
+  const r = await supabase.from('kl_nhiem_vu').insert(nv).select('id, ma').single();
+  if (r.error) throw new Error(r.error.message);
+  return r.data;
+}

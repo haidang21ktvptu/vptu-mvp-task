@@ -8,13 +8,13 @@ import { nhanTrangThai, THU_TU_NHOM } from '../src/lib/kl/nhan.js';
 
 const MOC = { HOAN_THANH: 146, THUONG_XUYEN: 16, QUA_HAN: 8, DANG_THUC_HIEN: 6, CHO_DIEU_KIEN: 6, CAN_DIEN_HAN: 3, SAP_DEN_HAN: 0 };
 
-// Sinh 185 dòng giả theo bộ số chuẩn: 52 dòng có lĩnh vực, 133 NULL (như production 15/9), 1 dòng không ngành.
+// Sinh 185 dòng giả theo bộ số chuẩn: 51 dòng có lĩnh vực, 134 NULL (đo trên production 15/9: 185 − 51), 1 dòng không ngành.
 function boMau() {
   const rows = [];
   let i = 0;
   for (const [nhom, so] of Object.entries(MOC)) {
     for (let k = 0; k < so; k++, i++) {
-      const coLV = i < 52;
+      const coLV = i < 51;
       rows.push({
         id: `id-${i}`, ma: `NV-${String(i + 1).padStart(3, '0')}`, noi_dung: `Nhiệm vụ ${i + 1}`, nhom_dem: nhom,
         so_hoi_nghi: 1 + (i % 38), ngay_ban_hanh: '2025-11-01', chu_tri_id: `cv${i % 9}`, chu_tri_ten: `Chuyên viên ${i % 9}`, chu_tri_phong: 'TONG_HOP',
@@ -46,11 +46,11 @@ describe('tổng hợp — bất biến và bộ số chuẩn', () => {
     assert.equal(t.tong, 185); assert.equal(t.tyLeHoanThanh, 79); assert.equal(t.hoanThanhChuaMinhChung, 78);
     assert.equal(t.tuoiLonNhatCanDienHan, 300); assert.equal(t.dangMo, 8 + 6 + 6 + 3);
   });
-  test('lọc theo nhóm cho đúng số dòng của ô; lĩnh vực NULL thành "Chưa phân loại" = 133, không mất khỏi tổng', () => {
+  test('lọc theo nhóm cho đúng số dòng của ô; lĩnh vực NULL thành "Chưa phân loại" = 134, không mất khỏi tổng', () => {
     for (const [nhom, so] of Object.entries(MOC)) assert.equal(locRows(rows, { nhom }).length, so, nhom);
-    assert.equal(locRows(rows, { linhVuc: CHUA_PHAN_LOAI }).length, 133);
+    assert.equal(locRows(rows, { linhVuc: CHUA_PHAN_LOAI }).length, 134);
     assert.equal(locRows(rows, { linhVuc: 'LV0' }).length + locRows(rows, { linhVuc: 'LV1' }).length + locRows(rows, { linhVuc: 'LV2' }).length
-      + locRows(rows, { linhVuc: 'LV3' }).length + locRows(rows, { linhVuc: 'LV4' }).length + 133, 185);
+      + locRows(rows, { linhVuc: 'LV3' }).length + locRows(rows, { linhVuc: 'LV4' }).length + 134, 185);
     assert.equal(locRows(rows, { nganh: CHUA_CO_NGANH }).length, 1);
     assert.equal(locRows(rows, { tuKhoa: 'nv-001' }).length, 1);
     assert.equal(locRows(rows, { nhom: 'HOAN_THANH', thieuMinhChung: true }).length, 78);
@@ -61,7 +61,7 @@ describe('tổng hợp — bất biến và bộ số chuẩn', () => {
     assert.equal(n.reduce((s, x) => s + x.linhVuc.reduce((t, l) => t + l.so, 0), 0), 185);
     assert.equal(n.at(-1).ma, CHUA_CO_NGANH);
     n.slice(0, -1).forEach((x) => { const cpl = x.linhVuc.findIndex((l) => l.ma === CHUA_PHAN_LOAI); if (cpl >= 0) assert.equal(cpl, x.linhVuc.length - 1); });
-    assert.equal(n.flatMap((x) => x.linhVuc).filter((l) => l.ma === CHUA_PHAN_LOAI).reduce((s, l) => s + l.so, 0), 133);
+    assert.equal(n.flatMap((x) => x.linhVuc).filter((l) => l.ma === CHUA_PHAN_LOAI).reduce((s, l) => s + l.so, 0), 134);
   });
   test('theoChuTriMo chỉ đếm việc đang mở (23), tổng theo chủ trì = 23; theoHoiNghi lấy 8 hội nghị số lớn nhất, tỷ lệ 0–100', () => {
     const c = theoChuTriMo(rows);

@@ -47,8 +47,9 @@
   .lich-su { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; max-height: 280px; overflow-y: auto; }
 
   /* Modal cập nhật: rộng hơn modal chuẩn, hai cột trên máy tính. */
-  .modal-rong { max-width: 640px; }
+  .modal-rong { max-width: 640px; max-height: calc(100vh - 32px); overflow-y: auto; }
   .cot-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cot-3 { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; }
   .nhan-checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 
   @media (max-width: 768px) {
@@ -59,7 +60,7 @@
     .stats-kl .o-so:nth-last-child(-n+2) { border-bottom: 0; }
     .bang tr > td.o-chi-tiet { padding: 8px 0 0; font-weight: 400; }
     .can-cu tbody th { width: auto; }
-    .cot-2 { grid-template-columns: 1fr; }
+    .cot-2, .cot-3 { grid-template-columns: 1fr; }
     .kl-dau-phai { width: 100%; margin-left: 0; justify-content: space-between; }
   }
 }
