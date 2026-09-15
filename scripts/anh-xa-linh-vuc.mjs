@@ -4,10 +4,12 @@
 //
 //   node anh-xa-linh-vuc.mjs --local                                              # dry-run local → CSV mặc định
 //   node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production      # dry-run production (chỉ đọc)
-//   node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production --ghi --file "<csv đã duyệt>"
+//   node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production --ghi --file "<csv hoặc xlsx đã duyệt>"
 //
 // - Đề xuất chỉ trong phạm vi lĩnh vực THUỘC ĐÚNG ngành của dòng, khớp không phân biệt hoa/thường/dấu; không chắc → trống.
-// - CSV mặc định: D:/TU 2026/Project/vptu-backup/nguon-kl-btvtu/anh-xa-linh-vuc.csv (đã có thì ghi thêm hậu tố ngày).
+// - CSV mặc định: D:/TU 2026/Project/vptu-backup/nguon-kl-btvtu/anh-xa-linh-vuc.csv (đã có thì ghi thêm hậu tố ngày);
+//   --out <file>.xlsx xuất Excel cùng bố cục. --ghi --file nhận .csv hoặc .xlsx (sheet "Đối chiếu lĩnh vực", tiêu đề dòng 5,
+//   cột E = lĩnh vực chốt, cột B tên ngành hiển thị → mã ngành) — người duyệt dùng Excel theo vùng dấu phẩy mở CSV bị gộp cột.
 // - --ghi: chốt sai ngành / không có trong danh mục → dừng, không ghi gì. Ghi bằng một khối SQL (scripts/kl/anh-xa-linh-vuc.mjs
 //   sqlCapNhat): không đổi cap_nhat_luc của dòng, kl_lich_su vẫn có vết từng dòng. Production: --production bắt buộc,
 //   cần backup-db.sh trước và xác nhận của chủ dự án trong phiên (CLAUDE.md rule 12).
@@ -17,6 +19,9 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createDb, dbQuery, parseArgs, PRODUCTION_REF, resolveTarget } from './kl/ket-noi.mjs';
 import { docChot, docCsv, ghiCsv, gomNhom, sqlCapNhat, taoBangDuyet } from './kl/anh-xa-linh-vuc.mjs';
+import { docXlsxDuyet, ghiXlsxDuyet } from './kl/doc-xlsx-linh-vuc.mjs';
+
+const laXlsx = (p) => (p || '').toLowerCase().endsWith('.xlsx');
 
 const ALLOWED = ['--file', '--out', '--local', '--project-ref', '--ghi', '--dry-run', '--production'];
 const CSV_MAC_DINH = 'D:/TU 2026/Project/vptu-backup/nguon-kl-btvtu/anh-xa-linh-vuc.csv';
@@ -43,11 +48,12 @@ async function docDuLieu(db, choPhepDanhMucLocal) {
 
 function duongDanCsv(out) {
   let path = resolve(out || CSV_MAC_DINH);
+  const duoi = laXlsx(path) ? '.xlsx' : '.csv';
   if (existsSync(path)) {
     const ngay = new Date().toISOString().slice(0, 10);
-    path = path.replace(/\.csv$/i, '') + `.${ngay}.csv`;
+    path = path.slice(0, -duoi.length) + `.${ngay}${duoi}`;
     let k = 2;
-    while (existsSync(path)) path = path.replace(/(\.\d{4}-\d{2}-\d{2})(?:-\d+)?\.csv$/, `$1-${k++}.csv`);
+    while (existsSync(path)) path = path.replace(/(\.\d{4}-\d{2}-\d{2})(?:-\d+)?\.(csv|xlsx)$/i, `$1-${k++}.$2`);
     console.log(`Đã có file duyệt cũ — không ghi đè, ghi sang: ${path}`);
   }
   mkdirSync(dirname(path), { recursive: true });
@@ -112,14 +118,18 @@ async function main() {
     const bang = taoBangDuyet(gomNhom(du.nhiemVu), du.nganh, du.linhVuc);
     inBaoCaoDryRun(du, bang);
     const path = duongDanCsv(args.out);
-    writeFileSync(path, ghiCsv(bang), 'utf8');
-    console.log(`\nĐã xuất bảng duyệt (${bang.length} dòng): ${path}\nĐiền cột "linh_vuc_chot" (tên hoặc mã lĩnh vực, để trống = giữ NULL) rồi chạy lại với --ghi --file "<csv>".`);
+    if (laXlsx(path)) await ghiXlsxDuyet(path, bang, du.nganh);
+    else writeFileSync(path, ghiCsv(bang), 'utf8');
+    console.log(`\nĐã xuất bảng duyệt (${bang.length} dòng): ${path}\nĐiền cột "linh_vuc_chot" (tên hoặc mã lĩnh vực, để trống = giữ NULL) rồi chạy lại với --ghi --file "<csv hoặc xlsx>" (Excel: sheet "Đối chiếu lĩnh vực", tiêu đề dòng 5, cột E).`);
     return;
   }
 
-  if (!args.file) throw new Error('--ghi cần --file <csv đã duyệt>.');
-  const rows = docCsv(readFileSync(args.file, 'utf8'));
-  const { cap_nhat: capNhat, bo_qua: boQua, loi } = docChot(rows, du.linhVuc);
+  if (!args.file) throw new Error('--ghi cần --file <csv hoặc xlsx đã duyệt>.');
+  // .xlsx: sheet "Đối chiếu lĩnh vực", cột B tên ngành hiển thị → mã ngành (không nhận diện được → vi phạm, dừng).
+  const { rows, loi: loiDoc } = laXlsx(args.file) ? await docXlsxDuyet(args.file, du.nganh) : { rows: docCsv(readFileSync(args.file, 'utf8')), loi: [] };
+  const chot = docChot(rows, du.linhVuc);
+  const { cap_nhat: capNhat, bo_qua: boQua } = chot;
+  const loi = [...loiDoc, ...chot.loi];
   if (loi.length > 0) { console.log(`\n== VI PHẠM (${loi.length}) — dừng, không ghi gì ==`); loi.forEach((l) => console.log(`  - ${l}`)); process.exitCode = 2; return; }
   const keHoach = await demHienTrang(db, capNhat);
   console.log(`\n== TRƯỚC KHI GHI == ${rows.length} dòng CSV · ${capNhat.length} cặp chốt · ${boQua} cặp để trống (giữ NULL)`);

@@ -1,4 +1,5 @@
 // GĐ9 PR 9B — scripts/anh-xa-linh-vuc.mjs: (a) phần thuần chạy mọi đích — đề xuất không phân biệt hoa/thường/dấu,
+// đọc file duyệt .xlsx (sheet "Đối chiếu lĩnh vực", tên ngành hiển thị → mã ngành; cần exceljs của scripts/, không có → bỏ qua),
 // KHÔNG vượt ngành, không đoán khi chỉ "chứa tên", CSV đọc/ghi tròn; (b) tích hợp chỉ trên Supabase local (RLS_LOCAL=1):
 // dry-run xuất bảng duyệt → --ghi với dòng chốt sai ngành bị dừng → --ghi đúng chỉ điền dòng có chốt, giữ NULL dòng
 // trống, không đụng dòng đã có lĩnh vực, không đổi cap_nhat_luc, kl_lich_su có vết. Dữ liệu tạo trong hội nghị 999.
@@ -11,14 +12,20 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { adminClient, IDS } from './lib.mjs';
 import { setupKlFixtures, linhVucReady } from './fixtures-kl.mjs';
+import { createRequire } from 'node:module';
 import { chuanHoa, deXuat, docChot, docCsv, ghiCsv, gomNhom, taoBangDuyet, COT_CSV } from '../../scripts/kl/anh-xa-linh-vuc.mjs';
+import { docXlsxDuyet, ghiXlsxDuyet, maNganhTuTen } from '../../scripts/kl/doc-xlsx-linh-vuc.mjs';
+
+// exceljs nằm trong scripts/node_modules (CI job staging không cài scripts/): không có thì bỏ qua phần .xlsx.
+const CO_EXCELJS = (() => { try { createRequire(fileURLToPath(new URL('../../scripts/kl/doc-xlsx-linh-vuc.mjs', import.meta.url))).resolve('exceljs'); return true; } catch { return false; } })();
+const SKIP_XLSX = CO_EXCELJS ? false : 'Chưa cài exceljs cho scripts/ (npm ci --prefix scripts).';
 
 const LV = [
   { ma: 'LV08_TAI_CHINH', nganh_ma: 'KINH_TE_TONG_HOP', ten: 'Tài chính', thu_tu: 2 },
   { ma: 'LV08_DAU_TU', nganh_ma: 'KINH_TE_TONG_HOP', ten: 'Đầu tư', thu_tu: 3 },
   { ma: 'LV03_TU_PHAP', nganh_ma: 'NOI_CHINH', ten: 'Tư pháp', thu_tu: 3 },
 ];
-const NGANH = [{ ma: 'KINH_TE_TONG_HOP', ten: '8. …', thu_tu: 8 }, { ma: 'NOI_CHINH', ten: '3. …', thu_tu: 3 }];
+const NGANH = [{ ma: 'KINH_TE_TONG_HOP', ten: '8. Kinh tế tổng hợp - Tài chính - Đầu tư - Ngân sách', thu_tu: 8 }, { ma: 'NOI_CHINH', ten: '3. Nội chính - ANQP - Tư pháp', thu_tu: 3 }];
 
 describe('anh-xa-linh-vuc — đề xuất và CSV (thuần)', () => {
   test('khớp không phân biệt hoa/thường/dấu/khoảng trắng/dấu câu; chỉ trong đúng ngành', () => {
@@ -64,6 +71,38 @@ describe('anh-xa-linh-vuc — đề xuất và CSV (thuần)', () => {
     assert.deepEqual(chot.cap_nhat.map((c) => [c.gia_tri_goc, c.linh_vuc_ma]), [['a', 'LV08_TAI_CHINH'], ['b', 'LV08_DAU_TU']]);
     assert.equal(chot.bo_qua, 1);
     assert.equal(chot.loi.length, 2); assert.match(chot.loi[0], /thuộc ngành NOI_CHINH/); assert.match(chot.loi[1], /không có ngành/);
+  });
+});
+
+describe('anh-xa-linh-vuc — file duyệt .xlsx', { skip: SKIP_XLSX }, () => {
+  test('tên ngành hiển thị → mã: theo số đầu chuỗi, theo tên (kể cả cắt ngắn), theo mã; lạ → null', () => {
+    assert.equal(maNganhTuTen('8. Kinh tế tổng hợp - Tài chính', NGANH), 'KINH_TE_TONG_HOP');
+    assert.equal(maNganhTuTen(' 3) Nội chính ', NGANH), 'NOI_CHINH');
+    assert.equal(maNganhTuTen('Nội chính - ANQP', NGANH), 'NOI_CHINH', 'không số, tên cắt ngắn');
+    assert.equal(maNganhTuTen('KINH_TE_TONG_HOP', NGANH), 'KINH_TE_TONG_HOP');
+    assert.equal(maNganhTuTen('Ngành lạ', NGANH), null);
+    assert.equal(maNganhTuTen('99. Không có', NGANH), null);
+    assert.equal(maNganhTuTen('', NGANH), null);
+  });
+  test('ghi rồi đọc lại .xlsx: cùng cấu trúc docCsv (nganh = mã), bỏ dòng trống, ngành không nhận diện → loi', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'anh-xa-xlsx-'));
+    try {
+      const path = join(dir, 'duyet.xlsx');
+      await ghiXlsxDuyet(path, [
+        { gia_tri_goc: 'Tài chính; "x"', nganh: 'KINH_TE_TONG_HOP', so_dong: 2, linh_vuc_de_xuat: 'Tài chính', linh_vuc_chot: 'tai chinh', ghi_chu: 'ngành 8' },
+        { gia_tri_goc: 'Tư pháp', nganh: 'NOI_CHINH', so_dong: 1, linh_vuc_de_xuat: '', linh_vuc_chot: '', ghi_chu: '' },
+        { gia_tri_goc: 'Lạ', nganh: 'KHONG_CO', so_dong: 1, linh_vuc_de_xuat: '', linh_vuc_chot: 'Tài chính', ghi_chu: '' },
+      ], NGANH);
+      const { rows, loi } = await docXlsxDuyet(path, NGANH);
+      assert.deepEqual(rows, [
+        { gia_tri_goc: 'Tài chính; "x"', nganh: 'KINH_TE_TONG_HOP', so_dong: '2', linh_vuc_de_xuat: 'Tài chính', linh_vuc_chot: 'tai chinh', ghi_chu: 'ngành 8' },
+        { gia_tri_goc: 'Tư pháp', nganh: 'NOI_CHINH', so_dong: '1', linh_vuc_de_xuat: '', linh_vuc_chot: '', ghi_chu: '' },
+      ]);
+      assert.equal(loi.length, 1); assert.match(loi[0], /Dòng 8: không nhận diện được ngành "KHONG_CO"/);
+      const chot = docChot(rows, LV);
+      assert.deepEqual(chot.cap_nhat.map((c) => c.linh_vuc_ma), ['LV08_TAI_CHINH']); assert.equal(chot.bo_qua, 1);
+      await assert.rejects(docXlsxDuyet(join(dir, 'khong-co.xlsx'), NGANH));
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });
 
@@ -115,8 +154,10 @@ describe('anh-xa-linh-vuc — chạy thật trên local', { skip: SKIP_TICH_HOP 
     const giua = (await adminClient().from('kl_nhiem_vu').select('ma, linh_vuc_ma').in('ma', ma).order('ma')).data;
     assert.deepEqual(giua.map((x) => x.linh_vuc_ma), [null, null, 'LV08_NGAN_SACH', null], 'dừng thì không ghi gì');
 
-    const dung = join(dir, 'dung.csv');
-    writeFileSync(dung, ghiCsv([dong('Tài chính', 'LV08_TAI_CHINH'), dong('TÀI CHÍNH', 'tài chính'), dong('Đầu tư', 'Đầu tư'), dong('Không rõ lắm', '')]), 'utf8');
+    // Bước đúng dùng .xlsx (người duyệt điền trên Excel) — cần exceljs; không có thì dùng CSV.
+    const hang = [dong('Tài chính', 'LV08_TAI_CHINH'), dong('TÀI CHÍNH', 'tài chính'), dong('Đầu tư', 'Đầu tư'), dong('Không rõ lắm', '')];
+    const dung = join(dir, CO_EXCELJS ? 'dung.xlsx' : 'dung.csv');
+    if (CO_EXCELJS) await ghiXlsxDuyet(dung, hang, NGANH); else writeFileSync(dung, ghiCsv(hang), 'utf8');
     const r2 = chay(['--ghi', '--file', dung]);
     assert.equal(r2.status, 0, r2.stdout + r2.stderr);
     const sau = (await adminClient().from('kl_nhiem_vu').select('ma, linh_vuc_ma, cap_nhat_luc').in('ma', ma).order('ma')).data;
