@@ -5,6 +5,7 @@ export const klDashboardTemplate = `
     <h1>Tổng quan Kết luận BTVTU<small>Số liệu thời gian thực trong phạm vi phụ trách của đồng chí; bấm vào bất kỳ con số nào để xem danh sách tạo nên con số đó</small></h1>
     <div class="kl-dau-phai">
       <span id="klDbTinhDen" class="chu-phu text-sm" aria-live="polite"></span>
+      <span id="klDbKetNoi" class="ket-noi" role="status"></span>
       <button type="button" data-action="loadKlDashboard" class="btn btn-phu">Tải lại</button>
     </div>
   </div>

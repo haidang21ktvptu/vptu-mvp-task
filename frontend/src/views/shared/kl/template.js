@@ -11,6 +11,7 @@ export const klTemplate = `
     <h1>Kết luận BTVTU<small id="klPhuDe">Nhiệm vụ theo dõi Kết luận Ban Thường vụ Tỉnh ủy trong phạm vi của đồng chí</small></h1>
     <div class="kl-dau-phai">
       <span id="klTinhDen" class="chu-phu text-sm" aria-live="polite"></span>
+      <span id="klKetNoi" class="ket-noi" role="status"></span>
       <button type="button" data-action="loadKl" class="btn btn-phu">Tải lại</button>
     </div>
   </div>

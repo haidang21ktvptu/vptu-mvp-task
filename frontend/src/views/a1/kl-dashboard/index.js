@@ -8,6 +8,7 @@ import { setActiveNav, showSection } from '../../shell.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, cauHinhKl } from '../../../lib/kl/du-lieu.js';
 import { tongHop, theoChuTriMo, theoHoiNghi, theoNganhLinhVuc, chatLuong, kiemBatBien } from '../../../lib/kl/tong-hop.js';
 import { openKl } from '../../shared/kl/index.js';
+import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { klDashboardTemplate } from './template.js';
 import { canThiepHtml, tinhHinhHtml, chatLuongHtml } from './ve-o-so.js';
 import { chuTriHtml, hoiNghiHtml, nganhLinhVucHtml } from './ve-bieu-do.js';
@@ -45,6 +46,7 @@ export function openKlDashboard() {
   showSection('viewKlDashboard');
   setActiveNav('navKlDashboard');
   loadKlDashboard();
+  batKlRealtime(() => { if (!$('viewKlDashboard').classList.contains('hidden')) loadKlDashboard(); }, (m) => hienKetNoi('klDbKetNoi', m));
 }
 
 // Bấm một con số: mở danh sách 10B với bộ lọc ghi trong data-loc (JSON), thay toàn bộ bộ lọc cũ.
