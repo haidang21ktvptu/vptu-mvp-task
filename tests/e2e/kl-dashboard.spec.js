@@ -53,6 +53,19 @@ test.describe.serial('Kết luận BTVTU — dashboard lãnh đạo', () => {
     await veTongQuan();
   });
 
+  test('sau truy vết, mục thanh bên "Kết luận BTVTU" đặt lại bộ lọc: đủ phạm vi, không còn nút Về tổng quan', async () => {
+    const tong = await so(page.locator('#klDbTinhHinh .o-so').first().locator('b'));
+    const o = page.locator('#klDbCanThiep .o-so').first();
+    if (await o.count() === 0) return;
+    await o.click();
+    await expect(page.locator('#klChipLoc')).toContainText('Về tổng quan');
+    await page.locator('#navKl').click();
+    await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(tong);
+    await expect(page.locator('#klChipLoc')).toBeHidden();
+    await page.locator('#navKlDashboard').click();
+    await expect(page.locator('#klDbTinhDen')).toContainText('Số liệu tính đến');
+  });
+
   test('thanh theo chủ trì: đoạn đầu tiên → danh sách đúng số dòng, có chip chủ trì', async () => {
     const doan = page.locator('#klDbChuTri .doan').first();
     if (await doan.count() === 0) return;

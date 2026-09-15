@@ -11,7 +11,7 @@
 
 ```
 cd tests/e2e && npm ci && npx playwright install chromium
-npm test                  # 33 test: desktop + mobile (phiên sẵn) rồi dang-nhap (form)
+npm test                  # 35 test: desktop + mobile (phiên sẵn) rồi dang-nhap (form)
 npm run test:desktop      # hoặc test:mobile
 npm run report            # mở báo cáo HTML của lần chạy gần nhất
 ```
