@@ -1,0 +1,111 @@
+// Kịch bản 9 (GĐ10 PR 10B): chuyên viên mở "Kết luận BTVTU", ô số = số dòng, cập nhật nhanh: chuyển Hoàn thành thiếu
+// minh chứng bị chặn ngay ở form, đủ minh chứng (có ngày → gợi ý ngày hoàn thành) thì lưu, dòng đổi nhóm, ô số đổi theo,
+// ngăn chi tiết ghi "nhập bởi" chính chuyên viên. Nhiệm vụ mẫu tạo bằng service_role trong hội nghị 997 (E2E), tự dọn.
+import { test, expect } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
+import { pageAs } from './lib/app.js';
+import { getKeys } from './lib/keys.mjs';
+import { E2E_TAG } from './global-setup.mjs';
+
+const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const SO_HOI_NGHI = 997;
+
+test.describe.serial('Kết luận BTVTU — màn hình chuyên viên', () => {
+  let db; let nvId; let nv2Id; let page;
+
+  test.beforeAll(async ({ browser }, testInfo) => {
+    const k = getKeys();
+    db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
+    const co = await db.from('kl_nhiem_vu').select('id').limit(1);
+    test.skip(Boolean(co.error), 'Project chưa có module KL (0014+).');
+    await donHoiNghi(db);
+    const { data: hn, error: e1 } = await db.from('kl_hoi_nghi').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-KL`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
+    if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
+    const { data: nv, error: e2 } = await db.from('kl_nhiem_vu').insert({
+      hoi_nghi_id: hn.id, chu_tri_id: CV1_ID, noi_dung: `${E2E_TAG} KL ${testInfo.project.name} ${Date.now()}`,
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', co_quan_trinh_ma: 'DANG_UY_UBND',
+    }).select('id').single();
+    if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
+    nvId = nv.id;
+    // Dòng "Cần điền hạn" (app, có lý do, không hạn): hoàn thành mà không điền hạn vẫn phải lưu được (CHECK 0014).
+    const { data: nv2, error: e3 } = await db.from('kl_nhiem_vu').insert({
+      hoi_nghi_id: hn.id, chu_tri_id: CV1_ID, noi_dung: `${E2E_TAG} KL cần điền hạn ${Date.now()}`,
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)', nganh_ma: 'KINH_TE_TONG_HOP',
+    }).select('id').single();
+    if (e3) throw new Error(`Tạo nhiệm vụ mẫu 2 thất bại: ${e3.message}`);
+    nv2Id = nv2.id;
+    page = await pageAs(browser, 'A3', testInfo);
+  });
+  test.afterAll(async () => {
+    await page?.context().close();
+    if (db) await donHoiNghi(db);
+  });
+
+  test('mở màn hình: ô Tổng = số dòng bảng; dòng mẫu ở nhóm Đang thực hiện; bấm ô lọc đúng', async () => {
+    await page.locator('#navKl').click();
+    const row = page.locator(`#klRow-${nvId}`);
+    await expect(row).toBeVisible();
+    await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
+    const tong = Number(await page.locator('#klSo-TONG').innerText());
+    await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(tong);
+    await expect(page.locator('#klTinhDen')).toContainText('Số liệu tính đến');
+    await page.locator('#klStats [data-nhom="DANG_THUC_HIEN"]').click();
+    const dth = Number(await page.locator('#klSo-DANG_THUC_HIEN').innerText());
+    await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(dth);
+    await expect(row).toBeVisible();
+    await page.locator('#klStats [data-nhom=""]').click();
+  });
+
+  test('cập nhật: Hoàn thành thiếu minh chứng → chặn ở form; minh chứng có ngày → gợi ý ngày; lưu → dòng sang Hoàn thành', async () => {
+    await page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Cập nhật' }).click();
+    await expect(page.locator('#klCapNhatModal')).toBeVisible();
+    await page.locator('#klCnTienDo').selectOption('HOAN_THANH');
+    await expect(page.locator('#klCnHoanThanhWrap')).toBeVisible();
+    await page.locator('#klCnLuu').click();
+    await expect(page.locator('#toastContainer')).toContainText('phải có minh chứng');
+    await expect(page.locator('#klCapNhatModal')).toBeVisible();
+
+    await page.locator('#klCnMinhChung').fill(`Báo cáo số 15/BC-VPTU ngày 5/9/2026 (${E2E_TAG})`);
+    await expect(page.locator('#klCnNgayHT')).toHaveValue('2026-09-05');
+    const truoc = Number(await page.locator('#klSo-HOAN_THANH').innerText());
+    await page.locator('#klCnLuu').click();
+    await expect(page.locator('#klCapNhatModal')).toBeHidden();
+    await expect(page.locator('#toastContainer')).toContainText('Đã cập nhật');
+    const row = page.locator(`#klRow-${nvId}`);
+    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    await expect(page.locator('#klSo-HOAN_THANH')).toHaveText(String(truoc + 1));
+    const { data } = await db.from('kl_nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, thieu_minh_chung').eq('id', nvId).single();
+    expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-05', thieu_minh_chung: false });
+  });
+
+  test('việc "Cần điền hạn" hoàn thành không cần điền hạn: lưu được, lý do chưa có hạn giữ nguyên', async () => {
+    const row = page.locator(`#klRow-${nv2Id}`);
+    await expect(row).toHaveAttribute('data-nhom', 'CAN_DIEN_HAN');
+    await row.getByRole('button', { name: 'Cập nhật' }).click();
+    await page.locator('#klCnTienDo').selectOption('HOAN_THANH');
+    await expect(page.locator('#klCnChuaCoHanWrap')).toBeHidden();
+    await page.locator('#klCnMinhChung').fill(`Công văn 20/CV-VPTU ngày 10/9/2026 (${E2E_TAG})`);
+    await page.locator('#klCnLuu').click();
+    await expect(page.locator('#klCapNhatModal')).toBeHidden();
+    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    const { data } = await db.from('kl_nhiem_vu').select('tien_do_ma, han_xu_ly, ly_do_chua_co_han').eq('id', nv2Id).single();
+    expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', han_xu_ly: null, ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)' });
+  });
+
+  test('ngăn chi tiết: tiến độ ghi "nhập bởi" chuyên viên, nguồn hệ thống, lịch sử có 3 thay đổi', async () => {
+    await page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Chi tiết' }).click();
+    const ct = page.locator(`#klChiTiet-${nvId}`);
+    await expect(ct).toBeVisible();
+    await expect(ct).toContainText('nhập bởi Demo Chuyên viên Một');
+    await expect(ct).toContainText('Nhập trên hệ thống');
+    await expect(ct.locator('summary')).toContainText('Lịch sử: 3 thay đổi');
+  });
+});
+
+async function donHoiNghi(db) {
+  const { data } = await db.from('kl_hoi_nghi').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
+  for (const h of data || []) {
+    await db.from('kl_nhiem_vu').delete().eq('hoi_nghi_id', h.id);
+    await db.from('kl_hoi_nghi').delete().eq('id', h.id);
+  }
+}
