@@ -65,3 +65,31 @@ Cùng bộ số này đã đạt trên local, CI cục bộ và staging với b�
 - Cấp cờ `quan_tri_kl` cho 2 tài khoản (một phòng Tổng hợp, một phòng CĐS-CY) qua màn hình Quản trị (`quyen_lich_su` ghi lý do).
 - Nhập phân công PCVP ↔ phòng: 5 dòng `phu_trach_phong`, khớp chức danh hiện hành.
 - Điều kiện xong GĐ8 (thiết kế Phần 4): nhập 185 dòng, 0 vi phạm cứng, số khớp mốc — **đạt**. Sang GĐ9: chạy song song 2 kỳ báo cáo với Google Sheet.
+
+## 7. Ánh xạ lĩnh vực chi tiết về danh mục `dm_linh_vuc` (GĐ9, 15/9/2026 — sau `v2.2.0`)
+
+Ngày chạy: 15/9/2026 (09:53 UTC = 16:53 giờ Việt Nam). Người thực hiện: chủ dự án, chạy tay `scripts/anh-xa-linh-vuc.mjs --project-ref <production> --production --ghi --file "<xlsx đã duyệt>"` sau khi backup (`prod-20260915-0823-tay`) và xác nhận trong phiên. Người duyệt: người quản trị sheet (phòng Tổng hợp), điền cột "Lĩnh vực chốt" trên file Excel `anh-xa-linh-vuc.2026-09-15.xlsx` (ngoài repo, `vptu-backup/nguon-kl-btvtu/`). Biên bản gốc: `scripts/out/bien-ban-anh-xa-linh-vuc-production-2026-09-15.md` (gitignored).
+
+| Mục | Giá trị |
+|---|---|
+| Dry-run chỉ đọc (danh mục thật, production ở 0020) | 185 nhiệm vụ, 184 có `linh_vuc_chi_tiet`, **84 cặp** (ngành, giá trị): 9 đề xuất được, 14 có gợi ý "chứa tên", 61 trống |
+| Đợt duyệt 1 — cặp đã chốt | **9** (đúng 9 cặp script đề xuất; người duyệt chưa chốt cặp gợi ý/trống nào) |
+| Dòng được điền `linh_vuc_ma` | **51** (0 dòng bỏ qua vì đã có lĩnh vực khác) |
+| Dòng còn `linh_vuc_ma` NULL (có `linh_vuc_chi_tiet`) | **133** |
+| `kl_lich_su` mới (`cot = linh_vuc_ma`, `nguoi_sua_ghi_chu` = script) | **51** — đếm lại khớp; `cap_nhat_luc`/`cap_nhat_boi` của 51 dòng **không đổi** (trigger `b_kl_nhiem_vu_truoc_ghi` tắt tạm trong khối SQL) |
+
+Chi tiết 9 cặp (giá trị gốc trên Excel → mã lĩnh vực · số dòng):
+
+| Ngành | Giá trị gốc | Lĩnh vực | Dòng |
+|---|---|---|---|
+| 2 | Trường chính trị | `LV02_TRUONG_CHINH_TRI` | 1 |
+| 3 | Nội chính | `LV03_NOI_CHINH` | 13 |
+| 3 | ANQP | `LV03_ANQP` | 4 |
+| 4 | Kiểm tra Đảng | `LV04_KIEM_TRA_DANG` | 15 |
+| 5 | Khu/Cụm CN | `LV05_KHU_CUM_CN` | 1 |
+| 8 | Kinh tế tổng hợp | `LV08_KINH_TE_TONG_HOP` | 6 |
+| 9 | Giao thông | `LV09_GIAO_THONG` | 6 |
+| 9 | Xây dựng | `LV09_XAY_DUNG` | 3 |
+| 10 | Chuyển đổi số | `LV10_CHUYEN_DOI_SO` | 2 |
+
+Còn lại: 14 cặp có gợi ý + 61 cặp trống (133 dòng) chờ người quản trị sheet duyệt tiếp; khi có file mới, chạy lại script với `--ghi` — script chỉ điền dòng đang NULL, dòng đã có lĩnh vực được bỏ qua và in ra. Điều kiện xong GĐ9 (thiết kế Phần 4): 9A, 9B merged; `v2.2.0` (0018–0020) trên production; mỗi dòng có `linh_vuc_chi_tiet` hoặc đã ánh xạ hoặc để NULL có chủ ý (đợt duyệt 1) — **đạt**. Sang GĐ10.
