@@ -3,6 +3,12 @@ name: CI
 # pull_request không giới hạn nhánh đích để PR xếp chồng (feature → feature) vẫn được kiểm tra.
 # Job "Kiểm thử RLS + e2e trên staging" chỉ chạy cho pull_request (không chạy khi push main để không
 # chen vào deploy-staging đang áp migration). Secrets cần có: xem docs/kien-truc.md.
+#
+# PR chỉ tài liệu (mọi file đổi khớp `docs/**` hoặc `*.md`, job `phan-loai`): hai job chậm
+# `supabase-db` và `kiem-thu-staging` được thay bằng job rỗng CÙNG TÊN hiển thị để ruleset `main`
+# (bắt buộc 4 check theo tên) vẫn xanh. Không chắc là docs-only (push main, diff lỗi, PR rỗng) → chạy đủ.
+# `gitleaks` và `frontend` luôn chạy. Test RLS bằng token thật trên staging đã chuyển sang
+# deploy-staging.yml (chạy sau db push); trong PR, RLS chạy trên Supabase cục bộ ở `supabase-db`.
 on:
   pull_request:
   push:
@@ -35,8 +41,39 @@ jobs:
           fi
           echo "Đạt: không có file dữ liệu thật."
 
+  # Phân loại PR: docs_only = 'true' chỉ khi danh sách file của PR đọc được (API), có ít nhất một file và
+  # KHÔNG file nào ngoài `docs/**` / `*.md`. Nhánh phát hành (`*phat-hanh*`) luôn 'false': commit đầu nhánh
+  # đó được gắn tag `v*` và `deploy-prod` (job kiem-tra) chỉ tin 4 check của đúng commit ấy, mà push main
+  # không chạy e2e — nên PR phát hành phải chạy đủ dù chỉ đổi tài liệu. Mọi lỗi → 'false'; job không đọc
+  # mã nguồn (không checkout) và không bao giờ đỏ. Chỉ chạy cho pull_request; khi bị bỏ qua (push main)
+  # output rỗng → các job dưới (điều kiện `!cancelled()` + `!= 'true'`) vẫn chạy đủ.
+  phan-loai:
+    name: Phân loại PR (chỉ tài liệu?)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.xet.outputs.docs_only }}
+    steps:
+      - id: xet
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SO_PR: ${{ github.event.pull_request.number }}
+          NHANH: ${{ github.head_ref }}
+        run: |
+          KQ=false
+          FILES=$(gh api "repos/$REPO/pulls/$SO_PR/files" --paginate --jq '.[].filename' 2>/dev/null || true)
+          NGOAI=$(printf '%s\n' "$FILES" | grep -Ev '^docs/|\.md$' || true)
+          case "$NHANH" in *phat-hanh*) NGOAI="(nhánh phát hành — luôn chạy đủ)";; esac
+          if [ -n "$FILES" ] && [ -z "$NGOAI" ]; then KQ=true; fi
+          echo "docs_only=$KQ" >> "$GITHUB_OUTPUT"
+          echo "docs_only=$KQ"
+          printf 'File đổi:\n%s\nNgoài docs/*.md:\n%s\n' "${FILES:-(không đọc được)}" "${NGOAI:-(không có)}"
+
   supabase-db:
     name: Áp migration + lint schema
+    needs: phan-loai
+    if: ${{ !cancelled() && needs.phan-loai.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,6 +106,15 @@ jobs:
           RLS_LOCAL: '1'
         run: npm ci && npm test
 
+  # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ cho PR docs-only (ruleset bắt check theo tên).
+  supabase-db-tai-lieu:
+    name: Áp migration + lint schema
+    needs: phan-loai
+    if: ${{ !cancelled() && needs.phan-loai.outputs.docs_only == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "PR chỉ tài liệu — bỏ qua áp migration, lint schema và test RLS cục bộ."
+
   frontend:
     name: Build frontend + giới hạn 300 dòng
     runs-on: ubuntu-latest
@@ -98,12 +144,15 @@ jobs:
       - name: Không file nào trên 300 dòng
         run: node scripts/check-line-limit.mjs
 
-  # RLS (101 test local / 99 staging, 7 lượt đăng nhập) rồi e2e (43 test, 8 lượt) chạy nối tiếp trong MỘT job — cùng một
-  # IP runner, tổng 15 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth. Nhóm
-  # concurrency để hai PR không cùng lúc ghi dữ liệu mẫu lên staging (không huỷ lượt đang chạy).
+  # e2e (43 test, 8 lượt đăng nhập) trên staging. RLS bằng token thật đã chuyển sang deploy-staging.yml
+  # (chạy sau db push); trong PR, RLS chạy cục bộ ở `supabase-db` với migration của chính PR. 8 lượt
+  # đăng nhập/lần, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth. Nhóm concurrency để hai PR không
+  # cùng lúc ghi dữ liệu mẫu lên staging (không huỷ lượt đang chạy). Giữ tên hiển thị cũ vì ruleset `main`
+  # bắt check theo tên.
   kiem-thu-staging:
     name: Kiểm thử RLS + e2e trên staging
-    if: github.event_name == 'pull_request'
+    needs: phan-loai
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.phan-loai.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: kiem-thu-staging
@@ -120,7 +169,6 @@ jobs:
           cache: npm
           cache-dependency-path: |
             frontend/package-lock.json
-            tests/rls/package-lock.json
             tests/e2e/package-lock.json
       - name: Kiểm tra secrets staging
         run: |
@@ -128,17 +176,35 @@ jobs:
             echo "::error::Thiếu secret STAGING_SUPABASE_ANON_KEY / STAGING_SUPABASE_SERVICE_ROLE_KEY (xem docs/kien-truc.md)."
             exit 1
           fi
-      - name: Cài phụ thuộc (frontend, tests/rls, tests/e2e)
+      - name: Cài phụ thuộc (frontend, tests/e2e)
         run: |
           npm ci --prefix frontend
-          npm ci --prefix tests/rls
           npm ci --prefix tests/e2e
-      - name: Test RLS (token thật, 7 tài khoản seed)
-        working-directory: tests/rls
-        run: npm test
-      - name: Cài Chromium cho Playwright
+      # Cache Chromium theo phiên bản @playwright/test trong lock file; trúng cache thì chỉ cài gói hệ thống.
+      # Lưu cache ngay sau khi cài xong (restore/save tách) để lần chạy e2e đỏ vẫn để lại cache cho lần re-run.
+      - name: Phiên bản Playwright
+        id: pw
+        run: echo "version=$(node -p "require('./tests/e2e/package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+      - name: Khôi phục cache Chromium của Playwright
+        id: pw-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Cài Chromium cho Playwright (khi chưa có cache)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
         working-directory: tests/e2e
         run: npx playwright install --with-deps chromium
+      - name: Lưu cache Chromium (khi vừa cài)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Cài gói hệ thống cho Chromium (khi đã có cache)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        working-directory: tests/e2e
+        run: npx playwright install-deps chromium
       - name: Test e2e (build Vite trỏ staging, 2 kích thước, phiên dùng lại)
         working-directory: tests/e2e
         run: npm test
@@ -149,3 +215,12 @@ jobs:
           name: playwright-report
           path: tests/e2e/playwright-report
           retention-days: 7
+
+  # Job rỗng cùng tên hiển thị với `kiem-thu-staging`, chỉ cho PR docs-only.
+  kiem-thu-staging-tai-lieu:
+    name: Kiểm thử RLS + e2e trên staging
+    needs: phan-loai
+    if: ${{ !cancelled() && needs.phan-loai.outputs.docs_only == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "PR chỉ tài liệu — bỏ qua e2e trên staging."
