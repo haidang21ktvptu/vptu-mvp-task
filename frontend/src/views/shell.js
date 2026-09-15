@@ -14,7 +14,7 @@ function formatLongDate(d) {
 const SECTION_BY_ROLE = { A1: 'viewThuongTruc', A2: 'viewLanhDaoVP', A3: 'viewChuyenVien' };
 // Mục dùng chung ngoài vai trò (GĐ8): chỉ hiện khi tài khoản có cờ tương ứng; mục khai báo data-section
 // tự hiện section của mình, các mục còn lại đưa về section theo vai trò.
-const EXTRA_SECTIONS = ['viewQuanTri', 'viewKl'];
+const EXTRA_SECTIONS = ['viewQuanTri', 'viewKl', 'viewKlDashboard'];
 // Kết luận BTVTU (GĐ10): mục dùng chung mọi vai trò, phạm vi do RLS quyết định.
 const KL_NAV = { id: 'navKl', label: 'Kết luận BTVTU', action: 'openKl', data: { section: 'viewKl' } };
 const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị hệ thống', action: 'openQuanTri', data: { section: 'viewQuanTri' } };
