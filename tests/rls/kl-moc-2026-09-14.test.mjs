@@ -1,6 +1,8 @@
-// Mốc đối chiếu sau khi nhập dữ liệu thật (PR 8B), thiết kế KL BTVTU mục 1.5 và điều kiện xong GĐ8:
-// 185 dòng Excel, tính tại ngày 14/9/2026 bằng kl_trang_thai (qua nhom_dem) phải ra đúng bộ số chủ dự án chốt.
-// Tự bỏ qua khi project chưa có đúng 185 dòng nguon = 'excel' (trước 8B, hoặc trên local/staging chỉ có dữ liệu giả).
+// Mốc đối chiếu sau khi nhập dữ liệu (PR 8B), thiết kế KL BTVTU mục 1.5 và điều kiện xong GĐ8:
+// 185 dòng nguon = 'excel' (file thật trên production; bộ dữ liệu vàng ẩn danh tests/rls/du-lieu-vang/kl-btvtu.json
+// trên local/staging — cùng ngày, loại hạn, tiến độ nên cùng bộ số), tính tại ngày 14/9/2026 bằng kl_trang_thai
+// (qua nhom_dem) phải ra đúng bộ số chủ dự án chốt. Loại trừ fixture RLS-TEST (N7 cũng nguon = 'excel').
+// Tự bỏ qua khi project chưa có đúng 185 dòng (chưa chạy scripts/nhap-kl-btvtu.mjs).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, assertOk } from './lib.mjs';
@@ -13,16 +15,20 @@ export const TONG = 185;
 test(`mốc ${NGAY_MOC}: ${TONG} dòng Excel cho đúng bộ số đã chốt`, async (t) => {
   if (!(await klSchemaReady())) return t.skip('Chưa có migration 0014–0016 trên project này.');
   const db = adminClient();
-  const { data: rows, error } = await db.from('kl_nhiem_vu').select('id').eq('nguon', 'excel');
+  const { data: rows, error } = await db.from('kl_nhiem_vu').select('id, chu_tri_id').eq('nguon', 'excel').not('noi_dung', 'like', 'RLS-TEST%');
   assertOk({ error }, 'đọc dòng excel');
-  if (rows.length !== TONG) return t.skip(`Project có ${rows.length}/${TONG} dòng nguon = excel — chạy sau PR 8B nhập dữ liệu.`);
+  if (rows.length !== TONG) return t.skip(`Project có ${rows.length}/${TONG} dòng nguon = excel — chạy scripts/nhap-kl-btvtu.mjs trước.`);
 
   const dem = Object.fromEntries(Object.keys(MOC).map((k) => [k, 0]));
-  for (const { id } of rows) {
+  const theoChuTri = {};
+  for (const { id, chu_tri_id } of rows) {
     const r = await db.rpc('kl_tinh_trang_thai', { p_id: id, p_ngay: NGAY_MOC });
     assertOk(r, `kl_tinh_trang_thai ${id}`);
     dem[r.data.nhom_dem] = (dem[r.data.nhom_dem] || 0) + 1;
+    theoChuTri[chu_tri_id] = (theoChuTri[chu_tri_id] || 0) + 1;
   }
   assert.deepEqual(dem, MOC, 'bộ số tại 14/9/2026 lệch mốc — giải thích từng dòng lệch trước khi đổi mốc');
+  // Bất biến (mục 2.5): tổng các nhóm = tổng dòng; tổng theo chủ trì = tổng dòng.
   assert.equal(Object.values(dem).reduce((a, b) => a + b, 0), TONG, 'bất biến: tổng các nhóm = tổng dòng');
+  assert.equal(Object.values(theoChuTri).reduce((a, b) => a + b, 0), TONG, 'bất biến: tổng theo chủ trì = tổng dòng');
 });

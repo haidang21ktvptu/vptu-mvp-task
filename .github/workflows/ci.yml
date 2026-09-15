@@ -54,7 +54,15 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: tests/rls/package-lock.json
+          cache-dependency-path: |
+            tests/rls/package-lock.json
+            scripts/package-lock.json
+      # Nạp bộ dữ liệu vàng ẩn danh (185 dòng, GĐ8 PR 8B) để test mốc kl-moc-2026-09-14 chạy thật trên Postgres cục bộ
+      # với migration của chính PR — không chỉ trên staging.
+      - name: Nạp bộ dữ liệu vàng KL BTVTU vào Supabase cục bộ
+        run: |
+          npm ci --prefix scripts
+          node scripts/nhap-kl-btvtu.mjs --file tests/rls/du-lieu-vang/kl-btvtu.json --local --ghi
       - name: Test RLS trên Supabase cục bộ (migration của PR)
         working-directory: tests/rls
         env:

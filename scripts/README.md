@@ -28,6 +28,31 @@ node create-system-account.mjs --project-ref <ref> --rollback      # xoá accoun
 
 Chạy lại an toàn (đã có thì chỉ đặt lại mật khẩu). Staging không cần chạy: `seed.sql` đã tạo sẵn (mật khẩu `123456`). Không ghi mật khẩu vào file nào.
 
+## `nhap-kl-btvtu.mjs` — nhập dữ liệu Theo dõi Kết luận BTVTU (GĐ8 PR 8B)
+
+Đọc file Excel gốc (**ngoài repo**, `D:TU 2026Projectptu-backup
+guon-kl-btvtukl-btvtu-goc.xlsx`) hoặc bộ dữ liệu vàng `tests/rls/du-lieu-vang/kl-btvtu.json` → kiểm tra → ghi `kl_hoi_nghi` / `kl_nhiem_vu` / `kl_lich_su` bằng service_role. Mô-đun ở `scripts/kl/` (kết nối, đọc nguồn, kiểm tra/ánh xạ, ghi). Cần `exceljs` (`npm install` trong `scripts/`).
+
+```
+node nhap-kl-btvtu.mjs --file "<đường dẫn .xlsx>" --local                                   # DRY-RUN (mặc định): không ghi gì
+node nhap-kl-btvtu.mjs --file ../tests/rls/du-lieu-vang/kl-btvtu.json --local --ghi [--xoa-cu]   # bộ vàng vào local
+node nhap-kl-btvtu.mjs --file ../tests/rls/du-lieu-vang/kl-btvtu.json --project-ref vojmrjezspdftovzinek --ghi   # staging
+node nhap-kl-btvtu.mjs --file "<xlsx>" --project-ref frwyxcmbonjaimziiuqr --production --ghi --anh-xa-nguoi-sua "<json>"
+```
+
+- **Dry-run là mặc định**; chỉ `--ghi` mới ghi. Dry-run in: bảng ánh xạ chủ trì (họ tên Excel → `accounts.full_name` khớp chính xác; "VPTU" → tài khoản A2 phòng `TONG_HOP` chức vụ "Trưởng phòng", ghi_chu "chuyển từ VPTU"), bảng đối chiếu số thô, **vi phạm dữ liệu** (thiếu cột, mã trùng, ngoài danh mục, ngày ban hành tương lai, hạn trước ngày ban hành, nhật ký lệch mã…) và **vi phạm ánh xạ** (tên/email không khớp — script dừng, không đoán), nhóm tự xử lý (dòng đang mở "Có hạn cụ thể" trống hạn → `ly_do_chua_co_han`; nhật ký không có mã → suy từ số dòng theo công thức của sheet; nhật ký không rõ người sửa → `nguoi_sua` NULL). Trạng thái **không** tính ở script — đối chiếu bằng test `kl-moc-2026-09-14` sau khi ghi.
+- Từ chối ghi khi đích đã có dòng `nguon = 'excel'`; `--xoa-cu` (xoá dữ liệu Excel cũ rồi nhập lại) chỉ cho local/staging, **bị từ chối trên production**. Production bắt buộc `--production` và, theo CLAUDE.md rule 12, chỉ chạy sau khi chủ dự án xác nhận trong phiên và đã `backup-db.sh`. Lỗi giữa chừng → tự xoá hội nghị/nhiệm vụ vừa tạo trong lần chạy.
+- Nhật ký cũ (sheet `NhatKyChinhSua`) vào `kl_lich_su` `nguon = 'excel'`: cột đổi sang tên cột DB, giá trị danh mục → mã, serial Excel → ngày, người sửa qua `--anh-xa-nguoi-sua` (file JSON `{"email": "username"}` ngoài repo; email chưa có → dừng). Mốc giờ trong sheet ghi hậu tố "Z" nhưng là giờ Việt Nam (trùng cột "Ngày cập nhật gần nhất" từng giây, phân bố 9h–18h) → ghi `+07:00`.
+- Sau khi ghi: đếm lại, `setval` sequence mã (`supabase db query --file`), biên bản `scripts/out/bien-ban-nhap-kl-<đích>-<ngày>.md` (gitignored; không họ tên, không số việc theo người) — chép phần cần vào `docs/bien-ban-nhap-kl-btvtu.md` sau khi nhập production.
+
+## `an-danh-kl-btvtu.mjs` — bộ dữ liệu vàng ẩn danh cho tests/
+
+```
+node an-danh-kl-btvtu.mjs --file "<đường dẫn .xlsx gốc>" --out ../tests/rls/du-lieu-vang/kl-btvtu.json
+```
+
+Giữ mã, hội nghị, số KL, ngày ban hành, loại hạn, hạn, tiến độ, ngành, cơ quan trình, ngày cập nhật; chủ trì → `full_name` của `demo_cv1`/`demo_cv2`/`demo_truongphong`/`demo_qtht` (xoay vòng theo tên đã sắp xếp; "VPTU" giữ nguyên để script nhập tự gán như dữ liệu thật); nội dung "Nhiệm vụ NV-xxx (ẩn)"; bỏ minh chứng, văn bản triển khai, lĩnh vực chi tiết, nhật ký. `tong_hop` của bản ẩn danh phải bằng file thật, khác → không ghi. File JSON một dòng/một nhiệm vụ (quy ước 300 dòng). Chạy lại khi file gốc đổi (`nguon_sha256` trong JSON).
+
 ## `check-line-limit.mjs` — quy ước không file nào trên 300 dòng
 
 Chạy trong CI (`node scripts/check-line-limit.mjs`), quét file git theo dõi; ngoại lệ: `*.md`, lockfile, `supabase/config.toml`, `index.html` gốc (bản cũ), `mockup/`.
