@@ -96,7 +96,14 @@ async function luu(nhapTiep) {
   $('klThLuu').disabled = true;
   try {
     let hn = hoiNghiChon();
-    if (hnMoi) { hn = await themHoiNghi(hnMoi); hoiNghi.unshift(hn); $('klThHoiNghi').insertAdjacentHTML('afterbegin', opt(hn.id, `Hội nghị ${hn.so_hoi_nghi} · ${hn.so_ket_luan} · BH ${formatNgay(hn.ngay_ban_hanh)}`)); }
+    if (hnMoi) {
+      hn = await themHoiNghi(hnMoi);
+      hoiNghi.unshift(hn);
+      $('klThHoiNghi').insertAdjacentHTML('afterbegin', opt(hn.id, `Hội nghị ${hn.so_hoi_nghi} · ${hn.so_ket_luan} · BH ${formatNgay(hn.ngay_ban_hanh)}`));
+      // Chuyển ngay sang hội nghị vừa tạo: nếu bước thêm nhiệm vụ lỗi, lần Lưu sau không tạo hội nghị trùng.
+      $('klThHoiNghi').value = hn.id;
+      capNhatHienThi();
+    }
     const kq = await themNhiemVu({ ...nv, hoi_nghi_id: hn.id });
     notifySuccess(`Đã thêm ${kq.ma}.`);
     afterSave();
