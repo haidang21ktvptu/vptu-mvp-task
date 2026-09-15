@@ -30,7 +30,10 @@ export function parseArgs(argv, allowed) {
 // Không dùng shell (tham số không bị ghép chuỗi); trên Windows nếu chỉ có shim .cmd của npm thì thử lại qua shell.
 export function runCli(cliArgs) {
   let r = spawnSync('supabase', cliArgs, { encoding: 'utf8' });
-  if (r.error?.code === 'ENOENT' && process.platform === 'win32') r = spawnSync('supabase.cmd', cliArgs, { encoding: 'utf8', shell: true });
+  if (r.error?.code === 'ENOENT' && process.platform === 'win32') {
+    // Qua shell thì phải tự bọc dấu nháy cho tham số có khoảng trắng (đường dẫn file tạm).
+    r = spawnSync('supabase.cmd', cliArgs.map((a) => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a)), { encoding: 'utf8', shell: true });
+  }
   if (r.error) throw new Error(`Không chạy được Supabase CLI: ${r.error.message}`);
   if (r.status !== 0) throw new Error(`Lệnh "supabase ${cliArgs.join(' ')}" thất bại:\n${r.stderr || r.stdout}`);
   return r.stdout;

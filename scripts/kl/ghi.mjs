@@ -87,20 +87,26 @@ async function chenLo(db, bang, rows, chon, daTao) {
 
 // Trả về số dòng đã ghi theo bảng. target dùng cho setval qua CLI.
 export async function ghiDuLieu(db, target, dong) {
-  const daTao = { hoi_nghi: [], nhiem_vu: [] };
+  const daTao = { hoi_nghi: [], nhiem_vu: [], lich_su: 0 };
   try {
     const hn = await chenLo(db, 'kl_hoi_nghi', dong.hoiNghi, 'id, so_hoi_nghi, so_ket_luan', daTao.hoi_nghi);
     const idHN = new Map(hn.map((h) => [`${h.so_hoi_nghi}|${h.so_ket_luan}`, h.id]));
     const nv = await chenLo(db, 'kl_nhiem_vu', dong.nhiemVu.map(({ khoa_hoi_nghi, ...r }) => ({ ...r, hoi_nghi_id: idHN.get(khoa_hoi_nghi) })), 'id, ma', daTao.nhiem_vu);
     const idNV = new Map(nv.map((n) => [n.ma, n.id]));
-    const ls = await chenLo(db, 'kl_lich_su', dong.nhatKy.map(({ ma, ...r }) => ({ ...r, nhiem_vu_id: idNV.get(ma) })), 'id');
-    const soMax = Math.max(...dong.nhiemVu.map((r) => Number(r.ma.slice(3))));
-    dbQuery(target, `SELECT setval('public.kl_nhiem_vu_ma_seq', ${soMax}, true);`);
-    return { hoi_nghi: hn.length, nhiem_vu: nv.length, lich_su_excel: ls.length, ma_ke_tiep: `NV-${String(soMax + 1).padStart(3, '0')}` };
+    daTao.lich_su = (await chenLo(db, 'kl_lich_su', dong.nhatKy.map(({ ma, ...r }) => ({ ...r, nhiem_vu_id: idNV.get(ma) })), 'id')).length;
   } catch (err) {
     await donSauLoi(db, daTao);
     throw err;
   }
+  // Dữ liệu đã vào đủ; sequence lỗi (CLI chưa login, token hết hạn) thì KHÔNG xoá lại — in SQL để chạy tay.
+  const soMax = Math.max(...dong.nhiemVu.map((r) => Number(r.ma.slice(3))));
+  const sql = `SELECT setval('public.kl_nhiem_vu_ma_seq', ${soMax}, true);`;
+  try {
+    dbQuery(target, sql);
+  } catch (err) {
+    console.error(`Dữ liệu đã ghi nhưng chưa đặt được sequence mã (${err.message}). Chạy tay: supabase db query ${target.cliArgs.join(' ')} "${sql}"`);
+  }
+  return { hoi_nghi: daTao.hoi_nghi.length, nhiem_vu: daTao.nhiem_vu.length, lich_su_excel: daTao.lich_su, ma_ke_tiep: `NV-${String(soMax + 1).padStart(3, '0')}` };
 }
 
 async function donSauLoi(db, daTao) {
