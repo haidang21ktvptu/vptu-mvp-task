@@ -15,7 +15,7 @@ function finish(value) {
 }
 
 // Ngày hôm nay theo giờ địa phương dạng YYYY-MM-DD (cho <input type="date">).
-function todayLocal() {
+export function todayLocal() {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 10);

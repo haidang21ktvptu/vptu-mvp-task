@@ -110,7 +110,7 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 
 ## 6. Quay lui
 
-Sự cố cụ thể (11 tình huống, lệnh copy-paste): `docs/xu-ly-su-co.md`.
+Sự cố cụ thể (12 tình huống, lệnh copy-paste): `docs/xu-ly-su-co.md`.
 
 - **Nguyên tắc:** production luôn là một tag `v*`; tag `production` (di động) đánh dấu commit đang chạy. Quay lui frontend **không phải** tag lại commit cũ (sha đó đã deploy Pages → bị bỏ qua) mà là một commit mới có cùng nội dung: `git checkout -b hotfix/quay-lui-v2.0.1 v2.0.1 && git commit --allow-empty -m "Quay lui về v2.0.1" && git push -u origin HEAD` → mở PR (CI xanh) → `git tag v2.0.2 && git push origin v2.0.2` → deploy-prod chạy lại, chờ duyệt; migration không áp gì thêm → merge PR sau. Không xoá/đổi tag cũ.
 - **Lỗi trước `db push`** (backup, secrets): production chưa đổi gì.

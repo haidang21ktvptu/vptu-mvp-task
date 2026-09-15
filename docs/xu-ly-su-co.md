@@ -93,3 +93,9 @@ Mọi lệnh dưới đây gõ trong **Git Bash** tại thư mục repo: `cd "/d
 - **Nguyên nhân:** token cá nhân Supabase luôn có hạn; hết hạn thì thành #7 đúng lúc bận.
 - **Xử lý:** supabase.com → **Account → Access Tokens → Generate new token** (tên ghi ngày, ví dụ `github-actions-2026-12`) → GitHub → **Settings → Secrets → `SUPABASE_ACCESS_TOKEN` → Update** → Actions → *Backup định kỳ production* → **Run workflow** → xanh → xoá token cũ → ghi ngày hết hạn mới vào `docs/TRANG-THAI.md` mục 5 (qua PR).
 - **Khôi phục từ backup?** Không.
+
+## 12. Thêm lĩnh vực mới vào một ngành đang có PCVP kiêm nhiệm (vận hành module KL)
+- **Dấu hiệu:** người có `quan_tri_kl` thêm lĩnh vực ở Quản trị → Danh mục lĩnh vực; màn hình hiện dòng vàng *"Ngành này đang có [tên PCVP] kiêm nhiệm N/M lĩnh vực. Lĩnh vực mới sẽ thuộc PCVP phụ trách phòng cho tới khi được phân công thêm."* Sau đó việc gán lĩnh vực mới hiện ở dashboard của PCVP phụ trách phòng, **không** hiện ở PCVP đang kiêm nhiệm ngành đó.
+- **Nguyên nhân:** kiêm nhiệm ghi theo từng cặp (ngành, lĩnh vực) trong `phu_trach_phong` (thiết kế KL Phần 5.4); lĩnh vực mới chưa có dòng nào nên mặc định theo quy tắc "phụ trách cả phòng". Đây là hành vi đúng, không phải lỗi.
+- **Xử lý:** nếu lĩnh vực mới phải thuộc người kiêm nhiệm: chủ dự án (`quan_tri_he_thong`) → Quản trị → dòng PCVP → **Kiêm nhiệm lĩnh vực** → chọn phòng, ngành, tích lĩnh vực mới, lý do, Lưu — có hiệu lực ngay, việc chuyển sang người kiêm nhiệm từ ngày chọn. Không vào được app: `supabase db query --linked --project-ref frwyxcmbonjaimziiuqr "select public.admin_phan_cong_phong('<username PCVP>', '<mã phòng>', true, 'Qua CLI: <lý do>', date '<YYYY-MM-DD hiệu lực>', '<mã ngành>', '<mã lĩnh vực>')"`. Nếu lĩnh vực mới đúng là của PCVP phụ trách phòng: không làm gì.
+- **Khôi phục từ backup?** Không.

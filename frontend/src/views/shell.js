@@ -28,7 +28,8 @@ function navItemHtml(item) {
 const MESSAGES_NAV = { id: 'dmBubbleLauncher', label: 'Nhắn tin', action: 'openDMPicker', badgeId: 'dmBubbleBadge' };
 
 export function renderNav(items) {
-  const extra = state.user?.quan_tri_he_thong ? [QUAN_TRI_NAV] : [];
+  // Quản trị hệ thống: quan_tri_he_thong (cờ, phân công) hoặc quan_tri_kl (danh mục lĩnh vực) — quyền thật ở RLS/hàm.
+  const extra = state.user?.quan_tri_he_thong || state.user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
   $('mainNav').innerHTML = [...items, ...extra, MESSAGES_NAV].map(navItemHtml).join('');
 }
 

@@ -245,11 +245,15 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 
 **Rủi ro**: ban đầu tưởng phải dọn 65 dòng; sau khi tách theo tiến độ và chốt cách xử lý việc chưa có hạn, chỉ còn 3 dòng sửa tay. Rủi ro còn lại chuyển sang vận hành: "Cần điền hạn" phải được chuyên viên xử lý, dashboard đếm tuổi để không bị quên.
 
-### GĐ9 — Dashboard đọc và chạy song song (2 PR)
+### GĐ9 — Phân công lĩnh vực, dashboard đọc và chạy song song (4 PR)
 
-**PR 9A — màn hình A3 và A2**: danh sách việc theo chủ trì, cập nhật nhanh, bộ lọc hội nghị/ngành/trạng thái. Mọi số đọc từ `v_kl_dashboard`.
+**PR 9A — phân công PCVP theo lĩnh vực (làm 15/9/2026)**: migration 0018 (`dm_linh_vuc`, `kl_nhiem_vu.linh_vuc_ma`, `phu_trach_phong.nganh_ma/linh_vuc_ma`, hai EXCLUDE, hàm quản trị) và 0019 (`kl_pham_vi` theo lĩnh vực, `v_kl_dashboard` thêm cột lĩnh vực); màn hình Quản trị có "Kiêm nhiệm lĩnh vực" và "Danh mục lĩnh vực"; `tests/rls/rls-11`. Chi tiết Phần 5.4.
 
-**PR 9B — dashboard A1**: bố cục mục 3.2, chưa có nút chỉ đạo. Xuất HTML hai bản từ snapshot `kl_bao_cao`.
+**PR 9B — ánh xạ lĩnh vực cho dữ liệu cũ**: `scripts/anh-xa-linh-vuc.mjs` đọc 82 giá trị `linh_vuc_chi_tiet` hiện có, đề xuất ánh xạ về `dm_linh_vuc`, xuất bảng cho người quản trị sheet duyệt (file ngoài repo), rồi `--ghi` áp lên production; dòng không ánh xạ được để NULL.
+
+**PR 9C — màn hình A3 và A2**: danh sách việc theo chủ trì, cập nhật nhanh, bộ lọc hội nghị/ngành/trạng thái. Mọi số đọc từ `v_kl_dashboard`. **Form nhập nhiệm vụ mới**: chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc** (`linh_vuc_ma`); `linh_vuc_chi_tiet` chỉ là ghi chú tự do.
+
+**PR 9D — dashboard A1**: bố cục mục 3.2, chưa có nút chỉ đạo. Xuất HTML hai bản từ snapshot `kl_bao_cao`.
 
 **Chạy song song 2 kỳ báo cáo** (dự kiến tuần 38–39): phòng Tổng hợp cập nhật cả sheet và app; cuối mỗi kỳ chủ dự án đối chiếu 5 ô số tổng + danh sách quá hạn. Lệch → tìm nguyên nhân, ghi CHANGELOG. Trùng 2 kỳ → GĐ10.
 
@@ -288,7 +292,7 @@ Tiếp nối cách làm GĐ0–7: mỗi giai đoạn có SPEC bổ sung, migrati
 4. Đặc quyền nhập/quản trị dữ liệu KL: **cờ `quan_tri_kl` gắn vào tài khoản cá nhân** của hai người được chỉ định (một phòng Tổng hợp, một phòng CĐS-CY). Không dùng tài khoản dùng chung. Cách quản lý: Phần 5.
 5. Bản PDF lãnh đạo: **hiện đơn vị chịu trách nhiệm (cơ quan trình), không hiện tên chuyên viên**; mọi số liệu **truy vết được ngay trên dashboard** tới nguồn nhập. Thiết kế: Phần 6.
 6. Nhân sự chủ trì: 8 người trong Excel đều còn công tác, có tài khoản. Script nhập đối chiếu theo họ tên; Trưởng phòng Tổng hợp hiện tại xác định từ `accounts` (phòng Tổng hợp, chức vụ Trưởng phòng) và hiện trong báo cáo dry-run để chủ dự án xác nhận trước khi ghi.
-7. **Phạm vi nhìn thấy**: Chánh Văn phòng nhìn tất cả; **lãnh đạo phòng nào nhìn phòng đó; Phó Chánh Văn phòng nhìn các phòng mình được phân công phụ trách**; hai người có `quan_tri_kl` nhìn toàn bộ module KL. Phân công PCVP ↔ phòng là **dữ liệu có hiệu lực theo ngày**, chủ dự án đổi được ngay trên màn hình Quản trị (Phần 5.5). Áp cho module KL từ GĐ8; áp ngược cho phần giao việc nội bộ là một PR riêng sau (ghi vào việc còn lại), vì đụng RLS của GĐ3.
+7. **Phạm vi nhìn thấy**: Chánh Văn phòng nhìn tất cả; **lãnh đạo phòng nào nhìn phòng đó; Phó Chánh Văn phòng nhìn các phòng mình được phân công phụ trách**; hai người có `quan_tri_kl` nhìn toàn bộ module KL. Phân công PCVP ↔ phòng là **dữ liệu có hiệu lực theo ngày**, chủ dự án đổi được ngay trên màn hình Quản trị (Phần 5.5). Áp cho module KL từ GĐ8; áp ngược cho phần giao việc nội bộ là một PR riêng sau (ghi vào việc còn lại), vì đụng RLS của GĐ3. **Bổ sung 15/9/2026 (PR 9A):** PCVP còn có thể **kiêm nhiệm theo (ngành, lĩnh vực)** ở phòng khác — việc thuộc cặp đó chuyển sang người kiêm nhiệm, PCVP phụ trách cả phòng không còn thấy; việc không có lĩnh vực luôn thuộc PCVP phụ trách phòng; mỗi PCVP tối đa 2 phòng "cả phòng"; A2 vẫn thấy toàn bộ phòng mình. Chi tiết và ràng buộc DB ở Phần 5.4; phần giao việc nội bộ không có ngành nên không áp dụng.
 8. **Không có kỳ báo cáo cố định — dashboard thời gian thực.** Mọi cập nhật của chuyên viên hoặc người nhập hiện ngay trên dashboard. Snapshot chỉ được tạo **khi bấm xuất PDF/HTML** (Phần 3.5), để bản đã gửi đi không đổi.
 9. Nhập cả 194 dòng nhật ký chỉnh sửa cũ vào `kl_lich_su`, gắn `nguon = 'excel'`, để cột "cập nhật cuối" có ngày thật cho các dòng từng được sửa.
 
@@ -336,6 +340,23 @@ Ràng buộc: một phòng có thể có nhiều lãnh đạo phụ trách (Chá
 
 Ví dụ tình huống bạn nêu: PCVP đang phụ trách CĐS-CY chuyển sang Tổng hợp → bỏ tích ô (PCVP, CĐS-CY), tích ô (PCVP, Tổng hợp), lý do "QĐ số .../QĐ-VPTU ngày ...", Lưu. Từ giây đó PCVP thấy dashboard KL và việc của phòng Tổng hợp, không còn thấy CĐS-CY. Hai phút, không cần Claude Code, không cần migration.
 
+**Mở rộng theo lĩnh vực (chủ dự án chốt 15/9/2026, PR 9A — migration 0018, 0019).** Một PCVP có thể **kiêm nhiệm** một phần việc của phòng khác theo cặp (ngành, lĩnh vực), thay vì chỉ phụ trách cả phòng.
+
+- **Danh mục `dm_linh_vuc`** (`ma`, `nganh_ma` → `dm_nganh`, `ten`, `thu_tu`): mỗi lĩnh vực thuộc đúng một ngành. Danh mục ban đầu tách từ tên 12 ngành theo dấu " - " (32 lĩnh vực; ví dụ ngành 8 → Kinh tế tổng hợp / Tài chính / Đầu tư / Ngân sách); migration tự kiểm ghép lại phải ra đúng nguyên văn tên ngành. Người có `quan_tri_kl` thêm lĩnh vực và sửa tên/thứ tự trên màn hình Quản trị (phần "Danh mục lĩnh vực", chỉ hiện với cờ này); không xoá, không chuyển ngành vì đã có việc và phân công tham chiếu.
+- **`kl_nhiem_vu.linh_vuc_ma`** (nullable) + FK ghép `(nganh_ma, linh_vuc_ma) → dm_linh_vuc(nganh_ma, ma)` — lĩnh vực phải thuộc đúng ngành của dòng, DB bảo đảm. `linh_vuc_chi_tiet` (văn bản tự do) **giữ nguyên làm ghi chú**, không dùng để phân quyền. Chủ trì không có `quan_tri_kl` không tự đổi được `linh_vuc_ma` (trigger guard 0015).
+- **`phu_trach_phong`** thêm `nganh_ma`, `linh_vuc_ma`: cả hai NULL = phụ trách **cả phòng**; kiêm nhiệm thì **cả hai bắt buộc** (CHECK) và lĩnh vực thuộc đúng ngành (FK ghép). Hai EXCLUDE (`btree_gist`): (1) cùng lãnh đạo không chồng kỳ trên cùng (phòng, ngành, lĩnh vực); (2) một (phòng, ngành, lĩnh vực) chỉ có **một người** kiêm nhiệm trong một thời kỳ, dù là ai — không chồng chéo ở tầng DB.
+- **Giới hạn**: mỗi PCVP tối đa **2 dòng phụ trách cả phòng** đang/sẽ hiệu lực; kiêm nhiệm lĩnh vực **không** tính vào giới hạn. Kiểm trong `admin_phan_cong_phong` (báo lỗi tiếng Việt); màn hình khoá nút "—" khi đã đủ 2.
+- **Quy tắc phạm vi** trong `kl_pham_vi(chu_tri, nganh_ma, linh_vuc_ma)` (0019), tính tại ngày hiện tại giờ Việt Nam:
+  - PCVP phụ trách cả phòng: thấy việc của phòng đó, **trừ** việc có (ngành, lĩnh vực) đang được một A1 **khác** kiêm nhiệm.
+  - PCVP kiêm nhiệm: thấy việc của phòng đó có đúng (ngành, lĩnh vực) được giao; **không** được mở cả phòng (`phu_trach()` chỉ xét dòng không có ngành).
+  - Việc có `linh_vuc_ma` NULL: thuộc PCVP phụ trách phòng, không ai kiêm nhiệm được.
+  - Chánh Văn phòng, `quan_tri_kl`, A3 việc mình: không đổi. **Trưởng phòng (A2) vẫn thấy toàn bộ việc phòng mình, kể cả lĩnh vực đã bị PCVP khác kiêm nhiệm** — chủ dự án xác nhận 15/9.
+  - Phần giao việc nội bộ (`tasks`) không có ngành → **không áp dụng**.
+- **Màn hình Quản trị**: mỗi dòng PCVP có nút **"Kiêm nhiệm lĩnh vực"** → chọn phòng → ngành → lĩnh vực (danh sách khoá theo ngành, chọn nhiều) → ngày hiệu lực → lý do → Lưu (`admin_kiem_nhiem_linh_vuc`, một transaction cho mọi lĩnh vực đã chọn). Ô bảng phân biệt rõ "Cả phòng" và chip "Kiêm nhiệm: <lĩnh vực> (ngành N)" kèm nút "Kết thúc". Hộp cảnh báo khi kiêm nhiệm chồng lên phạm vi PCVP khác (người phụ trách cả phòng sẽ không còn thấy việc thuộc lĩnh vực này; lĩnh vực đã có người kiêm nhiệm bị khoá). Nhật ký ghi `kiem_nhiem:<phòng>:<ngành>:<lĩnh vực>`.
+- **Thêm lĩnh vực vào ngành đang có PCVP kiêm nhiệm** (tình huống vận hành, `xu-ly-su-co.md` #12): phần Danh mục cảnh báo ngay khi chọn ngành — *"Ngành này đang có [tên PCVP] kiêm nhiệm N/M lĩnh vực. Lĩnh vực mới sẽ thuộc PCVP phụ trách phòng cho tới khi được phân công thêm."* Không chặn; muốn giao lĩnh vực mới cho người kiêm nhiệm thì chủ dự án phân công thêm bằng nút "Kiêm nhiệm lĩnh vực".
+- **Form nhập nhiệm vụ mới** (dashboard GĐ9, chưa làm ở PR 9A): chọn ngành → dropdown lĩnh vực khoá theo ngành, **bắt buộc**. Dữ liệu cũ: PR 9B `scripts/anh-xa-linh-vuc.mjs` đọc 82 giá trị `linh_vuc_chi_tiet` hiện có, đề xuất ánh xạ về `dm_linh_vuc`, xuất bảng cho người quản trị sheet duyệt (file ngoài repo), rồi `--ghi` áp lên production; dòng không ánh xạ được để NULL.
+- Kiểm chứng: `tests/rls/rls-11-linh-vuc` — (a) PCVP kiêm nhiệm thấy đúng việc (ngành, lĩnh vực) của phòng khác; (b) PCVP phụ trách phòng không thấy việc đã bị kiêm nhiệm; (c) việc lĩnh vực NULL vẫn thuộc PCVP phòng; (d) hai A1 kiêm nhiệm cùng lĩnh vực cùng kỳ bị EXCLUDE chặn; (e) PCVP phòng thứ 3 bị chặn; (f) kiêm nhiệm hết hiệu lực → việc trở về PCVP phòng; 85 test cũ vẫn xanh.
+
 ### 5.5 Tình huống thường gặp
 
 | Tình huống | Làm gì |
@@ -343,6 +364,8 @@ Ví dụ tình huống bạn nêu: PCVP đang phụ trách CĐS-CY chuyển sang
 | Người giữ `quan_tri_kl` nghỉ phép dài | Cấp tạm cho người thay, ghi lý do có ngày; đặt nhắc trong TRANG-THAI mục 5 để thu lại |
 | Người giữ quyền chuyển công tác | Tắt cờ ngay ngày quyết định có hiệu lực; cấp cho người mới; nhật ký giữ cả hai dòng |
 | PCVP đổi phòng phụ trách | Màn hình Quản trị → Phụ trách phòng → đổi tích + lý do + ngày (5.4). Không cần PR |
+| PCVP kiêm nhiệm một lĩnh vực của phòng khác | Màn hình Quản trị → dòng PCVP → "Kiêm nhiệm lĩnh vực" → phòng, ngành, lĩnh vực, ngày, lý do (5.4). Kết thúc bằng nút "Kết thúc" trên chip; lịch sử giữ nguyên |
+| Thêm lĩnh vực vào ngành đang có PCVP kiêm nhiệm | Người có `quan_tri_kl` thêm ở phần Danh mục; màn hình cảnh báo lĩnh vực mới thuộc PCVP phụ trách phòng cho tới khi được phân công thêm (`xu-ly-su-co.md` #12) |
 | Chủ dự án chuyển công tác | Migration gán `quan_tri_he_thong` cho người kế nhiệm, thu của người cũ — phải qua PR để có vết trong git, kèm cập nhật `xu-ly-su-co.md` và secret GitHub/Supabase theo checklist bàn giao |
 | Nghi ngờ ai đó sửa dữ liệu KL trái phép | Mở `kl_lich_su` lọc theo người; đối chiếu `quyen_lich_su` xem lúc đó người ấy có cờ không |
 

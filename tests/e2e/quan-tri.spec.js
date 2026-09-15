@@ -1,6 +1,8 @@
 // Kịch bản 8 (GĐ8, thiết kế KL BTVTU Phần 5): tài khoản có quan_tri_he_thong thấy mục "Quản trị hệ thống",
 // cấp rồi thu quyền quản trị KL cho demo_cv2 qua hộp lý do (bắt buộc), nhật ký hiện đúng hai dòng;
-// tài khoản thường (A3) không có mục này. Tự bỏ qua khi project chưa có demo_qtht (trước khi merge 0013).
+// tài khoản thường (A3) không có mục này. GĐ9 PR 9A: bảng phụ trách có nút "Kiêm nhiệm lĩnh vực", hộp chọn
+// ngành → lĩnh vực khoá theo ngành. Tự bỏ qua khi project chưa có demo_qtht (trước khi merge 0013) hoặc chưa có
+// dm_linh_vuc (trước khi merge 0018 — màn hình đọc cột mới của phu_trach_phong).
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -10,6 +12,11 @@ import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
 const CV2_ID = '00000000-0000-4000-8000-000000000005';
+
+function dbAdmin() {
+  const k = getKeys();
+  return createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
+}
 
 async function pageAsQtht(browser, testInfo) {
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
@@ -22,15 +29,18 @@ async function pageAsQtht(browser, testInfo) {
 
 test.describe.serial('Quản trị hệ thống: cấp/thu quyền quản trị KL có lý do', () => {
   // Kiểm lúc chạy (sau global-setup), không kiểm lúc nạp file: phiên demo_qtht do global-setup tạo.
+  let coLinhVuc = false;
+  test.beforeAll(async () => {
+    coLinhVuc = !(await dbAdmin().from('dm_linh_vuc').select('ma').limit(1)).error;
+  });
   test.beforeEach(() => {
     test.skip(!existsSync(storageStatePath('QTHT')), 'Chưa có demo_qtht trên project này (chạy sau khi merge 0013 + nạp seed).');
+    test.skip(!coLinhVuc, 'Chưa có migration 0018 (dm_linh_vuc) trên project này — chạy sau khi merge.');
   });
 
   test.afterAll(async () => {
     // Thu về trạng thái seed dù test lỗi giữa chừng (service_role, dữ liệu giả).
-    const k = getKeys();
-    const db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
-    await db.from('accounts').update({ quan_tri_kl: false }).eq('id', CV2_ID);
+    await dbAdmin().from('accounts').update({ quan_tri_kl: false }).eq('id', CV2_ID);
   });
 
   test('A3 thường không có mục Quản trị hệ thống', async ({ browser }, testInfo) => {
@@ -73,6 +83,16 @@ test.describe.serial('Quản trị hệ thống: cấp/thu quyền quản trị 
     await expect(page.locator('#qtPhuTrachBody')).toContainText('Chánh Văn phòng — phụ trách mọi phòng');
     await expect(page.locator('#qtPhuTrachBody button[data-username="demo_pcvp"][data-phong="TONG_HOP"]')).toHaveAttribute('aria-checked', 'true');
     await expect(page.locator('#qtPhuTrachBody button[data-username="demo_pcvp2"][data-phong="TONG_HOP"]')).toHaveAttribute('aria-checked', 'false');
+
+    // Kiêm nhiệm lĩnh vực (GĐ9 PR 9A): hộp mở đúng PCVP, chọn ngành 8 → 4 lĩnh vực khoá theo ngành; Huỷ không ghi gì.
+    await page.locator('#qtPhuTrachBody button[data-action="moKiemNhiem"][data-username="demo_pcvp2"]').click();
+    await expect(page.locator('#qtKiemNhiemModal')).toBeVisible();
+    await expect(page.locator('#qtKnMoTa')).toContainText('Demo Phó Chánh Văn phòng Hai');
+    await page.locator('#qtKnNganh').selectOption('KINH_TE_TONG_HOP');
+    await expect(page.locator('#qtKnLinhVuc input[type="checkbox"]')).toHaveCount(4);
+    await expect(page.locator('#qtKnLinhVuc')).toContainText('Tài chính');
+    await page.locator('#qtKiemNhiemModal button[data-action="dongKiemNhiem"]').click();
+    await expect(page.locator('#qtKiemNhiemModal')).toBeHidden();
 
     // Về mục theo vai trò: section vai trò hiện lại, mục Quản trị ẩn.
     await page.locator('#navA3Tasks').click();
