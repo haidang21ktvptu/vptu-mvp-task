@@ -90,12 +90,15 @@ jobs:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: ci-placeholder
         run: npm run build
-      - name: ESLint (frontend/src, tests/e2e, scripts)
+      - name: Unit test module thuần KL (frontend/tests, node:test)
+        working-directory: frontend
+        run: npm test
+      - name: ESLint (frontend/src, frontend/tests, tests/e2e, scripts)
         run: npm ci && npm run lint
       - name: Không file nào trên 300 dòng
         run: node scripts/check-line-limit.mjs
 
-  # RLS (101 test local / 99 staging, 7 lượt đăng nhập) rồi e2e (17 test, 8 lượt) chạy nối tiếp trong MỘT job — cùng một
+  # RLS (101 test local / 99 staging, 7 lượt đăng nhập) rồi e2e (23 test, 8 lượt) chạy nối tiếp trong MỘT job — cùng một
   # IP runner, tổng 15 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth. Nhóm
   # concurrency để hai PR không cùng lúc ghi dữ liệu mẫu lên staging (không huỷ lượt đang chạy).
   kiem-thu-staging:

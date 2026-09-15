@@ -13,7 +13,7 @@ export default [
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.browser } },
   },
   {
-    files: ['frontend/*.js', 'tests/e2e/**/*.{js,mjs}', 'scripts/**/*.mjs', 'eslint.config.js'],
+    files: ['frontend/*.js', 'frontend/tests/**/*.mjs', 'tests/e2e/**/*.{js,mjs}', 'scripts/**/*.mjs', 'eslint.config.js'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.node } },
   },
 ];

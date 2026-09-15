@@ -6,6 +6,7 @@
 @import './components.css';
 @import './tables.css';
 @import './features.css';
+@import './kl.css';
 
 @tailwind base;
 @tailwind components;
