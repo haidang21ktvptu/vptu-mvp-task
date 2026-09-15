@@ -52,13 +52,16 @@ Ba bước, người duyệt là người quản trị sheet (phòng Tổng hợ
 ```bash
 node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production           # 1. dry-run CHỈ ĐỌC → CSV duyệt ngoài repo
 #   → D:/TU 2026/Project/vptu-backup/nguon-kl-btvtu/anh-xa-linh-vuc.csv (đã có file thì ghi thêm hậu tố ngày, không ghi đè)
-#   2. Người duyệt mở CSV (Excel, phân cách ";"), điền cột linh_vuc_chot (tên hoặc mã lĩnh vực); để trống = giữ NULL.
-node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production --ghi --file "<csv đã duyệt>"   # 3. sau backup-db.sh + xác nhận trong phiên
+#   2. Người duyệt điền cột linh_vuc_chot (tên hoặc mã lĩnh vực); để trống = giữ NULL. Excel theo vùng dấu phẩy mở CSV ";" bị gộp cột
+#      → dùng .xlsx: thêm --out "<file>.xlsx" ở bước 1 (cùng bố cục) hoặc người duyệt tự tạo file có sheet "Đối chiếu lĩnh vực",
+#      tiêu đề dòng 5, dữ liệu từ dòng 6, cột A giá trị gốc · B tên ngành ("8. Kinh tế tổng hợp - …") · C số dòng · D đề xuất · E CHỐT · F ghi chú.
+node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production --ghi --file "<csv hoặc xlsx đã duyệt>"   # 3. sau backup-db.sh + xác nhận trong phiên
 node anh-xa-linh-vuc.mjs --local [--out <csv>]                                       # thử trên local (bộ vàng không có linh_vuc_chi_tiet)
 ```
 
 - `--ghi` in báo cáo trước (từng cặp → lĩnh vực, số dòng sẽ điền, dòng đã có lĩnh vực khác bị bỏ qua) và sau (đếm theo lĩnh vực, còn NULL, số dòng `kl_lich_su`); chốt sai ngành hoặc không có trong danh mục → dừng, không ghi gì. Chỉ điền dòng đang NULL.
 - Ghi bằng một khối SQL (`scripts/kl/anh-xa-linh-vuc.mjs` → `sqlCapNhat`): tắt tạm trigger `b_kl_nhiem_vu_truoc_ghi` để **không đổi `cap_nhat_luc`** của 82 dòng (giữ đúng chỉ số "không cập nhật 30 ngày"); `kl_lich_su` vẫn ghi từng dòng `cot = linh_vuc_ma` với `nguoi_sua_ghi_chu` của script. Biên bản: `scripts/out/bien-ban-anh-xa-linh-vuc-<đích>-<ngày>.md` (gitignored) → chép (không họ tên) vào `docs/bien-ban-nhap-kl-btvtu.md`.
+- `--ghi --file *.xlsx` (`scripts/kl/doc-xlsx-linh-vuc.mjs`, exceljs): nhận diện theo đuôi file; cột B tên ngành hiển thị → mã ngành theo số đầu chuỗi ("8." → ngành 8) hoặc theo tên; không nhận diện được → vi phạm, dừng; sheet "DanhMuc" bỏ qua; phần còn lại (chốt theo tên/mã, đúng ngành, chỉ dòng NULL, không đổi `cap_nhat_luc`, đếm lại) y như CSV.
 - Đích chưa có migration 0018 (production trước `v2.2.0`): dry-run vẫn chạy được bằng danh mục đọc từ Supabase local; `--ghi` thì bắt buộc đích đã có.
 
 ## `an-danh-kl-btvtu.mjs` — bộ dữ liệu vàng ẩn danh cho tests/

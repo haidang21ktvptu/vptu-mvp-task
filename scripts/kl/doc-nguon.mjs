@@ -30,7 +30,7 @@ export function gioVN(d) { return `${ngayISO(d)}T${pad(d.getUTCHours())}:${pad(d
 export function serialSangNgay(n) { return ngayISO(new Date(Math.round((n - 25569) * 86400) * 1000)); }
 
 // Giá trị "thô" của ô: chuỗi, số, Date hoặc null. richText ghép lại; công thức lấy result (""/undefined → null).
-function giaTriO(cell) {
+export function giaTriO(cell) {
   const v = cell.value;
   if (v == null || v === '') return null;
   if (typeof v !== 'object') return v;
