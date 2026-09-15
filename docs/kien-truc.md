@@ -20,12 +20,14 @@ flowchart LR
     A1[Quét rò rỉ bí mật<br/>gitleaks] 
     A2[Áp migration + lint schema<br/>supabase start · db lint · RLS local]
     A3[Build frontend + 300 dòng<br/>vite build · eslint]
-    A4[Kiểm thử RLS + e2e trên staging<br/>85 test RLS · 17 test e2e<br/>15 lượt đăng nhập]
+    A4[Kiểm thử RLS + e2e trên staging<br/>43 test e2e · 8 lượt đăng nhập<br/>Chromium cache]
+    A0[Phân loại PR<br/>docs-only → A2, A4 = job rỗng cùng tên]
   end
   PR -->|merge (merge commit, SAU khi phát hành)| M((main))
   M --> S1
   subgraph ST["push main  (deploy-staging.yml)"]
     S1[db push → staging] --> S2[build 2 bản:<br/>production = tag `production`<br/>staging = main] --> S3[deploy Pages<br/>actions/deploy-pages<br/>kiểm tra /staging/phien-ban.json]
+    S1 --> S4[Test RLS token thật<br/>7 lượt · không chặn deploy]
   end
   PR -->|git tag v* lên commit ĐẦU NHÁNH<br/>khi CI xanh, chưa merge| T((tag v2.x))
   T --> PK
@@ -45,12 +47,14 @@ Hai nguyên tắc cố định: (1) **migration luôn chạy trước deploy fro
 | Quét rò rỉ bí mật | gitleaks toàn bộ lịch sử + bước `git ls-files` chặn file `.xlsx/.xls/.csv/.pdf` (repo public, dữ liệu thật để ngoài repo — thiết kế KL BTVTU mục 2.4b; gitleaks bỏ qua các đuôi này theo allowlist mặc định nên không dùng rule gitleaks) |
 | Áp migration + lint schema | `supabase start` trên Postgres trắng (áp đủ migrations + `seed.sql`) + `supabase db lint --fail-on error` + **`tests/rls` với `RLS_LOCAL=1`** (kiểm tra RLS trên migration của chính PR, không tốn lượt đăng nhập hosted) |
 | Build frontend + giới hạn 300 dòng | `vite build` với giá trị giả, ESLint, `scripts/check-line-limit.mjs` |
-| Kiểm thử RLS + e2e trên staging | *Chỉ pull_request.* Một job: `tests/rls` (85 test, token thật của 7 tài khoản seed; test mốc 185 dòng tự bỏ qua khi chưa nhập dữ liệu) rồi `tests/e2e` (Playwright, build Vite trỏ staging, 17 test ở 2 kích thước). Dọn dữ liệu bằng service_role **của staging** (secret). |
+| Kiểm thử RLS + e2e trên staging | *Chỉ pull_request.* `tests/e2e` (Playwright, build Vite trỏ staging, 43 test ở 2 kích thước). Chromium được cache theo phiên bản `@playwright/test` trong lock file (`~/.cache/ms-playwright`; trúng cache chỉ cài gói hệ thống). Dọn dữ liệu bằng service_role **của staging** (secret). Từ PR CI rút gọn (sau v2.3.0), bước RLS token thật **không còn ở đây** — RLS chạy cục bộ ở job trên với migration của chính PR, và chạy token thật trên staging trong `deploy-staging.yml` sau `db push`; tên check giữ nguyên vì ruleset `main` bắt theo tên. |
+| Phân loại PR (chỉ tài liệu?) | Không phải check bắt buộc; chỉ chạy cho pull_request, không checkout. Đọc danh sách file của PR qua `gh api …/pulls/N/files`: có file và **mọi** file khớp `docs/**` hoặc `*.md` → `docs_only=true`; mọi trường hợp khác (push main, API lỗi, PR rỗng) → `false`. **Nhánh có `phat-hanh` trong tên luôn `false`**: commit đầu nhánh phát hành được gắn tag `v*`, `deploy-prod` (job `kiem-tra`) chỉ tin 4 check của đúng commit đó, mà push main không chạy e2e — nên PR phát hành phải chạy đủ dù chỉ đổi tài liệu. Khi `true`, hai job chậm `Áp migration + lint schema` và `Kiểm thử RLS + e2e trên staging` được thay bằng **job rỗng cùng tên hiển thị** (chỉ `echo`) nên 4 check bắt buộc vẫn xanh và hiện là "success" (GitHub cũng coi job bị bỏ qua là đạt với ruleset, nhưng `kiem-tra` đòi `conclusion = success`); `gitleaks` và `frontend` luôn chạy. Điều kiện dùng `!cancelled()` để nếu job phân loại lỗi hoặc bị bỏ qua thì vẫn chạy đủ. |
 
-**Ngân sách đăng nhập** (Supabase Auth giới hạn 30 lượt/5 phút/IP): RLS 7 lượt (một tiến trình, `--test-isolation=none`) + e2e 8 lượt = **15 lượt/lần chạy**. e2e đạt 8 lượt nhờ `global-setup.mjs` đăng nhập A1/A2/A3 + `demo_qtht` qua API (4 lượt) và ghi phiên thành storageState (`.auth/*.json`, khoá `sb-<ref>-auth-token` trong localStorage); project `desktop`/`mobile` mở trang với phiên sẵn; chỉ project `dang-nhap` (chạy sau cùng, vì đăng xuất huỷ phiên toàn cục) đăng nhập thật qua form (4 lượt). Job có `concurrency: kiem-thu-staging` nên hai PR không chạy chồng nhau; nếu vẫn gặp `over_request_rate_limit` (3 PR trong 5 phút, cùng IP runner) — chờ 5 phút rồi Re-run job. Cả hai bộ test từ chối chạy khi URL chứa ref production.
+**Ngân sách đăng nhập** (Supabase Auth giới hạn 30 lượt/5 phút/IP): trong PR chỉ còn e2e 8 lượt = **8 lượt/lần chạy** (RLS token thật 7 lượt nay chạy khi push main, cùng nhóm `concurrency: kiem-thu-staging`). e2e đạt 8 lượt nhờ `global-setup.mjs` đăng nhập A1/A2/A3 + `demo_qtht` qua API (4 lượt) và ghi phiên thành storageState (`.auth/*.json`, khoá `sb-<ref>-auth-token` trong localStorage); project `desktop`/`mobile` mở trang với phiên sẵn; chỉ project `dang-nhap` (chạy sau cùng, vì đăng xuất huỷ phiên toàn cục) đăng nhập thật qua form (4 lượt). Job có `concurrency: kiem-thu-staging` nên hai PR không chạy chồng nhau; nếu vẫn gặp `over_request_rate_limit` (3 PR trong 5 phút, cùng IP runner) — chờ 5 phút rồi Re-run job. Cả hai bộ test từ chối chạy khi URL chứa ref production.
 
 ### `deploy-staging.yml` — push main
 1. `supabase db push --project-ref <staging>` (dry-run trước, rồi `--yes`), ghi `migration list` vào Summary.
+1b. Job `Test RLS trên staging (token thật)` — `tests/rls` với token thật của 7 tài khoản seed (7 lượt đăng nhập), chạy **sau** db push nên kiểm trên schema staging đã có migration mới; song song với bước 2, **không chặn deploy** (staging phải luôn phản ánh `main`; đỏ thì xem log và sửa ở PR kế). Cần secret `STAGING_SUPABASE_ANON_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY`.
 2. Build hai bản (composite action `.github/actions/build-pages-site`): **production** từ commit của tag `production` (commit phát hành gần nhất — chưa có tag thì lấy `main`, kèm cảnh báo), **staging** từ `main` với `BASE_PATH=/vptu-mvp-task/staging/` và anon key staging. Mỗi bản có `phien-ban.json` (`{moi_truong, phien_ban, commit, build_luc}`).
 3. `actions/deploy-pages@v4`, rồi curl `/staging/phien-ban.json` tới khi thấy đúng commit (tối đa 3 phút). Mỗi push main là một sha mới nên luôn deploy được; re-run cùng commit sẽ "thành công" nhưng không đổi gì (xem dưới).
 
@@ -90,8 +94,8 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 |---|---|---|
 | `SUPABASE_ACCESS_TOKEN` | supabase.com → Account → Access Tokens → Generate new token (token cá nhân, dùng được cả hai project) | deploy-staging, deploy-prod (CLI `db push`, `db dump`) |
 | `STAGING_DB_PASSWORD` | Dashboard staging → Project Settings → Database → Database password (Reset nếu không nhớ) | deploy-staging |
-| `STAGING_SUPABASE_ANON_KEY` | Dashboard staging → Project Settings → API Keys → `anon` (hoặc `supabase projects api-keys --project-ref vojmrjezspdftovzinek`) | ci (e2e), build bản staging |
-| `STAGING_SUPABASE_SERVICE_ROLE_KEY` | cùng trang, `service_role` — **chỉ staging**, dùng dọn dữ liệu test | ci |
+| `STAGING_SUPABASE_ANON_KEY` | Dashboard staging → Project Settings → API Keys → `anon` (hoặc `supabase projects api-keys --project-ref vojmrjezspdftovzinek`) | ci (e2e), deploy-staging (RLS token thật), build bản staging |
+| `STAGING_SUPABASE_SERVICE_ROLE_KEY` | cùng trang, `service_role` — **chỉ staging**, dùng dọn dữ liệu test | ci (e2e), deploy-staging (RLS token thật) |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | *đã có* (production, chỉ anon key) | build bản production (ở cả hai workflow deploy) |
 | `SMOKE_USERNAME`, `SMOKE_PASSWORD` | `smoke_test` — tài khoản hệ thống (`accounts.is_system = true`, A3, phòng CDS_CY, ẩn khỏi mọi danh sách cán bộ) tạo bằng `scripts/create-system-account.mjs --project-ref <ref>`; script in mật khẩu ngẫu nhiên đúng một lần | deploy-prod job smoke |
 

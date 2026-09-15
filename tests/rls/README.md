@@ -11,4 +11,4 @@ RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset`; seed.sql đ�
 
 - Key lấy theo thứ tự: biến môi trường `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI dùng secret **staging**) → `RLS_LOCAL=1` → Supabase CLI đã `supabase login`. Không có `.env` chứa service_role; từ chối chạy nếu URL là project production.
 - Chạy chung tiến trình (`--test-isolation=none`) để 7 phiên đăng nhập dùng lại giữa các file (giới hạn 30 lượt/5 phút/IP).
-- Chạy trong CI ở job `Kiểm thử RLS + e2e trên staging` (`ci.yml`, mọi PR), trước `tests/e2e` trong cùng job (7 + 8 = 15 lượt đăng nhập) — xem `docs/kien-truc.md`.
+- Chạy trong CI hai nơi: mọi PR ở job `Áp migration + lint schema` (`ci.yml`, Supabase cục bộ, `RLS_LOCAL=1`, migration của chính PR) và sau mỗi push `main` ở job `Test RLS trên staging (token thật)` (`deploy-staging.yml`, sau `db push`, 7 lượt đăng nhập) — xem `docs/kien-truc.md`.

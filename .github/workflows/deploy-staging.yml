@@ -1,5 +1,9 @@
-# Mỗi lần push main: áp migration lên STAGING → build hai bản frontend → deploy GitHub Pages.
+# Mỗi lần push main: áp migration lên STAGING → (test RLS token thật ‖ build hai bản frontend) → deploy GitHub Pages.
 # Migration luôn chạy TRƯỚC deploy frontend (bài học GĐ1: frontend mới gọi hàm chưa có trong DB).
+# Test RLS bằng token thật (7 tài khoản seed) chuyển từ ci.yml sang đây để chạy SAU db push — tức trên
+# schema staging đã có migration mới; trong PR, RLS đã chạy trên Supabase cục bộ (job supabase-db).
+# Job RLS đỏ không chặn deploy (build/deploy không `needs` nó) nhưng làm cả run đỏ — đọc theo từng job:
+# deploy xanh + RLS đỏ = staging đã lên, RLS cần sửa ở PR kế; staging phải luôn phản ánh main để tra lỗi.
 #
 # Pages chỉ có một site nên artifact gồm cả hai bản (xem .github/actions/build-pages-site):
 #   /vptu-mvp-task/          production — build lại từ tag `production` (commit đã phát hành gần nhất,
@@ -10,8 +14,8 @@
 # commit sẽ "thành công" mà không đổi gì.
 #
 # Secrets (Settings → Secrets and variables → Actions, repository): SUPABASE_ACCESS_TOKEN,
-# STAGING_DB_PASSWORD, STAGING_SUPABASE_ANON_KEY, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-# (hai secret VITE_* là của production, chỉ anon key). Chi tiết: docs/kien-truc.md.
+# STAGING_DB_PASSWORD, STAGING_SUPABASE_ANON_KEY, STAGING_SUPABASE_SERVICE_ROLE_KEY (job RLS dọn dữ liệu test),
+# VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (hai secret VITE_* là của production, chỉ anon key). Chi tiết: docs/kien-truc.md.
 name: Deploy staging
 
 on:
@@ -65,6 +69,37 @@ jobs:
           supabase db push --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" --yes
           echo "### Migration staging" >> "$GITHUB_STEP_SUMMARY"
           supabase migration list --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+
+  # RLS bằng token thật trên staging (7 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP), sau khi migration
+  # đã áp. Chạy song song với build; không chặn deploy. Cùng nhóm concurrency với job e2e của ci.yml để không
+  # ghi dữ liệu mẫu lên staging cùng lúc với một PR đang kiểm thử.
+  kiem-thu-rls:
+    name: Test RLS trên staging (token thật)
+    needs: migration
+    runs-on: ubuntu-latest
+    concurrency:
+      group: kiem-thu-staging
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/rls/package-lock.json
+      # env ở cấp bước để dùng được STAGING_URL của workflow (cấp job không đọc được context `env`).
+      - name: Test RLS (token thật, 7 tài khoản seed)
+        working-directory: tests/rls
+        env:
+          SUPABASE_URL: ${{ env.STAGING_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Thiếu secret STAGING_SUPABASE_ANON_KEY / STAGING_SUPABASE_SERVICE_ROLE_KEY (xem docs/kien-truc.md)."
+            exit 1
+          fi
+          npm ci && npm test
 
   build:
     name: Build hai bản frontend
