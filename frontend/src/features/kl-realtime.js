@@ -8,6 +8,7 @@ import { onSessionLeave } from '../auth/session.js';
 
 const GOP_MS = 500;
 const CHU_KY_DU_PHONG_MS = 60_000;
+const CHO_KET_NOI_MS = 4_000;   // chưa SUBSCRIBED sau chừng này mới coi là mất kết nối (tránh nháy vàng lúc mở màn hình)
 const BANG = ['kl_nhiem_vu', 'kl_chi_dao', 'kl_dinh_chinh'];
 
 let channel = null;
@@ -15,10 +16,13 @@ let onChange = null;        // hàm đọc lại do màn hình đang mở cung c
 let onTrangThai = null;     // hàm hiện chỉ báo kết nối
 let henGop = null;
 let henDuPhong = null;
-let cheDo = 'tat';          // 'truc-tiep' | 'du-phong' | 'tat'
+let henChoKetNoi = null;
+let cheDo = 'tat';          // 'ket-noi' (đang nối, chưa cảnh báo) | 'truc-tiep' | 'du-phong' | 'tat'
 
 export const cheDoKlRealtime = () => cheDo;
-export const NHAN_CHE_DO = { 'truc-tiep': 'Cập nhật trực tiếp', 'du-phong': 'Mất kết nối trực tiếp — đang làm mới mỗi 60 giây', tat: '' };
+export const NHAN_CHE_DO = { 'ket-noi': 'Đang kết nối…', 'truc-tiep': 'Cập nhật trực tiếp', 'du-phong': 'Mất kết nối trực tiếp — đang làm mới mỗi 60 giây', tat: '' };
+// Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build — xem CHANGELOG mục 19, PR 10C).
+const LOP_CHE_DO = { 'ket-noi': 'ket-noi ket-noi-dang-noi', 'truc-tiep': 'ket-noi ket-noi-truc-tiep', 'du-phong': 'ket-noi ket-noi-du-phong', tat: 'ket-noi' };
 
 function docLai() {
   clearTimeout(henGop);
@@ -34,6 +38,7 @@ function gopDocLai() {
 function datCheDo(m) {
   if (cheDo === m) return;
   cheDo = m;
+  if (m !== 'ket-noi') { clearTimeout(henChoKetNoi); henChoKetNoi = null; }
   clearInterval(henDuPhong);
   henDuPhong = m === 'du-phong' ? setInterval(docLai, CHU_KY_DU_PHONG_MS) : null;
   if (onTrangThai) onTrangThai(m);
@@ -46,14 +51,17 @@ function onOnline() { if (cheDo !== 'tat') docLai(); }
 export function batKlRealtime(docLaiCuaManHinh, hienTrangThai) {
   onChange = docLaiCuaManHinh;
   onTrangThai = hienTrangThai || null;
-  if (onTrangThai) onTrangThai(cheDo === 'tat' ? 'du-phong' : cheDo);
+  if (onTrangThai) onTrangThai(cheDo === 'tat' ? 'ket-noi' : cheDo);
   if (channel) return;
   channel = BANG.reduce((ch, table) => ch.on('postgres_changes', { event: '*', schema: 'public', table }, gopDocLai), supabase.channel('kl_feed'))
     .subscribe((status) => {
-      // Trước khi SUBSCRIBED lần đầu vẫn ở dự phòng — màn hình không bao giờ "đứng" chờ realtime.
-      datCheDo(status === 'SUBSCRIBED' ? 'truc-tiep' : 'du-phong');
+      // Đang nối mà nhận CLOSED/lỗi thì vẫn chờ hết CHO_KET_NOI_MS (supabase-js tự thử lại), không nháy vàng ngay.
+      if (status === 'SUBSCRIBED') datCheDo('truc-tiep');
+      else if (cheDo !== 'ket-noi') datCheDo('du-phong');
     });
-  datCheDo('du-phong');
+  // Lúc mở màn hình: "Đang kết nối…" (không cảnh báo); sau CHO_KET_NOI_MS chưa SUBSCRIBED mới sang dự phòng có polling.
+  datCheDo('ket-noi');
+  henChoKetNoi = setTimeout(() => { if (cheDo === 'ket-noi') datCheDo('du-phong'); }, CHO_KET_NOI_MS);
   document.addEventListener('visibilitychange', onVisible);
   window.addEventListener('online', onOnline);
 }
@@ -61,6 +69,7 @@ export function batKlRealtime(docLaiCuaManHinh, hienTrangThai) {
 export function tatKlRealtime() {
   clearTimeout(henGop); henGop = null;
   clearInterval(henDuPhong); henDuPhong = null;
+  clearTimeout(henChoKetNoi); henChoKetNoi = null;
   document.removeEventListener('visibilitychange', onVisible);
   window.removeEventListener('online', onOnline);
   if (channel) supabase.removeChannel(channel);
@@ -72,7 +81,7 @@ export function hienKetNoi(id, m) {
   const el = document.getElementById(id);
   if (!el) return;
   el.textContent = NHAN_CHE_DO[m] || '';
-  el.className = `ket-noi ket-noi-${m}`;
+  el.className = LOP_CHE_DO[m] || 'ket-noi';
 }
 
 export function initKlRealtime() {

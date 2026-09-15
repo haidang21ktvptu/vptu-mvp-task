@@ -26,8 +26,12 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     hnId = hn.id;
     page = await pageAs(browser, 'A1', testInfo);
     await page.locator('#navKl').click();
+    // Lúc mở màn hình không được nháy cảnh báo vàng: chỉ "Đang kết nối…" rồi "Cập nhật trực tiếp".
+    await expect(page.locator('#klKetNoi')).not.toContainText('Mất kết nối');
     await expect(page.locator('#klBody tr[id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp xong (ô số đã có giá trị thật)
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT);
+    // Chạy trên bản build (vite preview): lớp trong @layer components phải còn sau Tailwind — chấm xanh có màu ngọc.
+    expect(await page.locator('#klKetNoi').evaluate((el) => getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(46, 125, 110)');
   });
   test.afterAll(async () => {
     await page?.context().close();
@@ -56,6 +60,7 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     test.setTimeout(150_000); // hai lần chờ heartbeat socket (~30 giây mỗi lần)
     await page.context().setOffline(true);
     await expect(page.locator('#klKetNoi')).toContainText('làm mới mỗi 60 giây', KN);
+    expect(await page.locator('#klKetNoi').evaluate((el) => getComputedStyle(el).color)).toBe('rgb(138, 101, 18)'); // chữ vàng --muc-vang trên bản build
     await page.context().setOffline(false);
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', KN);
   });
