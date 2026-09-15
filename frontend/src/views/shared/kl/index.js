@@ -20,5 +20,6 @@ export function registerKlView() {
   $('viewKl').innerHTML = klTemplate;
   mountKlCapNhatModal(loadKl);
   ganBoLoc();
-  registerActions({ openKl: () => openKl(), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet });
+  // Mục thanh bên: đặt lại toàn bộ bộ lọc (kể cả bộ lọc dashboard truyền sang) để thấy đủ phạm vi.
+  registerActions({ openKl: () => openKl({}), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet });
 }

@@ -11,13 +11,14 @@
 
 ```
 cd tests/e2e && npm ci && npx playwright install chromium
-npm test                  # 25 test: desktop + mobile (phiên sẵn) rồi dang-nhap (form)
+npm test                  # 35 test: desktop + mobile (phiên sẵn) rồi dang-nhap (form)
 npm run test:desktop      # hoặc test:mobile
 npm run report            # mở báo cáo HTML của lần chạy gần nhất
 ```
 
 - Key lấy theo thứ tự: biến môi trường `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI dùng secret **staging**) → `E2E_LOCAL=1` (Supabase cục bộ) → Supabase CLI đã `supabase login` (`lib/keys.mjs`, như `tests/rls`). Không có `.env` chứa key; từ chối chạy nếu URL là project production.
 - Kịch bản 9 (`kl-chuyen-vien.spec.js`, GĐ10): màn hình Kết luận BTVTU của chuyên viên — ô số = số dòng, cập nhật nhanh (chặn thiếu minh chứng, gợi ý ngày từ minh chứng, lưu), ngăn chi tiết truy vết; nhiệm vụ mẫu ở hội nghị 997, tự dọn; bỏ qua khi project chưa có module KL.
+- Kịch bản 10 (`kl-dashboard.spec.js`, GĐ10): dashboard "Tổng quan KL BTVTU" của A1 — tổng các ô = ô Tổng, mỗi ô/đoạn thanh/ô bảng bấm ra đúng số dòng danh sách (truy vết); không tạo dữ liệu, dùng bộ vàng trên staging.
 - `global-setup.mjs` dọn nhiệm vụ `E2E-TEST%` của lần chạy trước bằng service_role, rồi đăng nhập A1/A2/A3 qua API (3 lượt, + `demo_qtht` nếu project đã có — kịch bản 8 tự bỏ qua khi chưa có) và ghi phiên thành storageState `.auth/<vai trò>.json` (khoá `sb-<ref>-auth-token` của supabase-js).
 - Chạy tuần tự (1 worker) vì dùng chung dữ liệu. Project `desktop` và `mobile` mở trang với phiên sẵn (`pageAs`, không tốn lượt đăng nhập); project `dang-nhap` (kịch bản 1–3, đăng nhập thật qua form, A3 ở 360px) chạy **sau cùng** (`dependencies`) vì đăng xuất huỷ phiên toàn cục của tài khoản. Tổng **8 lượt đăng nhập/lần chạy** (giới hạn Supabase 30 lượt/5 phút/IP).
 - `realtime.spec.js` tạo nhiệm vụ mẫu bằng service_role và xoá tin nhắn cũ giữa `demo_truongphong` ↔ `demo_cv1` (dữ liệu giả) để huy hiệu bắt đầu từ 0; realtime gói Free có thể trễ vài giây nên các khẳng định realtime chờ tới 20 s.

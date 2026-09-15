@@ -21,6 +21,8 @@ const NHAN_CHIP = {
   thieuMinhChung: () => 'Hoàn thành chưa có minh chứng',
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
   khongCapNhatQua: (v) => `Đang mở, không cập nhật quá ${v} ngày`,
+  dangDinhChinh: () => 'Có đề nghị đính chính đang chờ duyệt',
+  nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
 
 export function setKlLoc(loc, thayThe = false) {
@@ -84,6 +86,7 @@ export function render() {
 function veChip() {
   const chips = Object.entries(kl.loc).filter(([k, v]) => NHAN_CHIP[k] && v).map(([k, v]) =>
     `<span class="chip">${escapeHtml(NHAN_CHIP[k](v))}<button type="button" data-action="boKlLoc" data-khoa="${k}" aria-label="Bỏ lọc">✕</button></span>`);
+  if (kl.loc.tuTongQuan) chips.unshift('<button type="button" class="btn btn-phu btn-nho" data-action="openKlDashboard">← Về tổng quan</button>');
   $('klChipLoc').innerHTML = chips.join('');
   $('klChipLoc').classList.toggle('hidden', chips.length === 0);
 }

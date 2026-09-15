@@ -64,6 +64,8 @@ export function locRows(rows, f = {}) {
     && (!f.chiMo || laMo(r))
     && (!f.thieuMinhChung || (r.nhom_dem === 'HOAN_THANH' && r.thieu_minh_chung))
     && (!f.khongNgayHoanThanh || (r.nhom_dem === 'HOAN_THANH' && !r.ngay_hoan_thanh))
+    && (!f.nhomTrong || f.nhomTrong.includes(r.nhom_dem))
+    && (!f.dangDinhChinh || r.dang_dinh_chinh)
     && (!f.khongCapNhatQua || (laMo(r) && (ngayTruoc(r.cap_nhat_luc, f.now) ?? 0) > f.khongCapNhatQua))
     && (!kw || `${r.ma} ${r.noi_dung} ${r.chu_tri_ten || ''} ${r.co_quan_trinh_ten || ''}`.toLowerCase().includes(kw)));
 }

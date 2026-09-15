@@ -6,6 +6,7 @@ import { setActiveNav } from '../shell.js';
 import { a1Template } from './template.js';
 import { populateA1Selects, loadA1Dashboard, applyA1Filter, toggleA1GiaoViec, handleA1ModeChange, handleA1GiaoViec } from './dashboard.js';
 import { loadA1StaffsTab, isStaffsTabVisible } from './tree.js';
+import { KL_DASHBOARD_NAV } from './kl-dashboard/index.js';
 
 // Hai "tab" cũ nay là hai mục ở thanh bên (id nút giữ nguyên cho e2e).
 const TABS = {
@@ -15,6 +16,7 @@ const TABS = {
 const NAV = [
   { id: TABS.dashboard.btn, label: 'Bảng điều khiển', action: 'switchA1Tab', data: { tab: 'dashboard' } },
   { id: TABS.staffs.btn, label: 'Cán bộ thuộc quyền', action: 'switchA1Tab', data: { tab: 'staffs' } },
+  KL_DASHBOARD_NAV, // Tổng quan KL BTVTU (GĐ10) — section dùng chung, phạm vi do RLS
 ];
 
 function switchA1Tab({ tab }) {
