@@ -30,11 +30,4 @@ export const tenLinhVuc = (ma) => timLinhVuc(ma)?.ten || ma;
 // Nhãn một cặp (ngành, lĩnh vực): "Tài chính (ngành 8)".
 export const nhanNganhLinhVuc = (nganhMa, linhVucMa) => `${tenLinhVuc(linhVucMa)} (${tenNganhNgan(nganhMa)})`;
 
-// Mã lĩnh vực mới: LV<số ngành 2 chữ số>_<tên không dấu, viết hoa, gạch dưới>, ví dụ LV08_TAI_CHINH_CONG.
-// Lớp ký tự trong regex đầu là dải dấu kết hợp U+0300–U+036F (bỏ dấu sau khi tách NFD).
-export function sinhMaLinhVuc(nganhMa, ten) {
-  const n = timNganh(nganhMa);
-  const slug = ten.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D')
-    .toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
-  return `LV${String(n?.thu_tu ?? 0).padStart(2, '0')}_${slug || 'MOI'}`;
-}
+// Mã lĩnh vực mới do server sinh (admin_them_linh_vuc, 0020): LV<số ngành>_<tên không dấu>; frontend không tự đặt mã.

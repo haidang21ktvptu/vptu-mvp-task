@@ -52,4 +52,16 @@ export const quanTriDanhMucTemplate = `
       </table>
     </div>
   </div>
+
+  <div class="bang mb-6">
+    <div class="bang-dau">
+      <h2>Nhật ký danh mục<span class="chu-phu">20 dòng gần nhất, không xoá được</span></h2>
+    </div>
+    <div class="bang-cuon">
+      <table>
+        <thead><tr><th>Lúc</th><th>Người thực hiện</th><th>Hành động</th><th>Mã</th><th>Thay đổi</th><th>Lý do</th></tr></thead>
+        <tbody id="qtLvNhatKyBody"><tr><td colspan="6" class="trong">Đang tải dữ liệu</td></tr></tbody>
+      </table>
+    </div>
+  </div>
 `;

@@ -45,6 +45,22 @@ node nhap-kl-btvtu.mjs --file "<xlsx>" --project-ref frwyxcmbonjaimziiuqr --prod
 - Nhật ký cũ (sheet `NhatKyChinhSua`) vào `kl_lich_su` `nguon = 'excel'`: cột đổi sang tên cột DB, giá trị danh mục → mã, serial Excel → ngày, người sửa qua `--anh-xa-nguoi-sua` (file JSON `{"email": "username"}` ngoài repo; email chưa có → dừng). Mốc giờ trong sheet ghi hậu tố "Z" nhưng là giờ Việt Nam (trùng cột "Ngày cập nhật gần nhất" từng giây, phân bố 9h–18h) → ghi `+07:00`.
 - Sau khi ghi: đếm lại, `setval` sequence mã (`supabase db query --file`), biên bản `scripts/out/bien-ban-nhap-kl-<đích>-<ngày>.md` (gitignored; không họ tên, không số việc theo người) — chép phần cần vào `docs/bien-ban-nhap-kl-btvtu.md` sau khi nhập production.
 
+## `anh-xa-linh-vuc.mjs` — ánh xạ `linh_vuc_chi_tiet` cũ về danh mục `dm_linh_vuc` (GĐ9 PR 9B)
+
+Ba bước, người duyệt là người quản trị sheet (phòng Tổng hợp); script **không đoán** — chỉ đề xuất khi giá trị bằng tên lĩnh vực (bỏ dấu, hoa/thường) và lĩnh vực thuộc đúng ngành của dòng.
+
+```bash
+node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production           # 1. dry-run CHỈ ĐỌC → CSV duyệt ngoài repo
+#   → D:/TU 2026/Project/vptu-backup/nguon-kl-btvtu/anh-xa-linh-vuc.csv (đã có file thì ghi thêm hậu tố ngày, không ghi đè)
+#   2. Người duyệt mở CSV (Excel, phân cách ";"), điền cột linh_vuc_chot (tên hoặc mã lĩnh vực); để trống = giữ NULL.
+node anh-xa-linh-vuc.mjs --project-ref frwyxcmbonjaimziiuqr --production --ghi --file "<csv đã duyệt>"   # 3. sau backup-db.sh + xác nhận trong phiên
+node anh-xa-linh-vuc.mjs --local [--out <csv>]                                       # thử trên local (bộ vàng không có linh_vuc_chi_tiet)
+```
+
+- `--ghi` in báo cáo trước (từng cặp → lĩnh vực, số dòng sẽ điền, dòng đã có lĩnh vực khác bị bỏ qua) và sau (đếm theo lĩnh vực, còn NULL, số dòng `kl_lich_su`); chốt sai ngành hoặc không có trong danh mục → dừng, không ghi gì. Chỉ điền dòng đang NULL.
+- Ghi bằng một khối SQL (`scripts/kl/anh-xa-linh-vuc.mjs` → `sqlCapNhat`): tắt tạm trigger `b_kl_nhiem_vu_truoc_ghi` để **không đổi `cap_nhat_luc`** của 82 dòng (giữ đúng chỉ số "không cập nhật 30 ngày"); `kl_lich_su` vẫn ghi từng dòng `cot = linh_vuc_ma` với `nguoi_sua_ghi_chu` của script. Biên bản: `scripts/out/bien-ban-anh-xa-linh-vuc-<đích>-<ngày>.md` (gitignored) → chép (không họ tên) vào `docs/bien-ban-nhap-kl-btvtu.md`.
+- Đích chưa có migration 0018 (production trước `v2.2.0`): dry-run vẫn chạy được bằng danh mục đọc từ Supabase local; `--ghi` thì bắt buộc đích đã có.
+
 ## `an-danh-kl-btvtu.mjs` — bộ dữ liệu vàng ẩn danh cho tests/
 
 ```
