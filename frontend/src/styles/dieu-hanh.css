@@ -12,8 +12,14 @@
   .nl-nhom td { background: var(--cb-da); color: var(--cb-muc-nhat); font-size: 13px; font-weight: 500; padding: 6px 16px; }
   .chu-canh-bao-inline { color: var(--muc-vang); font-weight: 500; }
 
+  /* ---- Ngăn chi tiết (15C): khối chỉ đạo ở đầu; bảng chi tiết gói trong khối gập ---- */
+  .chi-tiet-them { margin-top: 10px; border-top: 1px solid var(--cb-vien); padding-top: 8px; }
+  .chi-tiet-them > summary { cursor: pointer; color: var(--cb-cham); font-weight: 500; font-size: 14px; }
+  .chi-tiet-them > summary .chu-phu { font-weight: 400; }
+  .chi-tiet-them[open] > summary { margin-bottom: 6px; }
+
   /* ---- Luồng chỉ đạo (bình luận theo thời gian) ---- */
-  .luong-cd { margin-top: 12px; border-top: 1px solid var(--cb-vien); padding-top: 10px; }
+  .luong-cd { margin-top: 8px; }
   .luong-cd h4 { font-size: 14px; font-weight: 600; color: var(--cb-cham); margin-bottom: 8px; }
   .cd-goc { border-left: 3px solid var(--cb-vien); padding: 6px 12px; margin-bottom: 10px; background: var(--cb-giay); border-radius: 0 4px 4px 0; }
   .cd-goc[data-trang-thai="CHO_PHAN_HOI"] { border-left-color: var(--muc-vang); }
@@ -36,6 +42,7 @@
   .cd-ph.cd-chua-doc b::after { content: ' • mới'; color: var(--muc-vang); font-size: 11px; }
   .cd-ph p { margin: 2px 0 0; line-height: 1.5; white-space: pre-wrap; }
   .cd-form-ph { display: flex; gap: 8px; margin: 6px 0 2px 16px; }
+  .cd-form-dau { margin: 0 0 10px; padding: 8px 12px; border: 1px dashed var(--cb-vien); border-radius: 4px; }
   .cd-form-ph .input { flex: 1; }
   .cd-form { margin-top: 8px; padding: 8px 12px; border: 1px dashed var(--cb-vien); border-radius: 4px; }
   .cd-form-hang { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }

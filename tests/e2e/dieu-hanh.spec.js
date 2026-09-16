@@ -9,6 +9,7 @@ import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CVP_ID = '00000000-0000-4000-8000-000000000001';
 const SO_HOI_NGHI = 993;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
 
@@ -21,8 +22,8 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     const co = await db.from('v_ngoai_le').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có migration 0026 (điều hành ngoại lệ).');
     await don(db);
-    // Chuông của A3 bắt đầu từ 0: xoá tin hệ thống cũ (dữ liệu giả của các lần chạy trước).
-    await db.from('direct_messages').delete().eq('receiver_id', CV1_ID).eq('loai', 'he_thong');
+    // Chuông của A3 và A1 bắt đầu từ 0: xoá tin hệ thống cũ (dữ liệu giả của các lần chạy trước / test RLS trên staging).
+    await db.from('direct_messages').delete().in('receiver_id', [CV1_ID, CVP_ID]).eq('loai', 'he_thong');
     const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-DH`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
     if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
@@ -57,6 +58,9 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     await expect(a1.locator('#viewKl')).toBeVisible();
     const luong = a1.locator(`#klChiDao-${nvId}`);
     await expect(luong).toContainText('chưa có');
+    await expect(luong.locator('.cd-form input[name=noi_dung]')).toBeFocused(); // 15C: mở thẳng vào ô nhập
+    await expect(a1.locator(`#klChiTiet-${nvId} .chi-tiet-them`)).not.toHaveAttribute('open', ''); // bảng chi tiết gập
+    await expect(a1.locator('#currentUserDisplay')).toBeInViewport(); // tên người dùng ở đầu thanh bên, không cần cuộn
     await luong.locator('.cd-form select[name=loai]').selectOption('DON_DOC');
     await luong.locator('.cd-form input[name=noi_dung]').fill('Khẩn trương hoàn thành trong tuần (e2e)');
     await luong.locator('.cd-form button[type=submit]').click();
@@ -76,6 +80,7 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     await expect(luongA3.locator('.cd-goc')).toContainText('Khẩn trương hoàn thành trong tuần (e2e)');
     await expect(a3.locator('#chuongBadge')).toBeHidden();
     await expect(luongA3.locator('.cd-form')).toHaveCount(0); // A3 không có ô ra chỉ đạo
+    await expect(luongA3.locator('.cd-form-ph')).toHaveClass(/cd-form-dau/); // ô phản hồi ở đầu khối, cùng vị trí ô gửi của A1
     await luongA3.locator('.cd-form-ph input[name=noi_dung]').fill('Đã trình dự thảo, chờ ký (e2e)');
     await luongA3.locator('.cd-form-ph button[type=submit]').click();
     await expect(luongA3.locator('.cd-ph')).toHaveCount(1, RT);

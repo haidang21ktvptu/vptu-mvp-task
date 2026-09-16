@@ -113,9 +113,11 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Chi tiết' }).click();
     const ct = page.locator(`#klChiTiet-${nvId}`);
     await expect(ct).toBeVisible();
+    await ct.locator('.chi-tiet-them > summary').click(); // 15C: bảng chi tiết gập mặc định, khối chỉ đạo ở đầu ngăn
+    await expect(ct.locator('.chi-tiet-them')).toHaveAttribute('open', '');
     await expect(ct).toContainText('nhập bởi Demo Chuyên viên Một');
     await expect(ct).toContainText('Nhập trên hệ thống');
-    await expect(ct.locator('summary')).toContainText(`Lịch sử: ${coXacNhan ? 4 : 3} thay đổi`);
+    await expect(ct.locator('.lich-su-hop summary')).toContainText(`Lịch sử: ${coXacNhan ? 4 : 3} thay đổi`);
   });
 });
 

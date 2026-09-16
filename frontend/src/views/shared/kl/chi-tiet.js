@@ -61,6 +61,8 @@ export function chiTietHtml(r, ls, dc) {
         <b>${escapeHtml(r.ma)} · ${escapeHtml(owner)} · <span class="${chamMuc(r.muc_canh_bao).lop}"></span>${escapeHtml(nhanTrangThai(r))}</b>
         <span class="chu-phu">${nguonDong}${excelGhiChu}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'}</span>
       </div>
+      <div class="luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
+      <details class="chi-tiet-them"><summary>Xem chi tiết <span class="chu-phu">nội dung đầy đủ, căn cứ từng trường, lịch sử</span></summary>
       <p class="chi-tiet-noi-dung">${escapeHtml(r.noi_dung)}</p>
       <table class="can-cu">
         <thead><tr><th>Trường</th><th>Giá trị</th><th>Căn cứ</th></tr></thead>
@@ -81,8 +83,8 @@ export function chiTietHtml(r, ls, dc) {
           ${hangHtml('Đính chính', dinhChinh, '')}
         </tbody>
       </table>
-      <div class="luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <details class="lich-su-hop"><summary>Lịch sử: ${ls.filter((l) => l.cot !== '*').length} thay đổi — xem đầy đủ</summary>${lichSuHtml(ls)}</details>
+      </details>
     </div>`;
 }
 
@@ -96,7 +98,7 @@ export async function toggleKlChiTiet({ id }) {
   try {
     const [ls, dc] = await Promise.all([loadLichSu(id), loadDinhChinhCho(id)]);
     tr.firstElementChild.innerHTML = chiTietHtml(r, ls, dc);
-    napChiDao(r); // khối chỉ đạo (GĐ15) nạp riêng, ghi "đã đọc" khi hiện
+    await napChiDao(r); // khối chỉ đạo (GĐ15) ở đầu ngăn, nạp riêng, ghi "đã đọc" khi hiện; chờ để người gọi focus ô nhập
   } catch (e) {
     notifyError('Không đọc được lịch sử: ' + e.message);
     show(tr, false);

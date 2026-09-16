@@ -8,6 +8,7 @@ import { notifyError } from '../../components/toast.js';
 import { loadTinHeThong, tinHeThongDaDoc } from '../../lib/kl/dieu-hanh.js';
 import { openKl } from '../../views/shared/kl/index.js';
 import { toggleKlChiTiet } from '../../views/shared/kl/chi-tiet.js';
+import { focusChiDao } from '../../views/shared/kl/chi-dao.js';
 import { showDMToast, closeToast } from '../messages/chat.js';
 import { thongBaoTemplate } from './template.js';
 
@@ -59,7 +60,7 @@ async function moNhiemVuCuaTin(nvId, content) {
   const ma = (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
   await openKl({ tuKhoa: ma });
   await toggleKlChiTiet({ id: nvId });
-  $(`klRow-${nvId}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  focusChiDao(nvId);
 }
 
 const moThongBao = ({ id, nv }) => moNhiemVuCuaTin(nv, tin.find((t) => t.id === id)?.content || '');
