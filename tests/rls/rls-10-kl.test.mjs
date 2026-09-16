@@ -95,7 +95,7 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     const hn = await cv2.from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: '2026-08-01' }).select('id').single();
     assertOk(hn, 'quan_tri_kl thêm hội nghị');
     const nv = await cv2.from('nhiem_vu').insert({ van_ban_id: hn.data.id, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N8 mới', loai_thoi_han_ma: 'CHO_QUYET_DINH' }).select('id, ma, tao_boi').single();
-    assertOk(nv, 'quan_tri_kl thêm nhiệm vụ'); assert.match(nv.data.ma, /^NV-\d{3}$/); assert.equal(nv.data.tao_boi, IDS.cv2);
+    assertOk(nv, 'quan_tri_kl thêm nhiệm vụ'); assert.match(nv.data.ma, /^NV-\d{3,}$/); // 0027: lpad ≥ 3, không cắt khi sequence vượt 999 (staging đã qua 1000) assert.equal(nv.data.tao_boi, IDS.cv2);
     assertOk(await cv2.from('nhiem_vu').update({ noi_dung: 'RLS-TEST N8 đã sửa', nganh_ma: 'NOI_CHINH' }).eq('id', nv.data.id).select('id'), 'sửa mọi cột');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');
     assert.equal(await soThay('demo_cv2'), 1);
