@@ -1,4 +1,4 @@
-// Điểm vào của app (GĐ4): nối các module lại, không chứa nghiệp vụ.
+// Điểm vào của app: nối các module lại, không chứa nghiệp vụ.
 import './styles/main.css';
 import { $ } from './lib/dom.js';
 import { initActionDelegation } from './lib/actions.js';

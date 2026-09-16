@@ -3,100 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1C2A44">
-  <title>Hệ thống quản trị nhiệm vụ — Văn phòng Tỉnh ủy Cao Bằng</title>
+  <meta name="theme-color" content="#A8140F">
+  <title>Hệ thống quản trị nhiệm vụ — Tỉnh ủy Cao Bằng</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png">
   <script type="module" src="/src/main.js"></script>
 </head>
 <body>
 
-  <!-- ================= TRANG ĐĂNG NHẬP (DESIGN mục 4) ================= -->
-  <section id="loginSection" class="man-dang-nhap">
-    <svg class="nui" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-      <path d="M0 400 L0 300 C120 260 180 180 300 190 C380 196 420 250 500 240 C600 228 640 120 760 130 C860 138 900 210 1000 200 C1100 190 1150 90 1260 100 C1340 108 1390 170 1440 160 L1440 400 Z" fill="#26375A"/>
-      <path d="M0 400 L0 330 C100 320 160 270 260 280 C360 290 400 340 520 320 C640 300 700 230 820 240 C920 248 960 300 1060 290 C1160 280 1220 210 1320 220 C1400 226 1420 260 1440 250 L1440 400 Z" fill="#30436B"/>
-      <path d="M0 400 L0 360 C150 350 220 330 360 340 C500 350 560 370 700 355 C840 340 900 320 1040 330 C1180 340 1260 360 1440 340 L1440 400 Z" fill="#3B5080"/>
-    </svg>
-
-    <form id="loginForm" class="the-dang-nhap" novalidate>
-      <div class="thuong-hieu">
-        <!-- Biểu tượng tỉnh Cao Bằng do Văn phòng cung cấp (DESIGN mục 1): không đổi màu, không kéo méo. -->
-        <img class="logo-dang-nhap" src="/brand/logo-cao-bang.png" width="112" height="72" alt="Biểu tượng tỉnh Cao Bằng">
-        <h1 class="co-quan">Tỉnh ủy Cao Bằng<small>Văn phòng Tỉnh ủy</small></h1>
-        <div class="gach-vang" aria-hidden="true"></div>
-        <p class="he-thong">Hệ thống quản trị nhiệm vụ</p>
+  <!-- ================= ĐĂNG NHẬP (mockup v7) ================= -->
+  <section id="loginSection" class="dn">
+    <form id="loginForm" class="dn-the" novalidate>
+      <img class="logo-lon" src="/brand/bieu-trung.png" width="150" height="96" alt="Biểu trưng tỉnh Cao Bằng">
+      <div class="co-hang">
+        <img class="co" src="/brand/co-dang.svg" width="32" height="21" alt="Cờ Đảng">
+        <img class="co" src="/brand/co-to-quoc.svg" width="32" height="21" alt="Cờ Tổ quốc">
       </div>
-      <div class="thocam" aria-hidden="true"></div>
-
-      <label for="loginUsername" class="nhan">Tên đăng nhập</label>
-      <input type="text" id="loginUsername" class="input mb-4" required autocomplete="username" autocapitalize="none" spellcheck="false">
-      <label for="loginPassword" class="nhan">Mật khẩu</label>
-      <input type="password" id="loginPassword" class="input mb-4" required autocomplete="current-password">
+      <p class="dang">ĐẢNG CỘNG SẢN VIỆT NAM</p>
+      <h1>TỈNH ỦY CAO BẰNG</h1>
+      <p class="vp">VĂN PHÒNG TỈNH ỦY</p>
+      <p class="phu">Hệ thống quản trị nhiệm vụ theo kết quả</p>
+      <label for="loginUsername">Tên đăng nhập<input type="text" id="loginUsername" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Nhập tên đăng nhập được cấp"></label>
+      <label for="loginPassword">Mật khẩu<input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Nhập mật khẩu"></label>
       <div id="loginError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
-      <button type="submit" id="loginSubmitBtn" class="btn btn-chinh w-full">Đăng nhập</button>
+      <button type="submit" id="loginSubmitBtn" class="nut chinh">Đăng nhập hệ thống</button>
+      <p class="cuoi">Hệ thống phục vụ công tác chỉ đạo, điều hành của Tỉnh ủy. Hỗ trợ kỹ thuật: Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy.</p>
     </form>
-
-    <p class="chan-trang">Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy Cao Bằng · Hỗ trợ: 0869 134 298</p>
   </section>
 
   <!-- ================= ĐỔI MẬT KHẨU LẦN ĐẦU (bắt buộc, không có nút đóng — AUTH-2) ================= -->
   <div id="changePasswordModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
     <form id="changePasswordForm" class="modal modal-bat-buoc" novalidate>
       <h2 id="changePasswordTitle" class="modal-tieu-de">Đổi mật khẩu lần đầu</h2>
-      <p class="chu-phu mt-1 mb-5">Đồng chí đang dùng mật khẩu tạm. Đặt mật khẩu mới để tiếp tục.</p>
-
-      <label for="newPassword" class="nhan">Mật khẩu mới <span class="font-normal">(tối thiểu 8 ký tự, có chữ và số)</span></label>
-      <input type="password" id="newPassword" class="input mb-4" required autocomplete="new-password">
+      <p class="chu-phu" style="margin-top:4px">Đồng chí đang dùng mật khẩu tạm. Đặt mật khẩu mới để tiếp tục.</p>
+      <label for="newPassword" class="nhan">Mật khẩu mới (tối thiểu 8 ký tự, có chữ và số)</label>
+      <input type="password" id="newPassword" class="o-nhap" required autocomplete="new-password">
       <label for="newPasswordConfirm" class="nhan">Nhập lại mật khẩu mới</label>
-      <input type="password" id="newPasswordConfirm" class="input mb-4" required autocomplete="new-password">
+      <input type="password" id="newPasswordConfirm" class="o-nhap" required autocomplete="new-password">
       <div id="changePasswordError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
-
       <div class="modal-chan">
-        <button type="submit" id="changePasswordBtn" class="btn btn-chinh">Đổi mật khẩu và tiếp tục</button>
+        <button type="submit" id="changePasswordBtn" class="nut chinh">Đổi mật khẩu và tiếp tục</button>
       </div>
     </form>
   </div>
 
-  <!-- ================= KHUNG ỨNG DỤNG (sau đăng nhập, DESIGN mục 4) ================= -->
-  <div id="appShell" class="khung hidden">
-    <aside class="side">
-      <div class="side-logo">
-        <span class="logo-o"><img src="/brand/logo-cao-bang.png" width="40" height="26" alt=""></span>
-        <div><b>Văn phòng Tỉnh ủy</b><span>Cao Bằng</span></div>
-      </div>
-      <!-- Người đang đăng nhập ngay dưới logo (15C): luôn thấy, thanh bên sticky; trên điện thoại tên hiện ở thanh trên (#headerUser). -->
-      <div class="side-user">
-        <b id="currentUserDisplay">--</b>
-        <span id="currentRoleDisplay">--</span>
-      </div>
-      <nav id="mainNav" class="nav" aria-label="Điều hướng chính"></nav>
-    </aside>
-
-    <div class="main">
-      <header id="mainHeader" class="top">
-        <span class="cq">Tỉnh ủy Cao Bằng<i>·</i>Văn phòng</span>
-        <span id="headerDeptDisplay" class="phong">--</span>
-        <span id="headerUser" class="nguoi-dt">--</span>
+  <!-- ================= KHUNG ỨNG DỤNG: dải nhận diện, menu theo vai, trang một cột ================= -->
+  <div id="appShell" class="hidden">
+    <header id="mainHeader" class="dai">
+      <div class="max">
+        <img class="co" src="/brand/co-dang.svg" width="32" height="21" alt="Cờ Đảng">
+        <img class="co" src="/brand/co-to-quoc.svg" width="32" height="21" alt="Cờ Tổ quốc">
+        <img class="logo" src="/brand/bieu-trung.png" width="66" height="42" alt="Biểu trưng tỉnh Cao Bằng">
+        <div class="ten"><b>TỈNH ỦY CAO BẰNG</b><span>Hệ thống quản trị nhiệm vụ theo kết quả</span></div>
         <div class="phai">
-          <span id="headerDate" class="ngay"></span>
-          <button type="button" id="logoutBtn" class="btn btn-phu btn-nho">Đăng xuất</button>
+          <div class="nguoi"><b id="currentUserDisplay">--</b><span><span id="currentRoleDisplay">--</span> · <span id="headerDeptDisplay">--</span></span></div>
+          <button type="button" id="logoutBtn" class="nut-thoat" aria-label="Đăng xuất"><span>Đăng xuất</span></button>
         </div>
-      </header>
-      <div class="thocam" aria-hidden="true"></div>
+      </div>
+    </header>
+    <div class="max"><nav id="mainNav" class="menu" role="tablist" aria-label="Điều hướng chính"></nav></div>
 
-      <!-- Markup của từng view và modal được các module trong src/views, src/features gắn vào lúc khởi động -->
-      <main class="noi-dung">
-        <section id="viewThuongTruc" class="hidden"></section>
-        <section id="viewLanhDaoVP" class="hidden"></section>
-        <section id="viewChuyenVien" class="hidden"></section>
-        <section id="viewQuanTri" class="hidden"></section>
-        <section id="viewKl" class="hidden"></section>
-        <section id="viewKlDashboard" class="hidden"></section>
-      </main>
-      <!-- Chỉ hiện khi in (chỗ thứ 3 của hoa văn thổ cẩm, DESIGN mục 6) -->
-      <footer class="chan-in"><div class="thocam" aria-hidden="true"></div>Văn phòng Tỉnh ủy Cao Bằng · Hệ thống quản trị nhiệm vụ · Bản in từ hệ thống</footer>
-    </div>
+    <!-- Markup của từng màn hình được các module trong src/views, src/features gắn vào lúc khởi động -->
+    <main class="max trang">
+      <section id="viewDieuHanh" class="hidden"></section>
+      <section id="viewChiDaoDaGui" class="hidden"></section>
+      <section id="viewKl" class="hidden"></section>
+      <section id="viewGiaoViec" class="hidden"></section>
+      <section id="viewCanBo" class="hidden"></section>
+      <section id="viewBaoCao" class="hidden"></section>
+      <section id="viewNhanTin" class="hidden"></section>
+      <section id="viewQuanTri" class="hidden"></section>
+      <footer class="chan-in">Văn phòng Tỉnh ủy Cao Bằng · Hệ thống quản trị nhiệm vụ · Bản in từ hệ thống</footer>
+    </main>
+    <nav id="thanhDuoi" class="thanh-duoi" aria-label="Điều hướng điện thoại"></nav>
+    <div id="thanhKhac" class="thanh-khac hidden" role="menu"></div>
   </div>
   <div id="modalRoot"></div>
 

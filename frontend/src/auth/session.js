@@ -2,7 +2,7 @@
 import { supabase, sessionStorageKey } from '../lib/supabase.js';
 import { show } from '../lib/dom.js';
 import { state } from '../lib/state.js';
-import { initUserInterface } from '../views/shell.js';
+import { initUserInterface } from '../views/shell/index.js';
 
 // Hook cho các tính năng gắn thêm khi phiên bắt đầu/kết thúc (realtime ở PR c của GĐ4).
 const hooks = { onEnter: [], onLeave: [] };
