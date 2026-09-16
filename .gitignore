@@ -9,3 +9,4 @@ dist/
 scripts/out/
 # Cấu hình chạy local của Claude Code (chứa URL/key Supabase local) — không commit
 .claude/
+test-results/

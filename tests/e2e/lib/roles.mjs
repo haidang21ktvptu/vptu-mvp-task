@@ -10,9 +10,11 @@ export const USERS = {
 
 export const AUTH_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '.auth');
 
-export function storageStatePath(role) {
+// .auth/<vai>.json = phiên (cặp token) mới nhất của vai, do global-setup tạo và lib/app.js làm mới theo chuỗi (CI-4).
+export function sessionPath(role) {
   return join(AUTH_DIR, `${role}.json`);
 }
+export const storageStatePath = sessionPath; // tên cũ, giữ cho các spec kiểm tra existsSync
 
 // Tài khoản ngoài 3 vai trò chuẩn, đăng nhập "nếu có": demo_qtht (A3 giữ quan_tri_he_thong, GĐ8) chỉ tồn tại
 // khi project đã có migration 0013 + seed mới. global-setup bỏ qua khi đăng nhập lỗi; kịch bản tự skip.
