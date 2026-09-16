@@ -1,6 +1,7 @@
 // Kịch bản 11 (GĐ10 PR 10D): thời gian thực module KL — A1 mở danh sách, dữ liệu đổi ở DB (service_role, như chuyên viên
 // cập nhật ở máy khác) → ô số và dòng tự đổi, không bấm gì; mất mạng → chỉ báo chuyển sang "làm mới mỗi 60 giây",
-// có mạng lại → "Cập nhật trực tiếp". Nhiệm vụ mẫu ở hội nghị 996 (E2E), tự dọn.
+// có mạng lại → "Cập nhật trực tiếp". GĐ15: app nghe sự kiện offline/online của trình duyệt nên đổi chế độ trong vài giây,
+// không chờ heartbeat socket. Nhiệm vụ mẫu ở hội nghị 996 (E2E), tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs } from './lib/app.js';
@@ -10,7 +11,7 @@ import { E2E_TAG } from './global-setup.mjs';
 const CV1_ID = '00000000-0000-4000-8000-000000000004';
 const SO_HOI_NGHI = 996;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
-const KN = { timeout: 60_000 };   // phát hiện mất/nối lại kết nối (heartbeat socket ~30 giây)
+const KN = { timeout: 5_000 };    // mất mạng → dự phòng ngay theo sự kiện offline (GĐ15), không chờ heartbeat
 
 test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
   let db; let hnId; let page;
@@ -56,13 +57,12 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'HOAN_THANH');
   });
 
-  test('mất mạng → chỉ báo "làm mới mỗi 60 giây"; có mạng lại → "Cập nhật trực tiếp"', async () => {
-    test.setTimeout(150_000); // hai lần chờ heartbeat socket (~30 giây mỗi lần)
+  test('mất mạng → chỉ báo "làm mới mỗi 60 giây" trong ≤ 5 giây; có mạng lại → "Cập nhật trực tiếp"', async () => {
     await page.context().setOffline(true);
     await expect(page.locator('#klKetNoi')).toContainText('làm mới mỗi 60 giây', KN);
     expect(await page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(138, 101, 18)'); // chữ vàng --muc-vang trên bản build
     await page.context().setOffline(false);
-    await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', KN);
+    await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT); // kênh mới mở lại khi có mạng
   });
 });
 

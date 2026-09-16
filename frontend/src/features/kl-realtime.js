@@ -2,7 +2,8 @@
 // nhiem_vu / chi_dao / dinh_chinh (tên từ 0023, trước đó kl_*; đã trong publication từ 0016; RLS lọc sự kiện theo người nghe).
 // Sự kiện chỉ là TÍN HIỆU: gộp 500 ms rồi ĐỌC LẠI v_kl_dashboard (trạng thái do SQL tính, phạm vi có thể phụ thuộc
 // dòng khác) — không vá từng dòng ở client. Dự phòng: kênh rời SUBSCRIBED (CHANNEL_ERROR / TIMED_OUT / CLOSED) → làm mới
-// mỗi 60 giây và báo trên màn hình; kênh nối lại → tắt polling. Thêm: làm mới khi tab quay lại foreground và khi có mạng.
+// mỗi 60 giây và báo trên màn hình; kênh nối lại → tắt polling. Thêm: làm mới khi tab quay lại foreground; sự kiện window
+// 'offline' → dự phòng NGAY (không chờ heartbeat socket ~30 giây), 'online' → mở kênh mới và làm mới (GĐ15).
 import { supabase } from '../lib/supabase.js';
 import { onSessionLeave } from '../auth/session.js';
 
@@ -44,8 +45,28 @@ function datCheDo(m) {
   if (onTrangThai) onTrangThai(m);
 }
 
+function moKenh() {
+  channel = BANG.reduce((ch, table) => ch.on('postgres_changes', { event: '*', schema: 'public', table }, gopDocLai), supabase.channel('kl_feed'))
+    .subscribe((status) => {
+      // Đang nối mà nhận CLOSED/lỗi thì vẫn chờ hết CHO_KET_NOI_MS (supabase-js tự thử lại), không nháy vàng ngay.
+      if (status === 'SUBSCRIBED') datCheDo('truc-tiep');
+      else if (cheDo !== 'ket-noi') datCheDo('du-phong');
+    });
+  // Lúc mở: "Đang kết nối…" (không cảnh báo); sau CHO_KET_NOI_MS chưa SUBSCRIBED mới sang dự phòng có polling.
+  datCheDo('ket-noi');
+  henChoKetNoi = setTimeout(() => { if (cheDo === 'ket-noi') datCheDo('du-phong'); }, CHO_KET_NOI_MS);
+}
+
 function onVisible() { if (document.visibilityState === 'visible' && cheDo !== 'tat') docLai(); }
-function onOnline() { if (cheDo !== 'tat') docLai(); }
+function onOffline() { if (cheDo !== 'tat') datCheDo('du-phong'); }
+// Có mạng lại: không chờ socket cũ tự phát hiện — bỏ kênh cũ, mở kênh mới, làm mới ngay (người dùng thấy số liệu mới tức thì).
+function onOnline() {
+  if (cheDo === 'tat') return;
+  const cu = channel; channel = null;
+  if (cu) supabase.removeChannel(cu);
+  moKenh();
+  docLai();
+}
 
 // Bật khi mở một màn hình KL; gọi lại với hàm đọc lại của màn hình khác thì chỉ đổi hàm (kênh giữ nguyên).
 export function batKlRealtime(docLaiCuaManHinh, hienTrangThai) {
@@ -53,17 +74,10 @@ export function batKlRealtime(docLaiCuaManHinh, hienTrangThai) {
   onTrangThai = hienTrangThai || null;
   if (onTrangThai) onTrangThai(cheDo === 'tat' ? 'ket-noi' : cheDo);
   if (channel) return;
-  channel = BANG.reduce((ch, table) => ch.on('postgres_changes', { event: '*', schema: 'public', table }, gopDocLai), supabase.channel('kl_feed'))
-    .subscribe((status) => {
-      // Đang nối mà nhận CLOSED/lỗi thì vẫn chờ hết CHO_KET_NOI_MS (supabase-js tự thử lại), không nháy vàng ngay.
-      if (status === 'SUBSCRIBED') datCheDo('truc-tiep');
-      else if (cheDo !== 'ket-noi') datCheDo('du-phong');
-    });
-  // Lúc mở màn hình: "Đang kết nối…" (không cảnh báo); sau CHO_KET_NOI_MS chưa SUBSCRIBED mới sang dự phòng có polling.
-  datCheDo('ket-noi');
-  henChoKetNoi = setTimeout(() => { if (cheDo === 'ket-noi') datCheDo('du-phong'); }, CHO_KET_NOI_MS);
+  moKenh();
   document.addEventListener('visibilitychange', onVisible);
   window.addEventListener('online', onOnline);
+  window.addEventListener('offline', onOffline);
 }
 
 export function tatKlRealtime() {
@@ -72,6 +86,7 @@ export function tatKlRealtime() {
   clearTimeout(henChoKetNoi); henChoKetNoi = null;
   document.removeEventListener('visibilitychange', onVisible);
   window.removeEventListener('online', onOnline);
+  window.removeEventListener('offline', onOffline);
   if (channel) supabase.removeChannel(channel);
   channel = null; onChange = null; onTrangThai = null; cheDo = 'tat';
 }
