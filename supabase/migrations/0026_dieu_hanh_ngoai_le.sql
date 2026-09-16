@@ -2,7 +2,7 @@
 -- Lãnh đạo ra quyết định TRỰC TIẾP trên điểm nghẽn: luồng chỉ đạo → phản hồi → đóng, mỗi hành động ghi lich_su và tạo tin hệ
 -- thống cho người liên quan; view v_ngoai_le chỉ việc Đỏ/Đỏ đặc biệt với 4 trường bắt buộc (CN-5.2). Mã 1400/CH-n trong ngoặc.
 
--- 1. chi_dao: thêm loại Y_KIEN (bình luận, không cần phản hồi) và PHAN_HOI (từ Owner/người theo dõi lên, tra_loi_cho = chỉ đạo gốc);
+-- 1. chi_dao: thêm loại Y_KIEN (bình luận: tạo với DA_PHAN_HOI — không tính "chờ phản hồi", vẫn trả lời được tới khi đóng) và PHAN_HOI (từ Owner/người theo dõi lên, tra_loi_cho = chỉ đạo gốc);
 --    ghi chỉ qua hàm (policy INSERT trực tiếp bỏ — mọi thay đổi có vết). Bảng chi_dao_da_doc: đã đọc theo người.
 ALTER TABLE "public"."chi_dao" DROP CONSTRAINT "kl_chi_dao_loai_check";
 ALTER TABLE "public"."chi_dao"
@@ -134,7 +134,7 @@ END;
 $$;
 
 -- 5. chi_dao_gui(p) → id: A1/A2 trong phạm vi (kl_duoc_chi_dao 0016). p: nhiem_vu_id, loai, noi_dung, han_phan_hoi,
---    han_moi (GIA_HAN, DL-5: bắt buộc, sau hạn cũ; đổi han_xu_ly + so_lan_gia_han + 1, hạn cũ vào lich_su qua trigger; việc "Ký ban
+--    han_moi (GIA_HAN, DL-5: A1/quan_tri_kl, A2 chỉ việc mình giao không từ KL/TB; bắt buộc, sau hạn cũ; đổi han_xu_ly + so_lan_gia_han + 1, hạn cũ vào lich_su qua trigger; việc "Ký ban
 --    hành" chuyển sang "Có hạn cụ thể" vì hạn ký ban hành là hạn tự tính), nguoi_theo_doi_moi (GIAO_LAI: phải trong phạm vi
 --    người ra chỉ đạo — A2 cùng phòng, PCVP phòng phụ trách, Chánh VP/quan_tri_kl mọi cán bộ; người theo dõi cũ cũng nhận tin).
 CREATE FUNCTION "public"."chi_dao_gui"("p" jsonb) RETURNS uuid
@@ -155,6 +155,12 @@ BEGIN
     RAISE EXCEPTION 'Nhiệm vụ đã hoàn thành, không gia hạn hay giao lại.' USING ERRCODE = '22023';
   END IF;
   IF v_loai = 'GIA_HAN' THEN
+    -- Gia hạn là quyền của lãnh đạo Văn phòng (hoặc quan_tri_kl); trưởng phòng chỉ với việc chính mình giao và không phải việc
+    -- từ kết luận/thông báo của cấp ủy (KL_BTV/TB_THUONG_TRUC) — hạn do cấp ủy đặt, phòng không tự nới.
+    IF v_me."role_group" <> 'A1' AND NOT v_me."quan_tri_kl" AND (v_nv."tao_boi" IS DISTINCT FROM v_me."id"
+       OR (SELECT "loai" FROM "public"."van_ban_giao_viec" WHERE "id" = v_nv."van_ban_id") IN ('KL_BTV', 'TB_THUONG_TRUC')) THEN
+      RAISE EXCEPTION 'Trưởng phòng chỉ gia hạn việc do chính mình giao, không phải việc từ kết luận/thông báo của cấp ủy.' USING ERRCODE = '42501';
+    END IF;
     v_han_moi := nullif("p" ->> 'han_moi', '')::date;
     IF v_nv."han_xu_ly" IS NULL THEN RAISE EXCEPTION 'Việc chưa có hạn thì điền hạn ở Cập nhật, không gia hạn.' USING ERRCODE = '22023'; END IF;
     IF v_han_moi IS NULL OR v_han_moi <= v_nv."han_xu_ly" THEN
@@ -174,7 +180,7 @@ BEGIN
   END IF;
   INSERT INTO "public"."chi_dao" ("nhiem_vu_id", "nguoi_gui", "loai", "noi_dung", "han_phan_hoi", "han_moi", "chu_tri_moi", "trang_thai")
   VALUES (v_nv."id", v_me."id", v_loai, v_noi_dung, nullif("p" ->> 'han_phan_hoi', '')::date, v_han_moi, v_moi."id",
-          CASE WHEN v_loai = 'Y_KIEN' THEN 'DA_DONG' ELSE 'CHO_PHAN_HOI' END)
+          CASE WHEN v_loai = 'Y_KIEN' THEN 'DA_PHAN_HOI' ELSE 'CHO_PHAN_HOI' END)
   RETURNING "id" INTO v_id;
   PERFORM set_config('kl.chi_dao', '1', true);
   IF v_loai = 'GIA_HAN' THEN
@@ -190,7 +196,7 @@ END;
 $$;
 
 -- 6. chi_dao_phan_hoi(p) → id: Owner tài khoản, người theo dõi hoặc người đã tham gia luồng; p: chi_dao_id (gốc hoặc một phản
---    hồi), noi_dung. Chỉ đạo gốc đã đóng thì không phản hồi thêm; người khác người ra chỉ đạo phản hồi → gốc = DA_PHAN_HOI.
+--    hồi), noi_dung. Gốc đã đóng bằng chi_dao_dong (DA_DONG) thì không phản hồi thêm; người khác người ra chỉ đạo phản hồi → gốc = DA_PHAN_HOI.
 CREATE FUNCTION "public"."chi_dao_phan_hoi"("p" jsonb) RETURNS uuid
 LANGUAGE "plpgsql" SECURITY DEFINER SET "search_path" = "public" AS $$
 DECLARE v_goc "public"."chi_dao"; v_nv "public"."nhiem_vu"; v_noi_dung text := btrim(coalesce("p" ->> 'noi_dung', '')); v_id uuid;

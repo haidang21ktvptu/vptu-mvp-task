@@ -21,9 +21,13 @@ const lienQuan = async (ma) => { const r = await db().rpc('nguoi_lien_quan', { p
 const tinCua = async (ma) => { const r = await db().from('direct_messages').select('receiver_id, content, is_read').eq('nhiem_vu_id', id[ma]).eq('loai', 'he_thong'); assertOk(r, 'tin'); return r.data; };
 const demTheoNguoi = (tin) => tin.reduce((m, t) => ({ ...m, [t.receiver_id]: (m[t.receiver_id] || 0) + 1 }), {});
 const nv = async (ma) => (await db().from('nhiem_vu').select('*').eq('id', id[ma]).single()).data;
-const lichSu = async (ma, cot) => (await db().from('lich_su').select('cot, gia_tri_cu, gia_tri_moi, nguoi_sua').eq('nhiem_vu_id', id[ma]).eq('cot', cot)).data;
+const lichSu = async (ma, cot) => (await db().from('lich_su').select('cot, gia_tri_cu, gia_tri_moi, nguoi_sua').eq('nhiem_vu_id', id[ma]).eq('cot', cot).order('id')).data;
 const assertLoi = (r, label) => assert.ok(r.error, `${label}: phải bị chặn`);   // lỗi nghiệp vụ 22023
-const don = async () => { await db().from('nhiem_vu').delete().like('ma', 'NV-T9%'); };
+const don = async () => {
+  await db().from('nhiem_vu').delete().like('ma', 'NV-T9%');
+  await db().from('nhiem_vu').delete().like('noi_dung', 'KL-0026 giao%');
+  await db().from('van_ban_giao_viec').delete().eq('so_ket_luan', 'KL-0026 CV');
+};
 
 describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin hệ thống, v_ngoai_le', { skip: SKIP }, () => {
   before(async () => {
@@ -107,7 +111,7 @@ describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin h
     assert.equal(soPhanHoi, 2, 'gia hạn + kiểm tra số liệu chờ phản hồi; đôn đốc đã phản hồi và các phản hồi không đếm');
   });
 
-  test('5. chi_dao_dong: người khác bị chặn; người ra chỉ đạo đóng; sau đó không phản hồi thêm; Y_KIEN không chờ phản hồi', async () => {
+  test('5. chi_dao_dong: người khác bị chặn; người ra chỉ đạo đóng; sau đó không phản hồi thêm; Y_KIEN = DA_PHAN_HOI (không chờ phản hồi) nhưng A3 trả lời được, đóng rồi thì không', async () => {
     assertDenied(await (await userClient('demo_cv1')).rpc('chi_dao_dong', { p_id: cd.d1 }), 'người theo dõi đóng');
     assertDenied(await (await userClient('demo_pcvp')).rpc('chi_dao_dong', { p_id: cd.d1 }), 'PCVP không phải người ra chỉ đạo');
     assertOk(await (await userClient('demo_cvp')).rpc('chi_dao_dong', { p_id: cd.d1 }), 'Chánh VP đóng');
@@ -116,9 +120,10 @@ describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin h
     assertLoi(await (await userClient('demo_cvp')).rpc('chi_dao_dong', { p_id: cd.d1 }), 'đóng lần hai');
     const y = await gui('demo_truongphong', { nhiem_vu_id: id['NV-T91'], loai: 'Y_KIEN', noi_dung: 'Lưu ý phối hợp với Ban Tổ chức' });
     assertOk(y, 'A2 ý kiến trong phòng');
-    assert.equal((await db().from('chi_dao').select('trang_thai').eq('id', y.data).single()).data.trang_thai, 'DA_DONG');
+    assert.equal((await db().from('chi_dao').select('trang_thai').eq('id', y.data).single()).data.trang_thai, 'DA_PHAN_HOI');
     // Owner = phòng (owner_tai_khoan NULL): PCVP phụ trách phòng thấy việc nhưng không trong luồng → vẫn bị chặn (lỗi quyền, không phải "đã đóng").
     assertDenied(await phanHoi('demo_pcvp', { chi_dao_id: y.data, noi_dung: 'ngoài luồng' }), 'PCVP ngoài luồng trên việc Owner = phòng');
+assertOk(await phanHoi('demo_cv1', { chi_dao_id: y.data, noi_dung: 'Đã trao đổi với Ban Tổ chức' }), 'A3 (người theo dõi) trả lời Ý kiến');    assert.equal((await (await userClient('demo_cvp')).from('v_nhiem_vu').select('so_chi_dao_cho_phan_hoi').eq('id', id['NV-T91']).single()).data.so_chi_dao_cho_phan_hoi, 0, 'Ý kiến không tính chờ phản hồi');    assertOk(await (await userClient('demo_truongphong')).rpc('chi_dao_dong', { p_id: y.data }), 'người ra ý kiến đóng');    assertLoi(await phanHoi('demo_cv1', { chi_dao_id: y.data, noi_dung: 'muộn' }), 'trả lời Ý kiến đã đóng');
   });
 
   test('6. GIAO_LAI: người theo dõi mới phải trong phạm vi người ra chỉ đạo (A2 cùng phòng, PCVP phòng phụ trách); Chánh VP mọi phòng; người cũ nhận tin', async () => {
@@ -170,5 +175,21 @@ describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin h
     assert.equal((await cv1.from('chi_dao_da_doc').select('chi_dao_id')).data.length, 5);
     assert.equal((await (await userClient('demo_cv2')).from('chi_dao_da_doc').select('chi_dao_id')).data.length, 0, 'không thấy dòng đã đọc của người khác');
     assertDenied(await (await userClient('demo_qtht')).rpc('chi_dao_danh_dau_doc', { p_nhiem_vu: id['NV-T90'] }), 'ngoài phạm vi');
+  });
+
+  test('9. GIA_HAN chỉ A1/quan_tri_kl; A2 chỉ với việc chính mình giao và không từ kết luận/thông báo', async () => {
+    assertDenied(await gui('demo_truongphong', { nhiem_vu_id: id['NV-T94'], loai: 'GIA_HAN', noi_dung: 'A2 nới hạn KL', han_moi: '2027-01-31' }), 'A2 gia hạn việc từ KL_BTV (tao_boi NULL)');
+    const tp = await userClient('demo_truongphong');
+    const cv = await tp.rpc('giao_viec', { p: { van_ban: { loai: 'CONG_VAN', so_ket_luan: 'KL-0026 CV', ngay_ban_hanh: '2026-08-01' }, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1,
+      noi_dung: 'KL-0026 giao công văn', san_pham_loai: 'BAO_CAO', han_xu_ly: '2026-09-01' } });
+    assertOk(cv, 'A2 giao việc theo công văn');
+    const rCvp = await db().from('nhiem_vu').insert({ van_ban_id: cv.data.van_ban_id, nguoi_theo_doi: IDS.cv1, owner_don_vi_ma: 'TONG_HOP', noi_dung: 'KL-0026 giao bởi Chánh VP',
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-09-01', tao_boi: IDS.cvp }).select('id').single();
+    assertOk(rCvp, 'việc công văn do người khác giao');
+    assertDenied(await gui('demo_truongphong', { nhiem_vu_id: rCvp.data.id, loai: 'GIA_HAN', noi_dung: 'không phải mình giao', han_moi: '2026-10-01' }), 'A2 gia hạn việc công văn người khác giao');
+    assertOk(await gui('demo_truongphong', { nhiem_vu_id: cv.data.id, loai: 'GIA_HAN', noi_dung: 'Phòng tự nới việc mình giao', han_moi: '2026-10-01' }), 'A2 gia hạn việc mình giao theo công văn');
+    const n = (await db().from('nhiem_vu').select('han_xu_ly, so_lan_gia_han').eq('id', cv.data.id).single()).data;
+    assert.equal(n.han_xu_ly, '2026-10-01'); assert.equal(n.so_lan_gia_han, 1);
+    assertOk(await gui('demo_cvp', { nhiem_vu_id: rCvp.data.id, loai: 'GIA_HAN', noi_dung: 'Chánh VP gia hạn', han_moi: '2026-10-01' }), 'A1 gia hạn việc bất kỳ trong phạm vi');
   });
 });
