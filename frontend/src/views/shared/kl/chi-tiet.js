@@ -10,6 +10,9 @@ import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, chamMuc } from '../../../l
 import { timKlRow } from './danh-sach.js';
 import { sanPhamText } from './dong.js';
 import { napChiDao, focusChiDao } from './chi-dao.js';
+import { napMinhChung } from './minh-chung.js';
+
+const COT_VET = ['xac_nhan_nhan_viec', 'chi_dao', 'minh_chung_nop', 'minh_chung_xac_nhan', 'dong_nhiem_vu']; // lịch sử dạng câu, không có cũ → mới
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap' };
@@ -43,7 +46,7 @@ function hangHtml(nhan, giaTri, canCuHtml) {
 function lichSuHtml(ls) {
   if (ls.length === 0) return '<p class="chu-phu">Chưa có thay đổi nào được ghi nhận.</p>';
   return `<ul class="lich-su">${ls.map((l) => `<li><span class="chu-phu">${formatDateTime(l.luc)}</span> · ${escapeHtml(tenNguoi(l))} · <b>${tenCot(l.cot)}</b>: ${
-    l.cot === '*' ? `tạo dòng ${escapeHtml(l.gia_tri_moi || '')}` : ['xac_nhan_nhan_viec', 'chi_dao'].includes(l.cot) ? escapeHtml(l.gia_tri_moi || '')
+    l.cot === '*' ? `tạo dòng ${escapeHtml(l.gia_tri_moi || '')}` : COT_VET.includes(l.cot) ? escapeHtml(l.gia_tri_moi || '')
       : `${escapeHtml(hienGiaTri(l.cot, l.gia_tri_cu))} → ${escapeHtml(hienGiaTri(l.cot, l.gia_tri_moi))}`
   } <span class="chu-phu">(${TEN_NGUON[l.nguon] || l.nguon})</span></li>`).join('')}</ul>`;
 }
@@ -62,6 +65,7 @@ export function chiTietHtml(r, ls, dc) {
         <span class="chu-phu">${nguonDong}${excelGhiChu}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'}</span>
       </div>
       <div class="luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
+      <div class="khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>
       <details class="chi-tiet-them"><summary>Xem chi tiết <span class="chu-phu">nội dung đầy đủ, căn cứ từng trường, lịch sử</span></summary>
       <p class="chi-tiet-noi-dung">${escapeHtml(r.noi_dung)}</p>
       <table class="can-cu">
@@ -75,8 +79,8 @@ export function chiTietHtml(r, ls, dc) {
           ${r.ly_do_chua_co_han ? hangHtml('Lý do chưa có hạn', r.ly_do_chua_co_han, canCu('ly_do_chua_co_han', ls)) : ''}
           ${hangHtml('Loại thời hạn', r.loai_thoi_han_ten, canCu('loai_thoi_han_ma', ls))}
           ${hangHtml('Tiến độ', tenTrongDanhMuc('tienDo', r.tien_do_ma), `${canCu('tien_do_ma', ls)}<br><span class="chu-phu">cập nhật lần cuối ${formatDateTime(r.cap_nhat_luc)}${capNhat !== null ? ` (${capNhat} ngày trước)` : ''}</span>`)}
-          ${hangHtml('Ngày hoàn thành', hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh), canCu('ngay_hoan_thanh', ls))}
-          ${hangHtml('Minh chứng', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls))}
+          ${hangHtml('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày nhận văn bản)` : ''}`, canCu('ngay_hoan_thanh', ls))}
+          ${r.minh_chung ? hangHtml('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hangHtml('Người theo dõi', r.nguoi_theo_doi_ten || '(trống)', canCu('nguoi_theo_doi', ls))}
           ${hangHtml('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hangHtml('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
@@ -107,7 +111,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
     const [ls, dc] = await Promise.all([loadLichSu(id), loadDinhChinhCho(id)]);
     tr.firstElementChild.innerHTML = chiTietHtml(r, ls, dc);
     if (cheDo === 'chi-tiet') tr.querySelector('.chi-tiet-them').open = true;
-    await napChiDao(r); // khối chỉ đạo (GĐ15) ở đầu ngăn, nạp riêng, ghi "đã đọc" khi hiện
+    await Promise.all([napChiDao(r), napMinhChung(r)]); // khối chỉ đạo (GĐ15) và khối minh chứng (GĐ16) ở đầu ngăn, nạp riêng
   })();
   dangNap.set(id, nap.catch(() => {}));
   cheDoDangNap.set(id, cheDo);
