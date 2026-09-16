@@ -15,17 +15,17 @@ export const TONG = 185;
 test(`mốc ${NGAY_MOC}: ${TONG} dòng Excel cho đúng bộ số đã chốt`, async (t) => {
   if (!(await klSchemaReady())) return t.skip('Chưa có migration 0014–0016 trên project này.');
   const db = adminClient();
-  const { data: rows, error } = await db.from('kl_nhiem_vu').select('id, chu_tri_id').eq('nguon', 'excel').not('noi_dung', 'like', 'RLS-TEST%');
+  const { data: rows, error } = await db.from('nhiem_vu').select('id, nguoi_theo_doi').eq('nguon', 'excel').not('noi_dung', 'like', 'RLS-TEST%');
   assertOk({ error }, 'đọc dòng excel');
   if (rows.length !== TONG) return t.skip(`Project có ${rows.length}/${TONG} dòng nguon = excel — chạy scripts/nhap-kl-btvtu.mjs trước.`);
 
   const dem = Object.fromEntries(Object.keys(MOC).map((k) => [k, 0]));
   const theoChuTri = {};
-  for (const { id, chu_tri_id } of rows) {
+  for (const { id, nguoi_theo_doi } of rows) {
     const r = await db.rpc('kl_tinh_trang_thai', { p_id: id, p_ngay: NGAY_MOC });
     assertOk(r, `kl_tinh_trang_thai ${id}`);
     dem[r.data.nhom_dem] = (dem[r.data.nhom_dem] || 0) + 1;
-    theoChuTri[chu_tri_id] = (theoChuTri[chu_tri_id] || 0) + 1;
+    theoChuTri[nguoi_theo_doi] = (theoChuTri[nguoi_theo_doi] || 0) + 1;
   }
   assert.deepEqual(dem, MOC, 'bộ số tại 14/9/2026 lệch mốc — giải thích từng dòng lệch trước khi đổi mốc');
   // Bất biến (mục 2.5): tổng các nhóm = tổng dòng; tổng theo chủ trì = tổng dòng.

@@ -26,13 +26,13 @@ after(async () => { if (!SKIP) await adminClient().from('phu_trach_phong').delet
 async function kyVong(username) {
   const me = [...taiKhoan.values()].find((a) => a.username === username);
   const db = adminClient();
-  const { data: rows } = await db.from('kl_nhiem_vu').select('id, chu_tri_id, nganh_ma, linh_vuc_ma');
+  const { data: rows } = await db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma');
   const { data: pc } = await db.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, tu_ngay, den_ngay');
   const hieuLuc = (p) => p.tu_ngay <= homNay() && (!p.den_ngay || p.den_ngay >= homNay());
   const phongCua = (id) => taiKhoan.get(id)?.department;
   return new Set(rows.filter((r) => {
-    if (me.quan_tri_kl || r.chu_tri_id === me.id) return true;
-    const phong = phongCua(r.chu_tri_id);
+    if (me.quan_tri_kl || r.nguoi_theo_doi === me.id) return true;
+    const phong = phongCua(r.nguoi_theo_doi);
     if (me.role_group === 'A2') return phong === me.department;
     if (me.role_group !== 'A1') return false;
     if (me.is_chief) return true;
@@ -44,8 +44,8 @@ async function kyVong(username) {
 
 async function kiemMotVai(username, nhan) {
   const c = await userClient(username);
-  const r = await c.from('v_kl_dashboard').select('id, nhom_dem, linh_vuc_ma, nganh_ma, chu_tri_id');
-  assertOk(r, `${username} đọc v_kl_dashboard`);
+  const r = await c.from('v_nhiem_vu').select('id, nhom_dem, linh_vuc_ma, nganh_ma, nguoi_theo_doi');
+  assertOk(r, `${username} đọc v_nhiem_vu`);
   const thay = new Set(r.data.map((x) => x.id));
   const mong = await kyVong(username);
   assert.deepEqual([...thay].sort(), [...mong].sort(), `${nhan}: ${username} thấy ${thay.size} dòng, kỳ vọng ${mong.size}`);

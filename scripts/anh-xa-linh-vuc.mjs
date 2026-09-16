@@ -1,4 +1,4 @@
-// Ánh xạ giá trị tự do kl_nhiem_vu.linh_vuc_chi_tiet (dữ liệu Excel cũ) về danh mục dm_linh_vuc (GĐ9 PR 9B).
+// Ánh xạ giá trị tự do nhiem_vu.linh_vuc_chi_tiet (dữ liệu Excel cũ) về danh mục dm_linh_vuc (GĐ9 PR 9B).
 // DRY-RUN LÀ MẶC ĐỊNH và CHỈ ĐỌC: xuất bảng duyệt CSV ra NGOÀI repo; người quản trị sheet điền cột "linh_vuc_chot";
 // --ghi đọc lại CSV đã duyệt và chỉ điền linh_vuc_ma cho dòng có chốt (dòng để trống giữ NULL).
 //
@@ -11,7 +11,7 @@
 //   --out <file>.xlsx xuất Excel cùng bố cục. --ghi --file nhận .csv hoặc .xlsx (sheet "Đối chiếu lĩnh vực", tiêu đề dòng 5,
 //   cột E = lĩnh vực chốt, cột B tên ngành hiển thị → mã ngành) — người duyệt dùng Excel theo vùng dấu phẩy mở CSV bị gộp cột.
 // - --ghi: chốt sai ngành / không có trong danh mục → dừng, không ghi gì. Ghi bằng một khối SQL (scripts/kl/anh-xa-linh-vuc.mjs
-//   sqlCapNhat): không đổi cap_nhat_luc của dòng, kl_lich_su vẫn có vết từng dòng. Production: --production bắt buộc,
+//   sqlCapNhat): không đổi cap_nhat_luc của dòng, lich_su vẫn có vết từng dòng. Production: --production bắt buộc,
 //   cần backup-db.sh trước và xác nhận của chủ dự án trong phiên (CLAUDE.md rule 12).
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,12 +31,12 @@ const CSV_MAC_DINH = 'D:/TU 2026/Project/vptu-backup/nguon-kl-btvtu/anh-xa-linh-
 async function docDuLieu(db, choPhepDanhMucLocal) {
   const nganh = await db.from('dm_nganh').select('ma, ten, thu_tu').order('thu_tu');
   if (nganh.error) throw new Error(`Đọc dữ liệu thất bại: ${nganh.error.message}`);
-  let nv = await db.from('kl_nhiem_vu').select('id, ma, nganh_ma, linh_vuc_chi_tiet, linh_vuc_ma').order('ma');
+  let nv = await db.from('nhiem_vu').select('id, ma, nganh_ma, linh_vuc_chi_tiet, linh_vuc_ma').order('ma');
   let linhVuc = await db.from('dm_linh_vuc').select('ma, nganh_ma, ten, thu_tu').order('thu_tu');
   let nguonDanhMuc = 'đích';
   if (nv.error || linhVuc.error) {
     if (!choPhepDanhMucLocal) throw new Error(`Đích chưa có migration 0018 (dm_linh_vuc / linh_vuc_ma): ${(nv.error || linhVuc.error).message}`);
-    nv = await db.from('kl_nhiem_vu').select('id, ma, nganh_ma, linh_vuc_chi_tiet').order('ma');
+    nv = await db.from('nhiem_vu').select('id, ma, nganh_ma, linh_vuc_chi_tiet').order('ma');
     if (nv.error) throw new Error(`Đọc dữ liệu thất bại: ${nv.error.message}`);
     nv.data.forEach((n) => { n.linh_vuc_ma = null; });
     linhVuc = await createDb(resolveTarget({ local: true })).from('dm_linh_vuc').select('ma, nganh_ma, ten, thu_tu').order('thu_tu');
@@ -74,7 +74,7 @@ function inBaoCaoDryRun(du, bang) {
 }
 
 async function demHienTrang(db, capNhat) {
-  const { data, error } = await db.from('kl_nhiem_vu').select('id, ma, nganh_ma, linh_vuc_chi_tiet, linh_vuc_ma');
+  const { data, error } = await db.from('nhiem_vu').select('id, ma, nganh_ma, linh_vuc_chi_tiet, linh_vuc_ma');
   if (error) throw new Error(error.message);
   return capNhat.map((c) => {
     const dong = data.filter((n) => n.nganh_ma === c.nganh_ma && String(n.linh_vuc_chi_tiet ?? '').trim() === c.gia_tri_goc);
@@ -83,11 +83,11 @@ async function demHienTrang(db, capNhat) {
 }
 
 async function demSau(db) {
-  const { data, error } = await db.from('kl_nhiem_vu').select('linh_vuc_ma, linh_vuc_chi_tiet');
+  const { data, error } = await db.from('nhiem_vu').select('linh_vuc_ma, linh_vuc_chi_tiet');
   if (error) throw new Error(error.message);
   const theoLv = {};
   for (const n of data) if (n.linh_vuc_ma) theoLv[n.linh_vuc_ma] = (theoLv[n.linh_vuc_ma] || 0) + 1;
-  const { count } = await db.from('kl_lich_su').select('id', { count: 'exact', head: true }).eq('cot', 'linh_vuc_ma').eq('nguoi_sua_ghi_chu', 'script anh-xa-linh-vuc (CSV đã duyệt)');
+  const { count } = await db.from('lich_su').select('id', { count: 'exact', head: true }).eq('cot', 'linh_vuc_ma').eq('nguoi_sua_ghi_chu', 'script anh-xa-linh-vuc (CSV đã duyệt)');
   return { co_linh_vuc: data.filter((n) => n.linh_vuc_ma).length, con_null_co_chi_tiet: data.filter((n) => !n.linh_vuc_ma && String(n.linh_vuc_chi_tiet ?? '').trim()).length, theo_linh_vuc: theoLv, lich_su_script: count };
 }
 
@@ -100,7 +100,7 @@ function bienBan(target, keHoach, sau) {
     `- Cặp đã chốt: ${keHoach.length}; dòng điền mới: ${keHoach.reduce((s, c) => s + c.se_dien, 0)}; dòng bỏ qua vì đã có lĩnh vực khác: ${keHoach.reduce((s, c) => s + c.bo_qua_da_co.length, 0)}`,
     ...keHoach.map((c) => `  - "${c.gia_tri_goc}" (${c.nganh_ma}) → ${c.linh_vuc_ma}: ${c.se_dien} dòng`),
     `- Sau khi ghi: ${JSON.stringify(sau)}`, '',
-    'Không đổi cap_nhat_luc/cap_nhat_boi (trigger b_ tắt tạm trong khối SQL); kl_lich_su ghi từng dòng với nguoi_sua_ghi_chu của script.', '',
+    'Không đổi cap_nhat_luc/cap_nhat_boi (trigger b_ tắt tạm trong khối SQL); lich_su ghi từng dòng với nguoi_sua_ghi_chu của script.', '',
   ].join('\n'), 'utf8');
   return path;
 }

@@ -1,5 +1,5 @@
 // Nhập dữ liệu Theo dõi Kết luận BTVTU từ file Excel gốc (NGOÀI repo) hoặc bộ dữ liệu vàng .json vào
-// kl_hoi_nghi / kl_nhiem_vu / kl_lich_su (GĐ8 PR 8B, thiết kế Phần 2.4). DRY-RUN LÀ MẶC ĐỊNH — chỉ --ghi mới ghi.
+// van_ban_giao_viec / nhiem_vu / lich_su (GĐ8 PR 8B, thiết kế Phần 2.4). DRY-RUN LÀ MẶC ĐỊNH — chỉ --ghi mới ghi.
 //
 //   node nhap-kl-btvtu.mjs --file <đường dẫn .xlsx|.json> --local                          # dry-run trên Supabase cục bộ
 //   node nhap-kl-btvtu.mjs --file ../tests/rls/du-lieu-vang/kl-btvtu.json --local --ghi     # nhập bộ vàng (local/staging)
@@ -55,13 +55,13 @@ function bienBan(target, nguon, th, thNK, kq, kiemLai, anhXa) {
   const dong = [
     `# Biên bản nhập dữ liệu KL BTVTU — đích: ${target.ten} — ${new Date().toISOString()}`, '',
     `- Nguồn: ${nguon.loai}, SHA-256 \`${nguon.nguon_sha256}\``,
-    `- Đã ghi: ${kq.hoi_nghi} hội nghị, ${kq.nhiem_vu} nhiệm vụ (nguon = excel), ${kq.lich_su_excel} dòng nhật ký cũ (kl_lich_su nguon = excel, cot ≠ '*'); mã kế tiếp ${kq.ma_ke_tiep}`,
+    `- Đã ghi: ${kq.hoi_nghi} hội nghị, ${kq.nhiem_vu} nhiệm vụ (nguon = excel), ${kq.lich_su_excel} dòng nhật ký cũ (lich_su nguon = excel, cot ≠ '*'); mã kế tiếp ${kq.ma_ke_tiep}`,
     `- Đếm lại trên DB: ${JSON.stringify(kiemLai)}`,
     `- Số dòng theo tiến độ: ${JSON.stringify(th.tien_do)}; theo loại thời hạn: ${JSON.stringify(th.loai_thoi_han)}`,
     `- Có/không hạn theo tiến độ (Excel): ${JSON.stringify(th.co_han_theo_tien_do)}`,
     `- Chủ trì: ${anhXa.bang.filter((b) => b.ten !== 'VPTU').length} họ tên khớp tài khoản; ${kiemLai.chuyen_tu_vptu} dòng "VPTU" chuyển về Trưởng phòng Tổng hợp (không ghi tên/số việc theo người — repo public).`,
     `- Nhật ký cũ: ${thNK.tong} dòng theo cột ${JSON.stringify(thNK.theo_cot)}`,
-    `- Lưu ý: kl_lich_su còn ${kiemLai.lich_su_excel_tao} dòng cot = '*' do trigger ghi lúc INSERT (không phải nhật ký cũ).`,
+    `- Lưu ý: lich_su còn ${kiemLai.lich_su_excel_tao} dòng cot = '*' do trigger ghi lúc INSERT (không phải nhật ký cũ).`,
     '', 'Bộ số trạng thái tại 14/9/2026 đối chiếu bằng test tests/rls/kl-moc-2026-09-14 (hàm kl_trang_thai), không tính ở script.', '',
   ];
   const thuMuc = fileURLToPath(new URL('./out/', import.meta.url));   // scripts/out/ (gitignored), không phụ thuộc cwd
@@ -106,7 +106,7 @@ async function main() {
 
   const daCo = await demDongExcel(db);
   if (daCo > 0) {
-    if (!args.xoaCu) throw new Error(`Đích đã có ${daCo} dòng kl_nhiem_vu nguon = 'excel' — không nhập chồng. Local/staging: thêm --xoa-cu để xoá rồi nhập lại.`);
+    if (!args.xoaCu) throw new Error(`Đích đã có ${daCo} dòng nhiem_vu nguon = 'excel' — không nhập chồng. Local/staging: thêm --xoa-cu để xoá rồi nhập lại.`);
     const x = await xoaDuLieuExcelCu(db);
     console.log(`\nĐã xoá ${x.nhiem_vu} nhiệm vụ excel cũ và ${x.hoi_nghi} hội nghị trống.`);
   }

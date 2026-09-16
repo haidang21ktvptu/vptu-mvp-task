@@ -1,6 +1,6 @@
 // Hàm kl_trang_thai — nguồn duy nhất của trạng thái (thiết kế KL BTVTU Phần 2.2, 2.5, 6.2, 6.4).
 // Gọi qua kl_tinh_trang_thai(id, ngày) bằng service_role với NGÀY CỐ ĐỊNH để kết quả không phụ thuộc hôm nay.
-// Kèm ràng buộc/trigger của kl_nhiem_vu (Phần 2.3) — những gì phải chặn ngay khi ghi. Hai dòng KL-TZ (múi giờ)
+// Kèm ràng buộc/trigger của nhiem_vu (Phần 2.3) — những gì phải chặn ngay khi ghi. Hai dòng KL-TZ (múi giờ)
 // không mang tiền tố RLS-TEST để rls-10 đếm phạm vi không đổi; dọn theo hội nghị 999 ở teardown.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -45,7 +45,7 @@ describe('kl_trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip:
     assert.equal((await tt(fx.n1, '2026-08-07')).trang_thai, 'DANG_THUC_HIEN');
   });
   test('6. Ký ban hành: hạn nhập tay bị ghi đè = ngày ban hành + 10', async () => {
-    const { data } = await adminClient().from('kl_nhiem_vu').select('han_xu_ly').eq('id', fx.n3).single();
+    const { data } = await adminClient().from('nhiem_vu').select('han_xu_ly').eq('id', fx.n3).single();
     assert.equal(data.han_xu_ly, '2026-08-11');
     assert.equal((await tt(fx.n3, '2026-08-11')).trang_thai, 'SAP_DEN_HAN');
     assert.equal((await tt(fx.n3, '2026-08-12')).trang_thai, 'QUA_HAN');
@@ -53,18 +53,18 @@ describe('kl_trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip:
   test('7. Excel Hoàn thành không ngày, không hạn → HOAN_THANH, ket_qua KHONG_DANH_GIA; giữ cap_nhat_luc từ Excel', async () => {
     const r = await tt(fx.n7, '2026-09-14');
     assert.equal(r.trang_thai, 'HOAN_THANH'); assert.equal(r.ket_qua, 'KHONG_DANH_GIA'); assert.equal(r.do_tre_nhap_lieu, null);
-    const { data } = await adminClient().from('kl_nhiem_vu').select('cap_nhat_luc, thieu_minh_chung').eq('id', fx.n7).single();
+    const { data } = await adminClient().from('nhiem_vu').select('cap_nhat_luc, thieu_minh_chung').eq('id', fx.n7).single();
     assert.equal(new Date(data.cap_nhat_luc).toISOString(), '2026-09-01T11:03:00.000Z');
     assert.equal(data.thieu_minh_chung, true, 'cờ thiếu minh chứng của dữ liệu cũ (0021 không chặn ngược)');
   });
   test('8. do_tre_nhap_lieu lấy NGÀY theo giờ Việt Nam: ghi nhận 18:30 UTC (= 01:30 hôm sau giờ VN) tính đủ ngày', async () => {
     // Postgres trên Supabase chạy UTC; cast ::date trần sẽ cho 27/08 thay vì 28/08 → thiếu một ngày độ trễ.
     const db = adminClient();
-    const base = { hoi_nghi_id: fx.hn, chu_tri_id: IDS.cv1, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20',
+    const base = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20',
       tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-25', minh_chung: 'CV', nguon: 'excel' };
-    const r = await db.from('kl_nhiem_vu').insert([
-      { ...base, ma: 'NV-T08', noi_dung: 'KL-TZ N8 ghi 18:30 UTC', ghi_hoan_thanh_luc: '2026-08-27T18:30:00Z' }, // 28/08 01:30 VN
-      { ...base, ma: 'NV-T09', noi_dung: 'KL-TZ N9 ghi 16:59 UTC', ghi_hoan_thanh_luc: '2026-08-27T16:59:00Z' }, // 27/08 23:59 VN
+    const r = await db.from('nhiem_vu').insert([
+      { ...base, ma: 'NV-T08', noi_dung: 'KL-TZ N8 ghi 18:30 UTC', dong_luc: '2026-08-27T18:30:00Z' }, // 28/08 01:30 VN
+      { ...base, ma: 'NV-T09', noi_dung: 'KL-TZ N9 ghi 16:59 UTC', dong_luc: '2026-08-27T16:59:00Z' }, // 27/08 23:59 VN
     ]).select('id, ma');
     assertOk(r, 'tạo dòng thử múi giờ');
     const id = (ma) => r.data.find((x) => x.ma === ma).id;
@@ -81,37 +81,37 @@ describe('kl_trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip:
   });
 });
 
-describe('kl_nhiem_vu — ràng buộc và trigger (Phần 2.3, 6.2)', { skip: SKIP }, () => {
+describe('nhiem_vu — ràng buộc và trigger (Phần 2.3, 6.2)', { skip: SKIP }, () => {
   const db = () => adminClient();
   test('bị chặn: Có hạn cụ thể không hạn không lý do; chủ trì trống; hạn trước ngày ban hành; ngày ban hành tương lai', async () => {
-    const base = { hoi_nghi_id: fx.hn, chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST lỗi', loai_thoi_han_ma: 'CO_HAN_CU_THE' };
-    assert.ok((await db().from('kl_nhiem_vu').insert(base).select('id')).error, 'thiếu hạn và lý do');
-    assert.ok((await db().from('kl_nhiem_vu').insert({ ...base, chu_tri_id: null, han_xu_ly: '2026-09-01' }).select('id')).error, 'chủ trì NULL');
-    assert.ok((await db().from('kl_nhiem_vu').insert({ ...base, han_xu_ly: '2026-07-01' }).select('id')).error, 'hạn trước ngày BH');
-    assert.ok((await db().from('kl_hoi_nghi').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST tương lai', ngay_ban_hanh: '2099-01-01' }).select('id')).error, 'ngày BH tương lai');
+    const base = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST lỗi', loai_thoi_han_ma: 'CO_HAN_CU_THE' };
+    assert.ok((await db().from('nhiem_vu').insert(base).select('id')).error, 'thiếu hạn và lý do');
+    assert.ok((await db().from('nhiem_vu').insert({ ...base, nguoi_theo_doi: null, han_xu_ly: '2026-09-01' }).select('id')).error, 'chủ trì NULL');
+    assert.ok((await db().from('nhiem_vu').insert({ ...base, han_xu_ly: '2026-07-01' }).select('id')).error, 'hạn trước ngày BH');
+    assert.ok((await db().from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST tương lai', ngay_ban_hanh: '2099-01-01' }).select('id')).error, 'ngày BH tương lai');
   });
   test('Hoàn thành bắt buộc ngày hoàn thành (và minh chứng từ 0021); ngày ngoài [ngày BH, hôm nay] bị chặn; quay lại đang làm thì xoá ngày', async () => {
     const mc = { minh_chung: 'RLS-TEST CV 01' };
-    assert.ok((await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ...mc }).eq('id', fx.n1).select('id')).error, 'thiếu ngày hoàn thành');
-    assert.ok((await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2099-01-01', ...mc }).eq('id', fx.n1).select('id')).error, 'ngày tương lai');
-    const ok = await db().from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', ...mc }).eq('id', fx.n1).select('ghi_hoan_thanh_luc');
-    assertOk(ok, 'hoàn thành'); assert.ok(ok.data[0].ghi_hoan_thanh_luc, 'ghi lúc chuyển sang Hoàn thành');
-    const back = await db().from('kl_nhiem_vu').update({ tien_do_ma: 'DANG_THUC_HIEN' }).eq('id', fx.n1).select('ngay_hoan_thanh, ghi_hoan_thanh_luc');
-    assertOk(back, 'quay lại'); assert.deepEqual(back.data[0], { ngay_hoan_thanh: null, ghi_hoan_thanh_luc: null });
+    assert.ok((await db().from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ...mc }).eq('id', fx.n1).select('id')).error, 'thiếu ngày hoàn thành');
+    assert.ok((await db().from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2099-01-01', ...mc }).eq('id', fx.n1).select('id')).error, 'ngày tương lai');
+    const ok = await db().from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', ...mc }).eq('id', fx.n1).select('dong_luc');
+    assertOk(ok, 'hoàn thành'); assert.ok(ok.data[0].dong_luc, 'ghi lúc chuyển sang Hoàn thành');
+    const back = await db().from('nhiem_vu').update({ tien_do_ma: 'DANG_THUC_HIEN' }).eq('id', fx.n1).select('ngay_hoan_thanh, dong_luc');
+    assertOk(back, 'quay lại'); assert.deepEqual(back.data[0], { ngay_hoan_thanh: null, dong_luc: null });
   });
   test('Điền hạn thì lý do chưa có hạn tự xoá; lịch sử ghi từng cột đổi với nguon = app', async () => {
-    const r = await db().from('kl_nhiem_vu').update({ han_xu_ly: '2026-10-01' }).eq('id', fx.n4).select('ly_do_chua_co_han');
+    const r = await db().from('nhiem_vu').update({ han_xu_ly: '2026-10-01' }).eq('id', fx.n4).select('ly_do_chua_co_han');
     assertOk(r, 'điền hạn'); assert.equal(r.data[0].ly_do_chua_co_han, null);
-    const { data: ls } = await db().from('kl_lich_su').select('cot, gia_tri_cu, gia_tri_moi, nguon').eq('nhiem_vu_id', fx.n4).order('id');
+    const { data: ls } = await db().from('lich_su').select('cot, gia_tri_cu, gia_tri_moi, nguon').eq('nhiem_vu_id', fx.n4).order('id');
     assert.equal(ls[0].cot, '*');
     assert.ok(ls.some((l) => l.cot === 'han_xu_ly' && l.gia_tri_moi === '2026-10-01' && l.nguon === 'app'));
     assert.ok(ls.some((l) => l.cot === 'ly_do_chua_co_han' && l.gia_tri_moi === null));
-    await db().from('kl_nhiem_vu').update({ han_xu_ly: null, ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài' }).eq('id', fx.n4);
+    await db().from('nhiem_vu').update({ han_xu_ly: null, ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài' }).eq('id', fx.n4);
   });
   test('Đổi ngày ban hành → hạn Ký ban hành tính lại', async () => {
-    assertOk(await db().from('kl_hoi_nghi').update({ ngay_ban_hanh: '2026-08-05' }).eq('id', fx.hn), 'đổi ngày BH');
-    const { data } = await db().from('kl_nhiem_vu').select('han_xu_ly').eq('id', fx.n3).single();
+    assertOk(await db().from('van_ban_giao_viec').update({ ngay_ban_hanh: '2026-08-05' }).eq('id', fx.hn), 'đổi ngày BH');
+    const { data } = await db().from('nhiem_vu').select('han_xu_ly').eq('id', fx.n3).single();
     assert.equal(data.han_xu_ly, '2026-08-15');
-    await db().from('kl_hoi_nghi').update({ ngay_ban_hanh: '2026-08-01' }).eq('id', fx.hn);
+    await db().from('van_ban_giao_viec').update({ ngay_ban_hanh: '2026-08-01' }).eq('id', fx.hn);
   });
 });

@@ -20,7 +20,7 @@ const donPhanCong = async () => { if (!SKIP) await adminClient().from('phu_trach
 
 async function maThay(username) {
   const c = await userClient(username);
-  const r = await c.from('kl_nhiem_vu').select('ma').in('ma', BAY_VIEC).order('ma'); // chỉ 7 việc gốc (kl-trang-thai/rls-10 thêm dòng khác vào cùng fixture)
+  const r = await c.from('nhiem_vu').select('ma').in('ma', BAY_VIEC).order('ma'); // chỉ 7 việc gốc (kl-trang-thai/rls-10 thêm dòng khác vào cùng fixture)
   assertOk(r, `${username} select`);
   return r.data.map((x) => x.ma);
 }
@@ -42,7 +42,7 @@ describe('RLS-11 phạm vi PCVP theo (ngành, lĩnh vực)', { skip: SKIP }, () 
     // Kiêm nhiệm không mở "cả phòng"; hội nghị thấy được vì có việc trong phạm vi; dashboard có tên lĩnh vực.
     const pcvp2 = await userClient('demo_pcvp2');
     assert.equal((await pcvp2.rpc('phu_trach', { p_lanh_dao: IDS.pcvp2, p_phong: 'TONG_HOP' })).data, false);
-    const hn = await pcvp2.from('kl_hoi_nghi').select('id').eq('id', fx.hn);
+    const hn = await pcvp2.from('van_ban_giao_viec').select('id').eq('id', fx.hn);
     assertOk(hn, 'hội nghị'); assert.equal(hn.data.length, 1);
     const v = await pcvp2.from('v_kl_dashboard').select('ma, linh_vuc_ma, linh_vuc_ten').eq('ma', 'NV-T01').single();
     assertOk(v, 'dashboard'); assert.deepEqual(v.data, { ma: 'NV-T01', linh_vuc_ma: 'LV08_TAI_CHINH', linh_vuc_ten: 'Tài chính' });
@@ -165,15 +165,15 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
     assertOk(sai, 'đề nghị sai ngành vẫn ghi nhận (kiểm khi duyệt)');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY }), 'cấp');
     assertOk(await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true }), 'duyệt');
-    const { data: n5 } = await adminClient().from('kl_nhiem_vu').select('linh_vuc_ma').eq('id', fx.n5).single();
+    const { data: n5 } = await adminClient().from('nhiem_vu').select('linh_vuc_ma').eq('id', fx.n5).single();
     assert.equal(n5.linh_vuc_ma, 'LV08_TAI_CHINH');
-    const { data: ls } = await adminClient().from('kl_lich_su').select('cot, gia_tri_moi, nguon').eq('nhiem_vu_id', fx.n5).eq('nguon', 'dinh_chinh');
+    const { data: ls } = await adminClient().from('lich_su').select('cot, gia_tri_moi, nguon').eq('nhiem_vu_id', fx.n5).eq('nguon', 'dinh_chinh');
     assert.deepEqual(ls, [{ cot: 'linh_vuc_ma', gia_tri_moi: 'LV08_TAI_CHINH', nguon: 'dinh_chinh' }]);
     const r = await cv2.rpc('kl_duyet_dinh_chinh', { p_id: sai.data, p_chap_nhan: true });
     assert.equal(r.error?.code, '23503', 'FK ghép chặn lĩnh vực sai ngành');
-    const { data: dc } = await adminClient().from('kl_dinh_chinh').select('trang_thai').eq('id', sai.data).single();
+    const { data: dc } = await adminClient().from('dinh_chinh').select('trang_thai').eq('id', sai.data).single();
     assert.equal(dc.trang_thai, 'CHO_DUYET');
-    const { data: n6 } = await adminClient().from('kl_nhiem_vu').select('linh_vuc_ma').eq('id', fx.n6).single();
+    const { data: n6 } = await adminClient().from('nhiem_vu').select('linh_vuc_ma').eq('id', fx.n6).single();
     assert.equal(n6.linh_vuc_ma, null);
     assertOk(await cv2.rpc('kl_duyet_dinh_chinh', { p_id: sai.data, p_chap_nhan: false, p_ly_do: 'RLS-TEST bác' }), 'bác bỏ để dọn');
   });
@@ -182,9 +182,9 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
 describe('RLS-11 FK ghép lĩnh vực ↔ ngành (0018)', { skip: SKIP }, () => {
   test('FK ghép: lĩnh vực không thuộc ngành của dòng bị chặn (23503); có lĩnh vực mà bỏ ngành bị chặn (23514) — kể cả service_role', async () => {
     const db = adminClient();
-    const r1 = await db.from('kl_nhiem_vu').update({ linh_vuc_ma: 'LV03_TU_PHAP' }).eq('id', fx.n7).select('id');
+    const r1 = await db.from('nhiem_vu').update({ linh_vuc_ma: 'LV03_TU_PHAP' }).eq('id', fx.n7).select('id');
     assert.equal(r1.error?.code, '23503');
-    const r2 = await db.from('kl_nhiem_vu').update({ nganh_ma: null }).eq('id', fx.n1).select('id');
+    const r2 = await db.from('nhiem_vu').update({ nganh_ma: null }).eq('id', fx.n1).select('id');
     assert.equal(r2.error?.code, '23514');
     const r3 = await db.from('phu_trach_phong').insert({ lanh_dao_id: IDS.pcvp2, phong: 'TONG_HOP', nganh_ma: NGANH, linh_vuc_ma: 'LV03_TU_PHAP', ly_do: `${LY_DO} fk` }).select('id');
     assert.equal(r3.error?.code, '23503');

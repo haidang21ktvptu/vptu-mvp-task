@@ -22,7 +22,7 @@ export function setupKlFixtures() {
 
 // Trên staging trước khi merge 0014–0016 chưa có bảng → trả về null để test tự bỏ qua.
 export async function klSchemaReady() {
-  const r = await adminClient().from('kl_nhiem_vu').select('id').limit(1);
+  const r = await adminClient().from('nhiem_vu').select('id').limit(1);
   return !r.error;
 }
 // Trên staging trước khi merge 0018 chưa có dm_linh_vuc → fixture bỏ cột linh_vuc_ma, rls-11 tự bỏ qua.
@@ -35,29 +35,29 @@ async function createKlFixtures() {
   const db = adminClient();
   await teardownKlFixtures();
 
-  const { data: hn, error: e1 } = await db.from('kl_hoi_nghi')
+  const { data: hn, error: e1 } = await db.from('van_ban_giao_viec')
     .insert({ so_hoi_nghi: SO_HOI_NGHI_TEST, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: NGAY_BH }).select('id').single();
   if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
 
-  const base = { hoi_nghi_id: hn.id, nganh_ma: 'KINH_TE_TONG_HOP', co_quan_trinh_ma: 'DANG_UY_UBND' };
+  const base = { van_ban_id: hn.id, nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND' };
   const rows = [
-    { ...base, ma: 'NV-T01', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N1 quá hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', linh_vuc_ma: 'LV08_TAI_CHINH' },
-    { ...base, ma: 'NV-T02', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N2 hoàn thành trễ', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20', linh_vuc_ma: 'LV08_DAU_TU',
+    { ...base, ma: 'NV-T01', nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N1 quá hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', linh_vuc_ma: 'LV08_TAI_CHINH' },
+    { ...base, ma: 'NV-T02', nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N2 hoàn thành trễ', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20', linh_vuc_ma: 'LV08_DAU_TU',
       tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-25', minh_chung: 'Công văn 12/CV-VPTU' },
-    { ...base, ma: 'NV-T03', chu_tri_id: IDS.truongphong, noi_dung: 'RLS-TEST N3 ký ban hành', loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: '2026-12-31', linh_vuc_ma: 'LV08_TAI_CHINH' },
-    { ...base, ma: 'NV-T04', chu_tri_id: IDS.cv2, noi_dung: 'RLS-TEST N4 cần điền hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài', linh_vuc_ma: 'LV08_TAI_CHINH' },
-    { ...base, ma: 'NV-T05', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N5 chờ điều kiện', loai_thoi_han_ma: 'CHO_QUYET_DINH' },
-    { ...base, ma: 'NV-T06', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N6 thường xuyên', loai_thoi_han_ma: 'THUONG_XUYEN', han_xu_ly: '2026-08-15' },
-    { ...base, ma: 'NV-T07', chu_tri_id: IDS.cv1, noi_dung: 'RLS-TEST N7 excel không ngày', loai_thoi_han_ma: 'CO_HAN_CU_THE',
+    { ...base, ma: 'NV-T03', nguoi_theo_doi: IDS.truongphong, noi_dung: 'RLS-TEST N3 ký ban hành', loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: '2026-12-31', linh_vuc_ma: 'LV08_TAI_CHINH' },
+    { ...base, ma: 'NV-T04', nguoi_theo_doi: IDS.cv2, noi_dung: 'RLS-TEST N4 cần điền hạn', loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài', linh_vuc_ma: 'LV08_TAI_CHINH' },
+    { ...base, ma: 'NV-T05', nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N5 chờ điều kiện', loai_thoi_han_ma: 'CHO_QUYET_DINH' },
+    { ...base, ma: 'NV-T06', nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N6 thường xuyên', loai_thoi_han_ma: 'THUONG_XUYEN', han_xu_ly: '2026-08-15' },
+    { ...base, ma: 'NV-T07', nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N7 excel không ngày', loai_thoi_han_ma: 'CO_HAN_CU_THE',
       tien_do_ma: 'HOAN_THANH', nguon: 'excel', cap_nhat_luc: '2026-09-01T18:03:00+07:00' },
   ];
   if (!(await linhVucReady())) rows.forEach((r) => delete r.linh_vuc_ma);
   // defaultToNull: false — khoá thiếu ở một số dòng (tien_do_ma, nguon...) lấy DEFAULT của bảng thay vì NULL.
-  const { data: nv, error: e2 } = await db.from('kl_nhiem_vu').insert(rows, { defaultToNull: false }).select('id, ma');
+  const { data: nv, error: e2 } = await db.from('nhiem_vu').insert(rows, { defaultToNull: false }).select('id, ma');
   if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
   const id = (ma) => nv.find((r) => r.ma === ma).id;
 
-  const { data: d1, error: e3 } = await db.from('kl_chi_dao')
+  const { data: d1, error: e3 } = await db.from('chi_dao')
     .insert({ nhiem_vu_id: id('NV-T01'), nguoi_gui: IDS.truongphong, loai: 'DON_DOC', noi_dung: 'RLS-TEST D1', han_phan_hoi: '2026-09-16' })
     .select('id').single();
   if (e3) throw new Error(`Tạo chỉ đạo mẫu thất bại: ${e3.message}`);
@@ -67,10 +67,10 @@ async function createKlFixtures() {
 
 export async function teardownKlFixtures() {
   const db = adminClient();
-  const { data: hns } = await db.from('kl_hoi_nghi').select('id').in('so_hoi_nghi', [SO_HOI_NGHI_TEST, SO_HOI_NGHI_TEST - 1]);
+  const { data: hns } = await db.from('van_ban_giao_viec').select('id').in('so_hoi_nghi', [SO_HOI_NGHI_TEST, SO_HOI_NGHI_TEST - 1]);
   const ids = (hns || []).map((h) => h.id);
   if (ids.length === 0) return;
-  // kl_lich_su / kl_chi_dao / kl_dinh_chinh xoá theo FK ON DELETE CASCADE từ kl_nhiem_vu; hội nghị xoá sau.
-  await db.from('kl_nhiem_vu').delete().in('hoi_nghi_id', ids);
-  await db.from('kl_hoi_nghi').delete().in('id', ids);
+  // lich_su / chi_dao / dinh_chinh xoá theo FK ON DELETE CASCADE từ nhiem_vu; hội nghị xoá sau.
+  await db.from('nhiem_vu').delete().in('van_ban_id', ids);
+  await db.from('van_ban_giao_viec').delete().in('id', ids);
 }
