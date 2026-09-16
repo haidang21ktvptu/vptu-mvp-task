@@ -62,7 +62,7 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     await expect(page.locator('#klKetNoi')).toContainText('làm mới mỗi 60 giây', KN);
     expect(await page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(138, 101, 18)'); // chữ vàng --muc-vang trên bản build
     await page.context().setOffline(false);
-    await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT); // kênh mới mở lại khi có mạng
+    await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', { timeout: 60_000 }); // kênh mới mở lại khi có mạng; trên runner CI socket nối lại có thể theo backoff (~20–30 giây)
   });
 });
 
