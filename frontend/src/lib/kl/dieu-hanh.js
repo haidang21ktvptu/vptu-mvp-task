@@ -39,6 +39,10 @@ export const tinHeThongDaDoc = (nhiemVuId = null) => rpc('tin_he_thong_da_doc', 
 // Nhãn loại chỉ đạo (cùng bảng với chi_dao_ten_loai trong 0026).
 export const TEN_LOAI_CHI_DAO = {
   DON_DOC: 'Đôn đốc', GIA_HAN: 'Gia hạn', GIAO_LAI: 'Giao lại', YEU_CAU_MINH_CHUNG: 'Yêu cầu minh chứng',
-  KIEM_TRA_SO_LIEU: 'Kiểm tra số liệu', Y_KIEN: 'Ý kiến', PHAN_HOI: 'Phản hồi',
+  KIEM_TRA_SO_LIEU: 'Kiểm tra số liệu', Y_KIEN: 'Ý kiến', PHAN_HOI: 'Phản hồi', CHI_DAO_TT: 'Chỉ đạo Thường trực',
 };
 export const TEN_TRANG_THAI_CHI_DAO = { CHO_PHAN_HOI: 'Chờ phản hồi', DA_PHAN_HOI: 'Đã phản hồi', DA_DONG: 'Đã đóng' };
+// Chỉ đạo Thường trực (GĐ19, 0032 v_chi_dao_tt, RLS lọc phạm vi): Dashboard A1 lọc dòng mình là người nhận, A0 dòng mình gửi.
+export async function loadChiDaoTT() {
+  return loi(await supabase.from('v_chi_dao_tt').select('*'), 'đọc chỉ đạo Thường trực') || [];
+}

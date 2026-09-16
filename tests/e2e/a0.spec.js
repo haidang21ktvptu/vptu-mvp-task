@@ -41,7 +41,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — chỉ xem', () => {
     }
   });
 
-  test('màn hình Nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ nút Ý kiến', async () => {
+  test('màn hình Nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ nút Ý kiến / Chỉ đạo', async () => {
     await page.locator('#navKl').click();
     await expect(page.locator('#klBody tr[id^="klRow-"]').first()).toBeVisible();
     await expect(page.locator('#klNutThem')).toBeHidden();
@@ -49,13 +49,13 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — chỉ xem', () => {
     await expect(page.locator('#klBody [data-action=openDongNhiemVu]')).toHaveCount(0);
     await expect(page.locator('#klBody [data-action=openMinhChung]')).toHaveCount(0);
     const yKien = page.locator('#klBody [data-action=moKlChiDao]').first();
-    await expect(yKien).toHaveText('Ý kiến');
+    await expect(yKien).toHaveText('Ý kiến / Chỉ đạo');
     await yKien.click();
     const form = page.locator('#klBody form.cd-form').first();
     await expect(form).toBeVisible();
-    await expect(form.locator('select[name=loai] option')).toHaveCount(1);
+    await expect(form.locator('select[name=loai] option')).toHaveCount(2); // Ý kiến / Chỉ đạo (GĐ19, CH-16)
     await expect(form.locator('select[name=loai]')).toHaveValue('Y_KIEN');
-    await expect(form.locator('button[type=submit]')).toHaveText('Gửi ý kiến');
+    await expect(form.locator('button[type=submit]')).toHaveText('Gửi');
     await expect(page.locator('#klBody [data-action=dongChiDao]')).toHaveCount(0);
     await expect(page.locator('#klBody form.cd-form-ph')).toHaveCount(0);
   });

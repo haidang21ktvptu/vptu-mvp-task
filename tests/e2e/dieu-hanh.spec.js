@@ -9,7 +9,6 @@ import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000013'; // demo_e2e_dh — tài khoản riêng của spec (GĐ18)
-const CVP_ID = '00000000-0000-4000-8000-000000000001';
 const SO_HOI_NGHI = 993;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
 
@@ -23,7 +22,7 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     test.skip(Boolean(co.error), 'Project chưa có migration 0026 (điều hành ngoại lệ).');
     await don(db);
     // Chuông của A3 và A1 bắt đầu từ 0: xoá tin hệ thống cũ (dữ liệu giả của các lần chạy trước / test RLS trên staging).
-    await db.from('direct_messages').delete().in('receiver_id', [CV1_ID, CVP_ID]).eq('loai', 'he_thong');
+    await db.from('direct_messages').delete().eq('receiver_id', CV1_ID).eq('loai', 'he_thong'); // chỉ chuông A3 (tài khoản riêng); tin của demo_cvp có spec khác dùng
     const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-DH`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
     if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
@@ -97,7 +96,7 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     const goc = a1.locator(`#klChiDao-${nvId} .cd-goc`);
     await expect(goc.locator('.cd-ph')).toContainText('Đã trình dự thảo, chờ ký (e2e)', RT);
     await expect(goc).toHaveAttribute('data-trang-thai', 'DA_PHAN_HOI');
-    await expect(a1.locator('#chuongBadge')).toHaveText('1', RT);
+    await expect(a1.locator(`#thongBaoList [data-nv="${nvId}"]`)).toHaveCount(1, RT); // đếm theo nhiệm vụ: spec chi-dao-tt (worker kia) cũng gửi tin cho demo_cvp
     await goc.locator('[data-action=dongChiDao]').click();
     await expect(a1.locator(`#klChiDao-${nvId} .cd-goc`)).toHaveAttribute('data-trang-thai', 'DA_DONG', RT);
     await expect(a1.locator(`#klChiDao-${nvId} .cd-form-ph`)).toHaveCount(0);

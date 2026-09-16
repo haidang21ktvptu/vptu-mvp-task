@@ -91,7 +91,7 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 
 ### 3.6 CĐ — Chỉ đạo, đính chính, nhắn tin (giữ từ v2, hợp nhất)
 
-- **CĐ-1 [Sửa]** Bảng `chi_dao` (từ `kl_chi_dao`, gộp `task_directives`): loại `DON_DOC`, `GIA_HAN`, `GIAO_LAI`, `YEU_CAU_MINH_CHUNG`, `KIEM_TRA_SO_LIEU`, `Y_KIEN` (bình luận), `PHAN_HOI` (từ Owner/người theo dõi lên); hàm `chi_dao_gui/phan_hoi/dong`; đã đọc theo người (`chi_dao_da_doc`); huy hiệu + realtime giữ.
+- **CĐ-1 [Sửa]** Bảng `chi_dao` (từ `kl_chi_dao`, gộp `task_directives`): loại `DON_DOC`, `GIA_HAN`, `GIAO_LAI`, `YEU_CAU_MINH_CHUNG`, `KIEM_TRA_SO_LIEU`, `Y_KIEN` (bình luận), `PHAN_HOI` (từ Owner/người theo dõi lên), `CHI_DAO_TT` (chỉ đạo Thường trực — chỉ A0 gửi, người nhận tự tính, hạn 2 ngày làm việc, chỉ đạo con gắn `tra_loi_cho`; CH-16, 0032); hàm `chi_dao_gui/phan_hoi/dong`; đã đọc theo người (`chi_dao_da_doc`); huy hiệu + realtime giữ.
 - **CĐ-2 [Giữ]** Đính chính (`dinh_chinh`): đề nghị → duyệt bởi `quan_tri_kl` khác người đề nghị; UI ở giai đoạn sau; việc đang đính chính tách khỏi ô Đỏ.
 - **CĐ-3 [Giữ]** Nhắn tin 1-1 (`direct_messages`), danh bạ theo vai trò; thêm `loai = he_thong`, `nhiem_vu_id`.
 

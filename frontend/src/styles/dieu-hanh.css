@@ -35,6 +35,9 @@
   .cd-loai-YEU_CAU_MINH_CHUNG { background: var(--cb-ngoc); }
   .cd-loai-KIEM_TRA_SO_LIEU { background: var(--cb-ngoc); }
   .cd-loai-Y_KIEN { background: var(--cb-muc-nhat); }
+  .cd-loai-CHI_DAO_TT { background: var(--cb-do-dam); }
+  .cd-goc[data-loai="CHI_DAO_TT"] { border-left-width: 5px; }
+  .cd-form-con { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--cb-vien); }
   .cd-noi-dung { margin: 4px 0; line-height: 1.5; white-space: pre-wrap; }
   .cd-phu { font-size: 12px; }
   .cd-cac-ph { margin-left: 16px; border-left: 2px solid var(--cb-vien); padding-left: 10px; }

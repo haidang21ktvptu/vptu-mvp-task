@@ -74,7 +74,7 @@ export function ngoaiLeHtml(rows) {
 
 // Hai nút (15E): "Chi tiết" mở ngăn với bảng thông tin mở sẵn; "Chỉ đạo" mở ngăn (bảng gập), con trỏ vào thẳng ô nhập.
 // Cả hai sang màn hình Nhiệm vụ lọc đúng mã.
-async function moNgoaiLe(id, ma, cheDo) {
+export async function moNgoaiLe(id, ma, cheDo) {
   await openKl({ tuTongQuan: true, tuKhoa: ma });
   await toggleKlChiTiet({ id, cheDo });
   if (cheDo === 'chi-tiet') document.getElementById(`klRow-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
