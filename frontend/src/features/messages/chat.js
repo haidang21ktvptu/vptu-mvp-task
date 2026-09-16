@@ -21,6 +21,7 @@ export async function loadDirectMessages(peerId, markAsRead = false) {
   const chatBox = $('dmChatBox');
   const { data } = await supabase.from('direct_messages')
     .select('*')
+    .eq('loai', 'nguoi') // tin hệ thống (GĐ15) hiện ở chuông, không lẫn vào hội thoại
     .or(`and(sender_id.eq.${me},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${me})`)
     .order('created_at', { ascending: true });
 
@@ -79,12 +80,14 @@ export async function handleSendDM() {
 
 let toastTimer = null;
 
-export function showDMToast(senderName, content, senderId) {
-  setText('toastSender', `Tin nhắn từ ${senderName}`);
+// onOpen/nhanNut: tin hệ thống (GĐ15) dùng lại toast nhưng nút mở nhiệm vụ thay vì hội thoại.
+export function showDMToast(senderName, content, senderId, onOpen = null, nhanNut = 'Mở hội thoại') {
+  setText('toastSender', onOpen ? senderName : `Tin nhắn từ ${senderName}`);
   setText('toastContent', content);
+  setText('toastActionBtn', nhanNut);
   $('toastActionBtn').onclick = () => {
     closeToast();
-    openChatWith(senderId);
+    if (onOpen) onOpen(); else openChatWith(senderId);
   };
   show('realtimeToast', true);
   clearTimeout(toastTimer);

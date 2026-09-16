@@ -26,6 +26,8 @@ const NHAN_CHIP = {
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
   khongCapNhatQua: (v) => `Đang mở, không cập nhật quá ${v} ngày`,
   dangDinhChinh: () => 'Có đề nghị đính chính đang chờ duyệt',
+  muc: (v) => `Mức cảnh báo: ${v === 'DO_DAC_BIET' ? 'Đỏ đặc biệt' : v}`,
+  chuaCapQuyetDinh: () => 'Đang mở, chưa xác định cấp cần quyết định',
   nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
 

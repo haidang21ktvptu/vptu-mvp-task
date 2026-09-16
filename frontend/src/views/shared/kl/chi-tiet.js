@@ -9,6 +9,7 @@ import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
 import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, chamMuc } from '../../../lib/kl/nhan.js';
 import { timKlRow } from './danh-sach.js';
 import { sanPhamText } from './dong.js';
+import { napChiDao } from './chi-dao.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap' };
@@ -42,7 +43,7 @@ function hangHtml(nhan, giaTri, canCuHtml) {
 function lichSuHtml(ls) {
   if (ls.length === 0) return '<p class="chu-phu">Chưa có thay đổi nào được ghi nhận.</p>';
   return `<ul class="lich-su">${ls.map((l) => `<li><span class="chu-phu">${formatDateTime(l.luc)}</span> · ${escapeHtml(tenNguoi(l))} · <b>${tenCot(l.cot)}</b>: ${
-    l.cot === '*' ? `tạo dòng ${escapeHtml(l.gia_tri_moi || '')}` : l.cot === 'xac_nhan_nhan_viec' ? escapeHtml(l.gia_tri_moi || '')
+    l.cot === '*' ? `tạo dòng ${escapeHtml(l.gia_tri_moi || '')}` : ['xac_nhan_nhan_viec', 'chi_dao'].includes(l.cot) ? escapeHtml(l.gia_tri_moi || '')
       : `${escapeHtml(hienGiaTri(l.cot, l.gia_tri_cu))} → ${escapeHtml(hienGiaTri(l.cot, l.gia_tri_moi))}`
   } <span class="chu-phu">(${TEN_NGUON[l.nguon] || l.nguon})</span></li>`).join('')}</ul>`;
 }
@@ -77,10 +78,10 @@ export function chiTietHtml(r, ls, dc) {
           ${hangHtml('Người theo dõi', r.nguoi_theo_doi_ten || '(trống)', canCu('nguoi_theo_doi', ls))}
           ${hangHtml('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hangHtml('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
-          ${hangHtml('Chỉ đạo', r.so_chi_dao_cho_phan_hoi > 0 ? `${r.so_chi_dao_cho_phan_hoi} chờ phản hồi` : 'chưa có', '')}
           ${hangHtml('Đính chính', dinhChinh, '')}
         </tbody>
       </table>
+      <div class="luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <details class="lich-su-hop"><summary>Lịch sử: ${ls.filter((l) => l.cot !== '*').length} thay đổi — xem đầy đủ</summary>${lichSuHtml(ls)}</details>
     </div>`;
 }
@@ -95,6 +96,7 @@ export async function toggleKlChiTiet({ id }) {
   try {
     const [ls, dc] = await Promise.all([loadLichSu(id), loadDinhChinhCho(id)]);
     tr.firstElementChild.innerHTML = chiTietHtml(r, ls, dc);
+    napChiDao(r); // khối chỉ đạo (GĐ15) nạp riêng, ghi "đã đọc" khi hiện
   } catch (e) {
     notifyError('Không đọc được lịch sử: ' + e.message);
     show(tr, false);

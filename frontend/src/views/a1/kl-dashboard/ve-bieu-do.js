@@ -2,7 +2,7 @@
 // của dashboard A1. Thanh vẽ bằng HTML/CSS, không thư viện; mỗi đoạn/ô số là nút mở danh sách 10B với bộ lọc.
 import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
-import { tenNhom } from '../../../lib/kl/nhan.js';
+import { tenNhom, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { CHUA_PHAN_LOAI, CHUA_CO_NGANH } from '../../../lib/kl/tong-hop.js';
 import { nutLoc } from './ve-o-so.js';
@@ -16,6 +16,17 @@ const DOAN_MO = ['QUA_HAN', 'DANG_DINH_CHINH', 'SAP_DEN_HAN', 'CAN_DIEN_HAN', 'D
 function thanhHtml(nhom, tong, locGoc) {
   return `<div class="thanh" role="group">${DOAN_MO.filter((k) => nhom[k] > 0).map((k) =>
     `<button type="button" class="doan ${LOP_DOAN[k]}" style="flex-basis:${(nhom[k] / tong) * 100}%" ${nutLoc({ ...locGoc, nhom: k })} title="${tenNhom(k)}: ${nhom[k]}" aria-label="${tenNhom(k)}: ${nhom[k]}">${nhom[k]}</button>`).join('')}</div>`;
+}
+
+// Hàng 3a (GĐ15, CH-2): theo Owner đơn vị/phòng — nhãn mở danh sách lọc đơn vị; ghi số người theo dõi để thấy "ai theo dõi" là việc riêng.
+export function ownerHtml(ds) {
+  if (ds.length === 0) return '<p class="bd-trong">Không có việc đang mở.</p>';
+  const max = Math.max(...ds.map((c) => c.so));
+  return ds.map((c) => `
+    <div class="bd-hang">
+      <button type="button" class="bd-nhan" ${nutLoc({ donVi: c.owner_don_vi_ma, chiMo: true })}>${escapeHtml(boSoThuTu(c.ten))}<small>${c.trongVanPhong ? 'Trong Văn phòng' : 'Đơn vị ngoài'} · ${c.so} việc đang mở · ${c.nguoiTheoDoi.size} người theo dõi</small></button>
+      <div class="bd-thanh-o" style="width:${(c.so / max) * 100}%">${thanhHtml(c.nhom, c.so, { donVi: c.owner_don_vi_ma })}</div>
+    </div>`).join('') + chuGiaiHtml();
 }
 
 export function nguoiTheoDoiHtml(ds) {

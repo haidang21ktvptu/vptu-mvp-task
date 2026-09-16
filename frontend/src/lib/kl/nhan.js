@@ -51,7 +51,7 @@ export const TEN_COT = {
   linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn', van_ban_id: 'Văn bản giao việc',
   san_pham_loai: 'Loại sản phẩm', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
   ngay_nhan_van_ban: 'Ngày nhận văn bản', ngay_nhan_uoc_tinh: 'Ngày nhận ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
-  xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', '*': 'Tạo dòng',
+  xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng',
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 
