@@ -1,3 +1,5 @@
+> **Tài liệu lịch sử (GĐ8–10, đóng băng 16/9/2026).** Định hướng từ nay theo phụ lục Công văn 1400: `MUC-TIEU-1400.md` (thước đo), `RA-SOAT-HIEN-TRANG.md` (giữ/sửa/hợp nhất/bỏ từng phần của thiết kế này), `SPEC.md` v3, `CAU-HOI-NGHIEP-VU.md`, `LO-TRINH-V3.md`. Không cập nhật file này nữa; các quyết định đã chốt trong Phần 4 vẫn có hiệu lực trừ khi SPEC v3 ghi khác.
+
 # Thiết kế tích hợp: Theo dõi Kết luận BTVTU vào VPTU-TASK
 
 Ngày lập: 14/9/2026. Nguồn phân tích: file `TUCB_XX - kết quả thực hiện KL BTVTU - test.xlsx` (185 dòng, 4 sheet), hai bản infographic tuần 34 (bản lãnh đạo ẩn danh + bản nội bộ, dữ liệu 23/8/2026).
