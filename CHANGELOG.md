@@ -291,10 +291,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
    - Cập nhật ràng buộc vai trò: `role_group IN ('A1', 'A2', 'A3')`.
    - Nạp đủ danh mục 49 cán bộ Văn phòng Tỉnh ủy (mật khẩu mặc định: `123456`).
    - Cập nhật trường `manager_id` trỏ về đúng các đồng chí Phó Chánh Văn phòng phụ trách từng khối chuyên môn:
-     * Khối Tổng hợp (`TONG_HOP`): phụ trách bởi Đ/c Hoàng Thị Thu Trang (`hoangthithutrang`).
-     * Khối Hành chính - Lưu trữ (`HC_LT`): phụ trách bởi Đ/c Hoàng Văn Kiên (`hoangvankien`).
-     * Khối CĐS - Cơ yếu & Tài chính Đảng (`CDS_CY`, `TAI_CHINH_DANG`): phụ trách bởi Đ/c Phạm Xuân Tùng (`phamxuantung`).
-     * Khối Quản trị (`QUAN_TRI`): phụ trách bởi Đ/c Nông Thị Thùy Trang (`nongthithuytrang`).
+     * Khối Tổng hợp (`TONG_HOP`): phụ trách bởi Phó Chánh Văn phòng phụ trách khối Tổng hợp.
+     * Khối Hành chính - Lưu trữ (`HC_LT`): phụ trách bởi Phó Chánh Văn phòng phụ trách khối Hành chính - Lưu trữ.
+     * Khối CĐS - Cơ yếu & Tài chính Đảng (`CDS_CY`, `TAI_CHINH_DANG`): phụ trách bởi Phó Chánh Văn phòng phụ trách khối CĐS - Cơ yếu và Tài chính Đảng.
+     * Khối Quản trị (`QUAN_TRI`): phụ trách bởi Phó Chánh Văn phòng phụ trách khối Quản trị.
 3. **Cập nhật View `view_exception_dashboard`:**
    - Bổ sung trường `owner_department` để hỗ trợ Lãnh đạo Văn phòng lọc điểm nghẽn theo từng phòng ban.
 
@@ -508,3 +508,4 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - **PR-1 (chỉ tài liệu)**: `docs/MUC-TIEU-1400.md` (chép phụ lục dạng văn bản, mã NT/CN/QT — thước đo mọi giai đoạn); `docs/RA-SOAT-HIEN-TRANG.md` (từng bảng/hàm/policy/màn hình/hạ tầng → GIỮ/SỬA/HỢP NHẤT/BỎ; kết luận: `tasks` 0 dòng hợp nhất vào `kl_nhiem_vu` 185 dòng, hạ tầng giữ nguyên, khoảng trống lớn nhất là Owner đúng nghĩa, Product, ngày nhận, tệp minh chứng, leo thang tự động); `docs/SPEC.md` **v3** (viết lại quanh 1400: Owner = cơ quan/đơn vị trình tách khỏi người theo dõi, Product bắt buộc với việc mới, deadline bắt buộc với việc mới, tệp minh chứng, ngày nhận văn bản tạm = ngày ban hành có cờ, cấp nhận/cấp quyết định, Vàng 3 ngày/Đỏ/Đỏ đặc biệt ≥ 3 ngày, dashboard ngoại lệ 4 trường, ánh xạ 16 cột Excel → trường; mọi chỗ phụ thuộc quyết định đánh dấu `[CH-n]`); `docs/CAU-HOI-NGHIEP-VU.md` (15 câu + 5 đề xuất kỹ thuật, mỗi câu có phương án, hệ quả, đề xuất, ô quyết định trống); `docs/LO-TRINH-V3.md` (GĐ14–19, migration từ 0022, ước 19–22 ngày làm việc, production luôn chạy được). SPEC v2 giữ dưới tên `docs/SPEC-v2-luu.md`; `thiet-ke-theo-doi-kl-btvtu.md` đóng băng có dòng đầu trỏ sang bộ tài liệu mới.
 - **Số liệu production đọc 15/9 (chỉ đọc)**: `tasks`/`task_evidences`/`task_directives`/`direct_messages` 0 dòng; 185 nhiệm vụ KL (29 cơ quan trình = Văn phòng, 156 đơn vị ngoài), 146 HT không ngày hoàn thành, 78 thiếu minh chứng, 76 minh chứng chữ (0 tệp/URL), 65 "Có hạn cụ thể" không hạn, 134 lĩnh vực NULL, 51 dòng lịch sử `app` đều do script.
 - **Chặn**: không viết migration 0022 trước khi chủ dự án chốt CH-1, 2, 5, 6, 8, 9, 14. Repo không chứa tên riêng cán bộ hay dữ liệu Excel (đã grep).
+- **Quyết định của chủ dự án (16/9, cùng PR #51)**: 15 câu + KT ghi vào `CAU-HOI-NGHIEP-VU.md`. Khác đề xuất: **CH-6 = B** (minh chứng hợp lệ = số hiệu + ngày + cấp nhận; tệp tuỳ chọn, **không Supabase Storage** vì chưa có kinh phí gói Pro — tải tệp là việc chờ điều kiện trong lộ trình, GĐ15B rút gọn, bỏ migration policy Storage, NF-12 "khi có tệp"); **CH-11 = A** (vai trò `A0` cho 3 tài khoản Thường trực, chỉ đọc + ghi ý kiến chỉ đạo, 17B theo nhánh A); **KT-4 đổi** (cảnh báo tự động bằng workflow cron GitHub Actions gọi RPC bằng service_role, không `pg_cron`; ghi ở SPEC mục 6, LO-TRINH 16A, `kien-truc.md` mục 3). Lộ trình bỏ điều kiện gói Pro, đánh số lại migration 0025–0029, ước 18–21 ngày. CHANGELOG mục 7 (dòng phân công `manager_id` GĐ cũ) ẩn danh: tên và username bốn Phó Chánh Văn phòng thay bằng chức danh (repo public).

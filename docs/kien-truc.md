@@ -72,6 +72,9 @@ Hai nguyên tắc cố định: (1) **migration luôn chạy trước deploy fro
 ### `backup-dinh-ky.yml` — cron `0 20 */3 * *` (03:00 giờ VN, ngày 1, 4, …, 31) + `workflow_dispatch`
 Job `sao-luu`: `scripts/backup-db.sh --project-ref <prod> --nhan dinh-ky` → artifact `prod-<ngày>-dinh-ky` 90 ngày. Dùng repository secret `BACKUP_PASSPHRASE` (không dùng environment `production` vì có required reviewer). Hạn chế cron và cách tải về máy (`scripts/tai-backup.sh`, Task Scheduler): `docs/sao-luu-khoi-phuc.md` mục 3. GitHub tự tắt schedule sau 60 ngày repo không có commit.
 
+### `canh-bao-tu-dong.yml` — **kế hoạch GĐ16** (`LO-TRINH-V3.md` PR 16A, chưa có)
+Cảnh báo tự động 3 cấp (SPEC v3 CB-2) chạy bằng workflow `schedule` mỗi giờ + `workflow_dispatch`: một job `curl` gọi RPC `canh_bao_quet()` trên production với `SUPABASE_SERVICE_ROLE_KEY` production để trong **repository secret** `PROD_SUPABASE_SERVICE_ROLE_KEY` (không dùng environment `production` có reviewer vì workflow tự động; cùng lý do với `BACKUP_PASSPHRASE`). Quyết định KT-4 của chủ dự án 16/9/2026: không có gói Pro nên không có `pg_cron`. Ràng buộc: hàm `security definer`, chỉ `service_role` gọi được; idempotent theo (nhiệm vụ, mức) nên chạy trễ hay chạy lặp không gửi trùng; key không xuất hiện trong URL hay log (`::add-mask::`). Giới hạn của GitHub: cron có thể trễ tới vài chục phút giờ cao điểm; schedule bị tắt sau 60 ngày repo không có commit — thêm vào mục theo dõi định kỳ của TRANG-THAI như `backup-dinh-ky.yml`.
+
 Cấu hình Auth (`supabase config push`) **không** nằm trong pipeline — vẫn làm tay sau khi trình `config diff` (quy tắc phát hành hiện hành).
 
 ## 4. Vì sao staging frontend nằm ở `/staging/` cùng artifact

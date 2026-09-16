@@ -1,6 +1,6 @@
 # SPEC — VPTU-TASK phiên bản 3 (Hệ thống quản trị nhiệm vụ theo kết quả)
 
-Phiên bản 3.0 · Ngày lập 16/9/2026 · Trạng thái: **dự thảo chờ chủ dự án chốt câu hỏi nghiệp vụ** · Thay thế `SPEC-v2-luu.md` (v2, giữ để tra cứu).
+Phiên bản 3.0 · Ngày lập 16/9/2026 · Trạng thái: **đã chốt câu hỏi nghiệp vụ (16/9/2026), đủ điều kiện mở GĐ14** · Thay thế `SPEC-v2-luu.md` (v2, giữ để tra cứu).
 
 > Nguồn sự thật về "app phải làm gì" từ nay. Thước đo: `MUC-TIEU-1400.md` (mã NT/CN/QT). Mọi điểm phụ thuộc quyết định của chủ dự án đánh dấu **`[CH-n]`**, trỏ về `CAU-HOI-NGHIEP-VU.md`; văn bản dưới đây viết theo **phương án đề xuất** của câu hỏi đó, chủ dự án quyết khác thì sửa đúng chỗ đánh dấu. Hiện trạng và lý do giữ/bỏ: `RA-SOAT-HIEN-TRANG.md`. Lộ trình: `LO-TRINH-V3.md`. Giao diện: `DESIGN.md` (không đổi). Pipeline: `kien-truc.md`.
 
@@ -12,7 +12,7 @@ Phiên bản 3.0 · Ngày lập 16/9/2026 · Trạng thái: **dự thảo chờ 
 
 **1.2 Trong phạm vi v3.**
 - Một thực thể nhiệm vụ thống nhất (mục 5), chuỗi văn bản giao việc → nhiệm vụ cấp Văn phòng → nhiệm vụ cấp phòng → chuyên viên.
-- Trường theo 1-1-1-1-3; Product và tệp minh chứng; ngày nhận văn bản.
+- Trường theo 1-1-1-1-3; Product và minh chứng có cấu trúc (số hiệu + ngày + cấp nhận; tệp tuỳ chọn, nơi lưu tệp chờ kinh phí `[CH-6]`); ngày nhận văn bản.
 - Leo thang tự động 3 cấp, thông báo trong app; dashboard ngoại lệ chỉ việc Đỏ với 4 trường.
 - Mô hình 4 cấp: Thường trực Tỉnh ủy → Văn phòng Tỉnh ủy → Lãnh đạo phòng chuyên môn → Chuyên viên (bổ sung của chủ dự án, mã CĐ-1 trong `MUC-TIEU-1400.md` mục V).
 - Chuyển đổi 185 việc hiện có không mất dữ liệu, không suy đoán hồi tố.
@@ -25,13 +25,13 @@ Phiên bản 3.0 · Ngày lập 16/9/2026 · Trạng thái: **dự thảo chờ 
 
 | Cấp | Chủ thể | Trong app | Vai trò |
 |---|---|---|---|
-| 1 | Thường trực Tỉnh ủy (3 đồng chí) — cấp giao nhiệm vụ | **`[CH-11]`** đề xuất C: chưa có tài khoản, "dashboard cấp Thường trực" là màn hình của Chánh Văn phòng + bản xuất; mô hình để sẵn vai trò `A0` | `A0` (dự phòng, chỉ đọc) |
+| 1 | Thường trực Tỉnh ủy (3 đồng chí) — cấp giao nhiệm vụ | **`[CH-11]` = A (chốt 16/9):** 3 tài khoản vai trò `A0`, **chỉ đọc** dashboard ngoại lệ/tổng quan **+ ghi ý kiến chỉ đạo** (`chi_dao` loại `Y_KIEN`); tạo bằng script có vết, tài liệu chỉ ghi chức danh | `A0` |
 | 2 | Văn phòng Tỉnh ủy — Chánh Văn phòng, Phó Chánh Văn phòng | 5 tài khoản A1 | `A1` (CVP = `is_chief`) |
 | 3 | Lãnh đạo phòng chuyên môn (5 phòng) | 5 tài khoản A2 | `A2` |
 | 4 | Chuyên viên | 39 tài khoản A3 | `A3` |
 | — | Cơ quan/đơn vị ngoài Văn phòng (13 đơn vị theo danh mục) — **Owner** của phần lớn việc theo kết luận | **`[CH-1]`** đề xuất A: là danh mục `dm_don_vi`, không đăng nhập; người theo dõi là cán bộ Văn phòng | không |
 
-**Phạm vi nhìn thấy** (quy tắc 7 CLAUDE.md, giữ nguyên): A3 chỉ việc mình là Owner hoặc người theo dõi; A2 mọi việc của phòng mình (Owner hoặc người theo dõi thuộc phòng); PCVP các phòng/lĩnh vực được phân công (`phu_trach_phong`, kiêm nhiệm theo ngành–lĩnh vực); CVP tất cả; `quan_tri_kl` toàn bộ module; A0 (nếu có) chỉ việc Đỏ đặc biệt và tổng quan. `manager_id` không còn là nguồn phân quyền (RA-SOAT 1.1).
+**Phạm vi nhìn thấy** (quy tắc 7 CLAUDE.md, giữ nguyên): A3 chỉ việc mình là Owner hoặc người theo dõi; A2 mọi việc của phòng mình (Owner hoặc người theo dõi thuộc phòng); PCVP các phòng/lĩnh vực được phân công (`phu_trach_phong`, kiêm nhiệm theo ngành–lĩnh vực); CVP tất cả; `quan_tri_kl` toàn bộ module; `A0` đọc toàn bộ nhiệm vụ (ngoại lệ + tổng quan, mọi mức), không sửa gì ngoài ghi `chi_dao` loại `Y_KIEN`. `manager_id` không còn là nguồn phân quyền (RA-SOAT 1.1).
 
 **Hai vai trên một nhiệm vụ** **`[CH-2]`**:
 - **Owner** (NT-1): đơn vị (`owner_don_vi_ma`, bắt buộc) và/hoặc tài khoản (`owner_tai_khoan`, khi Owner là Văn phòng/phòng/chuyên viên). Chịu trách nhiệm kết quả; mọi số liệu đánh giá tính theo Owner.
@@ -65,8 +65,8 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 ### 3.3 MC — Sản phẩm và minh chứng (CN-3, NT-2, NT-4)
 
 - **MC-1 [Mới]** **Product** **`[CH-5]`**: `san_pham_loai` (danh mục 7 loại) + `san_pham_mo_ta`, bắt buộc khi tạo mới; 185 việc cũ NULL, nhãn "chưa định nghĩa sản phẩm (dữ liệu chuyển đổi)"; việc đang mở (39) phải điền trong 10 ngày làm việc, không chặn cập nhật khác.
-- **MC-2 [Mới]** Bảng `minh_chung` (mục 5.4): một việc nhiều minh chứng; mỗi minh chứng có `loai` (`tep` / `so_hieu` / `chu_cu`), `so_hieu`, `ngay_van_ban`, `cap_nhan` (danh mục cấp), `tep_path` (Supabase Storage bucket `minh-chung`, RLS theo phạm vi nhiệm vụ; giới hạn ≤ 20 MB, PDF/DOC/DOCX/XLSX **`[CH-6]`**).
-- **MC-3 [Mới]** **Minh chứng hợp lệ** **`[CH-6]`** đề xuất A: có tệp **và** số hiệu + ngày + cấp nhận, cấp nhận = `cap_nhan_san_pham` của nhiệm vụ (CN-3.2 "đã trình đúng cấp"). Bước đệm B (số hiệu đủ, tệp tuỳ chọn) chỉ nếu chủ dự án chọn.
+- **MC-2 [Mới]** Bảng `minh_chung` (mục 5.4): một việc nhiều minh chứng; mỗi minh chứng có `loai` (`tep` / `so_hieu` / `chu_cu`), `so_hieu`, `ngay_van_ban`, `cap_nhan` (danh mục cấp), `tep_path`/`tep_ten` **để sẵn, NULL** — chưa có nơi lưu tệp (**`[CH-6]` = B**: không dùng Supabase Storage vì chưa có kinh phí gói Pro; khi có kinh phí mới bật tải tệp, giới hạn dự kiến ≤ 20 MB, PDF/DOC/DOCX/XLSX).
+- **MC-3 [Mới]** **Minh chứng hợp lệ** **`[CH-6]` = B (chốt 16/9)**: **số hiệu + ngày văn bản + cấp nhận** có cấu trúc (ba trường bắt buộc, không còn ô chữ tự do), cấp nhận = `cap_nhan_san_pham` của nhiệm vụ (CN-3.2 "đã trình đúng cấp"). Tệp **tuỳ chọn** và hiện chưa có nơi lưu; tải tệp là **việc chờ điều kiện kinh phí** (LO-TRINH mục "Chờ điều kiện"), không phải bước đệm có hạn. Lệch với chữ "tải lên tệp" của CN-3.1 được chủ dự án chấp nhận vì văn bản đã tồn tại trên V-Office và tra được theo số hiệu.
 - **MC-4 [Sửa]** Nút **"Đóng nhiệm vụ"** chỉ sáng khi có ≥ 1 minh chứng hợp lệ (CN-3.1); hàm `dong_nhiem_vu()` kiểm lại phía DB, đặt `ngay_hoan_thanh` (= ngày văn bản minh chứng, sửa được), `dong_luc`, chốt lead time (QT-4). Quy tắc 0021 (Hoàn thành ⇒ minh chứng + ngày) giữ, chuyển sang bảng `minh_chung`.
 - **MC-5 [Giữ]** 76 minh chứng chữ cũ → `minh_chung.loai = chu_cu`, tách số hiệu/ngày khi nhận dạng được; không coi là vi phạm; 146 việc đã đóng không đánh giá lại; 78 việc đóng không minh chứng giữ cờ `thieu_minh_chung`.
 - **MC-6 [Mới]** Xác nhận minh chứng: người theo dõi hoặc lãnh đạo trong phạm vi bấm "Xác nhận hợp lệ" / "Không hợp lệ (lý do)" — hành động ghi vết, không phải trạng thái; Owner tài khoản không tự xác nhận minh chứng của mình.
@@ -75,10 +75,10 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 ### 3.4 CB — Cảnh báo tự động và leo thang (CN-4, NT-5)
 
 - **CB-1 [Mới]** Hàm `trang_thai(nv, ngay)` (mở rộng `kl_trang_thai`) trả thêm `muc_canh_bao`: `XANH` (còn > ngưỡng Vàng), `VANG` (còn ≤ `nguong_vang_ngay` = 3 và chưa có minh chứng hợp lệ), `DO` (quá hạn), `DO_DAC_BIET` (quá hạn ≥ `nguong_do_dac_biet_ngay` = 3) **`[CH-10]`**, `KHONG_AP_DUNG` (đã đóng, thường xuyên, chờ điều kiện, cần điền hạn). Một hàm, một nguồn; frontend không tự tính.
-- **CB-2 [Mới]** Job `pg_cron` mỗi giờ (mục 6): với mỗi việc đang mở, so `muc_canh_bao` với mức đã gửi lần cuối trong bảng `canh_bao`; lên mức → ghi dòng `canh_bao(nhiem_vu_id, muc, gui_luc, nguoi_nhan[])` và tạo tin `he_thong` trong `direct_messages` cho người nhận. Không gửi lặp cùng mức; hạ mức (gia hạn) → ghi dòng "hạ mức". Áp cho mọi việc đang mở kể cả cũ **`[CH-10]`**.
+- **CB-2 [Mới]** Hàm `canh_bao_quet(p_ngay)` được **workflow cron GitHub Actions** gọi mỗi giờ qua RPC bằng service_role (mục 6, **KT-4 đổi**: không có `pg_cron` vì không có gói Pro): với mỗi việc đang mở, so `muc_canh_bao` với mức đã gửi lần cuối trong bảng `canh_bao`; lên mức → ghi dòng `canh_bao(nhiem_vu_id, muc, gui_luc, nguoi_nhan[])` và tạo tin `he_thong` trong `direct_messages` cho người nhận. Không gửi lặp cùng mức; hạ mức (gia hạn) → ghi dòng "hạ mức". Áp cho mọi việc đang mở kể cả cũ **`[CH-10]`**.
 - **CB-3 [Mới]** Người nhận theo mức (CN-4.1–4.3, **`[CH-4]`**): VÀNG → Owner tài khoản (nếu có) và người theo dõi; ĐỎ → thêm **thủ trưởng trực tiếp**: chuyên viên → trưởng phòng; phòng → PCVP phụ trách phòng; Văn phòng → Chánh VP; đơn vị ngoài → lãnh đạo Văn phòng phụ trách lĩnh vực/phòng theo dõi; ĐỎ ĐẶC BIỆT → thêm Chánh VP và xuất hiện trên dashboard cấp Thường trực (CB-5).
 - **CB-4 [Mới]** Luân chuyển nội bộ (xác nhận nhận việc, đọc, chuyển người theo dõi) **không** đổi `ngay_nhan_van_ban`, không đổi deadline (CN-2.2); chỉ chỉ đạo `GIA_HAN` đổi deadline.
-- **CB-5 [Mới]** **Dashboard cấp Thường trực** = chế độ xem của dashboard ngoại lệ chỉ gồm `DO_DAC_BIET` **`[CH-11]`**; xuất được bản HTML/PDF (giai đoạn sau, GĐ cũ 13).
+- **CB-5 [Mới]** **Dashboard cấp Thường trực** = màn hình mặc định của vai trò `A0` (**`[CH-11]` = A**): dashboard ngoại lệ với bộ lọc mặc định `DO_DAC_BIET`, mở rộng được sang mọi việc Đỏ và tổng quan; Chánh Văn phòng cũng xem được chế độ này; xuất được bản HTML/PDF (giai đoạn sau, GĐ cũ 13).
 - **CB-6 [Giữ]** Kênh: trong app (chuông + tin hệ thống, realtime) **`[CH-12]`**; nhật ký gửi trong `canh_bao`; kênh ngoài là giai đoạn sau.
 
 ### 3.5 DB — Dashboard quản trị ngoại lệ (CN-5, QT-5)
@@ -190,8 +190,8 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 
 ## 6. Kiến trúc kỹ thuật bổ sung
 
-- Không server riêng (giữ). Cảnh báo tự động: extension `pg_cron` (gói Pro) gọi hàm `canh_bao_quet()` mỗi giờ; hàm idempotent, có test với ngày cố định; nếu `pg_cron` không bật được, dự phòng là GitHub Actions cron gọi RPC bằng service_role — quyết ở lộ trình.
-- Tệp: Supabase Storage bucket `minh-chung`, policy Storage dùng cùng `kl_pham_vi`; đường dẫn `nhiem_vu/<id>/<uuid>.<đuôi>`; không đưa key vào URL bên thứ ba.
+- Không server riêng (giữ). **Cảnh báo tự động (KT-4, chốt 16/9)**: workflow `canh-bao-tu-dong.yml` chạy theo `schedule` mỗi giờ (+ `workflow_dispatch`), gọi RPC `canh_bao_quet()` trên production bằng `SUPABASE_SERVICE_ROLE_KEY` production để trong **repository secret** (chỉ workflow này dùng; không đưa key vào URL, không log); hàm `security definer`, chỉ `service_role` gọi được, **idempotent** theo (nhiệm vụ, mức) nên chạy trễ/chạy lặp không gửi trùng; có test với ngày cố định. Giới hạn của GitHub Actions: cron có thể trễ vài phút tới vài chục phút giờ cao điểm, và GitHub tắt schedule sau 60 ngày repo không có commit (cùng cơ chế với `backup-dinh-ky.yml`, đã có mục theo dõi trong TRANG-THAI). Chuyển sang `pg_cron` khi có gói Pro là một PR nhỏ (chỉ đổi nơi gọi).
+- Tệp minh chứng: **chưa có nơi lưu** (`[CH-6]` = B); cột `tep_path` để sẵn. Khi có kinh phí: Supabase Storage bucket `minh-chung`, policy dùng cùng `kl_pham_vi`, đường dẫn `nhiem_vu/<id>/<uuid>.<đuôi>`, không đưa key vào URL bên thứ ba.
 - Realtime: một kênh `nhiem_vu_feed` cho `nhiem_vu`, `chi_dao`, `minh_chung`, `dinh_chinh`, `direct_messages`.
 - Thư mục frontend: đổi `views/shared/kl/` → `views/shared/nhiem-vu/`, `lib/kl/` → `lib/nhiem-vu/` khi đụng tới; giữ giới hạn 300 dòng/file.
 
@@ -204,7 +204,8 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 | NF-9 | Hàm trạng thái là nguồn duy nhất; mọi màu/số trên màn hình khớp hàm | Test bất biến + test màu tại 17–23h UTC |
 | NF-10 | Chuyển đổi không đổi bộ số 14/9 và không làm tài khoản nào mất quyền nhìn việc | Test `kl-moc-2026-09-14` + `kl-pham-vi-tong-hop` xanh sau `0022` |
 | NF-11 | Job cảnh báo idempotent, không gửi trùng | Test chạy 2 lần cùng ngày = 1 lần gửi |
-| NF-12 | Tệp minh chứng chỉ người trong phạm vi tải được | Test Storage policy 3 vai |
+| NF-12 | **Khi có tệp** (chờ kinh phí): tệp minh chứng chỉ người trong phạm vi tải được | Test Storage policy 3 vai — chưa áp ở v3 |
+| NF-13 | Job cảnh báo chạy được từ bên ngoài chỉ với service_role; `authenticated`/`anon` gọi `canh_bao_quet()` bị chặn | Test RLS 3 vai + service_role |
 
 ---
 
@@ -214,4 +215,4 @@ Không React/Vue; không self-host; email quy ước; RLS/hàm là nơi chặn; 
 
 ## 9. Điểm mở
 
-Toàn bộ ở `CAU-HOI-NGHIEP-VU.md` (CH-1…CH-15 kèm câu phụ 8b, 10b; KT-1…KT-5). Migration `0022` (GĐ14) không được viết trước khi **CH-1, 2, 3, 5, 6, 7, 8 (+8b), 9, 10 (+10b), 14** có quyết định — vì 0022 đã tạo cột cha–con (CH-3), danh mục cấp (CH-7) và ngưỡng cảnh báo (CH-10). CH-4, 11, 12, 13, 15 cần trước GĐ16–17.
+**Đã chốt toàn bộ ngày 16/9/2026** (`CAU-HOI-NGHIEP-VU.md`, ô "Quyết định" từng câu). Khác đề xuất ở hai điểm, đã sửa trong tài liệu này: **CH-6 = B** (minh chứng có cấu trúc, không Storage, tệp chờ kinh phí — MC-2, MC-3, mục 1.2, 6, NF-12) và **CH-11 = A** (vai trò `A0` cho 3 tài khoản Thường trực — mục 2, CB-5); **KT-4 đổi** (cron GitHub Actions thay `pg_cron` — CB-2, mục 6, NF-13). Migration `0022` (GĐ14) được phép viết.

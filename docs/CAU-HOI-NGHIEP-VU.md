@@ -20,7 +20,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **A**, với ghi chú: khi nối V-Office (CV-4) tài khoản đơn vị ngoài có thể xuất hiện tự nhiên qua hệ thống văn bản, khi đó xét lại B. Mô hình dữ liệu của A chứa được B (thêm `owner_tai_khoan` nullable), không phải làm lại.
 
-**Quyết định:** ☐ A ☐ B ☐ C ☐ Khác: ____________
+**Quyết định (chủ dự án, 16/9/2026):** ☑ **A** — Owner ngoài Văn phòng là đơn vị trong danh mục, không đăng nhập.
 
 ### CH-2. "Chủ trì theo dõi" giữ vai gì, và mọi con số "theo chủ trì" hiện nay xử lý thế nào?
 
@@ -33,7 +33,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **A**.
 
-**Quyết định:** ☐ A ☐ B ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **A** — giữ cột, đổi tên "Người theo dõi"; số liệu đánh giá tính theo Owner.
 
 ### CH-3. Chuỗi 4 cấp: cấp phòng có bắt buộc trong chuỗi giao việc không?
 
@@ -46,7 +46,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **A**, trường "giao tiếp cho phòng" **để mở** (nullable, không bắt buộc), nhập dần khi có dữ liệu (điểm 6 của chủ dự án).
 
-**Quyết định:** ☐ A ☐ B ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **A** — chuỗi mở, `nhiem_vu_cha`; "giao tiếp cho phòng" để mở, không bắt buộc.
 
 ### CH-4. Khi có nhiệm vụ con, việc cha "Hoàn thành" thế nào? Ai là "thủ trưởng trực tiếp" ở mỗi cấp (CN-4.2)?
 
@@ -55,7 +55,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | 4a. Cha hoàn thành khi | (i) Owner cha nộp minh chứng của cha (tờ trình đã trình lên cấp trên), không phụ thuộc con; (ii) tự động khi mọi con xong | **(i)** — đúng CN-3.2 (bằng chứng là sản phẩm đã trình đúng cấp); con xong không có nghĩa cha đã trình. Dashboard cảnh báo nếu cha còn mở mà mọi con đã xong quá 2 ngày. |
 | 4b. Thủ trưởng trực tiếp của Owner | Chuyên viên → trưởng phòng (`accounts.department`); phòng → PCVP phụ trách phòng (`phu_trach_phong` tại ngày) ; Văn phòng → Chánh Văn phòng; đơn vị ngoài → **lãnh đạo Văn phòng phụ trách lĩnh vực** (kiêm nhiệm lĩnh vực nếu có, không thì PCVP phụ trách phòng Tổng hợp) | như cột bên; điểm cần chốt là mắt xích **đơn vị ngoài**. |
 
-**Quyết định 4a:** ☐ (i) ☐ (ii) — **4b (đơn vị ngoài):** ☐ đồng ý ☐ Khác: ____________
+**Quyết định 4a (16/9):** ☑ **(i)** cha hoàn thành bằng minh chứng của cha — **4b:** ☑ **đồng ý** (đơn vị ngoài → lãnh đạo Văn phòng phụ trách lĩnh vực/phòng theo dõi).
 
 ---
 
@@ -72,7 +72,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **A**. Danh mục sản phẩm là câu hỏi phụ: chủ dự án cho danh sách hoặc dùng 7 loại trên.
 
-**Quyết định:** ☐ A ☐ B — Danh mục sản phẩm: ☐ dùng 7 loại đề xuất ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **A** — Danh mục sản phẩm: ☑ **dùng 7 loại đề xuất**.
 
 ### CH-6. Minh chứng hợp lệ là gì? Tệp bắt buộc hay số hiệu văn bản là đủ?
 
@@ -88,7 +88,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **A** cho việc tạo mới từ ngày phát hành v3 (đúng 1400, Storage trên gói Pro đủ dung lượng), **B** làm bước đệm một giai đoạn nếu chưa kịp làm Storage — ghi rõ trong lộ trình là bước đệm, không phải đích.
 
-**Quyết định:** ☐ A ngay ☐ B rồi A ☐ C ☐ Khác: ____________ — Giới hạn tệp: ☐ 20 MB ☐ Khác: ____
+**Quyết định (16/9):** ☑ **B** — **số hiệu + ngày + cấp nhận** là minh chứng hợp lệ; tệp **tuỳ chọn**, **không dùng Supabase Storage** (chưa có kinh phí gói Pro). Tệp đính kèm là **việc chờ điều kiện kinh phí**, không phải bước đệm có hạn; khi có kinh phí mới mở lại A. Hệ quả: GĐ15B rút còn nộp minh chứng có cấu trúc, bỏ migration policy Storage, NF-12 chuyển thành "khi có tệp".
 
 ### CH-7. Cấp có thẩm quyền "tiếp theo" ghi ở đâu, và "Cấp nào cần quyết định" (CN-5.2 mục 4) lấy từ đâu?
 
@@ -96,7 +96,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** hai trường riêng, đều **danh mục**: Thường trực Tỉnh ủy / Ban Thường vụ / Chánh Văn phòng / Phó Chánh Văn phòng / Trưởng phòng / Đơn vị trình. (a) bắt buộc khi tạo mới, mặc định = cấp ngay trên Owner; (b) **để mở** khi tạo, người theo dõi hoặc lãnh đạo điền khi việc chuyển Đỏ (dashboard ngoại lệ hiện "chưa xác định" cho tới khi điền, và đếm số việc Đỏ chưa có cấp quyết định). Dòng cũ: cả hai NULL.
 
-**Quyết định:** ☐ đồng ý ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **đồng ý** — hai danh mục cấp riêng; cấp nhận bắt buộc khi tạo mới, cấp quyết định để mở.
 
 ---
 
@@ -116,7 +116,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Câu phụ 8b — 3 việc đang mở "Cần điền hạn"** (đã có lý do "phụ thuộc yếu tố bên ngoài" chốt 14/9): (i) ép người theo dõi điền hạn (hoặc ngày rà soát) trong 10 ngày làm việc sau phát hành v3; (ii) giữ nguyên tới khi yếu tố bên ngoài rõ, chỉ đếm tuổi. Đề xuất (i).
 
-**Quyết định:** ☐ A ☐ B ☐ C ☐ Khác: ____________ — Việc thường xuyên mới tạo theo kỳ: ☐ đồng ý ☐ Khác: ____ — 8b: ☐ (i) ☐ (ii)
+**Quyết định (16/9):** ☑ **A** — việc mới bắt buộc có deadline; ☑ việc thường xuyên mới **tạo theo kỳ**; 8b: ☑ **(i)** — 3 việc "Cần điền hạn" điền hạn hoặc ngày rà soát trong 10 ngày làm việc sau phát hành v3.
 
 ### CH-9. Ngày bắt đầu đếm khi chưa nối V-Office: trường "ngày nhận văn bản", tạm bằng ngày ban hành, sửa dần — ai sửa, sửa đến khi nào, và "Ký ban hành trong 10 ngày" tính từ ngày nào?
 
@@ -127,7 +127,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 - Với việc tạo mới từ v3: ngày nhận **bắt buộc**, mặc định = hôm nay, không được sau hôm nay, không được trước ngày ban hành.
 - "Ký ban hành trong 10 ngày": hạn = **ngày ban hành + 10** (giữ, vì đây là quy định về thời hạn ký ban hành tính từ ngày ban hành kết luận), còn **lead time** tính từ ngày nhận. Hai mốc dùng cho hai việc khác nhau.
 
-**Quyết định:** ☐ đồng ý ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **đồng ý** — `ngay_nhan_van_ban` tạm = ngày ban hành có cờ ước tính; việc mới bắt buộc ngày nhận; "Ký ban hành" hạn = ngày ban hành + 10, lead time từ ngày nhận.
 
 ### CH-10. Ngưỡng cảnh báo: Vàng 3 ngày (1400) thay 7 ngày "sắp đến hạn" hiện tại; Đỏ đặc biệt 3 hay 5 ngày; áp ngay cho 8 việc quá hạn cũ?
 
@@ -137,7 +137,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Câu phụ 10b — ngưỡng "sắp đến hạn" 7 ngày hiện có** (`nguong_sap_den_han_ngay`, dùng cho ô "Sắp đến hạn" ở tổng quan và danh sách): (i) giữ hai ngưỡng — trạng thái "Sắp đến hạn" vẫn 7 ngày để lọc/xem, mức cảnh báo Vàng 3 ngày để gửi nhắc; (ii) gộp: sắp đến hạn = Vàng = 3 ngày. Đề xuất (i) — bộ số hồi quy 14/9 không đổi và lãnh đạo vẫn nhìn được việc sắp tới sớm hơn.
 
-**Quyết định:** Vàng ☐ 3 ☐ Khác: __ — Đỏ đặc biệt ☐ 3 ☐ 5 ☐ Khác: __ — Áp cho việc cũ ☐ có ☐ không — 10b: ☐ (i) ☐ (ii)
+**Quyết định (16/9):** Vàng ☑ **3** — Đỏ đặc biệt ☑ **3** — Áp cho việc cũ ☑ **có** — 10b: ☑ **(i)** giữ hai ngưỡng (Sắp đến hạn 7 để xem, Vàng 3 để nhắc).
 
 ---
 
@@ -153,13 +153,13 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **C**.
 
-**Quyết định:** ☐ A ☐ B ☐ C ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **A** — vai trò `A0` cho 3 tài khoản Thường trực Tỉnh ủy, **chỉ đọc + ghi ý kiến chỉ đạo**; PR 17B làm theo nhánh A. Tài liệu ghi chức danh, không ghi tên.
 
 ### CH-12. "Tự động gửi thông báo" qua kênh nào khi cơ quan chưa có email nội bộ và Zalo/SMS ngoài phạm vi?
 
 **Đề xuất:** giai đoạn v3: thông báo **trong app** (ô chuông + tin nhắn hệ thống trong `direct_messages`, realtime) là kênh chính thức; ghi nhật ký gửi (`thong_bao` bảng riêng, có `da_doc`). Kênh ngoài (Zalo OA/SMS/email) là giai đoạn sau, cần hợp đồng dịch vụ. Thông báo tự động sinh bởi job chạy ngầm trong DB (`pg_cron`, mỗi giờ) — cần bật extension trên gói Pro.
 
-**Quyết định:** ☐ đồng ý ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **đồng ý** — thông báo trong app là kênh chính thức. **Cách chạy ngầm đổi theo KT-4**: workflow cron GitHub Actions gọi RPC bằng service_role (không có `pg_cron`).
 
 ---
 
@@ -175,7 +175,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** **A ngay, B tuỳ chọn** (không là điều kiện xong giai đoạn nào).
 
-**Quyết định:** ☐ A ☐ A+B ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **A + B tuỳ chọn** — giữ NULL và không đánh giá; nhập bổ sung ngày văn bản minh chứng cho 68 việc khi tiện, không là điều kiện xong giai đoạn.
 
 ### CH-14. Phạm vi "văn bản giao việc": chỉ thông báo/kết luận của Thường trực, Ban Thường vụ hay mọi văn bản đến Văn phòng?
 
@@ -183,13 +183,13 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Đề xuất:** thực thể **văn bản giao việc** (`van_ban_giao_viec`) tổng quát: loại (Kết luận BTV / Thông báo Thường trực / Nghị quyết TW / Công văn / Khác), số hiệu, ngày ban hành, ngày nhận, cơ quan ban hành, số hội nghị (nullable, chỉ với BTV). Bảng `kl_hoi_nghi` hiện có chuyển thành bảng này. MVP nhập từ hai nguồn: kết luận BTV (như nay) và thông báo Thường trực; loại khác cho phép nhưng không bắt buộc dùng.
 
-**Quyết định:** ☐ đồng ý ☐ chỉ KL BTV + TB Thường trực ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **đồng ý tổng quát** — thực thể `van_ban_giao_viec` tổng quát; MVP nhập từ kết luận BTV và thông báo Thường trực, loại khác cho phép.
 
 ### CH-15. Điều kiện "chạy song song 2 kỳ với Google Sheet" và "≥ 9 chuyên viên tự cập nhật" còn giữ không khi mô hình đổi?
 
 **Đề xuất:** giữ nguyên tắc **một kỳ đối chiếu số tổng** với sheet sau khi hợp nhất thực thể (số tổng 185 và bộ trạng thái 146/16/8/6/6/3/0 tại 14/9 phải không đổi: việc đổi tên bảng/hàm và thêm màu cảnh báo không đụng thứ tự quy tắc dẫn xuất; ngưỡng "sắp đến hạn" giữ 7 nếu CH-10b = (i)), rồi tắt sheet; bỏ điều kiện "≥ 9 chuyên viên" thay bằng "mọi việc đang mở đã có Product và ngày nhận (ước tính hay thật) do người theo dõi xác nhận".
 
-**Quyết định:** ☐ đồng ý ☐ Khác: ____________
+**Quyết định (16/9):** ☑ **đồng ý** — một kỳ đối chiếu số tổng sau hợp nhất rồi tắt sheet; bỏ điều kiện "≥ 9 chuyên viên".
 
 ---
 
@@ -200,7 +200,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | KT-1 | Hợp nhất bằng cách **phát triển `kl_nhiem_vu` thành `nhiem_vu`** (đổi tên, thêm cột) và **bỏ** `tasks`, `task_evidences`, `task_directives` (production 0 dòng, staging chỉ dữ liệu giả). | Bên có dữ liệu, ràng buộc, lịch sử, RLS đã kiểm (113 test RLS, hơn nửa cho KL) là bên KL; luồng cũ rỗng. |
 | KT-2 | `direct_messages` giữ làm kênh thông báo và nhắn tin; `kl_chi_dao` thành `chi_dao` dùng chung. | Tránh hai bảng chỉ đạo. |
 | KT-3 | Trạng thái nhiệm vụ = **một hàm** `trang_thai(nv, ngay)` mở rộng từ `kl_trang_thai` (thêm màu XANH/VÀNG/ĐỎ/ĐỎ ĐẶC BIỆT, lead time). Frontend không tự tính. | Đã chốt GĐ8, giữ. |
-| KT-4 | Cảnh báo tự động chạy bằng `pg_cron` trong Postgres (gói Pro), không thêm server. | Giữ kiến trúc "không server riêng". |
+| KT-4 | ~~Cảnh báo tự động chạy bằng `pg_cron` trong Postgres (gói Pro)~~ **Đổi (chủ dự án 16/9):** cảnh báo tự động chạy bằng **workflow cron GitHub Actions** gọi RPC `canh_bao_quet()` bằng service_role (secret repository), vì không có gói Pro nên không có `pg_cron`. Không thêm server. | Ghi rõ trong SPEC mục 6, LO-TRINH 16A, `kien-truc.md`. |
 | KT-5 | Tệp minh chứng ở Supabase Storage, bucket `minh-chung`, RLS theo phạm vi nhiệm vụ; không lưu tệp trong repo/Pages. | Duy nhất chỗ lưu tệp trong stack hiện có. |
 
-**Phản đối (nếu có):** ____________
+**Quyết định (16/9):** KT-1, 2, 3, 5 ☑ **không phản đối**; KT-4 ☑ **đổi** như trên.
