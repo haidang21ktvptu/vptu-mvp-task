@@ -118,6 +118,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertLoi(await dong('demo_cv1', 'NV-T60'), /đã đóng/, 'đóng lại');
     assertOk(await xacNhan('demo_pcvp2', mc.a, false, 'Văn bản bị thu hồi'), 'bác minh chứng còn lại sau khi đóng');
     const v2 = await view('NV-T60'); assert.deepEqual([v2.so_minh_chung_hop_le, v2.thieu_minh_chung, v2.tien_do_ma], [0, true, 'HOAN_THANH']);
+    assert.equal(v2.cap_nhat_boi, IDS.cv1, 'tính lại cờ không ghi đè người cập nhật cuối (vẫn là người đóng)');
   });
 
   test('8. chữ cũ (chu_cu, chưa xác nhận) là hợp lệ: đếm được, đóng được việc cũ với ngày văn bản tách được; tách số hiệu/ngày', async () => {

@@ -77,7 +77,8 @@ DECLARE v_ngay_bh date; v_ky integer; v_du boolean;
         v_da_hoan_thanh boolean := TG_OP = 'UPDATE' AND OLD."tien_do_ma" = 'HOAN_THANH';
         v_nhap_excel boolean := TG_OP = 'INSERT' AND NEW."nguon" = 'excel';
         v_co_chu boolean := nullif(btrim(coalesce(NEW."minh_chung", '')), '') IS NOT NULL;
-        v_tinh_lai boolean := current_setting('kl.minh_chung_tinh_lai', true) = '1';   -- ghi_vet chỉ tính lại cờ (bác minh chứng sau khi đóng)
+        -- ghi_vet chỉ tính lại cờ (bác minh chứng sau khi đóng); coalesce vì GUC chưa từng set trả NULL, không phải '' (NULL làm IF bên dưới im lặng).
+        v_tinh_lai boolean := coalesce(current_setting('kl.minh_chung_tinh_lai', true), '') = '1';
 BEGIN
   SELECT "ngay_ban_hanh" INTO v_ngay_bh FROM "public"."van_ban_giao_viec" WHERE "id" = NEW."van_ban_id";
   IF NEW."loai_thoi_han_ma" = 'KY_BAN_HANH' THEN
@@ -111,7 +112,7 @@ BEGIN
     END IF;
   END IF;
   NEW."thieu_minh_chung" := NEW."tien_do_ma" = 'HOAN_THANH' AND NOT v_du;
-  IF TG_OP = 'UPDATE' OR NEW."nguon" = 'app' THEN
+  IF (TG_OP = 'UPDATE' OR NEW."nguon" = 'app') AND NOT v_tinh_lai THEN   -- tính lại cờ không ghi đè người/giờ cập nhật cuối
     NEW."cap_nhat_luc" := now();
     NEW."cap_nhat_boi" := "auth"."uid"();
   END IF;
