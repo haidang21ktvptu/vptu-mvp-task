@@ -1,6 +1,6 @@
-// Markup màn hình "Kết luận BTVTU" (GĐ10 PR 10B, thiết kế 3.4): thanh số liệu theo nhóm trạng thái (mỗi ô là nút lọc),
-// bộ lọc, bảng nhiệm vụ trong phạm vi RLS, dấu "Số liệu tính đến". Dùng chung A3 (việc mình), A2 (phòng), A1 (danh sách
-// truy vết từ dashboard). Không có nút chỉ đạo (GĐ11).
+// Markup màn hình "Nhiệm vụ" (GĐ10 PR 10B, thiết kế 3.4; GĐ14 đổi nhãn + cột Owner/Sản phẩm): thanh số liệu theo nhóm trạng
+// thái (mỗi ô là nút lọc), bộ lọc, bảng nhiệm vụ trong phạm vi RLS, dấu "Số liệu tính đến". Dùng chung A3 (việc mình là Owner
+// hoặc theo dõi), A2 (phòng), A1 (danh sách truy vết từ dashboard). Không có nút chỉ đạo (GĐ18).
 import { THU_TU_NHOM, NHOM } from '../../../lib/kl/nhan.js';
 
 const oSo = (ma) => `<button type="button" class="o-so ${NHOM[ma].stat}" data-action="locKlNhom" data-nhom="${ma}" aria-pressed="false">
@@ -8,12 +8,12 @@ const oSo = (ma) => `<button type="button" class="o-so ${NHOM[ma].stat}" data-ac
 
 export const klTemplate = `
   <div class="dau-trang">
-    <h1>Kết luận BTVTU<small id="klPhuDe">Nhiệm vụ theo dõi Kết luận Ban Thường vụ Tỉnh ủy trong phạm vi của đồng chí</small></h1>
+    <h1>Nhiệm vụ<small id="klPhuDe">Nhiệm vụ theo văn bản giao việc trong phạm vi của đồng chí — mỗi việc một đơn vị chịu trách nhiệm, một sản phẩm, một hạn</small></h1>
     <div class="kl-dau-phai">
       <span id="klTinhDen" class="chu-phu text-sm" aria-live="polite"></span>
       <span id="klKetNoi" class="ket-noi" role="status"></span>
       <button type="button" data-action="loadKl" class="btn btn-phu">Tải lại</button>
-      <button type="button" id="klNutThem" data-action="openKlThem" class="btn btn-chinh hidden">Thêm nhiệm vụ</button>
+      <button type="button" id="klNutThem" data-action="openKlThem" class="btn btn-chinh hidden">Giao việc</button>
     </div>
   </div>
 
@@ -31,22 +31,23 @@ export const klTemplate = `
         <select id="klLocHoiNghi" class="input input-nho" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
         <select id="klLocNganh" class="input input-nho" aria-label="Lọc theo ngành"><option value="">Mọi ngành</option></select>
         <select id="klLocLinhVuc" class="input input-nho" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>
-        <input type="search" id="klTimKiem" class="input input-nho" placeholder="Tìm theo mã NV, nội dung, chủ trì" aria-label="Tìm nhiệm vụ">
+        <input type="search" id="klTimKiem" class="input input-nho" placeholder="Tìm theo mã, nội dung, người chịu trách nhiệm, người theo dõi" aria-label="Tìm nhiệm vụ">
       </div>
     </div>
     <div class="bang-cuon">
       <table>
         <thead>
           <tr>
-            <th>Mã · Hội nghị</th>
-            <th>Nội dung · Cơ quan trình</th>
-            <th>Chủ trì</th>
+            <th>Mã · Văn bản</th>
+            <th>Nội dung · Sản phẩm</th>
+            <th>Chịu trách nhiệm</th>
+            <th>Người theo dõi</th>
             <th>Hạn</th>
-            <th>Trạng thái · Cập nhật</th>
+            <th>Cảnh báo · Trạng thái</th>
             <th class="phai">Thao tác</th>
           </tr>
         </thead>
-        <tbody id="klBody"><tr><td colspan="6" class="trong">Đang tải dữ liệu</td></tr></tbody>
+        <tbody id="klBody"><tr><td colspan="7" class="trong">Đang tải dữ liệu</td></tr></tbody>
       </table>
     </div>
   </div>

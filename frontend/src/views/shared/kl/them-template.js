@@ -1,20 +1,24 @@
-// Modal thêm nhiệm vụ KL mới (GĐ10 PR 10F; thiết kế 5.4 "form nhập nhiệm vụ mới", 6.8): chỉ người có quan_tri_kl
-// (policy INSERT 0016 là chốt). Chọn hội nghị có sẵn hoặc tạo hội nghị mới; ngành → lĩnh vực khoá theo ngành, bắt buộc.
+// Modal giao việc thống nhất (GĐ14 PR 14C, SPEC v3 GV-2): văn bản → chịu trách nhiệm (Owner) → sản phẩm → ngày nhận →
+// hạn → cấp nhận → ngành/lĩnh vực → người theo dõi. Nút hiện cho A1/A2/quan_tri_kl; quyền và 1-1-1 kiểm trong hàm giao_viec.
 export const klThemTemplate = `
 <div id="klThemModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="klThTieuDe">
   <form class="modal modal-rong" data-submit="luuKlThem" novalidate>
-    <h2 id="klThTieuDe" class="modal-tieu-de mb-3">Thêm nhiệm vụ Kết luận BTVTU</h2>
+    <h2 id="klThTieuDe" class="modal-tieu-de mb-3">Giao việc</h2>
 
     <div class="cot-2">
       <div>
-        <label for="klThHoiNghi" class="nhan">Hội nghị / văn bản kết luận</label>
-        <select id="klThHoiNghi" class="input"></select>
+        <label for="klThVanBan" class="nhan">Văn bản giao việc</label>
+        <select id="klThVanBan" class="input"></select>
       </div>
-      <div id="klThHoiNghiMoi" class="hidden">
-        <div class="cot-3">
-          <div><label for="klThSoHN" class="nhan">Số hội nghị</label><input type="number" id="klThSoHN" class="input" min="1"></div>
-          <div><label for="klThSoKL" class="nhan">Số kết luận</label><input type="text" id="klThSoKL" class="input" placeholder="123-KL/TU"></div>
+      <div id="klThVanBanMoi" class="hidden">
+        <div class="cot-2">
+          <div><label for="klThLoaiVB" class="nhan">Loại văn bản</label><select id="klThLoaiVB" class="input"></select></div>
+          <div id="klThSoHNWrap"><label for="klThSoHN" class="nhan">Số hội nghị</label><input type="number" id="klThSoHN" class="input" min="1"></div>
+        </div>
+        <div class="cot-3 mt-2">
+          <div><label for="klThSoKL" class="nhan">Số hiệu</label><input type="text" id="klThSoKL" class="input" placeholder="123-KL/TU"></div>
           <div><label for="klThNgayBH" class="nhan">Ngày ban hành</label><input type="date" id="klThNgayBH" class="input"></div>
+          <div><label for="klThNgayNhanVB" class="nhan">Ngày nhận <span class="chu-phu">(nếu biết)</span></label><input type="date" id="klThNgayNhanVB" class="input"></div>
         </div>
       </div>
     </div>
@@ -26,18 +30,56 @@ export const klThemTemplate = `
 
     <div class="cot-2 mt-3">
       <div>
-        <label for="klThChuTri" class="nhan">Chủ trì theo dõi</label>
-        <select id="klThChuTri" class="input"></select>
+        <label for="klThOwner" class="nhan">Chịu trách nhiệm <span class="chu-phu">đơn vị / phòng / cán bộ — đúng một</span></label>
+        <select id="klThOwner" class="input"></select>
       </div>
       <div>
-        <label for="klThCoQuan" class="nhan">Cơ quan trình</label>
-        <select id="klThCoQuan" class="input"></select>
+        <label for="klThNguoiTheoDoi" class="nhan">Người theo dõi <span class="chu-phu">cán bộ Văn phòng giúp việc</span></label>
+        <select id="klThNguoiTheoDoi" class="input"></select>
       </div>
     </div>
 
     <div class="cot-2 mt-3">
       <div>
-        <label for="klThNganh" class="nhan">Ngành</label>
+        <label for="klThSanPham" class="nhan">Sản phẩm đầu ra</label>
+        <select id="klThSanPham" class="input"></select>
+      </div>
+      <div>
+        <label for="klThSanPhamMoTa" class="nhan">Mô tả sản phẩm <span class="chu-phu">ví dụ: Tờ trình đề án X</span></label>
+        <input type="text" id="klThSanPhamMoTa" class="input">
+      </div>
+    </div>
+
+    <div class="cot-3 mt-3">
+      <div>
+        <label for="klThNgayNhan" class="nhan">Ngày nhận văn bản <span class="chu-phu">mốc bắt đầu đếm</span></label>
+        <input type="date" id="klThNgayNhan" class="input">
+      </div>
+      <div>
+        <label for="klThLoai" class="nhan">Loại thời hạn</label>
+        <select id="klThLoai" class="input"></select>
+      </div>
+      <div>
+        <label for="klThHan" class="nhan">Hạn hoàn thành <span id="klThHanLoai" class="chu-phu"></span></label>
+        <input type="date" id="klThHan" class="input">
+        <small id="klThHanGhiChu" class="chu-phu" aria-live="polite"></small>
+      </div>
+    </div>
+
+    <div class="cot-2 mt-3">
+      <div>
+        <label for="klThCapNhan" class="nhan">Cấp nhận sản phẩm <span class="chu-phu">mặc định = cấp trên Owner</span></label>
+        <select id="klThCapNhan" class="input"></select>
+      </div>
+      <div>
+        <label for="klThCapQD" class="nhan">Cấp cần quyết định <span class="chu-phu">để mở, điền khi việc Đỏ</span></label>
+        <select id="klThCapQD" class="input"></select>
+      </div>
+    </div>
+
+    <div class="cot-2 mt-3">
+      <div>
+        <label for="klThNganh" class="nhan">Ngành <span id="klThNganhGhiChu" class="chu-phu"></span></label>
         <select id="klThNganh" class="input"></select>
       </div>
       <div>
@@ -47,33 +89,14 @@ export const klThemTemplate = `
     </div>
 
     <div class="cot-2 mt-3">
-      <div>
-        <label for="klThLoai" class="nhan">Loại thời hạn</label>
-        <select id="klThLoai" class="input"></select>
-      </div>
-      <div>
-        <label for="klThHan" class="nhan">Hạn xử lý <span id="klThHanLoai" class="chu-phu"></span></label>
-        <input type="date" id="klThHan" class="input">
-        <small id="klThHanGhiChu" class="chu-phu" aria-live="polite"></small>
-      </div>
-    </div>
-    <div id="klThChuaCoHanWrap" class="mt-3 hidden">
-      <label class="nhan-checkbox"><input type="checkbox" id="klThChuaCoHan"> Chưa xác định được hạn (phụ thuộc yếu tố bên ngoài)</label>
-      <div id="klThLyDoWrap" class="hidden">
-        <label for="klThLyDo" class="nhan">Lý do chưa có hạn (bắt buộc)</label>
-        <textarea id="klThLyDo" class="input" rows="2"></textarea>
-      </div>
-    </div>
-
-    <div class="cot-2 mt-3">
-      <div><label for="klThVanBan" class="nhan">Văn bản triển khai</label><input type="text" id="klThVanBan" class="input"></div>
+      <div><label for="klThVanBanTK" class="nhan">Văn bản triển khai</label><input type="text" id="klThVanBanTK" class="input"></div>
       <div><label for="klThGhiChu" class="nhan">Ghi chú / lĩnh vực chi tiết</label><input type="text" id="klThGhiChu" class="input"></div>
     </div>
 
     <div class="modal-chan">
       <button type="button" data-action="closeKlThem" class="btn btn-phu">Huỷ</button>
       <button type="button" data-action="luuKlThemTiep" class="btn btn-phu">Lưu, nhập tiếp</button>
-      <button type="submit" id="klThLuu" class="btn btn-chinh">Lưu</button>
+      <button type="submit" id="klThLuu" class="btn btn-chinh">Giao việc</button>
     </div>
   </form>
 </div>

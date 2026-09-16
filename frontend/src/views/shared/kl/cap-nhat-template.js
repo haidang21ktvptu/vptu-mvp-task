@@ -1,4 +1,4 @@
-// Modal cập nhật nhanh của chủ trì (thiết kế 3.4, 6.8): đúng 7 cột guard 0015 cho phép. Nhãn trên ô nhập, một nút chính.
+// Modal cập nhật nhanh của người theo dõi / Owner (thiết kế 3.4, 6.8): đúng 7 cột guard 0015 cho phép. Nhãn trên ô nhập, một nút chính.
 export const klCapNhatTemplate = `
 <div id="klCapNhatModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="klCnTieuDe">
   <form class="modal modal-rong" data-submit="luuKlCapNhat" novalidate>

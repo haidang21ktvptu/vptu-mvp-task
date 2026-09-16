@@ -1,4 +1,4 @@
-// Nhãn, màu và thứ tự của các nhóm trạng thái KL (nhom_dem từ kl_trang_thai — DB tính, frontend chỉ đặt tên).
+// Nhãn, màu và thứ tự của các nhóm trạng thái (nhom_dem, muc_canh_bao từ hàm trang_thai — DB tính, frontend chỉ đặt tên).
 // Màu là thông tin (DESIGN mục 2): đỏ = phải can thiệp, vàng = sắp/chưa rõ, xanh = trong hạn/xong, xám = còn lại.
 export const NHOM = {
   QUA_HAN:        { ten: 'Quá hạn',                     row: 'r-do',   muc: 'muc-do',   stat: 's-do',   thuTu: 2, mo: true },
@@ -15,7 +15,17 @@ export const THU_TU_NHOM = Object.keys(NHOM); // thứ tự hiển thị ô số
 export const nhomCua = (ma) => NHOM[ma] || { ten: ma, row: '', muc: '', stat: '', thuTu: 99, mo: true };
 export const tenNhom = (ma) => nhomCua(ma).ten;
 
-// Nhãn trạng thái đầy đủ cho một dòng v_kl_dashboard: "Quá hạn · 30 ngày", "Cần điền hạn · 290 ngày", "Hoàn thành đúng hạn"…
+// Bốn mức cảnh báo 1400 (NT-5, CN-4) — chấm màu trước trạng thái. Tên lớp khai báo NGUYÊN VĂN (Tailwind cắt lớp ghép chuỗi).
+export const MUC_CANH_BAO = {
+  XANH:          { ten: 'Xanh — trong hạn',            lop: 'cham cham-xanh' },
+  VANG:          { ten: 'Vàng — còn ≤ 3 ngày, chưa có sản phẩm', lop: 'cham cham-vang' },
+  DO:            { ten: 'Đỏ — quá hạn',                lop: 'cham cham-do' },
+  DO_DAC_BIET:   { ten: 'Đỏ đặc biệt — quá hạn ≥ 3 ngày', lop: 'cham cham-dodb' },
+  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo',      lop: 'cham cham-khong' },
+};
+export const chamMuc = (muc) => MUC_CANH_BAO[muc] || MUC_CANH_BAO.KHONG_AP_DUNG;
+
+// Nhãn trạng thái đầy đủ cho một dòng v_nhiem_vu: "Quá hạn · 30 ngày", "Cần điền hạn · 290 ngày", "Hoàn thành đúng hạn"…
 export function nhanTrangThai(r) {
   switch (r.nhom_dem) {
     case 'QUA_HAN': return `Quá hạn · ${r.so_ngay_qua} ngày`;
@@ -32,13 +42,16 @@ export function nhanTrangThai(r) {
 // Tên hiển thị của mã nguồn dòng / nguồn dòng lịch sử.
 export const TEN_NGUON = { excel: 'Nhập từ Excel', app: 'Nhập trên hệ thống', dinh_chinh: 'Đính chính đã duyệt' };
 
-// Tên cột kl_nhiem_vu dùng trong ngăn truy vết và lịch sử.
+// Tên cột nhiem_vu dùng trong ngăn truy vết và lịch sử (0023 đã đổi tên cột cũ trong lịch sử).
 export const TEN_COT = {
   han_xu_ly: 'Hạn xử lý', loai_thoi_han_ma: 'Loại thời hạn', tien_do_ma: 'Tiến độ', ngay_hoan_thanh: 'Ngày hoàn thành',
   minh_chung: 'Minh chứng', van_ban_trien_khai: 'Văn bản triển khai', ly_do_chua_co_han: 'Lý do chưa có hạn',
-  ghi_chu: 'Ghi chú', nganh_ma: 'Ngành', linh_vuc_ma: 'Lĩnh vực', co_quan_trinh_ma: 'Cơ quan trình',
-  chu_tri_id: 'Chủ trì', noi_dung: 'Nội dung', linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn',
-  hoi_nghi_id: 'Hội nghị', '*': 'Tạo dòng',
+  ghi_chu: 'Ghi chú', nganh_ma: 'Ngành', linh_vuc_ma: 'Lĩnh vực', owner_don_vi_ma: 'Đơn vị chịu trách nhiệm',
+  owner_tai_khoan: 'Cán bộ chịu trách nhiệm', nguoi_theo_doi: 'Người theo dõi', noi_dung: 'Nội dung',
+  linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn', van_ban_id: 'Văn bản giao việc',
+  san_pham_loai: 'Loại sản phẩm', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
+  ngay_nhan_van_ban: 'Ngày nhận văn bản', ngay_nhan_uoc_tinh: 'Ngày nhận ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
+  xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', '*': 'Tạo dòng',
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 

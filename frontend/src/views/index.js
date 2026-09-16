@@ -17,7 +17,7 @@ export function registerViews() {
   registerA2View();
   registerA3View();
   registerQuanTriView(); // mục dùng chung, chỉ hiện ở thanh bên khi có quan_tri_he_thong (GĐ8)
-  registerKlView();      // Kết luận BTVTU, mọi vai trò (GĐ10)
+  registerKlView();      // Nhiệm vụ (thực thể thống nhất GĐ14), mọi vai trò
   registerKlDashboard(); // Tổng quan KL BTVTU, mục thanh bên chỉ ở A1 (GĐ10)
   mountReassignModal();
   initDirectives();

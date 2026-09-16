@@ -26,19 +26,26 @@ after(async () => { if (!SKIP) await adminClient().from('phu_trach_phong').delet
 async function kyVong(username) {
   const me = [...taiKhoan.values()].find((a) => a.username === username);
   const db = adminClient();
-  const { data: rows } = await db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma');
+  const { data: rows } = await db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma');
   const { data: pc } = await db.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, tu_ngay, den_ngay');
+  const { data: dv } = await db.from('dm_don_vi').select('ma, phong');
   const hieuLuc = (p) => p.tu_ngay <= homNay() && (!p.den_ngay || p.den_ngay >= homNay());
   const phongCua = (id) => taiKhoan.get(id)?.department;
-  return new Set(rows.filter((r) => {
-    if (me.quan_tri_kl || r.nguoi_theo_doi === me.id) return true;
-    const phong = phongCua(r.nguoi_theo_doi);
-    if (me.role_group === 'A2') return phong === me.department;
-    if (me.role_group !== 'A1') return false;
-    if (me.is_chief) return true;
+  // 0025: phòng của Owner = phòng của tài khoản Owner, hoặc dòng phòng trong dm_don_vi; PCVP xét cả hai phòng như nhau.
+  const phongOwner = (r) => (r.owner_tai_khoan ? phongCua(r.owner_tai_khoan) : dv.find((d) => d.ma === r.owner_don_vi_ma)?.phong) || null;
+  const pcvpThay = (phong, r) => {
+    if (!phong) return false;
     const kn = pc.find((p) => hieuLuc(p) && p.phong === phong && p.nganh_ma && p.nganh_ma === r.nganh_ma && p.linh_vuc_ma === r.linh_vuc_ma);
     if (kn) return kn.lanh_dao_id === me.id;
     return pc.some((p) => hieuLuc(p) && p.lanh_dao_id === me.id && p.phong === phong && !p.nganh_ma);
+  };
+  return new Set(rows.filter((r) => {
+    if (me.quan_tri_kl || r.nguoi_theo_doi === me.id || r.owner_tai_khoan === me.id) return true;
+    const phong = phongCua(r.nguoi_theo_doi);
+    if (me.role_group === 'A2') return phong === me.department || phongOwner(r) === me.department;
+    if (me.role_group !== 'A1') return false;
+    if (me.is_chief) return true;
+    return pcvpThay(phong, r) || pcvpThay(phongOwner(r), r);
   }).map((r) => r.id));
 }
 

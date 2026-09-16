@@ -64,3 +64,13 @@
     .kl-dau-phai { width: 100%; margin-left: 0; justify-content: space-between; }
   }
 }
+
+/* GĐ14: chấm màu bốn mức cảnh báo 1400 (NT-5) trước nhãn trạng thái — tên lớp khai báo nguyên văn ở lib/kl/nhan.js. */
+@layer components {
+  .cham { display: inline-block; width: 10px; height: 10px; border-radius: 9999px; margin-right: 6px; vertical-align: middle; border: 1px solid transparent; }
+  .cham-xanh { background: var(--muc-xanh); }
+  .cham-vang { background: var(--muc-vang); }
+  .cham-do { background: var(--muc-do); }
+  .cham-dodb { background: var(--muc-dodb); box-shadow: 0 0 0 2px var(--muc-dodb-bg); }
+  .cham-khong { background: transparent; border-color: var(--cb-vien); }
+}

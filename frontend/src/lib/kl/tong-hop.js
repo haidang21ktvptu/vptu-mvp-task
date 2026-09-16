@@ -1,4 +1,4 @@
-// Tổng hợp thuần (không DOM, không Supabase) trên các dòng v_kl_dashboard mà RLS đã trả về cho người dùng.
+// Tổng hợp thuần (không DOM, không Supabase) trên các dòng v_nhiem_vu mà RLS đã trả về cho người dùng.
 // Nguyên tắc GĐ10: trạng thái từng dòng do DB tính (nhom_dem của kl_trang_thai); ở đây CHỈ đếm và nhóm, không tính
 // lại hạn. Ô số và danh sách sinh từ cùng một mảng nên "tổng các nhóm = tổng dòng" và "bấm ô ra đúng danh sách"
 // là bất biến cấu trúc. Có unit test ở frontend/tests/tong-hop.test.mjs.
@@ -59,15 +59,15 @@ export function locRows(rows, f = {}) {
     && (!f.hoiNghi || String(r.so_hoi_nghi) === String(f.hoiNghi))
     && (!f.nganh || (f.nganh === CHUA_CO_NGANH ? !r.nganh_ma : r.nganh_ma === f.nganh))
     && (!f.linhVuc || (f.linhVuc === CHUA_PHAN_LOAI ? !r.linh_vuc_ma : r.linh_vuc_ma === f.linhVuc))
-    && (!f.chuTri || r.chu_tri_id === f.chuTri)
-    && (!f.coQuanTrinh || r.co_quan_trinh_ma === f.coQuanTrinh)
+    && (!f.nguoiTheoDoi || r.nguoi_theo_doi === f.nguoiTheoDoi)
+    && (!f.donVi || r.owner_don_vi_ma === f.donVi)
     && (!f.chiMo || laMo(r))
     && (!f.thieuMinhChung || (r.nhom_dem === 'HOAN_THANH' && r.thieu_minh_chung))
     && (!f.khongNgayHoanThanh || (r.nhom_dem === 'HOAN_THANH' && !r.ngay_hoan_thanh))
     && (!f.nhomTrong || f.nhomTrong.includes(r.nhom_dem))
     && (!f.dangDinhChinh || r.dang_dinh_chinh)
     && (!f.khongCapNhatQua || (laMo(r) && (ngayTruoc(r.cap_nhat_luc, f.now) ?? 0) > f.khongCapNhatQua))
-    && (!kw || `${r.ma} ${r.noi_dung} ${r.chu_tri_ten || ''} ${r.co_quan_trinh_ten || ''}`.toLowerCase().includes(kw)));
+    && (!kw || `${r.ma} ${r.noi_dung} ${r.nguoi_theo_doi_ten || ''} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''}`.toLowerCase().includes(kw)));
 }
 
 // Hàng 4 dashboard: ngành → lĩnh vực, có nhóm "Chưa phân loại" (lĩnh vực NULL) trong mỗi ngành và "Chưa có ngành".
@@ -89,12 +89,12 @@ export function theoNganhLinhVuc(rows) {
     .sort((a, b) => (a.ma === CHUA_CO_NGANH) - (b.ma === CHUA_CO_NGANH) || a.ten.localeCompare(b.ten, 'vi', { numeric: true }));
 }
 
-// Hàng 3a: theo chủ trì, CHỈ việc đang mở, phân theo nhóm (quá hạn / sắp hạn / cần điền hạn / đang làm / chờ điều kiện).
+// Hàng 3a: theo người theo dõi, CHỈ việc đang mở, phân theo nhóm (quá hạn / sắp hạn / cần điền hạn / đang làm / chờ điều kiện).
 export function theoChuTriMo(rows) {
   const m = new Map();
   rows.filter(laMo).forEach((r) => {
-    if (!m.has(r.chu_tri_id)) m.set(r.chu_tri_id, { chu_tri_id: r.chu_tri_id, ten: r.chu_tri_ten || '(không rõ)', phong: r.chu_tri_phong, so: 0, nhom: demTrong() });
-    const c = m.get(r.chu_tri_id);
+    if (!m.has(r.nguoi_theo_doi)) m.set(r.nguoi_theo_doi, { nguoi_theo_doi: r.nguoi_theo_doi, ten: r.nguoi_theo_doi_ten || '(không rõ)', phong: r.nguoi_theo_doi_phong, so: 0, nhom: demTrong() });
+    const c = m.get(r.nguoi_theo_doi);
     c.so++; c.nhom[r.nhom_dem] = (c.nhom[r.nhom_dem] || 0) + 1;
   });
   return [...m.values()].sort((a, b) => b.so - a.so || a.ten.localeCompare(b.ten, 'vi'));
