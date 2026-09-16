@@ -35,6 +35,8 @@ Rủi ro: đổi tên bảng đụng script nhập/ẩn danh/ánh xạ (`scripts
 
 ## GĐ15 — Minh chứng và đóng nhiệm vụ (NT-4, CN-3, QT-4) · ước 3–4 ngày · `v3.1.0`
 
+> **Hoàn thành 16/9/2026** — thực hiện dưới tên **GĐ16** theo thứ tự đã đảo (điều hành ngoại lệ lên trước), phát hành **`v3.2.0`**: 16A #64 migration `0028_minh_chung.sql` (không phải 0024 như dự kiến), 16B #65 giao diện; cùng đợt #62 (tách nút Chi tiết / Chỉ đạo), #63 (CI-4). Cảnh báo tự động (mục GĐ16 dưới đây) trở thành GĐ17, migration từ 0029, `v3.3.0`.
+
 | PR | Nội dung | Migration | Kiểm chứng |
 |---|---|---|---|
 | 15A | Bảng `minh_chung`; chuyển 76 minh chứng chữ thành dòng `loai = chu_cu` (tách số hiệu/ngày khi nhận dạng được, giữ nguyên văn); trigger 0021 chuyển sang kiểm `EXISTS minh_chung hợp lệ` khi đóng việc `theo_1400` (việc cũ giữ quy tắc chữ); hàm `nop_minh_chung()`, `xac_nhan_minh_chung()`, `dong_nhiem_vu()` (chốt lead time) | `0024_minh_chung.sql` | Test: đóng không minh chứng bị chặn; chữ cũ không bị coi vi phạm; Owner không tự xác nhận; lead time đúng |
