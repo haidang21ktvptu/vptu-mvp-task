@@ -62,7 +62,8 @@ $$;
 CREATE FUNCTION "public"."canh_bao_quet"("p_ngay" date DEFAULT "public"."kl_hom_nay"()) RETURNS jsonb
 LANGUAGE "plpgsql" SECURITY DEFINER SET "search_path" = "public" AS $$
 DECLARE
-  v_n integer := coalesce((SELECT "gia_tri"::integer FROM "public"."kl_cau_hinh" WHERE "khoa" = 'canh_bao_nhac_lai_ngay'), 3);
+  -- greatest(…, 1): N ≤ 0 do quản trị nhập vẫn không được gửi lặp trong ngày (NF-11).
+  v_n integer := greatest(coalesce((SELECT "gia_tri"::integer FROM "public"."kl_cau_hinh" WHERE "khoa" = 'canh_bao_nhac_lai_ngay'), 3), 1);
   r record; v_nguoi uuid[]; v_tin text; v_id bigint; v_ids bigint[] := ARRAY[]::bigint[];
   v_quet integer := 0; v_bo_qua integer := 0; v_so_tin integer := 0;
   v_gui jsonb := jsonb_build_object('VANG', 0, 'DO', 0, 'DO_DAC_BIET', 0);
