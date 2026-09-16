@@ -42,7 +42,8 @@ export function setKlLoc(loc, thayThe = false) {
   render();
 }
 
-export async function loadKl() {
+// Đọc lỗi tạm (mạng, staging bận) → thử lại một lần sau 800 ms rồi mới báo; giữ dòng cũ trên màn hình.
+export async function loadKl(lanThu = 0) {
   try {
     await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
     const { rows, luc } = await loadKlRows();
@@ -53,6 +54,7 @@ export async function loadKl() {
     render();
     if (sauKhiNap) sauKhiNap(rows);
   } catch (e) {
+    if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return loadKl(lanThu + 1); }
     notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);
   }
 }

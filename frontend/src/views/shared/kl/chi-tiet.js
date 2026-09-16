@@ -101,18 +101,26 @@ export function chiTietHtml(r, ls, dc) {
 let dangMo = null; let dangNap = null;
 export const idDangMo = () => dangMo;
 
+// Đọc lỗi tạm → thử lại một lần; vẫn lỗi → ghi ngay trong ngăn (toast tự đóng sau 4 giây, người dùng vẫn thấy lý do).
+async function docCanCu(id, lanThu = 0) {
+  try { return await Promise.all([loadLichSu(id), loadDinhChinhCho(id)]); } catch (e) {
+    if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return docCanCu(id, lanThu + 1); }
+    throw e;
+  }
+}
+
 async function nap(id, cheDo, giuBang) {
   const r = timKlRow(id); const o = $('klChiTiet');
   if (!r || !o) return;
   const p = (async () => {
-    const [ls, dc] = await Promise.all([loadLichSu(id), loadDinhChinhCho(id)]);
+    const [ls, dc] = await docCanCu(id);
     if (dangMo !== id) return;
     o.innerHTML = chiTietHtml(r, ls, dc);
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
     await Promise.all([napChiDao(r), napMinhChung(r)]);
     if (cheDo === 'chi-dao') focusChiDao(id);
   })();
-  dangNap = p.catch((e) => notifyError('Không đọc được lịch sử: ' + e.message));
+  dangNap = p.catch((e) => { notifyError('Không đọc được lịch sử: ' + e.message); if (dangMo === id) o.innerHTML = `<p class="loi-inline">Không đọc được lịch sử: ${escapeHtml(e.message)}. Bấm lại dòng để thử lại.</p>`; });
   await dangNap;
 }
 

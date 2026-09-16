@@ -9,7 +9,7 @@ import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
 import { datCapQuyetDinh } from '../../../lib/kl/dieu-hanh.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, locKlDonVi, boKlLoc, setKlLoc } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, locKlDonVi, boKlLoc, setKlLoc, timKlRow } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
@@ -35,6 +35,7 @@ export function openKl(loc) {
 // Mở đúng một việc từ màn hình khác (thẻ điều hành, chuông, chỉ đạo đã gửi): lọc theo mã rồi mở ngăn chi tiết.
 export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
   await openKl({ tuTongQuan: true, tuKhoa: ma });
+  if (!timKlRow(id)) await loadKl(); // đọc lỗi tạm / dòng vừa thêm chưa kịp về → đọc lại một lần
   await toggleKlChiTiet({ id, cheDo });
   $(`klRow-${id}`)?.scrollIntoView({ block: 'nearest' });
 }
