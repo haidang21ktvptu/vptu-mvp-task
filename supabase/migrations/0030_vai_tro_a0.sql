@@ -172,7 +172,8 @@ BEGIN
 END;
 $$;
 
--- 8. Nhắn tin 1-1 (0008): A0 không gửi tin (chỉ đọc + Y_KIEN); tin hệ thống vẫn tới A0 qua hàm SECURITY DEFINER (chi_dao_ghi_vet).
+-- 8. Nhắn tin 1-1 (policy 0026: chỉ tin loai 'nguoi' — tin he_thong chỉ do hàm SECURITY DEFINER tạo): thêm A0 không gửi tin
+--    (chỉ đọc + Y_KIEN); tin hệ thống vẫn tới A0 qua chi_dao_ghi_vet.
 DROP POLICY "messages_insert" ON "public"."direct_messages";
-CREATE POLICY "messages_insert" ON "public"."direct_messages"
-  FOR INSERT TO "authenticated" WITH CHECK ("sender_id" = "auth"."uid"() AND NOT "public"."me_la_a0"());
+CREATE POLICY "messages_insert" ON "public"."direct_messages" FOR INSERT TO "authenticated"
+  WITH CHECK ("sender_id" = (SELECT "auth"."uid"()) AND "loai" = 'nguoi' AND NOT "public"."me_la_a0"());
