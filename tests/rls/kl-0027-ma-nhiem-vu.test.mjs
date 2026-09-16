@@ -18,7 +18,8 @@ function sql(cau) {
   const r = spawnSync('supabase', ['db', 'query', ...dich, win ? `"${cau}"` : cau], { encoding: 'utf8', shell: win });
   return r.status === 0 ? r.stdout : null;
 }
-const docSo = (raw, khoa) => Number((raw || '').match(new RegExp(`"${khoa}":\\s*"?(\\d+)`))?.[1]);
+// Đọc số theo tên cột: CLI có bản in JSON ({"khoa": 217}) và bản in bảng kẻ ô (│ khoa │ … │ 217 │) — giữa tên cột và giá trị không có chữ số.
+const docSo = (raw, khoa) => Number((raw || '').match(new RegExp(`${khoa}[^\\d]*(\\d+)`))?.[1]);
 
 let fx; let cu = null; const ids = [];
 const chen = async (noiDung) => {
@@ -35,9 +36,9 @@ describe('0027 — mã nhiệm vụ không cắt số khi sequence vượt 999',
   });
 
   test('sequence 999 → chèn hai dòng được NV-1000, NV-1001; mã 3 chữ số vẫn đệm 0', async (t) => {
-    const raw = sql('SELECT last_value FROM public.nhiem_vu_ma_seq');
+    const raw = sql('SELECT last_value AS gia_tri FROM public.nhiem_vu_ma_seq');
     if (raw === null) { t.skip('Không chạy được `supabase db query` (CLI chưa login hoặc chưa link) — bỏ qua case sequence.'); return; }
-    cu = docSo(raw, 'last_value');
+    cu = docSo(raw, 'gia_tri');
     assert.ok(cu > 0, `đọc last_value: ${raw.slice(0, 200)}`);
     assert.ok(sql("SELECT setval('public.nhiem_vu_ma_seq', 999, true)") !== null, 'setval 999');
     assert.equal(await chen('1000'), 'NV-1000');
