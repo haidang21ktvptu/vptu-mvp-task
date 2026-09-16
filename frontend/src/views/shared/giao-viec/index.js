@@ -53,6 +53,9 @@ function ownerDoi() {
 export async function openGiaoViec() {
   showSection('viewGiaoViec');
   setActiveNav('navGiaoViec');
+  // Xoá lựa chọn cũ ngay để người dùng (và kịch bản e2e) không chọn vào danh sách của lần mở trước trong lúc đang nạp.
+  $('klThVanBan').innerHTML = opt('', 'Đang tải văn bản…'); $('klThLoai').innerHTML = opt('', 'Đang tải…');
+  $('klThLuu').disabled = true;
   try { await loadDanhMucKl(); vanBan = await loadVanBan(); } catch (e) { notifyError(e.message); return; }
   homNay = (await homNayTheoDb()) || homNayVN();
   const dm = danhMucKl();
