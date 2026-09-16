@@ -1,4 +1,4 @@
-// Trạng thái và vẽ màn hình danh sách KL: một lần đọc v_kl_dashboard (RLS lọc phạm vi) → ô số và bảng sinh từ CÙNG
+// Trạng thái và vẽ màn hình danh sách KL: một lần đọc v_nhiem_vu (RLS lọc phạm vi) → ô số và bảng sinh từ CÙNG
 // một mảng (tổng các ô = số dòng; bấm ô = lọc đúng mảng đó). Bộ lọc "ngữ cảnh" (hội nghị/ngành/lĩnh vực/tìm kiếm và
 // các khoá dashboard truyền sang) áp cho cả ô số lẫn bảng; bộ lọc "nhóm" chỉ áp cho bảng.
 import { $, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
@@ -16,8 +16,8 @@ export const timKlRow = (id) => kl.rows.find((r) => r.id === id);
 
 // Khoá lọc do dashboard (10C) đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm không hiện chip.
 const NHAN_CHIP = {
-  chuTri: (v) => `Chủ trì: ${kl.rows.find((r) => r.chu_tri_id === v)?.chu_tri_ten || v}`,
-  coQuanTrinh: (v) => `Cơ quan trình: ${tenTrongDanhMuc('coQuanTrinh', v)}`,
+  nguoiTheoDoi: (v) => `Người theo dõi: ${kl.rows.find((r) => r.nguoi_theo_doi === v)?.nguoi_theo_doi_ten || v}`,
+  donVi: (v) => `Chịu trách nhiệm: ${tenTrongDanhMuc('donVi', v)}`,
   chiMo: () => 'Chỉ việc đang mở',
   thieuMinhChung: () => 'Hoàn thành chưa có minh chứng',
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
@@ -43,7 +43,7 @@ export async function loadKl() {
     dienBoLoc();
     render();
   } catch (e) {
-    notifyError('Không đọc được dữ liệu Kết luận BTVTU: ' + e.message);
+    notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);
   }
 }
 
@@ -79,7 +79,7 @@ export function render() {
   // Ngăn chi tiết đang mở giữ nguyên qua lần vẽ lại (realtime đọc lại dữ liệu khi người dùng đang đọc căn cứ).
   const dangMo = [...document.querySelectorAll('#klBody .dong-chi-tiet:not(.hidden)')].map((tr) => tr.id.replace('klChiTiet-', ''));
   $('klBody').innerHTML = list.length === 0
-    ? `<tr><td colspan="${SO_COT}" class="trong">${kl.rows.length === 0 ? 'Không có nhiệm vụ Kết luận BTVTU nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</td></tr>`
+    ? `<tr><td colspan="${SO_COT}" class="trong">${kl.rows.length === 0 ? 'Không có nhiệm vụ nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</td></tr>`
     : list.map((r) => dongHtml(r, homNay)).join('');
   dangMo.filter((id) => $(`klChiTiet-${id}`)).forEach((id) => toggleKlChiTiet({ id }));
   setText('klSoDong', `${list.length} / ${kl.rows.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);

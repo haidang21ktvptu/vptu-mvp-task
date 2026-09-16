@@ -25,15 +25,16 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     await db().from('van_ban_giao_viec').delete().eq('so_hoi_nghi', 997);
   });
 
-  test('1. dm_don_vi: 13 dòng cũ giữ nguyên + 3 cột mới; chỉ Văn phòng Tỉnh ủy trong_van_phong, chưa dòng phòng nào (14C)', async () => {
+  test('1. dm_don_vi: 13 đơn vị + 5 phòng (0025) với 3 cột mới; Văn phòng và 5 phòng trong_van_phong, phong = mã phòng', async () => {
     const cv1 = await userClient('demo_cv1');
     const r = await cv1.from('dm_don_vi').select('ma, trong_van_phong, phong, lanh_dao_phu_trach').order('thu_tu');
     assertOk(r, 'A3 đọc dm_don_vi');
-    assert.equal(r.data.length, 13);
-    assert.deepEqual(r.data.filter((d) => d.trong_van_phong).map((d) => d.ma), ['VAN_PHONG_TINH_UY']);
-    assert.ok(r.data.every((d) => d.phong === null && d.lanh_dao_phu_trach === null));
+    assert.equal(r.data.length, 18);
+    assert.deepEqual(r.data.filter((d) => d.trong_van_phong).map((d) => d.ma), ['VAN_PHONG_TINH_UY', 'TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI']);
+    assert.ok(r.data.every((d) => (d.phong === null) === !['TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI'].includes(d.ma) && d.lanh_dao_phu_trach === null));
+    assert.ok(r.data.filter((d) => d.phong).every((d) => d.phong === d.ma), 'phong = mã phòng');
     const cu = await cv1.from('dm_co_quan_trinh').select('ma, ten, thu_tu');   // bí danh cho frontend cũ
-    assertOk(cu, 'bí danh dm_co_quan_trinh'); assert.equal(cu.data.length, 13);
+    assertOk(cu, 'bí danh dm_co_quan_trinh'); assert.equal(cu.data.length, 18);
     // CHECK: phong chỉ khi trong_van_phong.
     assert.ok((await db().from('dm_don_vi').update({ phong: 'TONG_HOP' }).eq('ma', 'BAN_TO_CHUC').select('ma')).error, 'phong trên đơn vị ngoài bị chặn');
   });
@@ -86,12 +87,12 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     assertOk(ok, 'ngày nhận = hôm nay VN'); assert.equal(ok.data.ngay_nhan_uoc_tinh, false);
   });
 
-  test('7. sửa tay ngày nhận → cờ ước tính tự tắt; người theo dõi A3 chưa được sửa cột mới (guard 0015, để 14C)', async () => {
+  test('7. sửa tay ngày nhận → cờ ước tính tự tắt; người theo dõi A3 sửa được ngày nhận/sản phẩm (guard 0025) nhưng không đổi Owner', async () => {
     const r = await db().from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-03' }).eq('ma', 'NV-T51').select('ngay_nhan_uoc_tinh').single();
     assertOk(r, 'admin sửa ngày nhận'); assert.equal(r.data.ngay_nhan_uoc_tinh, false);
     const cv1 = await userClient('demo_cv1');
-    assertDenied(await cv1.from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-04' }).eq('ma', 'NV-T51').select('id'), 'A3 sửa ngày nhận');
-    assertDenied(await cv1.from('nhiem_vu').update({ san_pham_mo_ta: 'x' }).eq('ma', 'NV-T51').select('id'), 'A3 sửa sản phẩm');
+    assertOk(await cv1.from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-04', san_pham_mo_ta: 'x' }).eq('ma', 'NV-T51').select('id'), 'A3 người theo dõi sửa ngày nhận, sản phẩm');
+    assertDenied(await cv1.from('nhiem_vu').update({ owner_don_vi_ma: 'TONG_HOP' }).eq('ma', 'NV-T51').select('id'), 'A3 đổi Owner');
   });
 
   test('8. bất biến dữ liệu cũ: mọi dòng excel có ngày nhận = ngày ban hành, cờ ước tính, theo_1400 = false, không dòng lịch sử cột mới', async () => {

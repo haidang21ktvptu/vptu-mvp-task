@@ -17,7 +17,7 @@ function boMau() {
       const coLV = i < 51;
       rows.push({
         id: `id-${i}`, ma: `NV-${String(i + 1).padStart(3, '0')}`, noi_dung: `Nhiệm vụ ${i + 1}`, nhom_dem: nhom,
-        so_hoi_nghi: 1 + (i % 38), ngay_ban_hanh: '2025-11-01', chu_tri_id: `cv${i % 9}`, chu_tri_ten: `Chuyên viên ${i % 9}`, chu_tri_phong: 'TONG_HOP',
+        so_hoi_nghi: 1 + (i % 38), ngay_ban_hanh: '2025-11-01', nguoi_theo_doi: `cv${i % 9}`, nguoi_theo_doi_ten: `Chuyên viên ${i % 9}`, nguoi_theo_doi_phong: 'TONG_HOP',
         nganh_ma: i === 100 ? null : `N${i % 12}`, nganh_ten: i === 100 ? null : `${(i % 12) + 1}. Ngành ${i % 12}`,
         linh_vuc_ma: coLV ? `LV${i % 5}` : null, linh_vuc_ten: coLV ? `Lĩnh vực ${i % 5}` : null,
         han_xu_ly: nhom === 'QUA_HAN' ? '2026-08-20' : nhom === 'THUONG_XUYEN' ? null : '2026-10-01',

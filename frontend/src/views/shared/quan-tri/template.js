@@ -5,7 +5,7 @@ import { quanTriDanhMucTemplate } from './template-linh-vuc.js';
 
 export const quanTriTemplate = `
   <div class="dau-trang">
-    <h1>Quản trị hệ thống<small>Cấp quyền quản trị Kết luận BTVTU, phân công lãnh đạo phụ trách phòng và lĩnh vực, danh mục lĩnh vực</small></h1>
+    <h1>Quản trị hệ thống<small>Cấp quyền quản trị nhiệm vụ, phân công lãnh đạo phụ trách phòng và lĩnh vực, danh mục lĩnh vực</small></h1>
     <button type="button" data-action="loadQuanTri" class="btn btn-phu shrink-0">Tải lại</button>
   </div>
 

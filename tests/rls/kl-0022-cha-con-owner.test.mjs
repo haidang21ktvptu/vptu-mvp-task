@@ -1,6 +1,6 @@
 // GĐ14 (0022) — chuỗi cha–con (CH-3: hạn con ≤ hạn cha, không vòng) và Owner tài khoản (NT-1, CH-1, SPEC mục 2: Văn phòng →
-// tài khoản A1; phòng → accounts.department = phong; đơn vị ngoài → không tài khoản). Dòng phòng của dm_don_vi chưa có (14C)
-// nên test tự tạo một dòng phòng tạm 'TEST_PHONG' rồi xoá. Mã NV-T6x, nội dung 'KL-1400 …', tự dọn.
+// tài khoản A1; phòng → accounts.department = phong; đơn vị ngoài → không tài khoản). Dòng phòng TONG_HOP có từ 0025.
+// Mã NV-T6x, nội dung 'KL-1400 …', tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, assertOk, IDS } from './lib.mjs';
@@ -17,16 +17,12 @@ const them = async (row) => {
 };
 const sua = (ma, patch) => db().from('nhiem_vu').update(patch).eq('ma', ma).select('id');
 const loi = (r) => r.error?.message || '';
-const don = async () => {
-  await db().from('nhiem_vu').delete().like('ma', 'NV-T6%');
-  await db().from('dm_don_vi').delete().eq('ma', 'TEST_PHONG');
-};
+const don = async () => { await db().from('nhiem_vu').delete().like('ma', 'NV-T6%'); };
 
 describe('0022 — cha–con và Owner tài khoản', { skip: SKIP }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    assertOk(await db().from('dm_don_vi').insert({ ma: 'TEST_PHONG', ten: 'KL-1400 Phòng thử', thu_tu: 99, trong_van_phong: true, phong: 'TONG_HOP' }), 'dòng phòng tạm');
   });
   after(don);
 
@@ -58,10 +54,10 @@ describe('0022 — cha–con và Owner tài khoản', { skip: SKIP }, () => {
   });
 
   test('5. Owner = phòng: tài khoản đúng phòng được, khác phòng bị chặn (kể cả A2/A1)', async () => {
-    assert.match(loi(await them({ ma: 'NV-T65', owner_don_vi_ma: 'TEST_PHONG', owner_tai_khoan: IDS.cv2 })), /phải thuộc phòng TONG_HOP/);
-    assert.match(loi(await them({ ma: 'NV-T65', owner_don_vi_ma: 'TEST_PHONG', owner_tai_khoan: IDS.cvp })), /phải thuộc phòng TONG_HOP/);
-    assertOk(await them({ ma: 'NV-T65', owner_don_vi_ma: 'TEST_PHONG', owner_tai_khoan: IDS.cv1 }), 'chuyên viên Tổng hợp');
-    assertOk(await them({ ma: 'NV-T66', owner_don_vi_ma: 'TEST_PHONG', owner_tai_khoan: IDS.truongphong }), 'Trưởng phòng Tổng hợp');
+    assert.match(loi(await them({ ma: 'NV-T65', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv2 })), /phải thuộc phòng TONG_HOP/);
+    assert.match(loi(await them({ ma: 'NV-T65', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cvp })), /phải thuộc phòng TONG_HOP/);
+    assertOk(await them({ ma: 'NV-T65', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'chuyên viên Tổng hợp');
+    assertOk(await them({ ma: 'NV-T66', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.truongphong }), 'Trưởng phòng Tổng hợp');
     assert.match(loi(await sua('NV-T65', { owner_tai_khoan: IDS.cv2 })), /phải thuộc phòng/);   // đổi tài khoản sai phòng
   });
 

@@ -66,13 +66,13 @@ test.describe.serial('Kết luận BTVTU — dashboard lãnh đạo', () => {
     await expect(page.locator('#klDbTinhDen')).toContainText('Số liệu tính đến');
   });
 
-  test('thanh theo chủ trì: đoạn đầu tiên → danh sách đúng số dòng, có chip chủ trì', async () => {
+  test('thanh theo người theo dõi: đoạn đầu tiên → danh sách đúng số dòng, có chip người theo dõi', async () => {
     const doan = page.locator('#klDbChuTri .doan').first();
     if (await doan.count() === 0) return;
     const n = await so(doan);
     await doan.click();
     await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(n);
-    await expect(page.locator('#klChipLoc')).toContainText('Chủ trì:');
+    await expect(page.locator('#klChipLoc')).toContainText('Người theo dõi:');
     await veTongQuan();
   });
 });

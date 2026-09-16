@@ -1,4 +1,4 @@
-// Hàng 3 (thanh xếp chồng theo chủ trì — chỉ việc đang mở; tỷ lệ hoàn thành 8 hội nghị) và hàng 4 (ngành → lĩnh vực)
+// Hàng 3 (thanh xếp chồng theo người theo dõi — chỉ việc đang mở; tỷ lệ hoàn thành 8 hội nghị) và hàng 4 (ngành → lĩnh vực)
 // của dashboard A1. Thanh vẽ bằng HTML/CSS, không thư viện; mỗi đoạn/ô số là nút mở danh sách 10B với bộ lọc.
 import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -18,13 +18,13 @@ function thanhHtml(nhom, tong, locGoc) {
     `<button type="button" class="doan ${LOP_DOAN[k]}" style="flex-basis:${(nhom[k] / tong) * 100}%" ${nutLoc({ ...locGoc, nhom: k })} title="${tenNhom(k)}: ${nhom[k]}" aria-label="${tenNhom(k)}: ${nhom[k]}">${nhom[k]}</button>`).join('')}</div>`;
 }
 
-export function chuTriHtml(ds) {
+export function nguoiTheoDoiHtml(ds) {
   if (ds.length === 0) return '<p class="bd-trong">Không có việc đang mở.</p>';
   const max = Math.max(...ds.map((c) => c.so));
   return ds.map((c) => `
     <div class="bd-hang">
-      <button type="button" class="bd-nhan" ${nutLoc({ chuTri: c.chu_tri_id, chiMo: true })}>${escapeHtml(c.ten)}<small>${escapeHtml(DEPT_NAMES[c.phong] || c.phong || '')} · ${c.so} việc đang mở</small></button>
-      <div class="bd-thanh-o" style="width:${(c.so / max) * 100}%">${thanhHtml(c.nhom, c.so, { chuTri: c.chu_tri_id })}</div>
+      <button type="button" class="bd-nhan" ${nutLoc({ nguoiTheoDoi: c.nguoi_theo_doi, chiMo: true })}>${escapeHtml(c.ten)}<small>${escapeHtml(DEPT_NAMES[c.phong] || c.phong || '')} · ${c.so} việc đang mở</small></button>
+      <div class="bd-thanh-o" style="width:${(c.so / max) * 100}%">${thanhHtml(c.nhom, c.so, { nguoiTheoDoi: c.nguoi_theo_doi })}</div>
     </div>`).join('') + chuGiaiHtml();
 }
 

@@ -1,5 +1,5 @@
 // Dashboard "Tổng quan KL BTVTU" của A1 (GĐ10 PR 10C, thiết kế 3.2): cùng nguồn đọc với màn hình danh sách 10B
-// (v_kl_dashboard, RLS lọc phạm vi — CVP tất cả, PCVP theo phụ trách/kiêm nhiệm), tổng hợp bằng lib/kl/tong-hop.js;
+// (v_nhiem_vu, RLS lọc phạm vi — CVP tất cả, PCVP theo phụ trách/kiêm nhiệm), tổng hợp bằng lib/kl/tong-hop.js;
 // mọi con số là nút mở danh sách với bộ lọc tương ứng (openKl). Không có nút chỉ đạo (GĐ11).
 import { $, setText, formatDateTime } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
@@ -11,7 +11,7 @@ import { openKl } from '../../shared/kl/index.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { klDashboardTemplate } from './template.js';
 import { canThiepHtml, tinhHinhHtml, chatLuongHtml } from './ve-o-so.js';
-import { chuTriHtml, hoiNghiHtml, nganhLinhVucHtml } from './ve-bieu-do.js';
+import { nguoiTheoDoiHtml, hoiNghiHtml, nganhLinhVucHtml } from './ve-bieu-do.js';
 
 export const KL_DASHBOARD_NAV = { id: 'navKlDashboard', label: 'Tổng quan KL BTVTU', action: 'openKlDashboard', data: { section: 'viewKlDashboard' } };
 let rows = [];
@@ -26,7 +26,7 @@ export async function loadKlDashboard() {
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     render(r.luc);
   } catch (e) {
-    notifyError('Không đọc được dữ liệu Kết luận BTVTU: ' + e.message);
+    notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);
   }
 }
 
@@ -35,7 +35,7 @@ export function render(luc = new Date()) {
   const nguongCapNhat = cauHinhKl('nguong_khong_cap_nhat_ngay', 30);
   $('klDbCanThiep').innerHTML = canThiepHtml(t);
   $('klDbTinhHinh').innerHTML = tinhHinhHtml(t);
-  $('klDbChuTri').innerHTML = chuTriHtml(theoChuTriMo(rows));
+  $('klDbChuTri').innerHTML = nguoiTheoDoiHtml(theoChuTriMo(rows));
   $('klDbHoiNghi').innerHTML = hoiNghiHtml(theoHoiNghi(rows, 8));
   $('klDbNganh').innerHTML = nganhLinhVucHtml(theoNganhLinhVuc(rows));
   $('klDbChatLuong').innerHTML = chatLuongHtml(chatLuong(rows, nguongCapNhat), nguongCapNhat);

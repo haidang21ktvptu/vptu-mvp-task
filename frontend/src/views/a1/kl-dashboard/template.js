@@ -2,7 +2,7 @@
 // "so với kỳ trước", ô chỉ đạo chờ GĐ11, hàng 4 = ngành → lĩnh vực). Mọi con số là nút mở danh sách 10B với bộ lọc tương ứng.
 export const klDashboardTemplate = `
   <div class="dau-trang">
-    <h1>Tổng quan Kết luận BTVTU<small>Số liệu thời gian thực trong phạm vi phụ trách của đồng chí; bấm vào bất kỳ con số nào để xem danh sách tạo nên con số đó</small></h1>
+    <h1>Tổng quan nhiệm vụ<small>Số liệu thời gian thực trong phạm vi phụ trách của đồng chí; bấm vào bất kỳ con số nào để xem danh sách tạo nên con số đó</small></h1>
     <div class="kl-dau-phai">
       <span id="klDbTinhDen" class="chu-phu text-sm" aria-live="polite"></span>
       <span id="klDbKetNoi" class="ket-noi" role="status"></span>
@@ -22,7 +22,7 @@ export const klDashboardTemplate = `
 
   <div class="bd-hai-cot">
     <section class="bang" aria-labelledby="klDbH3a">
-      <div class="bang-dau"><h2 id="klDbH3a">Theo chủ trì<span class="chu-phu">chỉ việc đang mở — ai đang gánh gì</span></h2></div>
+      <div class="bang-dau"><h2 id="klDbH3a">Theo người theo dõi<span class="chu-phu">chỉ việc đang mở — ai đang gánh gì</span></h2></div>
       <div id="klDbChuTri" class="bd-thanh"></div>
     </section>
     <section class="bang" aria-labelledby="klDbH3b">
