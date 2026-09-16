@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
+import { contextAs } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 
 const QTHT_ID = '00000000-0000-4000-8000-000000000008';
@@ -27,8 +28,7 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     test.skip(rpc.error?.code === 'PGRST202', 'Project chưa có migration 0025 (giao_viec) — chạy lại sau khi merge.');
     await don(db);
     await db.from('accounts').update({ quan_tri_kl: true }).eq('id', QTHT_ID);
-    const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
-    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale, storageState: storageStatePath('QTHT') });
+    const context = await contextAs(browser, 'QTHT', testInfo); // phiên riêng của demo_qtht (CI-4)
     page = await context.newPage();
     await page.goto('./');
     await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.QTHT.fullName);

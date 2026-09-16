@@ -6,7 +6,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs } from './lib/app.js';
+import { pageAs, contextAs } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -19,8 +19,7 @@ function dbAdmin() {
 }
 
 async function pageAsQtht(browser, testInfo) {
-  const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
-  const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale, storageState: storageStatePath('QTHT') });
+  const context = await contextAs(browser, 'QTHT', testInfo); // phiên riêng của demo_qtht (CI-4)
   const page = await context.newPage();
   await page.goto('./');
   await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.QTHT.fullName);

@@ -1,9 +1,11 @@
 // Playwright chạy trên bản build Vite (vite preview) trỏ tới staging; 2 kích thước màn hình
 // (1280px máy tính, 360px điện thoại — SPEC NF-4). Chạy tuần tự vì dữ liệu dùng chung.
 //
-// Tiết kiệm lượt đăng nhập (giới hạn 30 lượt/5 phút/IP): project `desktop` và `mobile` dùng phiên
-// sẵn (storageState) do global-setup tạo; project `dang-nhap`/`dang-nhap-mobile` (kịch bản 1–3: đăng nhập thật qua
-// form rồi đăng xuất) chạy SAU CÙNG vì đăng xuất huỷ phiên ở mọi thiết bị của tài khoản đó.
+// Tiết kiệm lượt đăng nhập (giới hạn 30 lượt/5 phút/IP): project `desktop` và `mobile` dùng phiên do global-setup
+// tạo, mỗi context một cặp token riêng qua refresh (lib/app.js, CI-4); project `dang-nhap` (kịch bản 1–3: đăng nhập thật
+// qua form rồi đăng xuất, kịch bản 3 đã ở kích thước điện thoại) chạy SAU CÙNG vì đăng xuất huỷ phiên ở mọi thiết bị.
+// Tổng 7 lượt đăng nhập/lần chạy. workers = 2 (CI-4): desktop và mobile chạy song song — mỗi spec cô lập dữ liệu theo hội
+// nghị riêng (993–997) và tự dọn; dang-nhap vẫn chạy sau cùng, một mình.
 //
 // Thời gian CI (GĐ15, mục tiêu job kiem-thu-staging < 3 phút): điện thoại CHỈ chạy các spec nhạy bố cục — đăng nhập,
 // màn hình chuyên viên, form giao việc, luồng nhận việc (thẻ dọc, modal, bàn phím). Dashboard, realtime, quản trị,
@@ -21,7 +23,7 @@ export default defineConfig({
   testMatch: /.*\.spec\.js/,
   testIgnore: ['**/smoke/**'],
   fullyParallel: false,
-  workers: 1,
+  workers: 2,
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
@@ -38,7 +40,6 @@ export default defineConfig({
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở hai project riêng bên dưới).
     { name: 'mobile', use: MOBILE, testMatch: [/kl-chuyen-vien\.spec\.js/, /kl-them-nhiem-vu\.spec\.js/, /nhiem-vu\.spec\.js/], testIgnore: ['**/smoke/**'] },
     { name: 'dang-nhap', use: DESKTOP, testMatch: /dang-nhap\.spec\.js/, dependencies: ['desktop', 'mobile'] },
-    { name: 'dang-nhap-mobile', use: MOBILE, testMatch: /dang-nhap\.spec\.js/, dependencies: ['dang-nhap'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',

@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys, SEED_PASSWORD, EMAIL_DOMAIN } from './lib/keys.mjs';
-import { USERS, OPTIONAL_USERS, AUTH_DIR, storageStatePath } from './lib/roles.mjs';
+import { USERS, OPTIONAL_USERS, AUTH_DIR, sessionPath } from './lib/roles.mjs';
 
 export const E2E_TAG = 'E2E-TEST';
 export const BASE_URL = 'http://127.0.0.1:4173/vptu-mvp-task/';
@@ -24,7 +24,6 @@ export async function cleanupE2EData() {
 
 async function saveSessions() {
   const k = getKeys();
-  const storageKey = `sb-${new URL(k.url).hostname.split('.')[0]}-auth-token`;
   mkdirSync(AUTH_DIR, { recursive: true });
   const login = async (user) => {
     const client = createClient(k.url, k.anon, noSession);
@@ -32,24 +31,19 @@ async function saveSessions() {
       email: `${user.username}@${EMAIL_DOMAIN}`, password: SEED_PASSWORD,
     });
     if (error) return { error };
-    return {
-      state: {
-        cookies: [],
-        origins: [{ origin: new URL(BASE_URL).origin, localStorage: [{ name: storageKey, value: JSON.stringify(data.session) }] }],
-      },
-    };
+    return { state: data.session }; // cặp token; lib/app.js làm mới theo chuỗi cho từng context
   };
   for (const [role, user] of Object.entries(USERS)) {
     const { state, error } = await login(user);
     if (error) throw new Error(`Đăng nhập ${user.username} thất bại: ${error.message}`);
-    writeFileSync(storageStatePath(role), JSON.stringify(state));
+    writeFileSync(sessionPath(role), JSON.stringify(state));
   }
   // Tài khoản tuỳ chọn (chưa có trên staging cho tới khi merge migration + nạp seed tương ứng):
   // đăng nhập lỗi thì xoá phiên cũ để kịch bản liên quan tự bỏ qua, không làm đỏ cả bộ.
   for (const [role, user] of Object.entries(OPTIONAL_USERS)) {
     const { state } = await login(user);
-    if (state) writeFileSync(storageStatePath(role), JSON.stringify(state));
-    else rmSync(storageStatePath(role), { force: true });
+    if (state) writeFileSync(sessionPath(role), JSON.stringify(state));
+    else rmSync(sessionPath(role), { force: true });
   }
 }
 
