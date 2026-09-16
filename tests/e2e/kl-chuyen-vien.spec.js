@@ -7,7 +7,7 @@ import { pageAs } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
-const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CV1_ID = '00000000-0000-4000-8000-000000000010'; // demo_e2e_kl — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 997;
 
 test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
@@ -36,7 +36,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     nv2Id = nv2.id;
     // service_role gọi xac_nhan_nhan_viec(uuid rỗng) → 42501 khi hàm có; PGRST202 khi chưa có 0025 → bỏ qua case xác nhận.
     coXacNhan = (await db.rpc('xac_nhan_nhan_viec', { p_id: '00000000-0000-0000-0000-000000000000' })).error?.code !== 'PGRST202';
-    page = await pageAs(browser, 'A3', testInfo);
+    page = await pageAs(browser, 'E2E_KL', testInfo);
   });
   test.afterAll(async () => {
     await page?.context().close();
@@ -117,7 +117,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await expect(ct.locator('.chi-tiet-them')).toHaveAttribute('open', '');
     await expect(ct.locator('input[name=noi_dung]')).toHaveCount(0); // chưa có chỉ đạo → chưa có ô phản hồi; con trỏ không bị đặt đâu cả
     await expect(page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Phản hồi' })).toBeVisible(); // A3 là người theo dõi: nút chính Phản hồi
-    await expect(ct).toContainText('nhập bởi Demo Chuyên viên Một');
+    await expect(ct).toContainText('nhập bởi Demo E2E Chuyên viên KL');
     await expect(ct).toContainText('Nhập trên hệ thống');
     await expect(ct.locator('.lich-su-hop summary')).toContainText(`Lịch sử: ${coXacNhan ? 4 : 3} thay đổi`);
   });

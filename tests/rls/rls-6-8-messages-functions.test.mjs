@@ -1,7 +1,9 @@
-// RLS-6 (direct_messages: chỉ người gửi/nhận) và RLS-8 (hàm SECURITY DEFINER kiểm tra quyền bên trong).
+// RLS-6 (direct_messages: chỉ người gửi/nhận) và RLS-8 (hàm SECURITY DEFINER kiểm tra quyền bên trong — mark_messages_read).
+// Các hàm luồng tasks v2 (assign_task, submit_evidence, approve_task, warn_task, mark_directives_read) đã bỏ ở GĐ18 (0031);
+// hàm nghiệp vụ của thực thể thống nhất có test riêng kl-0025 → kl-0030.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { userClient, anonClient, adminClient, assertDenied, assertOk, IDS } from './lib.mjs';
+import { userClient, anonClient, assertDenied, assertOk, IDS } from './lib.mjs';
 import { setupFixtures } from './fixtures.mjs';
 
 let fx;
@@ -37,47 +39,7 @@ describe('RLS-8 hàm nghiệp vụ', () => {
     const r = await cv1.rpc('mark_messages_read', { p_peer_id: IDS.pcvp });
     assertOk(r, 'cv1 mark'); assert.equal(r.data, 1);
   });
-  test('mark_directives_read: bên liên quan được; người ngoài bị chặn', async () => {
-    const cv1 = await userClient('demo_cv1');
-    const r = await cv1.rpc('mark_directives_read', { p_task_id: fx.t1 });
-    assertOk(r, 'cv1 mark directives'); assert.equal(r.data, 1);
-    assertDenied(await cv1.rpc('mark_directives_read', { p_task_id: fx.t2 }), 'cv1 mark T2');
-  });
-  test('assign_task: A2 giao trong phòng được; A2 giao phòng khác và A3 bị chặn', async () => {
-    const tp = await userClient('demo_truongphong');
-    const p = { title: 'RLS-TEST T4', resolution_code: 'RLS-TEST', expected_product: 'x', deadline: new Date(Date.now() + 86400000).toISOString(), critical_overdue_days: 3, leader_in_charge: IDS.truongphong };
-    const ok = await tp.rpc('assign_task', { p: { ...p, assigned_to: IDS.cv1 } });
-    assertOk(ok, 'A2 assign'); assert.ok(ok.data);
-    assertDenied(await tp.rpc('assign_task', { p: { ...p, assigned_to: IDS.cv2 } }), 'A2 assign phòng khác');
-    const cv1 = await userClient('demo_cv1');
-    assertDenied(await cv1.rpc('assign_task', { p: { ...p, assigned_to: IDS.cv1 } }), 'A3 assign');
-  });
-  test('submit_evidence: A3 nộp cho việc đang làm của mình; A3 khác bị chặn', async () => {
-    const cv2 = await userClient('demo_cv2');
-    const r = await cv2.rpc('submit_evidence', { p_task_id: fx.t2, p_title: 'RLS-TEST nộp', p_url: 'https://example.local/ok' });
-    assertOk(r, 'cv2 submit'); assert.ok(r.data);
-    const { data: t } = await adminClient().from('tasks').select('status').eq('id', fx.t2).single();
-    assert.equal(t.status, 'CHO_DUYET');
-    const cv1 = await userClient('demo_cv1');
-    assertDenied(await cv1.rpc('submit_evidence', { p_task_id: fx.t2, p_title: 'x', p_url: 'https://x' }), 'cv1 submit việc khác');
-  });
-  test('approve_task: PCVP2 duyệt trong khối được; A2 phòng khác và A3 bị chặn', async () => {
-    const tp = await userClient('demo_truongphong');
-    assertDenied(await tp.rpc('approve_task', { p_task_id: fx.t2 }), 'A2 duyệt phòng khác');
-    const cv2 = await userClient('demo_cv2');
-    assertDenied(await cv2.rpc('approve_task', { p_task_id: fx.t2 }), 'A3 tự duyệt');
-    const pcvp2 = await userClient('demo_pcvp2');
-    assertOk(await pcvp2.rpc('approve_task', { p_task_id: fx.t2 }), 'PCVP2 duyệt');
-    const { data: t } = await adminClient().from('tasks').select('status, completed_at').eq('id', fx.t2).single();
-    assert.equal(t.status, 'HOAN_THANH'); assert.ok(t.completed_at);
-  });
-  test('warn_task: A2 đôn đốc phòng mình được; phòng khác bị chặn', async () => {
-    const tp = await userClient('demo_truongphong');
-    const r = await tp.rpc('warn_task', { p_task_id: fx.t1 });
-    assertOk(r, 'warn T1'); assert.ok(r.data >= 1); // T1 có thể đã bị test RLS-4 đôn đốc trước
-    assertDenied(await tp.rpc('warn_task', { p_task_id: fx.t2 }), 'warn T2');
-  });
   test('bị chặn: anon gọi hàm', async () => {
-    assertDenied(await anonClient().rpc('warn_task', { p_task_id: fx.t1 }), 'anon rpc');
+    assertDenied(await anonClient().rpc('mark_messages_read', { p_peer_id: IDS.pcvp }), 'anon rpc');
   });
 });

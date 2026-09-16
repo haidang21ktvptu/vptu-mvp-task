@@ -9,7 +9,7 @@
 //   gán Trưởng phòng Tổng hợp của project (staging: demo_truongphong), đúng đường đi của dữ liệu thật.
 // - Nội dung = "Nhiệm vụ NV-xxx (ẩn)"; minh chứng, văn bản triển khai, lĩnh vực chi tiết = null; không có nhật ký.
 // - Bộ số tổng (tongHop) của bản ẩn danh PHẢI bằng của file thật — khác là lỗi, không ghi file. Bộ số trạng thái
-//   146/16/8/6/6/3/0 đối chiếu bằng test kl-moc-2026-09-14 sau khi nhập vào local/staging (hàm kl_trang_thai).
+//   146/16/8/6/6/3/0 đối chiếu bằng test kl-moc-2026-09-14 sau khi nhập vào local/staging (hàm trang_thai).
 
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';

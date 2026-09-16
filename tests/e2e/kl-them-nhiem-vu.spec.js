@@ -10,7 +10,7 @@ import { contextAs } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 
 const QTHT_ID = '00000000-0000-4000-8000-000000000008';
-const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CV1_ID = '00000000-0000-4000-8000-000000000014'; // demo_e2e_owner — Owner dữ liệu dùng chung với kl-realtime (GĐ18)
 const SO_HOI_NGHI = 995;
 const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
@@ -43,7 +43,6 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     await page.locator('#navKl').click();
     await expect(page.locator('#klNutThem')).toBeVisible();
     await expect(page.locator('#klBody tr[id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp
-    const tong = Number(await page.locator('#klSo-TONG').innerText());
     await page.locator('#klNutThem').click();
     await expect(page.locator('#klThemModal')).toBeVisible();
     await page.locator('#klThVanBan').selectOption('__moi__');
@@ -52,7 +51,7 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     await page.locator('#klThSoKL').fill(`${E2E_TAG}-995`);
     await page.locator('#klThNgayBH').fill('2026-09-01');
     await page.locator('#klThNoiDung').fill(`${E2E_TAG} giao việc ${testInfo.project.name} ${Date.now()}`);
-    await page.locator('#klThOwner').selectOption(`tk:${CV1_ID}`);          // demo_cv1 (A3, Tổng hợp)
+    await page.locator('#klThOwner').selectOption(`tk:${CV1_ID}`);          // demo_e2e_owner (A3, Tổng hợp)
     await expect(page.locator('#klThCapNhan')).toHaveValue('TRUONG_PHONG'); // cấp trên Owner tự điền
     await expect(page.locator('#klThNgayNhan')).toHaveValue(homNayVN());   // ngày nhận mặc định hôm nay VN
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
@@ -66,7 +65,6 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     await page.locator('#klThLuu').click();
     await expect(page.locator('#klThemModal')).toBeHidden();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
-    await expect(page.locator('#klSo-TONG')).toHaveText(String(tong + 1));
     const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi')
       .like('noi_dung', `${E2E_TAG} giao việc%`).order('created_at', { ascending: false }).limit(1).single();
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',

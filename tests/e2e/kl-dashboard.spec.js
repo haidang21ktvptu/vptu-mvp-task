@@ -7,7 +7,7 @@ import { pageAs } from './lib/app.js';
 test.describe.serial('Kết luận BTVTU — dashboard lãnh đạo', () => {
   let page;
   test.beforeAll(async ({ browser }, testInfo) => {
-    page = await pageAs(browser, 'A1', testInfo);
+    page = await pageAs(browser, 'PCVP2', testInfo) // PCVP khối Quản trị: không spec nào ghi dữ liệu ở đó → bộ số ổn định khi chạy 2 worker (GĐ18);
     await page.locator('#navKlDashboard').click();
     await expect(page.locator('#klDbTinhDen')).toContainText('Số liệu tính đến');
   });

@@ -7,7 +7,7 @@ import { pageAs } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
-const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CV1_ID = '00000000-0000-4000-8000-000000000011'; // demo_e2e_mc — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 992;
 
 test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng nhiệm vụ', () => {
@@ -34,7 +34,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     cuId = cu.id;
     const { error: e4 } = await db.from('minh_chung').insert({ nhiem_vu_id: cuId, loai: 'chu_cu', noi_dung_chu: `Công văn 12/CV-VPTU ngày 10/08/2026 (${E2E_TAG})`, so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-10' });
     if (e4) throw new Error(`Tạo minh chứng cũ thất bại: ${e4.message}`);
-    page = await pageAs(browser, 'A3', testInfo);
+    page = await pageAs(browser, 'E2E_MC', testInfo);
   });
   test.afterAll(async () => {
     await page?.context().close();

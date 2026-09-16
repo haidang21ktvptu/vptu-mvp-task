@@ -1,6 +1,7 @@
 // Khối "Chỉ đạo" trong ngăn chi tiết của MỌI nhiệm vụ (GĐ15, thiết kế luồng bình luận theo thời gian): dòng chỉ đạo gốc
 // (loại, người, lúc, nội dung, hạn mới nếu gia hạn, người theo dõi mới nếu giao lại) → các phản hồi thụt vào → ô phản hồi /
-// nút Đóng; cuối khối là ô nhập nhanh có chọn loại cho A1/A2. Nút chỉ ẩn/hiện cho đẹp — quyền thật trong hàm 0026.
+// nút Đóng; cuối khối là ô nhập nhanh có chọn loại cho A1/A2. Nút chỉ ẩn/hiện cho đẹp — quyền thật trong hàm 0026/0030.
+// A0 (GĐ18): chỉ ô "Ý kiến" (Y_KIEN), không phản hồi, không đóng — hàm 0030 từ chối tường minh.
 // Cập nhật realtime: chi_dao trong kênh kl_feed → loadKl() vẽ lại và mở lại ngăn chi tiết đang mở (danh-sach.js).
 import { $, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -16,6 +17,7 @@ const LOP_TRANG_THAI = { CHO_PHAN_HOI: 'muc muc-vang', DA_PHAN_HOI: 'muc muc-xan
 const LOAI_GUI = ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU', 'Y_KIEN'];
 
 export const duocChiDao = () => ['A1', 'A2'].includes(state.user?.role_group);
+export const laA0 = () => state.user?.role_group === 'A0';
 const tenNguoi = (id) => findAccount(id)?.full_name || 'Cán bộ';
 
 function phanHoiHtml(p, daDoc) {
@@ -44,9 +46,9 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
   ].filter(Boolean).join(' · ');
   const mo = g.trang_thai !== 'DA_DONG';
   const nut = [
-    mo && g.nguoi_gui === me ? `<button type="button" class="btn btn-phu btn-nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : '',
+    mo && g.nguoi_gui === me && !laA0() ? `<button type="button" class="btn btn-phu btn-nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : '',
   ].join('');
-  const formPh = mo && trongLuong(g, phanHoi, r) && g.id !== gocDau ? formPhHtml(g, r) : '';
+  const formPh = mo && !laA0() && trongLuong(g, phanHoi, r) && g.id !== gocDau ? formPhHtml(g, r) : '';
   return `
     <div class="cd-goc ${daDoc.has(g.id) ? '' : 'cd-chua-doc'}" id="cd-${g.id}" data-loai="${g.loai}" data-trang-thai="${g.trang_thai}">
       <div class="cd-dau">
@@ -62,13 +64,13 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
     </div>`;
 }
 
-function formGuiHtml(r) {
+function formGuiHtml(r, loai = LOAI_GUI) {
   const ds = (state.accounts || []).filter((a) => !a.is_system && a.id !== r.nguoi_theo_doi);
   return `
     <form class="cd-form" data-submit="guiChiDao" data-nv="${r.id}">
       <div class="cd-form-hang">
         <select name="loai" class="input input-nho" aria-label="Loại chỉ đạo">
-          ${LOAI_GUI.map((l) => `<option value="${l}">${TEN_LOAI_CHI_DAO[l]}</option>`).join('')}
+          ${loai.map((l) => `<option value="${l}">${TEN_LOAI_CHI_DAO[l]}</option>`).join('')}
         </select>
         <input type="date" name="han_moi" class="input input-nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
         <select name="nguoi_theo_doi_moi" class="input input-nho hidden" aria-label="Người theo dõi mới">
@@ -78,7 +80,7 @@ function formGuiHtml(r) {
       </div>
       <div class="cd-form-hang">
         <input type="text" name="noi_dung" required class="input input-nho" placeholder="Nội dung chỉ đạo (lý do nếu gia hạn/giao lại)" aria-label="Nội dung chỉ đạo">
-        <button type="submit" class="btn btn-chinh btn-nho">Gửi chỉ đạo</button>
+        <button type="submit" class="btn btn-chinh btn-nho">${loai.length === 1 ? 'Gửi ý kiến' : 'Gửi chỉ đạo'}</button>
       </div>
     </form>`;
 }
@@ -89,8 +91,8 @@ export function chiDaoHtml(r, { rows, daDoc }) {
   const phanHoiCua = (g) => rows.filter((c) => c.tra_loi_cho === g.id);
   const cho = goc.filter((g) => g.trang_thai === 'CHO_PHAN_HOI').length;
   const chuaDoc = rows.filter((c) => !daDoc.has(c.id)).length;
-  const moMoiNhat = duocChiDao() ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
-  const oNhap = duocChiDao() ? formGuiHtml(r) : moMoiNhat ? formPhHtml(moMoiNhat, r, 'cd-form-dau') : '';
+  const moMoiNhat = duocChiDao() || laA0() ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
+  const oNhap = duocChiDao() ? formGuiHtml(r) : laA0() ? formGuiHtml(r, ['Y_KIEN']) : moMoiNhat ? formPhHtml(moMoiNhat, r, 'cd-form-dau') : '';
   return `
     <div class="luong-cd" id="klChiDao-${r.id}">
       <h4>Chỉ đạo <span class="chu-phu">${goc.length === 0 ? 'chưa có' : `${goc.length} · ${cho} chờ phản hồi`}${chuaDoc ? ` · <span class="chu-canh-bao-inline">${chuaDoc} chưa đọc</span>` : ''}</span></h4>

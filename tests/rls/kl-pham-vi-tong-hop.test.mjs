@@ -1,4 +1,4 @@
-// GĐ10 (PR 10B): phạm vi đọc v_kl_dashboard theo từng vai và bất biến tổng hợp — với MỖI tài khoản: tập dòng thấy được
+// GĐ10 (PR 10B): phạm vi đọc v_nhiem_vu theo từng vai và bất biến tổng hợp — với MỖI tài khoản: tập dòng thấy được
 // đúng bằng kỳ vọng tính từ accounts + phu_trach_phong (service_role, không ghi số cứng), tổng theo nhom_dem = số dòng,
 // tổng theo lĩnh vực (kể cả NULL = "Chưa phân loại") = số dòng, mọi nhom_dem thuộc bộ tên đã biết. Chạy ở hai trạng thái:
 // bảng kiêm nhiệm RỖNG (hiện trạng production) rồi có một kiêm nhiệm (mượn cách của rls-11), rồi kết thúc kiêm nhiệm.
@@ -95,11 +95,11 @@ describe('KL phạm vi và bất biến tổng hợp theo vai', { skip: SKIP }, 
     const sau = await kiemMotVai('demo_pcvp', 'sau kết thúc');
     assert.ok(sau.demLV.LV08_TAI_CHINH >= 2, 'việc trở về PCVP phòng');
   });
-  test('cột hiển thị của v_kl_dashboard đủ cho màn hình (tên chủ trì, phòng, tên danh mục, tuổi, chỉ đạo chờ)', async () => {
+  test('cột hiển thị của v_nhiem_vu đủ cho màn hình (tên người theo dõi, phòng, tên danh mục, tuổi, chỉ đạo chờ)', async () => {
     const cv1 = await userClient('demo_cv1');
-    const r = await cv1.from('v_kl_dashboard').select('ma, chu_tri_ten, chu_tri_phong, nganh_ten, co_quan_trinh_ten, loai_thoi_han_ten, linh_vuc_ten, tuoi_ngay, so_chi_dao_cho_phan_hoi, thieu_minh_chung, so_ngay_qua').eq('ma', 'NV-T01').single();
+    const r = await cv1.from('v_nhiem_vu').select('ma, nguoi_theo_doi_ten, nguoi_theo_doi_phong, nganh_ten, owner_don_vi_ten, loai_thoi_han_ten, linh_vuc_ten, tuoi_ngay, so_chi_dao_cho_phan_hoi, thieu_minh_chung, so_ngay_qua').eq('ma', 'NV-T01').single();
     assertOk(r, 'đọc N1');
-    assert.equal(r.data.chu_tri_phong, 'TONG_HOP'); assert.equal(r.data.linh_vuc_ten, 'Tài chính');
+    assert.equal(r.data.nguoi_theo_doi_phong, 'TONG_HOP'); assert.equal(r.data.linh_vuc_ten, 'Tài chính');
     assert.equal(r.data.so_chi_dao_cho_phan_hoi, 1, 'D1 chờ phản hồi'); assert.ok(r.data.tuoi_ngay > 0); assert.ok(r.data.so_ngay_qua > 0);
   });
 });

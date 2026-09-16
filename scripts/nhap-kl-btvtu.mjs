@@ -8,7 +8,7 @@
 //
 // - Dry-run in: bảng ánh xạ chủ trì (họ tên Excel → username; "VPTU" → Trưởng phòng Tổng hợp), bảng đối chiếu số thô,
 //   vi phạm dữ liệu, vi phạm ánh xạ, nhóm script tự xử lý (3 dòng cần lý do chưa có hạn, dòng VPTU, nhật ký suy mã).
-//   Có vi phạm → không ghi. Trạng thái KHÔNG tính ở đây (kl_trang_thai trong DB; test kl-moc-2026-09-14 đối chiếu).
+//   Có vi phạm → không ghi. Trạng thái KHÔNG tính ở đây (trang_thai trong DB; test kl-moc-2026-09-14 đối chiếu).
 // - --ghi từ chối nếu đã có dòng nguon = 'excel' (trừ --xoa-cu, chỉ local/staging). Production: bắt buộc thêm --production,
 //   không bao giờ --xoa-cu, và cần chủ dự án xác nhận trong phiên (CLAUDE.md rule 12) + backup-db.sh trước đó.
 // - --anh-xa-nguoi-sua: file JSON {"email": "username"} ngoài repo cho nhật ký cũ; email thiếu → dừng.
@@ -62,7 +62,7 @@ function bienBan(target, nguon, th, thNK, kq, kiemLai, anhXa) {
     `- Chủ trì: ${anhXa.bang.filter((b) => b.ten !== 'VPTU').length} họ tên khớp tài khoản; ${kiemLai.chuyen_tu_vptu} dòng "VPTU" chuyển về Trưởng phòng Tổng hợp (không ghi tên/số việc theo người — repo public).`,
     `- Nhật ký cũ: ${thNK.tong} dòng theo cột ${JSON.stringify(thNK.theo_cot)}`,
     `- Lưu ý: lich_su còn ${kiemLai.lich_su_excel_tao} dòng cot = '*' do trigger ghi lúc INSERT (không phải nhật ký cũ).`,
-    '', 'Bộ số trạng thái tại 14/9/2026 đối chiếu bằng test tests/rls/kl-moc-2026-09-14 (hàm kl_trang_thai), không tính ở script.', '',
+    '', 'Bộ số trạng thái tại 14/9/2026 đối chiếu bằng test tests/rls/kl-moc-2026-09-14 (hàm trang_thai), không tính ở script.', '',
   ];
   const thuMuc = fileURLToPath(new URL('./out/', import.meta.url));   // scripts/out/ (gitignored), không phụ thuộc cwd
   mkdirSync(thuMuc, { recursive: true });

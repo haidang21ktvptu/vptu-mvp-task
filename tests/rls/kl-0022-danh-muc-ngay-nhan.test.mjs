@@ -33,8 +33,6 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     assert.deepEqual(r.data.filter((d) => d.trong_van_phong).map((d) => d.ma), ['VAN_PHONG_TINH_UY', 'TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI']);
     assert.ok(r.data.every((d) => (d.phong === null) === !['TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI'].includes(d.ma) && d.lanh_dao_phu_trach === null));
     assert.ok(r.data.filter((d) => d.phong).every((d) => d.phong === d.ma), 'phong = mã phòng');
-    const cu = await cv1.from('dm_co_quan_trinh').select('ma, ten, thu_tu');   // bí danh cho frontend cũ
-    assertOk(cu, 'bí danh dm_co_quan_trinh'); assert.equal(cu.data.length, 18);
     // CHECK: phong chỉ khi trong_van_phong.
     assert.ok((await db().from('dm_don_vi').update({ phong: 'TONG_HOP' }).eq('ma', 'BAN_TO_CHUC').select('ma')).error, 'phong trên đơn vị ngoài bị chặn');
   });

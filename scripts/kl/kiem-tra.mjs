@@ -139,7 +139,7 @@ const demTheo = (rows, f) => {
   return Object.fromEntries(Object.entries(m).sort(([a], [b]) => String(a).localeCompare(String(b), 'vi', { numeric: true })));
 };
 
-// Bảng đối chiếu số thô (KHÔNG tính trạng thái — đó là việc của kl_trang_thai trong DB). an-danh so sánh
+// Bảng đối chiếu số thô (KHÔNG tính trạng thái — đó là việc của trang_thai trong DB). an-danh so sánh
 // nguyên object này giữa file thật và bản ẩn danh.
 export function tongHop(rows) {
   return {

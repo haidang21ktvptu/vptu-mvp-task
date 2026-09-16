@@ -12,6 +12,7 @@ export const DEPT_NAMES = {
 };
 
 export const ROLE_LABELS = {
+  A0: 'Thường trực Tỉnh ủy (A0)',
   A1: 'Lãnh đạo Văn phòng (A1)',
   A2: 'Trưởng phòng chuyên môn (A2)',
   A3: 'Cán bộ thực hiện (A3)',
@@ -19,6 +20,7 @@ export const ROLE_LABELS = {
 
 // Nhãn vai trò người gửi trong luồng ý kiến chỉ đạo.
 export function senderRoleTag(roleGroup) {
+  if (roleGroup === 'A0') return 'Thường trực Tỉnh ủy';
   if (roleGroup === 'A1') return 'Lãnh đạo Văn phòng';
   if (roleGroup === 'A2') return 'Trưởng phòng';
   return 'Cán bộ thực hiện';

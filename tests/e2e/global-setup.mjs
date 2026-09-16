@@ -1,6 +1,6 @@
 // Chạy một lần trước cả bộ e2e:
 //   1. Dọn dữ liệu do lần chạy trước để lại (nhiệm vụ có tiêu đề bắt đầu bằng E2E_TAG) bằng service_role.
-//   2. Đăng nhập 3 tài khoản seed A1/A2/A3 qua API (3 lượt, + demo_qtht nếu có) và ghi phiên thành storageState
+//   2. Đăng nhập các tài khoản seed (3 vai chuẩn + tài khoản riêng từng spec, GĐ18; + demo_qtht/demo_a0 nếu có) và ghi phiên thành storageState
 //      (.auth/<vai trò>.json, khoá localStorage sb-<ref>-auth-token mà supabase-js đọc khi tải trang),
 //      để các kịch bản dùng lại phiên thay vì đăng nhập lại — giữ tổng lượt đăng nhập mỗi lần chạy
 //      dưới giới hạn 30 lượt/5 phút/IP của Supabase (xem README).
@@ -17,8 +17,10 @@ const noSession = { auth: { persistSession: false, autoRefreshToken: false } };
 export async function cleanupE2EData() {
   const k = getKeys();
   const db = createClient(k.url, k.service, noSession);
-  // task_directives / task_evidences xoá theo FK ON DELETE CASCADE.
-  const { error } = await db.from('tasks').delete().like('title', `${E2E_TAG}%`);
+  // Rác của lần chạy trước (spec tự dọn theo hội nghị 992–997; đây là lưới cuối): nhiệm vụ rồi văn bản giao việc.
+  const r1 = await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG}%`);
+  const r2 = await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}%`);
+  const error = r1.error || r2.error;
   if (error) throw new Error(`Dọn dữ liệu e2e thất bại: ${error.message}`);
 }
 
@@ -48,6 +50,10 @@ async function saveSessions() {
 }
 
 export default async function globalSetup() {
+  // Key lấy MỘT lần ở đây rồi truyền cho worker qua biến môi trường (Playwright kế thừa env của globalSetup): 2 worker cùng gọi
+  // Supabase CLI một lúc thỉnh thoảng lỗi (GĐ18); CI vốn đã có sẵn 3 biến này.
+  const k = getKeys();
+  Object.assign(process.env, { SUPABASE_URL: k.url, SUPABASE_ANON_KEY: k.anon, SUPABASE_SERVICE_ROLE_KEY: k.service });
   await cleanupE2EData();
   await saveSessions();
 }

@@ -45,7 +45,7 @@ describe('RLS-10 phạm vi đọc nhiem_vu (quyết định 7)', { skip: SKIP },
     assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: false, p_ly_do: LY_DO }), 'tắt');
     assert.equal(await soThay('demo_pcvp2'), 1);
   });
-  test('Hội nghị: thấy khi có nhiệm vụ trong phạm vi; danh mục và cấu hình ai cũng đọc; v_kl_dashboard lọc theo RLS', async () => {
+  test('Hội nghị: thấy khi có nhiệm vụ trong phạm vi; danh mục và cấu hình ai cũng đọc; v_nhiem_vu lọc theo RLS', async () => {
     const cv1 = await userClient('demo_cv1');
     const hn = await cv1.from('van_ban_giao_viec').select('id').eq('id', fx.hn);
     assertOk(hn, 'cv1 hội nghị'); assert.equal(hn.data.length, 1);
@@ -56,12 +56,12 @@ describe('RLS-10 phạm vi đọc nhiem_vu (quyết định 7)', { skip: SKIP },
     assertOk(dm, 'danh mục'); assert.equal(dm.data.length, 12);
     const ch = await qtht.from('kl_cau_hinh').select('khoa, gia_tri').eq('khoa', 'nguong_sap_den_han_ngay').single();
     assertOk(ch, 'cấu hình'); assert.equal(ch.data.gia_tri, '7');
-    const v = await cv1.from('v_kl_dashboard').select('ma, trang_thai, nhom_dem, chu_tri_ten').like('noi_dung', 'RLS-TEST%');
+    const v = await cv1.from('v_nhiem_vu').select('ma, trang_thai, nhom_dem, nguoi_theo_doi_ten').like('noi_dung', 'RLS-TEST%');
     assertOk(v, 'dashboard'); assert.equal(v.data.length, 5);
     assert.equal(v.data.find((r) => r.ma === 'NV-T05').trang_thai, 'CHO_DIEU_KIEN');
   });
   test('bị chặn: anon mọi bảng KL và view', async () => {
-    for (const t of ['nhiem_vu', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'dinh_chinh', 'kl_cau_hinh', 'dm_nganh', 'v_kl_dashboard']) {
+    for (const t of ['nhiem_vu', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'dinh_chinh', 'kl_cau_hinh', 'dm_nganh', 'v_nhiem_vu']) {
       assertDenied(await anonClient().from(t).select('*').limit(1), `anon ${t}`);
     }
   });
@@ -133,7 +133,7 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     assertOk(dn, 'đề nghị'); assert.ok(dn.data);
     const cv2 = await userClient('demo_cv2');
     assertDenied(await cv2.rpc('kl_de_nghi_dinh_chinh', { p_nhiem_vu: fx.n1, p_cot: 'han_xu_ly', p_gia_tri_moi: '2026-10-30', p_ly_do: 'x' }), 'người ngoài đề nghị');
-    const tt = await cv1.rpc('kl_tinh_trang_thai', { p_id: fx.n1, p_ngay: '2026-09-14' });
+    const tt = await cv1.rpc('tinh_trang_thai', { p_id: fx.n1, p_ngay: '2026-09-14' });
     assertOk(tt, 'trạng thái'); assert.equal(tt.data.trang_thai, 'QUA_HAN'); assert.equal(tt.data.dang_dinh_chinh, true); assert.equal(tt.data.nhom_dem, 'DANG_DINH_CHINH');
     assertDenied(await cv1.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true }), 'chủ trì tự duyệt');
 
@@ -145,7 +145,7 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     assert.equal(nv.han_xu_ly, '2026-10-30');
     const { data: ls } = await adminClient().from('lich_su').select('cot, gia_tri_moi, nguon, dinh_chinh_id').eq('nhiem_vu_id', fx.n1).eq('nguon', 'dinh_chinh');
     assert.deepEqual(ls, [{ cot: 'han_xu_ly', gia_tri_moi: '2026-10-30', nguon: 'dinh_chinh', dinh_chinh_id: dn.data }]);
-    const sau = await cv1.rpc('kl_tinh_trang_thai', { p_id: fx.n1, p_ngay: '2026-09-14' });
+    const sau = await cv1.rpc('tinh_trang_thai', { p_id: fx.n1, p_ngay: '2026-09-14' });
     assert.equal(sau.data.trang_thai, 'DANG_THUC_HIEN'); assert.equal(sau.data.dang_dinh_chinh, false);
     assert.ok((await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true })).error, 'duyệt lại đề nghị đã xử lý');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');

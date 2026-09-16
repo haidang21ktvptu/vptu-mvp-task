@@ -8,7 +8,7 @@ import { pageAs } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
-const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CV1_ID = '00000000-0000-4000-8000-000000000012'; // demo_e2e_nv — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 994;
 const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
@@ -32,7 +32,7 @@ test.describe.serial('Luồng giao việc thống nhất → xác nhận nhận 
   test.afterAll(async () => { if (db) await don(db); });
 
   test('Kịch bản 4a: A3 có việc cũ chưa xác nhận → KHÔNG hiện modal, chỉ có chip và nút xác nhận tuỳ chọn', async ({ browser }, testInfo) => {
-    const page = await pageAs(browser, 'A3', testInfo);
+    const page = await pageAs(browser, 'E2E_NV', testInfo);
     const row = page.locator(`#klRow-${cuId}`);
     await expect(row).toBeVisible();
     await expect(page.locator('#mandatoryAcceptModal')).toBeHidden();
@@ -65,13 +65,13 @@ test.describe.serial('Luồng giao việc thống nhất → xác nhận nhận 
     expect(data).toMatchObject({ theo_1400: true, owner_tai_khoan: CV1_ID, nguoi_theo_doi: '00000000-0000-4000-8000-000000000003' });
     moiId = data.id;
     const row = page.locator(`#klRow-${moiId}`);
-    await expect(row).toContainText('Demo Chuyên viên Một');
+    await expect(row).toContainText('Demo E2E Chuyên viên NV');
     await expect(row).toHaveAttribute('data-muc', 'VANG'); // còn 3 ngày, chưa có minh chứng → VÀNG (CN-4.1)
     await page.context().close();
   });
 
   test('Kịch bản 5: A3 bắt buộc xác nhận đã nhận việc (hạn, trạng thái không đổi); việc theo 1400 không chọn Hoàn thành ở Cập nhật, nút Đóng mờ khi chưa có minh chứng', async ({ browser }, testInfo) => {
-    const page = await pageAs(browser, 'A3', testInfo);
+    const page = await pageAs(browser, 'E2E_NV', testInfo);
     const modal = page.locator('#mandatoryAcceptModal');
     await expect(modal).toBeVisible();
     await expect(page.locator('#mandatoryTaskTitle')).toContainText(title);

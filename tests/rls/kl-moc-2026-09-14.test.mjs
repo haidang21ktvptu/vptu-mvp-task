@@ -1,6 +1,6 @@
 // Mốc đối chiếu sau khi nhập dữ liệu (PR 8B), thiết kế KL BTVTU mục 1.5 và điều kiện xong GĐ8:
 // 185 dòng nguon = 'excel' (file thật trên production; bộ dữ liệu vàng ẩn danh tests/rls/du-lieu-vang/kl-btvtu.json
-// trên local/staging — cùng ngày, loại hạn, tiến độ nên cùng bộ số), tính tại ngày 14/9/2026 bằng kl_trang_thai
+// trên local/staging — cùng ngày, loại hạn, tiến độ nên cùng bộ số), tính tại ngày 14/9/2026 bằng trang_thai
 // (qua nhom_dem) phải ra đúng bộ số chủ dự án chốt. Loại trừ fixture RLS-TEST (N7 cũng nguon = 'excel').
 // Tự bỏ qua khi project chưa có đúng 185 dòng (chưa chạy scripts/nhap-kl-btvtu.mjs).
 import { test } from 'node:test';
@@ -22,8 +22,8 @@ test(`mốc ${NGAY_MOC}: ${TONG} dòng Excel cho đúng bộ số đã chốt`, 
   const dem = Object.fromEntries(Object.keys(MOC).map((k) => [k, 0]));
   const theoChuTri = {};
   for (const { id, nguoi_theo_doi } of rows) {
-    const r = await db.rpc('kl_tinh_trang_thai', { p_id: id, p_ngay: NGAY_MOC });
-    assertOk(r, `kl_tinh_trang_thai ${id}`);
+    const r = await db.rpc('tinh_trang_thai', { p_id: id, p_ngay: NGAY_MOC });
+    assertOk(r, `tinh_trang_thai ${id}`);
     dem[r.data.nhom_dem] = (dem[r.data.nhom_dem] || 0) + 1;
     theoChuTri[nguoi_theo_doi] = (theoChuTri[nguoi_theo_doi] || 0) + 1;
   }

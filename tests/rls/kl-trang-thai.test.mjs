@@ -1,5 +1,5 @@
-// Hàm kl_trang_thai — nguồn duy nhất của trạng thái (thiết kế KL BTVTU Phần 2.2, 2.5, 6.2, 6.4).
-// Gọi qua kl_tinh_trang_thai(id, ngày) bằng service_role với NGÀY CỐ ĐỊNH để kết quả không phụ thuộc hôm nay.
+// Hàm trang_thai — nguồn duy nhất của trạng thái (thiết kế KL BTVTU Phần 2.2, 2.5, 6.2, 6.4).
+// Gọi qua tinh_trang_thai(id, ngày) bằng service_role với NGÀY CỐ ĐỊNH để kết quả không phụ thuộc hôm nay.
 // Kèm ràng buộc/trigger của nhiem_vu (Phần 2.3) — những gì phải chặn ngay khi ghi. Hai dòng KL-TZ (múi giờ)
 // không mang tiền tố RLS-TEST để rls-10 đếm phạm vi không đổi; dọn theo hội nghị 999 ở teardown.
 import { test, describe, before } from 'node:test';
@@ -12,12 +12,12 @@ let fx;
 before(async () => { if (!SKIP) fx = await setupKlFixtures(); });
 
 async function tt(id, ngay) {
-  const r = await adminClient().rpc('kl_tinh_trang_thai', { p_id: id, p_ngay: ngay });
-  assertOk(r, `kl_tinh_trang_thai ${ngay}`);
+  const r = await adminClient().rpc('tinh_trang_thai', { p_id: id, p_ngay: ngay });
+  assertOk(r, `tinh_trang_thai ${ngay}`);
   return r.data;
 }
 
-describe('kl_trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip: SKIP }, () => {
+describe('trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip: SKIP }, () => {
   test('1. Hoàn thành thắng mọi quy tắc: hoàn thành sau hạn vẫn HOAN_THANH, ket_qua TRE đúng số ngày', async () => {
     const r = await tt(fx.n2, '2026-09-14');
     assert.equal(r.trang_thai, 'HOAN_THANH'); assert.equal(r.nhom_dem, 'HOAN_THANH');
