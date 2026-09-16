@@ -11,6 +11,8 @@ import { dongHtml, SO_COT } from './dong.js';
 import { toggleKlChiTiet } from './chi-tiet.js';
 
 const kl = { rows: [], luc: null, loc: {} };
+let sauKhiNap = null;   // A3: kiểm tra việc theo 1400 chưa xác nhận sau mỗi lần nạp (kể cả realtime)
+export const setKlSauKhiNap = (fn) => { sauKhiNap = fn; };
 export const getKlRows = () => kl.rows;
 export const timKlRow = (id) => kl.rows.find((r) => r.id === id);
 
@@ -18,6 +20,7 @@ export const timKlRow = (id) => kl.rows.find((r) => r.id === id);
 const NHAN_CHIP = {
   nguoiTheoDoi: (v) => `Người theo dõi: ${kl.rows.find((r) => r.nguoi_theo_doi === v)?.nguoi_theo_doi_ten || v}`,
   donVi: (v) => `Chịu trách nhiệm: ${tenTrongDanhMuc('donVi', v)}`,
+  cuaToi: () => 'Việc của tôi (chịu trách nhiệm hoặc theo dõi)',
   chiMo: () => 'Chỉ việc đang mở',
   thieuMinhChung: () => 'Hoàn thành chưa có minh chứng',
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
@@ -42,6 +45,7 @@ export async function loadKl() {
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     dienBoLoc();
     render();
+    if (sauKhiNap) sauKhiNap(rows);
   } catch (e) {
     notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);
   }

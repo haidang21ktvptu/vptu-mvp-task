@@ -17,19 +17,6 @@ export const ROLE_LABELS = {
   A3: 'Cán bộ thực hiện (A3)',
 };
 
-const STATUS_LABELS = {
-  CHUA_GIAO: 'Chưa giao cán bộ',
-  CHO_TIEP_NHAN: 'Chờ nhận việc',
-  TU_CHOI_TIEP_NHAN: 'Đã từ chối',
-  DANG_THUC_HIEN: 'Đang thực hiện',
-  CHO_DUYET: 'Chờ duyệt',
-  HOAN_THANH: 'Hoàn thành',
-};
-
-export function taskStatusLabel(status) {
-  return STATUS_LABELS[status] || status;
-}
-
 // Nhãn vai trò người gửi trong luồng ý kiến chỉ đạo.
 export function senderRoleTag(roleGroup) {
   if (roleGroup === 'A1') return 'Lãnh đạo Văn phòng';
