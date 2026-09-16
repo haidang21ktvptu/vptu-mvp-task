@@ -15,8 +15,11 @@ let bang = null;
 
 // Realtime lọc theo TÊN BẢNG THẬT (view bí danh kl_* của 0024 không phát sự kiện) → dò một lần bảng nào tồn tại.
 async function tenBang() {
-  if (!bang) { const r = await supabase.from('nhiem_vu').select('id').limit(0); bang = r.error ? BANG_CU : BANG_MOI; }
-  return bang;
+  if (bang) return bang;
+  const r = await supabase.from('nhiem_vu').select('id').limit(0);
+  if (!r.error) bang = BANG_MOI;
+  else if (/PGRST205|42P01/.test(r.error.code || '')) bang = BANG_CU;   // bảng chưa có = schema cũ
+  return bang || BANG_MOI;   // lỗi mạng/phiên: không ghi nhớ, dò lại lần sau
 }
 
 let channel = null;
