@@ -191,6 +191,18 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Quyết định (16/9):** ☑ **đồng ý** — một kỳ đối chiếu số tổng sau hợp nhất rồi tắt sheet; bỏ điều kiện "≥ 9 chuyên viên".
 
+### CH-16. Thường trực Tỉnh ủy (A0) có ra "chỉ đạo" trên nhiệm vụ không, hay chỉ ghi ý kiến?
+
+**Bối cảnh:** GĐ18 (`v3.4.0`) cho A0 xem toàn bộ và ghi chỉ đạo loại `Y_KIEN` (bình luận, không tính chờ phản hồi). Thường trực cần một kênh chỉ đạo có hạn phản hồi và có người chịu trách nhiệm trả lời, tách khỏi ý kiến thông thường.
+
+**Quyết định (16/9):** ☑ **có — loại chỉ đạo riêng `CHI_DAO_TT`** (làm ở GĐ19):
+- Chỉ A0 gửi; A1/A2 không dùng loại này.
+- Người nhận bắt buộc: Chánh Văn phòng + PCVP phụ trách phạm vi của nhiệm vụ (phòng/ngành–lĩnh vực).
+- Hạn phản hồi mặc định **2 ngày làm việc** (A0 sửa được khi gửi).
+- Hiện ở **đầu Dashboard A1** và đếm vào ô "cấp cần quyết định".
+- A1 **phản hồi** hoặc **chuyển thành giao việc/đôn đốc** (chỉ đạo con gắn với chỉ đạo Thường trực); A0 thấy trạng thái phản hồi.
+- Quá hạn phản hồi → tin hệ thống cho A1 (Chánh VP + PCVP), **không leo thang thêm**.
+
 ---
 
 ## Nhóm F — Câu hỏi kỹ thuật có ảnh hưởng nghiệp vụ (chủ dự án chỉ cần phản đối nếu không đồng ý)

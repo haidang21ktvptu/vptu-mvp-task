@@ -53,7 +53,7 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 | 16B | Ô chuông + danh sách thông báo (dùng lại toast/realtime tin nhắn); tham số cảnh báo sửa qua hàm có lý do trên màn hình Quản trị; danh mục đơn vị (lãnh đạo phụ trách) | — | e2e: tin hệ thống xuất hiện realtime; sửa ngưỡng ghi nhật ký |
 | 16C | Phát hành `v3.2.0`; ngày đầu: lãnh đạo Văn phòng rà 8 việc quá hạn cũ trước khi bật dashboard Thường trực (`[CH-10]`) | | |
 
-## GĐ17 — Dashboard ngoại lệ và cấp Thường trực (CN-5, CN-4.3, QT-5) · ước 2–3 ngày · `v3.3.0`
+## GĐ17 — Dashboard ngoại lệ và cấp Thường trực (CN-5, CN-4.3, QT-5) · ước 2–3 ngày · `v3.3.0` — **hoàn thành 16/9** (17A đã làm ở GĐ15 `v3.1.0`; 17B = #68 migration 0030; phần cảnh báo tự động 3 cấp = #67 migration 0029 + `canh-bao.yml`; **`v3.3.0` gộp vào `v3.4.0`, không phát hành riêng**)
 
 | PR | Nội dung | Migration | Kiểm chứng |
 |---|---|---|---|
@@ -61,7 +61,7 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 | 17B | **Vai trò `A0` — Thường trực Tỉnh ủy** (`[CH-11]` = A, chốt 16/9): `role_group` thêm `A0`; RLS đọc toàn bộ nhiệm vụ, ghi duy nhất `chi_dao` loại `Y_KIEN`; màn hình mặc định = Ngoại lệ lọc Đỏ đặc biệt; seed staging 1 tài khoản giả `demo_thuongtruc`; 3 tài khoản thật trên production tạo bằng script có vết (in đối chiếu trước khi ghi, xác nhận trong phiên), tài liệu chỉ ghi chức danh | `0027_vai_tro_a0.sql` | RLS: A0 đọc được mọi việc, không UPDATE/INSERT bảng nào ngoài `chi_dao` `Y_KIEN`; e2e đăng nhập A0 → màn hình Đỏ đặc biệt |
 | 17C | Phát hành `v3.3.0` | | |
 
-## GĐ18 — Dọn luồng cũ và vòng chỉ đạo đầy đủ (QT-5; GĐ11 cũ) · ước 3 ngày · `v3.4.0`
+## GĐ18 — Dọn luồng cũ và vòng chỉ đạo đầy đủ (QT-5; GĐ11 cũ) · ước 3 ngày · `v3.4.0` — **hoàn thành 16/9** (18A = #68 migration 0031 DESTRUCTIVE; 18B đã làm ở GĐ15 migration 0026; 18C đính chính UI + tắt sheet **chuyển GĐ19**; 18D = phát hành `v3.4.0` gồm 0029–0031)
 
 | PR | Nội dung | Migration | Kiểm chứng |
 |---|---|---|---|
@@ -76,6 +76,8 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 - Quản trị nhân sự: luân chuyển/bổ nhiệm/rời cơ quan có hiệu lực theo ngày; việc mở của người rời → Giao lại; khoá thay xoá.
 - Nhập bổ sung dữ liệu chuyển đổi: ngày nhận thật, Product cho việc cũ, ngày hoàn thành cho 68 việc có minh chứng (`[CH-13]` B nếu chọn).
 - Chuẩn bị nối V-Office: đặc tả trường nhận từ log (ngày giờ nhận, số văn bản đến) — chỉ tài liệu.
+- **CH-16 chỉ đạo Thường trực (`CHI_DAO_TT`)** (chốt 16/9, `CAU-HOI-NGHIEP-VU.md`): loại chỉ đạo riêng chỉ A0 gửi; người nhận bắt buộc Chánh VP + PCVP phụ trách phạm vi; hạn phản hồi mặc định 2 ngày làm việc; hiện đầu Dashboard A1 và đếm ở ô "cấp cần quyết định"; A1 phản hồi hoặc chuyển thành giao việc/đôn đốc; A0 thấy trạng thái phản hồi; quá hạn → tin hệ thống cho A1, không leo thang thêm.
+- Chuyển từ GĐ18 (18C): đính chính có UI (đề nghị/duyệt); tắt Google Sheet (chỉ đọc) sau kỳ đối chiếu (`[CH-15]`).
 
 ---
 
