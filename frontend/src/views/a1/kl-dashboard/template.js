@@ -1,4 +1,4 @@
-// Markup Dashboard của Lãnh đạo Văn phòng / Trưởng phòng (GĐ10 PR 10C; GĐ15 điều hành ngoại lệ): hàng 1 bảng ngoại lệ
+// Markup Dashboard của Lãnh đạo Văn phòng / Trưởng phòng (GĐ10 PR 10C; GĐ15 điều hành ngoại lệ): hàng 0 chỉ đạo Thường trực (GĐ19, CH-16), hàng 1 bảng ngoại lệ
 // 4 trường (CN-5.2), hàng 2 tình hình chung (ô số), hàng 3 theo Owner (đơn vị) + hội nghị, hàng 3c theo người theo dõi (ghi
 // riêng, CH-2), hàng 4 ngành → lĩnh vực, cuối trang chất lượng số liệu. Mọi con số là nút mở danh sách với bộ lọc tương ứng.
 export const klDashboardTemplate = `
@@ -10,6 +10,11 @@ export const klDashboardTemplate = `
       <button type="button" data-action="loadKlDashboard" class="btn btn-phu">Tải lại</button>
     </div>
   </div>
+
+  <section class="bd-khoi hidden" id="klDbChiDaoTTKhoi" aria-labelledby="klDbH0">
+    <h2 id="klDbH0" class="bd-tieu-de">Chỉ đạo Thường trực chờ phản hồi<span class="chu-phu" id="klDbH0Phu"> — Chánh Văn phòng / PCVP phụ trách phản hồi hoặc chuyển thành chỉ đạo điều hành trong hạn</span></h2>
+    <div id="klDbChiDaoTT" class="bang nl-khoi"></div>
+  </section>
 
   <section class="bd-khoi" aria-labelledby="klDbH1">
     <h2 id="klDbH1" class="bd-tieu-de">Việc cần can thiệp hôm nay<span class="chu-phu"> — chỉ việc Đỏ / Đỏ đặc biệt: ai chậm, chậm bao nhiêu ngày, thiếu sản phẩm gì, cấp nào phải quyết</span></h2>

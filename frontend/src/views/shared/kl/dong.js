@@ -49,7 +49,7 @@ export function dongHtml(r, homNay) {
   const nut = (action, label, cls = 'btn-phu') => `<button type="button" data-action="${action}" data-id="${r.id}" class="btn ${cls} btn-nho">${label}</button>`;
   const nutNhan = laBenTrong(r) && nhom.mo && !r.da_xac_nhan_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc') : '';
   // 15E: nút chính riêng — A1/A2 "Chỉ đạo", Owner/người theo dõi "Phản hồi" (mở ngăn, con trỏ vào ô nhập); vai khác chỉ có Chi tiết.
-  const nutChiDao = duocChiDao() ? nut('moKlChiDao', 'Chỉ đạo', 'btn-chinh') : laA0() ? nut('moKlChiDao', 'Ý kiến', 'btn-chinh')
+  const nutChiDao = duocChiDao() ? nut('moKlChiDao', 'Chỉ đạo', 'btn-chinh') : laA0() ? nut('moKlChiDao', 'Ý kiến / Chỉ đạo', 'btn-chinh')
     : laBenTrong(r) ? nut('moKlChiDao', 'Phản hồi', 'btn-chinh') : '';
   // GĐ16 (MC-4): "Đóng nhiệm vụ" chỉ sáng khi có ≥ 1 minh chứng hợp lệ (so_minh_chung_hop_le từ v_nhiem_vu, cùng vị từ với DB).
   const coMC = (r.so_minh_chung_hop_le || 0) > 0;
