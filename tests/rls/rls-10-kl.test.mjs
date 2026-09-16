@@ -102,12 +102,13 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
   });
   test('chỉ đạo: A2 phòng mình thêm được; A3 chủ trì và PCVP ngoài phạm vi bị chặn; đọc theo phạm vi; sửa/xoá trực tiếp bị chặn', async () => {
     const tp = await userClient('demo_truongphong');
-    assertOk(await tp.from('chi_dao').insert({ nhiem_vu_id: fx.n1, nguoi_gui: IDS.truongphong, loai: 'YEU_CAU_MINH_CHUNG', noi_dung: 'RLS-TEST D2' }).select('id'), 'A2 chỉ đạo');
-    assertDenied(await tp.from('chi_dao').insert({ nhiem_vu_id: fx.n1, nguoi_gui: IDS.cvp, loai: 'DON_DOC', noi_dung: 'giả' }).select('id'), 'giả nguoi_gui');
+    // 0026: chỉ đạo chỉ qua hàm chi_dao_gui (INSERT trực tiếp bị thu quyền); quyền vẫn = kl_duoc_chi_dao.
+    assertOk(await tp.rpc('chi_dao_gui', { p: { nhiem_vu_id: fx.n1, loai: 'YEU_CAU_MINH_CHUNG', noi_dung: 'RLS-TEST D2' } }), 'A2 chỉ đạo');
+    assertDenied(await tp.from('chi_dao').insert({ nhiem_vu_id: fx.n1, nguoi_gui: IDS.truongphong, loai: 'DON_DOC', noi_dung: 'trực tiếp' }).select('id'), 'INSERT trực tiếp');
     const cv1 = await userClient('demo_cv1');
-    assertDenied(await cv1.from('chi_dao').insert({ nhiem_vu_id: fx.n1, nguoi_gui: IDS.cv1, loai: 'DON_DOC', noi_dung: 'x' }).select('id'), 'A3 chỉ đạo');
+    assertDenied(await cv1.rpc('chi_dao_gui', { p: { nhiem_vu_id: fx.n1, loai: 'DON_DOC', noi_dung: 'x' } }), 'A3 chỉ đạo');
     const pcvp2 = await userClient('demo_pcvp2');
-    assertDenied(await pcvp2.from('chi_dao').insert({ nhiem_vu_id: fx.n1, nguoi_gui: IDS.pcvp2, loai: 'DON_DOC', noi_dung: 'x' }).select('id'), 'PCVP ngoài phạm vi');
+    assertDenied(await pcvp2.rpc('chi_dao_gui', { p: { nhiem_vu_id: fx.n1, loai: 'DON_DOC', noi_dung: 'x' } }), 'PCVP ngoài phạm vi');
     const r = await cv1.from('chi_dao').select('id').eq('nhiem_vu_id', fx.n1);
     assertOk(r, 'chủ trì đọc chỉ đạo'); assert.equal(r.data.length, 2);
     const r2 = await pcvp2.from('chi_dao').select('id').eq('nhiem_vu_id', fx.n1);
