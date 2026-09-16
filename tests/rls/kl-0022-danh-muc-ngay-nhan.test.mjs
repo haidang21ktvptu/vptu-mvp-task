@@ -52,14 +52,14 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     assertOk(ok, 'đủ sản phẩm + cấp'); assert.equal(ok.data.theo_1400, false, 'mặc định chưa theo 1400');
   });
 
-  test('3. dm_loai_thoi_han.cho_phep_tao_moi đúng 2 loại; kl_cau_hinh có 3 khoá mới (3/3/30) và 4 khoá cũ', async () => {
+  test('3. dm_loai_thoi_han.cho_phep_tao_moi đúng 2 loại; kl_cau_hinh có 3 khoá mới (3/3/30), 4 khoá cũ và 1 khoá 0029', async () => {
     const cv1 = await userClient('demo_cv1');
     const lt = await cv1.from('dm_loai_thoi_han').select('ma, cho_phep_tao_moi');
     assert.deepEqual(lt.data.filter((x) => x.cho_phep_tao_moi).map((x) => x.ma).sort(), ['CO_HAN_CU_THE', 'KY_BAN_HANH']);
     const ch = await cv1.from('kl_cau_hinh').select('khoa, gia_tri');
     const m = Object.fromEntries(ch.data.map((x) => [x.khoa, x.gia_tri]));
     assert.equal(m.nguong_vang_ngay, '3'); assert.equal(m.nguong_do_dac_biet_ngay, '3'); assert.equal(m.ngay_ra_soat_toi_da, '30');
-    assert.equal(m.nguong_sap_den_han_ngay, '7'); assert.equal(Object.keys(m).length, 7);
+    assert.equal(m.nguong_sap_den_han_ngay, '7'); assert.equal(m.canh_bao_nhac_lai_ngay, '3'); assert.equal(Object.keys(m).length, 8);
   });
 
   test('4. văn bản: loai mặc định KL_BTV, loai lạ bị chặn; ngày nhận < ngày ban hành hoặc > hôm nay bị chặn; hợp lệ được', async () => {
