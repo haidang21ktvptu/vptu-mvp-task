@@ -1,10 +1,12 @@
 // Thao tác giao diện dùng chung cho các kịch bản e2e.
 //
-// Phiên riêng cho từng context (CI-4): global-setup đăng nhập mỗi vai MỘT lần (4 lượt) và lưu cặp token vào .auth/<vai>.json;
-// mỗi context lấy một cặp token MỚI bằng refresh (giới hạn 150/5 phút, tách khỏi 30 lượt đăng nhập) theo chuỗi: đọc token mới
-// nhất → refresh → ghi lại. Với xoay refresh token đang bật, hai context không bao giờ giữ cùng một refresh token còn hiệu lực;
-// context cũ vẫn chạy bằng access token (JWT 1 giờ) tới hết lần chạy. Khoá thư mục (mkdir nguyên tử) để hai worker không refresh
-// cùng một token ngoài khoảng reuse 10 giây (Supabase sẽ thu hồi cả chuỗi).
+// Phiên riêng cho từng context (CI-4): global-setup đăng nhập mỗi vai MỘT lần và lưu cặp token vào .auth/<vai>.json; mỗi context lấy một cặp
+// token MỚI bằng refresh (giới hạn 150/5 phút, tách khỏi 30 lượt đăng nhập) theo chuỗi: đọc token mới nhất → refresh → ghi lại. Với xoay
+// refresh token đang bật, hai context không bao giờ giữ cùng một refresh token còn hiệu lực; context cũ vẫn chạy bằng access token (JWT 1
+// giờ) tới hết lần chạy. Khoá thư mục (mkdir nguyên tử) để hai worker không refresh cùng một token ngoài khoảng reuse 10 giây.
+//
+// GĐ20 (giao diện v7): menu là hàng pill (#<id>) trên máy tính và thanh dưới (#<id>Duoi, mục thừa trong "Khác") trên điện thoại — nav()
+// bấm đúng nút đang hiện.
 import { expect } from '@playwright/test';
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
@@ -37,8 +39,7 @@ export async function phienMoi(role) {
   }
 }
 
-// Context mới theo kích thước/thiết bị của project hiện tại, đã có phiên riêng của vai trong localStorage (khoá supabase-js đọc
-// khi tải trang → app tự khôi phục phiên, không tốn lượt đăng nhập). Người gọi tự đóng context.
+// Context mới theo kích thước/thiết bị của project hiện tại, đã có phiên riêng của vai trong localStorage.
 export async function contextAs(browser, role, testInfo) {
   const session = await phienMoi(role);
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
@@ -56,8 +57,7 @@ export async function pageAs(browser, role, testInfo) {
   return page;
 }
 
-// Đăng nhập qua form (SPEC AUTH-1) và chờ vào đúng view theo vai trò (AUTH-5). Tốn 1 lượt đăng nhập —
-// chỉ dùng trong kịch bản kiểm tra chính việc đăng nhập (dang-nhap.spec.js).
+// Đăng nhập qua form (SPEC AUTH-1) và chờ vào đúng view theo vai trò (AUTH-5). Tốn 1 lượt đăng nhập — chỉ dùng ở dang-nhap.spec.js.
 export async function loginAs(page, role, password = SEED_PASSWORD) {
   const user = USERS[role];
   await page.goto('./');
@@ -73,15 +73,39 @@ export async function expectLoggedIn(page, role) {
   await expect(page.locator('#currentUserDisplay')).toContainText(user.fullName);
   await expect(page.locator('#currentRoleDisplay')).toHaveText(user.roleLabel);
   await expect(page.locator('#loginSection')).toBeHidden();
-  // Kiểm tra theo class "hidden" vì section có thể chưa có nội dung (kích thước 0). GĐ14: A2/A3 cùng mặc định viewKl.
   await expect(page.locator(user.section)).not.toHaveClass(/\bhidden\b/);
-  for (const u of Object.values(USERS)) {
-    if (u.section !== user.section) await expect(page.locator(u.section)).toHaveClass(/\bhidden\b/);
-  }
+  for (const id of ['#viewKl', '#viewGiaoViec', '#viewNhanTin', '#viewQuanTri']) await expect(page.locator(id)).toHaveClass(/\bhidden\b/);
 }
 
-// Đăng xuất qua nút — supabase-js huỷ phiên ở mọi thiết bị của tài khoản (scope global), nên chỉ
-// gọi trong kịch bản đăng nhập (chạy sau cùng), không gọi ở kịch bản dùng phiên chung.
+// Bấm một mục menu theo id (navKl, navDieuHanh, dmBubbleLauncher, navQuanTri…): pill trên máy tính, nút thanh dưới hoặc "Khác" trên điện thoại.
+// Chuyên viên (A3) không có mục Nhiệm vụ trên menu (mockup: Việc của tôi · Việc tôi theo dõi · Nhắn tin) — mở toàn bộ việc bằng nút
+// "Xem toàn bộ việc của tôi" trên màn hình Việc của tôi.
+export async function nav(page, id) {
+  const pill = page.locator(`#${id}`);
+  if (await pill.count() === 0) {
+    if (id !== 'navKl') throw new Error(`Menu không có mục ${id}`);
+    if (!(await page.locator('#viewDieuHanh').isVisible())) await nav(page, 'navDieuHanh');
+    await page.locator('#viewDieuHanh [data-action="openKl"]').click();
+    return;
+  }
+  if (await pill.isVisible()) { await pill.click(); return; }
+  const duoi = page.locator(`#${id}Duoi`);
+  if (!(await duoi.isVisible())) await page.locator('#navKhacDuoi').click();
+  await duoi.click();
+}
+
+// Mở màn hình Nhiệm vụ, lọc theo mã và mở ngăn chi tiết của một việc (id) — dùng ở nhiều kịch bản.
+export async function moViec(page, id, ma) {
+  await nav(page, 'navKl');
+  await page.locator('#klTimKiem').fill(ma);
+  const row = page.locator(`#klRow-${id}`);
+  await expect(row).toBeVisible();
+  await row.click();
+  await expect(page.locator(`#klChiTiet-${id}`)).toBeVisible();
+  return row;
+}
+
+// Đăng xuất qua nút — supabase-js huỷ phiên ở mọi thiết bị của tài khoản, nên chỉ gọi trong kịch bản đăng nhập (chạy sau cùng).
 export async function logout(page) {
   await page.locator('#logoutBtn').click();
   await expect(page.locator('#loginSection')).toBeVisible();

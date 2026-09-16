@@ -1,9 +1,9 @@
-// GĐ16 (PR 16B): minh chứng có cấu trúc. Chuyên viên (người theo dõi) mở ngăn chi tiết → nút "Đóng nhiệm vụ" mờ khi chưa có
-// minh chứng → nộp thiếu một ô bị chặn ở form → nộp đủ ba ô → nút Đóng sáng → đóng → HOAN_THANH, lead time = 15 ngày;
-// việc cũ có minh chứng chữ hiện nhãn "Minh chứng cũ". Dữ liệu mẫu tạo bằng service_role trong hội nghị 992, tự dọn.
+// GĐ16 (PR 16B; giao diện v7 GĐ20): minh chứng có cấu trúc. Chuyên viên (người theo dõi) mở ngăn chi tiết → nút "Đóng nhiệm vụ" mờ khi chưa có
+// minh chứng → nộp thiếu một ô bị chặn ở form → nộp đủ ba ô → nút Đóng sáng → đóng → HOAN_THANH, lead time = 15 ngày; việc cũ có minh chứng
+// chữ hiện nhãn "Minh chứng cũ". Dữ liệu mẫu tạo bằng service_role trong hội nghị 992, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs } from './lib/app.js';
+import { pageAs, nav } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
@@ -26,9 +26,6 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
       ngay_nhan_van_ban: '2026-08-05', ngay_nhan_uoc_tinh: false, cap_nhan_san_pham: 'CHANH_VAN_PHONG' }).select('id').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id;
-    // Việc theo 1400 chưa xác nhận nhận việc làm hiện hộp bắt buộc của A3 (accept-modal) che màn hình → ghi sẵn xác nhận.
-    const { error: eXn } = await db.from('lich_su').insert({ nhiem_vu_id: nvId, nguoi_sua: CV1_ID, cot: 'xac_nhan_nhan_viec', gia_tri_moi: `${E2E_TAG} sẵn`, nguon: 'app' });
-    if (eXn) throw new Error(`Ghi xác nhận nhận việc thất bại: ${eXn.message}`);
     const { data: cu, error: e3 } = await db.from('nhiem_vu').insert({ ...base, noi_dung: `${E2E_TAG} MC việc cũ ${Date.now()}`, theo_1400: false }).select('id').single();
     if (e3) throw new Error(`Tạo nhiệm vụ cũ thất bại: ${e3.message}`);
     cuId = cu.id;
@@ -42,15 +39,15 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
   });
 
   test('chưa có minh chứng: nút Đóng mờ; nộp thiếu ngày bị chặn ở form; nộp đủ ba ô → khối liệt kê, nút Đóng sáng', async () => {
-    await page.locator('#navKl').click();
+    await nav(page, 'navKl');
     const row = page.locator(`#klRow-${nvId}`);
     await expect(row).toBeVisible();
-    if (await page.locator('#mandatoryAcceptModal').isVisible()) await page.locator('#btnDeSau').click();
-    await expect(row.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeDisabled();
-    await row.getByRole('button', { name: 'Chi tiết' }).click();
+    await row.click();
+    const ngan = page.locator(`#klChiTiet-${nvId}`);
+    await expect(ngan.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeDisabled();
     const khoi = page.locator(`#klMinhChung-${nvId}`);
     await expect(khoi).toContainText('chưa có');
-    await khoi.getByRole('button', { name: 'Nộp minh chứng' }).click();
+    await ngan.getByRole('button', { name: 'Nộp minh chứng' }).click();
     await expect(page.locator('#klMcModal')).toBeVisible();
     await expect(page.locator('#klMcCap')).toHaveValue('CHANH_VAN_PHONG'); // cấp nhận gợi ý = cấp nhận sản phẩm của nhiệm vụ
     await page.locator('#klMcSoHieu').fill('15/BC-VPTU');
@@ -65,11 +62,11 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('15/BC-VPTU');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('Chưa xác nhận');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`).getByRole('button', { name: 'Xác nhận hợp lệ' })).toHaveCount(0); // người nộp không tự xác nhận
-    await expect(page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeEnabled();
+    await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeEnabled();
   });
 
   test('đóng nhiệm vụ: ngày gợi ý = ngày văn bản → HOAN_THANH, lead time 15 ngày, lịch sử có dòng đóng', async () => {
-    await page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' }).click();
+    await page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' }).click();
     await expect(page.locator('#klDongModal')).toBeVisible();
     await expect(page.locator('#klDongNgay')).toHaveValue('2026-08-20');
     await page.locator('#klDongLuu').click();
@@ -77,7 +74,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator('#toastContainer')).toContainText('Đã đóng nhiệm vụ');
     const row = page.locator(`#klRow-${nvId}`);
     await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
-    await expect(row.getByRole('button', { name: 'Đóng nhiệm vụ' })).toHaveCount(0);
+    await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toHaveCount(0);
     await expect(page.locator(`#klChiTiet-${nvId}`)).toContainText('lead time 15 ngày');
     const { data } = await db.from('v_nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, thieu_minh_chung, lead_time_ngay, so_minh_chung_hop_le').eq('id', nvId).single();
     expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-20', thieu_minh_chung: false, lead_time_ngay: 15, so_minh_chung_hop_le: 1 });
@@ -86,9 +83,9 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
   });
 
   test('việc cũ: khối minh chứng hiện nhãn "Minh chứng cũ" với nguyên văn; nút Đóng sáng (chữ cũ hợp lệ)', async () => {
-    const row = page.locator(`#klRow-${cuId}`);
-    await expect(row.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeEnabled();
-    await row.getByRole('button', { name: 'Chi tiết' }).click();
+    await page.locator(`#klRow-${cuId}`).click();
+    const ngan = page.locator(`#klChiTiet-${cuId}`);
+    await expect(ngan.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeEnabled();
     const dong = page.locator(`#klMinhChung-${cuId} .mc-dong`);
     await expect(dong).toHaveAttribute('data-loai', 'chu_cu');
     await expect(dong.locator('.mc-loai')).toHaveText('Minh chứng cũ');

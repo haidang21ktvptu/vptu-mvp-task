@@ -1,12 +1,12 @@
-// Kịch bản 12 (GĐ10 PR 10F, viết lại GĐ14 PR 14C): người có quan_tri_kl giao việc trên form thống nhất — văn bản mới
-// (loại, số hội nghị, số hiệu, ngày BH), chịu trách nhiệm (Owner) là cán bộ → cấp nhận tự điền, thiếu sản phẩm bị chặn ngay
-// ở form, đủ Owner + Product + Deadline → dòng XANH, theo_1400. Cấp cờ quan_tri_kl tạm cho demo_qtht bằng service_role, thu lại sau.
+// Kịch bản 12 (GĐ10 PR 10F, viết lại GĐ14; giao diện v7 GĐ20): người có quan_tri_kl giao việc trên trang ba bước — văn bản mới (loại, số
+// hội nghị, số hiệu, ngày BH), chịu trách nhiệm (Owner) là cán bộ → cấp nhận tự điền, thiếu sản phẩm bị chặn ngay ở form, đủ Owner + Product
+// + Deadline → sang Nhiệm vụ với dòng XANH (mép trái lam), theo_1400. Cấp cờ quan_tri_kl tạm cho demo_qtht bằng service_role, thu lại sau.
 import { test, expect } from '@playwright/test';
 import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs } from './lib/app.js';
+import { contextAs, nav } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 
 const QTHT_ID = '00000000-0000-4000-8000-000000000008';
@@ -14,7 +14,7 @@ const CV1_ID = '00000000-0000-4000-8000-000000000014'; // demo_e2e_owner — Own
 const SO_HOI_NGHI = 995;
 const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)', () => {
+test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
   let db; let page;
 
   test.beforeAll(async ({ browser }, testInfo) => {
@@ -23,9 +23,6 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('nhiem_vu').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có migration 0023+ (thực thể thống nhất).');
-    // service_role gọi giao_viec({}) → 42501 (chưa đăng nhập) khi hàm có; PGRST202 khi staging chưa có 0025 (CI của PR trước merge).
-    const rpc = await db.rpc('giao_viec', { p: {} });
-    test.skip(rpc.error?.code === 'PGRST202', 'Project chưa có migration 0025 (giao_viec) — chạy lại sau khi merge.');
     await don(db);
     await db.from('accounts').update({ quan_tri_kl: true }).eq('id', QTHT_ID);
     const context = await contextAs(browser, 'QTHT', testInfo); // phiên riêng của demo_qtht (CI-4)
@@ -39,12 +36,14 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
   });
 
   // eslint-disable-next-line no-empty-pattern
-  test('form: thiếu sản phẩm bị chặn; văn bản mới + Owner cán bộ + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
-    await page.locator('#navKl').click();
+  test('trang ba bước: thiếu sản phẩm bị chặn; văn bản mới + Owner cán bộ + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
+    await nav(page, 'navKl');
     await expect(page.locator('#klNutThem')).toBeVisible();
-    await expect(page.locator('#klBody tr[id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp
+    await expect(page.locator('#klBody [id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp
     await page.locator('#klNutThem').click();
-    await expect(page.locator('#klThemModal')).toBeVisible();
+    await expect(page.locator('#viewGiaoViec')).toBeVisible();
+    await expect(page.locator('#viewKl')).toBeHidden();
+    await expect(page.locator('#viewGiaoViec .buoc')).toHaveCount(3);
     await page.locator('#klThVanBan').selectOption('__moi__');
     await expect(page.locator('#klThSoHNWrap')).toBeVisible();   // KL_BTV mặc định → có số hội nghị
     await page.locator('#klThSoHN').fill(String(SO_HOI_NGHI));
@@ -59,36 +58,38 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     await page.locator('#klThHan').fill('2026-12-31');
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('sản phẩm đầu ra');
-    await expect(page.locator('#klThemModal')).toBeVisible();
+    await expect(page.locator('#viewGiaoViec')).toBeVisible();
     await page.locator('#klThSanPham').selectOption('TO_TRINH');
     await page.locator('#klThSanPhamMoTa').fill('Tờ trình thử nghiệm e2e');
     await page.locator('#klThLuu').click();
-    await expect(page.locator('#klThemModal')).toBeHidden();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
+    await expect(page.locator('#viewKl')).toBeVisible(); // sau khi giao: sang Nhiệm vụ, lọc theo mã vừa giao
     const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi')
       .like('noi_dung', `${E2E_TAG} giao việc%`).order('created_at', { ascending: false }).limit(1).single();
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',
       cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: QTHT_ID, tao_boi: QTHT_ID });
     const row = page.locator(`#klRow-${data.id}`);
+    await expect(row).toBeVisible();
+    await expect(page.locator('#klTimKiem')).toHaveValue(data.ma);
     await expect(row).toHaveAttribute('data-muc', 'XANH');
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
-    await expect(row.locator('.cham-xanh')).toHaveCount(1);
-    // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — chấm xanh phải có nền, không trong suốt.
-    const nen = await row.locator('.cham-xanh').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor);
-    expect(nen).not.toBe('rgba(0, 0, 0, 0)');
-    await expect(row).toContainText('Tờ trình');
+    await expect(row).toHaveClass(/\blam\b/);
+    // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — mép trái lam của việc Xanh.
+    expect(await row.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(10, 98, 199)');
+    await row.click();
+    await expect(page.locator(`#klChiTiet-${data.id}`)).toContainText('Tờ trình'); // sản phẩm ở ngăn chi tiết
   });
 
-  test('Ký ban hành: hạn tự tính = ngày BH + 10, ô hạn khoá; văn bản vừa tạo có trong danh sách chọn', async () => {
-    // demo_qtht là A3 và là người theo dõi của việc vừa giao → modal bắt buộc xác nhận (GĐ14) hiện; 'Để sau' rồi mở form.
-    if (await page.locator('#mandatoryAcceptModal').isVisible()) await page.locator('#btnDeSau').click();
-    await page.locator('#klNutThem').click();
+  test('Ký ban hành: hạn tự tính = ngày BH + 10, ô hạn khoá; văn bản vừa tạo có trong danh sách chọn; Huỷ về Nhiệm vụ', async () => {
+    await nav(page, 'navGiaoViec');
+    await expect(page.locator('#viewGiaoViec')).toBeVisible();
     const vb = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI).single();
     await page.locator('#klThVanBan').selectOption(vb.data.id);
     await page.locator('#klThLoai').selectOption('KY_BAN_HANH');
     await expect(page.locator('#klThHan')).toBeDisabled();
     await expect(page.locator('#klThHan')).toHaveValue('2026-09-11');
-    await page.locator('#klThemModal').getByRole('button', { name: 'Huỷ' }).click();
+    await page.locator('#viewGiaoViec').getByRole('button', { name: 'Huỷ' }).click();
+    await expect(page.locator('#viewKl')).toBeVisible();
   });
 });
 
