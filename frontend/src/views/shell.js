@@ -57,6 +57,7 @@ export function initUserInterface() {
 
   setText('currentUserDisplay', `${user.full_name} (${user.position_title})`);
   setText('currentRoleDisplay', ROLE_LABELS[user.role_group] || '');
+  setText('headerUser', user.full_name); // điện thoại: thanh bên không có khối người dùng, tên hiện ở thanh trên (15C)
   setText('headerDeptDisplay', DEPT_NAMES[user.department] || 'Văn phòng Tỉnh ủy Cao Bằng');
   setText('headerDate', formatLongDate(new Date()));
   renderNav(view?.nav || []);

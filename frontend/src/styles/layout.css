@@ -24,7 +24,9 @@
   /* ================= KHUNG ỨNG DỤNG ================= */
   .khung { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); min-height: 100vh; }
 
-  .side { background: var(--cb-cham); color: rgba(255, 255, 255, .9); display: flex; flex-direction: column; padding: 20px 0; }
+  /* Thanh bên dính (15C): người dùng và điều hướng luôn thấy khi cuộn nội dung dài (dashboard). */
+  .side { background: var(--cb-cham); color: rgba(255, 255, 255, .9); display: flex; flex-direction: column; padding: 20px 0;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; }
   .side-logo { padding: 0 20px 18px; border-bottom: 1px solid rgba(255, 255, 255, .12); display: flex; align-items: center; gap: 10px; }
   /* Logo trên nền chàm: ô nền trắng bo 4px cho đủ tương phản, không đổi màu logo. */
   .logo-o { flex: none; display: grid; place-items: center; width: 48px; height: 36px; background: #fff; border-radius: 4px; }
@@ -38,9 +40,11 @@
   .nav-item.on { background: var(--cb-cham-sang); border-left-color: var(--cb-vang); color: #fff; }
   .nav-item:focus-visible { outline: 2px solid var(--cb-vang); outline-offset: -2px; }
   .nav-item .huy-hieu { margin-left: auto; }
-  .side-user { padding: 16px 20px 0; border-top: 1px solid rgba(255, 255, 255, .12); font-size: 13px; }
-  .side-user b { display: block; color: #fff; font-weight: 500; }
+  /* Người đang đăng nhập ngay dưới logo (15C), không cần cuộn. */
+  .side-user { padding: 14px 20px; border-bottom: 1px solid rgba(255, 255, 255, .12); font-size: 13px; }
+  .side-user b { display: block; color: #fff; font-weight: 500; line-height: 1.35; }
   .side-user span { color: rgba(255, 255, 255, .6); }
+  .top .nguoi-dt { display: none; } /* tên người dùng ở thanh trên: chỉ điện thoại */
 
   .main { min-width: 0; display: flex; flex-direction: column; }
   .top { background: var(--cb-giay); padding: 12px 32px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px;
@@ -58,7 +62,7 @@
   /* ================= ĐIỆN THOẠI ================= */
   @media (max-width: 768px) {
     .khung { grid-template-columns: 1fr; }
-    .side { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 0; flex-direction: row;
+    .side { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 40; padding: 0; flex-direction: row; height: auto; overflow: visible;
       border-top: 1px solid rgba(255, 255, 255, .12); }
     .side-logo, .side-user { display: none; }
     .nav { flex-direction: row; justify-content: space-around; padding: 0; }
@@ -70,6 +74,7 @@
     .top .cq { font-size: 14px; }
     .top .ngay { display: none; }
     .top .phong { order: 3; flex-basis: 100%; padding-left: 0; border-left: 0; font-size: 13px; }
+    .top .nguoi-dt { display: block; order: 4; flex-basis: 100%; font-size: 13px; color: var(--cb-muc); font-weight: 500; }
     .noi-dung { padding: 16px 16px 84px; }
     /* Tiêu đề và nút cùng một hàng, nút căn phải, gọn hơn. */
     .dau-trang { flex-wrap: nowrap; align-items: flex-start; gap: 10px; }

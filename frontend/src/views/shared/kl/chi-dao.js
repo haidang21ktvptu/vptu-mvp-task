@@ -24,9 +24,19 @@ function phanHoiHtml(p, daDoc) {
     <p>${escapeHtml(p.noi_dung)}</p></div>`;
 }
 
-function gocHtml(g, phanHoi, daDoc, r) {
+const trongLuong = (g, phanHoi, r) => {
   const me = state.user?.id;
-  const trongLuong = me === r.nguoi_theo_doi || me === r.owner_tai_khoan || g.nguoi_gui === me || phanHoi.some((p) => p.nguoi_gui === me);
+  return me === r.nguoi_theo_doi || me === r.owner_tai_khoan || g.nguoi_gui === me || phanHoi.some((p) => p.nguoi_gui === me);
+};
+const formPhHtml = (g, r, them = '') => `
+    <form class="cd-form-ph ${them}" data-submit="guiPhanHoi" data-id="${g.id}" data-nv="${r.id}">
+      <input type="text" name="noi_dung" required class="input input-nho" placeholder="Phản hồi…" aria-label="Nội dung phản hồi">
+      <button type="submit" class="btn btn-cham btn-nho">Phản hồi</button>
+    </form>`;
+
+// gocDau: chỉ đạo mở mới nhất — với vai không ra chỉ đạo, ô phản hồi của nó đặt ở ĐẦU khối (cùng vị trí ô gửi của A1/A2).
+function gocHtml(g, phanHoi, daDoc, r, gocDau) {
+  const me = state.user?.id;
   const phu = [
     g.loai === 'GIA_HAN' && g.han_moi ? `Hạn mới: ${formatNgay(g.han_moi)}` : '',
     g.loai === 'GIAO_LAI' && g.chu_tri_moi ? `Người theo dõi mới: ${escapeHtml(tenNguoi(g.chu_tri_moi))}` : '',
@@ -36,11 +46,7 @@ function gocHtml(g, phanHoi, daDoc, r) {
   const nut = [
     mo && g.nguoi_gui === me ? `<button type="button" class="btn btn-phu btn-nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : '',
   ].join('');
-  const formPh = mo && trongLuong ? `
-    <form class="cd-form-ph" data-submit="guiPhanHoi" data-id="${g.id}" data-nv="${r.id}">
-      <input type="text" name="noi_dung" required class="input input-nho" placeholder="Phản hồi…" aria-label="Nội dung phản hồi">
-      <button type="submit" class="btn btn-cham btn-nho">Phản hồi</button>
-    </form>` : '';
+  const formPh = mo && trongLuong(g, phanHoi, r) && g.id !== gocDau ? formPhHtml(g, r) : '';
   return `
     <div class="cd-goc ${daDoc.has(g.id) ? '' : 'cd-chua-doc'}" id="cd-${g.id}" data-loai="${g.loai}" data-trang-thai="${g.trang_thai}">
       <div class="cd-dau">
@@ -77,16 +83,26 @@ function formGuiHtml(r) {
     </form>`;
 }
 
+// Bố cục (15C): ô nhập ở ĐẦU khối — A1/A2: ô gửi chỉ đạo; vai khác: ô phản hồi chỉ đạo mở mới nhất — rồi luồng theo thời gian.
 export function chiDaoHtml(r, { rows, daDoc }) {
   const goc = rows.filter((c) => !c.tra_loi_cho);
+  const phanHoiCua = (g) => rows.filter((c) => c.tra_loi_cho === g.id);
   const cho = goc.filter((g) => g.trang_thai === 'CHO_PHAN_HOI').length;
   const chuaDoc = rows.filter((c) => !daDoc.has(c.id)).length;
+  const moMoiNhat = duocChiDao() ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
+  const oNhap = duocChiDao() ? formGuiHtml(r) : moMoiNhat ? formPhHtml(moMoiNhat, r, 'cd-form-dau') : '';
   return `
     <div class="luong-cd" id="klChiDao-${r.id}">
       <h4>Chỉ đạo <span class="chu-phu">${goc.length === 0 ? 'chưa có' : `${goc.length} · ${cho} chờ phản hồi`}${chuaDoc ? ` · <span class="chu-canh-bao-inline">${chuaDoc} chưa đọc</span>` : ''}</span></h4>
-      ${goc.map((g) => gocHtml(g, rows.filter((c) => c.tra_loi_cho === g.id), daDoc, r)).join('')}
-      ${duocChiDao() ? formGuiHtml(r) : ''}
+      ${oNhap}
+      ${goc.map((g) => gocHtml(g, phanHoiCua(g), daDoc, r, moMoiNhat?.id)).join('')}
     </div>`;
+}
+
+// Đưa con trỏ vào ô nhập đầu khối (Dashboard bấm "Chỉ đạo", chuông bấm tin).
+export function focusChiDao(nhiemVuId) {
+  const o = $(`klChiDao-${nhiemVuId}`)?.querySelector('input[name=noi_dung]');
+  if (o) { o.scrollIntoView({ block: 'center', behavior: 'smooth' }); o.focus({ preventScroll: true }); }
 }
 
 // Nạp và vẽ khối chỉ đạo vào ngăn chi tiết đang mở; ghi "đã đọc" sau khi hiện (không chờ, không chặn).

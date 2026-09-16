@@ -11,6 +11,7 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { boSoThuTu, chamMuc } from '../../../lib/kl/nhan.js';
 import { openKl } from '../../shared/kl/index.js';
 import { toggleKlChiTiet } from '../../shared/kl/chi-tiet.js';
+import { focusChiDao } from '../../shared/kl/chi-dao.js';
 import { nutLoc } from './ve-o-so.js';
 
 const SO_COT = 8;
@@ -66,11 +67,11 @@ export function ngoaiLeHtml(rows) {
     </table></div>`;
 }
 
-// Nút "Chỉ đạo": sang màn hình Nhiệm vụ lọc đúng mã, mở ngăn chi tiết có khối chỉ đạo.
+// Nút "Chỉ đạo": sang màn hình Nhiệm vụ lọc đúng mã, mở ngăn chi tiết, con trỏ vào thẳng ô nhập chỉ đạo (15C).
 async function moChiDaoNgoaiLe({ id, ma }) {
   await openKl({ tuTongQuan: true, tuKhoa: ma });
   await toggleKlChiTiet({ id });
-  $(`klRow-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  focusChiDao(id);
 }
 
 // Chọn cấp tại chỗ (uỷ quyền một lần cho khối hàng 1): ghi qua hàm, lịch sử do trigger; nạp lại dashboard ngay (không chờ realtime).
