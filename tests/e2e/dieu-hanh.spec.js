@@ -49,8 +49,8 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(the).toContainText('Chưa ai xác nhận đã nhận việc');
     await expect(the).toContainText('chưa xác định');
     expect(Number((await the.locator('.tre').innerText()).split('\n')[0])).toBeGreaterThan(3);
-    expect(await the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(212, 32, 24)'); // --do
-    expect(await the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(168, 20, 15)');      // --do-dam: Đỏ đặc biệt
+    await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(212, 32, 24)'); // --do
+    await expect.poll(() => the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(168, 20, 15)');      // --do-dam: Đỏ đặc biệt
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
     await expect(a3.locator('#chuongBadge')).toBeHidden();
     // Xem diễn biến: sang Nhiệm vụ, ngăn chi tiết mở sẵn bảng căn cứ, không đặt con trỏ vào ô nhập.
@@ -95,7 +95,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     const goc = a1.locator(`#klChiDao-${nvId} .cd-goc`);
     await expect(goc.locator('.cd-ph')).toContainText('Đã trình dự thảo, chờ ký (e2e)', RT);
     await expect(goc).toHaveAttribute('data-trang-thai', 'DA_PHAN_HOI');
-    expect(await goc.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(30, 142, 90)'); // --luc: đã phản hồi (bản build)
+    await expect.poll(() => goc.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(30, 142, 90)'); // --luc: đã phản hồi (bản build)
     await expect(a1.locator(`#thongBaoList [data-nv="${nvId}"]`)).toHaveCount(1, RT); // gom theo nhiệm vụ: spec chi-dao-tt (worker kia) cũng gửi tin cho demo_cvp
     await goc.locator('[data-action=dongChiDao]').click();
     await expect(a1.locator(`#klChiDao-${nvId} .cd-goc`)).toHaveAttribute('data-trang-thai', 'DA_DONG', RT);

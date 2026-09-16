@@ -61,8 +61,8 @@ test('A0: thanh dưới Điều hành · Chỉ đạo · Tra cứu; số-lọc x
   await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
   await expect(page.locator('#thanhDuoi button')).toHaveText(['Điều hành', 'Chỉ đạo', 'Tra cứu']);
   await expect(page.locator('#dhKpi button')).toHaveCount(4);
-  expect(await page.locator('#dhKpi').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(2);
-  expect(await page.locator('#dhRay').evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('flex');
+  await expect.poll(() => page.locator('#dhKpi').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(2);
+  await expect.poll(() => page.locator('#dhRay').evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('flex');
   await khongCuonNgang(page);
   await page.context().close();
 });

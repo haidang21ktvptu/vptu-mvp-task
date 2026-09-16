@@ -75,7 +75,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
     await expect(row).toHaveClass(/\blam\b/);
     // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — mép trái lam của việc Xanh.
-    expect(await row.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(10, 98, 199)');
+    await expect.poll(() => row.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(10, 98, 199)');
     await row.click();
     await expect(page.locator(`#klChiTiet-${data.id}`)).toContainText('Tờ trình'); // sản phẩm ở ngăn chi tiết
   });

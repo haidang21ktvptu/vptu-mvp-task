@@ -31,8 +31,8 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await expect(o).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
     await expect(page.locator('#klBody [id^="klRow-"]:not([data-nhom="QUA_HAN"])')).toHaveCount(0);
-    const mau = await page.locator('#klBody [id^="klRow-"]').first().evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor);
-    expect(['rgb(212, 32, 24)', 'rgb(168, 20, 15)']).toContain(mau); // --do / --do-dam
+    await expect.poll(() => page.locator('#klBody [id^="klRow-"]').first().evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor))
+      .toMatch(/^rgb\((212, 32, 24|168, 20, 15)\)$/); // --do / --do-dam; poll: dòng có thể vừa vẽ lại (realtime)
     await page.locator('#klStats [data-nhom=""]').click();
     await expect(o).toHaveAttribute('aria-pressed', 'false');
   });
