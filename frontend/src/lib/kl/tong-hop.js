@@ -61,6 +61,7 @@ export function locRows(rows, f = {}) {
     && (!f.linhVuc || (f.linhVuc === CHUA_PHAN_LOAI ? !r.linh_vuc_ma : r.linh_vuc_ma === f.linhVuc))
     && (!f.nguoiTheoDoi || r.nguoi_theo_doi === f.nguoiTheoDoi)
     && (!f.donVi || r.owner_don_vi_ma === f.donVi)
+    && (!f.cuaToi || r.nguoi_theo_doi === f.cuaToi || r.owner_tai_khoan === f.cuaToi)
     && (!f.chiMo || laMo(r))
     && (!f.thieuMinhChung || (r.nhom_dem === 'HOAN_THANH' && r.thieu_minh_chung))
     && (!f.khongNgayHoanThanh || (r.nhom_dem === 'HOAN_THANH' && !r.ngay_hoan_thanh))

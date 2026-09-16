@@ -13,10 +13,8 @@ export async function pageAs(browser, role, testInfo) {
     viewport, isMobile, hasTouch, baseURL, locale, storageState: storageStatePath(role),
   });
   const page = await context.newPage();
-  const settled = role === 'A2' ? waitForA2Tracking(page) : null;
   await page.goto('./');
   await expectLoggedIn(page, role);
-  if (settled) await settled;
   return page;
 }
 
@@ -27,16 +25,8 @@ export async function loginAs(page, role, password = SEED_PASSWORD) {
   await page.goto('./');
   await page.locator('#loginUsername').fill(user.username);
   await page.locator('#loginPassword').fill(password);
-  // A2: loadA2Data chạy ngay khi vào app; chờ nó xong để thao tác sau không bị vẽ lại đè lên.
-  const settled = role === 'A2' ? waitForA2Tracking(page) : null;
   await page.locator('#loginSubmitBtn').click();
   await expectLoggedIn(page, role);
-  if (settled) await settled;
-}
-
-// Truy vấn cuối của loadA2Data là hồ sơ CHO_DUYET; có phản hồi = bảng theo dõi đã vẽ xong.
-function waitForA2Tracking(page) {
-  return page.waitForResponse((r) => r.url().includes('/rest/v1/tasks') && r.url().includes('CHO_DUYET'));
 }
 
 export async function expectLoggedIn(page, role) {
@@ -45,10 +35,10 @@ export async function expectLoggedIn(page, role) {
   await expect(page.locator('#currentUserDisplay')).toContainText(user.fullName);
   await expect(page.locator('#currentRoleDisplay')).toHaveText(user.roleLabel);
   await expect(page.locator('#loginSection')).toBeHidden();
-  // Kiểm tra theo class "hidden" vì section có thể chưa có nội dung (kích thước 0).
-  for (const [r, u] of Object.entries(USERS)) {
-    if (r === role) await expect(page.locator(u.section)).not.toHaveClass(/\bhidden\b/);
-    else await expect(page.locator(u.section)).toHaveClass(/\bhidden\b/);
+  // Kiểm tra theo class "hidden" vì section có thể chưa có nội dung (kích thước 0). GĐ14: A2/A3 cùng mặc định viewKl.
+  await expect(page.locator(user.section)).not.toHaveClass(/\bhidden\b/);
+  for (const u of Object.values(USERS)) {
+    if (u.section !== user.section) await expect(page.locator(u.section)).toHaveClass(/\bhidden\b/);
   }
 }
 
@@ -60,10 +50,3 @@ export async function logout(page) {
   await expect(page.locator('#mainHeader')).toBeHidden();
 }
 
-// Mở tab "Theo dõi & duyệt" của A2 và chờ loadA2Data vẽ xong bảng (truy vấn cuối là hồ sơ CHO_DUYET),
-// tránh bấm vào dòng cũ rồi bị vẽ lại đè lên.
-export async function openA2TrackingTab(page) {
-  const loaded = waitForA2Tracking(page);
-  await page.locator('#tabBtnTheoDoi').click();
-  await loaded;
-}

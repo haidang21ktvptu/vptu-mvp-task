@@ -22,9 +22,10 @@ export function openKl(loc) {
   setActiveNav('navKl');
   show('klNutThem', duocGiaoViec()); // ẩn/hiện cho đẹp; hàm giao_viec 0025 là chốt
   if (loc) setKlLoc(loc, true);
-  loadKl();
+  const nap = loadKl();
   // Realtime: đọc lại danh sách khi có thay đổi, chỉ khi màn hình này đang hiện; chỉ báo kết nối ở #klKetNoi.
   batKlRealtime(() => { if (!$('viewKl').classList.contains('hidden')) loadKl(); }, (m) => hienKetNoi('klKetNoi', m));
+  return nap;
 }
 
 // Xác nhận đã nhận việc (GV-5): chỉ ghi lịch sử, không đổi trạng thái/hạn — đồng hồ không dừng (CN-2.2).

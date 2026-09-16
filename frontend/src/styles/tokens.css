@@ -13,7 +13,7 @@
   --cb-muc-nhat: #5B6474;  /* Mực nhạt: chữ phụ, nhãn cột */
   --cb-vien: #DDD8CE;      /* Viền: kẻ bảng, viền input */
 
-  /* Mức cảnh báo (khớp alert_level của view_exception_dashboard) */
+  /* Mức cảnh báo (khớp muc_canh_bao của hàm trang_thai) */
   --muc-xanh-bg: #E6F2EF; --muc-xanh: #2A7365; /* đậm hơn ngọc một bậc để chữ 12px trên nền nhạt đạt 4.5:1 (Lighthouse) */
   --muc-vang-bg: #FBF3DF; --muc-vang: #8A6512;
   --muc-do-bg: #FBE9E7;   --muc-do: #B42318;

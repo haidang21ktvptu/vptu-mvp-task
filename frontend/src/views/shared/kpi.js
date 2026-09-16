@@ -1,23 +1,23 @@
-// Thống kê KPI theo nhóm cán bộ từ state.allTasks (TASK-5, DASH-2/3): tổng, trong hạn,
-// gần hạn (≤ 3 ngày), quá hạn, đang làm, hoàn thành.
+// KPI theo nhóm cán bộ từ dòng v_nhiem_vu (GĐ14, CH-2): số ĐÁNH GIÁ tính theo owner_tai_khoan (đang mở / quá hạn /
+// đỏ đặc biệt / hoàn thành); việc chỉ THEO DÕI (nguoi_theo_doi thuộc nhóm, Owner không thuộc nhóm) đếm riêng, không cộng vào.
+// Màu/mức từ hàm trang_thai (muc_canh_bao, nhom_dem) — frontend không tự tính hạn.
 import { state } from '../../lib/state.js';
 
-export function calculateGroupKPI(staffIds) {
-  const kpi = { total: 0, onTime: 0, warningSoon: 0, overdue: 0, inProgress: 0, completed: 0 };
-  const now = new Date();
+const DA_DONG = (r) => r.tien_do_ma === 'HOAN_THANH';
 
-  state.allTasks.forEach((t) => {
-    if (!staffIds.includes(t.assigned_to)) return;
-    kpi.total++;
-    if (t.status === 'HOAN_THANH') {
-      kpi.completed++;
-      return;
-    }
-    kpi.inProgress++;
-    const dead = new Date(t.deadline);
-    if (now > dead) kpi.overdue++;
-    else if ((dead - now) / 86400000 <= 3) kpi.warningSoon++;
-    else kpi.onTime++;
+export function calculateGroupKPI(staffIds, rows = state.nhiemVu) {
+  const kpi = { owner: 0, dangMo: 0, quaHan: 0, doDacBiet: 0, hoanThanh: 0, theoDoi: 0 };
+  const trong = (id) => Boolean(id) && staffIds.includes(id);
+  rows.forEach((r) => {
+    if (trong(r.owner_tai_khoan)) {
+      kpi.owner++;
+      if (DA_DONG(r)) kpi.hoanThanh++;
+      else {
+        kpi.dangMo++;
+        if (r.muc_canh_bao === 'DO' || r.muc_canh_bao === 'DO_DAC_BIET') kpi.quaHan++;
+        if (r.muc_canh_bao === 'DO_DAC_BIET') kpi.doDacBiet++;
+      }
+    } else if (trong(r.nguoi_theo_doi) && !DA_DONG(r)) kpi.theoDoi++;
   });
   return kpi;
 }

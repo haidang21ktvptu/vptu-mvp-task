@@ -82,6 +82,8 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
   });
 
   test('Ký ban hành: hạn tự tính = ngày BH + 10, ô hạn khoá; văn bản vừa tạo có trong danh sách chọn', async () => {
+    // demo_qtht là A3 và là người theo dõi của việc vừa giao → modal bắt buộc xác nhận (GĐ14) hiện; 'Để sau' rồi mở form.
+    if (await page.locator('#mandatoryAcceptModal').isVisible()) await page.locator('#btnDeSau').click();
     await page.locator('#klNutThem').click();
     const vb = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI).single();
     await page.locator('#klThVanBan').selectOption(vb.data.id);

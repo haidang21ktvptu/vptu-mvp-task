@@ -1,75 +1,51 @@
-// Modal bắt buộc tiếp nhận (TASK-3): A3 có việc CHO_TIEP_NHAN phải chọn tiếp nhận hoặc từ chối
-// kèm lý do. Chỉ cập nhật status/reject_reason — trigger tasks_guard_a3 chặn mọi cột khác (RLS-4).
-import { supabase } from '../../lib/supabase.js';
-import { $, show, setText, formatDateTime } from '../../lib/dom.js';
+// Modal bắt buộc tiếp nhận (GV-5, CN-2.2): chỉ với việc theo_1400 = true, đang mở, tôi là Owner/người theo dõi, chưa xác nhận.
+// "Tiếp nhận" = gọi xac_nhan_nhan_viec (chỉ ghi lịch sử, không đổi trạng thái/hạn). "Để sau" đóng modal trong phiên này
+// (việc vẫn hiện chip "chưa xác nhận nhận việc" trên danh sách). Từ chối/phản hồi đi qua chỉ đạo (GĐ18).
+import { $, show, setText } from '../../lib/dom.js';
+import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
+import { xacNhanNhanViec } from '../../lib/kl/du-lieu.js';
+import { formatNgay } from '../../lib/kl/ngay.js';
+import { loadKl } from '../shared/kl/danh-sach.js';
+import { sanPhamText } from '../shared/kl/dong.js';
 import { acceptModalTemplate } from './accept-modal-template.js';
 
-let afterChange = () => {};
+const deSau = new Set();   // id đã bấm "Để sau" trong phiên
 
-export function showMandatoryModal(task) {
-  if (!task) return;
-  $('mandatoryTaskId').value = task.id;
-  setText('mandatoryTaskTitle', task.title);
-  setText('mandatoryTaskRes', task.resolution_code);
-  setText('mandatoryTaskProduct', task.expected_product);
-  setText('mandatoryTaskDeadline', formatDateTime(task.deadline));
+export const canXacNhan = (r, me = state.user?.id) => r.theo_1400 && r.tien_do_ma !== 'HOAN_THANH' && !r.da_xac_nhan_nhan
+  && (r.owner_tai_khoan === me || r.nguoi_theo_doi === me);
 
-  const isPast = new Date(task.deadline) <= new Date();
-  let msg = '';
-  if (task.warning_count > 0) msg += `Đã đôn đốc ${task.warning_count} lần. Đề nghị đồng chí khẩn trương tiếp nhận. `;
-  if (isPast) msg += 'Hạn hoàn thành của nhiệm vụ này đã qua.';
-  setText('warningNoticeDiv', msg);
-  show('warningNoticeDiv', Boolean(msg));
-
-  show('rejectReasonBox', false);
-  show('btnConfirmReject', false);
-  show('btnAcceptTask', true);
-  show('btnRejectToggle', true);
+export function kiemTraNhanViec(rows) {
+  const r = rows.find((x) => canXacNhan(x) && !deSau.has(x.id));
+  if (!r) { show('mandatoryAcceptModal', false); return; }
+  $('mandatoryTaskId').value = r.id;
+  setText('mandatoryTaskTitle', `${r.ma} · ${r.noi_dung}`);
+  setText('mandatoryTaskRes', r.so_ket_luan || '');
+  setText('mandatoryTaskOwner', r.owner_tai_khoan_ten || r.owner_don_vi_ten || '');
+  setText('mandatoryTaskProduct', sanPhamText(r) || '—');
+  setText('mandatoryTaskDeadline', r.han_xu_ly ? formatNgay(r.han_xu_ly) : '—');
   show('mandatoryAcceptModal', true);
 }
 
 async function acceptTask() {
-  const taskId = $('mandatoryTaskId').value;
-  const { error } = await supabase.from('tasks').update({ status: 'DANG_THUC_HIEN' }).eq('id', taskId);
-  if (error) {
-    notifyError('Lỗi: ' + error.message);
-    return;
+  const id = $('mandatoryTaskId').value;
+  try {
+    await xacNhanNhanViec(id);
+    notifySuccess('Đã xác nhận nhận việc. Hạn và trạng thái không đổi — đồng hồ đã chạy từ ngày nhận văn bản.');
+    show('mandatoryAcceptModal', false);
+    loadKl();   // nạp lại → nếu còn việc chưa xác nhận, modal hiện tiếp
+  } catch (e) {
+    notifyError('Không xác nhận được: ' + e.message);
   }
-  notifySuccess('Đã tiếp nhận nhiệm vụ.');
+}
+
+function deSauTask() {
+  deSau.add($('mandatoryTaskId').value);
   show('mandatoryAcceptModal', false);
-  afterChange();
 }
 
-function toggleRejectReason() {
-  show('rejectReasonBox', true);
-  show('btnConfirmReject', true);
-  show('btnAcceptTask', false);
-  show('btnRejectToggle', false);
-}
-
-async function submitRejectTask() {
-  const taskId = $('mandatoryTaskId').value;
-  const reason = $('rejectReasonInput').value.trim();
-  if (!reason) {
-    notifyError('Nhập lý do từ chối trước khi gửi.');
-    return;
-  }
-  const { error } = await supabase.from('tasks')
-    .update({ status: 'TU_CHOI_TIEP_NHAN', reject_reason: reason }).eq('id', taskId);
-  if (error) {
-    notifyError('Lỗi: ' + error.message);
-    return;
-  }
-  notifySuccess('Đã gửi lý do từ chối nhận việc.');
-  show('mandatoryAcceptModal', false);
-  afterChange();
-}
-
-// onChange: nạp lại danh sách việc sau khi tiếp nhận/từ chối.
-export function mountAcceptModal(onChange) {
-  afterChange = onChange;
+export function mountAcceptModal() {
   $('modalRoot').insertAdjacentHTML('beforeend', acceptModalTemplate);
-  registerActions({ acceptTask, toggleRejectReason, submitRejectTask });
+  registerActions({ acceptTask, deSauTask });
 }

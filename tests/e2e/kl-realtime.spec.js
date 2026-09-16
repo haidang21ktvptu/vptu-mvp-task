@@ -18,10 +18,10 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
   test.beforeAll(async ({ browser }, testInfo) => {
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
-    const co = await db.from('kl_nhiem_vu').select('id').limit(1);
+    const co = await db.from('nhiem_vu').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có module KL (0014+).');
     await don(db);
-    const { data: hn, error } = await db.from('kl_hoi_nghi').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-RT`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
+    const { data: hn, error } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-RT`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
     if (error) throw new Error(`Tạo hội nghị mẫu thất bại: ${error.message}`);
     hnId = hn.id;
     page = await pageAs(browser, 'A1', testInfo);
@@ -41,8 +41,8 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
   // eslint-disable-next-line no-empty-pattern
   test('DB thêm một nhiệm vụ → ô Tổng tăng 1 và dòng xuất hiện, không bấm gì', async ({}, testInfo) => {
     const tong = Number(await page.locator('#klSo-TONG').innerText());
-    const { data: nv, error } = await db.from('kl_nhiem_vu').insert({
-      hoi_nghi_id: hnId, chu_tri_id: CV1_ID, noi_dung: `${E2E_TAG} realtime ${testInfo.project.name} ${Date.now()}`,
+    const { data: nv, error } = await db.from('nhiem_vu').insert({
+      van_ban_id: hnId, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} realtime ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31',
     }).select('id').single();
     if (error) throw new Error(error.message);
@@ -50,7 +50,7 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
     await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
     // DB đổi tiến độ (đủ minh chứng + ngày) → dòng đổi nhóm, ô Hoàn thành tăng.
     const ht = Number(await page.locator('#klSo-HOAN_THANH').innerText());
-    const r = await db.from('kl_nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', minh_chung: 'CV 01 (e2e)' }).eq('id', nv.id).select('id');
+    const r = await db.from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', minh_chung: 'CV 01 (e2e)' }).eq('id', nv.id).select('id');
     if (r.error) throw new Error(r.error.message);
     await expect(page.locator('#klSo-HOAN_THANH')).toHaveText(String(ht + 1), RT);
     await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'HOAN_THANH');
@@ -67,9 +67,9 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
 });
 
 async function don(db) {
-  const { data } = await db.from('kl_hoi_nghi').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
+  const { data } = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
   for (const h of data || []) {
-    await db.from('kl_nhiem_vu').delete().eq('hoi_nghi_id', h.id);
-    await db.from('kl_hoi_nghi').delete().eq('id', h.id);
+    await db.from('nhiem_vu').delete().eq('van_ban_id', h.id);
+    await db.from('van_ban_giao_viec').delete().eq('id', h.id);
   }
 }

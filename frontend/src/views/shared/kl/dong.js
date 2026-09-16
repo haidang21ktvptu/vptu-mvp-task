@@ -51,7 +51,7 @@ export function dongHtml(r, homNay) {
       <td class="tieude">${escapeHtml(r.ma)}<small>${vanBan} · BH ${formatNgay(r.ngay_ban_hanh)}</small></td>
       <td data-nhan="Nội dung" class="noi-dung" title="${escapeHtml(r.noi_dung)}">${escapeHtml(rutGon(r.noi_dung))}<small>${sanPham ? `Sản phẩm: ${escapeHtml(sanPham)}` : '<span class="chu-canh-bao">Chưa định nghĩa sản phẩm</span>'}</small>${chiDao}</td>
       <td data-nhan="Chịu trách nhiệm" class="nguoi">${ownerHtml(r)}</td>
-      <td data-nhan="Người theo dõi" class="nguoi">${escapeHtml(r.nguoi_theo_doi_ten) || '—'}<small>${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || r.nguoi_theo_doi_phong || '')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : ''}</small></td>
+      <td data-nhan="Người theo dõi" class="nguoi">${escapeHtml(r.nguoi_theo_doi_ten) || '—'}<small>${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || r.nguoi_theo_doi_phong || '')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhom.mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}</small></td>
       <td data-nhan="Hạn" class="han">${oHan(r, homNay)}</td>
       <td data-nhan="Trạng thái"><span class="${cham.lop}" title="${escapeHtml(cham.ten)}"></span><span class="muc ${nhom.muc}">${escapeHtml(nhanTrangThai(r))}</span>${thieuMC}${ghiChuCapNhat(r)}</td>
       <td><div class="thao-tac">${nut('toggleKlChiTiet', 'Chi tiết')}${nutNhan}${duocCapNhat(r) ? nut('openKlCapNhat', 'Cập nhật', 'btn-cham') : ''}</div></td>

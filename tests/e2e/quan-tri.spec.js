@@ -53,7 +53,7 @@ test.describe.serial('Quản trị hệ thống: cấp/thu quyền quản trị 
     const page = await pageAsQtht(browser, testInfo);
     await page.locator('#navQuanTri').click();
     await expect(page.locator('#viewQuanTri')).toBeVisible();
-    await expect(page.locator('#viewChuyenVien')).toBeHidden();
+    await expect(page.locator('#viewKl')).toBeHidden();
     const row = page.locator('#qtTaiKhoanBody tr', { hasText: 'demo_cv2' });
     await expect(row).toContainText('Không');
 
@@ -95,8 +95,8 @@ test.describe.serial('Quản trị hệ thống: cấp/thu quyền quản trị 
     await expect(page.locator('#qtKiemNhiemModal')).toBeHidden();
 
     // Về mục theo vai trò: section vai trò hiện lại, mục Quản trị ẩn.
-    await page.locator('#navA3Tasks').click();
-    await expect(page.locator('#viewChuyenVien')).toBeVisible();
+    await page.locator('#navKl').click();
+    await expect(page.locator('#viewKl')).toBeVisible();
     await expect(page.locator('#viewQuanTri')).toBeHidden();
     await page.context().close();
   });
