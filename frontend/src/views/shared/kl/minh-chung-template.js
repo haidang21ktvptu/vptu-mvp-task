@@ -8,22 +8,22 @@ export const klMinhChungTemplate = `
     <input type="hidden" id="klMcId">
     <div>
       <label for="klMcSoHieu" class="nhan">Số hiệu văn bản</label>
-      <input type="text" id="klMcSoHieu" class="input" placeholder="Ví dụ: 15/BC-VPTU" autocomplete="off">
+      <input type="text" id="klMcSoHieu" class="o-nhap" placeholder="Ví dụ: 15/BC-VPTU" autocomplete="off">
     </div>
     <div class="cot-2 mt-3">
       <div>
         <label for="klMcNgay" class="nhan">Ngày văn bản</label>
-        <input type="date" id="klMcNgay" class="input">
+        <input type="date" id="klMcNgay" class="o-nhap">
       </div>
       <div>
         <label for="klMcCap" class="nhan">Cấp nhận</label>
-        <select id="klMcCap" class="input"></select>
+        <select id="klMcCap" class="o-nhap"></select>
       </div>
     </div>
     <p class="chu-phu mt-3">Ba ô đều bắt buộc; văn bản tra được trên V-Office theo số hiệu. Tệp đính kèm chưa nhận (chờ điều kiện kinh phí).</p>
     <div class="modal-chan">
-      <button type="button" data-action="closeMinhChung" class="btn btn-phu">Huỷ</button>
-      <button type="submit" id="klMcLuu" class="btn btn-chinh">Nộp minh chứng</button>
+      <button type="button" data-action="closeMinhChung" class="nut">Huỷ</button>
+      <button type="submit" id="klMcLuu" class="nut chinh">Nộp minh chứng</button>
     </div>
   </form>
 </div>
@@ -33,11 +33,11 @@ export const klMinhChungTemplate = `
     <p id="klDongMoTa" class="chu-phu mt-1 mb-4"></p>
     <input type="hidden" id="klDongId">
     <label for="klDongNgay" class="nhan">Ngày hoàn thành <span class="chu-phu">gợi ý = ngày văn bản của minh chứng hợp lệ mới nhất, sửa được</span></label>
-    <input type="date" id="klDongNgay" class="input">
+    <input type="date" id="klDongNgay" class="o-nhap">
     <p id="klDongGhiChu" class="chu-phu mt-2"></p>
     <div class="modal-chan">
-      <button type="button" data-action="closeDongNhiemVu" class="btn btn-phu">Huỷ</button>
-      <button type="submit" id="klDongLuu" class="btn btn-chinh">Đóng nhiệm vụ</button>
+      <button type="button" data-action="closeDongNhiemVu" class="nut">Huỷ</button>
+      <button type="submit" id="klDongLuu" class="nut chinh">Đóng nhiệm vụ</button>
     </div>
   </form>
 </div>

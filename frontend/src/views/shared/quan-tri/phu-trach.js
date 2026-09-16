@@ -37,9 +37,9 @@ export async function renderPhuTrach() {
       <tr>
         <td class="tieude">${escapeHtml(ld.full_name)}<small>${escapeHtml(ld.position_title)}</small></td>
         ${ld.is_chief
-          ? `<td colspan="${phong.length + 1}" class="so"><span class="muc muc-xanh">Chánh Văn phòng — phụ trách mọi phòng</span></td>`
+          ? `<td colspan="${phong.length + 1}" class="so"><span class="trang-thai tt-xong">Chánh Văn phòng — phụ trách mọi phòng</span></td>`
           : phong.map((p) => cellHtml(ld, p)).join('') + `
-        <td><div class="thao-tac"><button type="button" class="btn btn-nho btn-phu" data-action="moKiemNhiem" data-username="${escapeHtml(ld.username)}"
+        <td><div class="thao-tac"><button type="button" class="nut nho" data-action="moKiemNhiem" data-username="${escapeHtml(ld.username)}"
           aria-label="Kiêm nhiệm lĩnh vực cho ${escapeHtml(ld.full_name)}">Kiêm nhiệm lĩnh vực</button></div></td>`}
       </tr>`).join('');
 }

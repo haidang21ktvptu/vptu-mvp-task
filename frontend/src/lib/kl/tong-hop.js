@@ -51,7 +51,8 @@ export function sapXep(rows) {
   }).map(([, r]) => r);
 }
 
-// Bộ lọc danh sách: mọi khoá đều tuỳ chọn; '' hoặc null = không lọc. linhVuc nhận mã hoặc CHUA_PHAN_LOAI.
+// Bộ lọc danh sách: mọi khoá đều tuỳ chọn; '' hoặc null = không lọc. linhVuc nhận mã hoặc CHUA_PHAN_LOAI; theoDoiCuaToi = việc tôi theo dõi
+// mà không phải Owner; canBo = việc một cán bộ là Owner hoặc theo dõi; ketLuan = số hiệu văn bản giao việc.
 export function locRows(rows, f = {}) {
   const kw = (f.tuKhoa || '').trim().toLowerCase();
   return rows.filter((r) =>

@@ -18,9 +18,9 @@ function rowHtml(lv) {
     <tr>
       <td data-nhan="Ngành">${escapeHtml(tenNganhNgan(lv.nganh_ma))}</td>
       <td data-nhan="Mã"><code class="text-xs">${escapeHtml(lv.ma)}</code></td>
-      <td data-nhan="Tên lĩnh vực"><input type="text" class="input input-nho" id="lvTen-${escapeHtml(lv.ma)}" value="${escapeHtml(lv.ten)}" aria-label="Tên lĩnh vực ${escapeHtml(lv.ma)}"></td>
-      <td data-nhan="Thứ tự" class="so"><input type="number" min="1" class="input input-nho w-20" id="lvThuTu-${escapeHtml(lv.ma)}" value="${lv.thu_tu}" aria-label="Thứ tự ${escapeHtml(lv.ma)}"></td>
-      <td><div class="thao-tac"><button type="button" class="btn btn-nho btn-phu" data-action="luuLinhVuc" data-ma="${escapeHtml(lv.ma)}">Lưu</button></div></td>
+      <td data-nhan="Tên lĩnh vực"><input type="text" class="o-nhap nho" id="lvTen-${escapeHtml(lv.ma)}" value="${escapeHtml(lv.ten)}" aria-label="Tên lĩnh vực ${escapeHtml(lv.ma)}"></td>
+      <td data-nhan="Thứ tự" class="so"><input type="number" min="1" class="o-nhap nho" style="width:80px" id="lvThuTu-${escapeHtml(lv.ma)}" value="${lv.thu_tu}" aria-label="Thứ tự ${escapeHtml(lv.ma)}"></td>
+      <td><div class="thao-tac"><button type="button" class="nut nho" data-action="luuLinhVuc" data-ma="${escapeHtml(lv.ma)}">Lưu</button></div></td>
     </tr>`;
 }
 
@@ -57,7 +57,7 @@ async function renderNhatKyDanhMuc() {
       <tr>
         <td class="whitespace-nowrap">${formatDateTime(r.luc)}</td>
         <td data-nhan="Người thực hiện">${escapeHtml(r.nguoi ? findAccount(r.nguoi)?.full_name || r.nguoi : (r.nguoi_ghi_chu || 'Hệ thống'))}</td>
-        <td data-nhan="Hành động"><span class="muc ${r.hanh_dong === 'them' ? 'muc-xanh' : 'muc-vang'}">${r.hanh_dong === 'them' ? 'Thêm' : 'Sửa'}</span></td>
+        <td data-nhan="Hành động"><span class="trang-thai ${r.hanh_dong === 'them' ? 'tt-xong' : 'tt-cho'}">${r.hanh_dong === 'them' ? 'Thêm' : 'Sửa'}</span></td>
         <td data-nhan="Mã"><code class="text-xs">${escapeHtml(r.ma)}</code></td>
         <td data-nhan="Thay đổi">${escapeHtml(moTaThayDoi(r))}</td>
         <td data-nhan="Lý do">${escapeHtml(r.ly_do)}</td>

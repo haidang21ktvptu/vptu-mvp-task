@@ -16,7 +16,7 @@ import { loadChiDao, chiDaoGui, chiDaoPhanHoi, chiDaoDong, chiDaoDanhDauDoc, TEN
 const LOP_LOAI = { DON_DOC: 'cd-loai cd-loai-DON_DOC', GIA_HAN: 'cd-loai cd-loai-GIA_HAN', GIAO_LAI: 'cd-loai cd-loai-GIAO_LAI',
   YEU_CAU_MINH_CHUNG: 'cd-loai cd-loai-YEU_CAU_MINH_CHUNG', KIEM_TRA_SO_LIEU: 'cd-loai cd-loai-KIEM_TRA_SO_LIEU', Y_KIEN: 'cd-loai cd-loai-Y_KIEN',
   CHI_DAO_TT: 'cd-loai cd-loai-CHI_DAO_TT' };
-const LOP_TRANG_THAI = { CHO_PHAN_HOI: 'muc muc-vang', DA_PHAN_HOI: 'muc muc-xanh', DA_DONG: 'muc' };
+const LOP_TRANG_THAI = { CHO_PHAN_HOI: 'trang-thai tt-cho', DA_PHAN_HOI: 'trang-thai tt-xong', DA_DONG: 'trang-thai tt-xam' };
 const LOAI_GUI = ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU', 'Y_KIEN'];
 const LOAI_CON = ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU'];
 const TEN_A0 = { Y_KIEN: 'Ý kiến', CHI_DAO_TT: 'Chỉ đạo' };
@@ -40,8 +40,8 @@ const trongLuong = (g, phanHoi, r) => {
 };
 const formPhHtml = (g, r, them = '') => `
     <form class="cd-form-ph ${them}" data-submit="guiPhanHoi" data-id="${g.id}" data-nv="${r.id}">
-      <input type="text" name="noi_dung" required class="input input-nho" placeholder="Phản hồi…" aria-label="Nội dung phản hồi">
-      <button type="submit" class="btn btn-cham btn-nho">Phản hồi</button>
+      <input type="text" name="noi_dung" required class="o-nhap nho" placeholder="Phản hồi…" aria-label="Nội dung phản hồi">
+      <button type="submit" class="nut lam nho">Phản hồi</button>
     </form>`;
 
 // gocDau: chỉ đạo mở mới nhất — với vai không ra chỉ đạo, ô phản hồi của nó đặt ở ĐẦU khối (cùng vị trí ô gửi của A1/A2).
@@ -56,7 +56,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
   ].filter(Boolean).join(' · ');
   const mo = g.trang_thai !== 'DA_DONG';
   const dongDuoc = mo && g.nguoi_gui === me && (g.loai === 'CHI_DAO_TT' ? laA0() : !laA0());
-  const nut = dongDuoc ? `<button type="button" class="btn btn-phu btn-nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : '';
+  const nut = dongDuoc ? `<button type="button" class="nut nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : '';
   const formPh = mo && !laA0() && trongLuong(g, phanHoi, r) && g.id !== gocDau ? formPhHtml(g, r) : '';
   const formCon = mo && g.loai === 'CHI_DAO_TT' && duocChiDao() && laNguoiNhan(g) ? formGuiHtml(r, LOAI_CON, g.id) : '';
   return `
@@ -64,7 +64,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
       <div class="cd-dau">
         <span class="${LOP_LOAI[g.loai] || 'cd-loai'}">${TEN_LOAI_CHI_DAO[g.loai] || g.loai}</span>
         <b>${escapeHtml(tenNguoi(g.nguoi_gui))}</b> <span class="chu-phu">${formatDateTime(g.created_at)}</span>
-        ${g.loai === 'Y_KIEN' ? '' : `<span class="${LOP_TRANG_THAI[g.trang_thai] || 'muc'}">${TEN_TRANG_THAI_CHI_DAO[g.trang_thai] || g.trang_thai}</span>`}
+        ${g.loai === 'Y_KIEN' ? '' : `<span class="${LOP_TRANG_THAI[g.trang_thai] || 'trang-thai tt-xam'}">${TEN_TRANG_THAI_CHI_DAO[g.trang_thai] || g.trang_thai}</span>`}
         <span class="cd-nut">${nut}</span>
       </div>
       <p class="cd-noi-dung">${escapeHtml(g.noi_dung)}</p>
@@ -84,19 +84,19 @@ function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
   return `
     <form class="cd-form ${traLoiCho ? 'cd-form-con' : ''}" data-submit="guiChiDao" data-nv="${r.id}" data-tra-loi-cho="${traLoiCho}">
       <div class="cd-form-hang">
-        <select name="loai" class="input input-nho" aria-label="Loại chỉ đạo">
+        <select name="loai" class="o-nhap nho" aria-label="Loại chỉ đạo">
           ${loai.map((l) => `<option value="${l}">${ten(l)}</option>`).join('')}
         </select>
-        <input type="date" name="han_moi" class="input input-nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
-        <input type="date" name="han_phan_hoi" class="input input-nho hidden" aria-label="Hạn phản hồi (mặc định 2 ngày làm việc)" title="Hạn phản hồi — để trống = 2 ngày làm việc">
-        <select name="nguoi_theo_doi_moi" class="input input-nho hidden" aria-label="Người theo dõi mới">
+        <input type="date" name="han_moi" class="o-nhap nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
+        <input type="date" name="han_phan_hoi" class="o-nhap nho hidden" aria-label="Hạn phản hồi (mặc định 2 ngày làm việc)" title="Hạn phản hồi — để trống = 2 ngày làm việc">
+        <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi mới">
           <option value="">— Chọn người theo dõi mới —</option>
           ${ds.map((a) => `<option value="${a.id}">${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('')}
         </select>
       </div>
       <div class="cd-form-hang">
-        <input type="text" name="noi_dung" required class="input input-nho" placeholder="${traLoiCho ? 'Nội dung chỉ đạo điều hành theo chỉ đạo Thường trực' : a0 ? 'Nội dung ý kiến / chỉ đạo Thường trực' : 'Nội dung chỉ đạo (lý do nếu gia hạn/giao lại)'}" aria-label="Nội dung chỉ đạo">
-        <button type="submit" class="btn btn-chinh btn-nho">${nhan}</button>
+        <input type="text" name="noi_dung" required class="o-nhap nho" placeholder="${traLoiCho ? 'Nội dung chỉ đạo điều hành theo chỉ đạo Thường trực' : a0 ? 'Nội dung ý kiến / chỉ đạo Thường trực' : 'Nội dung chỉ đạo (lý do nếu gia hạn/giao lại)'}" aria-label="Nội dung chỉ đạo">
+        <button type="submit" class="nut chinh nho">${nhan}</button>
       </div>
     </form>`;
 }

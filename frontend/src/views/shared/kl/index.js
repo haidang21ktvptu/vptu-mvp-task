@@ -1,33 +1,42 @@
-// Màn hình "Nhiệm vụ" (GĐ10 PR 10B, GĐ14 thực thể thống nhất): mục dùng chung mọi vai trò — A3 thấy việc mình là Owner
-// hoặc người theo dõi, A2 phòng mình, A1 theo phụ trách/kiêm nhiệm, quan_tri_kl tất cả — phạm vi do RLS (kl_pham_vi 0025)
-// quyết định, frontend chỉ vẽ. Nút "Giao việc" cho A1/A2/quan_tri_kl (quyền thật trong hàm giao_viec).
+// Màn hình "Nhiệm vụ" (mockup: tổng quan → danh sách → chi tiết): mục dùng chung mọi vai — A3 việc mình là Owner hoặc người theo dõi,
+// A2 phòng mình, A1 theo phụ trách/kiêm nhiệm, A0 và quan_tri_kl tất cả — phạm vi do RLS (kl_pham_vi) quyết định, frontend chỉ vẽ.
+// Nút "Giao việc" cho A1/A2/quan_tri_kl (quyền thật trong hàm giao_viec). moNhiemVu(id, ma, cheDo): các màn hình khác mở đúng việc.
 import { $, show } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { setActiveNav, showSection } from '../../shell.js';
+import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
+import { datCapQuyetDinh } from '../../../lib/kl/dieu-hanh.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, locKlDonVi, boKlLoc, setKlLoc } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
-import { mountKlThemModal } from './them-modal.js';
-import { toggleKlChiTiet, moKlChiTiet, moKlChiDao } from './chi-tiet.js';
+import { toggleKlChiTiet, chonKlRow, dongKlChiTiet } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
 import { mountMinhChung } from './minh-chung.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 
 export const duocGiaoViec = () => ['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
+const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng', A3: 'Việc của tôi' };
 
-// Mở màn hình; loc (tuỳ chọn) = bộ lọc do dashboard A1 truyền sang (thay thế toàn bộ bộ lọc hiện có).
+// Mở màn hình; loc (tuỳ chọn) = bộ lọc do màn hình khác truyền sang (thay thế toàn bộ bộ lọc hiện có). A3 mặc định = việc của tôi.
 export function openKl(loc) {
   showSection('viewKl');
   setActiveNav('navKl');
-  show('klNutThem', duocGiaoViec()); // ẩn/hiện cho đẹp; hàm giao_viec 0025 là chốt
-  if (loc) setKlLoc(loc, true);
+  show('klNutThem', duocGiaoViec());
+  $('klTieuDe').textContent = TIEU_DE[state.user?.role_group] || 'Nhiệm vụ';
+  const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});
+  setKlLoc(bo, true);
   const nap = loadKl();
-  // Realtime: đọc lại danh sách khi có thay đổi, chỉ khi màn hình này đang hiện; chỉ báo kết nối ở #klKetNoi.
-  batKlRealtime(() => { if (!$('viewKl').classList.contains('hidden')) loadKl(); }, (m) => hienKetNoi('klKetNoi', m));
+  batKlRealtime(() => { if (sectionDangHien('viewKl')) loadKl(); }, (m) => hienKetNoi('klKetNoi', m));
   return nap;
+}
+
+// Mở đúng một việc từ màn hình khác (thẻ điều hành, chuông, chỉ đạo đã gửi): lọc theo mã rồi mở ngăn chi tiết.
+export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
+  await openKl({ tuTongQuan: true, tuKhoa: ma });
+  await toggleKlChiTiet({ id, cheDo });
+  $(`klRow-${id}`)?.scrollIntoView({ block: 'nearest' });
 }
 
 // Xác nhận đã nhận việc (GV-5): chỉ ghi lịch sử, không đổi trạng thái/hạn — đồng hồ không dừng (CN-2.2).
@@ -41,13 +50,27 @@ async function xacNhanNhanViecAction({ id }) {
   }
 }
 
+// Chọn cấp cần quyết định tại chỗ trong ngăn chi tiết (A1/A2): ghi qua hàm, lịch sử do trigger; nạp lại danh sách ngay.
+async function onDoiCap(e) {
+  const sel = e.target;
+  if (!(sel instanceof HTMLSelectElement) || !sel.classList.contains('nl-cap')) return;
+  sel.disabled = true;
+  try {
+    await datCapQuyetDinh(sel.dataset.id, sel.value);
+    notifySuccess(sel.value ? 'Đã xác định cấp cần quyết định.' : 'Đã bỏ cấp cần quyết định.');
+    loadKl();
+  } catch (err) {
+    notifyError(err.message);
+    sel.disabled = false;
+  }
+}
+
 export function registerKlView() {
   $('viewKl').innerHTML = klTemplate;
+  $('klChiTiet').addEventListener('change', onDoiCap);
   mountKlCapNhatModal(loadKl);
-  mountKlThemModal(loadKl);
-  mountChiDao(registerActions, loadKl); // luồng chỉ đạo trong ngăn chi tiết (GĐ15)
-  mountMinhChung(registerActions, loadKl); // khối minh chứng + hộp nộp / đóng nhiệm vụ (GĐ16)
+  mountChiDao(registerActions, loadKl);
+  mountMinhChung(registerActions, loadKl);
   ganBoLoc();
-  // Mục thanh bên: đặt lại toàn bộ bộ lọc (kể cả bộ lọc dashboard truyền sang) để thấy đủ phạm vi.
-  registerActions({ openKl: () => openKl({}), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, moKlChiTiet, moKlChiDao, xacNhanNhanViec: xacNhanNhanViecAction });
+  registerActions({ openKl: () => openKl(), loadKl, locKlNhom, locKlDonVi, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction });
 }

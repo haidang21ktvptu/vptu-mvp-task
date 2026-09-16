@@ -1,29 +1,42 @@
-// Nhãn, màu và thứ tự của các nhóm trạng thái (nhom_dem, muc_canh_bao từ hàm trang_thai — DB tính, frontend chỉ đặt tên).
-// Màu là thông tin (DESIGN mục 2): đỏ = phải can thiệp, vàng = sắp/chưa rõ, xanh = trong hạn/xong, xám = còn lại.
+// Nhãn, màu và thứ tự của các nhóm trạng thái (nhom_dem, muc_canh_bao từ hàm trang_thai — DB tính, frontend chỉ đặt tên) và
+// bốn khâu nghẽn (v_ngoai_le.khau, 0033). Màu là thông tin (mockup): đỏ = phải can thiệp, vàng = sắp/chưa rõ, lục = xong, lam = cấu trúc.
+// Tên lớp khai báo NGUYÊN VĂN (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 export const NHOM = {
-  QUA_HAN:        { ten: 'Quá hạn',                     row: 'r-do',   muc: 'muc-do',   stat: 's-do',   thuTu: 2, mo: true },
-  DANG_DINH_CHINH:{ ten: 'Quá hạn — đang đính chính',   row: 'r-vang', muc: 'muc-vang', stat: 's-vang', thuTu: 3, mo: true },
-  SAP_DEN_HAN:    { ten: 'Sắp đến hạn',                 row: 'r-vang', muc: 'muc-vang', stat: 's-vang', thuTu: 4, mo: true },
-  CAN_DIEN_HAN:   { ten: 'Cần điền hạn',                row: 'r-vang', muc: 'muc-vang', stat: 's-vang', thuTu: 5, mo: true },
-  DANG_THUC_HIEN: { ten: 'Đang thực hiện',              row: 'r-xanh', muc: 'muc-xanh', stat: '',       thuTu: 6, mo: true },
-  CHO_DIEU_KIEN:  { ten: 'Chờ điều kiện',               row: '',       muc: '',         stat: '',       thuTu: 7, mo: true },
-  THUONG_XUYEN:   { ten: 'Thường xuyên',                row: '',       muc: '',         stat: '',       thuTu: 8, mo: false },
-  HOAN_THANH:     { ten: 'Hoàn thành',                  row: 'r-ht',   muc: 'muc-xanh', stat: 's-xanh', thuTu: 9, mo: false },
+  QUA_HAN:        { ten: 'Quá hạn',                     lop: 'do',   stat: 's-do',   thuTu: 2, mo: true },
+  DANG_DINH_CHINH:{ ten: 'Quá hạn — đang đính chính',   lop: 'vang', stat: 's-vang', thuTu: 3, mo: true },
+  SAP_DEN_HAN:    { ten: 'Sắp đến hạn',                 lop: 'vang', stat: 's-vang', thuTu: 4, mo: true },
+  CAN_DIEN_HAN:   { ten: 'Cần điền hạn',                lop: 'vang', stat: 's-vang', thuTu: 5, mo: true },
+  DANG_THUC_HIEN: { ten: 'Đang thực hiện',              lop: 'lam',  stat: 's-lam',  thuTu: 6, mo: true },
+  CHO_DIEU_KIEN:  { ten: 'Chờ điều kiện',               lop: '',     stat: '',       thuTu: 7, mo: true },
+  THUONG_XUYEN:   { ten: 'Thường xuyên',                lop: '',     stat: '',       thuTu: 8, mo: false },
+  HOAN_THANH:     { ten: 'Hoàn thành',                  lop: 'luc',  stat: 's-luc',  thuTu: 9, mo: false },
 };
 export const THU_TU_NHOM = Object.keys(NHOM); // thứ tự hiển thị ô số / bộ lọc
 
-export const nhomCua = (ma) => NHOM[ma] || { ten: ma, row: '', muc: '', stat: '', thuTu: 99, mo: true };
+export const nhomCua = (ma) => NHOM[ma] || { ten: ma, lop: '', stat: '', thuTu: 99, mo: true };
 export const tenNhom = (ma) => nhomCua(ma).ten;
 
-// Bốn mức cảnh báo 1400 (NT-5, CN-4) — chấm màu trước trạng thái. Tên lớp khai báo NGUYÊN VĂN (Tailwind cắt lớp ghép chuỗi).
+// Bốn mức cảnh báo 1400 (NT-5, CN-4) → lớp mép trái (the/hang-nv/muc) và tên.
 export const MUC_CANH_BAO = {
-  XANH:          { ten: 'Xanh — trong hạn',            lop: 'cham cham-xanh' },
-  VANG:          { ten: 'Vàng — còn ≤ 3 ngày, chưa có sản phẩm', lop: 'cham cham-vang' },
-  DO:            { ten: 'Đỏ — quá hạn',                lop: 'cham cham-do' },
-  DO_DAC_BIET:   { ten: 'Đỏ đặc biệt — quá hạn ≥ 3 ngày', lop: 'cham cham-dodb' },
-  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo',      lop: 'cham cham-khong' },
+  XANH:          { ten: 'Xanh — trong hạn',                     lop: 'lam' },
+  VANG:          { ten: 'Vàng — còn ≤ 3 ngày, chưa có sản phẩm', lop: 'vang' },
+  DO:            { ten: 'Đỏ — quá hạn',                         lop: 'do' },
+  DO_DAC_BIET:   { ten: 'Đỏ đặc biệt — quá hạn ≥ 3 ngày',       lop: 'dac-biet' },
+  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo',               lop: '' },
 };
-export const chamMuc = (muc) => MUC_CANH_BAO[muc] || MUC_CANH_BAO.KHONG_AP_DUNG;
+export const mucCua = (muc) => MUC_CANH_BAO[muc] || MUC_CANH_BAO.KHONG_AP_DUNG;
+// Lớp mép trái của một dòng v_nhiem_vu: hoàn thành → lục; còn lại theo mức cảnh báo.
+export const lopMep = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'luc' : mucCua(r.muc_canh_bao).lop);
+
+// Bốn khâu nghẽn của việc Đỏ (v_ngoai_le.khau, thứ tự ưu tiên trong 0033); mau = màu thanh tỉ lệ ở thanh trái.
+export const KHAU = {
+  CHO_QUYET:      { ten: 'Chờ cấp trên quyết',        phu: 'đã trình, chưa có ý kiến',  mau: 'cam' },
+  CHUA_SAN_PHAM:  { ten: 'Chưa có sản phẩm',          phu: 'đang làm, đã quá hạn',      mau: 'cam' },
+  CHO_MINH_CHUNG: { ten: 'Chờ xác nhận minh chứng',   phu: 'đã nộp, chờ Văn phòng',     mau: 'lam' },
+  CHUA_NHAN:      { ten: 'Chưa nhận việc',            phu: 'giao rồi, chưa xác nhận',   mau: 'cam' },
+};
+export const THU_TU_KHAU = Object.keys(KHAU);
+export const tenKhau = (ma) => KHAU[ma]?.ten || ma || '';
 
 // Nhãn trạng thái đầy đủ cho một dòng v_nhiem_vu: "Quá hạn · 30 ngày", "Cần điền hạn · 290 ngày", "Hoàn thành đúng hạn"…
 export function nhanTrangThai(r) {
@@ -56,5 +69,5 @@ export const TEN_COT = {
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 
-// "6. Đảng ủy Ủy ban nhân dân tỉnh" → "Đảng ủy Ủy ban nhân dân tỉnh" (bỏ số thứ tự khi hiện trong ô bảng).
+// "6. Đảng ủy Ủy ban nhân dân tỉnh" → "Đảng ủy Ủy ban nhân dân tỉnh" (bỏ số thứ tự khi hiện trong ô).
 export const boSoThuTu = (ten) => (ten || '').replace(/^\d+\.\s*/, '');
