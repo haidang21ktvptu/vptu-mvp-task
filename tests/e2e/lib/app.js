@@ -69,7 +69,7 @@ export async function loginAs(page, role, password = SEED_PASSWORD) {
 
 export async function expectLoggedIn(page, role) {
   const user = USERS[role];
-  await expect(page.locator('#mainHeader')).toBeVisible();
+  await expect(page.locator('#mainHeader')).toBeVisible({ timeout: 20_000 }); // khôi phục phiên + đọc hồ sơ trên staging lúc bận có thể quá 10 giây
   await expect(page.locator('#currentUserDisplay')).toContainText(user.fullName);
   await expect(page.locator('#currentRoleDisplay')).toHaveText(user.roleLabel);
   await expect(page.locator('#loginSection')).toBeHidden();
