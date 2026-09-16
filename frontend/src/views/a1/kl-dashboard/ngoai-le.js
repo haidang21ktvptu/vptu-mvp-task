@@ -11,7 +11,6 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { boSoThuTu, chamMuc } from '../../../lib/kl/nhan.js';
 import { openKl } from '../../shared/kl/index.js';
 import { toggleKlChiTiet } from '../../shared/kl/chi-tiet.js';
-import { focusChiDao } from '../../shared/kl/chi-dao.js';
 import { nutLoc } from './ve-o-so.js';
 
 const SO_COT = 8;
@@ -37,7 +36,7 @@ function dongHtml(r) {
       <td data-nhan="Cấp cần quyết định">${capSelectHtml(r)}</td>
       <td data-nhan="Người theo dõi" class="nguoi">${escapeHtml(r.nguoi_theo_doi_ten || '—')}<small>${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || r.nguoi_theo_doi_phong || '')}</small></td>
       <td data-nhan="Chỉ đạo" class="so">${r.so_chi_dao_cho_phan_hoi > 0 ? `<span class="muc muc-vang">${r.so_chi_dao_cho_phan_hoi} chờ phản hồi</span>` : '<span class="chu-phu">·</span>'}</td>
-      <td><div class="thao-tac"><button type="button" class="btn btn-cham btn-nho" data-action="moChiDaoNgoaiLe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Chỉ đạo</button></div></td>
+      <td><div class="thao-tac"><button type="button" class="btn btn-phu btn-nho" data-action="moChiTietNgoaiLe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Chi tiết</button><button type="button" class="btn btn-chinh btn-nho" data-action="moChiDaoNgoaiLe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Chỉ đạo</button></div></td>
     </tr>`;
 }
 
@@ -67,12 +66,15 @@ export function ngoaiLeHtml(rows) {
     </table></div>`;
 }
 
-// Nút "Chỉ đạo": sang màn hình Nhiệm vụ lọc đúng mã, mở ngăn chi tiết, con trỏ vào thẳng ô nhập chỉ đạo (15C).
-async function moChiDaoNgoaiLe({ id, ma }) {
+// Hai nút (15E): "Chi tiết" mở ngăn với bảng thông tin mở sẵn; "Chỉ đạo" mở ngăn (bảng gập), con trỏ vào thẳng ô nhập.
+// Cả hai sang màn hình Nhiệm vụ lọc đúng mã.
+async function moNgoaiLe(id, ma, cheDo) {
   await openKl({ tuTongQuan: true, tuKhoa: ma });
-  await toggleKlChiTiet({ id });
-  focusChiDao(id);
+  await toggleKlChiTiet({ id, cheDo });
+  if (cheDo === 'chi-tiet') document.getElementById(`klRow-${id}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
+const moChiTietNgoaiLe = ({ id, ma }) => moNgoaiLe(id, ma, 'chi-tiet');
+const moChiDaoNgoaiLe = ({ id, ma }) => moNgoaiLe(id, ma, 'chi-dao');
 
 // Chọn cấp tại chỗ (uỷ quyền một lần cho khối hàng 1): ghi qua hàm, lịch sử do trigger; nạp lại dashboard ngay (không chờ realtime).
 let napLai = () => {};
@@ -93,5 +95,5 @@ async function onDoiCap(e) {
 export function mountNgoaiLe(registerActions, napLaiDashboard) {
   napLai = napLaiDashboard;
   $('klDbNgoaiLe').addEventListener('change', onDoiCap);
-  registerActions({ moChiDaoNgoaiLe });
+  registerActions({ moChiTietNgoaiLe, moChiDaoNgoaiLe });
 }

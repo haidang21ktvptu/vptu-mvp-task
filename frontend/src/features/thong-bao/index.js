@@ -8,7 +8,7 @@ import { notifyError } from '../../components/toast.js';
 import { loadTinHeThong, tinHeThongDaDoc } from '../../lib/kl/dieu-hanh.js';
 import { openKl } from '../../views/shared/kl/index.js';
 import { toggleKlChiTiet } from '../../views/shared/kl/chi-tiet.js';
-import { focusChiDao } from '../../views/shared/kl/chi-dao.js';
+
 import { showDMToast, closeToast } from '../messages/chat.js';
 import { thongBaoTemplate } from './template.js';
 
@@ -59,8 +59,7 @@ async function moNhiemVuCuaTin(nvId, content) {
   loadThongBao();
   const ma = (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
   await openKl({ tuKhoa: ma });
-  await toggleKlChiTiet({ id: nvId });
-  focusChiDao(nvId);
+  await toggleKlChiTiet({ id: nvId, cheDo: 'chi-dao' }); // bảng gập, con trỏ vào ô chỉ đạo/phản hồi
 }
 
 const moThongBao = ({ id, nv }) => moNhiemVuCuaTin(nv, tin.find((t) => t.id === id)?.content || '');

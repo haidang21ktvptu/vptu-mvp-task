@@ -9,7 +9,7 @@ import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
 import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, chamMuc } from '../../../lib/kl/nhan.js';
 import { timKlRow } from './danh-sach.js';
 import { sanPhamText } from './dong.js';
-import { napChiDao } from './chi-dao.js';
+import { napChiDao, focusChiDao } from './chi-dao.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap' };
@@ -88,19 +88,39 @@ export function chiTietHtml(r, ls, dc) {
     </div>`;
 }
 
-export async function toggleKlChiTiet({ id }) {
+// Mở/đóng ngăn chi tiết. cheDo (15E): 'chi-tiet' = bảng thông tin mở sẵn, không đặt con trỏ; 'chi-dao' = bảng gập, con trỏ
+// vào ô chỉ đạo/phản hồi (ngăn đang mở thì chỉ đặt con trỏ, không đóng); không có = toggle giữ bảng gập (vẽ lại realtime).
+const dangNap = new Map(); // id → promise nạp ngăn (vẽ lại realtime có thể đang nạp khi người dùng bấm "Chỉ đạo")
+const cheDoDangNap = new Map(); // id → chế độ đã chọn khi ngăn còn "Đang tải…" (vẽ lại realtime giữ đúng chế độ, không suy từ DOM chưa có)
+export const bangDangMoSan = (id) => cheDoDangNap.get(id) === 'chi-tiet';
+export async function toggleKlChiTiet({ id, cheDo }) {
   const tr = $(`klChiTiet-${id}`);
   const r = timKlRow(id);
   if (!tr || !r) return;
-  if (!tr.classList.contains('hidden')) { show(tr, false); return; }
+  if (!tr.classList.contains('hidden')) {
+    if (cheDo === 'chi-dao') { await dangNap.get(id); const b = tr.querySelector('.chi-tiet-them'); if (b) b.open = false; focusChiDao(id); return; }
+    show(tr, false); return;
+  }
   tr.firstElementChild.innerHTML = '<p class="chu-phu">Đang tải căn cứ…</p>';
   show(tr, true);
-  try {
+  const nap = (async () => {
     const [ls, dc] = await Promise.all([loadLichSu(id), loadDinhChinhCho(id)]);
     tr.firstElementChild.innerHTML = chiTietHtml(r, ls, dc);
-    await napChiDao(r); // khối chỉ đạo (GĐ15) ở đầu ngăn, nạp riêng, ghi "đã đọc" khi hiện; chờ để người gọi focus ô nhập
+    if (cheDo === 'chi-tiet') tr.querySelector('.chi-tiet-them').open = true;
+    await napChiDao(r); // khối chỉ đạo (GĐ15) ở đầu ngăn, nạp riêng, ghi "đã đọc" khi hiện
+  })();
+  dangNap.set(id, nap.catch(() => {}));
+  cheDoDangNap.set(id, cheDo);
+  try {
+    await nap;
+    if (cheDo === 'chi-dao') focusChiDao(id);
   } catch (e) {
     notifyError('Không đọc được lịch sử: ' + e.message);
     show(tr, false);
+  } finally {
+    dangNap.delete(id);
+    cheDoDangNap.delete(id);
   }
 }
+export const moKlChiTiet = ({ id }) => toggleKlChiTiet({ id, cheDo: 'chi-tiet' });
+export const moKlChiDao = ({ id }) => toggleKlChiTiet({ id, cheDo: 'chi-dao' });

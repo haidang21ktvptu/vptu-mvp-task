@@ -8,7 +8,7 @@ import { tongHop, sapXep, locRows, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH } 
 import { THU_TU_NHOM, tenNhom } from '../../../lib/kl/nhan.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { dongHtml, SO_COT } from './dong.js';
-import { toggleKlChiTiet } from './chi-tiet.js';
+import { toggleKlChiTiet, bangDangMoSan } from './chi-tiet.js';
 
 const kl = { rows: [], luc: null, loc: {} };
 let sauKhiNap = null;   // A3: kiểm tra việc theo 1400 chưa xác nhận sau mỗi lần nạp (kể cả realtime)
@@ -83,11 +83,11 @@ export function render() {
   const list = sapXep(locRows(trongNguCanh, { nhom }));
   const homNay = homNayVN();
   // Ngăn chi tiết đang mở giữ nguyên qua lần vẽ lại (realtime đọc lại dữ liệu khi người dùng đang đọc căn cứ).
-  const dangMo = [...document.querySelectorAll('#klBody .dong-chi-tiet:not(.hidden)')].map((tr) => tr.id.replace('klChiTiet-', ''));
+  const dangMo = [...document.querySelectorAll('#klBody .dong-chi-tiet:not(.hidden)')].map((tr) => ({ id: tr.id.replace('klChiTiet-', ''), moBang: tr.querySelector('.chi-tiet-them')?.open ?? bangDangMoSan(tr.id.replace('klChiTiet-', '')) }));
   $('klBody').innerHTML = list.length === 0
     ? `<tr><td colspan="${SO_COT}" class="trong">${kl.rows.length === 0 ? 'Không có nhiệm vụ nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</td></tr>`
     : list.map((r) => dongHtml(r, homNay)).join('');
-  dangMo.filter((id) => $(`klChiTiet-${id}`)).forEach((id) => toggleKlChiTiet({ id }));
+  dangMo.filter(({ id }) => $(`klChiTiet-${id}`)).forEach(({ id, moBang }) => toggleKlChiTiet({ id, cheDo: moBang ? 'chi-tiet' : undefined }));
   setText('klSoDong', `${list.length} / ${kl.rows.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);
   if (kl.luc) setText('klTinhDen', `Số liệu tính đến ${formatDateTime(kl.luc)}:${String(kl.luc.getSeconds()).padStart(2, '0')}`);
   veChip();
