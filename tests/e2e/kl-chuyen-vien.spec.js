@@ -113,8 +113,10 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Chi tiết' }).click();
     const ct = page.locator(`#klChiTiet-${nvId}`);
     await expect(ct).toBeVisible();
-    await ct.locator('.chi-tiet-them > summary').click(); // 15C: bảng chi tiết gập mặc định, khối chỉ đạo ở đầu ngăn
+    // 15E: nút "Chi tiết" mở sẵn bảng thông tin (khối chỉ đạo vẫn ở đầu ngăn, không đặt con trỏ).
     await expect(ct.locator('.chi-tiet-them')).toHaveAttribute('open', '');
+    await expect(ct.locator('input[name=noi_dung]')).toHaveCount(0); // chưa có chỉ đạo → chưa có ô phản hồi; con trỏ không bị đặt đâu cả
+    await expect(page.locator(`#klRow-${nvId}`).getByRole('button', { name: 'Phản hồi' })).toBeVisible(); // A3 là người theo dõi: nút chính Phản hồi
     await expect(ct).toContainText('nhập bởi Demo Chuyên viên Một');
     await expect(ct).toContainText('Nhập trên hệ thống');
     await expect(ct.locator('.lich-su-hop summary')).toContainText(`Lịch sử: ${coXacNhan ? 4 : 3} thay đổi`);

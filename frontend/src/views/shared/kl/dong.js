@@ -5,6 +5,7 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { state } from '../../../lib/state.js';
 import { formatNgay, ghiChuHan, ngayTruoc } from '../../../lib/kl/ngay.js';
 import { nhomCua, nhanTrangThai, boSoThuTu, chamMuc } from '../../../lib/kl/nhan.js';
+import { duocChiDao } from './chi-dao.js';
 
 export const SO_COT = 7;
 const rutGon = (s, n = 140) => (s && s.length > n ? `${s.slice(0, n - 1)}…` : s || '');
@@ -45,6 +46,8 @@ export function dongHtml(r, homNay) {
   const sanPham = sanPhamText(r);
   const nut = (action, label, cls = 'btn-phu') => `<button type="button" data-action="${action}" data-id="${r.id}" class="btn ${cls} btn-nho">${label}</button>`;
   const nutNhan = laBenTrong(r) && nhom.mo && !r.da_xac_nhan_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc') : '';
+  // 15E: nút chính riêng — A1/A2 "Chỉ đạo", Owner/người theo dõi "Phản hồi" (mở ngăn, con trỏ vào ô nhập); vai khác chỉ có Chi tiết.
+  const nutChiDao = duocChiDao() ? nut('moKlChiDao', 'Chỉ đạo', 'btn-chinh') : laBenTrong(r) ? nut('moKlChiDao', 'Phản hồi', 'btn-chinh') : '';
   const vanBan = r.so_hoi_nghi ? `HN ${r.so_hoi_nghi} · ${escapeHtml(r.so_ket_luan)}` : escapeHtml(r.so_ket_luan);
   return `
     <tr id="klRow-${r.id}" class="${nhom.row}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}">
@@ -54,7 +57,7 @@ export function dongHtml(r, homNay) {
       <td data-nhan="Người theo dõi" class="nguoi">${escapeHtml(r.nguoi_theo_doi_ten) || '—'}<small>${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || r.nguoi_theo_doi_phong || '')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhom.mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}</small></td>
       <td data-nhan="Hạn" class="han">${oHan(r, homNay)}</td>
       <td data-nhan="Trạng thái"><span class="${cham.lop}" title="${escapeHtml(cham.ten)}"></span><span class="muc ${nhom.muc}">${escapeHtml(nhanTrangThai(r))}</span>${thieuMC}${ghiChuCapNhat(r)}</td>
-      <td><div class="thao-tac">${nut('toggleKlChiTiet', 'Chi tiết')}${nutNhan}${duocCapNhat(r) ? nut('openKlCapNhat', 'Cập nhật', 'btn-cham') : ''}</div></td>
+      <td><div class="thao-tac">${nut('moKlChiTiet', 'Chi tiết')}${nutChiDao}${nutNhan}${duocCapNhat(r) ? nut('openKlCapNhat', 'Cập nhật', 'btn-cham') : ''}</div></td>
     </tr>
     <tr id="klChiTiet-${r.id}" class="hidden dong-chi-tiet"><td colspan="${SO_COT}" class="o-chi-tiet"></td></tr>
   `;

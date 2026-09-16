@@ -65,7 +65,11 @@
   .tb-chua-doc button { background: rgba(212, 175, 55, .12); border-left: 3px solid var(--cb-vang); }
   .tb-trong { padding: 16px 14px; font-size: 13px; }
 
+  /* Thao tác trên dòng (15E): hai nút riêng — điện thoại xếp dọc, nút chính Chỉ đạo/Phản hồi đậm hơn. */
+  .thao-tac .btn-chinh { font-weight: 600; }
   @media (max-width: 768px) {
+    #klBody .thao-tac, .nl-bang .thao-tac { flex-direction: column; align-items: stretch; max-width: none; }
+    #klBody .thao-tac .btn, .nl-bang .thao-tac .btn { width: 100%; }
     .nl-noi-dung { max-width: none; }
     .cd-nut { margin-left: 0; }
     .tb-panel { position: fixed; left: 12px; right: 12px; top: 56px; width: auto; }

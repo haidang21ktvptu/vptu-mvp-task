@@ -51,6 +51,13 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     expect(Number(await row.locator('.nl-tre').innerText())).toBeGreaterThan(3);
     expect(await row.locator('.nl-tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(180, 35, 24)'); // --muc-do
     await expect(a3.locator('#chuongBadge')).toBeHidden();
+    // 15E: hai nút riêng — "Chi tiết" mở ngăn với bảng thông tin mở sẵn, không đặt con trỏ; nút chính "Chỉ đạo" đậm hơn (bản build).
+    expect(await row.locator('[data-action=moChiDaoNgoaiLe]').evaluate((el) => globalThis.getComputedStyle(el).fontWeight)).toBe('600');
+    await row.locator('[data-action=moChiTietNgoaiLe]').click();
+    await expect(a1.locator(`#klChiTiet-${nvId} .chi-tiet-them`)).toHaveAttribute('open', '');
+    await expect(a1.locator(`#klChiDao-${nvId} .cd-form input[name=noi_dung]`)).not.toBeFocused();
+    await a1.locator('#navKlDashboard').click();
+    await expect(row).toBeVisible();
   });
 
   test('A1 bấm Chỉ đạo → đôn đốc; A3 nhận chuông + toast realtime, mở nhiệm vụ từ toast và phản hồi', async () => {

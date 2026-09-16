@@ -11,7 +11,7 @@ import { klTemplate } from './template.js';
 import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { mountKlThemModal } from './them-modal.js';
-import { toggleKlChiTiet } from './chi-tiet.js';
+import { toggleKlChiTiet, moKlChiTiet, moKlChiDao } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 
@@ -47,5 +47,5 @@ export function registerKlView() {
   mountChiDao(registerActions, loadKl); // luồng chỉ đạo trong ngăn chi tiết (GĐ15)
   ganBoLoc();
   // Mục thanh bên: đặt lại toàn bộ bộ lọc (kể cả bộ lọc dashboard truyền sang) để thấy đủ phạm vi.
-  registerActions({ openKl: () => openKl({}), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction });
+  registerActions({ openKl: () => openKl({}), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, moKlChiTiet, moKlChiDao, xacNhanNhanViec: xacNhanNhanViecAction });
 }
