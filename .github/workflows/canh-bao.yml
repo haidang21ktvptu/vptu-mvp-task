@@ -1,0 +1,72 @@
+# Cảnh báo tự động 3 cấp (GĐ17, SPEC 3.4 CB-2; KT-4 đổi 16/9: không pg_cron vì không có gói Pro): mỗi ngày 00:30 UTC
+# (07:30 giờ Việt Nam) gọi RPC canh_bao_quet() trên production bằng service_role qua REST; hàm idempotent theo
+# (nhiệm vụ, mức, N ngày) nên chạy trễ/chạy lặp không gửi trùng. Chạy tay (workflow_dispatch) chọn được staging để thử
+# trước khi cron chạm production; cron luôn production.
+#
+# Secrets (repository): SUPABASE_SERVICE_ROLE_KEY (production), STAGING_SERVICE_ROLE_KEY (staging). Key chỉ đi trong
+# header, không đưa vào URL, không in ra log. Summary chỉ in số tổng hợp — không in tên tài khoản (repo public).
+# GitHub có thể chạy trễ giờ cao điểm và TỰ TẮT schedule sau 60 ngày repo không có commit — xem Actions mỗi tháng,
+# bấm "Enable workflow" nếu bị tắt (cùng cơ chế với backup-dinh-ky.yml, docs/TRANG-THAI.md mục 5).
+name: Cảnh báo tự động
+
+on:
+  schedule:
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+    inputs:
+      moi_truong:
+        description: 'Môi trường gọi RPC'
+        type: choice
+        options: [production, staging]
+        default: production
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: canh-bao-${{ inputs.moi_truong || 'production' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quet:
+    name: Quét và gửi cảnh báo (${{ inputs.moi_truong || 'production' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MOI_TRUONG: ${{ inputs.moi_truong || 'production' }}
+      PROD_URL: https://frwyxcmbonjaimziiuqr.supabase.co
+      STAGING_URL: https://vojmrjezspdftovzinek.supabase.co
+      PROD_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      STAGING_KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Chọn môi trường và kiểm tra secret
+        run: |
+          if [ "$MOI_TRUONG" = staging ]; then URL="$STAGING_URL"; KEY="$STAGING_KEY"; TEN=STAGING_SERVICE_ROLE_KEY
+          else URL="$PROD_URL"; KEY="$PROD_KEY"; TEN=SUPABASE_SERVICE_ROLE_KEY; fi
+          if [ -z "$KEY" ]; then echo "::error::Thiếu repository secret $TEN (docs/TRANG-THAI.md mục 3)."; exit 1; fi
+          echo "::add-mask::$KEY"
+          { echo "URL=$URL"; echo "KEY=$KEY"; } >> "$GITHUB_ENV"
+      - name: Gọi RPC canh_bao_quet
+        run: |
+          HTTP=$(curl --silent --show-error --output kq.json --write-out '%{http_code}' \
+            --max-time 120 -X POST "$URL/rest/v1/rpc/canh_bao_quet" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
+          if [ "$HTTP" != 200 ]; then
+            echo "::error::RPC trả HTTP $HTTP trên $MOI_TRUONG."; jq -r '.message // .' kq.json 2>/dev/null || cat kq.json; exit 1
+          fi
+      - name: Ghi thống kê tổng hợp vào Summary (không tên tài khoản)
+        run: |
+          {
+            echo "### Cảnh báo tự động — $MOI_TRUONG"
+            jq -r '"| Ngày tính | Đã quét | Bỏ qua (đã nhắc) | Gửi Vàng | Gửi Đỏ | Gửi Đỏ đặc biệt | Tổng tin |",
+                   "|---|---|---|---|---|---|---|",
+                   "| \(.ngay) | \(.quet) | \(.bo_qua) | \(.gui.VANG) | \(.gui.DO) | \(.gui.DO_DAC_BIET) | \(.tin) |",
+                   "",
+                   "Người nhận: \(.theo_nguoi_nhan | length) tài khoản; nhiều nhất \(.theo_nguoi_nhan | map(.so_tin) | max // 0) tin/người; " +
+                   "từ 10 tin trở lên: \(.theo_nguoi_nhan | map(select(.so_tin >= 10)) | length) tài khoản."' kq.json
+          } >> "$GITHUB_STEP_SUMMARY"
+          jq -c 'del(.theo_nguoi_nhan)' kq.json
