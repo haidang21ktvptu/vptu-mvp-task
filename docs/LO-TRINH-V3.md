@@ -70,13 +70,13 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 | 18C | Đính chính có UI (đề nghị/duyệt); tắt Google Sheet (chỉ đọc) sau kỳ đối chiếu (`[CH-15]`) | — | Một kỳ báo cáo hoàn toàn từ app |
 | 18D | Phát hành `v3.4.0` | | |
 
-## GĐ19 — Hoàn thiện theo CV-2 (GĐ12–13 cũ) · ước 4 ngày · `v3.5.x`
+## GĐ19 — Hoàn thiện theo CV-2 (GĐ12–13 cũ) · ước 4 ngày · `v3.5.x` — **hoàn thành phần MVP 1400 16/9** (CH-16 = #70 migration 0032, phát hành `v3.5.0`; 4 hạng mục CV-2 dưới đây hoãn sang **`v3.6`**)
 
-- Xuất HTML/PDF hai bản (lãnh đạo: Owner đơn vị, không tên cán bộ; nội bộ: có người theo dõi) từ snapshot `bao_cao` có mã; bảng chéo ngành × đơn vị; tuổi quá hạn theo bậc.
-- Quản trị nhân sự: luân chuyển/bổ nhiệm/rời cơ quan có hiệu lực theo ngày; việc mở của người rời → Giao lại; khoá thay xoá.
-- Nhập bổ sung dữ liệu chuyển đổi: ngày nhận thật, Product cho việc cũ, ngày hoàn thành cho 68 việc có minh chứng (`[CH-13]` B nếu chọn).
-- Chuẩn bị nối V-Office: đặc tả trường nhận từ log (ngày giờ nhận, số văn bản đến) — chỉ tài liệu.
-- **CH-16 chỉ đạo Thường trực (`CHI_DAO_TT`)** (chốt 16/9, `CAU-HOI-NGHIEP-VU.md`): loại chỉ đạo riêng chỉ A0 gửi; người nhận bắt buộc Chánh VP + PCVP phụ trách phạm vi; hạn phản hồi mặc định 2 ngày làm việc; hiện đầu Dashboard A1 và đếm ở ô "cấp cần quyết định"; A1 phản hồi hoặc chuyển thành giao việc/đôn đốc; A0 thấy trạng thái phản hồi; quá hạn → tin hệ thống cho A1, không leo thang thêm.
+- **[hoãn v3.6]** Xuất HTML/PDF hai bản (lãnh đạo: Owner đơn vị, không tên cán bộ; nội bộ: có người theo dõi) từ snapshot `bao_cao` có mã; bảng chéo ngành × đơn vị; tuổi quá hạn theo bậc.
+- **[hoãn v3.6]** Quản trị nhân sự: luân chuyển/bổ nhiệm/rời cơ quan có hiệu lực theo ngày; việc mở của người rời → Giao lại; khoá thay xoá.
+- **[hoãn v3.6]** Nhập bổ sung dữ liệu chuyển đổi: ngày nhận thật, Product cho việc cũ, ngày hoàn thành cho 68 việc có minh chứng (`[CH-13]` B nếu chọn).
+- **[hoãn v3.6]** Chuẩn bị nối V-Office: đặc tả trường nhận từ log (ngày giờ nhận, số văn bản đến) — chỉ tài liệu.
+- **CH-16 chỉ đạo Thường trực (`CHI_DAO_TT`)** — **xong #70, migration `0032`, `v3.5.0`** (chốt 16/9, `CAU-HOI-NGHIEP-VU.md`): loại chỉ đạo riêng chỉ A0 gửi; người nhận bắt buộc Chánh VP + PCVP phụ trách phạm vi; hạn phản hồi mặc định 2 ngày làm việc; hiện đầu Dashboard A1 và đếm ở ô "cấp cần quyết định"; A1 phản hồi hoặc chuyển thành giao việc/đôn đốc; A0 thấy trạng thái phản hồi; quá hạn → tin hệ thống cho A1, không leo thang thêm.
 - Chuyển từ GĐ18 (18C): đính chính có UI (đề nghị/duyệt); tắt Google Sheet (chỉ đọc) sau kỳ đối chiếu (`[CH-15]`).
 
 ---
@@ -90,7 +90,7 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 | 16 | NT-5, CN-4, QT-2, QT-3 (cron GitHub Actions) | 0025 | v3.2.0 | 3 ngày |
 | 17 | CN-5, QT-5, CN-4.3 (+ vai trò A0) | 0026–0027 | v3.3.0 | 3 ngày |
 | 18 | dọn + QT-5 (chỉ đạo) | 0028–0029 | v3.4.0 | 3 ngày |
-| 19 | CV-2 | tuỳ | v3.5.x | 4 ngày |
+| 19 | CH-16 (xong, `v3.5.0`); CV-2 hoãn `v3.6` | 0032 | v3.5.0 | 4 ngày |
 | **Tổng** | | | | **19–22 ngày làm việc** |
 
 Mốc CV-1 (28/9/2026) không đạt được với toàn bộ 5 chức năng; nếu cần một mốc trình bày, sau GĐ14 (v3.0.0) hệ thống đã có 1-1-1 (Owner, Product, Deadline) trên dữ liệu thật và form giao việc theo 1400 — đủ để chứng minh hướng đi.
