@@ -35,10 +35,14 @@ export async function renderKPITab() {
     notifyError('Không đọc được nhiệm vụ: ' + e.message);
     return;
   }
+  // Dòng đầu: việc Owner là chính phòng (chưa giao tiếp cho cá nhân) — cộng vào đánh giá của phòng, không của ai.
+  const p = calculateGroupKPI([], state.nhiemVu, me.department);
+  const dongPhong = `<tr class="r-ht"><td class="nguoi"><b>Phòng là Owner</b><small>chưa giao tiếp cho cá nhân</small></td>
+      <td class="so">${p.owner}</td><td class="so">${p.dangMo}</td><td class="so">${p.quaHan}</td><td class="so">${p.doDacBiet}</td><td class="so">${p.hoanThanh}</td><td class="so chu-phu">—</td><td></td></tr>`;
   const tbody = $('a2KpiTableBody');
-  tbody.innerHTML = myStaffs.length === 0
+  tbody.innerHTML = dongPhong + (myStaffs.length === 0
     ? '<tr><td colspan="8" class="trong">Phòng chưa có cán bộ trực thuộc.</td></tr>'
-    : myStaffs.map(staffKpiRowHtml).join('');
+    : myStaffs.map(staffKpiRowHtml).join(''));
 }
 
 registerActions({ renderKPITab });

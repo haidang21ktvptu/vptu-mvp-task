@@ -8,6 +8,7 @@ import { registerActions } from '../../lib/actions.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanTrangThai, chamMuc } from '../../lib/kl/nhan.js';
 import { sanPhamText } from './kl/dong.js';
+import { laOwnerPhong } from './kpi.js';
 
 // Chip KPI theo màu mức (DESIGN mục 2): Owner · đang mở · quá hạn · đỏ đặc biệt · hoàn thành · theo dõi.
 // Màu là thông tin: chỉ tô màu mức khi số lớn hơn 0. Nhãn ghi rõ "Owner" và "theo dõi" (CH-2).
@@ -60,6 +61,12 @@ export function generateInlineTasksHtml(staffId) {
       ${bangHtml('Chịu trách nhiệm (Owner)', owner)}
       ${bangHtml('Đang theo dõi (không tính vào đánh giá)', theoDoi.filter((r) => r.tien_do_ma !== 'HOAN_THANH'))}
     </div>`;
+}
+
+// Việc Owner là chính PHÒNG (owner_tai_khoan NULL, owner_don_vi_ma = mã phòng): hiện ở nút phòng, không dưới cá nhân nào.
+export function phongOwnerHtml(phongMa) {
+  const rows = state.nhiemVu.filter((r) => laOwnerPhong(r, phongMa));
+  return rows.length ? bangHtml(`Phòng là Owner — chưa giao tiếp cho cá nhân (${DEPT_NAMES[phongMa] || phongMa})`, rows) : '';
 }
 
 // Nút "Chi tiết việc" trên bảng cán bộ: mở/đóng dòng chi tiết ngay dưới (A1 cây + A2 KPI).

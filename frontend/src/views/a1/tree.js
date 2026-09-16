@@ -8,7 +8,7 @@ import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows } from '../../lib/kl/du-lieu.js';
 import { calculateGroupKPI } from '../shared/kpi.js';
-import { generateInlineTasksHtml, staffDetailButtonHtml, kpiChipsHtml } from '../shared/inline-tasks.js';
+import { generateInlineTasksHtml, staffDetailButtonHtml, kpiChipsHtml, phongOwnerHtml } from '../shared/inline-tasks.js';
 import { showSection } from '../shell.js';
 
 export async function loadA1StaffsTab() {
@@ -84,7 +84,7 @@ function renderDeptLeaderNodes(targetElement, leadersList) {
   }
   targetElement.innerHTML = leadersList.map((ld) => {
     const deptStaffs = state.accounts.filter((a) => a.department === ld.department);
-    const kpi = calculateGroupKPI(deptStaffs.map((s) => s.id));
+    const kpi = calculateGroupKPI(deptStaffs.map((s) => s.id), state.nhiemVu, ld.department);   // gồm việc Owner là chính phòng
     return `
       <div class="the overflow-hidden">
         <div class="nut-dau">
@@ -129,7 +129,8 @@ function toggleDeptStaffBlock({ leaderId, department }, btn) {
   btn?.setAttribute('aria-expanded', String(isHidden));
   if (!isHidden) return;
   const staffs = state.accounts.filter((a) => a.department === department && !a.is_system);
-  block.innerHTML = `<div class="bang"><div class="bang-cuon"><table>${BANG_CAN_BO_DAU}<tbody>${staffs.map(staffRowHtml).join('')}</tbody></table></div></div>`;
+  // Việc Owner là chính phòng hiện ở nút phòng (không dưới cá nhân nào), rồi tới bảng cán bộ.
+  block.innerHTML = `${phongOwnerHtml(department)}<div class="bang"><div class="bang-cuon"><table>${BANG_CAN_BO_DAU}<tbody>${staffs.map(staffRowHtml).join('')}</tbody></table></div></div>`;
 }
 
 export function isStaffsTabVisible() {
