@@ -8,6 +8,7 @@
 @import './features.css';
 @import './kl.css';
 @import './kl-dashboard.css';
+@import './dieu-hanh.css';
 
 @tailwind base;
 @tailwind components;

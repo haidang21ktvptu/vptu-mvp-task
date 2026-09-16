@@ -5,11 +5,13 @@ import { state, findAccount } from '../lib/state.js';
 import { onSessionEnter, onSessionLeave } from '../auth/session.js';
 import { loadDMUnreadMap } from './messages/index.js';
 import { loadDirectMessages, isChatOpenWith, showDMToast } from './messages/chat.js';
+import { onTinHeThongMoi } from './thong-bao/index.js';
 
 let channel = null;
 
 async function onMessageInsert(dm) {
   if (dm.receiver_id !== state.user.id) return;
+  if (dm.loai === 'he_thong') { onTinHeThongMoi(dm); return; } // GĐ15: chuông + toast mở nhiệm vụ
   if (isChatOpenWith(dm.sender_id)) {
     await loadDirectMessages(dm.sender_id, true);
     return;

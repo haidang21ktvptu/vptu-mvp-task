@@ -67,6 +67,8 @@ export function locRows(rows, f = {}) {
     && (!f.khongNgayHoanThanh || (r.nhom_dem === 'HOAN_THANH' && !r.ngay_hoan_thanh))
     && (!f.nhomTrong || f.nhomTrong.includes(r.nhom_dem))
     && (!f.dangDinhChinh || r.dang_dinh_chinh)
+    && (!f.muc || r.muc_canh_bao === f.muc)
+    && (!f.chuaCapQuyetDinh || (laMo(r) && !r.cap_quyet_dinh))
     && (!f.khongCapNhatQua || (laMo(r) && (ngayTruoc(r.cap_nhat_luc, f.now) ?? 0) > f.khongCapNhatQua))
     && (!kw || `${r.ma} ${r.noi_dung} ${r.nguoi_theo_doi_ten || ''} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''}`.toLowerCase().includes(kw)));
 }
@@ -135,4 +137,17 @@ export function kiemBatBien(rows) {
   const tongNhom = Object.values(nhom).reduce((a, b) => a + b, 0);
   const tongLV = theoNganhLinhVuc(rows).reduce((s, n) => s + n.linhVuc.reduce((t, l) => t + l.so, 0), 0);
   return { dung: tongNhom === rows.length && tongLV === rows.length, tongNhom, tongLV, tong: rows.length, nhomLa: Object.keys(nhom).filter((k) => !NHOM[k]) };
+}
+
+// Hàng 3a dashboard (GĐ15, CH-2): việc đang mở theo OWNER (đơn vị/phòng chịu trách nhiệm) — người theo dõi ghi riêng ở hàng 3c.
+export function theoOwnerMo(rows) {
+  const m = new Map();
+  rows.filter(laMo).forEach((r) => {
+    const k = r.owner_don_vi_ma || '';
+    if (!m.has(k)) m.set(k, { owner_don_vi_ma: k, ten: r.owner_don_vi_ten || '(chưa xác định)', trongVanPhong: Boolean(r.owner_trong_van_phong), so: 0, nhom: demTrong(), nguoiTheoDoi: new Set() });
+    const c = m.get(k);
+    c.so++; c.nhom[r.nhom_dem] = (c.nhom[r.nhom_dem] || 0) + 1;
+    if (r.nguoi_theo_doi_ten) c.nguoiTheoDoi.add(r.nguoi_theo_doi_ten);
+  });
+  return [...m.values()].sort((a, b) => b.so - a.so || a.ten.localeCompare(b.ten, 'vi'));
 }

@@ -12,6 +12,7 @@ export async function loadDMUnreadMap() {
   const { data } = await supabase.from('direct_messages')
     .select('sender_id')
     .eq('receiver_id', state.user.id)
+    .eq('loai', 'nguoi') // huy hiệu Nhắn tin chỉ đếm tin người gửi; tin hệ thống đếm ở chuông (GĐ15)
     .eq('is_read', false);
 
   state.dmUnread = {};

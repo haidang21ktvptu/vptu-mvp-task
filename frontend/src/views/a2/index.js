@@ -8,8 +8,10 @@ import { setActiveNav, showSection } from '../shell.js';
 import { openKl } from '../shared/kl/index.js';
 import { a2Template } from './template.js';
 import { renderKPITab } from './kpi.js';
+import { KL_DASHBOARD_NAV } from '../a1/kl-dashboard/index.js';
 
-const NAV = [{ id: 'tabBtnKPI', label: 'Cán bộ trong phòng', action: 'switchA2Tab', data: { tab: 'kpi' } }];
+// Dashboard (GĐ15): A2 xem cùng màn hình với A1, phạm vi phòng mình do RLS lọc.
+const NAV = [KL_DASHBOARD_NAV, { id: 'tabBtnKPI', label: 'Cán bộ trong phòng', action: 'switchA2Tab', data: { tab: 'kpi' } }];
 
 function switchA2Tab() {
   showSection('viewLanhDaoVP');

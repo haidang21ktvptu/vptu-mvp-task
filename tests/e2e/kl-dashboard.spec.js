@@ -1,5 +1,5 @@
-// Kịch bản 10 (GĐ10 PR 10C): dashboard "Tổng quan KL BTVTU" của A1 — mọi con số bấm ra đúng danh sách (truy vết 6.3):
-// ô Tổng → số dòng bảng; ô Quá hạn → chỉ dòng quá hạn; "Chưa phân loại" → số dòng bằng ô; tổng các ô hàng 1 + hàng 2 = Tổng.
+// Kịch bản 10 (GĐ10 PR 10C; GĐ15 hàng 1 = bảng ngoại lệ, ô số nhóm gộp vào hàng 2): Dashboard của A1 — mọi con số bấm ra đúng danh sách (truy vết 6.3):
+// ô Tổng → số dòng bảng; ô Quá hạn → chỉ dòng quá hạn; "Chưa phân loại" → số dòng bằng ô; tổng các ô nhóm hàng 2 = ô Tổng.
 // Không tạo dữ liệu (dùng dữ liệu KL sẵn có trên project: bộ vàng ở staging); bỏ qua khi project chưa có module KL.
 import { test, expect } from '@playwright/test';
 import { pageAs } from './lib/app.js';
@@ -19,13 +19,13 @@ test.describe.serial('Kết luận BTVTU — dashboard lãnh đạo', () => {
     await expect(page.locator('#klDbTinhDen')).toContainText('Số liệu tính đến');
   };
 
-  test('tổng các ô hàng 1 + hàng 2 = ô Tổng; ô Tổng mở danh sách có đúng số dòng', async () => {
+  test('tổng các ô nhóm hàng 2 = ô Tổng; ô Tổng mở danh sách có đúng số dòng', async () => {
     const tong = await so(page.locator('#klDbTinhHinh .o-so').first().locator('b'));
-    const cac = page.locator('#klDbCanThiep .o-so b, #klDbTinhHinh .o-so b');
+    const cac = page.locator('#klDbTinhHinh .o-so b');
     const n = await cac.count();
-    const oHang1 = await page.locator('#klDbCanThiep .o-so b').count(); // ô Tổng là ô đầu của hàng 2, đứng sau các ô hàng 1
+    const oTong = 0; // ô Tổng đứng đầu hàng 2
     let cong = 0;
-    for (let i = 0; i < n; i++) if (i !== oHang1) cong += await so(cac.nth(i));
+    for (let i = 0; i < n; i++) if (i !== oTong) cong += await so(cac.nth(i));
     expect(cong).toBe(tong);
     await page.locator('#klDbTinhHinh .o-so').first().click();
     await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(tong);
@@ -34,8 +34,8 @@ test.describe.serial('Kết luận BTVTU — dashboard lãnh đạo', () => {
   });
 
   test('ô Quá hạn (nếu có) → danh sách chỉ dòng quá hạn, đúng số', async () => {
-    const o = page.locator('#klDbCanThiep .o-so.s-do').first();
-    if (await o.count() === 0) return; // không có việc quá hạn trong phạm vi — hàng 1 không hiện ô
+    const o = page.locator('#klDbTinhHinh .o-so.s-do').first();
+    if (await o.count() === 0) return; // không có việc quá hạn trong phạm vi — ô không hiện
     const n = await so(o.locator('b'));
     await o.click();
     await expect(page.locator('#klBody tr[id^="klRow-"]')).toHaveCount(n);
@@ -55,7 +55,7 @@ test.describe.serial('Kết luận BTVTU — dashboard lãnh đạo', () => {
 
   test('sau truy vết, mục thanh bên "Kết luận BTVTU" đặt lại bộ lọc: đủ phạm vi, không còn nút Về tổng quan', async () => {
     const tong = await so(page.locator('#klDbTinhHinh .o-so').first().locator('b'));
-    const o = page.locator('#klDbCanThiep .o-so').first();
+    const o = page.locator('#klDbTinhHinh .o-so').nth(1); // một ô nhóm bất kỳ (không phải Tổng)
     if (await o.count() === 0) return;
     await o.click();
     await expect(page.locator('#klChipLoc')).toContainText('Về tổng quan');

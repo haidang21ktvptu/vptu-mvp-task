@@ -8,25 +8,22 @@ export const nutLoc = (loc) => `data-action="moKlDanhSach" data-loc="${escapeHtm
 
 const oSo = (so, nhan, loc, cls = '', phu = '') => `<button type="button" class="o-so ${cls}" ${nutLoc(loc)}><b>${so}</b><span>${nhan}</span>${phu ? `<small>${phu}</small>` : ''}</button>`;
 
-// Hàng 1: chỉ hiện ô > 0 (đỏ/vàng). Không có gì → một câu.
-export function canThiepHtml(t) {
+// Hàng 2 "Tình hình chung" (GĐ15 gộp ô đỏ/vàng của hàng 1 cũ vào đây — hàng 1 nay là bảng ngoại lệ): ô Tổng đứng đầu,
+// rồi các nhóm đang mở > 0 (đỏ/vàng/xám), Đang thực hiện, Hoàn thành, Thường xuyên. Tổng các ô nhóm = ô Tổng (bất biến DB-5).
+export function tinhHinhHtml(t) {
   const nguong = cauHinhKl('nguong_sap_den_han_ngay', 7);
-  const o = [
+  const canThiep = [
     ['QUA_HAN', 'Quá hạn', ''],
     ['DANG_DINH_CHINH', 'Quá hạn — đang đính chính', ''],
     ['SAP_DEN_HAN', `Sắp đến hạn (${nguong} ngày)`, ''],
     ['CAN_DIEN_HAN', 'Cần điền hạn', t.tuoiLonNhatCanDienHan ? `tuổi lớn nhất ${t.tuoiLonNhatCanDienHan} ngày` : ''],
     ['CHO_DIEU_KIEN', 'Chờ điều kiện', 'chưa có hạn theo bản chất'],
   ].filter(([k]) => t.nhom[k] > 0).map(([k, nhan, phu]) => oSo(t.nhom[k], nhan, { nhom: k }, NHOM[k].stat, phu));
-  return o.length ? o.join('') : '<p class="bd-trong">Hôm nay không có việc quá hạn, sắp đến hạn hay thiếu hạn trong phạm vi của đồng chí.</p>';
-}
-
-// Hàng 2: Tổng / Hoàn thành (tỷ lệ, chưa minh chứng) / Đang thực hiện / Thường xuyên.
-export function tinhHinhHtml(t) {
   return [
     oSo(t.tong, 'Tổng nhiệm vụ', {}, '', `${t.dangMo} đang mở`),
-    oSo(t.nhom.HOAN_THANH, `Hoàn thành · ${t.tyLeHoanThanh}%`, { nhom: 'HOAN_THANH' }, 's-xanh', t.hoanThanhChuaMinhChung ? `${t.hoanThanhChuaMinhChung} chưa có minh chứng` : ''),
+    ...canThiep,
     oSo(t.nhom.DANG_THUC_HIEN, 'Đang thực hiện', { nhom: 'DANG_THUC_HIEN' }, '', 'trong hạn, còn trên ngưỡng'),
+    oSo(t.nhom.HOAN_THANH, `Hoàn thành · ${t.tyLeHoanThanh}%`, { nhom: 'HOAN_THANH' }, 's-xanh', t.hoanThanhChuaMinhChung ? `${t.hoanThanhChuaMinhChung} chưa có minh chứng` : ''),
     oSo(t.nhom.THUONG_XUYEN, 'Thường xuyên', { nhom: 'THUONG_XUYEN' }, '', 'không tính hạn'),
   ].join('');
 }
