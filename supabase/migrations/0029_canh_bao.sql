@@ -73,7 +73,8 @@ BEGIN
     SELECT nv AS nv, nv."id", nv."ma", nv."han_xu_ly", (t.tt)."muc_canh_bao" AS muc, (t.tt)."so_ngay_qua" AS so_ngay_qua
     FROM "public"."nhiem_vu" nv
     CROSS JOIN LATERAL (SELECT "public"."trang_thai"(nv, "p_ngay") AS tt) t
-    WHERE nv."dong_luc" IS NULL AND (t.tt)."muc_canh_bao" IN ('VANG', 'DO', 'DO_DAC_BIET')
+    WHERE nv."dong_luc" IS NULL AND nv."tien_do_ma" <> 'HOAN_THANH'   -- việc Excel đã Hoàn thành có dong_luc NULL
+      AND (t.tt)."muc_canh_bao" IN ('VANG', 'DO', 'DO_DAC_BIET')
     ORDER BY nv."ma"
   LOOP
     v_quet := v_quet + 1;

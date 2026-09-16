@@ -10,7 +10,7 @@ import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 const NGAY = '2026-08-20';
-let fx; const id = {};
+let fx; const id = {}; let t0;
 const them = async (row) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: `KL-0029 ${row.ma}`, loai_thoi_han_ma: 'CO_HAN_CU_THE',
     nganh_ma: 'KINH_TE_TONG_HOP', ...row }).select('id').single();
@@ -21,12 +21,19 @@ const soCanhBao = async (ma) => (await db().from('canh_bao').select('id, muc, ng
 const nguoiNhan = async (ma) => (await soCanhBao(ma)).at(-1).nguoi_nhan.sort();
 const tinCua = async (ma) => (await db().from('direct_messages').select('receiver_id, sender_id, content').eq('nhiem_vu_id', id[ma]).eq('loai', 'he_thong')).data;
 const don = async () => {
+  // Dọn cả dấu vết job trên dữ liệu ngoài fixture (test 6 quét hôm nay trên toàn bộ nhiệm vụ mở của project) — theo mốc t0.
+  if (t0) {
+    await db().from('canh_bao').delete().gte('gui_luc', t0);
+    await db().from('direct_messages').delete().eq('loai', 'he_thong').is('sender_id', null).gte('created_at', t0);
+    await db().from('lich_su').delete().eq('cot', 'canh_bao').gte('luc', t0);
+  }
   await db().from('nhiem_vu').delete().like('ma', 'NV-T10%');
   await db().from('dm_don_vi').update({ lanh_dao_phu_trach: null }).eq('ma', 'DANG_UY_UBND');
 };
 
 describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo mức, chống trùng, lịch sử, tin hệ thống', { skip: SKIP }, () => {
   before(async () => {
+    t0 = new Date().toISOString();
     fx = await setupKlFixtures();
     await don();
     await db().from('dm_don_vi').update({ lanh_dao_phu_trach: IDS.pcvp2 }).eq('ma', 'DANG_UY_UBND');   // CH-4b: lãnh đạo VP phụ trách đơn vị ngoài
