@@ -2,7 +2,7 @@
 // đọc file duyệt .xlsx (sheet "Đối chiếu lĩnh vực", tên ngành hiển thị → mã ngành; cần exceljs của scripts/, không có → bỏ qua),
 // KHÔNG vượt ngành, không đoán khi chỉ "chứa tên", CSV đọc/ghi tròn; (b) tích hợp chỉ trên Supabase local (RLS_LOCAL=1):
 // dry-run xuất bảng duyệt → --ghi với dòng chốt sai ngành bị dừng → --ghi đúng chỉ điền dòng có chốt, giữ NULL dòng
-// trống, không đụng dòng đã có lĩnh vực, không đổi cap_nhat_luc, kl_lich_su có vết. Dữ liệu tạo trong hội nghị 999.
+// trống, không đụng dòng đã có lĩnh vực, không đổi cap_nhat_luc, lich_su có vết. Dữ liệu tạo trong hội nghị 999.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -116,8 +116,8 @@ describe('anh-xa-linh-vuc — chạy thật trên local', { skip: SKIP_TICH_HOP 
   before(async () => {
     fx = await setupKlFixtures();
     dir = mkdtempSync(join(tmpdir(), 'anh-xa-'));
-    const base = { hoi_nghi_id: fx.hn, chu_tri_id: IDS.cv1, nganh_ma: 'KINH_TE_TONG_HOP', loai_thoi_han_ma: 'CHO_QUYET_DINH' };
-    const r = await adminClient().from('kl_nhiem_vu').insert([
+    const base = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, nganh_ma: 'KINH_TE_TONG_HOP', loai_thoi_han_ma: 'CHO_QUYET_DINH' };
+    const r = await adminClient().from('nhiem_vu').insert([
       { ...base, ma: ma[0], noi_dung: 'RLS-TEST AX1', linh_vuc_chi_tiet: ' Tài chính ' },
       { ...base, ma: ma[1], noi_dung: 'RLS-TEST AX2', linh_vuc_chi_tiet: 'TÀI CHÍNH' },   // khác cách viết → cặp khác, cùng đề xuất
       { ...base, ma: ma[2], noi_dung: 'RLS-TEST AX3', linh_vuc_chi_tiet: 'Đầu tư', linh_vuc_ma: 'LV08_NGAN_SACH' }, // đã có → bỏ qua
@@ -127,7 +127,7 @@ describe('anh-xa-linh-vuc — chạy thật trên local', { skip: SKIP_TICH_HOP 
   });
   after(async () => {
     rmSync(dir, { recursive: true, force: true });
-    await adminClient().from('kl_nhiem_vu').delete().in('ma', ma);   // lịch sử xoá theo CASCADE
+    await adminClient().from('nhiem_vu').delete().in('ma', ma);   // lịch sử xoá theo CASCADE
   });
 
   test('dry-run xuất CSV: đề xuất đúng, dòng đã có ghi chú, dòng lạ để trống; không ghi gì', async () => {
@@ -140,18 +140,18 @@ describe('anh-xa-linh-vuc — chạy thật trên local', { skip: SKIP_TICH_HOP 
     assert.equal(cua('TÀI CHÍNH').linh_vuc_de_xuat, 'Tài chính');
     assert.equal(cua('Đầu tư').linh_vuc_de_xuat, 'Đầu tư'); assert.match(cua('Đầu tư').ghi_chu, /đã có: LV08_NGAN_SACH/);
     assert.equal(cua('Không rõ lắm').linh_vuc_de_xuat, '');
-    const { data } = await adminClient().from('kl_nhiem_vu').select('ma, linh_vuc_ma').in('ma', ma).order('ma');
+    const { data } = await adminClient().from('nhiem_vu').select('ma, linh_vuc_ma').in('ma', ma).order('ma');
     assert.deepEqual(data.map((x) => x.linh_vuc_ma), [null, null, 'LV08_NGAN_SACH', null]);
   });
 
   test('--ghi: chốt sai ngành → dừng không ghi; chốt đúng → chỉ điền dòng có chốt, giữ NULL dòng trống, không đổi cap_nhat_luc, có lịch sử', async () => {
-    const truoc = (await adminClient().from('kl_nhiem_vu').select('ma, cap_nhat_luc').in('ma', ma).order('ma')).data;
+    const truoc = (await adminClient().from('nhiem_vu').select('ma, cap_nhat_luc').in('ma', ma).order('ma')).data;
     const dong = (gt, chot) => ({ gia_tri_goc: gt, nganh: 'KINH_TE_TONG_HOP', so_dong: 1, linh_vuc_de_xuat: '', linh_vuc_chot: chot, ghi_chu: '' });
     const sai = join(dir, 'sai.csv');
     writeFileSync(sai, ghiCsv([dong('Tài chính', 'Tài chính'), dong('TÀI CHÍNH', 'Tư pháp')]), 'utf8');
     const r1 = chay(['--ghi', '--file', sai]);
     assert.equal(r1.status, 2, r1.stdout + r1.stderr); assert.match(r1.stdout, /thuộc ngành NOI_CHINH/);
-    const giua = (await adminClient().from('kl_nhiem_vu').select('ma, linh_vuc_ma').in('ma', ma).order('ma')).data;
+    const giua = (await adminClient().from('nhiem_vu').select('ma, linh_vuc_ma').in('ma', ma).order('ma')).data;
     assert.deepEqual(giua.map((x) => x.linh_vuc_ma), [null, null, 'LV08_NGAN_SACH', null], 'dừng thì không ghi gì');
 
     // Bước đúng dùng .xlsx (người duyệt điền trên Excel) — cần exceljs; không có thì dùng CSV.
@@ -160,11 +160,11 @@ describe('anh-xa-linh-vuc — chạy thật trên local', { skip: SKIP_TICH_HOP 
     if (CO_EXCELJS) await ghiXlsxDuyet(dung, hang, NGANH); else writeFileSync(dung, ghiCsv(hang), 'utf8');
     const r2 = chay(['--ghi', '--file', dung]);
     assert.equal(r2.status, 0, r2.stdout + r2.stderr);
-    const sau = (await adminClient().from('kl_nhiem_vu').select('ma, linh_vuc_ma, cap_nhat_luc').in('ma', ma).order('ma')).data;
+    const sau = (await adminClient().from('nhiem_vu').select('ma, linh_vuc_ma, cap_nhat_luc').in('ma', ma).order('ma')).data;
     assert.deepEqual(sau.map((x) => x.linh_vuc_ma), ['LV08_TAI_CHINH', 'LV08_TAI_CHINH', 'LV08_NGAN_SACH', null]);
     assert.deepEqual(sau.map((x) => x.cap_nhat_luc), truoc.map((x) => x.cap_nhat_luc), 'cap_nhat_luc không đổi');
-    const ids = (await adminClient().from('kl_nhiem_vu').select('id').in('ma', ma)).data.map((x) => x.id);
-    const { data: ls } = await adminClient().from('kl_lich_su').select('cot, gia_tri_moi, nguoi_sua_ghi_chu').in('nhiem_vu_id', ids).eq('cot', 'linh_vuc_ma');
+    const ids = (await adminClient().from('nhiem_vu').select('id').in('ma', ma)).data.map((x) => x.id);
+    const { data: ls } = await adminClient().from('lich_su').select('cot, gia_tri_moi, nguoi_sua_ghi_chu').in('nhiem_vu_id', ids).eq('cot', 'linh_vuc_ma');
     assert.equal(ls.length, 2);
     assert.ok(ls.every((l) => l.gia_tri_moi === 'LV08_TAI_CHINH' && /anh-xa-linh-vuc/.test(l.nguoi_sua_ghi_chu)));
   });

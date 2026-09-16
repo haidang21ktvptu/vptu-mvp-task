@@ -8,10 +8,10 @@ export const GHI_CHU_VPTU = 'Chuyển từ VPTU (chủ trì gốc trên Excel: V
 export const TEN_VPTU = 'VPTU';
 const MA_RE = /^NV-\d{3}$/;
 
-// Tiêu đề cột nhật ký Excel → cột kl_nhiem_vu (tiêu đề khác giữ nguyên văn, ví dụ "Sửa nhiều ô: B176:B179").
+// Tiêu đề cột nhật ký Excel → cột nhiem_vu (tiêu đề khác giữ nguyên văn, ví dụ "Sửa nhiều ô: B176:B179").
 export const COT_NHAT_KY = {
-  'Tiến độ': 'tien_do_ma', 'Hạn xử lý': 'han_xu_ly', 'Ngành/lĩnh vực': 'nganh_ma', 'Cơ quan/đơn vị trình': 'co_quan_trinh_ma',
-  'Loại thời hạn': 'loai_thoi_han_ma', 'Chủ trì theo dõi': 'chu_tri_id', 'Kết quả thực hiện / Minh chứng': 'minh_chung',
+  'Tiến độ': 'tien_do_ma', 'Hạn xử lý': 'han_xu_ly', 'Ngành/lĩnh vực': 'nganh_ma', 'Cơ quan/đơn vị trình': 'owner_don_vi_ma',
+  'Loại thời hạn': 'loai_thoi_han_ma', 'Chủ trì theo dõi': 'nguoi_theo_doi', 'Kết quả thực hiện / Minh chứng': 'minh_chung',
   'Văn bản triển khai': 'van_ban_trien_khai', 'Lĩnh vực chi tiết': 'linh_vuc_chi_tiet', 'Nội dung kết luận / Văn bản trình': 'noi_dung',
   'Ngày cập nhật gần nhất': 'cap_nhat_luc', 'Số hội nghị': 'so_hoi_nghi', 'Số TB/KL': 'so_ket_luan', 'Ngày ban hành': 'ngay_ban_hanh',
   'STT': 'stt', 'Mã nhiệm vụ': 'ma',
@@ -30,7 +30,7 @@ async function docBang(db, bang, cot) {
 // Danh mục từ DB: Map ten → ma cho 4 bảng.
 export async function docDanhMuc(db) {
   const dm = {};
-  for (const [k, bang] of [['nganh', 'dm_nganh'], ['co_quan', 'dm_co_quan_trinh'], ['loai', 'dm_loai_thoi_han'], ['tien_do', 'dm_tien_do']]) {
+  for (const [k, bang] of [['nganh', 'dm_nganh'], ['co_quan', 'dm_don_vi'], ['loai', 'dm_loai_thoi_han'], ['tien_do', 'dm_tien_do']]) {
     dm[k] = new Map((await docBang(db, bang, 'ma, ten')).map((r) => [r.ten, r.ma]));
   }
   return dm;

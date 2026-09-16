@@ -1,5 +1,5 @@
 // Thời gian thực cho module KL (GĐ10 PR 10D, thiết kế 3.5, quyết định 8): Supabase Realtime postgres_changes trên
-// kl_nhiem_vu / kl_chi_dao / kl_dinh_chinh (đã trong publication từ 0016; RLS lọc sự kiện theo người nghe).
+// nhiem_vu / chi_dao / dinh_chinh (tên từ 0023, trước đó kl_*; đã trong publication từ 0016; RLS lọc sự kiện theo người nghe).
 // Sự kiện chỉ là TÍN HIỆU: gộp 500 ms rồi ĐỌC LẠI v_kl_dashboard (trạng thái do SQL tính, phạm vi có thể phụ thuộc
 // dòng khác) — không vá từng dòng ở client. Dự phòng: kênh rời SUBSCRIBED (CHANNEL_ERROR / TIMED_OUT / CLOSED) → làm mới
 // mỗi 60 giây và báo trên màn hình; kênh nối lại → tắt polling. Thêm: làm mới khi tab quay lại foreground và khi có mạng.
@@ -9,7 +9,15 @@ import { onSessionLeave } from '../auth/session.js';
 const GOP_MS = 500;
 const CHU_KY_DU_PHONG_MS = 60_000;
 const CHO_KET_NOI_MS = 4_000;   // chưa SUBSCRIBED sau chừng này mới coi là mất kết nối (tránh nháy vàng lúc mở màn hình)
-const BANG = ['kl_nhiem_vu', 'kl_chi_dao', 'kl_dinh_chinh'];
+const BANG_MOI = ['nhiem_vu', 'chi_dao', 'dinh_chinh'];        // tên bảng từ migration 0023 (GĐ14)
+const BANG_CU = ['kl_nhiem_vu', 'kl_chi_dao', 'kl_dinh_chinh']; // schema trước 0023 (staging khi CI chạy PR chưa merge)
+let bang = null;
+
+// Realtime lọc theo TÊN BẢNG THẬT (view bí danh kl_* của 0024 không phát sự kiện) → dò một lần bảng nào tồn tại.
+async function tenBang() {
+  if (!bang) { const r = await supabase.from('nhiem_vu').select('id').limit(0); bang = r.error ? BANG_CU : BANG_MOI; }
+  return bang;
+}
 
 let channel = null;
 let onChange = null;        // hàm đọc lại do màn hình đang mở cung cấp
@@ -53,12 +61,16 @@ export function batKlRealtime(docLaiCuaManHinh, hienTrangThai) {
   onTrangThai = hienTrangThai || null;
   if (onTrangThai) onTrangThai(cheDo === 'tat' ? 'ket-noi' : cheDo);
   if (channel) return;
-  channel = BANG.reduce((ch, table) => ch.on('postgres_changes', { event: '*', schema: 'public', table }, gopDocLai), supabase.channel('kl_feed'))
-    .subscribe((status) => {
-      // Đang nối mà nhận CLOSED/lỗi thì vẫn chờ hết CHO_KET_NOI_MS (supabase-js tự thử lại), không nháy vàng ngay.
-      if (status === 'SUBSCRIBED') datCheDo('truc-tiep');
-      else if (cheDo !== 'ket-noi') datCheDo('du-phong');
-    });
+  channel = 'dang-tao';
+  tenBang().then((ds) => {
+    if (channel !== 'dang-tao') return;   // đã tắt trong lúc dò tên bảng
+    channel = ds.reduce((ch, table) => ch.on('postgres_changes', { event: '*', schema: 'public', table }, gopDocLai), supabase.channel('kl_feed'))
+      .subscribe((status) => {
+        // Đang nối mà nhận CLOSED/lỗi thì vẫn chờ hết CHO_KET_NOI_MS (supabase-js tự thử lại), không nháy vàng ngay.
+        if (status === 'SUBSCRIBED') datCheDo('truc-tiep');
+        else if (cheDo !== 'ket-noi') datCheDo('du-phong');
+      });
+  });
   // Lúc mở màn hình: "Đang kết nối…" (không cảnh báo); sau CHO_KET_NOI_MS chưa SUBSCRIBED mới sang dự phòng có polling.
   datCheDo('ket-noi');
   henChoKetNoi = setTimeout(() => { if (cheDo === 'ket-noi') datCheDo('du-phong'); }, CHO_KET_NOI_MS);
@@ -72,7 +84,7 @@ export function tatKlRealtime() {
   clearTimeout(henChoKetNoi); henChoKetNoi = null;
   document.removeEventListener('visibilitychange', onVisible);
   window.removeEventListener('online', onOnline);
-  if (channel) supabase.removeChannel(channel);
+  if (channel && channel !== 'dang-tao') supabase.removeChannel(channel);
   channel = null; onChange = null; onTrangThai = null; cheDo = 'tat';
 }
 

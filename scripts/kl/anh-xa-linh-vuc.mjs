@@ -31,7 +31,7 @@ export function deXuat(giaTri, nganhMa, linhVuc) {
   return { de_xuat: null, goi_y: goiY };
 }
 
-// Gom kl_nhiem_vu theo cặp (ngành, giá trị gốc đã cắt khoảng trắng; khoá "ngành|giá trị"); bỏ dòng không có linh_vuc_chi_tiet.
+// Gom nhiem_vu theo cặp (ngành, giá trị gốc đã cắt khoảng trắng; khoá "ngành|giá trị"); bỏ dòng không có linh_vuc_chi_tiet.
 export function gomNhom(nhiemVu) {
   const map = new Map();
   for (const n of nhiemVu) {
@@ -114,19 +114,19 @@ export function sqlCapNhat(dong) {
   return `DO $anh_xa_lv$
 DECLARE v_n integer; v_ls integer;
 BEGIN
-  ALTER TABLE public.kl_nhiem_vu DISABLE TRIGGER b_kl_nhiem_vu_truoc_ghi;
+  ALTER TABLE public.nhiem_vu DISABLE TRIGGER b_nhiem_vu_truoc_ghi;
   WITH a(id, linh_vuc_ma) AS (VALUES
     ${values})
-  UPDATE public.kl_nhiem_vu n SET linh_vuc_ma = a.linh_vuc_ma FROM a
+  UPDATE public.nhiem_vu n SET linh_vuc_ma = a.linh_vuc_ma FROM a
   WHERE n.id = a.id AND n.linh_vuc_ma IS NULL;
   GET DIAGNOSTICS v_n = ROW_COUNT;
   IF v_n <> ${dong.length} THEN
     RAISE EXCEPTION 'Cập nhật % dòng, dự kiến % — dữ liệu đã đổi kể từ báo cáo, huỷ.', v_n, ${dong.length};
   END IF;
-  UPDATE public.kl_lich_su SET nguoi_sua_ghi_chu = ${q(GHI_CHU_LICH_SU)}
+  UPDATE public.lich_su SET nguoi_sua_ghi_chu = ${q(GHI_CHU_LICH_SU)}
   WHERE cot = 'linh_vuc_ma' AND nguoi_sua IS NULL AND nguon = 'app' AND luc = now();
   GET DIAGNOSTICS v_ls = ROW_COUNT;
-  ALTER TABLE public.kl_nhiem_vu ENABLE TRIGGER b_kl_nhiem_vu_truoc_ghi;
+  ALTER TABLE public.nhiem_vu ENABLE TRIGGER b_nhiem_vu_truoc_ghi;
   IF v_ls <> v_n THEN RAISE EXCEPTION 'Số dòng lịch sử (%) khác số dòng cập nhật (%) — huỷ.', v_ls, v_n; END IF;
 END $anh_xa_lv$;
 `;

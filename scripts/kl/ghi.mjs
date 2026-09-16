@@ -10,21 +10,21 @@ const LO = 50;
 const COT_NGAY_NHAT_KY = new Set(['han_xu_ly', 'ngay_ban_hanh']);
 
 export async function demDongExcel(db) {
-  const { count, error } = await db.from('kl_nhiem_vu').select('id', { count: 'exact', head: true }).eq('nguon', 'excel');
-  if (error) throw new Error(`Không đếm được kl_nhiem_vu: ${error.message}`);
+  const { count, error } = await db.from('nhiem_vu').select('id', { count: 'exact', head: true }).eq('nguon', 'excel');
+  if (error) throw new Error(`Không đếm được nhiem_vu: ${error.message}`);
   return count;
 }
 
 // --xoa-cu (chỉ local/staging): xoá nhiệm vụ nguon = 'excel' (lịch sử/chỉ đạo/đính chính xoá theo FK CASCADE)
 // rồi hội nghị không còn nhiệm vụ nào.
 export async function xoaDuLieuExcelCu(db) {
-  const { data: nv, error } = await db.from('kl_nhiem_vu').delete().eq('nguon', 'excel').select('id');
+  const { data: nv, error } = await db.from('nhiem_vu').delete().eq('nguon', 'excel').select('id');
   if (error) throw new Error(`Xoá nhiệm vụ excel cũ thất bại: ${error.message}`);
-  const { data: hn, error: e2 } = await db.from('kl_hoi_nghi').select('id, kl_nhiem_vu(id)');
+  const { data: hn, error: e2 } = await db.from('van_ban_giao_viec').select('id, nhiem_vu(id)');
   if (e2) throw new Error(`Đọc hội nghị thất bại: ${e2.message}`);
-  const trong = hn.filter((h) => h.kl_nhiem_vu.length === 0).map((h) => h.id);
+  const trong = hn.filter((h) => h.nhiem_vu.length === 0).map((h) => h.id);
   if (trong.length > 0) {
-    const { error: e3 } = await db.from('kl_hoi_nghi').delete().in('id', trong);
+    const { error: e3 } = await db.from('van_ban_giao_viec').delete().in('id', trong);
     if (e3) throw new Error(`Xoá hội nghị trống thất bại: ${e3.message}`);
   }
   return { nhiem_vu: nv.length, hoi_nghi: trong.length };
@@ -42,8 +42,8 @@ export function dungDong(nguon, dm, anhXa, anhXaEmail) {
     const vptu = r.chu_tri_ten === TEN_VPTU;
     const han = loai === 'KY_BAN_HANH' ? null : r.han_xu_ly;
     const row = {
-      ma: r.ma, khoa_hoi_nghi: `${r.so_hoi_nghi}|${r.so_ket_luan}`, chu_tri_id: anhXa.theoTen.get(r.chu_tri_ten).id,
-      nganh_ma: dm.nganh.get(r.nganh_ten), co_quan_trinh_ma: dm.co_quan.get(r.co_quan_trinh_ten),
+      ma: r.ma, khoa_hoi_nghi: `${r.so_hoi_nghi}|${r.so_ket_luan}`, nguoi_theo_doi: anhXa.theoTen.get(r.chu_tri_ten).id,
+      nganh_ma: dm.nganh.get(r.nganh_ten), owner_don_vi_ma: dm.co_quan.get(r.co_quan_trinh_ten),
       linh_vuc_chi_tiet: r.linh_vuc_chi_tiet, noi_dung: r.noi_dung, loai_thoi_han_ma: loai, han_xu_ly: han,
       ly_do_chua_co_han: td !== 'HOAN_THANH' && loai === 'CO_HAN_CU_THE' && !han ? LY_DO_CHUA_CO_HAN : null,
       tien_do_ma: td, minh_chung: r.minh_chung, van_ban_trien_khai: r.van_ban_trien_khai, nguon: 'excel',
@@ -67,9 +67,9 @@ function doiGiaTriNhatKy(cot, v, dm, anhXa) {
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   if (typeof v === 'number') return COT_NGAY_NHAT_KY.has(cot) && v > 40000 ? serialSangNgay(v) : String(v);
   const s = String(v).trim();
-  const bang = { tien_do_ma: dm.tien_do, nganh_ma: dm.nganh, co_quan_trinh_ma: dm.co_quan, loai_thoi_han_ma: dm.loai }[cot];
+  const bang = { tien_do_ma: dm.tien_do, nganh_ma: dm.nganh, owner_don_vi_ma: dm.co_quan, loai_thoi_han_ma: dm.loai }[cot];
   if (bang && bang.has(s)) return bang.get(s);
-  if (cot === 'chu_tri_id' && anhXa.theoTen.has(s)) return anhXa.theoTen.get(s).username;
+  if (cot === 'nguoi_theo_doi' && anhXa.theoTen.has(s)) return anhXa.theoTen.get(s).username;
   return s;
 }
 
@@ -89,18 +89,18 @@ async function chenLo(db, bang, rows, chon, daTao) {
 export async function ghiDuLieu(db, target, dong) {
   const daTao = { hoi_nghi: [], nhiem_vu: [], lich_su: 0 };
   try {
-    const hn = await chenLo(db, 'kl_hoi_nghi', dong.hoiNghi, 'id, so_hoi_nghi, so_ket_luan', daTao.hoi_nghi);
+    const hn = await chenLo(db, 'van_ban_giao_viec', dong.hoiNghi, 'id, so_hoi_nghi, so_ket_luan', daTao.hoi_nghi);
     const idHN = new Map(hn.map((h) => [`${h.so_hoi_nghi}|${h.so_ket_luan}`, h.id]));
-    const nv = await chenLo(db, 'kl_nhiem_vu', dong.nhiemVu.map(({ khoa_hoi_nghi, ...r }) => ({ ...r, hoi_nghi_id: idHN.get(khoa_hoi_nghi) })), 'id, ma', daTao.nhiem_vu);
+    const nv = await chenLo(db, 'nhiem_vu', dong.nhiemVu.map(({ khoa_hoi_nghi, ...r }) => ({ ...r, van_ban_id: idHN.get(khoa_hoi_nghi) })), 'id, ma', daTao.nhiem_vu);
     const idNV = new Map(nv.map((n) => [n.ma, n.id]));
-    daTao.lich_su = (await chenLo(db, 'kl_lich_su', dong.nhatKy.map(({ ma, ...r }) => ({ ...r, nhiem_vu_id: idNV.get(ma) })), 'id')).length;
+    daTao.lich_su = (await chenLo(db, 'lich_su', dong.nhatKy.map(({ ma, ...r }) => ({ ...r, nhiem_vu_id: idNV.get(ma) })), 'id')).length;
   } catch (err) {
     await donSauLoi(db, daTao);
     throw err;
   }
   // Dữ liệu đã vào đủ; sequence lỗi (CLI chưa login, token hết hạn) thì KHÔNG xoá lại — in SQL để chạy tay.
   const soMax = Math.max(...dong.nhiemVu.map((r) => Number(r.ma.slice(3))));
-  const sql = `SELECT setval('public.kl_nhiem_vu_ma_seq', ${soMax}, true);`;
+  const sql = `SELECT setval('public.nhiem_vu_ma_seq', ${soMax}, true);`;
   try {
     dbQuery(target, sql);
   } catch (err) {
@@ -111,14 +111,14 @@ export async function ghiDuLieu(db, target, dong) {
 
 async function donSauLoi(db, daTao) {
   try {
-    for (const [bang, ids] of [['kl_nhiem_vu', daTao.nhiem_vu], ['kl_hoi_nghi', daTao.hoi_nghi]]) {
+    for (const [bang, ids] of [['nhiem_vu', daTao.nhiem_vu], ['van_ban_giao_viec', daTao.hoi_nghi]]) {
       if (ids.length === 0) continue;
       const { error } = await db.from(bang).delete().in('id', ids);
       if (error) throw new Error(`xoá ${bang}: ${error.message}`);
     }
     console.error(`Đã xoá lại ${daTao.nhiem_vu.length} nhiệm vụ và ${daTao.hoi_nghi.length} hội nghị vừa tạo trong lần chạy này.`);
   } catch (e) {
-    console.error(`KHÔNG dọn được dữ liệu vừa tạo (${e.message}) — kiểm tra tay kl_hoi_nghi/kl_nhiem_vu nguon = 'excel'.`);
+    console.error(`KHÔNG dọn được dữ liệu vừa tạo (${e.message}) — kiểm tra tay van_ban_giao_viec/nhiem_vu nguon = 'excel'.`);
   }
 }
 
@@ -132,10 +132,10 @@ export async function kiemLaiSauGhi(db) {
     return count;
   };
   return {
-    nhiem_vu_excel: await dem('kl_nhiem_vu', (q) => q.eq('nguon', 'excel')),
-    lich_su_excel_nhat_ky: await dem('kl_lich_su', (q) => q.eq('nguon', 'excel').neq('cot', '*')),
-    lich_su_excel_tao: await dem('kl_lich_su', (q) => q.eq('nguon', 'excel').eq('cot', '*')),
-    can_dien_han_ly_do: await dem('kl_nhiem_vu', (q) => q.eq('nguon', 'excel').eq('ly_do_chua_co_han', LY_DO_CHUA_CO_HAN)),
-    chuyen_tu_vptu: await dem('kl_nhiem_vu', (q) => q.eq('nguon', 'excel').eq('ghi_chu', GHI_CHU_VPTU)),
+    nhiem_vu_excel: await dem('nhiem_vu', (q) => q.eq('nguon', 'excel')),
+    lich_su_excel_nhat_ky: await dem('lich_su', (q) => q.eq('nguon', 'excel').neq('cot', '*')),
+    lich_su_excel_tao: await dem('lich_su', (q) => q.eq('nguon', 'excel').eq('cot', '*')),
+    can_dien_han_ly_do: await dem('nhiem_vu', (q) => q.eq('nguon', 'excel').eq('ly_do_chua_co_han', LY_DO_CHUA_CO_HAN)),
+    chuyen_tu_vptu: await dem('nhiem_vu', (q) => q.eq('nguon', 'excel').eq('ghi_chu', GHI_CHU_VPTU)),
   };
 }
