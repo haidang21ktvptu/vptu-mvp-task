@@ -35,10 +35,11 @@ export const klCapNhatTemplate = `
       </div>
     </div>
 
-    <div class="mt-3">
-      <label for="klCnMinhChung" class="nhan">Minh chứng <span class="chu-phu">số hiệu, ngày văn bản hoặc đường dẫn — bắt buộc khi Hoàn thành</span></label>
+    <div class="mt-3" id="klCnMinhChungWrap">
+      <label for="klCnMinhChung" class="nhan">Minh chứng dạng chữ <span class="chu-phu">dữ liệu cũ: số hiệu, ngày văn bản hoặc đường dẫn — bắt buộc khi Hoàn thành</span></label>
       <input type="text" id="klCnMinhChung" class="input" placeholder="Ví dụ: Báo cáo số 15/BC-VPTU ngày 5/9/2026">
     </div>
+    <p id="klCnGhiChu1400" class="chu-phu mt-3 hidden">Nhiệm vụ theo quy tắc 1400: nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) ở ngăn Chi tiết rồi bấm "Đóng nhiệm vụ" — không chuyển Hoàn thành ở đây.</p>
     <div class="cot-2 mt-3">
       <div>
         <label for="klCnVanBan" class="nhan">Văn bản triển khai</label>

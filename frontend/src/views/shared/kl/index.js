@@ -13,6 +13,7 @@ import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { mountKlThemModal } from './them-modal.js';
 import { toggleKlChiTiet, moKlChiTiet, moKlChiDao } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
+import { mountMinhChung } from './minh-chung.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 
 export const duocGiaoViec = () => ['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
@@ -45,6 +46,7 @@ export function registerKlView() {
   mountKlCapNhatModal(loadKl);
   mountKlThemModal(loadKl);
   mountChiDao(registerActions, loadKl); // luồng chỉ đạo trong ngăn chi tiết (GĐ15)
+  mountMinhChung(registerActions, loadKl); // khối minh chứng + hộp nộp / đóng nhiệm vụ (GĐ16)
   ganBoLoc();
   // Mục thanh bên: đặt lại toàn bộ bộ lọc (kể cả bộ lọc dashboard truyền sang) để thấy đủ phạm vi.
   registerActions({ openKl: () => openKl({}), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, moKlChiTiet, moKlChiDao, xacNhanNhanViec: xacNhanNhanViecAction });

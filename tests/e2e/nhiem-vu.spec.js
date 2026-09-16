@@ -70,7 +70,7 @@ test.describe.serial('Luồng giao việc thống nhất → xác nhận nhận 
     await page.context().close();
   });
 
-  test('Kịch bản 5: A3 bắt buộc xác nhận đã nhận việc (hạn, trạng thái không đổi) rồi cập nhật Hoàn thành có minh chứng', async ({ browser }, testInfo) => {
+  test('Kịch bản 5: A3 bắt buộc xác nhận đã nhận việc (hạn, trạng thái không đổi); việc theo 1400 không chọn Hoàn thành ở Cập nhật, nút Đóng mờ khi chưa có minh chứng', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A3', testInfo);
     const modal = page.locator('#mandatoryAcceptModal');
     await expect(modal).toBeVisible();
@@ -84,13 +84,16 @@ test.describe.serial('Luồng giao việc thống nhất → xác nhận nhận 
     await expect(row).toContainText('đã nhận việc');
     expect((await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma').eq('id', moiId).single()).data).toEqual(truoc);
 
+    // GĐ16 (16B): việc theo 1400 đóng bằng nút "Đóng nhiệm vụ" sau khi nộp minh chứng có cấu trúc (luồng đầy đủ ở kl-minh-chung.spec);
+    // modal Cập nhật không còn lựa chọn Hoàn thành và ô chữ tự do; nút Đóng mờ khi chưa có minh chứng.
+    await expect(row.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeDisabled();
     await row.getByRole('button', { name: 'Cập nhật' }).click();
-    await page.locator('#klCnTienDo').selectOption('HOAN_THANH');
-    await page.locator('#klCnMinhChung').fill(`Báo cáo số 15/BC-VPTU ngày ${homNayVN().split('-').reverse().join('/')} (e2e)`);
-    await page.locator('#klCnLuu').click();
+    await expect(page.locator('#klCapNhatModal')).toBeVisible();
+    await expect(page.locator('#klCnTienDo option[value="HOAN_THANH"]')).toHaveCount(0);
+    await expect(page.locator('#klCnMinhChungWrap')).toBeHidden();
+    await expect(page.locator('#klCnGhiChu1400')).toBeVisible();
+    await page.locator('#klCapNhatModal').getByRole('button', { name: 'Huỷ' }).click();
     await expect(page.locator('#klCapNhatModal')).toBeHidden();
-    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
-    await expect(row).toHaveAttribute('data-muc', 'KHONG_AP_DUNG');
     await page.context().close();
   });
 });

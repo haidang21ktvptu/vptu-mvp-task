@@ -32,7 +32,13 @@ export async function openKlCapNhat({ id }) {
   $('klCnId').value = row.id;
   setText('klCnTieuDe', `Cập nhật ${row.ma}`);
   setText('klCnMoTa', `${row.noi_dung} — ${row.loai_thoi_han_ten}, ban hành ${formatNgay(row.ngay_ban_hanh)}`);
-  $('klCnTienDo').innerHTML = danhMucKl().tienDo.map((t) => `<option value="${t.ma}"${t.ma === row.tien_do_ma ? ' selected' : ''}>${t.ten}</option>`).join('');
+  // GĐ16 (MC-3, MC-4): việc theo quy tắc 1400 đóng bằng nút "Đóng nhiệm vụ" sau khi nộp minh chứng có cấu trúc — modal này
+  // không có ô chữ tự do và không chọn Hoàn thành (trigger 0028 là chốt); việc cũ giữ quy tắc chữ.
+  const theo1400 = Boolean(row.theo_1400) && row.tien_do_ma !== 'HOAN_THANH';
+  $('klCnTienDo').innerHTML = danhMucKl().tienDo.filter((t) => !(theo1400 && t.ma === 'HOAN_THANH'))
+    .map((t) => `<option value="${t.ma}"${t.ma === row.tien_do_ma ? ' selected' : ''}>${t.ten}</option>`).join('');
+  show('klCnMinhChungWrap', !row.theo_1400);
+  show('klCnGhiChu1400', theo1400);
   $('klCnHan').value = row.han_xu_ly || '';
   $('klCnHan').min = row.ngay_ban_hanh;
   setText('klCnHanLoai', row.loai_thoi_han_ma === 'KY_BAN_HANH' ? '(tự tính = ngày ban hành + 10, không sửa)' : row.loai_thoi_han_ma === 'CO_HAN_CU_THE' ? '' : '(không bắt buộc với loại này)');
@@ -58,13 +64,13 @@ export function closeKlCapNhat() {
 function kiemTra(p) {
   if (p.han_xu_ly && p.han_xu_ly < row.ngay_ban_hanh) return `Hạn xử lý không được trước ngày ban hành (${formatNgay(row.ngay_ban_hanh)}). Chọn lại ngày.`;
   if (p.tien_do_ma === 'HOAN_THANH') {
-    if (trong(p.minh_chung)) return 'Chuyển sang Hoàn thành phải có minh chứng (số hiệu văn bản hoặc đường dẫn).';
+    if (!row.theo_1400 && trong(p.minh_chung)) return 'Chuyển sang Hoàn thành phải có minh chứng (số hiệu văn bản hoặc đường dẫn).';
     if (!p.ngay_hoan_thanh) return 'Chuyển sang Hoàn thành phải ghi ngày hoàn thành thật (theo văn bản minh chứng).';
     if (p.ngay_hoan_thanh > homNay || p.ngay_hoan_thanh < row.ngay_ban_hanh) return 'Ngày hoàn thành phải từ ngày ban hành tới hôm nay.';
   } else if (row.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly && trong(p.ly_do_chua_co_han)) {
     return 'Loại "Có hạn cụ thể" phải có hạn xử lý, hoặc tích "Chưa xác định được hạn" và ghi lý do.';
   }
-  if (p.tien_do_ma === 'HOAN_THANH' && row.tien_do_ma === 'HOAN_THANH' && !trong(row.minh_chung) && trong(p.minh_chung)) return 'Không xoá minh chứng của việc đã Hoàn thành. Muốn sửa, ghi minh chứng mới.';
+  if (!row.theo_1400 && p.tien_do_ma === 'HOAN_THANH' && row.tien_do_ma === 'HOAN_THANH' && !trong(row.minh_chung) && trong(p.minh_chung)) return 'Không xoá minh chứng của việc đã Hoàn thành. Muốn sửa, ghi minh chứng mới.';
   return null;
 }
 
@@ -79,7 +85,7 @@ async function luuKlCapNhat() {
     tien_do_ma: $('klCnTienDo').value,
     ...(oChuaCoHanHien ? { ly_do_chua_co_han: chuaCoHan ? $('klCnLyDo').value.trim() || null : null } : {}),
     ngay_hoan_thanh: laHT() ? $('klCnNgayHT').value || null : null,
-    minh_chung: $('klCnMinhChung').value.trim() || null,
+    ...(row.theo_1400 ? {} : { minh_chung: $('klCnMinhChung').value.trim() || null }), // việc 1400: minh chứng ở bảng minh_chung, không gửi cột chữ
     van_ban_trien_khai: $('klCnVanBan').value.trim() || null,
     ghi_chu: $('klCnGhiChu').value.trim() || null,
   };

@@ -75,3 +75,22 @@
     .tb-panel { position: fixed; left: 12px; right: 12px; top: 56px; width: auto; }
   }
 }
+
+/* ---- Khối minh chứng (GĐ16, MC-2…MC-6): danh sách minh chứng có cấu trúc, minh chứng cũ, xác nhận / không hợp lệ ---- */
+@layer components {
+  .khoi-mc { margin-top: 10px; }
+  .khoi-mc h4 { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 14px; font-weight: 600; color: var(--cb-cham); margin-bottom: 8px; }
+  .khoi-mc h4 .chu-phu { font-weight: 400; }
+  .mc-nut { margin-left: auto; display: flex; gap: 6px; }
+  .mc-dong { border-left: 3px solid var(--cb-vien); padding: 6px 12px; margin-bottom: 8px; background: var(--cb-giay); border-radius: 0 4px 4px 0; }
+  .mc-dong[data-hop-le="true"] { border-left-color: var(--muc-xanh); }
+  .mc-dong[data-hop-le="false"] { border-left-color: var(--muc-do); }
+  .mc-dau { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 13px; }
+  .mc-dau b { font-weight: 600; }
+  .mc-loai { display: inline-block; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 3px; color: #fff; background: var(--cb-ngoc); }
+  .mc-loai-cu { background: var(--cb-muc-nhat); }
+  .mc-chu { margin: 4px 0; font-size: 13px; white-space: pre-wrap; }
+  .mc-phu { font-size: 12px; }
+  .mc-form-ly-do { display: flex; gap: 6px; margin-top: 6px; }
+  .mc-form-ly-do .input { flex: 1; }
+}

@@ -13,6 +13,8 @@ const rutGon = (s, n = 140) => (s && s.length > n ? `${s.slice(0, n - 1)}…` : 
 // Ai là "bên trong" của việc: người theo dõi hoặc Owner tài khoản (ẩn/hiện cho đẹp; policy + guard 0025 là chốt).
 export const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
 export const duocCapNhat = (r) => laBenTrong(r) || Boolean(state.user?.quan_tri_kl);
+// GĐ16 (MC-4): ai được đóng nhiệm vụ — Owner/người theo dõi, lãnh đạo trong phạm vi (A1/A2), quan_tri_kl; hàm dong_nhiem_vu 0028 là chốt.
+export const duocDong = (r) => laBenTrong(r) || duocChiDao() || Boolean(state.user?.quan_tri_kl);
 
 // Owner hiển thị: cán bộ (tên, phòng) hoặc đơn vị/phòng.
 export function ownerHtml(r) {
@@ -48,6 +50,10 @@ export function dongHtml(r, homNay) {
   const nutNhan = laBenTrong(r) && nhom.mo && !r.da_xac_nhan_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc') : '';
   // 15E: nút chính riêng — A1/A2 "Chỉ đạo", Owner/người theo dõi "Phản hồi" (mở ngăn, con trỏ vào ô nhập); vai khác chỉ có Chi tiết.
   const nutChiDao = duocChiDao() ? nut('moKlChiDao', 'Chỉ đạo', 'btn-chinh') : laBenTrong(r) ? nut('moKlChiDao', 'Phản hồi', 'btn-chinh') : '';
+  // GĐ16 (MC-4): "Đóng nhiệm vụ" chỉ sáng khi có ≥ 1 minh chứng hợp lệ (so_minh_chung_hop_le từ v_nhiem_vu, cùng vị từ với DB).
+  const coMC = (r.so_minh_chung_hop_le || 0) > 0;
+  const nutDong = duocDong(r) && nhom.mo
+    ? `<button type="button" data-action="openDongNhiemVu" data-id="${r.id}" class="btn btn-cham btn-nho"${coMC ? '' : ' disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận) — nộp ở ngăn Chi tiết"'}>Đóng nhiệm vụ</button>` : '';
   const vanBan = r.so_hoi_nghi ? `HN ${r.so_hoi_nghi} · ${escapeHtml(r.so_ket_luan)}` : escapeHtml(r.so_ket_luan);
   return `
     <tr id="klRow-${r.id}" class="${nhom.row}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}">
@@ -57,7 +63,7 @@ export function dongHtml(r, homNay) {
       <td data-nhan="Người theo dõi" class="nguoi">${escapeHtml(r.nguoi_theo_doi_ten) || '—'}<small>${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || r.nguoi_theo_doi_phong || '')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhom.mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}</small></td>
       <td data-nhan="Hạn" class="han">${oHan(r, homNay)}</td>
       <td data-nhan="Trạng thái"><span class="${cham.lop}" title="${escapeHtml(cham.ten)}"></span><span class="muc ${nhom.muc}">${escapeHtml(nhanTrangThai(r))}</span>${thieuMC}${ghiChuCapNhat(r)}</td>
-      <td><div class="thao-tac">${nut('moKlChiTiet', 'Chi tiết')}${nutChiDao}${nutNhan}${duocCapNhat(r) ? nut('openKlCapNhat', 'Cập nhật', 'btn-cham') : ''}</div></td>
+      <td><div class="thao-tac">${nut('moKlChiTiet', 'Chi tiết')}${nutChiDao}${nutNhan}${duocCapNhat(r) ? nut('openKlCapNhat', 'Cập nhật', 'btn-cham') : ''}${nutDong}</div></td>
     </tr>
     <tr id="klChiTiet-${r.id}" class="hidden dong-chi-tiet"><td colspan="${SO_COT}" class="o-chi-tiet"></td></tr>
   `;
