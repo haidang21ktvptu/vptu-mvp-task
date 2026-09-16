@@ -22,6 +22,9 @@ test.describe.serial('Nhiệm vụ — giao việc thống nhất (quan_tri_kl)'
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('nhiem_vu').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có migration 0023+ (thực thể thống nhất).');
+    // service_role gọi giao_viec({}) → 42501 (chưa đăng nhập) khi hàm có; PGRST202 khi staging chưa có 0025 (CI của PR trước merge).
+    const rpc = await db.rpc('giao_viec', { p: {} });
+    test.skip(rpc.error?.code === 'PGRST202', 'Project chưa có migration 0025 (giao_viec) — chạy lại sau khi merge.');
     await don(db);
     await db.from('accounts').update({ quan_tri_kl: true }).eq('id', QTHT_ID);
     const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;

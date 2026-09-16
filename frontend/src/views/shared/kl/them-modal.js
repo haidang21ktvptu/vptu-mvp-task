@@ -46,6 +46,13 @@ function dienLinhVuc() {
   $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + ds.map((l) => opt(l.ma, l.ten)).join('');
 }
 
+// Đổi văn bản → ngày nhận mặc định = ngày nhận của văn bản nếu có (GV-2), không thì giữ hôm nay.
+function vanBanDoi() {
+  const vb = vanBanChon();
+  $('klThNgayNhan').value = vb?.ngay_nhan || homNay;
+  capNhatHienThi();
+}
+
 // Đổi Owner → cấp nhận sản phẩm mặc định = cấp ngay trên Owner (người dùng vẫn sửa được sau đó).
 function ownerDoi() {
   const { capMacDinh } = parseOwner($('klThOwner').value, danhMucKl(), state.accounts);
@@ -143,7 +150,8 @@ async function luu(nhapTiep) {
 export function mountKlThemModal(onSave) {
   afterSave = onSave;
   $('modalRoot').insertAdjacentHTML('beforeend', klThemTemplate);
-  ['klThVanBan', 'klThLoaiVB', 'klThLoai', 'klThNgayBH'].forEach((id) => $(id).addEventListener('change', capNhatHienThi));
+  ['klThLoaiVB', 'klThLoai', 'klThNgayBH'].forEach((id) => $(id).addEventListener('change', capNhatHienThi));
+  $('klThVanBan').addEventListener('change', vanBanDoi);
   $('klThHan').addEventListener('input', capNhatHienThi);
   $('klThNganh').addEventListener('change', dienLinhVuc);
   $('klThOwner').addEventListener('change', ownerDoi);
