@@ -91,6 +91,8 @@ export function chiTietHtml(r, ls, dc) {
 // Mở/đóng ngăn chi tiết. cheDo (15E): 'chi-tiet' = bảng thông tin mở sẵn, không đặt con trỏ; 'chi-dao' = bảng gập, con trỏ
 // vào ô chỉ đạo/phản hồi (ngăn đang mở thì chỉ đặt con trỏ, không đóng); không có = toggle giữ bảng gập (vẽ lại realtime).
 const dangNap = new Map(); // id → promise nạp ngăn (vẽ lại realtime có thể đang nạp khi người dùng bấm "Chỉ đạo")
+const cheDoDangNap = new Map(); // id → chế độ đã chọn khi ngăn còn "Đang tải…" (vẽ lại realtime giữ đúng chế độ, không suy từ DOM chưa có)
+export const bangDangMoSan = (id) => cheDoDangNap.get(id) === 'chi-tiet';
 export async function toggleKlChiTiet({ id, cheDo }) {
   const tr = $(`klChiTiet-${id}`);
   const r = timKlRow(id);
@@ -108,6 +110,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
     await napChiDao(r); // khối chỉ đạo (GĐ15) ở đầu ngăn, nạp riêng, ghi "đã đọc" khi hiện
   })();
   dangNap.set(id, nap.catch(() => {}));
+  cheDoDangNap.set(id, cheDo);
   try {
     await nap;
     if (cheDo === 'chi-dao') focusChiDao(id);
@@ -116,6 +119,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
     show(tr, false);
   } finally {
     dangNap.delete(id);
+    cheDoDangNap.delete(id);
   }
 }
 export const moKlChiTiet = ({ id }) => toggleKlChiTiet({ id, cheDo: 'chi-tiet' });
