@@ -8,7 +8,7 @@ import { pageAs } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
-const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CV1_ID = '00000000-0000-4000-8000-000000000013'; // demo_e2e_dh — tài khoản riêng của spec (GĐ18)
 const CVP_ID = '00000000-0000-4000-8000-000000000001';
 const SO_HOI_NGHI = 993;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
@@ -33,7 +33,7 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id;
     a1 = await pageAs(browser, 'A1', testInfo);
-    a3 = await pageAs(browser, 'A3', testInfo);
+    a3 = await pageAs(browser, 'E2E_DH', testInfo);
   });
   test.afterAll(async () => {
     for (const p of [a1, a3]) await p?.context().close();
@@ -47,7 +47,7 @@ test.describe.serial('Điều hành ngoại lệ — chỉ đạo, phản hồi,
     await expect(row).toContainText('Phòng Tổng hợp');
     await expect(row).toContainText('chưa định nghĩa');
     await expect(row.locator('.nl-cap')).toHaveValue('');
-    await expect(row).toContainText('Demo Chuyên viên Một');
+    await expect(row).toContainText('Demo E2E Chuyên viên DH');
     expect(Number(await row.locator('.nl-tre').innerText())).toBeGreaterThan(3);
     expect(await row.locator('.nl-tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(180, 35, 24)'); // --muc-do
     await expect(a3.locator('#chuongBadge')).toBeHidden();

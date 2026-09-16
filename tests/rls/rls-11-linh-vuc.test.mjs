@@ -44,7 +44,7 @@ describe('RLS-11 phạm vi PCVP theo (ngành, lĩnh vực)', { skip: SKIP }, () 
     assert.equal((await pcvp2.rpc('phu_trach', { p_lanh_dao: IDS.pcvp2, p_phong: 'TONG_HOP' })).data, false);
     const hn = await pcvp2.from('van_ban_giao_viec').select('id').eq('id', fx.hn);
     assertOk(hn, 'hội nghị'); assert.equal(hn.data.length, 1);
-    const v = await pcvp2.from('v_kl_dashboard').select('ma, linh_vuc_ma, linh_vuc_ten').eq('ma', 'NV-T01').single();
+    const v = await pcvp2.from('v_nhiem_vu').select('ma, linh_vuc_ma, linh_vuc_ten').eq('ma', 'NV-T01').single();
     assertOk(v, 'dashboard'); assert.deepEqual(v.data, { ma: 'NV-T01', linh_vuc_ma: 'LV08_TAI_CHINH', linh_vuc_ten: 'Tài chính' });
     const log = await qtht.from('quyen_lich_su').select('co, bat').eq('tai_khoan', IDS.pcvp2).order('id');
     assert.deepEqual(log.data.slice(-1).map((l) => [l.co, l.bat]), [['kiem_nhiem:TONG_HOP:KINH_TE_TONG_HOP:LV08_TAI_CHINH', true]]);

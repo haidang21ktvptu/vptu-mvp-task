@@ -1,4 +1,5 @@
 // Gắn markup từng view/modal/tính năng vào trang và đăng ký view theo vai trò (gọi một lần lúc khởi động).
+import { registerA0View } from './a0/index.js';
 import { registerA1View } from './a1/index.js';
 import { registerA2View } from './a2/index.js';
 import { registerA3View } from './a3/index.js';
@@ -12,6 +13,7 @@ import { initKlRealtime } from '../features/kl-realtime.js';
 import { onSessionEnter } from '../auth/session.js';
 
 export function registerViews() {
+  registerA0View();      // Thường trực Tỉnh ủy (GĐ18): chỉ Dashboard + Nhiệm vụ, chỉ đọc + Ý kiến
   registerA1View();
   registerA2View();
   registerA3View();

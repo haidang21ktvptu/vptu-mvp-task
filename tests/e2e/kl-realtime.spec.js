@@ -8,7 +8,7 @@ import { pageAs } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
-const CV1_ID = '00000000-0000-4000-8000-000000000004';
+const CV1_ID = '00000000-0000-4000-8000-000000000014'; // demo_e2e_owner — chỉ làm Owner dữ liệu (GĐ18)
 const SO_HOI_NGHI = 996;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
 const KN = { timeout: 5_000 };    // mất mạng → dự phòng ngay theo sự kiện offline (GĐ15), không chờ heartbeat
@@ -40,21 +40,18 @@ test.describe.serial('Kết luận BTVTU — thời gian thực', () => {
   });
 
   // eslint-disable-next-line no-empty-pattern
-  test('DB thêm một nhiệm vụ → ô Tổng tăng 1 và dòng xuất hiện, không bấm gì', async ({}, testInfo) => {
-    const tong = Number(await page.locator('#klSo-TONG').innerText());
+  test('DB thêm một nhiệm vụ → dòng xuất hiện, không bấm gì', async ({}, testInfo) => {
     const { data: nv, error } = await db.from('nhiem_vu').insert({
       van_ban_id: hnId, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} realtime ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31',
     }).select('id').single();
     if (error) throw new Error(error.message);
-    await expect(page.locator('#klSo-TONG')).toHaveText(String(tong + 1), RT);
-    await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
-    // DB đổi tiến độ (đủ minh chứng + ngày) → dòng đổi nhóm, ô Hoàn thành tăng.
-    const ht = Number(await page.locator('#klSo-HOAN_THANH').innerText());
+    // 2 worker (GĐ18): spec khác thêm/dọn việc cùng lúc nên không so ô Tổng/Hoàn thành theo số; chỉ kiểm dòng xuất hiện và đổi nhóm.
+    await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN', RT);
+    // DB đổi tiến độ (đủ minh chứng + ngày) → dòng đổi nhóm.
     const r = await db.from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', minh_chung: 'CV 01 (e2e)' }).eq('id', nv.id).select('id');
     if (r.error) throw new Error(r.error.message);
-    await expect(page.locator('#klSo-HOAN_THANH')).toHaveText(String(ht + 1), RT);
-    await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    await expect(page.locator(`#klRow-${nv.id}`)).toHaveAttribute('data-nhom', 'HOAN_THANH', RT);
   });
 
   test('mất mạng → chỉ báo "làm mới mỗi 60 giây" trong ≤ 5 giây; có mạng lại → "Cập nhật trực tiếp"', async () => {

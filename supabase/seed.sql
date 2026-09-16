@@ -9,6 +9,11 @@
 --   demo_cv2         A3  Chuyên viên QUAN_TRI (khác phòng, khác khối)
 --   smoke_test       A3  Tài khoản hệ thống (is_system, phòng CDS_CY) — smoke test sau phát hành; ẩn khỏi danh bạ
 --   demo_qtht        A3  Chuyên viên CDS_CY giữ cờ quan_tri_he_thong (GĐ8) — cấp/thu quan_tri_kl, phân công phụ trách phòng
+--   demo_a0          A0  Thường trực Tỉnh ủy (GĐ18, CH-11 = A): chỉ đọc + ghi ý kiến; không phòng
+-- Tài khoản riêng cho từng spec e2e (GĐ18, Playwright 2 worker — spec không dùng chung tài khoản; test RLS vẫn dùng bộ trên):
+--   demo_e2e_kl / demo_e2e_mc / demo_e2e_nv / demo_e2e_dh  A3 TONG_HOP — kl-chuyen-vien / kl-minh-chung / nhiem-vu / dieu-hanh
+--   demo_e2e_owner   A3  TONG_HOP, chỉ làm Owner dữ liệu (kl-realtime, kl-them-nhiem-vu), không đăng nhập
+--   demo_e2e_tp / demo_e2e_cv  A2 / A3 phòng giả E2E_RT — realtime (nhắn tin 1-1)
 -- Mật khẩu chung: 123456 (chỉ tài khoản giả). Từ migration 0011, accounts.id là FK tới
 -- auth.users.id nên phải tạo auth user TRƯỚC, cùng id, rồi mới INSERT accounts.
 -- ON CONFLICT DO NOTHING/UPDATE để chạy lại vẫn đồng bộ được manager_id/is_chief.
@@ -24,7 +29,15 @@ WITH demo(id, username) AS (
     ('00000000-0000-4000-8000-000000000004'::uuid, 'demo_cv1'),
     ('00000000-0000-4000-8000-000000000005'::uuid, 'demo_cv2'),
     ('00000000-0000-4000-8000-000000000007'::uuid, 'smoke_test'),
-    ('00000000-0000-4000-8000-000000000008'::uuid, 'demo_qtht')
+    ('00000000-0000-4000-8000-000000000008'::uuid, 'demo_qtht'),
+    ('00000000-0000-4000-8000-000000000009'::uuid, 'demo_a0'),
+    ('00000000-0000-4000-8000-000000000010'::uuid, 'demo_e2e_kl'),
+    ('00000000-0000-4000-8000-000000000011'::uuid, 'demo_e2e_mc'),
+    ('00000000-0000-4000-8000-000000000012'::uuid, 'demo_e2e_nv'),
+    ('00000000-0000-4000-8000-000000000013'::uuid, 'demo_e2e_dh'),
+    ('00000000-0000-4000-8000-000000000014'::uuid, 'demo_e2e_owner'),
+    ('00000000-0000-4000-8000-000000000015'::uuid, 'demo_e2e_tp'),
+    ('00000000-0000-4000-8000-000000000016'::uuid, 'demo_e2e_cv')
 )
 INSERT INTO "auth"."users"
   ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at",
@@ -62,7 +75,15 @@ VALUES
   ('00000000-0000-4000-8000-000000000004', 'demo_cv1', 'Demo Chuyên viên Một', 'A3', 'Chuyên viên', '00000000-0000-4000-8000-000000000002', 'TONG_HOP', false, false, false, false),
   ('00000000-0000-4000-8000-000000000005', 'demo_cv2', 'Demo Chuyên viên Hai', 'A3', 'Chuyên viên', '00000000-0000-4000-8000-000000000006', 'QUAN_TRI', false, false, false, false),
   ('00000000-0000-4000-8000-000000000007', 'smoke_test', 'Tài khoản kiểm thử hệ thống', 'A3', 'Kiểm thử hệ thống', NULL, 'CDS_CY', false, false, true, false),
-  ('00000000-0000-4000-8000-000000000008', 'demo_qtht', 'Demo Quản trị hệ thống', 'A3', 'Chuyên viên', NULL, 'CDS_CY', false, false, false, true)
+  ('00000000-0000-4000-8000-000000000008', 'demo_qtht', 'Demo Quản trị hệ thống', 'A3', 'Chuyên viên', NULL, 'CDS_CY', false, false, false, true),
+  ('00000000-0000-4000-8000-000000000009', 'demo_a0', 'Demo Thường trực Tỉnh ủy', 'A0', 'Thường trực Tỉnh ủy', NULL, NULL, false, false, false, false),
+  ('00000000-0000-4000-8000-000000000010', 'demo_e2e_kl', 'Demo E2E Chuyên viên KL', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000011', 'demo_e2e_mc', 'Demo E2E Chuyên viên MC', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000012', 'demo_e2e_nv', 'Demo E2E Chuyên viên NV', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000013', 'demo_e2e_dh', 'Demo E2E Chuyên viên DH', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000014', 'demo_e2e_owner', 'Demo E2E Chuyên viên Owner', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000015', 'demo_e2e_tp', 'Demo E2E Trưởng phòng RT', 'A2', 'Trưởng phòng', NULL, 'E2E_RT', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000016', 'demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'Chuyên viên', NULL, 'E2E_RT', false, false, false, false)
 ON CONFLICT ("id") DO UPDATE SET
   "manager_id" = EXCLUDED."manager_id",
   "department" = EXCLUDED."department",

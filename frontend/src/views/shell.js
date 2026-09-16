@@ -11,7 +11,8 @@ function formatLongDate(d) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-const SECTION_BY_ROLE = { A1: 'viewThuongTruc', A2: 'viewLanhDaoVP', A3: 'viewChuyenVien' };
+// A0 (GĐ18): không có section riêng — vào thẳng Dashboard (mục dùng chung).
+const SECTION_BY_ROLE = { A0: 'viewKlDashboard', A1: 'viewThuongTruc', A2: 'viewLanhDaoVP', A3: 'viewChuyenVien' };
 // Mục dùng chung ngoài vai trò (GĐ8): chỉ hiện khi tài khoản có cờ tương ứng; mục khai báo data-section
 // tự hiện section của mình, các mục còn lại đưa về section theo vai trò.
 const EXTRA_SECTIONS = ['viewQuanTri', 'viewKl', 'viewKlDashboard'];
@@ -58,7 +59,7 @@ export function initUserInterface() {
   setText('currentUserDisplay', `${user.full_name} (${user.position_title})`);
   setText('currentRoleDisplay', ROLE_LABELS[user.role_group] || '');
   setText('headerUser', user.full_name); // điện thoại: thanh bên không có khối người dùng, tên hiện ở thanh trên (15C)
-  setText('headerDeptDisplay', DEPT_NAMES[user.department] || 'Văn phòng Tỉnh ủy Cao Bằng');
+  setText('headerDeptDisplay', DEPT_NAMES[user.department] || (user.role_group === 'A0' ? 'Thường trực Tỉnh ủy Cao Bằng' : 'Văn phòng Tỉnh ủy Cao Bằng'));
   setText('headerDate', formatLongDate(new Date()));
   renderNav(view?.nav || []);
 
