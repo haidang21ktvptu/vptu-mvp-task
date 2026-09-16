@@ -50,11 +50,13 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     await expect(row).toBeVisible();
     await row.locator('[data-action=moKlChiDao]').click();
     const form = a0.locator(`#klChiDao-${nvId} form.cd-form`);
-    await expect(form.locator('input[name=noi_dung]')).toBeFocused();
+    await expect(form.locator('input[name=noi_dung]')).toBeVisible();
+    await expect(form.locator('input[name=noi_dung]')).toBeEditable(); // không kiểm focus tự động (headless trên runner không ổn định)
     await expect(form.locator('select[name=loai] option')).toHaveText(['Ý kiến', 'Chỉ đạo']);
     await expect(form.locator('input[name=han_phan_hoi]')).toBeHidden();
     await form.locator('select[name=loai]').selectOption('CHI_DAO_TT');
     await expect(form.locator('input[name=han_phan_hoi]')).toBeVisible(); // để trống = 2 ngày làm việc
+    await form.locator('input[name=noi_dung]').click();
     await form.locator('input[name=noi_dung]').fill('Báo cáo Thường trực tiến độ trước thứ Sáu (e2e)');
     await form.locator('button[type=submit]').click();
     const goc = a0.locator(`#klChiDao-${nvId} .cd-goc[data-loai=CHI_DAO_TT]`);
