@@ -1,7 +1,7 @@
 // Hành động tại chỗ trên thẻ / dòng của các màn hình điều hành (A0/A1/A2/A3): mở/đóng ô một dòng, điền gợi ý, gửi chỉ đạo Thường trực
 // (A0), đôn đốc (A1/A2), phản hồi chỉ đạo, xác nhận minh chứng hợp lệ / không hợp lệ, xem diễn biến. Mọi ghi qua hàm DB 0026/0028/0032;
 // sau mỗi hành động màn hình gọi lại hàm nạp (napLai) do màn hình đăng ký.
-import { $, show } from '../../../lib/dom.js';
+import { $ } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { chiDaoGui, chiDaoPhanHoi } from '../../../lib/kl/dieu-hanh.js';
@@ -67,4 +67,3 @@ const moChiDaoViec = ({ id, ma }) => moNhiemVu(id, ma, 'chi-dao');
 export function mountHanhDongDieuHanh() {
   registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec });
 }
-export { show };

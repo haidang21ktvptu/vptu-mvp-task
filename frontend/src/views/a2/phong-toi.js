@@ -11,9 +11,10 @@ import { sanPhamThieu } from '../shared/dieu-hanh/the-viec.js';
 const oHtml = (id, submit, data, placeholder, nhan) => `<form class="o" id="${id}" data-submit="${submit}" ${data}><input name="noi_dung" required placeholder="${placeholder}" aria-label="${placeholder}">
     <button type="submit" class="nut chinh">${nhan}</button><button type="button" class="nut" data-action="dongO" data-o="${id}">Huỷ</button></form>`;
 
-// Chỉ đạo đang chờ phản hồi trên việc của phòng mà KHÔNG do chính mình gửi (từ Văn phòng / Thường trực).
+// Chỉ đạo điều hành đang chờ phản hồi trên việc của phòng mà KHÔNG do chính mình gửi (từ Văn phòng). Luồng Thường trực (CHI_DAO_TT)
+// chỉ Chánh VP / PCVP phụ trách phản hồi (0032) → không đưa vào đây.
 export function mucChiDaoChoHtml() {
-  const ds = dh.chiDaoCho.filter((c) => c.nguoi_gui !== state.user?.id && timRow(c.nhiem_vu_id));
+  const ds = dh.chiDaoCho.filter((c) => c.nguoi_gui !== state.user?.id && c.loai !== 'CHI_DAO_TT' && timRow(c.nhiem_vu_id));
   if (ds.length === 0) return '';
   return `<div class="muc do" id="ptMucChiDao"><b>Chỉ đạo từ Văn phòng chờ phòng phản hồi (${ds.length})</b>${ds.map((c) => {
     const r = timRow(c.nhiem_vu_id);

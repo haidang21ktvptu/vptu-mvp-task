@@ -51,7 +51,7 @@ export async function loadKl(lanThu = 0) {
     const bb = kiemBatBien(rows);
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     dienBoLoc();
-    render();
+    render(true);
     if (sauKhiNap) sauKhiNap(rows);
   } catch (e) {
     if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return loadKl(lanThu + 1); }
@@ -79,8 +79,9 @@ function dienLinhVuc() {
     + opt(CHUA_PHAN_LOAI, 'Chưa phân loại', kl.loc.linhVuc === CHUA_PHAN_LOAI);
 }
 
-// Vẽ dải số (theo lọc ngữ cảnh) và danh sách (theo lọc ngữ cảnh + nhóm).
-export function render() {
+// Vẽ dải số (theo lọc ngữ cảnh) và danh sách (theo lọc ngữ cảnh + nhóm). veLaiNgan: chỉ khi dữ liệu vừa nạp lại (không nạp lại căn cứ
+// của ngăn đang mở mỗi lần gõ ô tìm / đổi bộ lọc).
+export function render(veLaiNgan = false) {
   const { nhom, ...nguCanh } = kl.loc;
   const trongNguCanh = locRows(kl.rows, nguCanh);
   const t = tongHop(trongNguCanh);
@@ -94,7 +95,7 @@ export function render() {
   $('klBody').innerHTML = list.length === 0
     ? `<p class="trong-nho">${kl.rows.length === 0 ? 'Không có nhiệm vụ nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</p>`
     : list.map((r) => dongHtml(r, homNay, r.id === dangMo)).join('');
-  if (dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
+  if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
   setText('klSoDong', `${list.length} / ${kl.rows.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);
   if (kl.luc) setText('klTinhDen', `Số liệu tính đến ${formatDateTime(kl.luc)}:${String(kl.luc.getSeconds()).padStart(2, '0')}`);
   veChip();
