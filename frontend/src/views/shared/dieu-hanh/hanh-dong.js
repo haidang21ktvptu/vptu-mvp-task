@@ -107,7 +107,7 @@ async function xacNhanNhanTT({ id, ma }) {
     const moi = await xacNhanNhanViec(id);
     notifySuccess(moi ? `Đã xác nhận nhận việc ${ma}. Thường trực được báo; hạn và trạng thái không đổi.` : 'Đồng chí đã xác nhận nhận việc này trước đó.');
     // Hàm DB đã ghi: cập nhật dòng cục bộ và vẽ lại ngay (khối Thường trực giao biến mất tức thì), không chờ nạp lại toàn trang (staging bận có thể vài giây).
-    const r = dh.rows.find((x) => x.id === id); if (r) { r.da_xac_nhan_nhan = true; veDieuHanh(); }
+    const r = dh.rows.find((x) => x.id === id); if (r) { r.da_xac_nhan_nhan = true; r.toi_da_xac_nhan = true; veDieuHanh(); }
     await napLaiViec(id); await lamMoiHuyHieu(); await napLai();
   } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
 }

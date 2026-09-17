@@ -68,7 +68,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
 
 // Việc Thường trực giao cho tôi, chưa xác nhận nhận (A1: Owner tài khoản; A2: người theo dõi khi giao cho phòng).
 export function khoiThuongTrucHtml() {
-  const ds = dh.rows.filter((r) => r.uu_tien === 'THUONG_TRUC' && mo(r) && !r.bi_tu_choi && !r.da_xac_nhan_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
+  const ds = dh.rows.filter((r) => r.uu_tien === 'THUONG_TRUC' && mo(r) && !r.bi_tu_choi && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
   if (ds.length === 0) return '';
   return `<div class="muc do" id="khoiTT"><b>Việc Thường trực giao, chờ đồng chí xác nhận đã nhận (${ds.length})</b>
     <p>Xác nhận trong 1 ngày làm việc; quá hạn hệ thống nhắc đồng chí và Chánh Văn phòng. Từ chối cần lý do, Thường trực duyệt.</p>

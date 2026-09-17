@@ -10,8 +10,8 @@
   .dai .max { display: flex; align-items: center; gap: 14px; min-height: 60px; position: relative; }
   .co-cum { flex: none; width: 84px; height: 48px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .3)); }
   .logo { height: 42px; width: auto; background: #fff; border-radius: 8px; padding: 4px 7px; display: block; flex: none; }
-  .ten b { display: block; font-size: 14px; letter-spacing: .03em; white-space: nowrap; }
-  .ten span { font-size: 12px; opacity: .9; display: block; }
+  .dai .ten b { display: block; font-size: 14px; letter-spacing: .03em; white-space: nowrap; }
+  .dai .ten span { font-size: 12px; opacity: .9; display: block; } /* chỉ dải nhận diện — không để lan sang .ten của thẻ điều hành / dòng Nhiệm vụ (nhãn .dk bị block, ẩn mô tả trên điện thoại) */
   .dai .phai { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; }
   .logo { height: 44px; }
   /* Nút trên dải: biểu tượng trắng, không nền tròn tối; hover mới sáng nhẹ */
@@ -97,7 +97,7 @@
     .menu button .huy-hieu { position: absolute; top: 2px; right: 2px; margin: 0; }
     .trang { padding-left: 72px; padding-right: 16px; }
     .dai .max { padding: 0 16px; }
-    .ten span { display: none; }
+    .dai .ten span { display: none; }
   }
 
   /* ================= ≤ 600px: ĐIỆN THOẠI ================= */

@@ -2,6 +2,7 @@
 // chạm statement timeout như nạp cả danh sách), thay vào bộ nhớ của màn hình Nhiệm vụ (kl.rows) và Điều hành (dh.rows, dh.ngoaiLe, dh.tuChoiCho),
 // vẽ lại màn hình đang hiện. Nạp lại toàn danh sách phía sau vẫn chạy; realtime chỉ là bổ sung — không phụ thuộc vào nó.
 import { supabase } from '../../../lib/supabase.js';
+import { state } from '../../../lib/state.js';
 import { getKlRows, render } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
 import { veDieuHanh } from '../dieu-hanh/man-hinh.js';
@@ -13,7 +14,7 @@ const COT_TU_CHOI = 'id, nhiem_vu_id, nguoi_de_nghi, cap_duyet, ly_do, tao_luc, 
 export async function docMotViec(id) {
   const [r, xn, tc, nl] = await Promise.all([
     supabase.from('v_nhiem_vu').select('*').eq('id', id).maybeSingle(),
-    supabase.from('lich_su').select('id').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec').limit(1),
+    supabase.from('lich_su').select('nguoi_sua').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec'),
     supabase.from('tu_choi').select(COT_TU_CHOI).eq('nhiem_vu_id', id).order('tao_luc', { ascending: false }),
     supabase.from('v_ngoai_le').select('*').eq('id', id).maybeSingle(),
   ]);
@@ -22,6 +23,7 @@ export async function docMotViec(id) {
   const tcAll = tc.data || [];
   if (row) {
     row.da_xac_nhan_nhan = (xn.data || []).length > 0;
+    row.toi_da_xac_nhan = (xn.data || []).some((x) => x.nguoi_sua === state.user?.id);
     row.tu_choi_cho = tcAll.find((t) => t.trang_thai === 'CHO_DUYET') || null;
     row.tu_choi_moi_nhat = tcAll[0] || null;
   }

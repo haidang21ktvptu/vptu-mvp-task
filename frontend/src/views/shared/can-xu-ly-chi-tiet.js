@@ -25,7 +25,8 @@ const dong = (muc, r, chu, hanhDong = '', them = '') => `<div class="cx-dong the
 const nut = (nhan, action, data, lop = '') => `<button type="button" class="nut nho ${lop}" data-action="${action}" ${Object.entries(data).map(([k, v]) => `data-${k}="${escapeHtml(String(v))}"`).join(' ')}>${nhan}</button>`;
 
 // ---- Các tập việc theo mục (cùng quy tắc đếm với kl_so_chua_xu_ly ở DB)
-export const cuaToiChoNhan = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && r.theo_1400 && !r.da_xac_nhan_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
+// Việc mới chờ CHÍNH TÔI xác nhận (cùng quy tắc kl_so_chua_xu_ly.viec_moi: owner và người theo dõi mỗi người tự nhận, không nhận thay nhau).
+export const cuaToiChoNhan = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && r.theo_1400 && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
 const canQuyet = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && canToiQuyet(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && !r.dang_dinh_chinh);
 const biTuChoi = () => dh.rows.filter((r) => mo(r) && r.bi_tu_choi && (['A0', 'A1', 'A2'].includes(vai()) || r.tao_boi === me() || r.giao_thay_mat_cho === me()));
 const deNghiChoDuyet = () => (vai() === 'A0'

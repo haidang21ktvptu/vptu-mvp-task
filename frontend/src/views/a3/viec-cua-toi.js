@@ -12,14 +12,14 @@ import { dh, timRow, deNghiCuaToi } from '../shared/dieu-hanh/du-lieu.js';
 const me = () => state.user?.id;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laCuaToi = (r) => r.owner_tai_khoan === me() || r.nguoi_theo_doi === me();
-const canNhan = (r) => r.theo_1400 && mo(r) && !r.da_xac_nhan_nhan && laCuaToi(r) && !r.bi_tu_choi;
+const canNhan = (r) => r.theo_1400 && mo(r) && !r.toi_da_xac_nhan && laCuaToi(r) && !r.bi_tu_choi; // chính tôi chưa nhận (owner / người theo dõi mỗi người tự nhận)
 
 // Kết quả đề nghị từ chối của TÔI (GĐ22, mục 5b): đã đồng ý → chờ giao lại; không đồng ý → phải nhận việc (kèm ý kiến) cho tới khi xác nhận.
 const ketQuaTuChoi = (r) => {
   const t = r.tu_choi_moi_nhat;
   if (!t || t.nguoi_de_nghi !== me() || !mo(r) || !laCuaToi(r)) return null;
   if (t.trang_thai === 'DONG_Y' && r.bi_tu_choi) return { r, t, chu: 'Đã đồng ý từ chối, chờ giao lại' };
-  if (t.trang_thai === 'KHONG_DONG_Y' && !r.da_xac_nhan_nhan) return { r, t, chu: `Không đồng ý, phải nhận việc${t.y_kien_duyet ? `: ${t.y_kien_duyet}` : ''}` };
+  if (t.trang_thai === 'KHONG_DONG_Y' && !r.toi_da_xac_nhan) return { r, t, chu: `Không đồng ý, phải nhận việc${t.y_kien_duyet ? `: ${t.y_kien_duyet}` : ''}` };
   return null;
 };
 export function thanhTuChoiHtml() {

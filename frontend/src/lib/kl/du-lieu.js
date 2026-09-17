@@ -1,6 +1,7 @@
 // Đọc dữ liệu module Nhiệm vụ (thực thể thống nhất GĐ14). Nguồn duy nhất của dòng và trạng thái là v_nhiem_vu
 // (security_invoker → RLS kl_pham_vi 0025 quyết định ai thấy gì; frontend không lọc theo vai trò/phòng). Danh mục nạp một lần.
 import { supabase } from '../supabase.js';
+import { state } from '../state.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -55,14 +56,16 @@ export function loadKlRows() {
 async function docKlRows() {
   const [rows, xn, tcAll] = await Promise.all([
     loi(await supabase.from('v_nhiem_vu').select('*').order('ma'), 'đọc nhiệm vụ'),
-    loi(await supabase.from('lich_su').select('nhiem_vu_id').eq('cot', 'xac_nhan_nhan_viec'), 'đọc xác nhận nhận việc'),
+    loi(await supabase.from('lich_su').select('nhiem_vu_id, nguoi_sua').eq('cot', 'xac_nhan_nhan_viec'), 'đọc xác nhận nhận việc'),
     // Đề nghị từ chối (0034): RLS chỉ trả dòng người đề nghị / cấp duyệt / cấp trên đọc được; mọi trạng thái, mới nhất trước — dòng đầu mỗi việc
     // là đề nghị mới nhất (GĐ22: người đề nghị thấy "đã đồng ý" / "không đồng ý" ngay trên thẻ).
     loi(await supabase.from('tu_choi').select('id, nhiem_vu_id, nguoi_de_nghi, cap_duyet, ly_do, tao_luc, trang_thai, y_kien_duyet, duyet_luc').order('tao_luc', { ascending: false }), 'đọc đề nghị từ chối'),
   ]);
-  const daNhan = new Set(xn.map((x) => x.nhiem_vu_id)); const tcCho = tcAll.filter((t) => t.trang_thai === 'CHO_DUYET');
+  const me = state.user?.id; const daNhan = new Set(xn.map((x) => x.nhiem_vu_id)); const toiNhan = new Set(xn.filter((x) => x.nguoi_sua === me).map((x) => x.nhiem_vu_id));
+  const tcCho = tcAll.filter((t) => t.trang_thai === 'CHO_DUYET');
   rows.forEach((r) => {
-    r.da_xac_nhan_nhan = daNhan.has(r.id); // bi_tu_choi đã có trong v_nhiem_vu (0037)
+    r.da_xac_nhan_nhan = daNhan.has(r.id); // có bất kỳ ai (owner / người theo dõi) xác nhận — khâu CHUA_NHAN, chú thích dòng; bi_tu_choi đã có trong v_nhiem_vu (0037)
+    r.toi_da_xac_nhan = toiNhan.has(r.id); // CHÍNH TÔI đã xác nhận — quy tắc: owner và người theo dõi mỗi người tự nhận (cùng kl_so_chua_xu_ly.viec_moi)
     r.tu_choi_cho = tcCho.find((t) => t.nhiem_vu_id === r.id) || null; r.tu_choi_moi_nhat = tcAll.find((t) => t.nhiem_vu_id === r.id) || null;
   });
   return { rows, luc: new Date(), tuChoiCho: tcCho, tuChoi: tcAll };
