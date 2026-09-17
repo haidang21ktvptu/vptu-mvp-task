@@ -5,9 +5,11 @@ Job CI `Kiểm thử RLS + e2e trên staging` (`.github/workflows/ci.yml`) đọ
 | Giá trị | Project | Việc job làm |
 |---|---|---|
 | (trống) hoặc `staging` | `vojmrjezspdftovzinek` | e2e như trước (migration và RLS trên staging do `deploy-staging.yml` lo khi push `main`). |
-| `production` | `frwyxcmbonjaimziiuqr` | `supabase db push` migration của nhánh → `scripts/seed-demo.mjs` (tài khoản demo, idempotent) → test RLS → e2e. |
+| `production` | `frwyxcmbonjaimziiuqr` | `supabase db push` migration của nhánh → `scripts/seed-demo.mjs` (tài khoản demo, idempotent) → **chỉ e2e** (không test RLS token thật). |
 
-Summary của job ghi dòng đầu "Môi trường kiểm thử: … (project …)". `deploy-staging.yml` và `deploy-prod.yml` không đổi.
+Summary của job ghi dòng đầu "Môi trường kiểm thử: … (project …)"; với production ghi thêm "production: chỉ e2e". `deploy-staging.yml` và `deploy-prod.yml` không đổi.
+
+**Nguyên tắc: không chạy bộ RLS token thật trên production.** Bộ `tests/rls` giả định seed của staging (id tài khoản cố định, phân công PCVP demo, tổng số dòng như `supabase/seed.sql`, không ai giữ `quan_tri_kl`) nên trên dữ liệu thật đỏ hàng loạt (rls-9/10/11, kl-0025/0026/0028, kl-pham-vi-tong-hop) dù mã đúng. RLS của chính PR đã chạy đủ trên Supabase cục bộ ở job "Áp migration + lint schema"; production chỉ dùng để chạy e2e trên schema và dữ liệu thật. Không viết lại bộ test cho production.
 
 ## Secret / biến trên GitHub
 

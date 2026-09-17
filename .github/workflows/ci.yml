@@ -150,7 +150,7 @@ jobs:
   # cùng lúc ghi dữ liệu mẫu lên staging (không huỷ lượt đang chạy). Giữ tên hiển thị cũ vì ruleset `main`
   # bắt check theo tên.
   # Công tắc môi trường kiểm thử (docs/KIEM-THU.md): biến kho vars.KIEM_THU_MOI_TRUONG = 'staging' (mặc định) | 'production'.
-  # production: db push migration lên project production, nạp tài khoản demo (scripts/seed-demo.mjs, idempotent), chạy RLS rồi e2e.
+  # production: db push migration lên project production, nạp tài khoản demo (scripts/seed-demo.mjs, idempotent) rồi CHỈ e2e (không RLS token thật).
   # Tên job giữ nguyên vì ruleset của main yêu cầu check này; Summary ghi rõ môi trường.
   kiem-thu-staging:
     name: Kiểm thử RLS + e2e trên staging
@@ -178,6 +178,9 @@ jobs:
       - name: Môi trường kiểm thử
         run: |
           echo "### Môi trường kiểm thử: **$KIEM_THU_MOI_TRUONG** (project \`$PROJECT_REF\`)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$KIEM_THU_MOI_TRUONG" = production ]; then
+            echo "production: chỉ e2e (db push + tài khoản demo + e2e; bỏ RLS token thật — bộ RLS giả định seed staging, RLS đã chạy ở job cục bộ)." >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
             echo "::error::Thiếu secret anon/service_role cho môi trường $KIEM_THU_MOI_TRUONG (staging: STAGING_SUPABASE_*; production: VITE_SUPABASE_ANON_KEY + SUPABASE_SERVICE_ROLE_KEY)."
             exit 1
@@ -186,7 +189,7 @@ jobs:
         run: |
           npm ci --prefix frontend
           npm ci --prefix tests/e2e
-      # ---- Chỉ khi KIEM_THU_MOI_TRUONG = production: migration → tài khoản demo → RLS (staging: migration do deploy-staging.yml, RLS ở đó) ----
+      # ---- Chỉ khi KIEM_THU_MOI_TRUONG = production: migration → tài khoản demo (staging: migration do deploy-staging.yml, RLS ở đó) ----
       - uses: supabase/setup-cli@v1
         if: env.KIEM_THU_MOI_TRUONG == 'production'
         with:
@@ -208,12 +211,9 @@ jobs:
         run: |
           npm ci --prefix scripts
           node scripts/seed-demo.mjs 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Test RLS (token thật; file gọi canh_bao_quet tự bỏ qua trên production)
-        if: env.KIEM_THU_MOI_TRUONG == 'production'
-        working-directory: tests/rls
-        run: |
-          npm ci
-          npm test
+      # KHÔNG chạy RLS token thật trên production: bộ RLS giả định seed của staging (id cố định, phân công demo, tổng số dòng, không ai có
+      # quan_tri_kl) nên đỏ hàng loạt trên dữ liệu thật dù mã đúng; RLS đã chạy đủ trên Supabase cục bộ ở job "Áp migration + lint schema".
+      # production: chỉ db push → tài khoản demo → e2e (docs/KIEM-THU.md).
       # Cache Chromium theo phiên bản @playwright/test trong lock file; trúng cache thì chỉ cài gói hệ thống.
       # Lưu cache ngay sau khi cài xong (restore/save tách) để lần chạy e2e đỏ vẫn để lại cache cho lần re-run.
       - name: Phiên bản Playwright
