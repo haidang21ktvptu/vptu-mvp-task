@@ -1,7 +1,7 @@
 // Bộ dữ liệu mẫu E2E-SEED (gọi từ seed-demo.mjs): một văn bản giao việc + 6 nhiệm vụ đủ trạng thái mà bộ e2e cần có sẵn trên một DB rỗng
 // (a0.spec, bo-cuc-mobile, kl-dashboard cần "có dòng" trong phạm vi A0/A1; các spec khác tự tạo dữ liệu riêng E2E-TEST*).
-// Idempotent: tìm văn bản theo so_ket_luan = 'E2E-SEED', nhiệm vụ theo noi_dung (bắt đầu 'E2E-SEED'), chỉ chèn dòng thiếu (nhiệm vụ, lich_su xác
-// nhận nhận việc, minh_chung); hạn/ngày nhận tính lại theo hôm nay (giờ Việt Nam) cho đúng dòng tag để trạng thái không trôi. KHÔNG đụng gì ngoài tag.
+// Idempotent: tìm văn bản theo so_ket_luan = 'E2E-SEED', nhiệm vụ theo noi_dung (bắt đầu 'E2E-SEED'), chỉ chèn dòng thiếu (nhiệm vụ, lich_su giao việc / xác
+// nhận nhận việc / cảnh báo, canh_bao việc Đỏ, minh_chung); hạn/ngày nhận tính lại theo hôm nay (giờ Việt Nam) cho đúng dòng tag để trạng thái không trôi. KHÔNG đụng gì ngoài tag.
 // Tài khoản lấy theo username demo_* (không gán id cứng) — thiếu tài khoản nào thì báo rõ tên, không chèn nửa vời. Phòng: TONG_HOP nếu đang có
 // PCVP phụ trách (thật hoặc demo do seed-demo chèn), nếu không thì phòng đầu tiên có phân công thật. Sau khi nạp, đọc v_nhiem_vu dưới token của
 // demo_cvp và demo_a0 để chắc chắn bộ mẫu nằm trong phạm vi nhìn thấy. Dọn: màn hình Dọn dữ liệu → bộ sẵn "dữ liệu thử" (0043).
@@ -19,7 +19,7 @@ function danhSach(tk, homNay, phong) {
     loai_thoi_han_ma: 'CO_HAN_CU_THE', san_pham_loai: 'BAO_CAO', nguon: 'app' });
   return [
     { noi_dung: `${SEED_TAG} đang thực hiện, còn thời gian`, ...chung('demo_cv1'), han_xu_ly: congNgay(homNay, 20), ngay_nhan_van_ban: congNgay(homNay, -5), theo_1400: true, do_khan: 'THUONG', xacNhan: true },
-    { noi_dung: `${SEED_TAG} quá hạn Đỏ, chưa có minh chứng`, ...chung('demo_cv1'), han_xu_ly: congNgay(homNay, -10), ngay_nhan_van_ban: congNgay(homNay, -20), theo_1400: true, do_khan: 'KHAN', xacNhan: true },
+    { noi_dung: `${SEED_TAG} quá hạn Đỏ, chưa có minh chứng`, ...chung('demo_cv1'), han_xu_ly: congNgay(homNay, -10), ngay_nhan_van_ban: congNgay(homNay, -20), theo_1400: true, do_khan: 'KHAN', xacNhan: true, canhBao: true },
     { noi_dung: `${SEED_TAG} sắp đến hạn`, ...chung('demo_cv1'), han_xu_ly: congNgay(homNay, 2), ngay_nhan_van_ban: congNgay(homNay, -8), theo_1400: true, do_khan: 'THUONG', xacNhan: true },
     { noi_dung: `${SEED_TAG} hoàn thành có minh chứng hợp lệ`, ...chung('demo_cv1'), han_xu_ly: congNgay(homNay, -3), ngay_nhan_van_ban: congNgay(homNay, -15), theo_1400: true, do_khan: 'THUONG',
       hoanThanh: congNgay(homNay, -4), xacNhan: true, // chuyển Hoàn thành sau khi đã có minh chứng (trigger 0028 bắt buộc)
@@ -55,7 +55,7 @@ export async function napDuLieuMau(db, dryRun) {
   const kq = { tao: 0, capNhat: 0, daCo: 0 };
   let vb = loi(await db.from('van_ban_giao_viec').select('id').eq('so_ket_luan', SEED_TAG).maybeSingle(), 'Đọc văn bản mẫu');
   if (!vb && !dryRun) vb = loi(await db.from('van_ban_giao_viec').insert({ so_ket_luan: SEED_TAG, loai: 'CONG_VAN', ngay_ban_hanh: congNgay(homNay, -30), tao_boi: tk.demo_truongphong }).select('id').single(), 'Tạo văn bản mẫu');
-  for (const { xacNhan, minhChung, hoanThanh, ...nv } of danhSach(tk, homNay, phong)) {
+  for (const { xacNhan, minhChung, hoanThanh, canhBao, ...nv } of danhSach(tk, homNay, phong)) {
     const cu = loi(await db.from('nhiem_vu').select('id').eq('noi_dung', nv.noi_dung).maybeSingle(), 'Đọc nhiệm vụ mẫu');
     if (dryRun) { cu ? kq.daCo++ : kq.tao++; continue; }
     let id = cu?.id;
@@ -66,9 +66,13 @@ export async function napDuLieuMau(db, dryRun) {
       id = loi(await db.from('nhiem_vu').insert({ ...nv, van_ban_id: vb.id }).select('id').single(), `Tạo "${nv.noi_dung}"`).id;
       kq.tao++;
     }
-    if (xacNhan) {
-      const co = loi(await db.from('lich_su').select('id').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec').limit(1), 'Đọc lich_su');
-      if (!co.length) loi(await db.from('lich_su').insert({ nhiem_vu_id: id, nguoi_sua: nv.owner_tai_khoan, cot: 'xac_nhan_nhan_viec', gia_tri_moi: `${SEED_TAG} xác nhận`, nguon: 'app' }), 'Ghi xác nhận nhận việc');
+    // Diễn biến tối thiểu: mọi việc có dòng "giao việc" (v_dien_bien ≥ 1 dòng — a0.spec mở khối Xem diễn biến); xác nhận nhận; việc Đỏ có cảnh báo.
+    await lichSuNeuThieu(db, id, 'giao_viec', { nguoi_sua: nv.tao_boi, gia_tri_moi: `${SEED_TAG} giao việc, người nhận demo` });
+    if (xacNhan) await lichSuNeuThieu(db, id, 'xac_nhan_nhan_viec', { nguoi_sua: nv.owner_tai_khoan, gia_tri_moi: `${SEED_TAG} xác nhận` });
+    if (canhBao) {
+      const co = loi(await db.from('canh_bao').select('id').eq('nhiem_vu_id', id).eq('muc', 'DO_DAC_BIET').limit(1), 'Đọc canh_bao');
+      if (!co.length) loi(await db.from('canh_bao').insert({ nhiem_vu_id: id, muc: 'DO_DAC_BIET', ngay: homNay, nguoi_nhan: [nv.owner_tai_khoan, nv.nguoi_theo_doi] }), 'Ghi canh_bao');
+      await lichSuNeuThieu(db, id, 'canh_bao', { nguoi_sua: null, nguoi_sua_ghi_chu: 'Hệ thống — cảnh báo tự động', gia_tri_moi: `${SEED_TAG} cảnh báo Đỏ đặc biệt: quá hạn, chưa có minh chứng` });
     }
     if (minhChung) {
       const co = loi(await db.from('minh_chung').select('id').eq('nhiem_vu_id', id).limit(1), 'Đọc minh_chung');
@@ -78,6 +82,12 @@ export async function napDuLieuMau(db, dryRun) {
   }
   console.log(`${dryRun ? '[dry-run] ' : ''}Bộ ${SEED_TAG} (phòng ${phong}): tạo ${kq.tao} · cập nhật hạn ${kq.capNhat} · đã có ${kq.daCo}`);
   if (!dryRun) await kiemPhamVi(db, ['demo_cvp', 'demo_a0']);
+}
+
+// Một dòng lich_su theo (việc, cột) nếu chưa có — cùng khoá chống trùng cho mọi lần chạy lại.
+async function lichSuNeuThieu(db, id, cot, them) {
+  const co = loi(await db.from('lich_su').select('id').eq('nhiem_vu_id', id).eq('cot', cot).limit(1), `Đọc lich_su ${cot}`);
+  if (!co.length) loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot, nguon: 'app', ...them }), `Ghi lich_su ${cot}`);
 }
 
 // Đọc v_nhiem_vu bằng JWT của từng vai (apikey service_role chỉ để gọi GoTrue; PostgREST lấy vai từ Authorization) — phải thấy đủ 6 dòng tag.

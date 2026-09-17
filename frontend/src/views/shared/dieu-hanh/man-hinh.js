@@ -11,6 +11,7 @@ import { openKl } from '../kl/index.js';
 import { dh, napDieuHanh, locThe, viecDo } from './du-lieu.js';
 import { rayHtml, tieuDeDanhSach } from './ray.js';
 import { theHtml } from './the-viec.js';
+import { giuDienBien } from '../dien-bien.js';
 import { kpiHtml, NHAN_KPI } from './kpi.js';
 import { datNapLai, mountHanhDongDieuHanh } from './hanh-dong.js';
 
@@ -48,6 +49,7 @@ export function veDieuHanh() {
   $('dhKpi').innerHTML = kpiHtml(kpi);
   $('dhKpi').classList.toggle('nam', kpi.length === 5);
   $('dhRay').innerHTML = rayHtml();
+  const traDienBien = giuDienBien($('dsThe')); // khối "Xem diễn biến" đang mở không mất khi danh sách vẽ lại (nạp lại nền / realtime)
   if (dh.loc.kpi === 'tat') {
     const t = tongHop(dh.rows);
     setText('dsTieuDe', `Toàn cảnh ${t.tong} nhiệm vụ`);
@@ -58,6 +60,7 @@ export function veDieuHanh() {
     setText('dsTieuDe', tieuDeDanhSach(ds.length, NHAN_KPI[dh.loc.kpi] || ''));
     setText('dsPhu', cauHinh.phuDe());
     $('dsThe').innerHTML = ds.length ? ds.map(theHtml).join('') : '<p class="trong">Không có việc nào ở bộ lọc này.</p>';
+    traDienBien();
   }
   cauHinh.veThem();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}, so sánh với tuần trước`);

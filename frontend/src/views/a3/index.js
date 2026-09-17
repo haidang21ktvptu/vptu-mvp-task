@@ -18,12 +18,14 @@ import { openKl } from '../shared/kl/index.js';
 import { openKlCapNhat } from '../shared/kl/cap-nhat-modal.js';
 import { nhomViecCuaToi, mucHtml, thanhTuChoiHtml } from './viec-cua-toi.js';
 import { canXuLyHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
+import { giuDienBien } from '../shared/dien-bien.js';
 
 function ve() {
   const n = nhomViecCuaToi();
   const canLam = n.moi.length + n.chiDao.length + n.canMinhChung.length;
   setText('vctTom', `${canLam} việc cần làm, ${n.dangLam.length} đang thực hiện, ${n.theoDoi.length} đang theo dõi`);
   $('dhCanXuLy').innerHTML = canXuLyHtml();
+  const traDienBien = giuDienBien($('vctMuc')); // khối Xem diễn biến đang mở giữ qua lần vẽ lại
   $('vctMuc').innerHTML = [
     thanhTuChoiHtml(),        // GĐ22: kết quả đề nghị từ chối của tôi (đã đồng ý / không đồng ý)
     khoiBiTuChoiHtml(),       // GĐ22: việc tôi giao thay mặt bị từ chối (chuyên viên giữ quan_tri_kl)
@@ -33,6 +35,7 @@ function ve() {
     mucHtml('vang', 'Sắp đến hạn hoặc quá hạn, chưa có minh chứng', n.canMinhChung, 'minh-chung'),
     mucHtml('', 'Đang thực hiện, còn thời gian', n.dangLam, 'dang-lam'),
   ].join('') || '<div class="muc"><b>Hôm nay đồng chí không có việc nào cần làm.</b></div>';
+  traDienBien();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
 }
 
