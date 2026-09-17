@@ -6,23 +6,27 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-// GĐ23: dòng 2 dải nhận diện = chức danh theo mẫu dhtn (không mã vai): "Chánh Văn phòng", "Trưởng phòng · Phòng …", "Chuyên viên · Phòng …".
-const A1 = 'Văn phòng';
-const A2 = 'Trưởng phòng · Phòng Tổng hợp';
-const A3 = 'Chuyên viên · Phòng Tổng hợp';
+// GĐ23: dòng 2 dải nhận diện = chức danh theo mẫu dhtn, sinh bằng CÙNG hàm nhanChucDanh của app từ vai + phòng của từng tài khoản (như
+// supabase/seed.sql / scripts/seed-demo.mjs) — không gõ tay; phòng ngoài DEPT_NAMES (E2E_RT) hiện mã phòng. PCVP: phần "Phụ trách …" phụ thuộc
+// dữ liệu phân công nên expectLoggedIn dùng toContainText.
+import { nhanChucDanh } from '../../../frontend/src/lib/constants.js';
+
 const DH = '#viewDieuHanh';
+const tk = (username, fullName, role_group, department, extra = {}) => ({
+  username, fullName, section: DH, roleLabel: nhanChucDanh({ role_group, department, is_chief: extra.is_chief === true, position_title: extra.position_title || 'Chuyên viên' }), ...extra,
+});
 
 export const USERS = {
-  A1: { username: 'demo_cvp', fullName: 'Demo Chánh Văn phòng', section: DH, roleLabel: A1 },
-  A2: { username: 'demo_truongphong', fullName: 'Demo Trưởng phòng', section: DH, roleLabel: A2 },
-  A3: { username: 'demo_cv1', fullName: 'Demo Chuyên viên Một', section: DH, roleLabel: A3 },
-  PCVP2: { username: 'demo_pcvp2', fullName: 'Demo Phó Chánh Văn phòng Hai', section: DH, roleLabel: A1 },
-  E2E_KL: { username: 'demo_e2e_kl', fullName: 'Demo E2E Chuyên viên KL', section: DH, roleLabel: A3 },
-  E2E_MC: { username: 'demo_e2e_mc', fullName: 'Demo E2E Chuyên viên MC', section: DH, roleLabel: A3 },
-  E2E_NV: { username: 'demo_e2e_nv', fullName: 'Demo E2E Chuyên viên NV', section: DH, roleLabel: A3 },
-  E2E_DH: { username: 'demo_e2e_dh', fullName: 'Demo E2E Chuyên viên DH', section: DH, roleLabel: A3 },
-  E2E_TP: { username: 'demo_e2e_tp', fullName: 'Demo E2E Trưởng phòng RT', section: DH, roleLabel: A2 },
-  E2E_CV: { username: 'demo_e2e_cv', fullName: 'Demo E2E Chuyên viên RT', section: DH, roleLabel: A3 },
+  A1: tk('demo_cvp', 'Demo Chánh Văn phòng', 'A1', 'LANH_DAO_VAN_PHONG', { is_chief: true }),
+  A2: tk('demo_truongphong', 'Demo Trưởng phòng', 'A2', 'TONG_HOP'),
+  A3: tk('demo_cv1', 'Demo Chuyên viên Một', 'A3', 'TONG_HOP'),
+  PCVP2: tk('demo_pcvp2', 'Demo Phó Chánh Văn phòng Hai', 'A1', 'LANH_DAO_VAN_PHONG'),
+  E2E_KL: tk('demo_e2e_kl', 'Demo E2E Chuyên viên KL', 'A3', 'TONG_HOP'),
+  E2E_MC: tk('demo_e2e_mc', 'Demo E2E Chuyên viên MC', 'A3', 'TONG_HOP'),
+  E2E_NV: tk('demo_e2e_nv', 'Demo E2E Chuyên viên NV', 'A3', 'TONG_HOP'),
+  E2E_DH: tk('demo_e2e_dh', 'Demo E2E Chuyên viên DH', 'A3', 'TONG_HOP'),
+  E2E_TP: tk('demo_e2e_tp', 'Demo E2E Trưởng phòng RT', 'A2', 'E2E_RT'),
+  E2E_CV: tk('demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'E2E_RT'),
 };
 
 export const AUTH_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '.auth');
@@ -36,6 +40,6 @@ export const storageStatePath = sessionPath; // tên cũ, giữ cho các spec ki
 // Tài khoản ngoài bộ chuẩn, đăng nhập "nếu có" (global-setup bỏ qua khi đăng nhập lỗi; kịch bản tự skip):
 // demo_qtht (A3 giữ quan_tri_he_thong, GĐ8), demo_a0 (Thường trực Tỉnh ủy, GĐ18 — có từ migration 0030 + seed mới).
 export const OPTIONAL_USERS = {
-  QTHT: { username: 'demo_qtht', fullName: 'Demo Quản trị hệ thống', roleLabel: A3 },
-  A0: { username: 'demo_a0', fullName: 'Demo Thường trực Tỉnh ủy', section: DH, roleLabel: 'Thường trực Tỉnh ủy' },
+  QTHT: tk('demo_qtht', 'Demo Quản trị hệ thống', 'A3', 'CDS_CY'),
+  A0: tk('demo_a0', 'Demo Thường trực Tỉnh ủy', 'A0', null),
 };
