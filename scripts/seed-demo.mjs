@@ -1,6 +1,6 @@
 // Nạp tài khoản demo (demo_*, demo_e2e_*, smoke_test) + phân công PCVP phụ trách phòng giả cho kiểm thử RLS/e2e lên MỘT project bất kỳ
 // bằng service_role — an toàn khi chạy lại (idempotent), KHÔNG chạm dữ liệu thật: chỉ tạo auth user + dòng accounts còn thiếu (cùng id với
-// supabase/seed.sql), không sửa dòng đã có, không tạo nhiệm vụ (bộ test tự tạo NV-T* / E2E-TEST* và tự dọn).
+// supabase/seed.sql), không sửa dòng đã có; rồi nạp bộ dữ liệu mẫu E2E-SEED (seed-demo-du-lieu.mjs, idempotent) để e2e chạy được trên DB rỗng.
 //
 //   node scripts/seed-demo.mjs [--project-ref <ref>] [--dry-run]
 //   Key: biến môi trường SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (CI) → hoặc Supabase CLI đã `supabase login` với --project-ref.
@@ -12,6 +12,7 @@
 import { spawnSync } from 'node:child_process';
 import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
+import { napDuLieuMau, napPhongThu } from './seed-demo-du-lieu.mjs';
 
 const EMAIL_DOMAIN = 'vptu.caobang.local';
 const PRODUCTION_REF = 'frwyxcmbonjaimziiuqr';
@@ -98,6 +99,8 @@ async function main() {
   }
   console.log(`${dryRun ? '[dry-run] ' : ''}Tài khoản: tạo ${kq.tao.length} [${kq.tao.join(', ')}] · đã có ${kq.daCo.length} · bỏ qua ${kq.boQua.length} ${kq.boQua.join('; ')}`);
   console.log(`Phụ trách phòng: tạo [${pt.tao.join(', ')}] · đã có [${pt.daCo.join(', ')}] · bỏ qua ${pt.boQua.join('; ')}`);
+  await napPhongThu(db, dryRun);
+  await napDuLieuMau(db, dryRun);
 }
 
 main().catch((e) => { console.error(e.message); process.exit(1); });

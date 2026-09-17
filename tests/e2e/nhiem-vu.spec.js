@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, moViec } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000012'; // demo_e2e_nv — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 994;
@@ -30,6 +30,8 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND' }).select('id, ma').single();
     if (e2) throw new Error(`Tạo việc cũ thất bại: ${e2.message}`);
     cuId = cu.id; cuMa = cu.ma;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('E2E_NV', cuId, cuMa);
   });
   test.afterAll(async () => { if (db) { await don(db, duAn); await donVanBan(db, hnKhoa); } });
 
