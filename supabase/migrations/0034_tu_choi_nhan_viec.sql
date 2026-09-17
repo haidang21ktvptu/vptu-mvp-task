@@ -27,10 +27,10 @@ INSERT INTO "public"."kl_cau_hinh" ("khoa", "gia_tri", "mo_ta") VALUES ('tu_choi
 ON CONFLICT ("khoa") DO NOTHING;
 
 -- 2. Lãnh đạo trực tiếp của một cán bộ (cấp duyệt): A3 → Trưởng phòng cùng phòng (phòng chưa có A2 → PCVP phụ trách → Chánh VP);
---    A2 → PCVP đang phụ trách phòng, không có thì Chánh VP; A1 → A0. Không bao giờ là người giao thay mặt (A3/quan_tri_kl).
+--    A2 → PCVP đang phụ trách phòng, không có thì Chánh VP; PCVP → Chánh VP; Chánh VP → A0. Không bao giờ là người giao thay mặt.
 CREATE FUNCTION "public"."lanh_dao_truc_tiep"("p_nguoi" uuid) RETURNS uuid
 LANGUAGE "sql" STABLE SECURITY DEFINER SET "search_path" = "public" AS $$
-  WITH a AS (SELECT "role_group", "department" FROM "public"."accounts" WHERE "id" = "p_nguoi"),
+  WITH a AS (SELECT "role_group", "department", "is_chief" FROM "public"."accounts" WHERE "id" = "p_nguoi"),
   a2 AS (SELECT x."id" FROM "public"."accounts" x, a WHERE x."role_group" = 'A2' AND x."department" = a."department" AND NOT x."is_system" ORDER BY x."username" LIMIT 1),
   pcvp AS (SELECT x."id" FROM "public"."accounts" x, a WHERE x."role_group" = 'A1' AND NOT x."is_chief" AND NOT x."is_system"
            AND "public"."phu_trach"(x."id", a."department", "public"."kl_hom_nay"()) ORDER BY x."username" LIMIT 1),
@@ -39,7 +39,7 @@ LANGUAGE "sql" STABLE SECURITY DEFINER SET "search_path" = "public" AS $$
   SELECT CASE a."role_group"
     WHEN 'A3' THEN coalesce((SELECT "id" FROM a2), (SELECT "id" FROM pcvp), (SELECT "id" FROM cvp))
     WHEN 'A2' THEN coalesce((SELECT "id" FROM pcvp), (SELECT "id" FROM cvp))
-    WHEN 'A1' THEN (SELECT "id" FROM a0) END
+    WHEN 'A1' THEN CASE WHEN a."is_chief" THEN (SELECT "id" FROM a0) ELSE (SELECT "id" FROM cvp) END END
   FROM a;
 $$;
 
@@ -69,6 +69,7 @@ BEGIN
     RAISE EXCEPTION 'Chỉ Owner hoặc người theo dõi vừa được giao việc mới đề nghị từ chối.' USING ERRCODE = '42501';
   END IF;
   IF v."tien_do_ma" = 'HOAN_THANH' THEN RAISE EXCEPTION 'Nhiệm vụ đã đóng, không còn từ chối được.' USING ERRCODE = '22023'; END IF;
+  IF v."bi_tu_choi" THEN RAISE EXCEPTION 'Việc đã được đồng ý từ chối, đang chờ giao lại.' USING ERRCODE = '22023'; END IF;
   IF EXISTS (SELECT 1 FROM "public"."lich_su" WHERE "nhiem_vu_id" = v."id" AND "cot" = 'xac_nhan_nhan_viec' AND "nguoi_sua" = v_me."id") THEN
     RAISE EXCEPTION 'Đồng chí đã xác nhận nhận việc này, không còn từ chối được.' USING ERRCODE = '22023';
   END IF;
@@ -89,13 +90,15 @@ BEGIN
 END;
 $$;
 
--- 5. duyet_tu_choi(p_id, p_dong_y, p_y_kien): chỉ cấp duyệt; đồng ý → bi_tu_choi = true (guard 0026 bỏ qua nhờ kl.chi_dao); người đề nghị nhận tin.
+-- 5. duyet_tu_choi(p_id, p_dong_y, p_y_kien): chỉ cấp duyệt (cấp duyệt là Thường trực → bất kỳ A0 nào); đồng ý → bi_tu_choi = true
+--    (guard 0026 bỏ qua nhờ kl.chi_dao); người đề nghị nhận tin.
 CREATE FUNCTION "public"."duyet_tu_choi"("p_id" uuid, "p_dong_y" boolean, "p_y_kien" text DEFAULT NULL) RETURNS void
 LANGUAGE "plpgsql" SECURITY DEFINER SET "search_path" = "public" AS $$
 DECLARE t "public"."tu_choi"; v_ma text; v_ket text; v_y_kien text := nullif(btrim(coalesce("p_y_kien", '')), '');
 BEGIN
   SELECT * INTO t FROM "public"."tu_choi" WHERE "id" = "p_id";
-  IF t."id" IS NULL OR "auth"."uid"() IS NULL OR t."cap_duyet" <> "auth"."uid"() THEN
+  IF t."id" IS NULL OR "auth"."uid"() IS NULL OR NOT (t."cap_duyet" = "auth"."uid"()
+     OR ("public"."me_role"() = 'A0' AND (SELECT "role_group" FROM "public"."accounts" WHERE "id" = t."cap_duyet") = 'A0')) THEN
     RAISE EXCEPTION 'Chỉ cấp duyệt ghi trên đề nghị mới được duyệt.' USING ERRCODE = '42501';
   END IF;
   IF t."trang_thai" <> 'CHO_DUYET' THEN RAISE EXCEPTION 'Đề nghị này đã được duyệt.' USING ERRCODE = '22023'; END IF;

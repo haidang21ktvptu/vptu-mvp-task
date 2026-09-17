@@ -2,17 +2,24 @@
 // cấp duyệt = lãnh đạo trực tiếp của người đề nghị (A3 → Trưởng phòng cùng phòng; phòng chưa có A2 → PCVP phụ trách), KHÔNG BAO GIỜ là
 // người giao thay mặt (chỉ nhận tin); lý do chỉ người đề nghị, cấp duyệt và cấp trên trong chuỗi đọc (A0 tất cả), không vào lich_su hay
 // tin hệ thống; chỉ cấp duyệt duyệt; đồng ý → bi_tu_choi, v_ngoai_le khau BI_TU_CHOI (ưu tiên đầu, nhom TU_CHOI khi chưa Đỏ); cờ xoá khi
-// GIAO_LAI hoặc giao lại cho Owner khác; canh_bao_quet nhắc cấp duyệt quá 2 ngày làm việc theo ngày Việt Nam (mốc 18h UTC); A0 nhắn 1-1.
-// Mã NV-T92…T95, tự dọn.
+// GIAO_LAI hoặc giao lại cho Owner khác; canh_bao_quet nhắc cấp duyệt quá 2 ngày làm việc theo ngày Việt Nam (mốc 18h UTC); A0 nhắn 1-1;
+// PCVP đề nghị → Chánh VP duyệt; Chánh VP đề nghị → Thường trực, BẤT KỲ A0 nào duyệt được; việc đã đồng ý từ chối không đề nghị lại.
+// Mã NV-T92…T97 + một tài khoản A0 tạm (kl0034_a0b), tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, assertNoRows, IDS } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, assertNoRows, IDS, EMAIL_DOMAIN } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 const E2E_KL = '00000000-0000-4000-8000-000000000010'; // demo_e2e_kl, A3 Tổng hợp — người theo dõi / Owner mới khi giao lại
-let fx; const id = {}; let t0; let tc92; let tc93; let tc94;
+let fx; const id = {}; let t0; let tc92; let tc93; let tc94; let a0b; // a0b: id tài khoản A0 tạm thứ hai
+const A0B = 'kl0034_a0b'; const MK_A0B = 'Kl0034tamA0b'; // staging bắt mật khẩu ≥ 8 ký tự có chữ và số
+let clientA0B = null;
+const rpcA0B = async (fn, args) => {
+  if (!clientA0B) { clientA0B = anonClient(); const r = await clientA0B.auth.signInWithPassword({ email: `${A0B}@${EMAIL_DOMAIN}`, password: MK_A0B }); if (r.error) throw new Error(`Đăng nhập ${A0B}: ${r.error.message}`); }
+  return clientA0B.rpc(fn, args);
+};
 const LY_DO = 'KL-0034 lý do riêng tư không được lộ';
 const assertLoi = (r, label) => assert.ok(r.error, `${label}: phải bị từ chối (22023)`);
 const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, args);
@@ -25,12 +32,22 @@ const nv = async (ma) => (await db().from('nhiem_vu').select('bi_tu_choi').eq('i
 const tin = async (nguoi, ma) => (await db().from('direct_messages').select('content').eq('receiver_id', nguoi).eq('loai', 'he_thong').eq('nhiem_vu_id', id[ma]).gte('created_at', t0)).data;
 const docTuChoi = async (username, tcId) => (await userClient(username)).from('tu_choi').select('id, ly_do').eq('id', tcId);
 const don = async () => {
-  await db().from('nhiem_vu').delete().in('ma', ['NV-T92', 'NV-T93', 'NV-T94', 'NV-T95']);
+  await db().from('nhiem_vu').delete().in('ma', ['NV-T92', 'NV-T93', 'NV-T94', 'NV-T95', 'NV-T96', 'NV-T97']);
   if (t0) {
     await db().from('canh_bao').delete().gte('gui_luc', t0);
     await db().from('direct_messages').delete().gte('created_at', t0).or('loai.eq.he_thong,content.like.KL-0034%');
     await db().from('lich_su').delete().eq('cot', 'canh_bao').gte('luc', t0);
   }
+  const cu = (await db().from('accounts').select('id').eq('username', A0B)).data || [];
+  for (const a of cu) { await db().from('accounts').delete().eq('id', a.id); await db().auth.admin.deleteUser(a.id); }
+};
+// Tài khoản A0 tạm thứ hai (auth + hồ sơ), đăng nhập bằng mật khẩu seed.
+const taoA0B = async () => {
+  const r = await db().auth.admin.createUser({ email: `${A0B}@${EMAIL_DOMAIN}`, password: MK_A0B, email_confirm: true, user_metadata: { username: A0B, full_name: 'KL-0034 Thường trực B' } });
+  if (r.error) throw new Error(`Tạo auth A0 tạm thất bại: ${r.error.message}`);
+  const a = await db().from('accounts').upsert({ id: r.data.user.id, username: A0B, full_name: 'KL-0034 Thường trực B', role_group: 'A0', position_title: 'Thường trực Tỉnh ủy (test)',
+    department: null, is_chief: false, must_change_password: false, is_system: false, quan_tri_he_thong: false }, { onConflict: 'id' }).select('id').single();
+  assertOk(a, 'hồ sơ A0 tạm'); return a.data.id;
 };
 
 describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riêng tư lý do, duyệt, cờ, nhắc, A0 nhắn 1-1', { skip: SKIP }, () => {
@@ -42,6 +59,9 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
     await them({ ma: 'NV-T93', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2, tao_boi: IDS.qtht });      // phòng Quản trị chưa có A2 → PCVP2
     await them({ ma: 'NV-T94', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.qtht });      // giao thay mặt (quản trị)
     await them({ ma: 'NV-T95', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.truongphong });
+    await them({ ma: 'NV-T96', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.pcvp, tao_boi: IDS.cvp });   // PCVP theo dõi, Chánh VP giao
+    await them({ ma: 'NV-T97', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cvp, tao_boi: IDS.qtht });   // Chánh VP theo dõi
+    a0b = await taoA0B();
   });
   after(don);
 
@@ -136,6 +156,25 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
     const q3 = await db().rpc('canh_bao_quet', { p_ngay: '2026-09-16' }); assertOk(q3, 'quét lại');
     assert.equal(q3.data.gui.TU_CHOI, 0, 'cùng chu kỳ không nhắc lại');
     assertOk(await rpc('demo_pcvp2', 'duyet_tu_choi', { p_id: tc93, p_dong_y: true }), 'PCVP2 duyệt NV-T93');
+  });
+
+  test('9. PCVP đề nghị → cấp duyệt là Chánh VP; Chánh VP đề nghị → Thường trực, A0 thứ hai (không phải cap_duyet ghi) vẫn duyệt được', async () => {
+    const r96 = await rpc('demo_pcvp', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T96'], p_ly_do: LY_DO }); assertOk(r96, 'PCVP đề nghị');
+    assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', r96.data).single()).data.cap_duyet, IDS.cvp, 'PCVP → Chánh VP duyệt');
+    const r97 = await rpc('demo_cvp', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T97'], p_ly_do: LY_DO }); assertOk(r97, 'Chánh VP đề nghị');
+    const t97 = (await db().from('tu_choi').select('cap_duyet').eq('id', r97.data).single()).data;
+    assert.equal((await db().from('accounts').select('role_group').eq('id', t97.cap_duyet).single()).data.role_group, 'A0', 'Chánh VP → Thường trực duyệt');
+    assert.notEqual(t97.cap_duyet, a0b, 'cấp duyệt ghi là A0 khác tài khoản tạm');
+    assertDenied(await rpc('demo_pcvp2', 'duyet_tu_choi', { p_id: r97.data, p_dong_y: true }), 'PCVP không duyệt đề nghị của Chánh VP');
+    assertDenied(await rpcA0B('duyet_tu_choi', { p_id: r96.data, p_dong_y: true }), 'A0 không duyệt thay Chánh VP (cấp duyệt không phải A0)');
+    assertOk(await rpcA0B('duyet_tu_choi', { p_id: r97.data, p_dong_y: true, p_y_kien: 'Thường trực B duyệt' }), 'A0 thứ hai duyệt đề nghị của Chánh VP');
+    assert.equal((await nv('NV-T97')).bi_tu_choi, true);
+    assert.equal((await tin(IDS.cvp, 'NV-T97')).filter((x) => /Thường trực B duyệt/.test(x.content)).length, 1, 'Chánh VP nhận tin duyệt');
+  });
+
+  test('10. Việc đã được đồng ý từ chối (bi_tu_choi) không đề nghị lại được cho tới khi giao lại', async () => {
+    assertLoi(await rpc('demo_cv2', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T93'], p_ly_do: 'lần hai' }), 'đề nghị lại khi đang chờ giao lại');
+    assert.equal((await db().from('tu_choi').select('id').eq('nhiem_vu_id', id['NV-T93'])).data.length, 1, 'không thêm dòng đề nghị');
   });
 
   test('8. A0 nhắn tin 1-1 được; tin he_thong vẫn không chèn thẳng', async () => {
