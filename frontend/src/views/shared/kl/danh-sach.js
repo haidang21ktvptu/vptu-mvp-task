@@ -46,6 +46,7 @@ export async function loadKl(lanThu = 0) {
     await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
     const { rows, luc } = await loadKlRows();
     kl.rows = rows; kl.luc = luc;
+    $('klBody').dataset.nap = luc.toISOString(); // dấu hiệu đã nạp xong (e2e chờ thuộc tính này, không dựa vào "có dòng đầu")
     const bb = kiemBatBien(rows);
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     dienBoLoc();

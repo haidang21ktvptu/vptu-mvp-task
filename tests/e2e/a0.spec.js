@@ -78,8 +78,9 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
 
   test('Toàn bộ nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ ô Ý kiến / Chỉ đạo', async () => {
     await nav(page, 'navKl');
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
     const row = page.locator('#klBody [id^="klRow-"]').first();
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible(); // Thường trực thấy toàn bộ việc: có dòng để mở
     await expect(page.locator('#klNutThem')).toBeHidden();
     await row.click();
     const ngan = page.locator('#klChiTiet');

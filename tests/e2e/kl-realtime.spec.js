@@ -28,7 +28,7 @@ test.describe.serial('Nhiệm vụ — thời gian thực', () => {
     await nav(page, 'navKl');
     // Lúc mở màn hình không được nháy cảnh báo vàng: chỉ "Đang kết nối…" rồi "Cập nhật trực tiếp".
     await expect(page.locator('#klKetNoi')).not.toContainText('Mất kết nối');
-    await expect(page.locator('#klBody [id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp xong
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT);
     // Chạy trên bản build (vite preview): lớp trong @layer components phải còn sau Tailwind — chấm xanh có màu lục.
     await expect.poll(() => page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(30, 142, 90)');

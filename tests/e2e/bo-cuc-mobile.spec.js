@@ -41,6 +41,7 @@ for (const v of VAI) {
     const cot = await page.locator('#viewKl .md').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length);
     expect(cot, 'danh sách và ngăn chi tiết một cột').toBe(1);
     await khongCuonNgang(page);
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong rồi mới xét có dòng hay không
     const row = page.locator('#klBody [id^="klRow-"]').first();
     if (await row.count() > 0) {
       await row.click();

@@ -23,6 +23,7 @@ const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng'
 export function openKl(loc) {
   showSection('viewKl');
   setActiveNav('navKl');
+  $('klBody').removeAttribute('data-nap'); // đang nạp lại: bỏ dấu hiệu cũ
   show('klNutThem', duocGiaoViec());
   $('klTieuDe').textContent = TIEU_DE[state.user?.role_group] || 'Nhiệm vụ';
   const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});
