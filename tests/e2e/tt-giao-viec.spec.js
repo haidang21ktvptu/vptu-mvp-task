@@ -36,6 +36,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
     await nav(page, 'navGiaoViec');
     await expect(page.locator('#viewGiaoViec .gv-the')).toBeVisible();
+    await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', { timeout: 20_000 }); // biểu mẫu đã khởi tạo theo vai (mặc định Khẩn đặt sau khi phiên + danh mục sẵn sàng)
     await expect(page.locator('#klThVanBanWrap')).toBeHidden();          // rút gọn: không chọn văn bản
     await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();    // người theo dõi tự suy
     await expect(page.locator('#klThThayMatWrap')).toBeHidden();

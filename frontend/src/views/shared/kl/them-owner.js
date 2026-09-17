@@ -20,7 +20,7 @@ export function canBoOwner(accounts, me) {
 }
 
 export function ownerOptionsHtml(dm, accounts, me) {
-  const sapTen = (a, b) => a.full_name.localeCompare(b.full_name, 'vi');
+  const sapTen = (a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi'); // tên trống (tài khoản tạm) không làm hỏng biểu mẫu
   const a0 = me?.role_group === 'A0';
   const canBo = canBoOwner(accounts, me).sort(sapTen).map((a) => opt(`tk:${a.id}`, `${a.full_name} — ${tenPhong(a.department)}`));
   const trongVp = a0 ? dm.donVi.filter((d) => d.trong_van_phong && d.phong).map((d) => opt(`dv:${d.ma}`, d.ten))
@@ -33,7 +33,7 @@ export function ownerOptionsHtml(dm, accounts, me) {
 // Lãnh đạo được giao thay mặt (GĐ22): A1/A2 đang hoạt động; hàm giao_viec kiểm phạm vi với Owner.
 export function thayMatOptionsHtml(accounts) {
   return accounts.filter((a) => !a.is_system && ['A1', 'A2'].includes(a.role_group))
-    .sort((a, b) => a.role_group.localeCompare(b.role_group) || a.full_name.localeCompare(b.full_name, 'vi'))
+    .sort((a, b) => a.role_group.localeCompare(b.role_group) || (a.full_name || '').localeCompare(b.full_name || '', 'vi'))
     .map((a) => opt(a.id, `${a.full_name} — ${a.position_title || ''}${a.department ? ` · ${tenPhong(a.department)}` : ''}`)).join('');
 }
 // Người theo dõi gợi ý theo Owner (GĐ22): phòng → Trưởng phòng; Văn phòng → Chánh VP; lãnh đạo A1/A2 → chính họ; chuyên viên → giữ mặc định (người giao).
@@ -66,7 +66,7 @@ export function parseOwner(value, dm, accounts) {
 export function nguoiTheoDoiOptionsHtml(accounts, me) {
   let ds = accounts.filter((a) => !a.is_system);
   if (me?.role_group === 'A2' && !laQtkl(me)) ds = ds.filter((a) => a.department === me.department || a.id === me.id);
-  return ds.sort((a, b) => a.full_name.localeCompare(b.full_name, 'vi')).map((a) => opt(a.id, `${a.full_name} — ${tenPhong(a.department)}`, a.id === me?.id)).join('');
+  return ds.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi')).map((a) => opt(a.id, `${a.full_name} — ${tenPhong(a.department)}`, a.id === me?.id)).join('');
 }
 
 export const LOAI_VAN_BAN = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'],

@@ -85,10 +85,11 @@ function capNhatTomTat() {
 
 export async function openGiaoViec() {
   showSection('viewGiaoViec');
+  $('giaoViecForm').removeAttribute('data-san-sang'); // đang khởi tạo theo vai/dữ liệu — spec chờ cờ này trước khi đọc ô
   setActiveNav('navGiaoViec');
   $('klThVanBan').innerHTML = opt('', 'Đang tải văn bản…'); $('klThLoai').innerHTML = opt('', 'Đang tải…');
   $('klThLuu').disabled = true;
-  try { await loadDanhMucKl(); vanBan = laA0() ? [] : await loadVanBan(); } catch (e) { notifyError(e.message); return; }
+  try { await loadDanhMucKl(); vanBan = laA0() ? [] : await loadVanBan(); } catch (e) { notifyError(e.message); $('giaoViecForm').dataset.sanSang = 'loi'; return; }
   homNay = (await homNayTheoDb()) || homNayVN();
   const dm = danhMucKl(); const a0 = laA0();
   AN_A0.forEach((id) => show(id, !a0));
@@ -113,6 +114,7 @@ export async function openGiaoViec() {
   dienLinhVuc();
   capNhatHienThi();
   $('klThNoiDung').focus();
+  $('giaoViecForm').dataset.sanSang = '1'; // mặc định theo vai (A0 = Khẩn) đã đặt sau khi phiên và danh mục sẵn sàng
 }
 
 // Kiểm tra phía form (cùng quy tắc với giao_viec); trả về chuỗi lỗi hoặc null.
