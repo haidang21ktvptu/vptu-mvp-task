@@ -42,3 +42,13 @@ export async function kiemThayViec(role, id, nhan = '') {
   if (error) throw new Error(`Đọc v_nhiem_vu bằng vai ${role}: ${error.message}`);
   if (!data.length) throw new Error(`Việc mẫu ${nhan || id} không nằm trong phạm vi của vai ${role} (kl_pham_vi) — kiểm owner_tai_khoan / nguoi_theo_doi / owner_don_vi_ma và tài khoản trên project.`);
 }
+
+// Phòng mà một lãnh đạo (PCVP demo) đang phụ trách — đọc phu_trach_phong lúc chạy thay vì gõ cứng (trên production phòng thật có lãnh đạo thật,
+// seed-demo chỉ phân công phòng thử E2E_PT / E2E_RT cho demo_pcvp2). Ưu tiên phòng thử E2E_*; không có phân công nào → lỗi rõ ở beforeAll.
+export async function phongPhuTrach(db, lanhDaoId) {
+  const { data, error } = await db.from('phu_trach_phong').select('phong').eq('lanh_dao_id', lanhDaoId).is('den_ngay', null);
+  if (error) throw new Error(`Đọc phu_trach_phong: ${error.message}`);
+  const phong = data.map((p) => p.phong).sort((a, b) => Number(b.startsWith('E2E_')) - Number(a.startsWith('E2E_')))[0];
+  if (!phong) throw new Error(`Lãnh đạo ${lanhDaoId} không phụ trách phòng nào — chạy scripts/seed-demo.mjs (phòng thử E2E) trước.`);
+  return phong;
+}

@@ -12,7 +12,7 @@
 import { spawnSync } from 'node:child_process';
 import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
-import { napDuLieuMau } from './seed-demo-du-lieu.mjs';
+import { napDuLieuMau, napPhongThu } from './seed-demo-du-lieu.mjs';
 
 const EMAIL_DOMAIN = 'vptu.caobang.local';
 const PRODUCTION_REF = 'frwyxcmbonjaimziiuqr';
@@ -99,6 +99,7 @@ async function main() {
   }
   console.log(`${dryRun ? '[dry-run] ' : ''}Tài khoản: tạo ${kq.tao.length} [${kq.tao.join(', ')}] · đã có ${kq.daCo.length} · bỏ qua ${kq.boQua.length} ${kq.boQua.join('; ')}`);
   console.log(`Phụ trách phòng: tạo [${pt.tao.join(', ')}] · đã có [${pt.daCo.join(', ')}] · bỏ qua ${pt.boQua.join('; ')}`);
+  await napPhongThu(db, dryRun);
   await napDuLieuMau(db, dryRun);
 }
 

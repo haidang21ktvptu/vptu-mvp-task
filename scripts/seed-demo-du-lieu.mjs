@@ -3,7 +3,8 @@
 // Idempotent: tìm văn bản theo so_ket_luan = 'E2E-SEED', nhiệm vụ theo noi_dung (bắt đầu 'E2E-SEED'), chỉ chèn dòng thiếu (nhiệm vụ, lich_su giao việc / xác
 // nhận nhận việc / cảnh báo, canh_bao việc Đỏ, minh_chung); hạn/ngày nhận tính lại theo hôm nay (giờ Việt Nam) cho đúng dòng tag để trạng thái không trôi. KHÔNG đụng gì ngoài tag.
 // Tài khoản lấy theo username demo_* (không gán id cứng) — thiếu tài khoản nào thì báo rõ tên, không chèn nửa vời. Phòng: TONG_HOP nếu đang có
-// PCVP phụ trách (thật hoặc demo do seed-demo chèn), nếu không thì phòng đầu tiên có phân công thật. Sau khi nạp, đọc v_nhiem_vu dưới token của
+// PCVP phụ trách (thật hoặc demo do seed-demo chèn), nếu không thì phòng đầu tiên có phân công thật.
+// Trước đó napPhongThu: phòng thử E2E (E2E_RT nếu có trong dm_don_vi, không thì E2E_PT) + phân công demo_pcvp2 phụ trách, cho spec cần PCVP phụ trách phòng. Sau khi nạp, đọc v_nhiem_vu dưới token của
 // demo_cvp và demo_a0 để chắc chắn bộ mẫu nằm trong phạm vi nhìn thấy. Dọn: màn hình Dọn dữ liệu → bộ sẵn "dữ liệu thử" (0043).
 import { createClient } from '@supabase/supabase-js';
 
@@ -28,6 +29,27 @@ function danhSach(tk, homNay, phong) {
       minhChung: { loai: 'chu_cu', noi_dung_chu: `Công văn 08/CV-VPTU ngày 10/08/2026 (${SEED_TAG})`, so_hieu: '08/CV-VPTU', ngay_van_ban: '2026-08-10' } },
     { noi_dung: `${SEED_TAG} việc mới giao, chưa xác nhận nhận`, ...chung('demo_e2e_kl'), han_xu_ly: congNgay(homNay, 12), ngay_nhan_van_ban: homNay, theo_1400: true, do_khan: 'KHAN' },
   ];
+}
+
+// Phòng thử E2E cho PCVP demo (demo_pcvp2) phụ trách — không đụng phòng thật (trên production phòng thật đã có lãnh đạo thật phụ trách nên
+// seed không chèn được, spec cần "PCVP phụ trách phòng X" sẽ đỏ). Dùng phòng E2E_RT nếu dm_don_vi đã có, không thì tạo E2E_PT (trong Văn phòng,
+// phong = mã). Phân công phu_trach_phong đang hiệu lực demo_pcvp2 ↔ phòng đó, ly_do 'seed kiểm thử'. Idempotent; Dọn dữ liệu xoá (0044).
+export async function napPhongThu(db, dryRun) {
+  const lanhDao = loi(await db.from('accounts').select('id').eq('username', 'demo_pcvp2').maybeSingle(), 'Đọc demo_pcvp2');
+  if (!lanhDao) throw new Error('Thiếu tài khoản demo_pcvp2 — không tạo phòng thử E2E.');
+  const co = loi(await db.from('dm_don_vi').select('ma, phong').in('ma', ['E2E_RT', 'E2E_PT']).order('ma', { ascending: false }), 'Đọc dm_don_vi'); // E2E_RT trước
+  let phong = co[0]?.phong || co[0]?.ma;
+  if (!phong) {
+    phong = 'E2E_PT';
+    if (!dryRun) {
+      const { data: tt } = await db.from('dm_don_vi').select('thu_tu').order('thu_tu', { ascending: false }).limit(1).maybeSingle();
+      loi(await db.from('dm_don_vi').insert({ ma: phong, ten: `Phòng thử E2E (${SEED_TAG})`, thu_tu: (tt?.thu_tu || 0) + 1, trong_van_phong: true, phong }), 'Tạo phòng thử E2E');
+    }
+  }
+  const pt = loi(await db.from('phu_trach_phong').select('id').eq('lanh_dao_id', lanhDao.id).eq('phong', phong).is('den_ngay', null), 'Đọc phu_trach_phong');
+  if (!pt.length && !dryRun) loi(await db.from('phu_trach_phong').insert({ lanh_dao_id: lanhDao.id, phong, tu_ngay: '2026-01-01', ly_do: 'seed kiểm thử' }), 'Phân công phòng thử');
+  console.log(`${dryRun ? '[dry-run] ' : ''}Phòng thử E2E: ${phong} (${co.length ? 'đã có' : 'tạo mới'}) · demo_pcvp2 phụ trách: ${pt.length ? 'đã có' : 'tạo'}`);
+  return phong;
 }
 
 async function taiKhoan(db) {
