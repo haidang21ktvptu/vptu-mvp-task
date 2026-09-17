@@ -6,6 +6,7 @@ import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { formatNgay, homNayVN } from '../../../lib/kl/ngay.js';
 import { tenKhau, boSoThuTu } from '../../../lib/kl/nhan.js';
+import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { canToiQuyet, ttCuaViec } from './du-lieu.js';
 
 export const GOI_Y_A0 = ['Báo cáo Thường trực lý do chậm', 'Hoàn thành trước ngày …', 'Chánh Văn phòng trực tiếp xử lý', 'Trình Ban Thường vụ kỳ họp tới'];
@@ -68,14 +69,14 @@ export function theHtml(r) {
   const quyet = canToiQuyet(r);
   const lop = r.bi_tu_choi && r.nhom !== 'DO' ? 'tu-choi' : r.muc_canh_bao === 'DO_DAC_BIET' ? 'dac-biet' : 'do';
   const tre = r.nhom === 'DO' ? `<div class="tre">${r.so_ngay_qua}<small>ngày trễ</small></div>` : '<div class="tre cam">!<small>chờ giao lại</small></div>';
-  const nhanTC = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối, chờ giao lại</span>' : '';
+  const nhanTC = nhanPhuHtml(r); // độ khẩn · Thường trực giao · Thay mặt … giao · Bị từ chối (GĐ22)
   const nutGiaoLai = r.bi_tu_choi && !laA0() ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : '';
   const owner = r.owner_tai_khoan_ten ? `${escapeHtml(r.owner_tai_khoan_ten)}<span>${escapeHtml(boSoThuTu(r.owner_don_vi_ten))}</span>`
     : `${escapeHtml(boSoThuTu(r.owner_don_vi_ten) || '(chưa xác định)')}<span>${r.owner_trong_van_phong ? 'theo dõi: ' + escapeHtml(r.nguoi_theo_doi_ten || '—') : 'đơn vị ngoài Văn phòng'}</span>`;
   const daCo = ttCuaViec(r.id).length > 0;
   const nutChinh = laA0() ? (daCo ? 'Chỉ đạo thêm' : 'Chỉ đạo') : 'Đôn đốc';
-  return `<article class="the ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}>
-      <div class="the-dau"><div class="ten"><b>${escapeHtml(r.ma)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}${nhanTC}</b><span>${escapeHtml(r.noi_dung)}</span></div>
+  return `<article class="the ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
+      <div class="the-dau"><div class="ten"><b>${escapeHtml(r.ma)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''} ${nhanTC}</b><span>${escapeHtml(r.noi_dung)}</span></div>
         ${tre}</div>
       <div class="dot"><div>${owner}</div><div><span class="khau">${tenKhau(r.khau)}</span></div>
         <div>${escapeHtml(sanPhamThieu(r))}<span>sản phẩm còn thiếu</span></div><div>${escapeHtml(r.cap_quyet_dinh_ten)}<span>cấp cần quyết</span></div>

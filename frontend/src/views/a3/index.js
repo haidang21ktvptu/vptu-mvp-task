@@ -15,13 +15,17 @@ import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { openKl } from '../shared/kl/index.js';
 import { openKlCapNhat } from '../shared/kl/cap-nhat-modal.js';
-import { nhomViecCuaToi, mucHtml } from './viec-cua-toi.js';
+import { nhomViecCuaToi, mucHtml, thanhTuChoiHtml } from './viec-cua-toi.js';
+import { canXuLyHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
 
 function ve() {
   const n = nhomViecCuaToi();
   const canLam = n.moi.length + n.chiDao.length + n.canMinhChung.length;
   setText('vctTom', `${canLam} việc cần làm, ${n.dangLam.length} đang thực hiện, ${n.theoDoi.length} đang theo dõi`);
+  $('dhCanXuLy').innerHTML = canXuLyHtml();
   $('vctMuc').innerHTML = [
+    thanhTuChoiHtml(),        // GĐ22: kết quả đề nghị từ chối của tôi (đã đồng ý / không đồng ý)
+    khoiBiTuChoiHtml(),       // GĐ22: việc tôi giao thay mặt bị từ chối (chuyên viên giữ quan_tri_kl)
     mucHtml('do', 'Bị từ chối, chờ lãnh đạo giao lại', n.tuChoi, 'tu-choi'),
     mucHtml('lam', 'Việc mới giao — cần xác nhận đã nhận', n.moi, 'moi'),
     mucHtml('do', 'Chỉ đạo cần trả lời', n.chiDao, 'chi-dao'),
@@ -72,6 +76,7 @@ export function registerA3View() {
       $('viewDieuHanh').innerHTML = `
         <div class="dau"><h1>Việc của tôi</h1><span id="dhTinhDen">${ngayDaiVN()}, đang nạp…</span>
           <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
+        <div id="dhCanXuLy"></div>
         <div class="khung"><div class="tieu"><b>Hôm nay của tôi</b><span id="vctTom"></span></div><div id="vctMuc"></div>
           <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem toàn bộ việc của tôi</button></div></div>`;
       datNapLai(loadViecCuaToi);

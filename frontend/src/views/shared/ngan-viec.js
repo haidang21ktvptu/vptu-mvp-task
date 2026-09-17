@@ -6,6 +6,7 @@ import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
 import { nhanTrangThai, lopMep, boSoThuTu } from '../../lib/kl/nhan.js';
+import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { nguoiTheoDoiMoiOptions } from './dieu-hanh/the-viec.js';
 
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
@@ -19,8 +20,8 @@ export function hanNgan(r, homNay = homNayVN()) {
   const n = soNgay(homNay, r.han_xu_ly);
   return `${n < 0 ? `trễ ${-n} ngày` : n === 0 ? 'đến hạn hôm nay' : `còn ${n} ngày`} · hạn ${formatNgay(r.han_xu_ly)}`;
 }
-const nhanPhu = (r) => (r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối, chờ giao lại</span>' : r.tu_choi_cho ? '<span class="nhan-xam">Đề nghị từ chối, chờ duyệt</span>'
-  : r.so_chi_dao_cho_phan_hoi > 0 ? `<span class="nhan-xam">${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi</span>` : '');
+// Nhãn phụ: độ khẩn / Thường trực giao / thay mặt / từ chối (GĐ22) rồi số chỉ đạo chờ phản hồi.
+const nhanPhu = (r) => `${nhanGd22(r)} ${!r.bi_tu_choi && !r.tu_choi_cho && r.so_chi_dao_cho_phan_hoi > 0 ? `<span class="nhan-xam">${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi</span>` : ''}`;
 
 // Hai ô hành động một dòng dưới một việc (A1/A2): Giao lại, Nhắc.
 function hanhDongViecHtml(r, tienTo) {

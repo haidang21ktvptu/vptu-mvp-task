@@ -15,13 +15,15 @@ import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
 import { mucChiDaoChoHtml, mucViecDoHtml, mucSapHanHtml } from './phong-toi.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
+import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
 import { registerCanBo } from '../shared/can-bo.js';
 
 function ve() {
   const rows = dh.rows; const mo = rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH');
   const doN = viecDo().length; const vangN = rows.filter((r) => r.muc_canh_bao === 'VANG').length;
   setText('ptTom', `${mo.length} việc mở, ${doN} Đỏ, ${vangN} Vàng`);
-  $('ptTuChoi').innerHTML = tuChoiChoHtml();
+  $('dhCanXuLy').innerHTML = canXuLyHtml();
+  $('dhTC').innerHTML = khoiThuongTrucHtml() + tuChoiChoHtml() + khoiBiTuChoiHtml(); // GĐ22: việc Thường trực giao, đề nghị cần duyệt, việc mình giao bị từ chối
   $('ptChiDao').innerHTML = mucChiDaoChoHtml();
   $('ptDo').innerHTML = mucViecDoHtml();
   $('ptMc').innerHTML = dh.mcCho.length ? `<div class="muc lam"><b>Minh chứng chuyên viên vừa nộp</b>${minhChungChoHtml()}</div>` : '';
@@ -50,8 +52,9 @@ export function registerA2View() {
       $('viewDieuHanh').innerHTML = `
         <div class="dau"><h1>${phong} hôm nay</h1><span id="dhTinhDen">${ngayDaiVN()}, đang nạp số liệu…</span>
           <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
+        <div id="dhCanXuLy"></div>
         <div class="khung"><div class="tieu"><b>Ba việc của Trưởng phòng</b><span id="ptTom"></span></div>
-          <div id="ptTuChoi"></div><div id="ptChiDao"></div><div id="ptDo"></div><div id="ptMc"></div><div id="ptVang"></div>
+          <div id="dhTC"></div><div id="ptChiDao"></div><div id="ptDo"></div><div id="ptMc"></div><div id="ptVang"></div>
           <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem đủ nhiệm vụ của phòng</button></div></div>`;
       datNapLai(loadPhongToi);
       openDieuHanh();

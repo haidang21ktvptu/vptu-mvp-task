@@ -4,10 +4,10 @@
 // đóng; quá hạn phản hồi → canh_bao_quet gửi tin người nhận chưa phản hồi, idempotent. Mã NV-T90/T91, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
-const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
+const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 let fx; const id = {}; let t0; let tt1; let tt2; let tt3; let conId;
 const assertLoi = (r, label) => assert.ok(r.error, `${label}: phải bị từ chối (22023)`);
@@ -64,7 +64,7 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
     const c = await row(tt1);
     assert.equal(c.loai, 'CHI_DAO_TT'); assert.equal(c.trang_thai, 'CHO_PHAN_HOI'); assert.equal(c.tra_loi_cho, null);
     assert.deepEqual([...c.nguoi_nhan].sort(), [IDS.cvp, IDS.pcvp2].sort(), 'người nhận: Chánh VP + PCVP phụ trách Quản trị');
-    assert.equal(c.han_phan_hoi, ngayLamViecSau(homNayVN(), 2), 'hạn = 2 ngày làm việc sau hôm nay (giờ Việt Nam)');
+    assert.equal(c.han_phan_hoi, ngayLamViecSau(homNayVN(), 1), 'hạn = 1 ngày làm việc sau hôm nay (GĐ22: A0 mặc định Khẩn; Thường 2 ngày)');
     const mau = /^Chỉ đạo Thường trực · NV-T90/;
     assert.equal((await tin(IDS.cvp, 'NV-T90', mau)).length, 1, 'Chánh VP nhận tin');
     assert.equal((await tin(IDS.pcvp2, 'NV-T90', mau)).length, 1, 'PCVP2 nhận tin');

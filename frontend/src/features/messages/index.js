@@ -6,8 +6,9 @@ import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { loadTinHeThong } from '../../lib/kl/dieu-hanh.js';
-import { setActiveNav, showSection, setNavBadge } from '../../views/shell/index.js';
+import { setActiveNav, showSection } from '../../views/shell/index.js';
 import { gomTheoViec } from '../thong-bao/index.js';
+import { lamMoiHuyHieu } from '../huy-hieu.js';
 import { messagesTemplate, toastTinTemplate } from './template.js';
 import { openDMChat, openViecChat, moViecTuHoiThoai, handleSendDM, closeToast, datMoNhanTin } from './chat.js';
 
@@ -17,9 +18,8 @@ let nhomViec = [];
 export async function loadDMUnreadMap() {
   const { data } = await supabase.from('direct_messages').select('sender_id').eq('receiver_id', state.user.id).eq('loai', 'nguoi').eq('is_read', false);
   state.dmUnread = {};
-  let total = 0;
-  (data || []).forEach((m) => { state.dmUnread[m.sender_id] = (state.dmUnread[m.sender_id] || 0) + 1; total++; });
-  setNavBadge('dmBubbleBadge', total);
+  (data || []).forEach((m) => { state.dmUnread[m.sender_id] = (state.dmUnread[m.sender_id] || 0) + 1; });
+  await lamMoiHuyHieu(); // huy hiệu Nhắn tin = tin người + tin hệ thống chưa đọc (kl_so_chua_xu_ly, GĐ22) — tính lại cả sau khi đọc tin
 }
 
 function canChatWith(a) {

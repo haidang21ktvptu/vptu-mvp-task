@@ -6,11 +6,12 @@
 // 'offline' → dự phòng NGAY (không chờ heartbeat socket ~30 giây), 'online' → mở kênh mới và làm mới (GĐ15).
 import { supabase } from '../lib/supabase.js';
 import { onSessionLeave } from '../auth/session.js';
+import { baoHuyHieu } from './huy-hieu.js';
 
 const GOP_MS = 500;
 const CHU_KY_DU_PHONG_MS = 60_000;
 const CHO_KET_NOI_MS = 4_000;   // chưa SUBSCRIBED sau chừng này mới coi là mất kết nối (tránh nháy vàng lúc mở màn hình)
-const BANG = ['nhiem_vu', 'chi_dao', 'dinh_chinh'];   // tên bảng thật (0023); view bí danh kl_* không phát sự kiện
+const BANG = ['nhiem_vu', 'chi_dao', 'dinh_chinh', 'tu_choi'];   // tên bảng thật (0023); view bí danh kl_* không phát sự kiện; tu_choi (0037, GĐ22)
 
 let channel = null;
 let onChange = null;        // hàm đọc lại do màn hình đang mở cung cấp
@@ -32,6 +33,7 @@ function docLai() {
 }
 
 function gopDocLai() {
+  baoHuyHieu();   // số chưa xử lý trên menu dùng chung tín hiệu này (GĐ22), không mở kênh riêng
   if (henGop) return;
   henGop = setTimeout(docLai, GOP_MS);
 }

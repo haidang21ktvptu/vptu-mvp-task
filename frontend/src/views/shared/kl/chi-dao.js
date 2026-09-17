@@ -10,7 +10,9 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { loadChiDao, chiDaoGui, chiDaoPhanHoi, chiDaoDong, chiDaoDanhDauDoc, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../../lib/kl/dieu-hanh.js';
+import { loadChiDao, chiDaoGui, chiDaoPhanHoi, chiDaoDong, chiDaoDanhDauDoc, xacNhanDaNhanChiDao, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../../lib/kl/dieu-hanh.js';
+import { nutDoKhanHtml, nhanDoKhanHtml } from '../../../lib/kl/do-khan.js';
+import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 const LOP_LOAI = { DON_DOC: 'cd-loai cd-loai-DON_DOC', GIA_HAN: 'cd-loai cd-loai-GIA_HAN', GIAO_LAI: 'cd-loai cd-loai-GIAO_LAI',
@@ -53,16 +55,21 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
     g.loai === 'CHI_DAO_TT' ? `Người nhận: ${(g.nguoi_nhan || []).map((u) => escapeHtml(tenNguoi(u))).join(', ')}` : '',
     g.han_phan_hoi ? `Hạn phản hồi: ${formatNgay(g.han_phan_hoi)}` : '',
     g.loai !== 'CHI_DAO_TT' && g.tra_loi_cho ? 'Theo chỉ đạo Thường trực' : '',
+    (g.da_nhan || []).length ? `Đã nhận: ${g.da_nhan.map((u) => escapeHtml(tenNguoi(u))).join(', ')}` : '',
   ].filter(Boolean).join(' · ');
   const mo = g.trang_thai !== 'DA_DONG';
   const dongDuoc = mo && g.nguoi_gui === me && (g.loai === 'CHI_DAO_TT' ? laA0() : !laA0());
-  const nut = dongDuoc ? `<button type="button" class="nut nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : '';
+  // Hỏa tốc (GĐ22): người nhận (luồng TT: nguoi_nhan; luồng thường: Owner/người theo dõi) phải bấm "Đã nhận" — hàm 0036 là chốt.
+  const laNhan = g.loai === 'CHI_DAO_TT' ? laNguoiNhan(g) : me === r.nguoi_theo_doi || me === r.owner_tai_khoan;
+  const daNhan = (g.da_nhan || []).includes(me);
+  const nutNhan = mo && g.do_khan === 'HOA_TOC' && laNhan && !daNhan && !laA0() ? `<button type="button" class="nut nho do" data-action="daNhanChiDao" data-id="${g.id}" data-nv="${r.id}">Đã nhận</button>` : '';
+  const nut = `${nutNhan}${dongDuoc ? `<button type="button" class="nut nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : ''}`;
   const formPh = mo && !laA0() && trongLuong(g, phanHoi, r) && g.id !== gocDau ? formPhHtml(g, r) : '';
   const formCon = mo && g.loai === 'CHI_DAO_TT' && duocChiDao() && laNguoiNhan(g) ? formGuiHtml(r, LOAI_CON, g.id) : '';
   return `
     <div class="cd-goc ${daDoc.has(g.id) ? '' : 'cd-chua-doc'}" id="cd-${g.id}" data-loai="${g.loai}" data-trang-thai="${g.trang_thai}">
       <div class="cd-dau">
-        <span class="${LOP_LOAI[g.loai] || 'cd-loai'}">${TEN_LOAI_CHI_DAO[g.loai] || g.loai}</span>
+        <span class="${LOP_LOAI[g.loai] || 'cd-loai'}">${TEN_LOAI_CHI_DAO[g.loai] || g.loai}</span>${nhanDoKhanHtml(g.do_khan)}
         <b>${escapeHtml(tenNguoi(g.nguoi_gui))}</b> <span class="chu-phu">${formatDateTime(g.created_at)}</span>
         ${g.loai === 'Y_KIEN' ? '' : `<span class="${LOP_TRANG_THAI[g.trang_thai] || 'trang-thai tt-xam'}">${TEN_TRANG_THAI_CHI_DAO[g.trang_thai] || g.trang_thai}</span>`}
         <span class="cd-nut">${nut}</span>
@@ -83,6 +90,7 @@ function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
   const nhan = traLoiCho ? 'Chuyển thành chỉ đạo' : a0 ? 'Gửi' : 'Gửi chỉ đạo';
   return `
     <form class="cd-form ${traLoiCho ? 'cd-form-con' : ''}" data-submit="guiChiDao" data-nv="${r.id}" data-tra-loi-cho="${traLoiCho}">
+      ${nutDoKhanHtml('do_khan', a0 ? 'KHAN' : 'THUONG', `cdDk-${r.id}-${traLoiCho || 'goc'}-`)}
       <div class="cd-form-hang">
         <select name="loai" class="o-nhap nho" aria-label="Loại chỉ đạo">
           ${loai.map((l) => `<option value="${l}">${ten(l)}</option>`).join('')}
@@ -141,7 +149,7 @@ export async function napChiDao(r) {
 let sauHanhDong = () => {};
 async function guiChiDao(ds, form) {
   const f = new FormData(form);
-  const p = { nhiem_vu_id: ds.nv, loai: f.get('loai'), noi_dung: (f.get('noi_dung') || '').trim() };
+  const p = { nhiem_vu_id: ds.nv, loai: f.get('loai'), noi_dung: (f.get('noi_dung') || '').trim(), do_khan: f.get('do_khan') || 'THUONG' };
   if (p.loai === 'GIA_HAN') p.han_moi = f.get('han_moi') || '';
   if (p.loai === 'GIAO_LAI') p.nguoi_theo_doi_moi = f.get('nguoi_theo_doi_moi') || '';
   if (p.loai === 'CHI_DAO_TT') p.han_phan_hoi = f.get('han_phan_hoi') || '';
@@ -174,6 +182,17 @@ async function dongChiDao(ds) {
     notifyError(e.message);
   }
 }
+// "Đã nhận" chỉ đạo Hỏa tốc (GĐ22): người gửi được báo; huy hiệu / thanh đỏ làm mới.
+async function daNhanChiDao(ds) {
+  try {
+    const moi = await xacNhanDaNhanChiDao(ds.id);
+    notifySuccess(moi ? 'Đã ghi nhận đồng chí đã nhận chỉ đạo. Người gửi được báo.' : 'Đồng chí đã bấm Đã nhận trước đó.');
+    await lamMoiHuyHieu();
+    sauHanhDong();
+  } catch (e) {
+    notifyError(e.message);
+  }
+}
 // Chọn loại → hiện ô hạn mới (GIA_HAN) / người theo dõi mới (GIAO_LAI) / hạn phản hồi (CHI_DAO_TT). Uỷ quyền một lần cho cả trang.
 function onDoiLoai(e) {
   const sel = e.target;
@@ -186,5 +205,5 @@ function onDoiLoai(e) {
 export function mountChiDao(registerActions, napLaiDanhSach) {
   sauHanhDong = napLaiDanhSach;
   document.body.addEventListener('change', onDoiLoai);
-  registerActions({ guiChiDao, guiPhanHoi, dongChiDao });
+  registerActions({ guiChiDao, guiPhanHoi, dongChiDao, daNhanChiDao });
 }

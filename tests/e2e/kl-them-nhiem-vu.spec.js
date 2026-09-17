@@ -11,6 +11,7 @@ import { E2E_TAG } from './global-setup.mjs';
 
 const QTHT_ID = '00000000-0000-4000-8000-000000000008';
 const CV1_ID = '00000000-0000-4000-8000-000000000014'; // demo_e2e_owner — Owner dữ liệu dùng chung với kl-realtime (GĐ18)
+const TRUONG_PHONG_ID = '00000000-0000-4000-8000-000000000003'; // demo_truongphong — lãnh đạo được giao thay mặt (GĐ22)
 const SO_HOI_NGHI = 995;
 const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
@@ -36,14 +37,17 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
   });
 
   // eslint-disable-next-line no-empty-pattern
-  test('trang ba bước: thiếu sản phẩm bị chặn; văn bản mới + Owner cán bộ + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
+  test('biểu mẫu một khối: thiếu sản phẩm → nút Giao mờ, chấm 3 chưa sáng; văn bản mới + Owner cán bộ + thay mặt + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
     await nav(page, 'navKl');
     await expect(page.locator('#klNutThem')).toBeVisible();
     await expect(page.locator('#klBody [id^="klRow-"]').first()).toBeVisible(); // dữ liệu đã nạp
     await page.locator('#klNutThem').click();
     await expect(page.locator('#viewGiaoViec')).toBeVisible();
     await expect(page.locator('#viewKl')).toBeHidden();
-    await expect(page.locator('#viewGiaoViec .buoc')).toHaveCount(3);
+    await expect(page.locator('#viewGiaoViec .gv-the')).toHaveCount(1);          // GĐ22: một thẻ, ba phần nối tiếp
+    await expect(page.locator('#viewGiaoViec .gv-phan')).toHaveCount(3);
+    await expect(page.locator('#klThThayMatWrap')).toBeVisible();               // người giao không phải lãnh đạo → ô Thay mặt bắt buộc
+    await expect(page.locator('#klThDoKhan')).toHaveValue('THUONG');
     await page.locator('#klThVanBan').selectOption('__moi__');
     await expect(page.locator('#klThSoHNWrap')).toBeVisible();   // KL_BTV mặc định → có số hội nghị
     await page.locator('#klThSoHN').fill(String(SO_HOI_NGHI));
@@ -57,18 +61,24 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
     await page.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
     await page.locator('#klThHan').fill('2026-12-31');
-    await page.locator('#klThLuu').click();
-    await expect(page.locator('#toastContainer')).toContainText('sản phẩm đầu ra');
-    await expect(page.locator('#viewGiaoViec')).toBeVisible();
+    await page.locator('#klThThayMat').selectOption(TRUONG_PHONG_ID);          // thay mặt Trưởng phòng Tổng hợp (cùng phòng Owner)
+    await expect(page.locator('#gvCham1')).toHaveClass(/\bxong\b/);
+    await expect(page.locator('#gvCham2')).toHaveClass(/\bxong\b/);
+    await expect(page.locator('#gvCham3')).not.toHaveClass(/\bxong\b/);        // thiếu sản phẩm
+    await expect(page.locator('#klThLuu')).toBeDisabled();
+    await expect(page.locator('#gvTomTatChu')).toContainText('sản phẩm …');
     await page.locator('#klThSanPham').selectOption('TO_TRINH');
     await page.locator('#klThSanPhamMoTa').fill('Tờ trình thử nghiệm e2e');
+    await expect(page.locator('#gvCham3')).toHaveClass(/\bxong\b/);
+    await expect(page.locator('#gvTomTatChu')).toContainText('sản phẩm Tờ trình, độ khẩn Thường');
+    await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
     await expect(page.locator('#viewKl')).toBeVisible(); // sau khi giao: sang Nhiệm vụ, lọc theo mã vừa giao
-    const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi')
+    const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi, do_khan, giao_thay_mat_cho')
       .eq('noi_dung', noiDung).single(); // đúng dòng vừa tạo, không lấy 'mới nhất' (2 worker)
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',
-      cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: QTHT_ID, tao_boi: QTHT_ID });
+      cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: QTHT_ID, tao_boi: QTHT_ID, do_khan: 'THUONG', giao_thay_mat_cho: TRUONG_PHONG_ID });
     const row = page.locator(`#klRow-${data.id}`);
     await expect(row).toBeVisible();
     await expect(page.locator('#klTimKiem')).toHaveValue(data.ma);

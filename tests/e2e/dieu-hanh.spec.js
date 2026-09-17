@@ -54,12 +54,12 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect.poll(() => the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(168, 20, 15)');      // --do-dam: Đỏ đặc biệt
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
     await expect(a3.locator('#chuongBadge')).toBeHidden();
-    // Xem diễn biến: sang Nhiệm vụ, ngăn chi tiết mở sẵn bảng căn cứ, không đặt con trỏ vào ô nhập.
+    // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (v_dien_bien: có dòng tạo việc), không rời Điều hành; bấm lại để gập.
     await the.locator('[data-action=xemDienBien]').click();
-    await expect(a1.locator('#viewKl')).toBeVisible();
-    await expect(a1.locator(`#klChiTiet-${nvId} .chi-tiet-them`)).toHaveAttribute('open', '');
-    await expect(a1.locator(`#klChiDao-${nvId} .cd-form input[name=noi_dung]`)).not.toBeFocused();
-    await nav(a1, 'navDieuHanh');
+    await expect(a1.locator('#viewDieuHanh')).toBeVisible();
+    await expect(the.locator(`#db-${nvId} .dien-bien li`).first()).toBeVisible();
+    await the.locator('[data-action=xemDienBien]').click();
+    await expect(the.locator(`#db-${nvId}`)).toHaveCount(0);
     await expect(the).toBeVisible();
   });
 

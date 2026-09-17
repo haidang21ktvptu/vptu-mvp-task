@@ -9,6 +9,7 @@ export const CHUA_PHAN_LOAI = 'CHUA_PHAN_LOAI'; // lĩnh vực NULL (134 dòng p
 export const CHUA_CO_NGANH = 'CHUA_CO_NGANH';
 
 const demTrong = () => Object.fromEntries(THU_TU_NHOM.map((k) => [k, 0]));
+const THU_TU_DK = { HOA_TOC: 1, THUONG_KHAN: 2, KHAN: 3 }; // cùng bảng với lib/kl/do-khan.js (giữ file này thuần, không import)
 const laMo = (r) => nhomCua(r.nhom_dem).mo;
 
 // Đếm theo nhom_dem, đủ mọi khoá (0 khi không có) để ô số luôn vẽ được.
@@ -43,7 +44,8 @@ export function sapXep(rows) {
     else if (r.nhom_dem === 'CAN_DIEN_HAN') phu = -(r.tuoi_ngay || 0);
     else if (r.nhom_dem === 'HOAN_THANH') phu = -(Date.parse(r.ngay_hoan_thanh || r.cap_nhat_luc || 0) || 0);
     else phu = r.han_xu_ly ? Date.parse(r.han_xu_ly) : Number.MAX_SAFE_INTEGER;
-    return [r.so_chi_dao_cho_phan_hoi > 0 ? 0 : 1, n.thuTu, phu, r.ma || ''];
+    // GĐ22: độ khẩn (Hỏa tốc trước) rồi việc Thường trực giao đứng đầu trong cùng độ khẩn, trước mọi tiêu chí cũ.
+    return [THU_TU_DK[r.do_khan] || 4, r.uu_tien === 'THUONG_TRUC' ? 0 : 1, r.so_chi_dao_cho_phan_hoi > 0 ? 0 : 1, n.thuTu, phu, r.ma || ''];
   };
   return [...rows].map((r) => [khoa(r), r]).sort(([a], [b]) => {
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1;

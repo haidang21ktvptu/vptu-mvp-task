@@ -10,20 +10,41 @@ const nhomOpt = (nhan, ds) => (ds.length ? `<optgroup label="${escapeHtml(nhan)}
 const tenPhong = (ma) => DEPT_NAMES[ma] || ma || '';
 const laQtkl = (me) => Boolean(me?.quan_tri_kl);
 
-// Cán bộ được chọn làm Owner theo vai người giao.
+// Cán bộ được chọn làm Owner theo vai người giao (A0 — GĐ22: chỉ lãnh đạo Văn phòng, hoặc một phòng ở nhóm dưới).
 export function canBoOwner(accounts, me) {
-  const ds = accounts.filter((a) => !a.is_system);
+  const ds = accounts.filter((a) => !a.is_system && a.role_group !== 'A0');
+  if (me?.role_group === 'A0') return ds.filter((a) => a.role_group === 'A1');
   if (laQtkl(me) || me?.role_group === 'A1') return ds;
   if (me?.role_group === 'A2') return ds.filter((a) => a.role_group === 'A3' && a.department === me.department);
   return [];
 }
 
 export function ownerOptionsHtml(dm, accounts, me) {
-  const sapTen = (a, b) => a.full_name.localeCompare(b.full_name, 'vi');
+  const sapTen = (a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi'); // tên trống (tài khoản tạm) không làm hỏng biểu mẫu
+  const a0 = me?.role_group === 'A0';
   const canBo = canBoOwner(accounts, me).sort(sapTen).map((a) => opt(`tk:${a.id}`, `${a.full_name} — ${tenPhong(a.department)}`));
-  const trongVp = laQtkl(me) || me?.role_group === 'A1' ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
+  const trongVp = a0 ? dm.donVi.filter((d) => d.trong_van_phong && d.phong).map((d) => opt(`dv:${d.ma}`, d.ten))
+    : laQtkl(me) || me?.role_group === 'A1' ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
   const ngoai = laQtkl(me) ? dm.donVi.filter((d) => !d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
-  return opt('', 'Chọn đơn vị hoặc cán bộ chịu trách nhiệm') + nhomOpt('Cán bộ', canBo) + nhomOpt('Văn phòng và các phòng', trongVp) + nhomOpt('Đơn vị ngoài Văn phòng', ngoai);
+  return opt('', a0 ? 'Chọn lãnh đạo Văn phòng hoặc phòng nhận việc' : 'Chọn đơn vị hoặc cán bộ chịu trách nhiệm')
+    + nhomOpt(a0 ? 'Lãnh đạo Văn phòng' : 'Cán bộ', canBo) + nhomOpt(a0 ? 'Các phòng' : 'Văn phòng và các phòng', trongVp) + nhomOpt('Đơn vị ngoài Văn phòng', ngoai);
+}
+
+// Lãnh đạo được giao thay mặt (GĐ22): A1/A2 đang hoạt động; hàm giao_viec kiểm phạm vi với Owner.
+export function thayMatOptionsHtml(accounts) {
+  return accounts.filter((a) => !a.is_system && ['A1', 'A2'].includes(a.role_group))
+    .sort((a, b) => a.role_group.localeCompare(b.role_group) || (a.full_name || '').localeCompare(b.full_name || '', 'vi'))
+    .map((a) => opt(a.id, `${a.full_name} — ${a.position_title || ''}${a.department ? ` · ${tenPhong(a.department)}` : ''}`)).join('');
+}
+// Người theo dõi gợi ý theo Owner (GĐ22): phòng → Trưởng phòng; Văn phòng → Chánh VP; lãnh đạo A1/A2 → chính họ; chuyên viên → giữ mặc định (người giao).
+export function goiYTheoDoi(value, dm, accounts) {
+  if (!value) return null;
+  const [kieu, ma] = value.split(':');
+  if (kieu === 'tk') { const a = accounts.find((x) => x.id === ma); return a && ['A1', 'A2'].includes(a.role_group) ? a.id : null; }
+  const dv = dm.donVi.find((d) => d.ma === ma);
+  if (!dv?.trong_van_phong) return null;
+  const a = dv.phong ? accounts.find((x) => x.role_group === 'A2' && x.department === dv.phong && !x.is_system) : accounts.find((x) => x.role_group === 'A1' && x.is_chief && !x.is_system);
+  return a?.id || null;
 }
 
 // "tk:<id>" → { owner_tai_khoan, owner_don_vi_ma (phòng của cán bộ, hoặc Văn phòng với lãnh đạo), capMacDinh };
@@ -45,7 +66,7 @@ export function parseOwner(value, dm, accounts) {
 export function nguoiTheoDoiOptionsHtml(accounts, me) {
   let ds = accounts.filter((a) => !a.is_system);
   if (me?.role_group === 'A2' && !laQtkl(me)) ds = ds.filter((a) => a.department === me.department || a.id === me.id);
-  return ds.sort((a, b) => a.full_name.localeCompare(b.full_name, 'vi')).map((a) => opt(a.id, `${a.full_name} — ${tenPhong(a.department)}`, a.id === me?.id)).join('');
+  return ds.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi')).map((a) => opt(a.id, `${a.full_name} — ${tenPhong(a.department)}`, a.id === me?.id)).join('');
 }
 
 export const LOAI_VAN_BAN = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'],

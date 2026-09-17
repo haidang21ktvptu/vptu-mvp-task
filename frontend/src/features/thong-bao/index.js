@@ -9,6 +9,7 @@ import { loadTinHeThong, tinHeThongDaDoc } from '../../lib/kl/dieu-hanh.js';
 import { moNhiemVu } from '../../views/shared/kl/index.js';
 import { showDMToast, closeToast } from '../messages/chat.js';
 import { thongBaoTemplate } from './template.js';
+import { lamMoiHuyHieu } from '../huy-hieu.js';
 
 let tin = [];
 const maCua = (content) => (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
@@ -61,14 +62,14 @@ async function moNhiemVuCuaTin(nvId, ma) {
   $('chuongBtn').setAttribute('aria-expanded', 'false');
   closeToast();
   if (!nvId) return;
-  try { await tinHeThongDaDoc(nvId); } catch { /* không chặn việc mở nhiệm vụ */ }
+  try { await tinHeThongDaDoc(nvId); lamMoiHuyHieu(); } catch { /* không chặn việc mở nhiệm vụ */ }
   loadThongBao();
   await moNhiemVu(nvId, ma, 'chi-dao');
 }
 const moThongBao = ({ nhiemVu, ma }) => moNhiemVuCuaTin(nhiemVu, ma);
 
 async function docHetThongBao() {
-  try { await tinHeThongDaDoc(null); loadThongBao(); } catch (e) { notifyError(e.message); }
+  try { await tinHeThongDaDoc(null); loadThongBao(); lamMoiHuyHieu(); } catch (e) { notifyError(e.message); }
 }
 
 // Tin hệ thống mới tới qua realtime (đã qua RLS: chỉ tin của tôi): cập nhật chuông, toast có nút mở nhiệm vụ.

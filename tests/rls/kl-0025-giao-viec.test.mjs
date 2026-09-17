@@ -98,11 +98,11 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
 
   test('6. quan_tri_kl nhập việc Owner đơn vị ngoài với người theo dõi Văn phòng; người theo dõi hệ thống bị chặn', async () => {
     assertOk(await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cấp tạm');
-    const r = await giao('demo_cv2', { ma: 'QTKL', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 });
+    const r = await giao('demo_cv2', { ma: 'QTKL', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp }); // GĐ22: quan_tri_kl giao thay mặt lãnh đạo
     assertOk(r, 'quan_tri_kl nhập việc đơn vị ngoài');
     const nv = (await db().from('nhiem_vu').select('owner_tai_khoan, nguoi_theo_doi, cap_nhan_san_pham').eq('id', r.data.id).single()).data;
     assert.deepEqual(nv, { owner_tai_khoan: null, nguoi_theo_doi: IDS.cv1, cap_nhan_san_pham: 'THUONG_TRUC' });
-    assert.match(loi(await giao('demo_cv2', { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: '00000000-0000-4000-8000-000000000007' })), /cán bộ Văn phòng/);
+    assert.match(loi(await giao('demo_cv2', { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: '00000000-0000-4000-8000-000000000007', thay_mat_cho: IDS.cvp })), /cán bộ Văn phòng/);
     await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2);
   });
 

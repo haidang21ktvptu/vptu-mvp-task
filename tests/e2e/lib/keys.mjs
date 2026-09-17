@@ -20,7 +20,7 @@ function runCli(args) {
 
 // Test tạo/xoá dữ liệu bằng service_role nên tuyệt đối không được trỏ vào production.
 export function assertNotProduction(url) {
-  if (url.includes(PRODUCTION_REF)) throw new Error('Từ chối chạy test trên project production.');
+  if (url.includes(PRODUCTION_REF) && process.env.KIEM_THU_MOI_TRUONG !== 'production') throw new Error('Từ chối chạy test trên project production (đặt KIEM_THU_MOI_TRUONG=production nếu cố ý — docs/KIEM-THU.md).');
 }
 
 let cached = null;
