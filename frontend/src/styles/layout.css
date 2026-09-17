@@ -3,8 +3,10 @@
    1040px. Màn đăng nhập ở cuối. */
 @layer components {
   /* ================= DẢI NHẬN DIỆN ================= */
-  .dai { background: linear-gradient(90deg, var(--do-dam), var(--do)); color: #fff; position: relative; overflow: hidden; }
-  .dai-song { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  /* Dải KHÔNG overflow: hidden (từng cắt hộp chuông / bánh răng / tìm nhanh ở mép dưới 60px → hộp bị main che); lớp sóng tự cắt bằng overflow của SVG.
+     z-index 48: hộp thả xuống trong dải nổi trên thanh trái (40), thanh dưới (41), thanh Hỏa tốc (45), ngăn chi tiết sticky; dưới modal (50), trang chặn (70), toast (100). */
+  .dai { background: linear-gradient(90deg, var(--do-dam), var(--do)); color: #fff; position: relative; z-index: 48; }
+  .dai-song { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
   .dai .max { display: flex; align-items: center; gap: 14px; min-height: 60px; position: relative; }
   .co-cum { flex: none; width: 84px; height: 48px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .3)); }
   .logo { height: 42px; width: auto; background: #fff; border-radius: 8px; padding: 4px 7px; display: block; flex: none; }
