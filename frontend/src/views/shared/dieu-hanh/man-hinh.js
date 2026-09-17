@@ -43,7 +43,7 @@ function toanCanhHtml() {
 }
 
 export function veDieuHanh() {
-  if (!$('dhKpi')) return;
+  if (!$('dhKpi')) { cauHinh.veThem(); return; } // màn hình không có dải KPI (A3 "Việc của tôi") vẽ bằng hàm vai đăng ký — napLaiViec vẫn vẽ lại thẻ ngay
   const kpi = cauHinh.kpi();
   $('dhKpi').innerHTML = kpiHtml(kpi);
   $('dhKpi').classList.toggle('nam', kpi.length === 5);
