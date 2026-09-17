@@ -91,7 +91,7 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 | 23 | #76 | Dải nhận diện + menu bánh răng theo vai; đổi mật khẩu lần đầu; Edge Function `quan-tri-tai-khoan` (service_role chỉ trong function, nhật ký `nhat_ky_he_thong`); Dọn dữ liệu hai bước (xem trước → gõ `XOÁ`, mốc backup < 24 giờ); bản tin 7h30; nạp lại đúng việc sau mọi hành động ghi | 0038–0042 |
 | 24 | #77–#79 | Hộp thả xuống chuông/bánh răng; dải "Cần xử lý ngay" có nút hành động dẫn tới việc; bộ dữ liệu mẫu `E2E-SEED` + phòng thử `E2E_PT` (e2e chạy trên DB rỗng, kiểm phạm vi việc mẫu ngay ở beforeAll); bộ sẵn dọn dữ liệu thử xoá cả `E2E-SEED*` và phòng thử | 0043–0044 |
 
-Phát hành `v3.6.0` (PR tài liệu `release/v3.6.0`, tag gắn lên commit đầu nhánh, không merge trước tag): production DB đã ở `0044` (CI kiểm thử trên production `db push` từng PR) nên deploy chỉ còn frontend + Edge Function; backup trước phát hành `prod-20260917-1605-truoc-v3.6.0`. Lỗi đã biết: bước "Ghi mốc backup" trong `backup-dinh-ky.yml` thoát mã 127 (artifact vẫn đúng). Bốn hạng mục CV-2 hoãn từ GĐ19 vẫn chờ (xem trên).
+Phát hành `v3.6.0` (PR tài liệu `release/v3.6.0`, tag gắn lên commit đầu nhánh, không merge trước tag): production DB đã ở `0044` (CI kiểm thử trên production `db push` từng PR) nên deploy chỉ còn frontend + Edge Function; backup trước phát hành `prod-20260917-1605-truoc-v3.6.0`. Lỗi "Ghi mốc backup" exit 127 trong `backup-dinh-ky.yml` đã sửa ở `v3.6.1` (#82; cùng #81 sửa nhãn độ khẩn thẻ nghẽn, nhãn minh chứng, việc mới chờ xác nhận theo từng người — không migration). Bốn hạng mục CV-2 hoãn từ GĐ19 vẫn chờ (xem trên).
 
 ## Tổng hợp
 

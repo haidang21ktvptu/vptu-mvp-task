@@ -35,6 +35,8 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Quyết định (16/9):** ☑ **A** — giữ cột, đổi tên "Người theo dõi"; số liệu đánh giá tính theo Owner.
 
+**Bổ sung (17/9/2026, `v3.6.1`):** chủ trì (Owner tài khoản) và người theo dõi **mỗi người tự xác nhận nhận việc**, người này nhận không thay cho người kia (dải "Cần xử lý ngay", thẻ "Việc mới giao", nút ở ngăn chi tiết và `kl_so_chua_xu_ly.viec_moi` đều tính theo chính người xem); khâu nghẽn "Chưa nhận việc" và cảnh báo tự động (`da_nhan_viec`, `v_ngoai_le`) tính khi **chưa ai** nhận.
+
 ### CH-3. Chuỗi 4 cấp: cấp phòng có bắt buộc trong chuỗi giao việc không?
 
 **Bối cảnh.** Mô hình 1400 (theo chủ dự án): Thường trực → Văn phòng → Lãnh đạo phòng chuyên môn → Chuyên viên. Hiện 185 việc đều do phòng Tổng hợp theo dõi; 5 phòng chưa có dữ liệu giao việc. CN-1.2: người giao **chỉ đặt Owner, Product, Deadline**.
