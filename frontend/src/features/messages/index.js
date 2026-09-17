@@ -1,4 +1,4 @@
-// Nhắn tin (MSG-1/2, mockup): màn hình riêng — danh bạ theo phạm vi vai trò (A1 tất cả; A2 A1 + phòng mình; A3 phòng mình) xếp theo
+// Nhắn tin (MSG-1/2, mockup): màn hình riêng — danh bạ theo phạm vi vai trò (A0/A1 tất cả; A2 A1 + phòng mình; A3 phòng mình) xếp theo
 // phòng, huy hiệu chưa đọc ở mục menu; hội thoại của việc (tin hệ thống gom theo nhiệm vụ) ở đầu danh bạ. Hội thoại ở ./chat.js.
 import { supabase } from '../../lib/supabase.js';
 import { $, escapeHtml } from '../../lib/dom.js';
@@ -25,7 +25,7 @@ export async function loadDMUnreadMap() {
 function canChatWith(a) {
   const me = state.user;
   if (a.id === me.id) return false;
-  if (me.role_group === 'A1') return true;
+  if (me.role_group === 'A0' || me.role_group === 'A1') return true; // A0 nhắn tới bất kỳ ai (0034)
   if (me.role_group === 'A2') return a.role_group === 'A1' || a.department === me.department;
   return a.department === me.department;
 }

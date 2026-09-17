@@ -27,6 +27,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
       van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} ngoại lệ ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP',
+      theo_1400: true, ngay_nhan_van_ban: '2026-08-05', ngay_nhan_uoc_tinh: false, // 0033: khâu "Chưa nhận việc" chỉ với việc theo quy tắc 1400
     }).select('id, ma').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id; ma = nv.ma;

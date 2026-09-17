@@ -3,14 +3,14 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { tongHop } from '../../../lib/kl/tong-hop.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { dh, viecDo, ttCho, canToiQuyet, theoKhau, xuHuong, chuXuHuong } from './du-lieu.js';
+import { dh, viecDo, viecTuChoi, ttCho, canToiQuyet, xuHuong, chuXuHuong } from './du-lieu.js';
 
 const o = (k) => `<button type="button" class="${k.lop}" data-action="locKpi" data-loc="${k.loc}" aria-pressed="${String(dh.loc.kpi === k.loc)}">
     <b>${k.so}</b><span>${escapeHtml(k.nhan)}</span>${k.phu ? `<small class="${k.phuLop || ''}">${escapeHtml(k.phu)}</small>` : ''}</button>`;
 
 // Số quá hạn (Đỏ + Đỏ đặc biệt) với xu hướng; số khâu đang nghẽn.
 export function kpiQuaHan() {
-  const soKhau = theoKhau().filter((k) => k.so > 0).length;
+  const soKhau = new Set(viecDo().map((r) => r.khau)).size; // chỉ khâu của việc quá hạn (bị từ chối chưa quá hạn đếm ở ô riêng)
   const xh = chuXuHuong(xuHuong('muc_canh_bao', ['DO', 'DO_DAC_BIET']).chenh);
   return { lop: 'cam', loc: 'nghen', so: viecDo().length, nhan: `việc quá hạn, nghẽn ở ${soKhau} khâu`, phu: xh.chu, phuLop: xh.lop };
 }
@@ -32,6 +32,11 @@ export function kpiChiDaoTT(nhan) {
 export function kpiCanQuyet(nhan) {
   return { lop: 'do', loc: 'quyet', so: viecDo().filter(canToiQuyet).length, nhan, phu: 'cấp cần quyết đã ghi trên việc' };
 }
+// Việc bị từ chối, chờ giao lại (A0, 0034) — ô riêng, không cộng vào quá hạn.
+export function kpiTuChoi() {
+  const n = viecTuChoi().length;
+  return { lop: 'cam', loc: 'tuchoi', so: n, nhan: 'việc bị từ chối, chờ giao lại', phu: n ? 'đề nghị từ chối đã được cấp duyệt đồng ý' : '' };
+}
 // Minh chứng chờ xác nhận (A1/A2).
 export function kpiMinhChung() {
   return { lop: 'lam', loc: 'mc', so: dh.mcCho.length, nhan: 'minh chứng đã nộp, chờ xác nhận', phu: dh.mcCho.length ? 'xác nhận bằng một bấm ở cuối trang' : '' };
@@ -40,4 +45,4 @@ export function kpiMinhChung() {
 export const kpiHtml = (ds) => ds.map(o).join('');
 
 // Nhãn đuôi cho tiêu đề danh sách theo số-lọc đang chọn.
-export const NHAN_KPI = { quyet: ' cần Thường trực quyết', nghen: ' đang nghẽn', cho: ' có chỉ đạo Thường trực chờ phản hồi', tt: ' có chỉ đạo Thường trực chờ phản hồi', mc: ' chờ xác nhận minh chứng', null: ' đang nghẽn' };
+export const NHAN_KPI = { quyet: ' cần Thường trực quyết', nghen: ' đang nghẽn', cho: ' có chỉ đạo Thường trực chờ phản hồi', tt: ' có chỉ đạo Thường trực chờ phản hồi', mc: ' chờ xác nhận minh chứng', tuchoi: ' bị từ chối, chờ giao lại', null: ' đang nghẽn' };

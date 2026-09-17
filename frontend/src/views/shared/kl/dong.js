@@ -30,7 +30,8 @@ function hanHtml(r, homNay) {
 
 // Dòng phụ: chịu trách nhiệm + điều đáng chú ý nhất.
 function phuText(r) {
-  const chuY = r.so_chi_dao_cho_phan_hoi > 0 ? `${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi`
+  const chuY = r.bi_tu_choi ? 'bị từ chối, chờ giao lại' : r.tu_choi_cho ? 'đề nghị từ chối, chờ duyệt'
+    : r.so_chi_dao_cho_phan_hoi > 0 ? `${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi`
     : r.nhom_dem === 'HOAN_THANH' ? (r.thieu_minh_chung ? 'chưa có minh chứng' : 'minh chứng hợp lệ')
       : laBenTrong(r) && !r.da_xac_nhan_nhan ? 'chưa xác nhận nhận việc'
         : !r.san_pham_loai ? 'chưa định nghĩa sản phẩm' : (r.so_minh_chung_hop_le || 0) === 0 ? `thiếu ${r.san_pham_ten}` : 'đã có minh chứng';

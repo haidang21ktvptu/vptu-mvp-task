@@ -23,7 +23,7 @@ export function hienGiaTri(cot, v) {
   if (DANH_MUC_COT[cot]) return tenTrongDanhMuc(DANH_MUC_COT[cot], v);
   if (COT_NGAY.includes(cot)) return formatNgay(v);
   if (COT_TAI_KHOAN.includes(cot)) return findAccount(v)?.full_name || v;
-  if (cot === 'ngay_nhan_uoc_tinh' || cot === 'theo_1400') return v === 'true' || v === true ? 'có' : 'không';
+  if (cot === 'ngay_nhan_uoc_tinh' || cot === 'theo_1400' || cot === 'bi_tu_choi') return v === 'true' || v === true ? 'có' : 'không';
   return String(v);
 }
 const tenNguoi = (l) => findAccount(l.nguoi_sua)?.full_name || l.nguoi_sua_ghi_chu || (l.nguon === 'excel' ? 'không xác định (nhật ký Excel)' : 'hệ thống');
@@ -55,11 +55,18 @@ function hanhDongHtml(r) {
   const mo = nhomCua(r.nhom_dem).mo;
   const nut = (action, nhan, lop = '', them = '') => `<button type="button" class="nut ${lop}" data-action="${action}" data-id="${r.id}" ${them}>${nhan}</button>`;
   const coMC = (r.so_minh_chung_hop_le || 0) > 0;
+  // Từ chối (0034): cạnh "Xác nhận đã nhận việc", chỉ khi chưa xác nhận và chưa có đề nghị chờ duyệt; lý do bắt buộc, chỉ cấp duyệt và cấp trên đọc.
+  const tuChoi = laBenTrong(r) && mo && !r.da_xac_nhan_nhan && !r.tu_choi_cho;
   return `<div class="hanh-dong">
     ${laBenTrong(r) && mo && !r.da_xac_nhan_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc', 'lam') : ''}
+    ${tuChoi ? nut('moO', 'Từ chối', '', `data-o="oTcNgan-${r.id}"`) : ''}
     ${duocCapNhat(r) && mo ? nut('openKlCapNhat', 'Cập nhật') : ''}
     ${duocDong(r) && mo ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
-    <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>`;
+    <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
+    ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
+      <small>Lý do chỉ lãnh đạo trực tiếp và cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
+      <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
+      <button type="submit" class="nut chinh">Gửi đề nghị</button><button type="button" class="nut" data-action="dongO" data-o="oTcNgan-${r.id}">Huỷ</button></form>` : ''}`;
 }
 
 export function chiTietHtml(r, ls, dc) {
@@ -69,7 +76,7 @@ export function chiTietHtml(r, ls, dc) {
   const nhanViec = ls.filter((l) => l.cot === 'xac_nhan_nhan_viec');
   const hanLop = r.nhom_dem === 'QUA_HAN' || r.nhom_dem === 'DANG_DINH_CHINH' ? ' style="color:var(--do)"' : '';
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
-      <p class="ma">${escapeHtml(r.ma)}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''}, ban hành ${formatNgay(r.ngay_ban_hanh)} · <span class="trang-thai ${r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : r.nhom_dem === 'QUA_HAN' ? 'tt-qua' : 'tt-xam'}">${escapeHtml(nhanTrangThai(r))}</span></p>
+      <p class="ma">${escapeHtml(r.ma)}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''}, ban hành ${formatNgay(r.ngay_ban_hanh)} · <span class="trang-thai ${r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : r.nhom_dem === 'QUA_HAN' ? 'tt-qua' : 'tt-xam'}">${escapeHtml(nhanTrangThai(r))}</span>${r.bi_tu_choi ? ' <span class="trang-thai tt-qua">Bị từ chối, chờ giao lại</span>' : r.tu_choi_cho ? ' <span class="trang-thai tt-xam">Đề nghị từ chối, chờ duyệt</span>' : ''}</p>
       <h3>${escapeHtml(r.noi_dung)}</h3>
       <dl><dt>Chủ trì</dt><dd>${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}</dd>
         <dt>Theo dõi</dt><dd>${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}</dd>

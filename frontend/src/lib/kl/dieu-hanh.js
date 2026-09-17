@@ -55,6 +55,10 @@ export async function loadTinHeThong(gioiHan = 60) {
 }
 export const tinHeThongDaDoc = (nhiemVuId = null) => rpc('tin_he_thong_da_doc', { p_nhiem_vu: nhiemVuId });
 
+// Từ chối nhận việc (0034): đề nghị (Owner/người theo dõi chưa xác nhận nhận việc) và duyệt (chỉ cấp duyệt). Lý do chỉ đọc được qua RLS tu_choi.
+export const deNghiTuChoi = (nhiemVuId, lyDo) => rpc('de_nghi_tu_choi', { p_nhiem_vu: nhiemVuId, p_ly_do: lyDo });
+export const duyetTuChoi = (id, dongY, yKien) => rpc('duyet_tu_choi', { p_id: id, p_dong_y: dongY, p_y_kien: yKien || null });
+
 // Nhãn loại chỉ đạo (cùng bảng với chi_dao_ten_loai trong 0026).
 export const TEN_LOAI_CHI_DAO = {
   DON_DOC: 'Đôn đốc', GIA_HAN: 'Gia hạn', GIAO_LAI: 'Giao lại', YEU_CAU_MINH_CHUNG: 'Yêu cầu minh chứng',

@@ -36,13 +36,16 @@ export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
 
 // Toàn bộ dòng trong phạm vi người dùng (RLS) + tập id đã có xác nhận nhận việc, kèm mốc thời gian đọc ("Số liệu tính đến").
 export async function loadKlRows() {
-  const [rows, xn] = await Promise.all([
+  const [rows, xn, tc, tcCho] = await Promise.all([
     loi(await supabase.from('v_nhiem_vu').select('*').order('ma'), 'đọc nhiệm vụ'),
     loi(await supabase.from('lich_su').select('nhiem_vu_id').eq('cot', 'xac_nhan_nhan_viec'), 'đọc xác nhận nhận việc'),
+    loi(await supabase.from('nhiem_vu').select('id').eq('bi_tu_choi', true), 'đọc cờ bị từ chối'),
+    // Đề nghị từ chối đang chờ duyệt (0034): RLS chỉ trả dòng người đề nghị / cấp duyệt / cấp trên đọc được.
+    loi(await supabase.from('tu_choi').select('id, nhiem_vu_id, nguoi_de_nghi, cap_duyet, ly_do, tao_luc').eq('trang_thai', 'CHO_DUYET').order('tao_luc'), 'đọc đề nghị từ chối'),
   ]);
-  const daNhan = new Set(xn.map((x) => x.nhiem_vu_id));
-  rows.forEach((r) => { r.da_xac_nhan_nhan = daNhan.has(r.id); });
-  return { rows, luc: new Date() };
+  const daNhan = new Set(xn.map((x) => x.nhiem_vu_id)); const biTuChoi = new Set(tc.map((x) => x.id));
+  rows.forEach((r) => { r.da_xac_nhan_nhan = daNhan.has(r.id); r.bi_tu_choi = biTuChoi.has(r.id); r.tu_choi_cho = tcCho.find((t) => t.nhiem_vu_id === r.id) || null; });
+  return { rows, luc: new Date(), tuChoiCho: tcCho };
 }
 
 // "Hôm nay" theo DB (kl_hom_nay, giờ Việt Nam) để giới hạn ô ngày trên form cùng nguồn với trigger.

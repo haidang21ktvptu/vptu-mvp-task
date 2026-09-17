@@ -50,9 +50,33 @@
   <!-- ================= KHUNG ỨNG DỤNG: dải nhận diện, menu theo vai, trang một cột ================= -->
   <div id="appShell" class="hidden">
     <header id="mainHeader" class="dai">
+      <!-- Lớp họa tiết sóng mờ vẽ SVG (tham khảo dhtn.dcs.vn), không dùng ảnh raster -->
+      <svg class="dai-song" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 38C150 8 300 68 450 38S750 8 900 38s250 30 300 0V60H0Z" fill="#fff" opacity=".07"/>
+        <path d="M0 22C200 52 400 -8 600 22s400 30 600 0V60H0Z" fill="#fff" opacity=".05"/>
+        <path d="M0 50C300 20 600 60 900 30s200 10 300 20V60H0Z" fill="#000" opacity=".06"/>
+      </svg>
       <div class="max">
-        <img class="co" src="/brand/co-dang.svg" width="32" height="21" alt="Cờ Đảng">
-        <img class="co" src="/brand/co-to-quoc.svg" width="32" height="21" alt="Cờ Tổ quốc">
+        <!-- Cụm cờ bay 84×48 vẽ SVG: cờ Đảng trước, cờ Tổ quốc sau; hai cột chéo nhẹ; lá cờ 36×24 (3:2), nếp gợn ba lớp sáng/tối -->
+        <svg class="co-cum" viewBox="0 0 84 48" width="84" height="48" role="img" aria-label="Cờ Đảng Cộng sản Việt Nam và cờ Tổ quốc">
+          <defs>
+            <path id="coLa" d="M0 0C6-2 12 2 18 0S30-2 36 0V24C30 26 24 22 18 24S6 26 0 24Z"/>
+            <path id="coSang" d="M8 .4C10.5-.6 13 .6 15.5 .2V24.2C13 24.6 10.5 23.4 8 24.4Z"/>
+            <path id="coToi" d="M23 .2C26 -.8 29 .4 32 0V24C29 24.4 26 23.2 23 24.2Z"/>
+          </defs>
+          <line x1="40" y1="47" x2="46" y2="3" stroke="#F2D27A" stroke-width="1.6" stroke-linecap="round"/>
+          <g transform="translate(46 3) rotate(6)">
+            <use href="#coLa" fill="#D42018"/><use href="#coSang" fill="#fff" opacity=".22"/><use href="#coToi" fill="#000" opacity=".16"/>
+            <polygon points="18,5 20.2,11.3 26.7,11.3 21.4,15 23.4,21.3 18,17.5 12.6,21.3 14.6,15 9.3,11.3 15.8,11.3" fill="#F5D000"/>
+          </g>
+          <line x1="30" y1="47" x2="14" y2="3" stroke="#F2D27A" stroke-width="1.6" stroke-linecap="round"/>
+          <g transform="translate(14 3) rotate(-6)">
+            <use href="#coLa" fill="#D42018"/><use href="#coSang" fill="#fff" opacity=".22"/><use href="#coToi" fill="#000" opacity=".16"/>
+            <path d="M21.5 8.5A6.3 6.3 0 1 0 25.5 18.5" fill="none" stroke="#F5D000" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M12.5 8.5l9.5 9.5" stroke="#F5D000" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M10.2 6.4l4.2 4.2" stroke="#F5D000" stroke-width="4.2" stroke-linecap="round"/>
+          </g>
+        </svg>
         <img class="logo" src="/brand/bieu-trung.png" width="66" height="42" alt="Biểu trưng tỉnh Cao Bằng">
         <div class="ten"><b>TỈNH ỦY CAO BẰNG</b><span>Hệ thống quản trị nhiệm vụ theo kết quả</span></div>
         <div class="phai">

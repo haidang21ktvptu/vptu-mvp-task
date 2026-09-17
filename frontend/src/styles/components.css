@@ -52,6 +52,12 @@
   .the .dot { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 10px; font-size: 14px; }
   .the .dot > div { line-height: 1.2; } .the .dot span { display: block; font-size: 12px; color: var(--chu-phu); }
   .the .hanh-dong { margin-top: 12px; } .the .o { margin-top: 12px; }
+  /* Từ chối nhận việc (0034): thẻ bị từ chối chưa quá hạn (mép cam), ô "chờ giao lại", nhãn trên thẻ/dòng, lý do trong khối duyệt. */
+  .the.tu-choi { border-left-color: var(--cam); background: var(--nen-vang-mo); }
+  .the .tre.cam { color: var(--cam); }
+  .nhan-tu-choi { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--cam-nhat); color: var(--cam-chu); font-size: 12px; font-weight: 600; vertical-align: 2px; }
+  .nhan-xam { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--nen-phu); color: var(--chu-phu); font-size: 12px; }
+  .muc .ly-do { color: var(--chu); font-size: 14px; margin-top: 4px; padding: 6px 10px; background: #fff; border: 1px dashed var(--vien); border-radius: var(--bo-o); }
   /* Vòng khép kín: Đã gửi → Văn phòng trả lời (hạn) → Đóng. */
   .vong { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--chu-phu); flex-wrap: wrap; }
   .vong em { font-style: normal; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--nen-phu); border: 1px solid var(--vien); }

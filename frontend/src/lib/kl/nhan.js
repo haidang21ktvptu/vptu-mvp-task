@@ -30,6 +30,7 @@ export const lopMep = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'luc' : mucCua(r.muc
 
 // Bốn khâu nghẽn của việc Đỏ (v_ngoai_le.khau, thứ tự ưu tiên trong 0033); mau = màu thanh tỉ lệ ở thanh trái.
 export const KHAU = {
+  BI_TU_CHOI:     { ten: 'Bị từ chối, chờ giao lại',  phu: 'đề nghị từ chối đã duyệt',  mau: 'do' },
   CHO_QUYET:      { ten: 'Chờ cấp trên quyết',        phu: 'đã trình, chưa có ý kiến',  mau: 'cam' },
   CHUA_SAN_PHAM:  { ten: 'Chưa có sản phẩm',          phu: 'đang làm, đã quá hạn',      mau: 'cam' },
   CHO_MINH_CHUNG: { ten: 'Chờ xác nhận minh chứng',   phu: 'đã nộp, chờ Văn phòng',     mau: 'lam' },
@@ -64,7 +65,7 @@ export const TEN_COT = {
   linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn', van_ban_id: 'Văn bản giao việc',
   san_pham_loai: 'Loại sản phẩm', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
   ngay_nhan_van_ban: 'Ngày nhận văn bản', ngay_nhan_uoc_tinh: 'Ngày nhận ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
-  xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng',
+  xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng', tu_choi: 'Từ chối nhận việc', bi_tu_choi: 'Bị từ chối, chờ giao lại',
   minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận minh chứng', dong_nhiem_vu: 'Đóng nhiệm vụ',
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;

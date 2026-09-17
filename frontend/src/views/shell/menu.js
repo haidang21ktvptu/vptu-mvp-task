@@ -6,6 +6,7 @@ export const MENU = {
     { id: 'navDieuHanh', label: 'Trung tâm điều hành', ngan: 'Điều hành', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true },
     { id: 'navChiDaoDaGui', label: 'Chỉ đạo đã gửi', ngan: 'Chỉ đạo', action: 'openChiDaoDaGui', section: 'viewChiDaoDaGui', duoi: true },
     { id: 'navKl', label: 'Toàn bộ nhiệm vụ', ngan: 'Tra cứu', action: 'openKl', section: 'viewKl', duoi: true },
+    { id: 'navCanBo', label: 'Cán bộ', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo' },
   ],
   A1: [
     { id: 'navDieuHanh', label: 'Điều hành hôm nay', ngan: 'Điều hành', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true },
@@ -26,7 +27,7 @@ export const MENU = {
   ],
 };
 
-// Mục dùng chung mọi vai (trừ A0 không nhắn tin): Nhắn tin có huy hiệu; Quản trị chỉ khi có cờ.
+// Mục dùng chung mọi vai (A0 nhắn tin 1-1 từ 0034): Nhắn tin có huy hiệu; Quản trị chỉ khi có cờ.
 export const NHAN_TIN_NAV = { id: 'dmBubbleLauncher', label: 'Nhắn tin', ngan: 'Nhắn tin', action: 'openNhanTin', section: 'viewNhanTin', badgeId: 'dmBubbleBadge' };
 export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Quản trị', action: 'openQuanTri', section: 'viewQuanTri' };
 
@@ -35,7 +36,7 @@ const QTKL_A3 = [MENU.A1[1], { ...MENU.A1[2], label: 'Toàn bộ nhiệm vụ' }
 
 export function menuCuaVai(user) {
   const goc = [...(MENU[user?.role_group] || []), ...(user?.role_group === 'A3' && user?.quan_tri_kl ? QTKL_A3 : [])];
-  const nhanTin = user?.role_group === 'A0' ? [] : [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
+  const nhanTin = [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
   return [...goc, ...nhanTin, ...quanTri];
 }

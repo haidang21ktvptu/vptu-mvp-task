@@ -7,9 +7,9 @@ import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
-import { datCapQuyetDinh } from '../../../lib/kl/dieu-hanh.js';
+import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, locKlDonVi, boKlLoc, setKlLoc, timKlRow } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
@@ -51,6 +51,17 @@ async function xacNhanNhanViecAction({ id }) {
   }
 }
 
+// Đề nghị từ chối nhận việc từ ngăn chi tiết (0034): lý do bắt buộc; hàm de_nghi_tu_choi là chốt (chưa xác nhận, một đề nghị chờ mỗi việc).
+async function tuChoiNhanViec({ id, ma }, form) {
+  const lyDo = (new FormData(form).get('noi_dung') || '').trim();
+  if (!lyDo) { notifyError('Đề nghị từ chối phải có lý do.'); return; }
+  try {
+    await deNghiTuChoi(id, lyDo);
+    notifySuccess(`Đã gửi đề nghị từ chối ${ma}. Lãnh đạo trực tiếp của đồng chí sẽ duyệt; hạn và trạng thái việc không đổi.`);
+    loadKl();
+  } catch (e) { notifyError(e.message); }
+}
+
 // Chọn cấp cần quyết định tại chỗ trong ngăn chi tiết (A1/A2): ghi qua hàm, lịch sử do trigger; nạp lại danh sách ngay.
 async function onDoiCap(e) {
   const sel = e.target;
@@ -73,5 +84,5 @@ export function registerKlView() {
   mountChiDao(registerActions, loadKl);
   mountMinhChung(registerActions, loadKl);
   ganBoLoc();
-  registerActions({ openKl: () => openKl(), loadKl, locKlNhom, locKlDonVi, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction });
+  registerActions({ openKl: () => openKl(), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
 }

@@ -1,11 +1,14 @@
 /* Màn hình Nhiệm vụ (mockup "Các mục còn lại"): dải tổng quan bấm để lọc (.tq), danh sách gọn (.md .list, .hang-nv) và ngăn chi
    tiết bên phải (.md .chi-tiet); giao việc ba bước một trang (.buoc); khung/mục của A2/A3 (.khung, .muc, .mc-inline). */
 @layer components {
-  .tq { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
-  .tq button { border: 1px solid var(--vien); background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 14px; display: inline-flex; gap: 8px; align-items: center; }
-  .tq button b { font-size: 16px; }
-  .tq button[aria-pressed="true"] { border-color: var(--chu); box-shadow: inset 0 0 0 1px var(--chu); }
-  .tq .sep { width: 1px; background: var(--vien); margin: 4px 2px; align-self: stretch; }
+  /* Thanh trạng thái phân đoạn một hàng (GĐ21): các ô nối liền trong một viền, cuộn ngang khi hẹp; ô đang chọn nền sẫm. */
+  .tq { display: inline-flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; margin-top: 14px; align-items: stretch; background: #fff; border: 1px solid var(--vien); border-radius: 999px; }
+  .tq button, .tq .o-so { border: 0; border-left: 1px solid var(--vien); background: transparent; padding: 8px 14px; font-size: 14px; display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
+  .tq > :first-child { border-left: 0; }
+  .tq button b, .tq .o-so b { font-size: 16px; }
+  .tq button[aria-pressed="true"] { background: var(--chu); color: #fff; }
+  .tq button[aria-pressed="true"] b { color: #fff; }
+  .tq .sep { display: none; }
   .tq .s-do b { color: var(--do); } .tq .s-vang b { color: var(--vang-chu); } .tq .s-lam b { color: var(--lam); } .tq .s-luc b { color: var(--luc); }
   .chip-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--vien); font-size: 13px; }

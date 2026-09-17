@@ -44,7 +44,9 @@ function toanCanhHtml() {
 
 export function veDieuHanh() {
   if (!$('dhKpi')) return;
-  $('dhKpi').innerHTML = kpiHtml(cauHinh.kpi());
+  const kpi = cauHinh.kpi();
+  $('dhKpi').innerHTML = kpiHtml(kpi);
+  $('dhKpi').classList.toggle('nam', kpi.length === 5);
   $('dhRay').innerHTML = rayHtml();
   if (dh.loc.kpi === 'tat') {
     const t = tongHop(dh.rows);
@@ -68,6 +70,7 @@ export async function loadDieuHanh() {
 export function openDieuHanh() {
   showSection('viewDieuHanh');
   setActiveNav('navDieuHanh');
+  datNapLai(loadDieuHanh); // Cán bộ / Báo cáo đặt hàm nạp lại riêng khi mở — quay về đây đặt lại
   loadDieuHanh();
   batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadDieuHanh(); }, (m) => hienKetNoi('dhKetNoi', m));
 }

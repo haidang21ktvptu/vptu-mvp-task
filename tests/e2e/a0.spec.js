@@ -23,13 +23,18 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(page.locator('#viewDieuHanh')).not.toHaveClass(/\bhidden\b/);
     await expect(page.locator('#dhTieuDeTrang')).toHaveText('Trung tâm điều hành Thường trực');
     await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước');
-    await expect(page.locator('#dhKpi button')).toHaveCount(4);
-    await expect(page.locator('#dhRay [data-khau]')).toHaveCount(4);
+    await expect(page.locator('#dhKpi button')).toHaveCount(5); // GĐ21: thêm ô "bị từ chối" riêng
+    await expect(page.locator('#dhKpi [data-loc="tuchoi"]')).toContainText('bị từ chối');
+    await expect(page.locator('#dhRay [data-khau]')).toHaveCount(5);
     await expect(page.locator('#navDieuHanh')).toBeVisible();
     await expect(page.locator('#navChiDaoDaGui')).toBeVisible();
     await expect(page.locator('#navKl')).toBeVisible();
-    await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);
+    await expect(page.locator('#navCanBo')).toBeVisible();           // GĐ21: Cán bộ toàn Văn phòng
+    await expect(page.locator('#dmBubbleLauncher')).toBeVisible();   // GĐ21: A0 nhắn tin 1-1
     await expect(page.locator('#navQuanTri')).toHaveCount(0);
+    await page.locator('#navCanBo').click();
+    await expect(page.locator('#viewCanBo .cb section').first()).toContainText('Lãnh đạo Văn phòng');
+    await page.locator('#navDieuHanh').click();
   });
 
   test('số-lọc và thanh trái là bộ lọc: bấm khâu → aria-pressed, danh sách đổi tiêu đề; số hoàn thành → toàn cảnh', async () => {

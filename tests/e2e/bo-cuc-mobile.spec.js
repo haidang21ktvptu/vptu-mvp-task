@@ -30,6 +30,7 @@ for (const v of VAI) {
     await expect(page.locator('#viewDieuHanh h1').first()).toContainText(v.tieuDe);
     await expect(page.locator('#currentUserDisplay')).toBeVisible();
     await expect(page.locator('#mainHeader .logo')).toBeVisible();
+    await expect(page.locator('#mainHeader .co-cum')).toBeVisible(); // GĐ21: cụm cờ SVG
     expect((await page.locator('#mainHeader').boundingBox()).height).toBeLessThan(80);
     await khongCuonNgang(page);
 
@@ -59,11 +60,31 @@ test('A0: thanh dưới Điều hành · Chỉ đạo · Tra cứu; số-lọc x
   const page = await (await contextAs(browser, 'A0', testInfo)).newPage();
   await page.goto('./');
   await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
-  await expect(page.locator('#thanhDuoi button')).toHaveText(['Điều hành', 'Chỉ đạo', 'Tra cứu']);
-  await expect(page.locator('#dhKpi button')).toHaveCount(4);
+  await expect(page.locator('#thanhDuoi button')).toHaveText(['Điều hành', 'Chỉ đạo', 'Tra cứu', 'Khác']); // GĐ21: Cán bộ, Nhắn tin vào "Khác"
+  await expect(page.locator('#dhKpi button')).toHaveCount(5);
   await expect.poll(() => page.locator('#dhKpi').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(2);
   await expect.poll(() => page.locator('#dhRay').evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('flex');
   await khongCuonNgang(page);
+  await page.context().close();
+});
+
+// GĐ21: 601–900px → menu thành thanh biểu tượng dọc bên trái (chỉ biểu tượng, nhãn ở title), thanh dưới ẩn; dải cao 60px với cụm cờ SVG.
+test('A1 ở 768px: thanh biểu tượng trái thay hàng pill, thanh dưới ẩn, dải 60px, không cuộn ngang', async ({ browser }, testInfo) => {
+  const page = await pageAs(browser, 'A1', testInfo);
+  await page.setViewportSize({ width: 768, height: 900 });
+  await expect(page.locator('#thanhDuoi')).toBeHidden();
+  const menu = page.locator('#mainNav');
+  await expect(menu).toBeVisible();
+  const kieu = await menu.evaluate((el) => { const s = globalThis.getComputedStyle(el); return { pos: s.position, w: el.getBoundingClientRect().width, left: el.getBoundingClientRect().left }; });
+  expect(kieu.pos).toBe('fixed'); expect(kieu.left).toBe(0); expect(kieu.w).toBeLessThan(70);
+  await expect(menu.locator('#navKl .ico')).toBeVisible();
+  await expect(menu.locator('#navKl')).toHaveAttribute('title', 'Nhiệm vụ');
+  expect(Math.round((await page.locator('#mainHeader').boundingBox()).height)).toBe(60);
+  await expect(page.locator('#mainHeader .co-cum')).toBeVisible();
+  await khongCuonNgang(page);
+  await page.setViewportSize({ width: 360, height: 740 });
+  await expect(page.locator('#thanhDuoi')).toBeVisible();
+  await expect(menu).toBeHidden();
   await page.context().close();
 });
 
