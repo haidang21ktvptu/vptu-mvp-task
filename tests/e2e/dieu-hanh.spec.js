@@ -7,12 +7,14 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, moViec } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000013'; // demo_e2e_dh — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 993;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
 
 test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn đốc, phản hồi, chuông, cấp quyết định', () => {
+  let hnKhoa;
   let db; let nvId; let ma; let a1; let a3;
 
   test.beforeAll(async ({ browser }, testInfo) => {
@@ -20,10 +22,9 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('v_ngoai_le').select('khau').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có migration 0033 (v_ngoai_le.khau).');
-    await don(db);
     await db.from('direct_messages').delete().eq('receiver_id', CV1_ID).eq('loai', 'he_thong'); // chuông A3 (tài khoản riêng) bắt đầu từ 0
-    const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-DH`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
-    if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
+    hnKhoa = khoaRieng('DH', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
+    const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
       van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} ngoại lệ ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP',
@@ -36,7 +37,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
   });
   test.afterAll(async () => {
     for (const p of [a1, a3]) await p?.context().close();
-    if (db) await don(db);
+    if (db) await donVanBan(db, hnKhoa);
   });
 
   test('Điều hành hôm nay (A1): thẻ Đỏ đủ 4 điều, khâu "Chưa nhận việc", sản phẩm "chưa định nghĩa", cấp "chưa xác định"; màu đỏ trên bản build', async () => {
@@ -117,10 +118,3 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
   });
 });
 
-async function don(db) {
-  const { data } = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
-  for (const h of data || []) {
-    await db.from('nhiem_vu').delete().eq('van_ban_id', h.id); // chi_dao, lich_su, tin hệ thống xoá theo FK CASCADE
-    await db.from('van_ban_giao_viec').delete().eq('id', h.id);
-  }
-}

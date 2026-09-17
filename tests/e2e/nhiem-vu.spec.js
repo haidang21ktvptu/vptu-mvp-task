@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, moViec } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000012'; // demo_e2e_nv — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 994;
@@ -14,22 +15,23 @@ const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 test.describe.serial('Luồng giao việc → xác nhận nhận việc trên thẻ → hoàn thành', () => {
-  let db; let title; let cuId; let cuMa; let moiId; let moiMa;
+  let db; let title; let cuId; let cuMa; let moiId; let moiMa; let hnKhoa; let duAn;
 
   test.beforeAll(async ({}, testInfo) => { // eslint-disable-line no-empty-pattern
-    title = `${E2E_TAG} giao-nhan ${testInfo.project.name} ${Date.now()}`; // nhãn riêng: "giao%" từng khớp cả "giao việc" của kl-them-nhiem-vu (2 worker mobile → xoá nhầm)
+    duAn = testInfo.project.name;
+    title = `${E2E_TAG} giao-nhan ${duAn} ${Date.now()}`; // nhãn riêng: "giao%" từng khớp cả "giao việc" của kl-them-nhiem-vu (2 worker mobile → xoá nhầm)
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
-    await don(db);
+    await don(db, duAn);
     // Việc CŨ (theo_1400 = false, dữ liệu chuyển đổi) của demo_e2e_nv: không được hiện thẻ cần xác nhận.
-    const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-KL994`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
-    if (e1) throw new Error(`Tạo văn bản mẫu thất bại: ${e1.message}`);
+    hnKhoa = khoaRieng('KL994', testInfo);
+    const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: cu, error: e2 } = await db.from('nhiem_vu').insert({ van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} việc cũ ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND' }).select('id, ma').single();
     if (e2) throw new Error(`Tạo việc cũ thất bại: ${e2.message}`);
     cuId = cu.id; cuMa = cu.ma;
   });
-  test.afterAll(async () => { if (db) await don(db); });
+  test.afterAll(async () => { if (db) { await don(db, duAn); await donVanBan(db, hnKhoa); } });
 
   test('Kịch bản 4a: A3 có việc cũ chưa xác nhận → KHÔNG có thẻ cần xác nhận, chỉ nút xác nhận tuỳ chọn ở ngăn chi tiết', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
@@ -50,7 +52,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     await page.locator('#klThVanBan').selectOption('__moi__');
     await page.locator('#klThLoaiVB').selectOption('CONG_VAN');
     await expect(page.locator('#klThSoHNWrap')).toBeHidden();   // công văn không có số hội nghị
-    await page.locator('#klThSoKL').fill(`${E2E_TAG}-CV-${Date.now()}`);
+    await page.locator('#klThSoKL').fill(`${E2E_TAG}-CV-${duAn}-${Date.now()}`);
     await page.locator('#klThNgayBH').fill(homNayVN());
     await page.locator('#klThNoiDung').fill(title);
     await page.locator('#klThOwner').selectOption(`tk:${CV1_ID}`);
@@ -104,9 +106,8 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
   });
 });
 
-async function don(db) {
-  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} giao-nhan%`);
-  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} việc cũ%`);
-  await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}-CV-%`);
-  await db.from('van_ban_giao_viec').delete().eq('so_hoi_nghi', SO_HOI_NGHI);
+// Chỉ dọn dữ liệu của project này (việc giao qua giao diện + văn bản CV của nó); văn bản KL994 dọn theo khoá riêng (donVanBan).
+async function don(db, duAn) {
+  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} giao-nhan ${duAn}%`);
+  await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}-CV-${duAn}-%`);
 }

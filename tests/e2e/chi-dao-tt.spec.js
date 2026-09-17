@@ -9,12 +9,14 @@ import { pageAs, contextAs, nav, moViec } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const CV2_ID = '00000000-0000-4000-8000-000000000005'; // demo_cv2 — chuyên viên phòng Quản trị
 const SO_HOI_NGHI = 991;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
 
 test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ trách phản hồi → A0 thấy trạng thái', () => {
+  let hnKhoa;
   let db; let nvId; let ma; let a0; let pcvp;
 
   test.beforeAll(async ({ browser }, testInfo) => {
@@ -23,9 +25,8 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('v_chi_dao_tt').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có migration 0032 (chỉ đạo Thường trực).');
-    await don(db);
-    const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-TT`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
-    if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
+    hnKhoa = khoaRieng('TT', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
+    const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
       van_ban_id: hn.id, nguoi_theo_doi: CV2_ID, owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: CV2_ID,
       noi_dung: `${E2E_TAG} chỉ đạo Thường trực ${testInfo.project.name} ${Date.now()}`,
@@ -40,7 +41,7 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
   });
   test.afterAll(async () => {
     for (const p of [a0, pcvp]) await p?.context().close();
-    if (db) await don(db);
+    if (db) await donVanBan(db, hnKhoa);
   });
 
   test('A0: ô nhập chung có "Ý kiến" / "Chỉ đạo"; gửi Chỉ đạo → dòng CHI_DAO_TT chờ phản hồi, người nhận tự tính; Chỉ đạo đã gửi có dòng', async () => {
@@ -96,10 +97,3 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
   });
 });
 
-async function don(db) {
-  const { data } = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
-  for (const h of data || []) {
-    await db.from('nhiem_vu').delete().eq('van_ban_id', h.id); // chi_dao, canh_bao, lich_su, tin hệ thống xoá theo FK CASCADE
-    await db.from('van_ban_giao_viec').delete().eq('id', h.id);
-  }
-}

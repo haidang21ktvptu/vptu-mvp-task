@@ -6,11 +6,13 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000010'; // demo_e2e_kl — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 997;
 
 test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
+  let hnKhoa;
   let db; let nvId; let nv2Id; let page;
 
   test.beforeAll(async ({ browser }, testInfo) => {
@@ -18,9 +20,8 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('nhiem_vu').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có module KL (0014+).');
-    await donHoiNghi(db);
-    const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-KL`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
-    if (e1) throw new Error(`Tạo hội nghị mẫu thất bại: ${e1.message}`);
+    hnKhoa = khoaRieng('KL', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
+    const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
       van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} KL ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND',
@@ -38,7 +39,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
   });
   test.afterAll(async () => {
     await page?.context().close();
-    if (db) await donHoiNghi(db);
+    if (db) await donVanBan(db, hnKhoa);
   });
 
   test('mở màn hình: ô Tổng = số dòng; dòng mẫu ở nhóm Đang thực hiện; bấm ô lọc đúng; không có Giao việc', async () => {
@@ -131,10 +132,3 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
   });
 });
 
-async function donHoiNghi(db) {
-  const { data } = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
-  for (const h of data || []) {
-    await db.from('nhiem_vu').delete().eq('van_ban_id', h.id);
-    await db.from('van_ban_giao_viec').delete().eq('id', h.id);
-  }
-}

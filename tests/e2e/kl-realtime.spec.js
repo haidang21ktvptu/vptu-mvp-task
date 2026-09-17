@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000014'; // demo_e2e_owner — chỉ làm Owner dữ liệu (GĐ18)
 const SO_HOI_NGHI = 996;
@@ -13,17 +14,15 @@ const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ v�
 const KN = { timeout: 5_000 };    // mất mạng → dự phòng ngay theo sự kiện offline (GĐ15), không chờ heartbeat
 
 test.describe.serial('Nhiệm vụ — thời gian thực', () => {
-  let db; let hnId; let page;
+  let db; let hnId; let hnKhoa; let page;
 
   test.beforeAll(async ({ browser }, testInfo) => {
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('nhiem_vu').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có module KL (0014+).');
-    await don(db);
-    const { data: hn, error } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-RT`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
-    if (error) throw new Error(`Tạo hội nghị mẫu thất bại: ${error.message}`);
-    hnId = hn.id;
+    hnKhoa = khoaRieng('RT', testInfo); // khoá riêng theo project (dọn dấu vết cũ của chính khoá trước khi tạo)
+    hnId = await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI });
     page = await pageAs(browser, 'A1', testInfo);
     await nav(page, 'navKl');
     // Lúc mở màn hình không được nháy cảnh báo vàng: chỉ "Đang kết nối…" rồi "Cập nhật trực tiếp".
@@ -35,7 +34,7 @@ test.describe.serial('Nhiệm vụ — thời gian thực', () => {
   });
   test.afterAll(async () => {
     await page?.context().close();
-    if (db) await don(db);
+    if (db) await donVanBan(db, hnKhoa);
   });
 
   // eslint-disable-next-line no-empty-pattern
@@ -60,10 +59,3 @@ test.describe.serial('Nhiệm vụ — thời gian thực', () => {
   });
 });
 
-async function don(db) {
-  const { data } = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
-  for (const h of data || []) {
-    await db.from('nhiem_vu').delete().eq('van_ban_id', h.id);
-    await db.from('van_ban_giao_viec').delete().eq('id', h.id);
-  }
-}

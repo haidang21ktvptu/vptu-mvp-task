@@ -14,23 +14,24 @@ const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 test.describe.serial('Từ chối nhận việc — người đề nghị, người giao, tin duyệt', () => {
-  let db; let id; let ma; let noiDung;
+  let db; let id; let ma; let noiDung; let duAn;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({}, testInfo) => { // eslint-disable-line no-empty-pattern
+    duAn = testInfo.project.name;
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('kl_cau_hinh').select('khoa').eq('khoa', 'thuong_truc_han_nhan_ngay').maybeSingle();
     test.skip(!co.data, 'Project chưa có migration 0035+.');
-    await don(db);
-    noiDung = `${E2E_TAG} tu-choi ${Date.now()}`;
-    const { data: vb, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_ket_luan: `${E2E_TAG}-TC-${Date.now()}`, loai: 'CONG_VAN', ngay_ban_hanh: '2026-09-01' }).select('id').single();
+    await don(db, duAn);
+    noiDung = `${E2E_TAG} tu-choi ${duAn} ${Date.now()}`;
+    const { data: vb, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_ket_luan: `${E2E_TAG}-TC3-${duAn}-${Date.now()}`, loai: 'CONG_VAN', ngay_ban_hanh: '2026-09-01' }).select('id').single();
     if (e1) throw new Error(`Tạo văn bản mẫu thất bại: ${e1.message}`);
     const { data, error: e2 } = await db.from('nhiem_vu').insert({ van_ban_id: vb.id, noi_dung: noiDung, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: congNgay(homNayVN(), 12),
       owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: NV_ID, nguoi_theo_doi: TP_ID, tao_boi: TP_ID, theo_1400: true, san_pham_loai: 'BAO_CAO', ngay_nhan_van_ban: homNayVN(), do_khan: 'KHAN' }).select('id, ma').single();
     if (e2) throw new Error(`Tạo việc mẫu thất bại: ${e2.message}`);
     id = data.id; ma = data.ma;
   });
-  test.afterAll(async () => { if (db) await don(db); });
+  test.afterAll(async () => { if (db) await don(db, duAn); });
 
   test('A3: thẻ việc mới có nhãn Khẩn → Từ chối với lý do → thẻ ghi chờ Trưởng phòng duyệt', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
@@ -83,7 +84,8 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
   });
 });
 
-async function don(db) {
-  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} tu-choi%`);
-  await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}-TC-%`);
+// Chỉ dọn dữ liệu của project này (khoá có tên project); khoá TC3 tách khỏi TC của tu-choi.spec.
+async function don(db, duAn) {
+  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} tu-choi ${duAn}%`);
+  await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}-TC3-${duAn}-%`);
 }

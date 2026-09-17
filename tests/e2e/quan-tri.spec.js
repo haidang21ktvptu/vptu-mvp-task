@@ -95,7 +95,8 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
     await expect(row).toContainText('Không');
     await page.locator('#qtTabNhatKy').click();
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText('Tắt');
-    await expect(page.locator('#qtCanhBao')).toContainText('Đang có 0 người giữ quyền quản trị KL BTVTU (quy định: 2).');
+    const soKl = (await dbAdmin().from('accounts').select('id').eq('quan_tri_kl', true)).data.length; // spec khác (kl-them-nhiem-vu) có thể đang cấp tạm
+    await expect(page.locator('#qtCanhBao')).toContainText(`Đang có ${soKl} người giữ quyền quản trị KL BTVTU (quy định: 2).`);
 
     // Về mục theo vai trò: section vai trò hiện lại, mục Quản trị ẩn.
     await nav(page, 'navKl');

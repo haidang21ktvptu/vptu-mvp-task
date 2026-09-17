@@ -7,6 +7,8 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { chiDaoGui, chiDaoPhanHoi, deNghiTuChoi, duyetTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { xacNhanMinhChung } from '../../../lib/kl/minh-chung.js';
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
+import { dh } from './du-lieu.js';
+import { veDieuHanh } from './man-hinh.js';
 import { chonDoKhan } from '../../../lib/kl/do-khan.js';
 import { moNhiemVu } from '../kl/index.js';
 import { xemDienBien } from '../dien-bien.js';
@@ -100,6 +102,8 @@ async function xacNhanNhanTT({ id, ma }) {
   try {
     const moi = await xacNhanNhanViec(id);
     notifySuccess(moi ? `Đã xác nhận nhận việc ${ma}. Thường trực được báo; hạn và trạng thái không đổi.` : 'Đồng chí đã xác nhận nhận việc này trước đó.');
+    // Hàm DB đã ghi: cập nhật dòng cục bộ và vẽ lại ngay (khối Thường trực giao biến mất tức thì), không chờ nạp lại toàn trang (staging bận có thể vài giây).
+    const r = dh.rows.find((x) => x.id === id); if (r) { r.da_xac_nhan_nhan = true; veDieuHanh(); }
     await lamMoiHuyHieu(); await napLai();
   } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
 }
