@@ -61,7 +61,7 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
 
   test('2. Mọi hàm ghi từ chối A0 (42501): giao_viec, chỉ đạo điều hành, cấp quyết định, nhận việc, minh chứng, đóng; ghi bảng trực tiếp 0 dòng', async () => {
     const me = await a0();
-    assertDenied(await me.rpc('giao_viec', { p: { noi_dung: 'KL-0030 A0 giao', van_ban_id: fx.hn, owner_tai_khoan: IDS.cv1 } }), 'giao_viec');
+    assertDenied(await me.rpc('giao_viec', { p: { noi_dung: 'KL-0030 A0 giao', van_ban_id: fx.hn, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31' } }), 'giao_viec cho chuyên viên (GĐ22: A0 chỉ giao lãnh đạo VP hoặc phòng)');
     for (const loai of ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU']) {
       assertDenied(await me.rpc('chi_dao_gui', { p: { nhiem_vu_id: id['NV-T88'], loai, noi_dung: 'x', han_moi: '2026-12-31', nguoi_theo_doi_moi: IDS.cv2 } }), `chi_dao_gui ${loai}`);
     }

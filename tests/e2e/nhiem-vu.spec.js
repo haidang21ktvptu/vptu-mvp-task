@@ -14,7 +14,7 @@ const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 test.describe.serial('Luồng giao việc → xác nhận nhận việc trên thẻ → hoàn thành', () => {
-  let db; let title; let cuId; let cuMa; let moiId;
+  let db; let title; let cuId; let cuMa; let moiId; let moiMa;
 
   test.beforeAll(async ({}, testInfo) => { // eslint-disable-line no-empty-pattern
     title = `${E2E_TAG} giao-nhan ${testInfo.project.name} ${Date.now()}`; // nhãn riêng: "giao%" từng khớp cả "giao việc" của kl-them-nhiem-vu (2 worker mobile → xoá nhầm)
@@ -61,9 +61,9 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
     await expect(page.locator('#viewKl')).toBeVisible();
-    const { data } = await db.from('nhiem_vu').select('id, theo_1400, owner_tai_khoan, nguoi_theo_doi').eq('noi_dung', title).single();
+    const { data } = await db.from('nhiem_vu').select('id, ma, theo_1400, owner_tai_khoan, nguoi_theo_doi').eq('noi_dung', title).single();
     expect(data).toMatchObject({ theo_1400: true, owner_tai_khoan: CV1_ID, nguoi_theo_doi: '00000000-0000-4000-8000-000000000003' });
-    moiId = data.id;
+    moiId = data.id; moiMa = data.ma;
     const row = page.locator(`#klRow-${moiId}`);
     await expect(row).toBeVisible();
     await expect(row).toContainText('Demo E2E Chuyên viên NV');
@@ -88,7 +88,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     await expect(page.locator(`#vctMuc-minh-chung #vct-${moiId} form.mc-inline`)).toBeVisible();
 
     // GĐ16 (16B): việc theo 1400 đóng bằng "Đóng nhiệm vụ" sau khi nộp minh chứng có cấu trúc; modal Cập nhật không có Hoàn thành; nút Đóng mờ.
-    await page.locator(`#vct-${moiId}`).getByRole('button', { name: 'Xem' }).click();
+    await moViec(page, moiId, moiMa); // GĐ22: nút Xem trên thẻ mở diễn biến tại chỗ; ngăn chi tiết mở từ màn hình Nhiệm vụ
     const ngan = page.locator(`#klChiTiet-${moiId}`);
     await expect(ngan).toBeVisible();
     await expect(ngan).toContainText('đã nhận việc');

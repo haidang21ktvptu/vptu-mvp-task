@@ -6,7 +6,11 @@ import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { chiDaoGui, chiDaoPhanHoi, deNghiTuChoi, duyetTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { xacNhanMinhChung } from '../../../lib/kl/minh-chung.js';
+import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
+import { chonDoKhan } from '../../../lib/kl/do-khan.js';
 import { moNhiemVu } from '../kl/index.js';
+import { xemDienBien } from '../dien-bien.js';
+import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 
 let napLai = async () => {};
 export const datNapLai = (fn) => { napLai = fn; };
@@ -90,10 +94,19 @@ async function duyetTuChoiThe(ds, el) {
     await thanhCong(form, dongY ? `Đã đồng ý từ chối ${ds.ma}. Việc chờ giao lại cho người khác.` : `Đã ghi không đồng ý với đề nghị từ chối ${ds.ma}. Người đề nghị tiếp tục thực hiện.`);
   } catch (e) { notifyError(e.message); }
 }
-const xemDienBien = ({ id, ma }) => moNhiemVu(id, ma, 'chi-tiet');
 const moChiDaoViec = ({ id, ma }) => moNhiemVu(id, ma, 'chi-dao');
+// Xác nhận đã nhận việc Thường trực giao ngay tại khối đầu trang (A1/A2, GĐ22): chỉ ghi lịch sử (0025), huy hiệu và trang nạp lại.
+async function xacNhanNhanTT({ id, ma }) {
+  try {
+    const moi = await xacNhanNhanViec(id);
+    notifySuccess(moi ? `Đã xác nhận nhận việc ${ma}. Thường trực được báo; hạn và trạng thái không đổi.` : 'Đồng chí đã xác nhận nhận việc này trước đó.');
+    await lamMoiHuyHieu(); await napLai();
+  } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
+}
+// Dải "Cần xử lý ngay": cuộn tới khối trong trang (id), không có thì về đầu trang.
+const cuonToi = ({ toi }) => { const el = $(toi); if (el && !el.classList.contains('hidden')) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
 export function mountHanhDongDieuHanh() {
   registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
-    giaoLaiThe, deNghiTuChoiThe, duyetTuChoiThe });
+    giaoLaiThe, deNghiTuChoiThe, duyetTuChoiThe, xacNhanNhanTT, chonDoKhan, cuonToi });
 }

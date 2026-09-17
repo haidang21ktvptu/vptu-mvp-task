@@ -58,6 +58,12 @@ export const tinHeThongDaDoc = (nhiemVuId = null) => rpc('tin_he_thong_da_doc', 
 // Từ chối nhận việc (0034): đề nghị (Owner/người theo dõi chưa xác nhận nhận việc) và duyệt (chỉ cấp duyệt). Lý do chỉ đọc được qua RLS tu_choi.
 export const deNghiTuChoi = (nhiemVuId, lyDo) => rpc('de_nghi_tu_choi', { p_nhiem_vu: nhiemVuId, p_ly_do: lyDo });
 export const duyetTuChoi = (id, dongY, yKien) => rpc('duyet_tu_choi', { p_id: id, p_dong_y: dongY, p_y_kien: yKien || null });
+// GĐ22 (0036/0037): "Đã nhận" chỉ đạo Hỏa tốc (chỉ người nhận); số chưa xử lý cho huy hiệu; dòng thời gian một việc (v_dien_bien, mới nhất trước).
+export const xacNhanDaNhanChiDao = (id) => rpc('xac_nhan_da_nhan_chi_dao', { p_id: id });
+export const loadSoChuaXuLy = () => rpc('kl_so_chua_xu_ly', {});
+export async function loadDienBien(nhiemVuId) {
+  return loi(await supabase.from('v_dien_bien').select('*').eq('nhiem_vu_id', nhiemVuId), 'đọc diễn biến') || [];
+}
 
 // Nhãn loại chỉ đạo (cùng bảng với chi_dao_ten_loai trong 0026).
 export const TEN_LOAI_CHI_DAO = {

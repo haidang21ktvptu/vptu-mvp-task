@@ -9,15 +9,18 @@ import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
 import { dh } from '../shared/dieu-hanh/du-lieu.js';
 import { khoiChiDaoTTHtml } from './chi-dao-tt.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
+import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
 import { registerBaoCao } from './bao-cao.js';
 import { registerCanBo } from '../shared/can-bo.js';
 
-// Đầu trang: đề nghị từ chối cần duyệt (0034, chỉ hiện khi có) rồi chỉ đạo Thường trực chờ Văn phòng.
-const DAU = '<section class="cau hidden" id="dhTC"></section><section class="cau" id="dhTT"></section>';
+// Đầu trang: dải "Cần xử lý ngay" (GĐ22), việc Thường trực giao chờ xác nhận, đề nghị từ chối cần duyệt (0034), việc mình giao bị từ chối
+// (chỉ hiện khi có) rồi chỉ đạo Thường trực chờ Văn phòng.
+const DAU = '<div id="dhCanXuLy"></div><section class="cau hidden" id="dhTC"></section><section class="cau" id="dhTT"></section>';
 const CUOI = '<section class="cau" id="dhMcKhoi"><h2><em class="lam" id="dhMcSo">0</em> minh chứng đã nộp, chờ xác nhận</h2><div id="dhMc"></div></section>';
 
 function veThem() {
-  const tc = tuChoiChoHtml();
+  $('dhCanXuLy').innerHTML = canXuLyHtml();
+  const tc = khoiThuongTrucHtml() + tuChoiChoHtml() + khoiBiTuChoiHtml();
   $('dhTC').innerHTML = tc; show('dhTC', Boolean(tc));
   $('dhTT').innerHTML = khoiChiDaoTTHtml();
   $('dhMcSo').textContent = dh.mcCho.length;

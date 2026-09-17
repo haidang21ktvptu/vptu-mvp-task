@@ -122,7 +122,10 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await ct.locator('.chi-tiet-them > summary').click();
     await expect(ct).toContainText('nhập bởi Demo E2E Chuyên viên KL');
     await expect(ct).toContainText('Nhập trên hệ thống');
-    await expect(ct.locator('.lich-su-hop summary')).toContainText('Lịch sử: 4 thay đổi');
+    // GĐ22: lịch sử nằm trong dòng thời gian "Diễn biến" (v_dien_bien) ngay trong ngăn, mới nhất trên đầu; có dòng tạo việc và xác nhận nhận việc.
+    await expect(ct.locator('.dien-bien li').first()).toBeVisible();
+    await expect(ct.locator(`#klDienBien-${nvId}`)).toContainText('Xác nhận đã nhận việc');
+    await expect(ct.locator(`#klDienBien-${nvId}`)).toContainText('Tạo dòng');
     await expect(ct.locator('.luong-cd')).toContainText('chưa có'); // chưa có chỉ đạo → không có ô phản hồi
     await expect(ct.locator('input[name=noi_dung]')).toHaveCount(0);
   });

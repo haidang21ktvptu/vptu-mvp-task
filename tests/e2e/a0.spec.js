@@ -68,10 +68,12 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await o.locator('[data-action="dongO"]').click();
     await expect(o).not.toHaveClass(/\bmo\b/);
     const id = (await the.getAttribute('id')).replace('the-', '');
+    // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (không rời trang); bấm lại để gập.
     await the.locator('[data-action="xemDienBien"]').click();
-    await expect(page.locator('#viewKl')).toBeVisible();
-    await expect(page.locator(`#klChiTiet-${id}`)).toBeVisible();
-    await expect(page.locator(`#klChiTiet-${id} .chi-tiet-them`)).toHaveAttribute('open', '');
+    await expect(page.locator('#viewDieuHanh')).toBeVisible();
+    await expect(the.locator(`#db-${id} .dien-bien li`).first()).toBeVisible();
+    await the.locator('[data-action="xemDienBien"]').click();
+    await expect(the.locator(`#db-${id}`)).toHaveCount(0);
   });
 
   test('Toàn bộ nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ ô Ý kiến / Chỉ đạo', async () => {

@@ -11,6 +11,9 @@ import { mountMessages, loadDMUnreadMap } from '../features/messages/index.js';
 import { mountThongBao, loadThongBao } from '../features/thong-bao/index.js';
 import { initRealtime } from '../features/realtime.js';
 import { initKlRealtime } from '../features/kl-realtime.js';
+import { initHuyHieu } from '../features/huy-hieu.js';
+import { mountThanhHoaToc } from './shell/thanh-hoa-toc.js';
+import { mountCanXuLy } from './shared/can-xu-ly.js';
 import { onSessionEnter } from '../auth/session.js';
 
 export function registerViews() {
@@ -24,8 +27,11 @@ export function registerViews() {
   registerQuanTriView(); // mục theo cờ quan_tri_he_thong / quan_tri_kl
   mountMessages();       // Nhắn tin gom theo việc
   mountThongBao();       // chuông gom theo việc, mọi vai trò
+  mountThanhHoaToc();    // thanh đỏ Hỏa tốc chưa Đã nhận (GĐ22)
+  mountCanXuLy();        // dải "Cần xử lý ngay" vẽ lại theo realtime (GĐ22)
   onSessionEnter(loadDMUnreadMap);
   onSessionEnter(loadThongBao);
   initRealtime();
   initKlRealtime();
+  initHuyHieu();         // số chưa xử lý trên menu + dải "Cần xử lý ngay" (GĐ22)
 }

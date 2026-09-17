@@ -54,14 +54,14 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
 
   test('A2: khối "Đề nghị từ chối" ở đầu Phòng tôi hôm nay có lý do; Đồng ý → khối biến mất', async () => {
     await tp.locator('[data-action=loadDieuHanh]').click();
-    const khoi = tp.locator('#ptTuChoi #dhTuChoi');
+    const khoi = tp.locator('#dhTC #dhTuChoi');
     await expect(khoi).toBeVisible();
     const the = khoi.locator(`.the-con[data-nhiem-vu="${nvId}"]`);
     await expect(the).toContainText('Demo E2E Chuyên viên RT');
     await expect(the).toContainText('Lý do: E2E: việc thuộc chuyên môn phòng khác');
     await the.locator('input[name=noi_dung]').fill('Đồng ý, sẽ giao người khác');
     await the.locator('button[data-dong-y="1"]').click();
-    await expect(tp.locator('#ptTuChoi #dhTuChoi')).toHaveCount(0);
+    await expect(tp.locator('#dhTC #dhTuChoi')).toHaveCount(0);
     const { data } = await db.from('nhiem_vu').select('bi_tu_choi').eq('id', nvId).single();
     expect(data.bi_tu_choi).toBe(true);
   });
@@ -70,7 +70,7 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
     await cv.locator('[data-action=loadDieuHanh]').click();
     const muc = cv.locator('#vctMuc-tu-choi');
     await expect(muc).toBeVisible();
-    await expect(muc.locator(`#vct-${nvId} .nhan-tu-choi`)).toHaveText('Bị từ chối, chờ giao lại');
+    await expect(muc.locator(`#vct-${nvId} .nhan-tu-choi`)).toHaveText('Đã đồng ý từ chối, chờ giao lại');
     await expect(cv.locator(`#vctMuc-moi #vct-${nvId}`)).toHaveCount(0);
   });
 });

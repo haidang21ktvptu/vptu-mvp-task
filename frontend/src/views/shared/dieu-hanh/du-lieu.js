@@ -6,6 +6,7 @@ import { loadDanhMucKl, loadCauHinhKl, loadKlRows } from '../../../lib/kl/du-lie
 import { loadNgoaiLe, loadChiDaoTT, loadSoLieuTai, loadMinhChungCho, loadChiDaoCho } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN, congNgay } from '../../../lib/kl/ngay.js';
 import { THU_TU_KHAU, boSoThuTu } from '../../../lib/kl/nhan.js';
+import { soSanhDoKhan } from '../../../lib/kl/do-khan.js';
 
 export const dh = { rows: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
 
@@ -59,7 +60,8 @@ export function locThe() {
   return goc.filter((r) => (!khau || r.khau === khau) && (!dv || (r.owner_don_vi_ma || '') === dv)
     && (kpi !== 'quyet' || canToiQuyet(r)) && (kpi !== 'cho' && kpi !== 'tt' || ttCuaViec(r.id).some((c) => c.trang_thai === 'CHO_PHAN_HOI'))
     && (kpi !== 'mc' || r.khau === 'CHO_MINH_CHUNG'))
-    .sort((a, b) => (canToiQuyet(b) ? 1 : 0) - (canToiQuyet(a) ? 1 : 0) || (b.so_ngay_qua || 0) - (a.so_ngay_qua || 0)); // việc bị từ chối chưa quá hạn: so_ngay_qua NULL
+    // GĐ22: độ khẩn (Hỏa tốc trước) → Thường trực giao → cần tôi quyết → số ngày trễ (việc bị từ chối chưa quá hạn: so_ngay_qua NULL).
+    .sort((a, b) => soSanhDoKhan(a, b) || (canToiQuyet(b) ? 1 : 0) - (canToiQuyet(a) ? 1 : 0) || (b.so_ngay_qua || 0) - (a.so_ngay_qua || 0));
 }
 
 // Xu hướng so với tuần trước từ kl_so_lieu_tai: { hienTai, truoc, chenh } cho một tập khoá của muc_canh_bao hoặc nhom_dem.

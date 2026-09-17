@@ -6,12 +6,28 @@ import { state, findAccount } from '../../lib/state.js';
 import { danhMucKl } from '../../lib/kl/du-lieu.js';
 import { formatNgay, ghiChuHan, homNayVN } from '../../lib/kl/ngay.js';
 import { TEN_LOAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
+import { nhanPhuHtml, nhanDoKhanHtml } from '../../lib/kl/do-khan.js';
 import { dh, timRow, deNghiCuaToi } from '../shared/dieu-hanh/du-lieu.js';
 
 const me = () => state.user?.id;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laCuaToi = (r) => r.owner_tai_khoan === me() || r.nguoi_theo_doi === me();
 const canNhan = (r) => r.theo_1400 && mo(r) && !r.da_xac_nhan_nhan && laCuaToi(r) && !r.bi_tu_choi;
+
+// Kết quả đề nghị từ chối của TÔI (GĐ22, mục 5b): đã đồng ý → chờ giao lại; không đồng ý → phải nhận việc (kèm ý kiến) cho tới khi xác nhận.
+const ketQuaTuChoi = (r) => {
+  const t = r.tu_choi_moi_nhat;
+  if (!t || t.nguoi_de_nghi !== me() || !mo(r) || !laCuaToi(r)) return null;
+  if (t.trang_thai === 'DONG_Y' && r.bi_tu_choi) return { r, t, chu: 'Đã đồng ý từ chối, chờ giao lại' };
+  if (t.trang_thai === 'KHONG_DONG_Y' && !r.da_xac_nhan_nhan) return { r, t, chu: `Không đồng ý, phải nhận việc${t.y_kien_duyet ? `: ${t.y_kien_duyet}` : ''}` };
+  return null;
+};
+export function thanhTuChoiHtml() {
+  const ds = dh.rows.map(ketQuaTuChoi).filter(Boolean);
+  if (ds.length === 0) return '';
+  return `<div class="muc vang" id="vctThanhTuChoi"><b>Kết quả đề nghị từ chối của đồng chí (${ds.length})</b>${ds.map(({ r, t, chu }) =>
+    `<p data-nhiem-vu="${r.id}" data-ket-qua="${t.trang_thai}"><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} — <b>${escapeHtml(chu)}</b> (${escapeHtml(findAccount(t.cap_duyet)?.full_name || 'cấp duyệt')} duyệt ${t.duyet_luc ? formatDateTime(t.duyet_luc) : ''})</p>`).join('')}</div>`;
+}
 
 export function nhomViecCuaToi() {
   const rows = dh.rows.filter(laCuaToi);
@@ -39,10 +55,12 @@ function dongMoi(r) {
         <small>Lý do chỉ lãnh đạo trực tiếp và cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
         <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
         <button type="submit" class="nut chinh">Gửi đề nghị</button><button type="button" class="nut" data-action="dongO" data-o="oTc-${r.id}">Huỷ</button></form>`;
-  return `<div class="the-con" id="vct-${r.id}"${dn ? ' data-de-nghi="1"' : ''}><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''}</p>${hanhDong}</div>`;
+  const kq = ketQuaTuChoi(r);
+  return `<div class="the-con" id="vct-${r.id}"${dn ? ' data-de-nghi="1"' : ''}><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''} ${nhanPhuHtml(r)}</p>
+    ${kq ? `<p class="chu-canh-bao-inline" data-ket-qua="${kq.t.trang_thai}">${escapeHtml(kq.chu)}</p>` : ''}${hanhDong}</div>`;
 }
 function dongTuChoi(r) {
-  return `<div class="the-con do" id="vct-${r.id}" data-tu-choi="1"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} · <span class="nhan-tu-choi">Bị từ chối, chờ giao lại</span></p>
+  return `<div class="the-con do" id="vct-${r.id}" data-tu-choi="1"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} ${nhanDoKhanHtml(r.do_khan)} · <span class="nhan-tu-choi">Đã đồng ý từ chối, chờ giao lại</span></p>
     <div class="hanh-dong">${xem(r)}</div></div>`;
 }
 function dongChiDao(c) {
@@ -53,13 +71,13 @@ function dongChiDao(c) {
 function dongMinhChung(r, homNay) {
   const cap = danhMucKl().cap.map((c) => `<option value="${c.ma}"${c.ma === r.cap_nhan_san_pham ? ' selected' : ''}>${escapeHtml(c.ten)}</option>`).join('');
   const han = r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : 'chưa có hạn';
-  return `<div class="the-con ${r.muc_canh_bao === 'VANG' ? '' : 'do'}" id="vct-${r.id}" data-muc="${escapeHtml(r.muc_canh_bao)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, ${han}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''}</p>
+  return `<div class="the-con ${r.muc_canh_bao === 'VANG' ? '' : 'do'}" id="vct-${r.id}" data-muc="${escapeHtml(r.muc_canh_bao)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, ${han}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>
     <form class="mc-inline" data-submit="nopMinhChungThe" data-id="${r.id}"><input name="so_hieu" placeholder="Số hiệu văn bản" aria-label="Số hiệu" autocomplete="off"><input type="date" name="ngay_van_ban" aria-label="Ngày văn bản" max="${homNay}">
       <select name="cap_nhan" aria-label="Cấp nhận"><option value="">Cấp nhận</option>${cap}</select><button type="submit" class="nut chinh">Nộp minh chứng</button></form>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }
 function dongDangLam(r) {
-  return `<div class="the-con" id="vct-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</p>
+  return `<div class="the-con" id="vct-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} ${nhanPhuHtml(r)}</p>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }
 

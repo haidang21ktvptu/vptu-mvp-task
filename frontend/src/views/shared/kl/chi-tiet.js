@@ -7,12 +7,13 @@ import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
 import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua } from '../../../lib/kl/nhan.js';
+import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
+import { napDienBien } from '../dien-bien.js';
 import { timKlRow } from './danh-sach.js';
 import { sanPhamText, laBenTrong, duocCapNhat, duocDong, ownerText } from './dong.js';
 import { napChiDao, focusChiDao, duocChiDao } from './chi-dao.js';
 import { napMinhChung } from './minh-chung.js';
 
-const COT_VET = ['xac_nhan_nhan_viec', 'chi_dao', 'minh_chung_nop', 'minh_chung_xac_nhan', 'dong_nhiem_vu'];
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap' };
 const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban'];
@@ -35,13 +36,6 @@ function canCu(cot, ls) {
   return `<span class="chu-phu">nhập bởi ${escapeHtml(tenNguoi(l))}, ${formatDateTime(l.luc)} · ${TEN_NGUON[l.nguon] || l.nguon}</span>`;
 }
 const hang = (nhan, giaTri, canCuHtml) => `<tr><th scope="row">${nhan}</th><td>${escapeHtml(giaTri)}</td><td>${canCuHtml}</td></tr>`;
-
-function lichSuHtml(ls) {
-  if (ls.length === 0) return '<p class="chu-phu">Chưa có thay đổi nào được ghi nhận.</p>';
-  return `<ul class="lich-su">${ls.map((l) => `<li><span class="chu-phu">${formatDateTime(l.luc)}</span> · ${escapeHtml(tenNguoi(l))} · <b>${tenCot(l.cot)}</b>: ${
-    l.cot === '*' ? `tạo dòng ${escapeHtml(l.gia_tri_moi || '')}` : COT_VET.includes(l.cot) ? escapeHtml(l.gia_tri_moi || '')
-      : `${escapeHtml(hienGiaTri(l.cot, l.gia_tri_cu))} → ${escapeHtml(hienGiaTri(l.cot, l.gia_tri_moi))}`} <span class="chu-phu">(${TEN_NGUON[l.nguon] || l.nguon})</span></li>`).join('')}</ul>`;
-}
 
 // Cấp cần quyết định: A1/A2 chọn tại chỗ (dat_cap_quyet_dinh 0026, CN-5.2(4)); vai khác chỉ đọc.
 function capQuyetHtml(r) {
@@ -76,7 +70,7 @@ export function chiTietHtml(r, ls, dc) {
   const nhanViec = ls.filter((l) => l.cot === 'xac_nhan_nhan_viec');
   const hanLop = r.nhom_dem === 'QUA_HAN' || r.nhom_dem === 'DANG_DINH_CHINH' ? ' style="color:var(--do)"' : '';
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
-      <p class="ma">${escapeHtml(r.ma)}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''}, ban hành ${formatNgay(r.ngay_ban_hanh)} · <span class="trang-thai ${r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : r.nhom_dem === 'QUA_HAN' ? 'tt-qua' : 'tt-xam'}">${escapeHtml(nhanTrangThai(r))}</span>${r.bi_tu_choi ? ' <span class="trang-thai tt-qua">Bị từ chối, chờ giao lại</span>' : r.tu_choi_cho ? ' <span class="trang-thai tt-xam">Đề nghị từ chối, chờ duyệt</span>' : ''}</p>
+      <p class="ma">${escapeHtml(r.ma)}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''}, ban hành ${formatNgay(r.ngay_ban_hanh)} · <span class="trang-thai ${r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : r.nhom_dem === 'QUA_HAN' ? 'tt-qua' : 'tt-xam'}">${escapeHtml(nhanTrangThai(r))}</span> ${nhanPhuHtml(r)}</p>
       <h3>${escapeHtml(r.noi_dung)}</h3>
       <dl><dt>Chủ trì</dt><dd>${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}</dd>
         <dt>Theo dõi</dt><dd>${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}</dd>
@@ -86,7 +80,8 @@ export function chiTietHtml(r, ls, dc) {
       ${hanhDongHtml(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <div class="khoi-nho khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>
-      <details class="chi-tiet-them"><summary>Xem chi tiết <span class="chu-phu">căn cứ từng trường, lịch sử</span></summary>
+      <div class="khoi-nho db-khoi" id="klDienBien-${r.id}"><h4>Diễn biến <span class="chu-phu">mới nhất trên đầu</span></h4><div><p class="chu-phu">Đang tải diễn biến…</p></div></div>
+      <details class="chi-tiet-them"><summary>Xem chi tiết <span class="chu-phu">căn cứ từng trường</span></summary>
       <table class="can-cu"><thead><tr><th>Trường</th><th>Giá trị</th><th>Căn cứ</th></tr></thead><tbody>
           ${hang('Chịu trách nhiệm', ownerText(r), canCu(r.owner_tai_khoan ? 'owner_tai_khoan' : 'owner_don_vi_ma', ls))}
           ${hang('Sản phẩm đầu ra', sanPhamText(r) || '(chưa định nghĩa sản phẩm — dữ liệu chuyển đổi)', canCu('san_pham_loai', ls))}
@@ -100,7 +95,6 @@ export function chiTietHtml(r, ls, dc) {
           ${hang('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
           ${hang('Nguồn dòng · Đính chính', `${nguonDong}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'} · ${dinhChinh}`, '')}
         </tbody></table>
-      <details class="lich-su-hop"><summary>Lịch sử: ${ls.filter((l) => l.cot !== '*').length} thay đổi — xem đầy đủ</summary>${lichSuHtml(ls)}</details>
       </details>
     </div>`;
 }
@@ -124,7 +118,7 @@ async function nap(id, cheDo, giuBang) {
     if (dangMo !== id) return;
     o.innerHTML = chiTietHtml(r, ls, dc);
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
-    await Promise.all([napChiDao(r), napMinhChung(r)]);
+    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id)]);
     if (cheDo === 'chi-dao') focusChiDao(id);
   })();
   dangNap = p.catch((e) => { notifyError('Không đọc được lịch sử: ' + e.message); if (dangMo === id) o.innerHTML = `<p class="loi-inline">Không đọc được lịch sử: ${escapeHtml(e.message)}. Bấm lại dòng để thử lại.</p>`; });

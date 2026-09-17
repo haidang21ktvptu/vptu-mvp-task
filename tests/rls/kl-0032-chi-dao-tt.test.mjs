@@ -64,7 +64,7 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
     const c = await row(tt1);
     assert.equal(c.loai, 'CHI_DAO_TT'); assert.equal(c.trang_thai, 'CHO_PHAN_HOI'); assert.equal(c.tra_loi_cho, null);
     assert.deepEqual([...c.nguoi_nhan].sort(), [IDS.cvp, IDS.pcvp2].sort(), 'người nhận: Chánh VP + PCVP phụ trách Quản trị');
-    assert.equal(c.han_phan_hoi, ngayLamViecSau(homNayVN(), 2), 'hạn = 2 ngày làm việc sau hôm nay (giờ Việt Nam)');
+    assert.equal(c.han_phan_hoi, ngayLamViecSau(homNayVN(), 1), 'hạn = 1 ngày làm việc sau hôm nay (GĐ22: A0 mặc định Khẩn; Thường 2 ngày)');
     const mau = /^Chỉ đạo Thường trực · NV-T90/;
     assert.equal((await tin(IDS.cvp, 'NV-T90', mau)).length, 1, 'Chánh VP nhận tin');
     assert.equal((await tin(IDS.pcvp2, 'NV-T90', mau)).length, 1, 'PCVP2 nhận tin');

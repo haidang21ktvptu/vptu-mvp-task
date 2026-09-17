@@ -146,9 +146,12 @@ assertOk(await phanHoi('demo_cv1', { chi_dao_id: y.data, noi_dung: 'Đã trao đ
       const c = await userClient(u);
       const [nl, tat] = await Promise.all([c.from('v_ngoai_le').select('*'), c.from('v_nhiem_vu').select('id, nhom_dem')]);
       assertOk(nl, u); assertOk(tat, u);
-      assert.equal(nl.data.length, tat.data.filter((r) => ['QUA_HAN', 'DANG_DINH_CHINH'].includes(r.nhom_dem)).length, `${u}: tổng khớp ô Quá hạn`);
-      assert.ok(nl.data.every((r) => ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && r.so_ngay_qua > 0 && r.owner_ten && r.san_pham_ten && r.cap_quyet_dinh_ten), `${u}: chỉ Đỏ, đủ 4 trường`);
-      assert.ok(nl.data.every((r, i) => i === 0 || nl.data[i - 1].so_ngay_qua >= r.so_ngay_qua), `${u}: giảm dần`);
+      // 0034: hàng bị từ chối chưa Đỏ (nhom TU_CHOI) đếm riêng, không cộng vào ô Quá hạn; GĐ22: thứ tự ngày trễ giảm dần trong cùng độ khẩn / ưu tiên.
+      const doNl = nl.data.filter((r) => r.nhom !== 'TU_CHOI');
+      assert.equal(doNl.length, tat.data.filter((r) => ['QUA_HAN', 'DANG_DINH_CHINH'].includes(r.nhom_dem)).length, `${u}: tổng khớp ô Quá hạn`);
+      assert.ok(doNl.every((r) => ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && r.so_ngay_qua > 0 && r.owner_ten && r.san_pham_ten && r.cap_quyet_dinh_ten), `${u}: chỉ Đỏ, đủ 4 trường`);
+      const khoa = (r) => `${r.thu_tu_do_khan}-${r.uu_tien || ''}-${r.bi_tu_choi}`;
+      assert.ok(doNl.every((r, i) => i === 0 || khoa(doNl[i - 1]) !== khoa(r) || doNl[i - 1].so_ngay_qua >= r.so_ngay_qua), `${u}: giảm dần`);
     }
     const cvp = await userClient('demo_cvp');
     const r = (await cvp.from('v_ngoai_le').select('*').eq('id', id['NV-T93']).single()).data;
