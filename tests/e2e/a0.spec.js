@@ -3,7 +3,7 @@
 // nhiệm vụ: chỉ đọc + Ý kiến/Chỉ đạo (quyền thật: hàm 0030 từ chối A0 tường minh — test RLS kl-0030). Không tạo dữ liệu; bỏ qua khi thiếu demo_a0.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { contextAs, nav } from './lib/app.js';
+import { contextAs, nav, NAP } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 
 test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều hành, chỉ xem', () => {
@@ -22,7 +22,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(page.locator('#currentRoleDisplay')).toContainText(OPTIONAL_USERS.A0.roleLabel);
     await expect(page.locator('#viewDieuHanh')).not.toHaveClass(/\bhidden\b/);
     await expect(page.locator('#dhTieuDeTrang')).toHaveText('Trung tâm điều hành Thường trực');
-    await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước');
+    await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước', NAP);
     await expect(page.locator('#dhKpi button')).toHaveCount(5); // GĐ21: thêm ô "bị từ chối" riêng
     await expect(page.locator('#dhKpi [data-loc="tuchoi"]')).toContainText('bị từ chối');
     await expect(page.locator('#dhRay [data-khau]')).toHaveCount(5);
@@ -49,7 +49,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(khau).toHaveAttribute('aria-pressed', 'false');
     await page.locator('#dhKpi [data-loc="tat"]').click();
     await expect(page.locator('#dsTieuDe')).toContainText('Toàn cảnh');
-    await expect(page.locator('#dsThe .toan-canh')).toBeVisible();
+    await expect(page.locator('#dsThe .toan-canh')).toBeVisible(NAP);
     await page.locator('#dhKpi [data-loc="tat"]').click();
     await expect(page.locator('#dsTieuDe')).toContainText('đang nghẽn');
   });
@@ -71,16 +71,16 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (không rời trang); bấm lại để gập.
     await the.locator('[data-action="xemDienBien"]').click();
     await expect(page.locator('#viewDieuHanh')).toBeVisible();
-    await expect(the.locator(`#db-${id} .dien-bien li`).first()).toBeVisible();
+    await expect(the.locator(`#db-${id} .dien-bien li`).first()).toBeVisible(NAP);
     await the.locator('[data-action="xemDienBien"]').click();
     await expect(the.locator(`#db-${id}`)).toHaveCount(0);
   });
 
   test('Toàn bộ nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ ô Ý kiến / Chỉ đạo', async () => {
     await nav(page, 'navKl');
-    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator('#klBody [id^="klRow-"]').first();
-    await expect(row).toBeVisible(); // Thường trực thấy toàn bộ việc: có dòng để mở
+    await expect(row).toBeVisible(NAP); // Thường trực thấy toàn bộ việc: có dòng để mở
     await expect(page.locator('#klNutThem')).toBeHidden();
     await row.click();
     const ngan = page.locator('#klChiTiet');

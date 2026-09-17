@@ -4,7 +4,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, contextAs, nav } from './lib/app.js';
+import { pageAs, contextAs, nav, NAP } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -71,7 +71,7 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
     await page.locator('#qtTabTaiKhoan').click();
     await expect(page.locator('#qtKhuTaiKhoan')).toBeVisible();
     const row = page.locator('#qtTaiKhoanBody tr', { hasText: 'demo_cv2' });
-    await expect(row).toContainText('Không');
+    await expect(row).toContainText('Không', NAP);
     const lyDo = `${E2E_TAG} ${testInfo.project.name} ${Date.now()}`;
     await row.getByRole('button', { name: /Cấp quyền/ }).click();
     await expect(page.locator('#qtLyDoModal')).toBeVisible();
@@ -81,7 +81,7 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
     await page.locator('#qtLyDoXacNhan').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã cấp quyền quản trị KL BTVTU cho Demo Chuyên viên Hai.');
     await expect(page.locator('#qtTabTaiKhoan')).toHaveAttribute('aria-selected', 'true'); // nạp lại giữ đúng tab
-    await expect(row).toContainText('Có quyền');
+    await expect(row).toContainText('Có quyền', NAP);
     await page.locator('#qtTabNhatKy').click();
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText(lyDo);
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText('Bật');
@@ -92,7 +92,7 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
     await page.locator('#qtLyDo').fill(`${lyDo} thu`);
     await page.locator('#qtLyDoXacNhan').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã thu quyền quản trị KL BTVTU của Demo Chuyên viên Hai.');
-    await expect(row).toContainText('Không');
+    await expect(row).toContainText('Không', NAP);
     await page.locator('#qtTabNhatKy').click();
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText('Tắt');
     const soKl = (await dbAdmin().from('accounts').select('id').eq('quan_tri_kl', true)).data.length; // spec khác (kl-them-nhiem-vu) có thể đang cấp tạm

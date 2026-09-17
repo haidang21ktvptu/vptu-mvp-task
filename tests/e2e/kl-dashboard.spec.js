@@ -2,14 +2,14 @@
 // Tổng; ô Quá hạn → chỉ dòng quá hạn; Báo cáo: mỗi con số bấm ra đúng danh sách có chip "Chịu trách nhiệm"; mục menu Nhiệm vụ đặt lại bộ lọc;
 // Cán bộ thuộc quyền: bức tranh tải việc theo phòng. Không tạo dữ liệu (bộ vàng trên staging); bỏ qua khi project chưa có module KL.
 import { test, expect } from '@playwright/test';
-import { pageAs, nav } from './lib/app.js';
+import { pageAs, nav, NAP } from './lib/app.js';
 
 test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn phòng', () => {
   let page;
   test.beforeAll(async ({ browser }, testInfo) => {
     page = await pageAs(browser, 'PCVP2', testInfo); // PCVP khối Quản trị: không spec nào ghi dữ liệu ở đó → bộ số ổn định khi chạy 2 worker
     await nav(page, 'navKl');
-    await expect(page.locator('#klTinhDen')).toContainText('Số liệu tính đến');
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
   });
   test.afterAll(async () => { await page?.context().close(); });
 

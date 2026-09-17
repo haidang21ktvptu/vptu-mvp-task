@@ -41,19 +41,33 @@ export function setKlLoc(loc, thayThe = false) {
 }
 
 // Đọc lỗi tạm (mạng, staging bận) → thử lại một lần sau 800 ms rồi mới báo; giữ dòng cũ trên màn hình.
-export async function loadKl(lanThu = 0) {
+// Đánh dấu "chưa nạp" khi mở lại màn hình: render() bỏ data-nap cho tới khi có dữ liệu mới.
+export function datKlChuaNap() { kl.luc = null; }
+
+// Gộp lượt nạp trùng (mở màn hình + realtime + sau hành động cùng lúc): một lượt tại một thời điểm; lượt tới trong lúc đang nạp chỉ ghi nhớ
+// "cần nạp lại" và chạy MỘT lần sau khi xong — mỗi lượt là 3 truy vấn (v_nhiem_vu tính trạng thái từng dòng) nên chạy chồng làm staging quá tải.
+let dangNap = null; let canNapLai = false;
+export function loadKl() {
+  if (dangNap) { canNapLai = true; return dangNap; }
+  dangNap = (async () => {
+    try { await napKl(); } finally { dangNap = null; }
+    if (canNapLai) { canNapLai = false; return loadKl(); }
+  })();
+  return dangNap;
+}
+
+async function napKl(lanThu = 0) {
   try {
     await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
     const { rows, luc } = await loadKlRows();
     kl.rows = rows; kl.luc = luc;
-    $('klBody').dataset.nap = luc.toISOString(); // dấu hiệu đã nạp xong (e2e chờ thuộc tính này, không dựa vào "có dòng đầu")
     const bb = kiemBatBien(rows);
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     dienBoLoc();
     render(true);
     if (sauKhiNap) sauKhiNap(rows);
   } catch (e) {
-    if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return loadKl(lanThu + 1); }
+    if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return napKl(lanThu + 1); }
     notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);
   }
 }
@@ -97,6 +111,8 @@ export function render(veLaiNgan = false) {
     : list.map((r) => dongHtml(r, homNay, r.id === dangMo)).join('');
   if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
   setText('klSoDong', `${list.length} / ${kl.rows.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);
+  // Dấu hiệu "đã nạp xong" cho mọi màn / vai (e2e chờ thuộc tính này, không dựa vào "có dòng đầu"): đặt ở đây để cả danh sách rỗng cũng có.
+  if (kl.luc) $('klBody').dataset.nap = kl.luc.toISOString(); else $('klBody').removeAttribute('data-nap');
   if (kl.luc) setText('klTinhDen', `Số liệu tính đến ${formatDateTime(kl.luc)}:${String(kl.luc.getSeconds()).padStart(2, '0')}`);
   veChip();
 }

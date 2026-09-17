@@ -14,6 +14,9 @@ import { getKeys, SEED_PASSWORD } from './keys.mjs';
 import { USERS, sessionPath } from './roles.mjs';
 
 export { USERS };
+// Thời gian chờ DỮ LIỆU NẠP XONG trên staging (data-nap, #klRow-*, #vct*, #the-*, #tt-viec-*, ngăn chi tiết…): staging nhỏ, 2 worker → có thể
+// quá 10 giây. Assert giao diện thuần (nút, nhãn, lớp CSS) giữ 10 giây mặc định.
+export const NAP = { timeout: 20_000 };
 
 const KHOA_MS = 20_000;
 const ngu = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -98,10 +101,11 @@ export async function nav(page, id) {
 export async function moViec(page, id, ma) {
   await nav(page, 'navKl');
   await page.locator('#klTimKiem').fill(ma);
+  await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong rồi mới tìm dòng (không tìm khi đang nạp lại)
   const row = page.locator(`#klRow-${id}`);
-  await expect(row).toBeVisible();
+  await expect(row).toBeVisible(NAP);
   await row.click();
-  await expect(page.locator(`#klChiTiet-${id}`)).toBeVisible();
+  await expect(page.locator(`#klChiTiet-${id}`)).toBeVisible(NAP);
   return row;
 }
 

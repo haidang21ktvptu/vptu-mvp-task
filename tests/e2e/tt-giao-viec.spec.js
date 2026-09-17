@@ -5,7 +5,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { contextAs, pageAs, nav } from './lib/app.js';
+import { contextAs, pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -55,7 +55,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     const { data } = await db.from('nhiem_vu').select('id, uu_tien, do_khan, owner_tai_khoan, nguoi_theo_doi, tao_boi, theo_1400').eq('noi_dung', noiDung).single();
     expect(data).toMatchObject({ uu_tien: 'THUONG_TRUC', do_khan: 'KHAN', owner_tai_khoan: CVP_ID, nguoi_theo_doi: CVP_ID, tao_boi: A0_ID, theo_1400: true });
     id = data.id;
-    await expect(page.locator(`#klRow-${id}`)).toContainText('Thường trực giao'); // sang Nhiệm vụ: dòng có nhãn
+    await expect(page.locator(`#klRow-${id}`)).toContainText('Thường trực giao', NAP); // sang Nhiệm vụ: dòng có nhãn
     await context.close();
   });
 
@@ -63,7 +63,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     const page = await pageAs(browser, 'A1', testInfo);
     const the = page.locator(`#tt-viec-${id}`);
     await expect(the).toBeVisible({ timeout: 15_000 });
-    await expect(the).toContainText(noiDung);
+    await expect(the).toContainText(noiDung, NAP);
     await expect(the.locator('.nhan-tt')).toHaveText('Thường trực giao');
     await expect(the.locator('.dk-khan')).toContainText('Khẩn');
     await expect(page.locator('#dhCanXuLy')).toContainText('việc mới chờ xác nhận');

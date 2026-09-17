@@ -1,17 +1,45 @@
-// Đầu trang chủ mọi vai (GĐ22): (1) dải "Cần xử lý ngay" gom bốn thứ từ kl_so_chua_xu_ly — tin chưa đọc, việc cần quyết / đề nghị chờ duyệt / bị
-// từ chối, việc mới chờ xác nhận, Hỏa tốc chưa Đã nhận; (2) khối "Việc Thường trực giao" (A1/A2: Xác nhận đã nhận / Từ chối tại chỗ);
+// Đầu trang chủ mọi vai (GĐ22, GĐ23): (1) dải "Cần xử lý ngay" — mỗi mục (tin chưa đọc, việc cần quyết, đề nghị chờ duyệt, bị từ chối, việc mới
+// chờ xác nhận, Hỏa tốc chưa Đã nhận) là một NÚT: bấm mở ngay dưới dải danh sách gọn các việc của mục kèm nút hành động đúng việc (can-xu-ly-chi-tiet.js); (2) khối "Việc Thường trực giao" (A1/A2: Xác nhận đã nhận / Từ chối tại chỗ);
 // (3) khối "Việc đồng chí giao bị từ chối / đang đề nghị từ chối" (người giao, kể cả giao thay mặt) với nút Giao lại (A1/A2). Dữ liệu thẻ từ dh
 // (dòng RLS trả về); hàm DB là chốt. Mọi khối trả '' khi không có gì.
 import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
-import { soChuaXuLy, onSoChuaXuLy } from '../../features/huy-hieu.js';
+import { soChuaXuLy, onSoChuaXuLy, lamMoiHuyHieu } from '../../features/huy-hieu.js';
+import { registerActions } from '../../lib/actions.js';
+import { notifySuccess, notifyError } from '../../components/toast.js';
+import { xacNhanNhanViec } from '../../lib/kl/du-lieu.js';
+import { loadDMUnreadMap } from '../../features/messages/index.js';
+import { napLaiViec } from './kl/nap-lai-viec.js';
+import { reloadCurrentView } from '../shell/index.js';
+import { chiTietHtml } from './can-xu-ly-chi-tiet.js';
+
+let mucDangMo = null; // mục đang mở danh sách dưới dải (giữ qua các lần vẽ lại theo realtime / sau hành động)
 
 // Mọi trang chủ đặt <div id="dhCanXuLy"> — vẽ lại dải khi số chưa xử lý đổi (realtime), không chờ trang nạp lại.
 export function mountCanXuLy() {
   onSoChuaXuLy((so) => { const el = $('dhCanXuLy'); if (el) el.innerHTML = canXuLyHtml(so); });
+  registerActions({ moCanXuLy, cxXacNhanNhan, cxMoChuong });
 }
+
+// Bấm một mục của dải: mở / đóng danh sách của mục đó (tin: đọc lại số chưa đọc theo người trước khi vẽ).
+async function moCanXuLy({ muc }) {
+  mucDangMo = mucDangMo === muc ? null : muc;
+  if (mucDangMo === 'tin') { try { await loadDMUnreadMap(); } catch { /* vẽ theo số đang có */ } }
+  const el = $('dhCanXuLy'); if (el) el.innerHTML = canXuLyHtml();
+  $('cxChiTiet')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+// Xác nhận đã nhận việc ngay trên dòng (mọi vai): hàm DB là chốt; nạp lại đúng việc rồi vẽ lại trang.
+async function cxXacNhanNhan({ id, ma }) {
+  try {
+    const moi = await xacNhanNhanViec(id);
+    notifySuccess(moi ? `Đã xác nhận nhận việc ${ma}. Hạn và trạng thái không đổi.` : 'Đồng chí đã xác nhận nhận việc này trước đó.');
+    await napLaiViec(id); await lamMoiHuyHieu(); reloadCurrentView();
+  } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
+}
+// Mở chuông sau khi sự kiện bấm hiện tại kết thúc (bộ "bấm ra ngoài" của chuông đóng bảng ngay trong cùng sự kiện).
+const cxMoChuong = () => setTimeout(() => $('chuongBtn')?.click(), 0);
 import { dh } from './dieu-hanh/du-lieu.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 
@@ -20,18 +48,22 @@ const vai = () => state.user?.role_group;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const xem = (r) => `<button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button>`;
 
-// Dải "Cần xử lý ngay": mỗi mục là một nút nhảy tới nơi xử lý (Nhắn tin, khối trong trang, thanh Hỏa tốc).
+// Dải "Cần xử lý ngay": mỗi mục là một nút mở danh sách việc của mục đó ngay bên dưới (data-muc); mục đang mở có aria-expanded.
 export function canXuLyHtml(so = soChuaXuLy()) {
   if (!so) return '';
   const n = (k) => Number(so[k] || 0);
-  const quyet = n('can_quyet') + n('de_nghi_cho_duyet') + n('bi_tu_choi');
+  const nut = (muc, so_, chu, lop = '') => (so_ ? `<button type="button" class="${lop}" data-action="moCanXuLy" data-muc="${muc}" aria-expanded="${String(mucDangMo === muc)}"><b>${so_}</b> ${chu}</button>` : '');
   const muc = [
-    n('nhan_tin') ? `<button type="button" data-action="openNhanTin"><b>${n('nhan_tin')}</b> tin chưa đọc</button>` : '',
-    quyet && vai() !== 'A3' ? `<button type="button" data-action="cuonToi" data-toi="dhTC"><b>${quyet}</b> ${[n('can_quyet') && 'việc cần quyết', n('de_nghi_cho_duyet') && 'đề nghị chờ duyệt', n('bi_tu_choi') && 'việc bị từ chối'].filter(Boolean).join(', ')}</button>` : '',
-    n('viec_moi') ? `<button type="button" data-action="cuonToi" data-toi="${vai() === 'A3' ? 'vctMuc-moi' : 'khoiTT'}"><b>${n('viec_moi')}</b> việc mới chờ xác nhận${n('tt_cho_nhan') ? ` (${n('tt_cho_nhan')} Thường trực giao)` : ''}</button>` : '',
-    n('hoa_toc_viec') + n('hoa_toc_chi_dao') ? `<button type="button" class="do" data-action="cuonToi" data-toi="thanhHoaToc"><b>${n('hoa_toc_viec') + n('hoa_toc_chi_dao')}</b> Hỏa tốc chưa Đã nhận</button>` : '',
+    nut('tin', n('nhan_tin'), 'tin chưa đọc'),
+    vai() !== 'A3' ? nut('quyet', n('can_quyet'), 'việc cần quyết') : '',
+    vai() !== 'A3' ? nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị chờ duyệt') : '',
+    nut('tuchoi', n('bi_tu_choi'), 'việc bị từ chối'),
+    nut('moi', n('viec_moi'), `việc mới chờ xác nhận${n('tt_cho_nhan') ? ` (${n('tt_cho_nhan')} Thường trực giao)` : ''}`),
+    nut('hoatoc', n('hoa_toc_viec') + n('hoa_toc_chi_dao'), 'Hỏa tốc chưa Đã nhận', 'do'),
   ].filter(Boolean);
-  return muc.length ? `<div class="can-xu-ly" id="canXuLy" role="region" aria-label="Cần xử lý ngay"><span>Cần xử lý ngay</span>${muc.join('')}</div>` : '';
+  if (!muc.length) { mucDangMo = null; return ''; }
+  return `<div class="can-xu-ly" id="canXuLy" role="region" aria-label="Cần xử lý ngay"><span>Cần xử lý ngay</span>${muc.join('')}</div>
+    <div id="cxChiTiet" class="cx-chi-tiet ${mucDangMo ? '' : 'hidden'}" role="region" aria-label="Danh sách cần xử lý">${mucDangMo ? chiTietHtml(mucDangMo, so) : ''}</div>`;
 }
 
 // Việc Thường trực giao cho tôi, chưa xác nhận nhận (A1: Owner tài khoản; A2: người theo dõi khi giao cho phòng).

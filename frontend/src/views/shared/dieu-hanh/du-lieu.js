@@ -13,8 +13,10 @@ export const dh = { rows: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTua
 export async function napDieuHanh() {
   await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
   const homNay = homNayVN();
-  const [r, nl, tt, sl, sl7, mc, cd] = await Promise.all([loadKlRows(), loadNgoaiLe(), loadChiDaoTT(), loadSoLieuTai(homNay), loadSoLieuTai(congNgay(homNay, -7)),
-    loadMinhChungCho(), loadChiDaoCho()]);
+  // Hai đợt: dòng + ngoại lệ (nặng, tính trạng thái từng dòng) trước; số liệu hai mốc (mỗi mốc lại tính trạng thái toàn phạm vi) sau — bớt số
+  // truy vấn nặng chạy chồng trên một kết nối (staging nhỏ: 7 truy vấn cùng lúc mỗi trang làm nghẽn cả truy vấn danh mục).
+  const [r, nl, tt, mc, cd] = await Promise.all([loadKlRows(), loadNgoaiLe(), loadChiDaoTT(), loadMinhChungCho(), loadChiDaoCho()]);
+  const [sl, sl7] = await Promise.all([loadSoLieuTai(homNay), loadSoLieuTai(congNgay(homNay, -7))]);
   Object.assign(dh, { rows: r.rows, ngoaiLe: nl, chiDaoTT: tt, soLieu: sl, soLieuTuanTruoc: sl7, mcCho: mc, chiDaoCho: cd, tuChoiCho: r.tuChoiCho, luc: r.luc });
   return dh;
 }

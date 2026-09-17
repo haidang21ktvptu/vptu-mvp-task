@@ -68,10 +68,19 @@ export function veDieuHanh() {
 
 // Lỗi tạm (mạng, staging bận → statement timeout của v_nhiem_vu / v_ngoai_le khi nhiều trang nạp cùng lúc): thử lại MỘT lần sau 800 ms rồi mới báo,
 // cùng quy tắc với danh sách Nhiệm vụ (kl/danh-sach.js) — trang không đứng ở "đang nạp số liệu…" vì một lượt đọc lỗi.
-export async function loadDieuHanh(lanThu = 0) {
-  const lan = Number(lanThu) || 0; // nút Tải lại gọi qua delegation truyền dataset → coi là lần 0
+// Gộp lượt nạp trùng (mở màn hình + realtime + sau hành động): một lượt tại một thời điểm, lượt tới trong lúc đang nạp chạy một lần sau khi xong.
+let dangNap = null; let canNapLai = false;
+export function loadDieuHanh() {
+  if (dangNap) { canNapLai = true; return dangNap; }
+  dangNap = (async () => {
+    try { await napMotLan(); } finally { dangNap = null; }
+    if (canNapLai) { canNapLai = false; return loadDieuHanh(); }
+  })();
+  return dangNap;
+}
+async function napMotLan(lan = 0) {
   try { await napDieuHanh(); veDieuHanh(); } catch (e) {
-    if (lan < 1) { await new Promise((r) => setTimeout(r, 800)); return loadDieuHanh(lan + 1); }
+    if (lan < 1) { await new Promise((r) => setTimeout(r, 800)); return napMotLan(lan + 1); }
     notifyError('Không đọc được dữ liệu điều hành: ' + e.message);
   }
 }
