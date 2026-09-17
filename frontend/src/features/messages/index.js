@@ -8,6 +8,7 @@ import { registerActions } from '../../lib/actions.js';
 import { loadTinHeThong } from '../../lib/kl/dieu-hanh.js';
 import { setActiveNav, showSection } from '../../views/shell/index.js';
 import { gomTheoViec } from '../thong-bao/index.js';
+import { lamMoiHuyHieu } from '../huy-hieu.js';
 import { messagesTemplate, toastTinTemplate } from './template.js';
 import { openDMChat, openViecChat, moViecTuHoiThoai, handleSendDM, closeToast, datMoNhanTin } from './chat.js';
 
@@ -18,7 +19,7 @@ export async function loadDMUnreadMap() {
   const { data } = await supabase.from('direct_messages').select('sender_id').eq('receiver_id', state.user.id).eq('loai', 'nguoi').eq('is_read', false);
   state.dmUnread = {};
   (data || []).forEach((m) => { state.dmUnread[m.sender_id] = (state.dmUnread[m.sender_id] || 0) + 1; });
-  // Huy hiệu Nhắn tin (tin người + tin hệ thống chưa đọc) do features/huy-hieu.js đặt từ kl_so_chua_xu_ly (GĐ22).
+  await lamMoiHuyHieu(); // huy hiệu Nhắn tin = tin người + tin hệ thống chưa đọc (kl_so_chua_xu_ly, GĐ22) — tính lại cả sau khi đọc tin
 }
 
 function canChatWith(a) {
