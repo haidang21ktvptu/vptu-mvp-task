@@ -37,12 +37,15 @@ function taiKhoanRowHtml(a) {
 // Dòng vàng theo 5.2: số người giữ quan_tri_kl ≠ 2; chủ dự án đang tự giữ quan_tri_kl.
 function renderCanhBao(accounts) {
   const soKl = accounts.filter((a) => a.quan_tri_kl).length;
-  const msgs = [];
-  if (soKl !== SO_NGUOI_QUAN_TRI_KL) msgs.push(`Đang có ${soKl} người giữ quyền quản trị KL BTVTU (quy định: ${SO_NGUOI_QUAN_TRI_KL}).`);
+  // Luôn hiện dòng đếm (đủ, thiếu, vượt) — chỉ đổi cấp độ: vượt = đỏ, đúng = trung tính, thiếu = nhắc (vàng mặc định).
+  const msgs = [`Đang có ${soKl} người giữ quyền quản trị KL BTVTU (quy định: ${SO_NGUOI_QUAN_TRI_KL}).`];
   if (state.user.quan_tri_kl) msgs.push('Đồng chí đang tự giữ quyền quản trị KL — thu lại khi xong việc.');
   const box = $('qtCanhBao');
   box.innerText = msgs.join(' ');
-  box.classList.toggle('hidden', msgs.length === 0);
+  box.classList.remove('hidden');
+  box.classList.toggle('vuot', soKl > SO_NGUOI_QUAN_TRI_KL);
+  box.classList.toggle('du', soKl === SO_NGUOI_QUAN_TRI_KL && !state.user.quan_tri_kl);
+  box.dataset.muc = soKl > SO_NGUOI_QUAN_TRI_KL ? 'vuot' : soKl === SO_NGUOI_QUAN_TRI_KL ? 'du' : 'thieu';
   $('qtSoNguoiKl').innerText = `${soKl}/${SO_NGUOI_QUAN_TRI_KL} người giữ quyền quản trị KL`;
 }
 

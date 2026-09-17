@@ -8,7 +8,7 @@ import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { contextAs, nav, NAP } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const QTHT_ID = '00000000-0000-4000-8000-000000000008';
 const CV1_ID = '00000000-0000-4000-8000-000000000014'; // demo_e2e_owner — Owner dữ liệu dùng chung với kl-realtime (GĐ18)
@@ -44,6 +44,8 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     vbKhoa = khoaRieng('995', testInfo); // văn bản sẽ tạo qua giao diện ở test 1 — khoá riêng theo project
     await donVanBan(db, vbKhoa);         // dấu vết lần chạy dở trước của chính khoá này
     mocId = await taoViecMoc(db);
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('QTHT', mocId, 'TNV-MOC');
     await db.from('accounts').update({ quan_tri_kl: true }).eq('id', QTHT_ID);
     const context = await contextAs(browser, 'QTHT', testInfo); // phiên riêng của demo_qtht (CI-4)
     page = await context.newPage();

@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000011'; // demo_e2e_mc — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 992;
@@ -30,6 +30,8 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     const { data: cu, error: e3 } = await db.from('nhiem_vu').insert({ ...base, noi_dung: `${E2E_TAG} MC việc cũ ${Date.now()}`, theo_1400: false }).select('id').single();
     if (e3) throw new Error(`Tạo nhiệm vụ cũ thất bại: ${e3.message}`);
     cuId = cu.id;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('E2E_MC', nvId, 'MC theo 1400'); await kiemThayViec('E2E_MC', cuId, 'MC việc cũ');
     const { error: e4 } = await db.from('minh_chung').insert({ nhiem_vu_id: cuId, loai: 'chu_cu', noi_dung_chu: `Công văn 12/CV-VPTU ngày 10/08/2026 (${E2E_TAG})`, so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-10' });
     if (e4) throw new Error(`Tạo minh chứng cũ thất bại: ${e4.message}`);
     page = await pageAs(browser, 'E2E_MC', testInfo);

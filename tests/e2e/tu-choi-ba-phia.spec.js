@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { kiemThayViec } from './lib/du-lieu.mjs';
 
 const NV_ID = '00000000-0000-4000-8000-000000000012';       // demo_e2e_nv (A3, Tổng hợp)
 const TP_ID = '00000000-0000-4000-8000-000000000003';       // demo_truongphong (A2, Tổng hợp) — người giao và cấp duyệt
@@ -30,6 +31,8 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
       owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: NV_ID, nguoi_theo_doi: TP_ID, tao_boi: TP_ID, theo_1400: true, san_pham_loai: 'BAO_CAO', ngay_nhan_van_ban: homNayVN(), do_khan: 'KHAN' }).select('id, ma').single();
     if (e2) throw new Error(`Tạo việc mẫu thất bại: ${e2.message}`);
     id = data.id; ma = data.ma;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('E2E_NV', id, ma); await kiemThayViec('A2', id, ma);
   });
   test.afterAll(async () => { if (db) await don(db, duAn); });
 

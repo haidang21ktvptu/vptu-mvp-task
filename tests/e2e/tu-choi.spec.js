@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const CV_ID = '00000000-0000-4000-8000-000000000016'; // demo_e2e_cv (A3, E2E_RT)
 const TP_ID = '00000000-0000-4000-8000-000000000015'; // demo_e2e_tp (A2, E2E_RT) — người giao và cấp duyệt
@@ -29,6 +29,8 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
     }).select('id').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('E2E_CV', nvId, 'TC'); await kiemThayViec('E2E_TP', nvId, 'TC');
     cv = await pageAs(browser, 'E2E_CV', testInfo);
     tp = await pageAs(browser, 'E2E_TP', testInfo);
   });

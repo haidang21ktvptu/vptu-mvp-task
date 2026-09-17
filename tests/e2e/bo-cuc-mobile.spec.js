@@ -3,10 +3,23 @@
 // danh sách và ngăn chi tiết xếp một cột; màn đăng nhập vừa khung. Không tạo dữ liệu.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { pageAs, contextAs, nav, NAP } from './lib/app.js';
+import { pageAs, contextAs, nav, NAP, loginAs } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 
 test.skip(({ isMobile }) => !isMobile, 'Chỉ chạy ở project điện thoại.');
+
+// Hộp thả xuống trên dải (chuông, bánh răng) phải NỔI TRÊN nội dung: bounding box trong khung nhìn và điểm trong hộp nhận được click
+// (elementFromPoint nằm trong hộp — không bị main / thanh trái / thanh dưới che, không bị overflow của dải cắt).
+const hopNoiTren = async (page, id) => {
+  const hop = page.locator(`#${id}`);
+  await expect(hop).toBeVisible();
+  const b = await hop.boundingBox(); const vp = page.viewportSize();
+  expect(b.x, `#${id} trong khung nhìn`).toBeGreaterThanOrEqual(0); expect(b.y).toBeGreaterThanOrEqual(0);
+  expect(b.x + b.width).toBeLessThanOrEqual(vp.width + 1); expect(b.y + b.height).toBeLessThanOrEqual(vp.height + 1);
+  const x = b.x + b.width / 2; const y = b.y + Math.min(b.height / 2, 20);
+  const nhan = await page.evaluate(([i, px, py]) => globalThis.document.getElementById(i).contains(globalThis.document.elementFromPoint(px, py)), [id, x, y]);
+  expect(nhan, `#${id} nhận được click (không bị che)`).toBe(true);
+};
 
 const khongCuonNgang = async (page) => {
   const { w, vw } = await page.evaluate(() => ({ w: globalThis.document.documentElement.scrollWidth, vw: globalThis.innerWidth }));
@@ -34,6 +47,8 @@ for (const v of VAI) {
     await expect(page.locator('#mainHeader .co-cum')).toBeVisible(); // GĐ21: cụm cờ SVG
     expect((await page.locator('#mainHeader').boundingBox()).height).toBeLessThan(80);
     await khongCuonNgang(page);
+    await page.locator('#chuongBtn').click(); await hopNoiTren(page, 'thongBaoPanel'); await page.locator('#chuongBtn').click(); // chuông nổi trên nội dung
+    await expect(page.locator('#thongBaoPanel')).toBeHidden();
 
     await nav(page, 'navKl');
     await expect(page.locator('#viewKl')).toBeVisible();
@@ -84,10 +99,25 @@ test('A1 ở 768px: thanh biểu tượng trái thay hàng pill, thanh dưới �
   expect(Math.round((await page.locator('#mainHeader').boundingBox()).height)).toBe(60);
   await expect(page.locator('#mainHeader .co-cum')).toBeVisible();
   await khongCuonNgang(page);
+  await page.locator('#chuongBtn').click(); await hopNoiTren(page, 'thongBaoPanel'); await page.locator('#chuongBtn').click(); // 768px: nổi trên thanh trái
+  await page.locator('#banhRangBtn').click(); await hopNoiTren(page, 'banhRangMenu'); await page.keyboard.press('Escape');
+  await expect(page.locator('#banhRangMenu')).toBeHidden();
   await page.setViewportSize({ width: 360, height: 740 });
   await expect(page.locator('#thanhDuoi')).toBeVisible();
   await expect(menu).toBeHidden();
   await page.context().close();
+});
+
+// Đăng xuất từ bánh răng (điện thoại): hộp nổi trên thanh dưới, bấm Đăng xuất về màn đăng nhập. Đăng nhập qua form bằng tài khoản không project nào
+// dùng SAU bo-cuc (demo_e2e_kl — kl-chuyen-vien đã chạy ở mobile trước đó) vì đăng xuất huỷ phiên chung của tài khoản.
+test('bánh răng nổi trên thanh dưới; Đăng xuất về màn đăng nhập', async ({ page }) => {
+  await loginAs(page, 'E2E_KL');
+  await page.locator('#banhRangBtn').click();
+  await hopNoiTren(page, 'banhRangMenu');
+  await expect(page.locator('#banhRangMenu [role="menuitem"]').last()).toHaveText('Đăng xuất');
+  await page.locator('#logoutBtn').click();
+  await expect(page.locator('#loginSection')).toBeVisible();
+  await expect(page.locator('#mainHeader')).toBeHidden();
 });
 
 test('màn đăng nhập vừa khung điện thoại', async ({ page }) => {

@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, moViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000013'; // demo_e2e_dh — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 993;
@@ -32,6 +32,8 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     }).select('id, ma').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id; ma = nv.ma;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('A1', nvId, ma); await kiemThayViec('E2E_DH', nvId, ma);
     a1 = await pageAs(browser, 'A1', testInfo);
     a3 = await pageAs(browser, 'E2E_DH', testInfo);
   });

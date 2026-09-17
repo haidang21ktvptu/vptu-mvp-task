@@ -36,7 +36,9 @@ export function dienBienHtml(rows) {
 export async function napDienBien(el, nhiemVuId) {
   if (!el) return;
   el.innerHTML = '<p class="chu-phu">Đang tải diễn biến…</p>';
-  try { el.innerHTML = dienBienHtml(await loadDienBien(nhiemVuId)); } catch (e) { notifyError(e.message); el.innerHTML = `<p class="loi-inline">${escapeHtml(e.message)}</p>`; }
+  // Trong lúc đọc, vùng chứa có thể đã bị vẽ lại (giuDienBien gắn lại bản sao) → ghi vào phần tử đang có trong trang, không vào phần tử đã rời DOM.
+  const dich = () => (el.isConnected ? el : $(`db-${nhiemVuId}`)?.querySelector(':scope > div')) || el;
+  try { dich().innerHTML = dienBienHtml(await loadDienBien(nhiemVuId)); } catch (e) { notifyError(e.message); dich().innerHTML = `<p class="loi-inline">${escapeHtml(e.message)}</p>`; }
 }
 
 // "Xem diễn biến" trên thẻ/dòng: mở rộng ngay dưới thẻ chứa nút (bấm lại để gập); không có thẻ chứa (chuông, ngăn) → mở ngăn chi tiết như cũ.
@@ -48,4 +50,17 @@ export async function xemDienBien({ id, ma }, el) {
   the.insertAdjacentHTML('beforeend', `<div class="khoi-nho db-khoi" id="db-${id}"><h4>Diễn biến <span class="chu-phu">${escapeHtml(ma || '')}</span></h4><div></div></div>`);
   el.setAttribute('aria-expanded', 'true');
   await napDienBien(the.querySelector(`#db-${id} > div`), id);
+}
+
+// Khối diễn biến đang mở trong một vùng sắp vẽ lại (nạp lại nền, realtime): nhớ HTML theo id việc trước, gắn lại vào đúng thẻ sau khi vẽ —
+// người dùng vừa bấm "Xem diễn biến" không bị mất khối chỉ vì danh sách vẽ lại. Gọi: const tra = giuDienBien(vung); vung.innerHTML = …; tra();
+export function giuDienBien(vung) {
+  const ds = [...(vung?.querySelectorAll('.db-khoi') || [])].map((k) => [k.id.slice(3), k.outerHTML]);
+  return () => ds.forEach(([id, html]) => {
+    const nut = vung.querySelector(`[data-action="xemDienBien"][data-id="${id}"]`);
+    const the = nut?.closest('.the, .the-con, article.viec, .nv-dong, .hang-nv');
+    if (!the || the.querySelector(`#db-${id}`)) return;
+    the.insertAdjacentHTML('beforeend', html);
+    nut.setAttribute('aria-expanded', 'true');
+  });
 }
