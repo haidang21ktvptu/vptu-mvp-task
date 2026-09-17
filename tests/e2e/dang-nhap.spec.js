@@ -22,7 +22,10 @@ test.describe.serial('Đăng nhập theo vai trò', () => {
     await page.locator('#loginPassword').fill('123456');
     await page.locator('#loginSubmitBtn').click();
     await expectLoggedIn(page, 'A1');
-    await expect(page.locator('#headerDeptDisplay')).toHaveText('Lãnh đạo Văn phòng');
+    await expect(page.locator('#currentRoleDisplay')).toHaveText('Chánh Văn phòng'); // GĐ23: dòng 2 = chức danh, không mã vai
+    await expect(page.locator('#avatarNguoi')).toHaveText('P'); // chữ cái đầu của tên (Demo Chánh Văn phòng → "phòng")
+    await expect(page.locator('#chuongBtn')).toBeVisible();
+    await expect(page.locator('#banhRangBtn')).toBeVisible();
 
     // Tải lại trang: phiên do Supabase Auth giữ, không phải đăng nhập lại.
     await page.reload();
@@ -32,7 +35,14 @@ test.describe.serial('Đăng nhập theo vai trò', () => {
 
   test('Kịch bản 2: A2 (Trưởng phòng) đăng nhập → view Trưởng phòng', async ({ page }) => {
     await loginAs(page, 'A2');
-    await expect(page.locator('#headerDeptDisplay')).toHaveText('Phòng Tổng hợp');
+    await expect(page.locator('#currentRoleDisplay')).toHaveText('Trưởng phòng · Phòng Tổng hợp');
+    // Menu bánh răng của Trưởng phòng: có Ủy quyền giao việc, Đăng xuất cuối cùng; không có nhóm Quản trị hệ thống.
+    await page.locator('#banhRangBtn').click();
+    await expect(page.locator('#banhRangMenu')).toBeVisible();
+    await expect(page.locator('#banhRangMenu [role="menuitem"]').last()).toHaveText('Đăng xuất');
+    await expect(page.locator('#banhRangMenu')).toContainText('Ủy quyền giao việc');
+    await expect(page.locator('#banhRangMenu')).not.toContainText('Quản trị hệ thống');
+    await page.keyboard.press('Escape');
     await logout(page);
   });
 
@@ -41,7 +51,7 @@ test.describe.serial('Đăng nhập theo vai trò', () => {
 
     test('Kịch bản 3: A3 (Chuyên viên) đăng nhập → view Chuyên viên', async ({ page }) => {
       await loginAs(page, 'A3');
-      await expect(page.locator('#headerDeptDisplay')).toHaveText('Phòng Tổng hợp');
+      await expect(page.locator('#avatarNguoi')).toBeVisible(); // điện thoại: chỉ avatar, dòng tên ẩn
       await logout(page);
     });
   });

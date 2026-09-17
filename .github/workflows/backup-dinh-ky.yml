@@ -68,5 +68,13 @@ jobs:
         with:
           name: ${{ env.BACKUP_NAME }}
           path: backup/${{ env.BACKUP_NAME }}.tar.gz.gpg
+      # Mốc backup (nhat_ky_he_thong hanh_dong = backup, 0041): màn hình Dọn dữ liệu chỉ cho xoá khi có backup trong 24 giờ. RPC chỉ service_role gọi được.
+      - name: Ghi mốc backup (ghi_moc_backup)
+        env:
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then echo "::warning::Thiếu SUPABASE_SERVICE_ROLE_KEY — không ghi mốc backup."; exit 0; fi
+          curl --silent --show-error --fail --max-time 60 -X POST "https://$PROD_REF.supabase.co/rest/v1/rpc/ghi_moc_backup" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d "{\"p_nhan\":\"$BACKUP_NAME\"}"
           retention-days: 90
           if-no-files-found: error

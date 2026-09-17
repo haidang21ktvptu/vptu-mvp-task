@@ -16,18 +16,19 @@ const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
 test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác nhận đã nhận', () => {
-  let db; let noiDung; let id;
+  let db; let noiDung; let id; let duAn;
 
-  test.beforeAll(async () => {
+  test.beforeAll(async ({}, testInfo) => { // eslint-disable-line no-empty-pattern
+    duAn = testInfo.project.name;
     test.skip(!existsSync(storageStatePath('A0')), 'Chưa có demo_a0 trên project này.');
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('kl_cau_hinh').select('khoa').eq('khoa', 'thuong_truc_han_nhan_ngay').maybeSingle();
     test.skip(!co.data, 'Project chưa có migration 0035+.');
-    noiDung = `${E2E_TAG} TT giao ${Date.now()}`;
-    await don(db);
+    noiDung = `${E2E_TAG} TT giao ${duAn} ${Date.now()}`;
+    await don(db, duAn);
   });
-  test.afterAll(async () => { if (db) await don(db); });
+  test.afterAll(async () => { if (db) await don(db, duAn); });
 
   test('A0: biểu mẫu rút gọn, mặc định Khẩn; giao cho Chánh VP → uu_tien Thường trực, theo dõi = Chánh VP', async ({ browser }, testInfo) => {
     const context = await contextAs(browser, 'A0', testInfo);
@@ -76,7 +77,9 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
   });
 });
 
-async function don(db) {
-  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} TT giao%`);
-  await db.from('van_ban_giao_viec').delete().eq('tao_boi', A0_ID).like('so_ket_luan', 'Thường trực giao %');
+// Việc của project này (nội dung có tên project); văn bản "Thường trực giao …" do app đặt tên (không gắn tag được) chỉ xoá khi không còn nhiệm vụ.
+async function don(db, duAn) {
+  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} TT giao ${duAn}%`);
+  const { data } = await db.from('van_ban_giao_viec').select('id, nhiem_vu(id)').eq('tao_boi', A0_ID).like('so_ket_luan', 'Thường trực giao %');
+  for (const vb of data || []) if (!vb.nhiem_vu?.length) await db.from('van_ban_giao_viec').delete().eq('id', vb.id);
 }

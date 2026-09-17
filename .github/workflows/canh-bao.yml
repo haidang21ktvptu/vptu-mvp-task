@@ -58,6 +58,13 @@ jobs:
           if [ "$HTTP" != 200 ]; then
             echo "::error::RPC trả HTTP $HTTP trên $MOI_TRUONG."; jq -r '.message // .' kq.json 2>/dev/null || cat kq.json; exit 1
           fi
+      # GĐ23: người bật "gom tin" nhận một bản tin 7h30 tóm tắt thông báo chưa đọc; kèm thu ủy quyền giao việc hết hạn (0041).
+      - name: Gọi RPC tin_tom_tat_sang
+        run: |
+          HTTP=$(curl --silent --show-error --output tomtat.json --write-out '%{http_code}' \
+            --max-time 60 -X POST "$URL/rest/v1/rpc/tin_tom_tat_sang" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
+          if [ "$HTTP" != 200 ]; then echo "::warning::tin_tom_tat_sang trả HTTP $HTTP (hàm chưa có trước 0041?)."; else echo "Bản tin 7h30 đã gửi cho $(cat tomtat.json) tài khoản." >> "$GITHUB_STEP_SUMMARY"; fi
       - name: Ghi thống kê tổng hợp vào Summary (không tên tài khoản)
         run: |
           {

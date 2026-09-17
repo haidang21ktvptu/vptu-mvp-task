@@ -1,0 +1,26 @@
+/* GĐ23: màn hình Cá nhân, Trợ giúp, các khu quản trị mới (biểu mẫu ngắn trong .bang), hộp mật khẩu tạm. Tên lớp viết nguyên văn (Tailwind cắt lớp ghép). */
+@layer components {
+  .cn-ho-so { display: grid; grid-template-columns: 160px 1fr; gap: 16px 24px; padding: 16px; }
+  .cn-anh { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .avatar-lon { width: 96px; height: 96px; font-size: 36px; background: var(--nen-phu); color: var(--do-dam); border: 1px solid var(--vien); }
+  .cn-thong-tin { display: grid; grid-template-columns: 160px 1fr; gap: 10px 16px; align-items: center; margin: 0; font-size: 14px; }
+  .cn-thong-tin dt { color: var(--chu-phu); } .cn-thong-tin dd { margin: 0; font-weight: 600; } .cn-thong-tin dd input { font-weight: 400; max-width: 260px; }
+  .cn-ho-so .modal-chan { grid-column: 1 / -1; justify-content: flex-end; }
+  .cn-tuy-chon { padding: 8px 16px 16px; display: grid; gap: 10px; }
+  .cn-o { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--vien); border-radius: 12px; font-size: 14px; cursor: pointer; }
+  .cn-o input { margin-top: 3px; } .cn-o b { display: block; } .cn-o small { color: var(--chu-phu); display: block; margin-top: 2px; }
+  .tg-noi-dung { padding: 8px 20px 20px; font-size: 15px; line-height: 1.55; }
+  .tg-noi-dung h3 { margin-top: 18px; font-size: 16px; color: var(--do-dam); } .tg-noi-dung ul { padding-left: 20px; margin-top: 6px; } .tg-noi-dung li { margin-top: 4px; }
+  .qt-form { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; padding: 14px 16px; border-bottom: 1px solid var(--vien); font-size: 14px; }
+  .qt-form label { display: flex; flex-direction: column; gap: 4px; color: var(--chu-phu); min-width: 180px; } .qt-form label.rong { flex: 1 1 260px; }
+  .qt-form label > input, .qt-form label > select { color: var(--chu); }
+  .luong-ok { background: var(--luc-nhat, #E8F5E9); border: 1px solid #A5D6A7; color: var(--chu); padding: 10px 16px; font-size: 14px; }
+  .luong-canh-bao a, .luong-ok a { text-decoration: underline; }
+  .nut.nguy-hiem { background: var(--do); color: #fff; border-color: var(--do); } .nut.nguy-hiem:disabled { opacity: .45; }
+  .mk-tam { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .mk-tam code { font-size: 22px; letter-spacing: .08em; padding: 8px 14px; background: var(--nen-phu); border: 1px dashed var(--vien); border-radius: 8px; user-select: all; }
+  @media (max-width: 600px) {
+    .cn-ho-so, .cn-thong-tin { grid-template-columns: 1fr; }
+    .qt-form label { min-width: 0; flex: 1 1 100%; }
+  }
+}

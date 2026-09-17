@@ -6,12 +6,14 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const CV_ID = '00000000-0000-4000-8000-000000000016'; // demo_e2e_cv (A3, E2E_RT)
 const TP_ID = '00000000-0000-4000-8000-000000000015'; // demo_e2e_tp (A2, E2E_RT) — người giao và cấp duyệt
 const SO_HOI_NGHI = 991;
 
 test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng phòng duyệt, nhãn chờ giao lại', () => {
+  let hnKhoa;
   let db; let nvId; let cv; let tp;
 
   test.beforeAll(async ({ browser }, testInfo) => {
@@ -19,9 +21,8 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     const co = await db.from('tu_choi').select('id').limit(1);
     test.skip(Boolean(co.error), 'Project chưa có migration 0034.');
-    await don(db);
-    const { data: hn, error: e1 } = await db.from('van_ban_giao_viec').insert({ so_hoi_nghi: SO_HOI_NGHI, so_ket_luan: `${E2E_TAG}-TC`, ngay_ban_hanh: '2026-08-01' }).select('id').single();
-    if (e1) throw new Error(`Tạo văn bản mẫu thất bại: ${e1.message}`);
+    hnKhoa = khoaRieng('TC', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
+    const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
       van_ban_id: hn.id, nguoi_theo_doi: CV_ID, tao_boi: TP_ID, noi_dung: `${E2E_TAG} từ chối ${Date.now()}`, theo_1400: true,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND', ngay_nhan_van_ban: '2026-08-05',
@@ -33,7 +34,7 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
   });
   test.afterAll(async () => {
     await cv?.context().close(); await tp?.context().close();
-    if (db) await don(db);
+    if (db) await donVanBan(db, hnKhoa);
   });
 
   test('A3: việc mới giao có nút Từ chối; lý do bắt buộc; gửi xong dòng ghi "chờ duyệt", không còn nút xác nhận', async () => {
@@ -75,7 +76,3 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
   });
 });
 
-async function don(db) {
-  const { data: hns } = await db.from('van_ban_giao_viec').select('id').eq('so_hoi_nghi', SO_HOI_NGHI);
-  for (const h of hns || []) { await db.from('nhiem_vu').delete().eq('van_ban_id', h.id); await db.from('van_ban_giao_viec').delete().eq('id', h.id); }
-}

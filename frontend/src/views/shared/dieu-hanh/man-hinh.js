@@ -63,8 +63,14 @@ export function veDieuHanh() {
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}, so sánh với tuần trước`);
 }
 
-export async function loadDieuHanh() {
-  try { await napDieuHanh(); veDieuHanh(); } catch (e) { notifyError('Không đọc được dữ liệu điều hành: ' + e.message); }
+// Lỗi tạm (mạng, staging bận → statement timeout của v_nhiem_vu / v_ngoai_le khi nhiều trang nạp cùng lúc): thử lại MỘT lần sau 800 ms rồi mới báo,
+// cùng quy tắc với danh sách Nhiệm vụ (kl/danh-sach.js) — trang không đứng ở "đang nạp số liệu…" vì một lượt đọc lỗi.
+export async function loadDieuHanh(lanThu = 0) {
+  const lan = Number(lanThu) || 0; // nút Tải lại gọi qua delegation truyền dataset → coi là lần 0
+  try { await napDieuHanh(); veDieuHanh(); } catch (e) {
+    if (lan < 1) { await new Promise((r) => setTimeout(r, 800)); return loadDieuHanh(lan + 1); }
+    notifyError('Không đọc được dữ liệu điều hành: ' + e.message);
+  }
 }
 
 export function openDieuHanh() {

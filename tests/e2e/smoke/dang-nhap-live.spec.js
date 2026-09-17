@@ -25,6 +25,7 @@ test('Bản live: đăng nhập 1 tài khoản vào app rồi đăng xuất', as
   await expect(page.locator('#loginSection')).toBeHidden();
   expect(consoleErrors, 'không có lỗi console sau khi vào app').toEqual([]);
 
+  await page.locator('#banhRangBtn').click(); // GĐ23: Đăng xuất trong menu bánh răng
   await page.locator('#logoutBtn').click();
   await expect(page.locator('#loginSection')).toBeVisible();
 });

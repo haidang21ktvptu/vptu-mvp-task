@@ -5,9 +5,11 @@ Job CI `Kiểm thử RLS + e2e trên staging` (`.github/workflows/ci.yml`) đọ
 | Giá trị | Project | Việc job làm |
 |---|---|---|
 | (trống) hoặc `staging` | `vojmrjezspdftovzinek` | e2e như trước (migration và RLS trên staging do `deploy-staging.yml` lo khi push `main`). |
-| `production` | `frwyxcmbonjaimziiuqr` | `supabase db push` migration của nhánh → `scripts/seed-demo.mjs` (tài khoản demo, idempotent) → test RLS → e2e. |
+| `production` | `frwyxcmbonjaimziiuqr` | `supabase db push` migration của nhánh → `scripts/seed-demo.mjs` (tài khoản demo, idempotent) → **chỉ e2e** (không test RLS token thật). |
 
-Summary của job ghi dòng đầu "Môi trường kiểm thử: … (project …)". `deploy-staging.yml` và `deploy-prod.yml` không đổi.
+Summary của job ghi dòng đầu "Môi trường kiểm thử: … (project …)"; với production ghi thêm "production: chỉ e2e". `deploy-staging.yml` và `deploy-prod.yml` không đổi.
+
+**Nguyên tắc: không chạy bộ RLS token thật trên production.** Bộ `tests/rls` giả định seed của staging (id tài khoản cố định, phân công PCVP demo, tổng số dòng như `supabase/seed.sql`, không ai giữ `quan_tri_kl`) nên trên dữ liệu thật đỏ hàng loạt (rls-9/10/11, kl-0025/0026/0028, kl-pham-vi-tong-hop) dù mã đúng. RLS của chính PR đã chạy đủ trên Supabase cục bộ ở job "Áp migration + lint schema"; production chỉ dùng để chạy e2e trên schema và dữ liệu thật. Không viết lại bộ test cho production.
 
 ## Secret / biến trên GitHub
 
@@ -33,3 +35,17 @@ Chỉ khi cần kiểm thử trên dữ liệu thật trước go-live (ví dụ
 3. Tài khoản demo: xoá `demo_*`, `demo_e2e_*` bằng `node scripts/create-auth-users.mjs --project-ref frwyxcmbonjaimziiuqr --rollback` **chỉ với các id `00000000-0000-4000-8000-0000000000NN`** (kiểm tra danh sách trước), rồi xoá dòng `accounts` tương ứng; giữ `smoke_test` nếu đang dùng cho smoke test sau phát hành.
 4. Xoá phân công `phu_trach_phong` có `ly_do = 'seed kiểm thử'`.
 5. Xác nhận lại bằng `kl-moc-2026-09-14` (đếm 185 dòng `nguon = excel` không đổi).
+
+## Edge Function `quan-tri-tai-khoan` (GĐ23)
+
+Mã ở `supabase/functions/quan-tri-tai-khoan/index.ts` (Deno). Việc cần `service_role` (tạo tài khoản đăng nhập, đặt mật khẩu tạm, khoá/mở, cờ `quan_tri_he_thong`) chạy ở đây; key `SUPABASE_SERVICE_ROLE_KEY` do Supabase cấp sẵn trong secrets của function, **không** nằm ở frontend hay repo. Người gọi phải đăng nhập và có `accounts.quan_tri_he_thong` (function gọi RPC `me_quan_tri_he_thong` bằng JWT của họ). Mọi hành động ghi `nhat_ky_he_thong` (0041); mật khẩu tạm chỉ trả về một lần trong response.
+
+- Deploy tự động: `deploy-staging.yml` (push `main`) và `deploy-prod.yml` (tag `v*`) chạy `supabase functions deploy quan-tri-tai-khoan --project-ref <ref> --use-api` ngay sau `db push`.
+- Deploy tay (khi cần thử trên staging trước khi merge): `supabase functions deploy quan-tri-tai-khoan --project-ref vojmrjezspdftovzinek --use-api` (CLI đã `supabase login`). Không cần đặt secret gì thêm.
+- Kiểm thử: màn hình Quản trị → Tài khoản (tài khoản `demo_qtht`): tạo tài khoản thử, đặt lại mật khẩu, khoá/mở; xem dòng tương ứng ở tab Nhật ký hệ thống. Cấp/thu `quan_tri_kl` vẫn qua hàm SQL `admin_dat_co` (e2e `quan-tri.spec.js` không phụ thuộc function).
+- Lỗi thường gặp: HTTP 401/403 = phiên hết hạn hoặc không có cờ; 409 = trùng tên đăng nhập; xem log ở Dashboard → Edge Functions → Logs.
+
+## Cờ đổi mật khẩu lần đầu và dọn dữ liệu (GĐ23)
+
+- Trước go-live: `node scripts/bat-co-doi-mat-khau.mjs --project-ref frwyxcmbonjaimziiuqr` in danh sách tài khoản thật (bỏ `demo_*`, `smoke_test`, `is_system`); chạy lại với `--thuc-hien` để bật cờ; script đếm lại số dòng sau khi ghi.
+- Màn hình Dọn dữ liệu (`quan_tri_he_thong`): xem trước số dòng → gõ `XOÁ`. App chỉ cho xoá khi mốc backup (dòng `nhat_ky_he_thong` hành động `backup` mới nhất, do `backup-dinh-ky.yml` và bước backup của `deploy-prod.yml` ghi qua RPC `ghi_moc_backup` bằng `SUPABASE_SERVICE_ROLE_KEY`) trong 24 giờ. Bộ sẵn "dữ liệu thử" xoá NV-T*, E2E-TEST*, văn bản RLS-TEST / hội nghị 991–999, tài khoản `demo_*` và mọi thứ gắn với chúng (thay cho mục "Dọn dữ liệu thử trước go-live" ở trên; vẫn giữ `smoke_test`).

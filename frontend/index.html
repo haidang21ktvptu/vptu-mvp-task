@@ -31,21 +31,19 @@
     </form>
   </section>
 
-  <!-- ================= ĐỔI MẬT KHẨU LẦN ĐẦU (bắt buộc, không có nút đóng — AUTH-2) ================= -->
-  <div id="changePasswordModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
-    <form id="changePasswordForm" class="modal modal-bat-buoc" novalidate>
-      <h2 id="changePasswordTitle" class="modal-tieu-de">Đổi mật khẩu lần đầu</h2>
-      <p class="chu-phu" style="margin-top:4px">Đồng chí đang dùng mật khẩu tạm. Đặt mật khẩu mới để tiếp tục.</p>
-      <label for="newPassword" class="nhan">Mật khẩu mới (tối thiểu 8 ký tự, có chữ và số)</label>
-      <input type="password" id="newPassword" class="o-nhap" required autocomplete="new-password">
-      <label for="newPasswordConfirm" class="nhan">Nhập lại mật khẩu mới</label>
-      <input type="password" id="newPasswordConfirm" class="o-nhap" required autocomplete="new-password">
+  <!-- ================= ĐẶT MẬT KHẨU MỚI (trang chặn toàn màn hình khi accounts.must_change_password — AUTH-2; mở lại từ bánh răng để đổi tự nguyện) ================= -->
+  <section id="changePasswordModal" class="trang-chan hidden" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
+    <form id="changePasswordForm" class="dn-the modal-bat-buoc" novalidate>
+      <img class="logo-lon" src="/brand/bieu-trung.png" width="150" height="96" alt="Biểu trưng tỉnh Cao Bằng" style="height:64px">
+      <h1 id="changePasswordTitle" style="font-size:20px">Đặt mật khẩu mới</h1>
+      <p id="changePasswordMoTa" class="phu">Đồng chí đang dùng mật khẩu tạm do quản trị cấp. Đặt mật khẩu mới để tiếp tục.</p>
+      <label for="newPassword">Mật khẩu mới (tối thiểu 8 ký tự, có chữ và số, khác mật khẩu tạm)<input type="password" id="newPassword" required autocomplete="new-password"></label>
+      <label for="newPasswordConfirm">Nhập lại mật khẩu mới<input type="password" id="newPasswordConfirm" required autocomplete="new-password"></label>
       <div id="changePasswordError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
-      <div class="modal-chan">
-        <button type="submit" id="changePasswordBtn" class="nut chinh">Đổi mật khẩu và tiếp tục</button>
-      </div>
+      <button type="submit" id="changePasswordBtn" class="nut chinh">Lưu mật khẩu và tiếp tục</button>
+      <button type="button" id="changePasswordHuy" class="nut hidden" data-action="dongDoiMatKhau" style="width:100%;margin-top:10px">Quay lại</button>
     </form>
-  </div>
+  </section>
 
   <!-- ================= KHUNG ỨNG DỤNG: dải nhận diện, menu theo vai, trang một cột ================= -->
   <div id="appShell" class="hidden">
@@ -79,9 +77,26 @@
         </svg>
         <img class="logo" src="/brand/bieu-trung.png" width="66" height="42" alt="Biểu trưng tỉnh Cao Bằng">
         <div class="ten"><b>TỈNH ỦY CAO BẰNG</b><span>Hệ thống quản trị nhiệm vụ theo kết quả</span></div>
+        <!-- Cụm phải theo mẫu dhtn.dcs.vn: Tìm → Chuông (features/thong-bao chèn trước .nguoi) → avatar + tên hai dòng → Bánh răng (shell/banh-rang.js) -->
         <div class="phai">
-          <div class="nguoi"><b id="currentUserDisplay">--</b><span><span id="currentRoleDisplay">--</span> · <span id="headerDeptDisplay">--</span></span></div>
-          <button type="button" id="logoutBtn" class="nut-thoat" aria-label="Đăng xuất"><span>Đăng xuất</span></button>
+          <div class="tim-nhanh">
+            <button type="button" id="timNhanhBtn" class="nut-dai" data-action="toggleTimNhanh" aria-label="Tìm nhanh mã hoặc nội dung việc" aria-expanded="false" aria-controls="timNhanhForm">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </button>
+            <form id="timNhanhForm" class="tim-nhanh-o hidden" role="search" novalidate>
+              <input type="search" id="timNhanhO" placeholder="Mã (NV-…) hoặc nội dung việc" aria-label="Từ khoá tìm nhanh" autocomplete="off">
+            </form>
+          </div>
+          <div class="nguoi">
+            <span id="avatarNguoi" class="avatar" aria-hidden="true">?</span>
+            <div class="nguoi-chu"><b id="currentUserDisplay">--</b><span id="currentRoleDisplay">--</span></div>
+          </div>
+          <div class="banh-rang">
+            <button type="button" id="banhRangBtn" class="nut-dai" data-action="toggleBanhRang" aria-haspopup="menu" aria-expanded="false" aria-controls="banhRangMenu" aria-label="Cài đặt và tài khoản">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>
+            </button>
+            <div id="banhRangMenu" class="br-menu hidden" role="menu" aria-label="Cài đặt và tài khoản"></div>
+          </div>
         </div>
       </div>
     </header>
@@ -97,6 +112,8 @@
       <section id="viewBaoCao" class="hidden"></section>
       <section id="viewNhanTin" class="hidden"></section>
       <section id="viewQuanTri" class="hidden"></section>
+      <section id="viewCaNhan" class="hidden"></section>
+      <section id="viewTroGiup" class="hidden"></section>
       <footer class="chan-in">Văn phòng Tỉnh ủy Cao Bằng · Hệ thống quản trị nhiệm vụ · Bản in từ hệ thống</footer>
     </main>
     <nav id="thanhDuoi" class="thanh-duoi" aria-label="Điều hướng điện thoại"></nav>

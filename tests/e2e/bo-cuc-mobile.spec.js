@@ -28,7 +28,8 @@ for (const v of VAI) {
     await expect(nut).toHaveText(v.duoi.map((t) => new RegExp(`^${t}`)));
     await expect(page.locator('#navDieuHanhDuoi')).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('#viewDieuHanh h1').first()).toContainText(v.tieuDe);
-    await expect(page.locator('#currentUserDisplay')).toBeVisible();
+    await expect(page.locator('#avatarNguoi')).toBeVisible(); // GĐ23: điện thoại chỉ hiện avatar, tên ẩn
+    await expect(page.locator('#chuongBtn')).toBeVisible();
     await expect(page.locator('#mainHeader .logo')).toBeVisible();
     await expect(page.locator('#mainHeader .co-cum')).toBeVisible(); // GĐ21: cụm cờ SVG
     expect((await page.locator('#mainHeader').boundingBox()).height).toBeLessThan(80);
@@ -40,6 +41,7 @@ for (const v of VAI) {
     const cot = await page.locator('#viewKl .md').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length);
     expect(cot, 'danh sách và ngăn chi tiết một cột').toBe(1);
     await khongCuonNgang(page);
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong rồi mới xét có dòng hay không
     const row = page.locator('#klBody [id^="klRow-"]').first();
     if (await row.count() > 0) {
       await row.click();
@@ -91,7 +93,7 @@ test('A1 ở 768px: thanh biểu tượng trái thay hàng pill, thanh dưới �
 test('màn đăng nhập vừa khung điện thoại', async ({ page }) => {
   await page.goto('./');
   await expect(page.locator('#loginSection')).toBeVisible();
-  const the = await page.locator('.dn-the').boundingBox();
+  const the = await page.locator('#loginSection .dn-the').boundingBox(); // GĐ23: trang đặt mật khẩu (ẩn) cũng dùng .dn-the
   expect(the.width).toBeLessThanOrEqual(page.viewportSize().width);
   await khongCuonNgang(page);
 });

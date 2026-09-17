@@ -71,7 +71,7 @@ export async function expectLoggedIn(page, role) {
   const user = USERS[role];
   await expect(page.locator('#mainHeader')).toBeVisible({ timeout: 20_000 }); // khôi phục phiên + đọc hồ sơ trên staging lúc bận có thể quá 10 giây
   await expect(page.locator('#currentUserDisplay')).toContainText(user.fullName);
-  await expect(page.locator('#currentRoleDisplay')).toHaveText(user.roleLabel);
+  await expect(page.locator('#currentRoleDisplay')).toContainText(user.roleLabel);
   await expect(page.locator('#loginSection')).toBeHidden();
   await expect(page.locator(user.section)).not.toHaveClass(/\bhidden\b/);
   for (const id of ['#viewKl', '#viewGiaoViec', '#viewNhanTin', '#viewQuanTri']) await expect(page.locator(id)).toHaveClass(/\bhidden\b/);
@@ -107,6 +107,7 @@ export async function moViec(page, id, ma) {
 
 // Đăng xuất qua nút — supabase-js huỷ phiên ở mọi thiết bị của tài khoản, nên chỉ gọi trong kịch bản đăng nhập (chạy sau cùng).
 export async function logout(page) {
+  await page.locator('#banhRangBtn').click(); // GĐ23: Đăng xuất nằm cuối menu bánh răng
   await page.locator('#logoutBtn').click();
   await expect(page.locator('#loginSection')).toBeVisible();
   await expect(page.locator('#mainHeader')).toBeHidden();
