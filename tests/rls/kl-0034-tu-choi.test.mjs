@@ -7,10 +7,10 @@
 // Mã NV-T92…T97 + một tài khoản A0 tạm (kl0034_a0b), tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, assertNoRows, IDS, EMAIL_DOMAIN } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, assertNoRows, IDS, EMAIL_DOMAIN, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
-const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
+const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 const E2E_KL = '00000000-0000-4000-8000-000000000010'; // demo_e2e_kl, A3 Tổng hợp — người theo dõi / Owner mới khi giao lại
 let fx; const id = {}; let t0; let tc92; let tc93; let tc94; let a0b; // a0b: id tài khoản A0 tạm thứ hai

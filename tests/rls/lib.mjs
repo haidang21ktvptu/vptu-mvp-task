@@ -14,6 +14,10 @@ import { createClient } from '@supabase/supabase-js';
 export const STAGING_REF = 'vojmrjezspdftovzinek';
 export const PRODUCTION_REF = 'frwyxcmbonjaimziiuqr';
 export const SEED_PASSWORD = '123456';
+// Công tắc kiểm thử (docs/KIEM-THU.md): KIEM_THU_MOI_TRUONG=production cho phép trỏ project production; các file gọi canh_bao_quet / xoá
+// tin hệ thống sau mốc t0 tự bỏ qua ở chế độ này (chúng gửi cảnh báo thật, xoá tin thật).
+export const LA_PRODUCTION = process.env.KIEM_THU_MOI_TRUONG === 'production';
+export const BO_QUA_PRODUCTION = 'Bỏ qua trên production: test gọi canh_bao_quet (gửi cảnh báo tới mọi việc thật) hoặc xoá tin hệ thống sau t0.';
 export const EMAIL_DOMAIN = 'vptu.caobang.local';
 
 // id cố định trong supabase/seed.sql
@@ -53,7 +57,7 @@ export function getKeys() {
   }
   if (!keys.anon || !keys.service) throw new Error('Không lấy được anon/service_role key.');
   // Test tạo/xoá dữ liệu bằng service_role nên tuyệt đối không được trỏ vào production.
-  if (keys.url.includes(PRODUCTION_REF)) throw new Error('Từ chối chạy test trên project production.');
+  if (keys.url.includes(PRODUCTION_REF) && !LA_PRODUCTION) throw new Error('Từ chối chạy test trên project production (đặt KIEM_THU_MOI_TRUONG=production nếu cố ý — docs/KIEM-THU.md).');
   return keys;
 }
 

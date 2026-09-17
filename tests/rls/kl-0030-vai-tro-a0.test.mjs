@@ -3,10 +3,10 @@
 // thống là phản hồi vào luồng Y_KIEN do chính mình mở; cảnh báo Đỏ đặc biệt không gửi A0. Mã NV-T88/T89, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, assertNoRows, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, assertNoRows, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
-const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
+const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const NGAY = '2026-08-20';   // hạn 15/08 → quá 5 ngày → Đỏ đặc biệt (cùng ngày quét với kl-0029 để idempotent)
 const db = () => adminClient();
 let fx; const id = {}; let t0; let mcId; let donDocId; let yKienId;

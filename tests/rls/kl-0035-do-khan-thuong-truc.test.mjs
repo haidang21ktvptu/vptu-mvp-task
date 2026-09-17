@@ -5,10 +5,10 @@
 // giờ làm việc), TT_CHUA_NHAN (hằng ngày); v_dien_bien không lộ lý do từ chối ngoài chuỗi; thứ tự v_ngoai_le; kl_so_chua_xu_ly. Tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
-const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
+const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 let fx; const id = {}; let t0; let cdHoaToc; let ttId; let tcId;
 const LY_DO = 'KL-0035 lý do riêng tư';

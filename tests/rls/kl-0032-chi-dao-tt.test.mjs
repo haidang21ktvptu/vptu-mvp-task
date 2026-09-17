@@ -4,10 +4,10 @@
 // đóng; quá hạn phản hồi → canh_bao_quet gửi tin người nhận chưa phản hồi, idempotent. Mã NV-T90/T91, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
-const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
+const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 let fx; const id = {}; let t0; let tt1; let tt2; let tt3; let conId;
 const assertLoi = (r, label) => assert.ok(r.error, `${label}: phải bị từ chối (22023)`);
