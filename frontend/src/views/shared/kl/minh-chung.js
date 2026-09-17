@@ -14,7 +14,7 @@ import { laBenTrong } from './dong.js';
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 const LOP_LOAI = { so_hieu: 'mc-loai', chu_cu: 'mc-loai mc-loai-cu', tep: 'mc-loai' };
-const LOP_TRANG_THAI = { null: 'muc muc-vang', true: 'muc muc-xanh', false: 'muc muc-do' };
+const LOP_TRANG_THAI = { null: 'trang-thai tt-cho', true: 'trang-thai tt-xong', false: 'trang-thai tt-qua' };
 const TEN_TRANG_THAI = { null: 'Chưa xác nhận', true: 'Hợp lệ', false: 'Không hợp lệ' };
 
 const tenNguoi = (id) => findAccount(id)?.full_name || 'không xác định';
@@ -27,8 +27,8 @@ function mcHtml(m, r) {
   const chiTiet = [m.ngay_van_ban ? `ngày ${formatNgay(m.ngay_van_ban)}` : '', m.cap_nhan ? tenTrongDanhMuc('cap', m.cap_nhan) : ''].filter(Boolean).join(' · ');
   const xacNhan = m.hop_le === null ? '' : `<p class="chu-phu mc-phu">${m.hop_le ? 'Hợp lệ' : `Không hợp lệ: ${escapeHtml(m.ly_do_khong_hop_le || '')}`} — ${escapeHtml(tenNguoi(m.xac_nhan_boi))}, ${formatDateTime(m.xac_nhan_luc)}</p>`;
   const nut = duocXacNhan(r, m) ? `
-        <button type="button" class="btn btn-phu btn-nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === true ? ' disabled' : ''}>Xác nhận hợp lệ</button>
-        <button type="button" class="btn btn-phu btn-nho" data-action="moBacMinhChung" data-id="${m.id}"${m.hop_le === false ? ' disabled' : ''}>Không hợp lệ</button>` : '';
+        <button type="button" class="nut nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === true ? ' disabled' : ''}>Xác nhận hợp lệ</button>
+        <button type="button" class="nut nho" data-action="moBacMinhChung" data-id="${m.id}"${m.hop_le === false ? ' disabled' : ''}>Không hợp lệ</button>` : '';
   return `
     <div class="mc-dong" id="mc-${m.id}" data-loai="${m.loai}" data-hop-le="${k}">
       <div class="mc-dau">
@@ -41,15 +41,15 @@ function mcHtml(m, r) {
       ${m.loai === 'chu_cu' ? `<p class="mc-chu">${escapeHtml(m.noi_dung_chu || '')}</p>` : ''}
       ${xacNhan}
       <form class="mc-form-ly-do hidden" id="mcBac-${m.id}" data-submit="bacMinhChung" data-id="${m.id}" data-nv="${r.id}">
-        <input type="text" name="ly_do" required class="input input-nho" placeholder="Lý do không hợp lệ (bắt buộc)" aria-label="Lý do không hợp lệ">
-        <button type="submit" class="btn btn-cham btn-nho">Ghi không hợp lệ</button>
+        <input type="text" name="ly_do" required class="o-nhap nho" placeholder="Lý do không hợp lệ (bắt buộc)" aria-label="Lý do không hợp lệ">
+        <button type="submit" class="nut lam nho">Ghi không hợp lệ</button>
       </form>
     </div>`;
 }
 
 export function minhChungHtml(r, ds) {
   const hopLe = ds.filter(mcHopLe).length;
-  const nutNop = laBenTrong(r) ? `<button type="button" class="btn btn-cham btn-nho" data-action="openMinhChung" data-id="${r.id}">Nộp minh chứng</button>` : '';
+  const nutNop = laBenTrong(r) ? `<button type="button" class="nut lam nho" data-action="openMinhChung" data-id="${r.id}">Nộp minh chứng</button>` : '';
   return `
     <div class="khoi-mc" id="klMinhChung-${r.id}" data-hop-le="${hopLe}">
       <h4>Minh chứng <span class="chu-phu">${ds.length === 0 ? 'chưa có' : `${hopLe} hợp lệ / ${ds.length} đã nộp`}</span><span class="mc-nut">${nutNop}</span></h4>

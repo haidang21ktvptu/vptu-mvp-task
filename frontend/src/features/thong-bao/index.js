@@ -1,26 +1,36 @@
-// Chuông thông báo ở thanh trên, mọi vai trò (GĐ15, CĐ-3/CB-6): đếm tin hệ thống chưa đọc (direct_messages loai = he_thong,
-// do hàm chi_dao_* của 0026 tạo cho người liên quan), bấm mở danh sách, bấm một tin → đánh dấu đã đọc theo nhiệm vụ rồi mở
-// đúng nhiệm vụ (màn hình Nhiệm vụ lọc theo mã, ngăn chi tiết bung). Realtime: features/realtime.js gọi onTinHeThongMoi.
+// Chuông thông báo ở dải nhận diện, mọi vai (mockup "Chuông gom theo việc"): tin hệ thống (direct_messages loai = he_thong, do hàm chi_dao_* /
+// minh chứng / cảnh báo tạo cho người liên quan) gom theo nhiệm vụ — "NV-118 có 3 diễn biến mới" thay vì 3 dòng rời; bấm mở đúng luồng
+// của việc (ngăn chi tiết, con trỏ vào ô chỉ đạo/phản hồi) và đánh dấu đã đọc theo nhiệm vụ. Realtime: features/realtime.js gọi onTinHeThongMoi.
 import { $, show, setText, escapeHtml, formatDateTime } from '../../lib/dom.js';
-import { state, findAccount } from '../../lib/state.js';
+import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { loadTinHeThong, tinHeThongDaDoc } from '../../lib/kl/dieu-hanh.js';
-import { openKl } from '../../views/shared/kl/index.js';
-import { toggleKlChiTiet } from '../../views/shared/kl/chi-tiet.js';
-
+import { moNhiemVu } from '../../views/shared/kl/index.js';
 import { showDMToast, closeToast } from '../messages/chat.js';
 import { thongBaoTemplate } from './template.js';
 
 let tin = [];
+const maCua = (content) => (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
 
-function dongHtml(t) {
-  const [dau, ...con] = t.content.split(': ');
-  return `<li class="tb-dong ${t.is_read ? '' : 'tb-chua-doc'}">
-    <button type="button" data-action="moThongBao" data-id="${t.id}" data-nv="${t.nhiem_vu_id || ''}">
-      <b>${escapeHtml(dau)}</b><span>${escapeHtml(con.join(': '))}</span>
-      <small>${escapeHtml(findAccount(t.sender_id)?.full_name || 'Hệ thống')} · ${formatDateTime(t.created_at)}</small>
-    </button></li>`;
+// Gom theo nhiệm vụ: mới nhất trước; số chưa đọc; dòng đầu = tin mới nhất.
+export function gomTheoViec(ds) {
+  const m = new Map();
+  ds.forEach((t) => {
+    const k = t.nhiem_vu_id || `tin-${t.id}`;
+    if (!m.has(k)) m.set(k, { nv: t.nhiem_vu_id, ma: maCua(t.content), moiNhat: t, so: 0, chuaDoc: 0 });
+    const g = m.get(k); g.so++; if (!t.is_read) g.chuaDoc++;
+  });
+  return [...m.values()].sort((a, b) => (b.chuaDoc > 0) - (a.chuaDoc > 0) || (a.moiNhat.created_at < b.moiNhat.created_at ? 1 : -1));
+}
+
+function nhomHtml(g) {
+  const [dau, ...con] = g.moiNhat.content.split(': ');
+  return `<li class="tb-dong ${g.chuaDoc ? 'tb-chua-doc' : ''}" data-nv="${g.nv || ''}">
+    <button type="button" data-action="moThongBao" data-nhiem-vu="${g.nv || ''}" data-ma="${escapeHtml(g.ma)}">
+      <b>${escapeHtml(g.ma || dau)}${g.so > 1 ? ` có ${g.so} diễn biến${g.chuaDoc ? `, ${g.chuaDoc} mới` : ''}` : g.chuaDoc ? ' · mới' : ''}</b>
+      <span>${escapeHtml(g.so > 1 ? `${dau}: ${con.join(': ')}` : con.join(': ') || dau)}</span>
+      <small>${formatDateTime(g.moiNhat.created_at)}</small></button></li>`;
 }
 
 function render() {
@@ -28,18 +38,14 @@ function render() {
   setText('chuongBadge', chuaDoc);
   show('chuongBadge', chuaDoc > 0);
   $('chuongBtn').setAttribute('aria-label', chuaDoc ? `Thông báo, ${chuaDoc} chưa đọc` : 'Thông báo');
-  $('thongBaoList').innerHTML = tin.length ? tin.map(dongHtml).join('') : '<li class="tb-trong chu-phu">Chưa có thông báo nào.</li>';
+  const nhom = gomTheoViec(tin);
+  $('thongBaoList').innerHTML = nhom.length ? nhom.map(nhomHtml).join('') : '<li class="tb-trong chu-phu">Chưa có thông báo nào.</li>';
   show('thongBaoDocHet', chuaDoc > 0);
 }
 
 export async function loadThongBao() {
   if (!state.user) return;
-  try {
-    tin = await loadTinHeThong();
-    render();
-  } catch (e) {
-    notifyError(e.message);
-  }
+  try { tin = await loadTinHeThong(); render(); } catch (e) { notifyError(e.message); }
 }
 
 function toggleThongBao() {
@@ -49,20 +55,17 @@ function toggleThongBao() {
   if (mo) loadThongBao();
 }
 
-// Mở đúng nhiệm vụ của một tin: đã đọc mọi tin về nhiệm vụ đó → màn hình Nhiệm vụ lọc mã → bung chi tiết (có khối chỉ đạo).
-async function moNhiemVuCuaTin(nvId, content) {
+// Mở đúng nhiệm vụ của một nhóm tin: đã đọc mọi tin về nhiệm vụ đó → màn hình Nhiệm vụ lọc mã → ngăn chi tiết, con trỏ vào ô chỉ đạo/phản hồi.
+async function moNhiemVuCuaTin(nvId, ma) {
   show('thongBaoPanel', false);
   $('chuongBtn').setAttribute('aria-expanded', 'false');
   closeToast();
   if (!nvId) return;
   try { await tinHeThongDaDoc(nvId); } catch { /* không chặn việc mở nhiệm vụ */ }
   loadThongBao();
-  const ma = (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
-  await openKl({ tuKhoa: ma });
-  await toggleKlChiTiet({ id: nvId, cheDo: 'chi-dao' }); // bảng gập, con trỏ vào ô chỉ đạo/phản hồi
+  await moNhiemVu(nvId, ma, 'chi-dao');
 }
-
-const moThongBao = ({ id, nv }) => moNhiemVuCuaTin(nv, tin.find((t) => t.id === id)?.content || '');
+const moThongBao = ({ nhiemVu, ma }) => moNhiemVuCuaTin(nhiemVu, ma);
 
 async function docHetThongBao() {
   try { await tinHeThongDaDoc(null); loadThongBao(); } catch (e) { notifyError(e.message); }
@@ -72,7 +75,7 @@ async function docHetThongBao() {
 export function onTinHeThongMoi(dm) {
   tin = [dm, ...tin.filter((t) => t.id !== dm.id)];
   render();
-  showDMToast('Thông báo trên nhiệm vụ', dm.content, dm.sender_id, () => moNhiemVuCuaTin(dm.nhiem_vu_id, dm.content), 'Mở nhiệm vụ');
+  showDMToast('Thông báo trên nhiệm vụ', dm.content, dm.sender_id, () => moNhiemVuCuaTin(dm.nhiem_vu_id, maCua(dm.content)), 'Mở nhiệm vụ');
 }
 
 function onClickNgoai(e) {
@@ -82,7 +85,7 @@ function onClickNgoai(e) {
 }
 
 export function mountThongBao() {
-  $('headerDate').insertAdjacentHTML('beforebegin', thongBaoTemplate);
+  $('currentUserDisplay').closest('.nguoi').insertAdjacentHTML('beforebegin', thongBaoTemplate);
   document.addEventListener('click', onClickNgoai);
   registerActions({ toggleThongBao, moThongBao, docHetThongBao });
 }

@@ -7,7 +7,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const LIMIT = 300;
-const EXCLUDED = [/\.md$/, /package-lock\.json$/, /^supabase\/config\.toml$/, /^mockup\//, /\.(png|jpe?g|gif|webp|svg|ico|woff2?)$/i];
+const EXCLUDED = [/\.md$/, /package-lock\.json$/, /^supabase\/config\.toml$/, /^mockup\//, /^docs\/ui-ux\//, /\.(png|jpe?g|gif|webp|svg|ico|woff2?)$/i];
 
 const files = execSync('git ls-files', { encoding: 'utf8' })
   .split('\n')

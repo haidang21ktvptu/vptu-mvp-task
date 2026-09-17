@@ -9,11 +9,11 @@ export const klCapNhatTemplate = `
     <div class="cot-2">
       <div>
         <label for="klCnTienDo" class="nhan">Tiến độ</label>
-        <select id="klCnTienDo" class="input"></select>
+        <select id="klCnTienDo" class="o-nhap"></select>
       </div>
       <div>
         <label for="klCnHan" class="nhan">Hạn xử lý <span id="klCnHanLoai" class="chu-phu"></span></label>
-        <input type="date" id="klCnHan" class="input">
+        <input type="date" id="klCnHan" class="o-nhap">
         <small id="klCnHanGhiChu" class="chu-phu" aria-live="polite"></small>
       </div>
     </div>
@@ -22,7 +22,7 @@ export const klCapNhatTemplate = `
       <label class="nhan-checkbox"><input type="checkbox" id="klCnChuaCoHan"> Chưa xác định được hạn (phụ thuộc yếu tố bên ngoài)</label>
       <div id="klCnLyDoWrap" class="hidden">
         <label for="klCnLyDo" class="nhan">Lý do chưa có hạn (bắt buộc)</label>
-        <textarea id="klCnLyDo" class="input" rows="2"></textarea>
+        <textarea id="klCnLyDo" class="o-nhap" rows="2"></textarea>
       </div>
     </div>
 
@@ -30,30 +30,30 @@ export const klCapNhatTemplate = `
       <div class="cot-2 mt-3">
         <div>
           <label for="klCnNgayHT" class="nhan">Ngày hoàn thành thật (theo văn bản minh chứng)</label>
-          <input type="date" id="klCnNgayHT" class="input">
+          <input type="date" id="klCnNgayHT" class="o-nhap">
         </div>
       </div>
     </div>
 
     <div class="mt-3" id="klCnMinhChungWrap">
       <label for="klCnMinhChung" class="nhan">Minh chứng dạng chữ <span class="chu-phu">dữ liệu cũ: số hiệu, ngày văn bản hoặc đường dẫn — bắt buộc khi Hoàn thành</span></label>
-      <input type="text" id="klCnMinhChung" class="input" placeholder="Ví dụ: Báo cáo số 15/BC-VPTU ngày 5/9/2026">
+      <input type="text" id="klCnMinhChung" class="o-nhap" placeholder="Ví dụ: Báo cáo số 15/BC-VPTU ngày 5/9/2026">
     </div>
     <p id="klCnGhiChu1400" class="chu-phu mt-3 hidden">Nhiệm vụ theo quy tắc 1400: nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) ở ngăn Chi tiết rồi bấm "Đóng nhiệm vụ" — không chuyển Hoàn thành ở đây.</p>
     <div class="cot-2 mt-3">
       <div>
         <label for="klCnVanBan" class="nhan">Văn bản triển khai</label>
-        <input type="text" id="klCnVanBan" class="input">
+        <input type="text" id="klCnVanBan" class="o-nhap">
       </div>
       <div>
         <label for="klCnGhiChu" class="nhan">Ghi chú</label>
-        <input type="text" id="klCnGhiChu" class="input">
+        <input type="text" id="klCnGhiChu" class="o-nhap">
       </div>
     </div>
 
     <div class="modal-chan">
-      <button type="button" data-action="closeKlCapNhat" class="btn btn-phu">Huỷ</button>
-      <button type="submit" id="klCnLuu" class="btn btn-chinh">Lưu cập nhật</button>
+      <button type="button" data-action="closeKlCapNhat" class="nut">Huỷ</button>
+      <button type="submit" id="klCnLuu" class="nut chinh">Lưu cập nhật</button>
     </div>
   </form>
 </div>

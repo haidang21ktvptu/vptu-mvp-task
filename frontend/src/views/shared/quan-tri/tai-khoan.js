@@ -14,10 +14,10 @@ function taiKhoanRowHtml(a) {
   const me = a.id === state.user.id;
   const search = `${a.full_name} ${a.username}`.toLowerCase();
   const kl = a.quan_tri_kl
-    ? '<span class="muc muc-xanh">Có quyền</span>'
-    : '<span class="muc">Không</span>';
-  const ht = a.quan_tri_he_thong ? '<span class="muc muc-vang">Chủ dự án</span>' : '';
-  const btn = `<button type="button" class="btn btn-nho ${a.quan_tri_kl ? 'btn-nguy-hiem' : 'btn-phu'}"
+    ? '<span class="trang-thai tt-xong">Có quyền</span>'
+    : '<span class="trang-thai tt-xam">Không</span>';
+  const ht = a.quan_tri_he_thong ? '<span class="trang-thai tt-cho">Chủ dự án</span>' : '';
+  const btn = `<button type="button" class="nut nho ${a.quan_tri_kl ? 'chinh' : ''}"
       data-action="toggleQuanTriKl" data-username="${escapeHtml(a.username)}" data-bat="${a.quan_tri_kl ? '0' : '1'}"
       aria-label="${a.quan_tri_kl ? 'Thu' : 'Cấp'} quyền quản trị KL của ${escapeHtml(a.full_name)}">${a.quan_tri_kl ? 'Thu quyền' : 'Cấp quyền'}</button>`;
   return `
@@ -70,7 +70,7 @@ function nhatKyRowHtml(r) {
       <td data-nhan="Người thực hiện">${escapeHtml(nguoi)}</td>
       <td data-nhan="Tài khoản">${escapeHtml(tk)}</td>
       <td data-nhan="Quyền">${escapeHtml(quyen)}</td>
-      <td data-nhan="Bật/Tắt"><span class="muc ${r.bat ? 'muc-xanh' : 'muc-do'}">${r.bat ? 'Bật' : 'Tắt'}</span></td>
+      <td data-nhan="Bật/Tắt"><span class="trang-thai ${r.bat ? 'tt-xong' : 'tt-qua'}">${r.bat ? 'Bật' : 'Tắt'}</span></td>
       <td data-nhan="Lý do">${escapeHtml(r.ly_do)}</td>
     </tr>`;
 }

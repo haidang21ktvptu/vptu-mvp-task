@@ -1,0 +1,17 @@
+/* In / PDF (Báo cáo A1 và mọi màn hình): bỏ dải điều hướng, nút, ô nhập; giữ dải tổng quan và bảng. Trong @layer utilities để đứng
+   sau mọi quy tắc thành phần. */
+@layer utilities {
+  @media print {
+    .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim,
+    .ray, .tb-panel { display: none !important; }
+    body { background: #fff; }
+    .max { max-width: none; padding: 0; }
+    .trang { padding: 0; }
+    .md { grid-template-columns: 1fr; }
+    .md .chi-tiet { position: static; max-height: none; }
+    .dieu-hanh { grid-template-columns: 1fr; }
+    .the, .bang, .bc-khoi, .khung { break-inside: avoid; border-color: #999; }
+    .chan-in { display: block; margin-top: 24px; font-size: 12px; color: var(--chu-phu); border-top: 1px solid #999; padding-top: 8px; }
+  }
+}
+@layer components { .chan-in { display: none; } }

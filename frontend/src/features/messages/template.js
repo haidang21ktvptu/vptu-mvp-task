@@ -1,47 +1,33 @@
-// Toast tin nhắn mới, danh bạ và khung chat 1-1 (MSG-1/2) theo DESIGN mục 5.
-// Mục "Nhắn tin" (#dmBubbleLauncher + huy hiệu #dmBubbleBadge) nằm ở thanh bên, do views/shell.js vẽ.
+// Màn hình Nhắn tin (mockup): danh bạ xếp theo phòng ở trái, hội thoại ở giữa; tin hệ thống về một việc gom thành hội thoại của việc đó
+// (có nút Mở việc), không lẫn với tin người. Toast tin mới (realtime) dùng chung với chuông.
 export const messagesTemplate = `
-<!-- TOAST TIN NHẮN MỚI (realtime) -->
+  <div class="dau"><h1>Nhắn tin</h1><span>danh bạ theo phòng; tin hệ thống về một việc gom thành một hội thoại của việc đó — người trong phạm vi đều thấy</span></div>
+  <div class="nt">
+    <div class="ds-ht">
+      <div class="tim"><input type="search" id="dmSearchContact" placeholder="Tìm người hoặc mã việc" aria-label="Tìm hội thoại"></div>
+      <div id="dmViecKhoi"><h3>Việc có diễn biến</h3><div id="dmViecList"></div></div>
+      <h3>Cán bộ</h3><div id="dmContactList"></div>
+    </div>
+    <div class="hoi" id="dmModal">
+      <div class="dau-ht"><b id="dmChatHeaderName">Chọn một hội thoại</b><small id="dmChatHeaderRole" class="chu-phu"></small><span id="dmChatHeaderPhu"></span></div>
+      <div id="dmChatBox" class="tin" aria-live="polite"><p class="trong-nho">Chọn cán bộ hoặc việc ở bên trái để xem hội thoại.</p></div>
+      <form id="dmGuiForm" data-submit="handleSendDM" class="go hidden">
+        <input type="text" id="dmInput" required placeholder="Nhập tin nhắn" aria-label="Nội dung tin nhắn" autocomplete="off">
+        <button type="submit" class="nut lam">Gửi</button>
+      </form>
+      <div id="dmMoViec" class="go hidden"><span class="chu-phu" style="flex:1">Hội thoại của việc: chỉ đạo, cảnh báo, phản hồi — trả lời ngay trên việc.</span>
+        <button type="button" class="nut" data-action="moViecTuHoiThoai">Mở việc</button></div>
+    </div>
+  </div>
+`;
+
+export const toastTinTemplate = `
 <div id="realtimeToast" class="toast toast-tin hidden" role="status">
   <div class="flex-1 min-w-0">
-    <b id="toastSender" class="font-medium">Tin nhắn mới</b>
+    <b id="toastSender">Tin nhắn mới</b>
     <p id="toastContent" class="whitespace-pre-wrap">--</p>
-    <div class="mt-2"><button type="button" id="toastActionBtn" class="btn btn-phu btn-nho btn-sang">Mở hội thoại</button></div>
+    <div class="mt-2"><button type="button" id="toastActionBtn" class="nut nho sang">Mở hội thoại</button></div>
   </div>
   <button type="button" data-action="closeToast" class="toast-dong" aria-label="Đóng thông báo">✕</button>
-</div>
-
-<!-- DANH BẠ CHỌN NGƯỜI NHẮN TIN -->
-<div id="dmPickerModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="dmPickerTitle">
-  <div class="modal">
-    <div class="flex items-start justify-between gap-3 mb-3">
-      <h2 id="dmPickerTitle" class="modal-tieu-de">Danh bạ nhắn tin</h2>
-      <button type="button" data-action="closeDMPicker" class="btn btn-phu btn-nho">Đóng</button>
-    </div>
-    <label for="dmSearchContact" class="nhan">Tìm cán bộ</label>
-    <input type="search" id="dmSearchContact" class="input input-nho" placeholder="Tên, chức vụ hoặc phòng">
-    <div id="dmContactList" class="danh-ba"></div>
-  </div>
-</div>
-
-<!-- KHUNG CHAT 1-1 -->
-<div id="dmModal" class="khung-chat hidden" role="dialog" aria-labelledby="dmChatHeaderName">
-  <div class="chat-dau">
-    <div class="nguoi">
-      <b id="dmChatHeaderName">--</b>
-      <small id="dmChatHeaderRole">--</small>
-    </div>
-    <div class="flex gap-2 shrink-0">
-      <button type="button" data-action="openDMPicker" class="btn btn-phu btn-nho">Danh bạ</button>
-      <button type="button" data-action="closeDMModal" class="btn btn-phu btn-nho" aria-label="Đóng khung chat">Đóng</button>
-    </div>
-  </div>
-  <div id="dmChatBox" class="chat-hop" aria-live="polite">
-    <p class="chu-phu text-center">Đang tải tin nhắn</p>
-  </div>
-  <form data-submit="handleSendDM" class="chat-gui">
-    <input type="text" id="dmInput" required class="input input-nho" placeholder="Nhập tin nhắn" aria-label="Nội dung tin nhắn">
-    <button type="submit" class="btn btn-cham btn-nho">Gửi</button>
-  </form>
 </div>
 `;

@@ -1,12 +1,12 @@
-// GĐ18 — vai trò A0 Thường trực Tỉnh ủy (CH-11 = A, SPEC CB-5): đăng nhập → vào thẳng Dashboard (lọc sẵn Đỏ đặc biệt, mở rộng
-// được sang mọi việc Đỏ) → không có nút ghi nào ngoài "Ý kiến" (quyền thật: hàm 0030 từ chối A0 tường minh — test RLS kl-0030).
-// Không tạo dữ liệu; bỏ qua khi project chưa có demo_a0 (migration 0030 + seed).
+// GĐ20 — vai trò A0 Thường trực Tỉnh ủy (mockup bản 5 "Trung tâm điều hành Thường trực"): đăng nhập → vào thẳng trung tâm điều hành
+// (4 số-lọc, thanh trái 4 khâu, thẻ việc Đỏ có nút Chỉ đạo + Xem diễn biến) → menu chỉ 3 mục (không Nhắn tin, không Quản trị) → Toàn bộ
+// nhiệm vụ: chỉ đọc + Ý kiến/Chỉ đạo (quyền thật: hàm 0030 từ chối A0 tường minh — test RLS kl-0030). Không tạo dữ liệu; bỏ qua khi thiếu demo_a0.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { contextAs } from './lib/app.js';
+import { contextAs, nav } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 
-test.describe.serial('Thường trực Tỉnh ủy (A0) — chỉ xem', () => {
+test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều hành, chỉ xem', () => {
   let page;
 
   test.beforeAll(async ({ browser }, testInfo) => {
@@ -18,45 +18,74 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — chỉ xem', () => {
   });
   test.afterAll(async () => { await page?.context().close(); });
 
-  test('vào thẳng Dashboard; thanh bên chỉ Dashboard + Nhiệm vụ + Nhắn tin; nhãn vai trò đúng', async () => {
+  test('vào thẳng Trung tâm điều hành: 4 số-lọc, 4 khâu ở thanh trái, menu 3 mục, nhãn vai trò đúng', async () => {
     await expect(page.locator('#currentRoleDisplay')).toHaveText(OPTIONAL_USERS.A0.roleLabel);
-    await expect(page.locator('#viewKlDashboard')).not.toHaveClass(/\bhidden\b/);
-    await expect(page.locator('#klDbTinhDen')).toContainText('Số liệu tính đến');
-    await expect(page.locator('#navKlDashboard')).toBeVisible();
+    await expect(page.locator('#viewDieuHanh')).not.toHaveClass(/\bhidden\b/);
+    await expect(page.locator('#dhTieuDeTrang')).toHaveText('Trung tâm điều hành Thường trực');
+    await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước');
+    await expect(page.locator('#dhKpi button')).toHaveCount(4);
+    await expect(page.locator('#dhRay [data-khau]')).toHaveCount(4);
+    await expect(page.locator('#navDieuHanh')).toBeVisible();
+    await expect(page.locator('#navChiDaoDaGui')).toBeVisible();
     await expect(page.locator('#navKl')).toBeVisible();
-    await expect(page.locator('#tabBtnA1Staffs')).toHaveCount(0);
+    await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);
     await expect(page.locator('#navQuanTri')).toHaveCount(0);
   });
 
-  test('bảng ngoại lệ: không nút Chỉ đạo, cấp quyết định chỉ đọc, chỉ dòng Đỏ đặc biệt cho tới khi bấm mở rộng', async () => {
-    await expect(page.locator('#klDbNgoaiLe button', { hasText: 'Chỉ đạo' })).toHaveCount(0);
-    await expect(page.locator('#klDbNgoaiLe select.nl-cap')).toHaveCount(0);
-    const rows = page.locator('#klDbNgoaiLeBody tr[id^="nlRow-"]');
-    if (await rows.count() > 0) {
-      for (const r of await rows.all()) await expect(r).toHaveAttribute('data-muc', 'DO_DAC_BIET');
-      await expect(page.locator('#nlLocA0')).toHaveText('Xem mọi việc Đỏ');
-      await page.locator('#nlLocA0').click();
-      await expect(page.locator('#nlLocA0')).toHaveText('Chỉ Đỏ đặc biệt');
-      expect(await page.locator('#klDbNgoaiLeBody tr[id^="nlRow-"]').count()).toBeGreaterThanOrEqual(await rows.count());
-    }
+  test('số-lọc và thanh trái là bộ lọc: bấm khâu → aria-pressed, danh sách đổi tiêu đề; số hoàn thành → toàn cảnh', async () => {
+    const theTruoc = await page.locator('#dsThe .the').count();
+    const khau = page.locator('#dhRay [data-khau="CHUA_NHAN"]');
+    await khau.click();
+    await expect(khau).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#dsTieuDe')).toContainText('khâu chưa nhận việc');
+    expect(await page.locator('#dsThe .the').count()).toBeLessThanOrEqual(theTruoc);
+    for (const t of await page.locator('#dsThe .the').all()) await expect(t).toHaveAttribute('data-khau', 'CHUA_NHAN');
+    await page.locator('#dhRay .tat').click();
+    await expect(khau).toHaveAttribute('aria-pressed', 'false');
+    await page.locator('#dhKpi [data-loc="tat"]').click();
+    await expect(page.locator('#dsTieuDe')).toContainText('Toàn cảnh');
+    await expect(page.locator('#dsThe .toan-canh')).toBeVisible();
+    await page.locator('#dhKpi [data-loc="tat"]').click();
+    await expect(page.locator('#dsTieuDe')).toContainText('đang nghẽn');
   });
 
-  test('màn hình Nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ nút Ý kiến / Chỉ đạo', async () => {
-    await page.locator('#navKl').click();
-    await expect(page.locator('#klBody tr[id^="klRow-"]').first()).toBeVisible();
+  test('thẻ việc Đỏ: số ngày trễ, khâu, nút Chỉ đạo mở ô một dòng có gợi ý; Xem diễn biến mở ngăn chi tiết ở Toàn bộ nhiệm vụ', async () => {
+    const the = page.locator('#dsThe .the').first();
+    if (await the.count() === 0) return; // phạm vi không có việc Đỏ
+    await expect(the.locator('.tre')).toBeVisible();
+    await expect(the.locator('.khau')).toBeVisible();
+    await the.locator('[data-action="moO"]').click();
+    const o = the.locator('form.o');
+    await expect(o).toHaveClass(/\bmo\b/);
+    await expect(o.locator('.goi-y button')).toHaveCount(4);
+    await o.locator('.goi-y button').first().click();
+    await expect(o.locator('input[name=noi_dung]')).toHaveValue('Báo cáo Thường trực lý do chậm');
+    await o.locator('[data-action="dongO"]').click();
+    await expect(o).not.toHaveClass(/\bmo\b/);
+    const id = (await the.getAttribute('id')).replace('the-', '');
+    await the.locator('[data-action="xemDienBien"]').click();
+    await expect(page.locator('#viewKl')).toBeVisible();
+    await expect(page.locator(`#klChiTiet-${id}`)).toBeVisible();
+    await expect(page.locator(`#klChiTiet-${id} .chi-tiet-them`)).toHaveAttribute('open', '');
+  });
+
+  test('Toàn bộ nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ ô Ý kiến / Chỉ đạo', async () => {
+    await nav(page, 'navKl');
+    const row = page.locator('#klBody [id^="klRow-"]').first();
+    await expect(row).toBeVisible();
     await expect(page.locator('#klNutThem')).toBeHidden();
-    await expect(page.locator('#klBody [data-action=xacNhanNhanViec]')).toHaveCount(0);
-    await expect(page.locator('#klBody [data-action=openDongNhiemVu]')).toHaveCount(0);
-    await expect(page.locator('#klBody [data-action=openMinhChung]')).toHaveCount(0);
-    const yKien = page.locator('#klBody [data-action=moKlChiDao]').first();
-    await expect(yKien).toHaveText('Ý kiến / Chỉ đạo');
-    await yKien.click();
-    const form = page.locator('#klBody form.cd-form').first();
+    await row.click();
+    const ngan = page.locator('#klChiTiet');
+    await expect(ngan.locator('.chi-tiet-noi')).toBeVisible();
+    await expect(ngan.locator('[data-action=xacNhanNhanViec]')).toHaveCount(0);
+    await expect(ngan.locator('[data-action=openDongNhiemVu]')).toHaveCount(0);
+    await expect(ngan.locator('[data-action=openMinhChung]')).toHaveCount(0);
+    await expect(ngan.locator('select.nl-cap')).toHaveCount(0); // cấp quyết định chỉ đọc
+    const form = ngan.locator('form.cd-form').first();
     await expect(form).toBeVisible();
     await expect(form.locator('select[name=loai] option')).toHaveCount(2); // Ý kiến / Chỉ đạo (GĐ19, CH-16)
     await expect(form.locator('select[name=loai]')).toHaveValue('Y_KIEN');
     await expect(form.locator('button[type=submit]')).toHaveText('Gửi');
-    await expect(page.locator('#klBody [data-action=dongChiDao]')).toHaveCount(0);
-    await expect(page.locator('#klBody form.cd-form-ph')).toHaveCount(0);
+    await expect(ngan.locator('form.cd-form-ph')).toHaveCount(0);
   });
 });

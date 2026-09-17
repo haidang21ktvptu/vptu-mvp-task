@@ -1,26 +1,16 @@
 /** @type {import('tailwindcss').Config} */
-// Hệ màu/phông theo docs/DESIGN.md (GĐ5). Giá trị gốc nằm ở src/styles/tokens.css; khai báo
-// lại ở đây để dùng được dạng tiện ích (bg-cb-cham, text-cb-muc-nhat, font-serif...).
+// Token theo docs/ui-ux/mockup-v7.html; giá trị gốc ở src/styles/tokens.css, khai báo lại đây để dùng dạng tiện ích khi cần
+// (bg-do, text-chu-phu...). Giao diện chủ yếu dùng lớp thành phần tự viết trong @layer components.
 export default {
   content: ['./index.html', './src/**/*.js'],
   theme: {
     extend: {
       colors: {
-        cb: {
-          do: '#A6192E', 'do-dam': '#8E1527', vang: '#C9A227', cham: '#1C2A44', 'cham-sang': '#26375A',
-          ngoc: '#2E7D6E', da: '#F4F2ED', giay: '#FFFFFF', muc: '#1D2433', 'muc-nhat': '#5B6474', vien: '#DDD8CE',
-        },
-        muc: {
-          xanh: '#2A7365', 'xanh-bg': '#E6F2EF', vang: '#8A6512', 'vang-bg': '#FBF3DF',
-          do: '#B42318', 'do-bg': '#FBE9E7', dodb: '#7A0C1E', 'dodb-bg': '#F6DCE0',
-        },
+        do: '#D42018', 'do-dam': '#A8140F', 'do-nhat': '#FBE6E9', vang: '#F2B705', 'vang-nhat': '#FFF6D6', lam: '#0A62C7', 'lam-nhat': '#E7F0FB',
+        luc: '#1E8E5A', 'luc-nhat': '#E4F3EA', cam: '#D9711C', 'cam-nhat': '#FBEBDC', nen: '#FFFFFF', 'nen-phu': '#F7F8FA', vien: '#E3E7EC',
+        chu: '#1B2430', 'chu-phu': '#606B7A',
       },
-      fontFamily: {
-        sans: ['"Be Vietnam Pro"', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
-        serif: ['"Noto Serif"', 'Georgia', '"Times New Roman"', 'serif'],
-      },
-      borderRadius: { input: '4px', card: '6px' },
-      boxShadow: { modal: '0 8px 24px rgba(28,42,68,.18)' },
+      fontFamily: { sans: ['"Be Vietnam Pro"', 'system-ui', '-apple-system', '"Segoe UI"', 'Roboto', 'sans-serif'] },
     },
   },
   plugins: [],

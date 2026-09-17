@@ -1,0 +1,41 @@
+// Bảng menu theo vai (mockup v7 "Menu theo từng vai trò"): mục đầu là hộp thư việc của chính người đó; mọi hành động làm ngay trên
+// dòng; menu còn lại để tra cứu và cấu hình. Trên điện thoại mỗi vai có thanh dưới 3 mục (duoi: true), mục còn lại vào "Khác".
+// id giữ tên cũ ở những mục e2e đã dùng (navKl, navQuanTri, dmBubbleLauncher); action là tên hành động đã đăng ký (lib/actions.js).
+export const MENU = {
+  A0: [
+    { id: 'navDieuHanh', label: 'Trung tâm điều hành', ngan: 'Điều hành', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true },
+    { id: 'navChiDaoDaGui', label: 'Chỉ đạo đã gửi', ngan: 'Chỉ đạo', action: 'openChiDaoDaGui', section: 'viewChiDaoDaGui', duoi: true },
+    { id: 'navKl', label: 'Toàn bộ nhiệm vụ', ngan: 'Tra cứu', action: 'openKl', section: 'viewKl', duoi: true },
+  ],
+  A1: [
+    { id: 'navDieuHanh', label: 'Điều hành hôm nay', ngan: 'Điều hành', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true },
+    { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true },
+    { id: 'navKl', label: 'Nhiệm vụ', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true },
+    { id: 'navCanBo', label: 'Cán bộ thuộc quyền', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo' },
+    { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao' },
+  ],
+  A2: [
+    { id: 'navDieuHanh', label: 'Phòng tôi hôm nay', ngan: 'Phòng tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true },
+    { id: 'navGiaoViec', label: 'Giao việc trong phòng', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true },
+    { id: 'navKl', label: 'Nhiệm vụ của phòng', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true },
+    { id: 'navCanBo', label: 'Cán bộ trong phòng', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo' },
+  ],
+  A3: [
+    { id: 'navDieuHanh', label: 'Việc của tôi', ngan: 'Việc của tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true },
+    { id: 'navTheoDoi', label: 'Việc tôi theo dõi', ngan: 'Theo dõi', action: 'openTheoDoi', section: 'viewKl', duoi: true },
+  ],
+};
+
+// Mục dùng chung mọi vai (trừ A0 không nhắn tin): Nhắn tin có huy hiệu; Quản trị chỉ khi có cờ.
+export const NHAN_TIN_NAV = { id: 'dmBubbleLauncher', label: 'Nhắn tin', ngan: 'Nhắn tin', action: 'openNhanTin', section: 'viewNhanTin', badgeId: 'dmBubbleBadge' };
+export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Quản trị', action: 'openQuanTri', section: 'viewQuanTri' };
+
+// Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Giao việc và Nhiệm vụ toàn phạm vi.
+const QTKL_A3 = [MENU.A1[1], { ...MENU.A1[2], label: 'Toàn bộ nhiệm vụ' }];
+
+export function menuCuaVai(user) {
+  const goc = [...(MENU[user?.role_group] || []), ...(user?.role_group === 'A3' && user?.quan_tri_kl ? QTKL_A3 : [])];
+  const nhanTin = user?.role_group === 'A0' ? [] : [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
+  const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
+  return [...goc, ...nhanTin, ...quanTri];
+}

@@ -1,16 +1,17 @@
-// Modal giao việc thống nhất (GĐ14 PR 14C; SPEC v3 GV-2: người giao chỉ thiết lập Owner, Product, Deadline — hệ thống tự
-// điền, cho sửa: ngày nhận, cấp nhận, người theo dõi). Kiểm phía form theo 6.8 để báo lỗi sớm; DB là chốt qua giao_viec (0025).
-// "Lưu, nhập tiếp" giữ văn bản/ngành/lĩnh vực/loại hạn cho kết luận có nhiều việc.
+// Màn hình Giao việc (ba bước một trang, dùng chung A1/A2/quan_tri_kl; SPEC v3 GV-2: người giao chỉ thiết lập Owner, Product, Deadline —
+// hệ thống tự điền, cho sửa: ngày nhận, cấp nhận, người theo dõi). Kiểm phía form để báo lỗi sớm; DB là chốt qua giao_viec (0025).
+// "Giao, nhập tiếp" giữ văn bản/ngành/lĩnh vực/loại hạn cho kết luận có nhiều việc.
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, loadVanBan, giaoViec } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, loadVanBan, giaoViec } from '../../../lib/kl/du-lieu.js';
 import { homNayVN, formatNgay, ghiChuHan, congNgay } from '../../../lib/kl/ngay.js';
-import { klThemTemplate } from './them-template.js';
-import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, LOAI_VAN_BAN, tenLoaiVanBan, canNganh } from './them-owner.js';
+import { setActiveNav, showSection } from '../../shell/index.js';
+import { openKl } from '../kl/index.js';
+import { giaoViecTemplate } from './template.js';
+import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, LOAI_VAN_BAN, tenLoaiVanBan, canNganh } from '../kl/them-owner.js';
 
-let afterSave = () => {};
 let vanBan = [];
 let homNay = homNayVN();
 const MOI = '__moi__';
@@ -40,27 +41,22 @@ function capNhatHienThi() {
   setText('klThHanGhiChu', $('klThHan').value ? ghiChuHan($('klThHan').value, homNay) : '');
   setText('klThNganhGhiChu', canNganh(loaiVanBan()) ? '(bắt buộc với kết luận / thông báo)' : '(không bắt buộc với loại văn bản này)');
 }
-
 function dienLinhVuc() {
-  const ds = linhVucCuaNganh($('klThNganh').value);
-  $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + ds.map((l) => opt(l.ma, l.ten)).join('');
+  $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + linhVucCuaNganh($('klThNganh').value).map((l) => opt(l.ma, l.ten)).join('');
 }
-
-// Đổi văn bản → ngày nhận mặc định = ngày nhận của văn bản nếu có (GV-2), không thì giữ hôm nay.
-function vanBanDoi() {
-  const vb = vanBanChon();
-  $('klThNgayNhan').value = vb?.ngay_nhan || homNay;
-  capNhatHienThi();
-}
-
-// Đổi Owner → cấp nhận sản phẩm mặc định = cấp ngay trên Owner (người dùng vẫn sửa được sau đó).
+function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || homNay; capNhatHienThi(); }
 function ownerDoi() {
   const { capMacDinh } = parseOwner($('klThOwner').value, danhMucKl(), state.accounts);
   if (capMacDinh) $('klThCapNhan').value = capMacDinh;
 }
 
-async function openKlThem() {
-  try { vanBan = await loadVanBan(); } catch (e) { notifyError(e.message); return; }
+export async function openGiaoViec() {
+  showSection('viewGiaoViec');
+  setActiveNav('navGiaoViec');
+  // Xoá lựa chọn cũ ngay để người dùng (và kịch bản e2e) không chọn vào danh sách của lần mở trước trong lúc đang nạp.
+  $('klThVanBan').innerHTML = opt('', 'Đang tải văn bản…'); $('klThLoai').innerHTML = opt('', 'Đang tải…');
+  $('klThLuu').disabled = true;
+  try { await loadDanhMucKl(); vanBan = await loadVanBan(); } catch (e) { notifyError(e.message); return; }
   homNay = (await homNayTheoDb()) || homNayVN();
   const dm = danhMucKl();
   $('klThVanBan').innerHTML = opt(MOI, 'Văn bản giao việc mới…') + vanBan.map((h) => opt(h.id, nhanVanBan(h))).join('');
@@ -78,11 +74,9 @@ async function openKlThem() {
   $('klThNgayNhan').value = homNay;
   dienLinhVuc();
   capNhatHienThi();
-  show('klThemModal', true);
+  $('klThLuu').disabled = false;
   $('klThNoiDung').focus();
 }
-
-function closeKlThem() { show('klThemModal', false); }
 
 // Kiểm tra phía form (cùng quy tắc với giao_viec); trả về chuỗi lỗi hoặc null.
 function kiemTra(p) {
@@ -128,18 +122,16 @@ async function luu(nhapTiep) {
   try {
     const kq = await giaoViec(p);
     notifySuccess(`Đã giao việc ${kq.ma}.`);
-    afterSave();
-    if (p.van_ban) {   // văn bản vừa tạo trong hàm → đưa vào danh sách để "nhập tiếp" không tạo trùng
+    if (p.van_ban) {
       const vb = { id: kq.van_ban_id, ...p.van_ban };
       vanBan.unshift(vb);
       $('klThVanBan').insertAdjacentHTML('afterbegin', opt(vb.id, nhanVanBan(vb)));
     }
-    if (!nhapTiep) { closeKlThem(); return; }
-    // Nhập tiếp: giữ văn bản, ngành, lĩnh vực, loại hạn, người theo dõi; xoá phần riêng của từng việc.
+    if (!nhapTiep) { openKl({ tuKhoa: kq.ma }); return; }
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
     ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
     $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = '';
-    capNhatHienThi(); $('klThNoiDung').focus();
+    capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus();
   } catch (e) {
     notifyError('Không giao được việc: ' + e.message);
   } finally {
@@ -147,13 +139,12 @@ async function luu(nhapTiep) {
   }
 }
 
-export function mountKlThemModal(onSave) {
-  afterSave = onSave;
-  $('modalRoot').insertAdjacentHTML('beforeend', klThemTemplate);
+export function registerGiaoViec() {
+  $('viewGiaoViec').innerHTML = giaoViecTemplate;
   ['klThLoaiVB', 'klThLoai', 'klThNgayBH'].forEach((id) => $(id).addEventListener('change', capNhatHienThi));
   $('klThVanBan').addEventListener('change', vanBanDoi);
   $('klThHan').addEventListener('input', capNhatHienThi);
   $('klThNganh').addEventListener('change', dienLinhVuc);
   $('klThOwner').addEventListener('change', ownerDoi);
-  registerActions({ openKlThem, closeKlThem, luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true) });
+  registerActions({ openGiaoViec, huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true) });
 }

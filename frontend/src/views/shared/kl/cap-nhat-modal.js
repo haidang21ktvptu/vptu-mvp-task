@@ -25,8 +25,8 @@ function capNhatHienThi() {
   setText('klCnHanGhiChu', han && !laHT() ? ghiChuHan(han, homNay) : '');
 }
 
-export async function openKlCapNhat({ id }) {
-  row = timKlRow(id);
+export async function openKlCapNhat({ id, rows }) {
+  row = timKlRow(id) || rows?.find((r) => r.id === id);
   if (!row) return;
   homNay = (await homNayTheoDb()) || homNayVN();
   $('klCnId').value = row.id;

@@ -23,7 +23,8 @@ export function escapeHtml(text) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;'); // thuộc tính data-loc='...' chứa JSON: dấu nháy đơn trong tên kết luận không được cắt thuộc tính
 }
 
 // Ô lỗi inline (đăng nhập, đổi mật khẩu): rỗng = ẩn.

@@ -1,14 +1,14 @@
-/* Điểm vào CSS: token → nền tảng → bố cục → thành phần, rồi Tailwind (tiện ích bố cục nhỏ). */
+/* Điểm vào CSS (mockup v7): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
 @import './layout.css';
 @import './components.css';
-@import './tables.css';
-@import './features.css';
-@import './kl.css';
-@import './kl-dashboard.css';
 @import './dieu-hanh.css';
+@import './nhiem-vu.css';
+@import './chi-tiet.css';
+@import './man-hinh.css';
+@import './in.css';
 
 @tailwind base;
 @tailwind components;

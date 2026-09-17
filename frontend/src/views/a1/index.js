@@ -1,30 +1,39 @@
-// View A1 — Lãnh đạo Văn phòng (GĐ14): mặc định sau đăng nhập = Tổng quan nhiệm vụ (10C); mục "Cán bộ thuộc quyền" =
-// cây phân cấp đọc v_nhiem_vu; giao việc bằng form thống nhất trên màn hình Nhiệm vụ (14C). Bảng điều khiển ngoại lệ
-// theo luồng tasks cũ đã bỏ (dashboard ngoại lệ 4 trường của 1400 → GĐ17).
+// View A1 — Chánh Văn phòng / PCVP (mockup "Điều hành hôm nay"): khối chỉ đạo Thường trực chờ Văn phòng ở đầu trang (Phản hồi /
+// Đôn đốc phòng tại thẻ), rồi cùng cấu trúc số-lọc + thanh trái + thẻ việc Đỏ như bản 5 trong phạm vi của mình; cuối trang minh chứng
+// chờ xác nhận (một bấm). Menu: Giao việc, Nhiệm vụ, Cán bộ thuộc quyền, Báo cáo, Nhắn tin, Quản trị (cờ).
 import { $ } from '../../lib/dom.js';
-import { registerActions } from '../../lib/actions.js';
 import { registerView } from '../registry.js';
-import { setActiveNav } from '../shell.js';
-import { a1Template } from './template.js';
-import { loadA1StaffsTab, isStaffsTabVisible } from './tree.js';
-import { KL_DASHBOARD_NAV, openKlDashboard } from './kl-dashboard/index.js';
+import { khungHtml, datCauHinhDieuHanh, openDieuHanh, ngayDaiVN, dangKyDieuHanhVai } from '../shared/dieu-hanh/man-hinh.js';
+import { kpiQuaHan, kpiChiDaoTT, kpiMinhChung, kpiHoanThanh } from '../shared/dieu-hanh/kpi.js';
+import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
+import { dh } from '../shared/dieu-hanh/du-lieu.js';
+import { khoiChiDaoTTHtml } from './chi-dao-tt.js';
+import { registerBaoCao } from './bao-cao.js';
+import { registerCanBo } from '../shared/can-bo.js';
 
-const NAV = [
-  KL_DASHBOARD_NAV, // Tổng quan nhiệm vụ (GĐ10) — section dùng chung, phạm vi do RLS
-  { id: 'tabBtnA1Staffs', label: 'Cán bộ thuộc quyền', action: 'switchA1Tab', data: { tab: 'staffs' } },
-];
+const DAU = '<section class="cau" id="dhTT"></section>';
+const CUOI = '<section class="cau" id="dhMcKhoi"><h2><em class="lam" id="dhMcSo">0</em> minh chứng đã nộp, chờ xác nhận</h2><div id="dhMc"></div></section>';
 
-function switchA1Tab() {
-  setActiveNav('tabBtnA1Staffs');
-  loadA1StaffsTab();
+function veThem() {
+  $('dhTT').innerHTML = khoiChiDaoTTHtml();
+  $('dhMcSo').textContent = dh.mcCho.length;
+  $('dhMc').innerHTML = minhChungChoHtml();
 }
 
 export function registerA1View() {
-  $('viewThuongTruc').innerHTML = a1Template;
-  registerActions({ switchA1Tab });
+  registerBaoCao();
+  registerCanBo();
   registerView('A1', {
-    nav: NAV,
-    init() { openKlDashboard(); },
-    reload() { if (isStaffsTabVisible()) loadA1StaffsTab(); },
+    init() {
+      dangKyDieuHanhVai();
+      $('viewDieuHanh').innerHTML = khungHtml('Điều hành hôm nay', `${ngayDaiVN()}, đang nạp số liệu…`, DAU, CUOI);
+      datCauHinhDieuHanh({
+        kpi: () => [kpiQuaHan(), kpiChiDaoTT('chỉ đạo của Thường trực đang chờ Văn phòng'), kpiMinhChung(), kpiHoanThanh()],
+        phuDe: () => 'mỗi thẻ đúng bốn điều: ai chậm, chậm bao nhiêu ngày, thiếu sản phẩm gì, cấp nào phải quyết — hành động ngay tại thẻ',
+        veThem,
+      });
+      openDieuHanh();
+    },
+    reload() { openDieuHanh(); },
   });
 }
