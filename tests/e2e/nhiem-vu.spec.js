@@ -17,7 +17,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
   let db; let title; let cuId; let cuMa; let moiId;
 
   test.beforeAll(async ({}, testInfo) => { // eslint-disable-line no-empty-pattern
-    title = `${E2E_TAG} giao ${testInfo.project.name} ${Date.now()}`;
+    title = `${E2E_TAG} giao-nhan ${testInfo.project.name} ${Date.now()}`; // nhãn riêng: "giao%" từng khớp cả "giao việc" của kl-them-nhiem-vu (2 worker mobile → xoá nhầm)
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
     await don(db);
@@ -105,7 +105,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
 });
 
 async function don(db) {
-  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} giao%`);
+  await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} giao-nhan%`);
   await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} việc cũ%`);
   await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}-CV-%`);
   await db.from('van_ban_giao_viec').delete().eq('so_hoi_nghi', SO_HOI_NGHI);

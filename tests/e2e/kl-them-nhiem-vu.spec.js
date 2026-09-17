@@ -49,7 +49,8 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await page.locator('#klThSoHN').fill(String(SO_HOI_NGHI));
     await page.locator('#klThSoKL').fill(`${E2E_TAG}-995`);
     await page.locator('#klThNgayBH').fill('2026-09-01');
-    await page.locator('#klThNoiDung').fill(`${E2E_TAG} giao việc ${testInfo.project.name} ${Date.now()}`);
+    const noiDung = `${E2E_TAG} giao việc ${testInfo.project.name} ${Date.now()}`;
+    await page.locator('#klThNoiDung').fill(noiDung);
     await page.locator('#klThOwner').selectOption(`tk:${CV1_ID}`);          // demo_e2e_owner (A3, Tổng hợp)
     await expect(page.locator('#klThCapNhan')).toHaveValue('TRUONG_PHONG'); // cấp trên Owner tự điền
     await expect(page.locator('#klThNgayNhan')).toHaveValue(homNayVN());   // ngày nhận mặc định hôm nay VN
@@ -65,7 +66,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
     await expect(page.locator('#viewKl')).toBeVisible(); // sau khi giao: sang Nhiệm vụ, lọc theo mã vừa giao
     const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi')
-      .like('noi_dung', `${E2E_TAG} giao việc%`).order('created_at', { ascending: false }).limit(1).single();
+      .eq('noi_dung', noiDung).single(); // đúng dòng vừa tạo, không lấy 'mới nhất' (2 worker)
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',
       cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: QTHT_ID, tao_boi: QTHT_ID });
     const row = page.locator(`#klRow-${data.id}`);

@@ -90,14 +90,17 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
   test('quan_tri_kl (cấp tạm cho cv2): thấy tất cả, thêm hội nghị + nhiệm vụ, sửa mọi cột; thu cờ → mất ngay', async () => {
     const qtht = await userClient('demo_qtht');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO }), 'cấp');
+    try { // thất bại giữa chừng vẫn thu cờ (nếu không, các test sau thấy cv2 còn quan_tri_kl → vỡ dây chuyền)
     const cv2 = await userClient('demo_cv2');
     assert.equal(await soThay('demo_cv2'), 7);
     const hn = await cv2.from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: '2026-08-01' }).select('id').single();
     assertOk(hn, 'quan_tri_kl thêm hội nghị');
     const nv = await cv2.from('nhiem_vu').insert({ van_ban_id: hn.data.id, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N8 mới', loai_thoi_han_ma: 'CHO_QUYET_DINH' }).select('id, ma, tao_boi').single();
-    assertOk(nv, 'quan_tri_kl thêm nhiệm vụ'); assert.match(nv.data.ma, /^NV-\d{3,}$/); // 0027: lpad ≥ 3, không cắt khi sequence vượt 999 (staging đã qua 1000) assert.equal(nv.data.tao_boi, IDS.cv2);
+    assertOk(nv, 'quan_tri_kl thêm nhiệm vụ'); assert.match(nv.data.ma, /^NV-\d{3,}$/); assert.equal(nv.data.tao_boi, IDS.cv2); // 0027: sequence > 999 không cắt số (staging đã qua NV-1000)
     assertOk(await cv2.from('nhiem_vu').update({ noi_dung: 'RLS-TEST N8 đã sửa', nganh_ma: 'NOI_CHINH' }).eq('id', nv.data.id).select('id'), 'sửa mọi cột');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');
+    } finally {
+      assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');
+    }
     assert.equal(await soThay('demo_cv2'), 1);
   });
   test('chỉ đạo: A2 phòng mình thêm được; A3 chủ trì và PCVP ngoài phạm vi bị chặn; đọc theo phạm vi; sửa/xoá trực tiếp bị chặn', async () => {
@@ -139,6 +142,7 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
 
     const qtht = await userClient('demo_qtht');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO }), 'cấp');
+    try {
     assert.ok((await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: false, p_ly_do: '' })).error, 'bác bỏ thiếu lý do');
     assertOk(await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true }), 'quan_tri_kl duyệt');
     const { data: nv } = await adminClient().from('nhiem_vu').select('han_xu_ly').eq('id', fx.n1).single();
@@ -148,6 +152,8 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     const sau = await cv1.rpc('tinh_trang_thai', { p_id: fx.n1, p_ngay: '2026-09-14' });
     assert.equal(sau.data.trang_thai, 'DANG_THUC_HIEN'); assert.equal(sau.data.dang_dinh_chinh, false);
     assert.ok((await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true })).error, 'duyệt lại đề nghị đã xử lý');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');
+    } finally {
+      assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');
+    }
   });
 });
