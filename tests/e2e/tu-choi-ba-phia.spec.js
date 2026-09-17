@@ -68,6 +68,22 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     await page.context().close();
   });
 
+  test('A1: dải Cần xử lý → bấm "việc bị từ chối" → danh sách dưới dải có dòng mã việc và nút Giao lại', async ({ browser }, testInfo) => {
+    const page = await pageAs(browser, 'A1', testInfo);
+    const nutMuc = page.locator('#canXuLy button[data-muc="tuchoi"]');
+    await expect(nutMuc).toContainText('việc bị từ chối', { timeout: 15_000 });
+    await nutMuc.click();
+    await expect(nutMuc).toHaveAttribute('aria-expanded', 'true');
+    const dong = page.locator(`#cx-tuchoi-${id}`);
+    await expect(dong).toBeVisible();
+    await expect(dong.locator('.cx-ma')).toHaveText(ma);
+    await expect(dong).toContainText('Bị từ chối');
+    await expect(dong.getByRole('button', { name: 'Giao lại' })).toBeVisible();
+    await dong.getByRole('button', { name: 'Giao lại' }).click();
+    await expect(page.locator(`#cxGiaoLai-${id}`)).toBeVisible(); // ô giao lại mở ngay dưới dòng
+    await page.context().close();
+  });
+
   test('A3: thấy "Đã đồng ý từ chối, chờ giao lại"; huy hiệu Nhắn tin có số; hội thoại của việc có tin duyệt', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     await expect(page.locator('#vctThanhTuChoi')).toBeVisible({ timeout: 15_000 });

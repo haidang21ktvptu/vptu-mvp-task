@@ -7,8 +7,14 @@ let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... 
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data || []; };
 
-export async function loadDanhMucKl(lai = false) {
-  if (danhMuc && !lai) return danhMuc;
+// Danh mục / cấu hình: một lượt đọc đang bay dùng chung (Điều hành và Nhiệm vụ mở gần nhau từng gọi 7 + 1 truy vấn hai lần).
+let dangDocDanhMuc = null; let dangDocCauHinh = null;
+export function loadDanhMucKl(lai = false) {
+  if (danhMuc && !lai) return Promise.resolve(danhMuc);
+  if (!dangDocDanhMuc) dangDocDanhMuc = docDanhMuc().finally(() => { dangDocDanhMuc = null; });
+  return dangDocDanhMuc;
+}
+async function docDanhMuc() {
   const [n, l, d, s, c, h, t] = await Promise.all([
     supabase.from('dm_nganh').select('ma, ten, thu_tu').order('thu_tu'),
     supabase.from('dm_linh_vuc').select('ma, nganh_ma, ten, thu_tu').order('thu_tu'),
@@ -26,8 +32,12 @@ export const danhMucKl = () => danhMuc || { nganh: [], linhVuc: [], donVi: [], s
 export const tenTrongDanhMuc = (bang, ma) => danhMucKl()[bang]?.find((x) => x.ma === ma)?.ten || ma || '';
 export const linhVucCuaNganh = (nganhMa) => danhMucKl().linhVuc.filter((l) => l.nganh_ma === nganhMa);
 
-export async function loadCauHinhKl(lai = false) {
-  if (cauHinh && !lai) return cauHinh;
+export function loadCauHinhKl(lai = false) {
+  if (cauHinh && !lai) return Promise.resolve(cauHinh);
+  if (!dangDocCauHinh) dangDocCauHinh = docCauHinh().finally(() => { dangDocCauHinh = null; });
+  return dangDocCauHinh;
+}
+async function docCauHinh() {
   const rows = loi(await supabase.from('kl_cau_hinh').select('khoa, gia_tri'), 'cấu hình');
   cauHinh = Object.fromEntries(rows.map((r) => [r.khoa, Number(r.gia_tri)]));
   return cauHinh;
@@ -35,7 +45,14 @@ export async function loadCauHinhKl(lai = false) {
 export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
 
 // Toàn bộ dòng trong phạm vi người dùng (RLS) + tập id đã có xác nhận nhận việc, kèm mốc thời gian đọc ("Số liệu tính đến").
-export async function loadKlRows() {
+let dangDocRows = null;
+export function loadKlRows() {
+  // Đang có lượt đọc → dùng chung kết quả (không chạy chồng truy vấn nặng); mỗi nơi gọi nhận MẢNG RIÊNG để Điều hành và Nhiệm vụ không
+  // cùng trỏ một mảng (nap-lai-viec thay dòng tại chỗ).
+  if (!dangDocRows) dangDocRows = docKlRows().finally(() => { dangDocRows = null; });
+  return dangDocRows.then((r) => ({ ...r, rows: [...r.rows] }));
+}
+async function docKlRows() {
   const [rows, xn, tcAll] = await Promise.all([
     loi(await supabase.from('v_nhiem_vu').select('*').order('ma'), 'đọc nhiệm vụ'),
     loi(await supabase.from('lich_su').select('nhiem_vu_id').eq('cot', 'xac_nhan_nhan_viec'), 'đọc xác nhận nhận việc'),

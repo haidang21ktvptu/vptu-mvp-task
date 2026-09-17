@@ -44,6 +44,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
 
   test('mở màn hình: ô Tổng = số dòng; dòng mẫu ở nhóm Đang thực hiện; bấm ô lọc đúng; không có Giao việc', async () => {
     await nav(page, 'navKl');
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
     await expect(row).toBeVisible();
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');

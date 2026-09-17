@@ -41,6 +41,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
 
   test('chưa có minh chứng: nút Đóng mờ; nộp thiếu ngày bị chặn ở form; nộp đủ ba ô → khối liệt kê, nút Đóng sáng', async () => {
     await nav(page, 'navKl');
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
     await expect(row).toBeVisible();
     await row.click();

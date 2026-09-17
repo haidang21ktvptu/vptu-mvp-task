@@ -56,12 +56,12 @@ export function nguoiTheoDoiMoiOptions(r) {
     .map((a) => `<option value="${a.id}">${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('');
 }
 // Ô giao lại (A1/A2) dưới thẻ việc bị từ chối: người theo dõi mới + lý do một dòng.
-export function oGiaoLaiHtml(r) {
-  return `<form class="o" id="oGiaoLai-${r.id}" data-submit="giaoLaiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
+export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
+  return `<form class="o" id="${tienTo}-${r.id}" data-submit="giaoLaiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
       <small>Giao lại cho người theo dõi mới; người cũ và người mới nhận thông báo; cờ "bị từ chối" tự xoá.</small>
       <select name="nguoi_theo_doi_moi" required aria-label="Người theo dõi mới"><option value="">Chọn người theo dõi mới</option>${nguoiTheoDoiMoiOptions(r)}</select>
       <input name="noi_dung" required placeholder="Lý do giao lại" aria-label="Lý do giao lại">
-      <button type="submit" class="nut chinh">Giao lại</button><button type="button" class="nut" data-action="dongO" data-o="oGiaoLai-${r.id}">Huỷ</button>
+      <button type="submit" class="nut chinh">Giao lại</button><button type="button" class="nut" data-action="dongO" data-o="${tienTo}-${r.id}">Huỷ</button>
     </form>`;
 }
 

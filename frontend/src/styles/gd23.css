@@ -19,6 +19,14 @@
   .nut.nguy-hiem { background: var(--do); color: #fff; border-color: var(--do); } .nut.nguy-hiem:disabled { opacity: .45; }
   .mk-tam { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
   .mk-tam code { font-size: 22px; letter-spacing: .08em; padding: 8px 14px; background: var(--nen-phu); border: 1px dashed var(--vien); border-radius: 8px; user-select: all; }
+  /* Danh sách dưới dải "Cần xử lý ngay" */
+  .can-xu-ly button[aria-expanded="true"] { background: var(--chu); color: #fff; border-color: var(--chu); }
+  .cx-chi-tiet { margin-top: 8px; background: #fff; border: 1px solid #F1E0A8; border-radius: 12px; padding: 6px 14px 10px; }
+  .cx-dau { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; font-size: 14px; }
+  .cx-dong { padding: 8px 0; border-top: 1px solid var(--vien); font-size: 14px; }
+  .cx-dong p { margin: 0; line-height: 1.45; } .cx-dong .hanh-dong { margin-top: 6px; }
+  .cx-ma { color: var(--lam); text-decoration: underline; text-underline-offset: 2px; padding: 0; background: none; font: inherit; }
+  .cx-ma:hover { color: var(--do-dam); }
   @media (max-width: 600px) {
     .cn-ho-so, .cn-thong-tin { grid-template-columns: 1fr; }
     .qt-form label { min-width: 0; flex: 1 1 100%; }

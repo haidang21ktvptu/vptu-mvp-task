@@ -10,7 +10,7 @@ import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
 import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
@@ -24,7 +24,7 @@ const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng'
 export function openKl(loc) {
   showSection('viewKl');
   setActiveNav('navKl');
-  $('klBody').removeAttribute('data-nap'); // đang nạp lại: bỏ dấu hiệu cũ
+  datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec());
   $('klTieuDe').textContent = TIEU_DE[state.user?.role_group] || 'Nhiệm vụ';
   const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});

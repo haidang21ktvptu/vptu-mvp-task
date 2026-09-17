@@ -9,7 +9,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
   test.beforeAll(async ({ browser }, testInfo) => {
     page = await pageAs(browser, 'PCVP2', testInfo); // PCVP khối Quản trị: không spec nào ghi dữ liệu ở đó → bộ số ổn định khi chạy 2 worker
     await nav(page, 'navKl');
-    await expect(page.locator('#klTinhDen')).toContainText('Số liệu tính đến');
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
   });
   test.afterAll(async () => { await page?.context().close(); });
 
