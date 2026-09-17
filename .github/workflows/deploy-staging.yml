@@ -69,6 +69,11 @@ jobs:
           supabase db push --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" --yes
           echo "### Migration staging" >> "$GITHUB_STEP_SUMMARY"
           supabase migration list --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+      # Edge Function quan-tri-tai-khoan (GĐ23): service_role chỉ nằm trong secrets của function (Supabase cấp sẵn), deploy cùng lượt với migration.
+      - name: supabase functions deploy (staging)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy quan-tri-tai-khoan --project-ref "$STAGING_REF" --use-api
 
   # RLS bằng token thật trên staging (7 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP), sau khi migration
   # đã áp. Chạy song song với build; không chặn deploy. Cùng nhóm concurrency với job e2e của ci.yml để không

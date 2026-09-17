@@ -4,6 +4,9 @@ import { registerA1View } from './a1/index.js';
 import { registerA2View } from './a2/index.js';
 import { registerA3View } from './a3/index.js';
 import { registerQuanTriView } from './shared/quan-tri/index.js';
+import { registerCaNhanView } from './shared/ca-nhan/index.js';
+import { mountBanhRang } from './shell/banh-rang.js';
+import { mountTimNhanh } from './shell/tim-nhanh.js';
 import { registerKlView } from './shared/kl/index.js';
 import { registerGiaoViec } from './shared/giao-viec/index.js';
 import { mountDieuHanh } from './shared/dieu-hanh/man-hinh.js';
@@ -24,7 +27,10 @@ export function registerViews() {
   registerA1View();      // Điều hành hôm nay, Cán bộ thuộc quyền, Báo cáo
   registerA2View();      // Phòng tôi hôm nay, Cán bộ trong phòng
   registerA3View();      // Việc của tôi, Việc tôi theo dõi
-  registerQuanTriView(); // mục theo cờ quan_tri_he_thong / quan_tri_kl
+  registerQuanTriView(); // khu theo quyền: cờ quan_tri_*, Chánh VP (phân công, ngưỡng), Trưởng phòng (ủy quyền)
+  registerCaNhanView();  // Hồ sơ cá nhân, Thông báo, Trợ giúp, Bản gọn (bánh răng)
+  mountBanhRang();       // menu bánh răng trên dải (Đăng xuất ở cuối)
+  mountTimNhanh();       // ô tìm nhanh trên dải
   mountMessages();       // Nhắn tin gom theo việc
   mountThongBao();       // chuông gom theo việc, mọi vai trò
   mountThanhHoaToc();    // thanh đỏ Hỏa tốc chưa Đã nhận (GĐ22)

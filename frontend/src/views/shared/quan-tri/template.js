@@ -2,6 +2,7 @@
 // PCVP thấy 0 nhiệm vụ). Tab: Phân công phụ trách · Tài khoản và cờ · Danh mục lĩnh vực · Nhật ký. Khu hệ thống chỉ với quan_tri_he_thong,
 // khu danh mục với quan_tri_kl; mọi thao tác gọi hàm SQL admin_* hoặc đi qua RLS (frontend chỉ ẩn/hiện, không phải nơi chặn).
 import { quanTriDanhMucTemplate, quanTriNhatKyDanhMucTemplate } from './template-linh-vuc.js';
+import { quanTriHeThongTemplate } from './template-he-thong.js';
 
 export const quanTriTemplate = `
   <div class="dau"><h1>Quản trị</h1><span>phân công lãnh đạo phụ trách phòng và lĩnh vực, cấp quyền quản trị nhiệm vụ, danh mục, nhật ký</span>
@@ -11,7 +12,11 @@ export const quanTriTemplate = `
     <button type="button" id="qtTabPhuTrach" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuPhuTrach" aria-selected="true">Phân công phụ trách</button>
     <button type="button" id="qtTabTaiKhoan" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuTaiKhoan" aria-selected="false">Tài khoản và cờ</button>
     <button type="button" id="qtTabDanhMuc" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDanhMuc" aria-selected="false">Danh mục lĩnh vực</button>
-    <button type="button" id="qtTabNhatKy" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKy" aria-selected="false">Nhật ký</button>
+    <button type="button" id="qtTabCauHinh" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuCauHinh" aria-selected="false">Ngưỡng cảnh báo</button>
+    <button type="button" id="qtTabUyQuyen" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuUyQuyen" aria-selected="false">Ủy quyền giao việc</button>
+    <button type="button" id="qtTabNhatKy" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKy" aria-selected="false">Nhật ký cấp quyền</button>
+    <button type="button" id="qtTabDonDuLieu" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDonDuLieu" aria-selected="false">Dọn dữ liệu</button>
+    <button type="button" id="qtTabNhatKyHeThong" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKyHeThong" aria-selected="false">Nhật ký hệ thống</button>
   </div>
 
   <div id="qtKhuPhuTrach" class="qt-khu">
@@ -24,9 +29,10 @@ export const quanTriTemplate = `
   <div id="qtKhuTaiKhoan" class="qt-khu hidden">
     <div class="bang">
       <div class="bang-dau"><h2>Tài khoản và cờ đặc quyền<span class="chu-phu" id="qtSoNguoiKl"></span></h2>
-        <div class="bo-loc"><input type="search" id="qtTimTaiKhoan" class="o-nhap nho" placeholder="Tìm theo họ tên, tài khoản" aria-label="Tìm tài khoản"></div></div>
+        <div class="bo-loc"><input type="search" id="qtTimTaiKhoan" class="o-nhap nho" placeholder="Tìm theo họ tên, tài khoản" aria-label="Tìm tài khoản">
+          <button type="button" class="nut nho chinh" data-action="moTaoTaiKhoan">Tạo tài khoản</button></div></div>
       <div class="bang-cuon"><table>
-        <thead><tr><th>Cán bộ</th><th>Phòng</th><th>Vai trò</th><th>Quản trị KL BTVTU</th><th>Quản trị hệ thống</th><th class="phai">Thao tác</th></tr></thead>
+        <thead><tr><th>Cán bộ</th><th>Phòng</th><th>Vai trò</th><th>Quản trị KL BTVTU</th><th>Hệ thống</th><th class="phai">Thao tác</th></tr></thead>
         <tbody id="qtTaiKhoanBody"><tr><td colspan="6" class="trong">Đang tải dữ liệu</td></tr></tbody></table></div>
     </div>
   </div>
@@ -42,6 +48,7 @@ export const quanTriTemplate = `
     </div>
     <div id="qtKhuNhatKyDanhMuc">${quanTriNhatKyDanhMucTemplate}</div>
   </div>
+  ${quanTriHeThongTemplate}
 `;
 
 // Hộp xác nhận bắt gõ lý do (dùng chung cho cấp/thu cờ và phân công phụ trách).

@@ -1,6 +1,7 @@
 // Chuông thông báo ở dải nhận diện, mọi vai (mockup "Chuông gom theo việc"): tin hệ thống (direct_messages loai = he_thong, do hàm chi_dao_* /
 // minh chứng / cảnh báo tạo cho người liên quan) gom theo nhiệm vụ — "NV-118 có 3 diễn biến mới" thay vì 3 dòng rời; bấm mở đúng luồng
-// của việc (ngăn chi tiết, con trỏ vào ô chỉ đạo/phản hồi) và đánh dấu đã đọc theo nhiệm vụ. Realtime: features/realtime.js gọi onTinHeThongMoi.
+// của việc và đánh dấu đã đọc theo nhiệm vụ. Số trên huy hiệu = kl_so_chua_xu_ly.thong_bao (0041, cùng nguồn với pill Nhắn tin = nhan_tin);
+// realtime: features/realtime.js gọi onTinHeThongMoi. Tuỳ chọn (accounts.tuy_chon): am_chuong = kêu khi có tin; gom_tin = không bật toast rời.
 import { $, show, setText, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -9,7 +10,7 @@ import { loadTinHeThong, tinHeThongDaDoc } from '../../lib/kl/dieu-hanh.js';
 import { moNhiemVu } from '../../views/shared/kl/index.js';
 import { showDMToast, closeToast } from '../messages/chat.js';
 import { thongBaoTemplate } from './template.js';
-import { lamMoiHuyHieu } from '../huy-hieu.js';
+import { lamMoiHuyHieu, onSoChuaXuLy } from '../huy-hieu.js';
 
 let tin = [];
 const maCua = (content) => (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
@@ -34,11 +35,17 @@ function nhomHtml(g) {
       <small>${formatDateTime(g.moiNhat.created_at)}</small></button></li>`;
 }
 
+// Huy hiệu: "9+" khi hơn 9; ẩn khi 0.
+export function veHuyHieuChuong(n) {
+  const so = Number(n || 0);
+  setText('chuongBadge', so > 9 ? '9+' : String(so));
+  show('chuongBadge', so > 0);
+  $('chuongBtn')?.setAttribute('aria-label', so ? `Thông báo, ${so} chưa đọc` : 'Thông báo');
+}
+
 function render() {
   const chuaDoc = tin.filter((t) => !t.is_read).length;
-  setText('chuongBadge', chuaDoc);
-  show('chuongBadge', chuaDoc > 0);
-  $('chuongBtn').setAttribute('aria-label', chuaDoc ? `Thông báo, ${chuaDoc} chưa đọc` : 'Thông báo');
+  veHuyHieuChuong(chuaDoc);
   const nhom = gomTheoViec(tin);
   $('thongBaoList').innerHTML = nhom.length ? nhom.map(nhomHtml).join('') : '<li class="tb-trong chu-phu">Chưa có thông báo nào.</li>';
   show('thongBaoDocHet', chuaDoc > 0);
@@ -72,10 +79,22 @@ async function docHetThongBao() {
   try { await tinHeThongDaDoc(null); loadThongBao(); lamMoiHuyHieu(); } catch (e) { notifyError(e.message); }
 }
 
-// Tin hệ thống mới tới qua realtime (đã qua RLS: chỉ tin của tôi): cập nhật chuông, toast có nút mở nhiệm vụ.
+// Tiếng chuông ngắn (WebAudio, không tệp âm thanh) khi người dùng bật am_chuong.
+function keuChuong() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.08;
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.18);
+  } catch { /* trình duyệt chặn âm thanh khi chưa tương tác */ }
+}
+
+// Tin hệ thống mới tới qua realtime (đã qua RLS: chỉ tin của tôi): cập nhật chuông, toast có nút mở nhiệm vụ (trừ khi gom_tin).
 export function onTinHeThongMoi(dm) {
   tin = [dm, ...tin.filter((t) => t.id !== dm.id)];
   render();
+  if (state.user?.tuy_chon?.am_chuong) keuChuong();
+  if (state.user?.tuy_chon?.gom_tin) return;
   showDMToast('Thông báo trên nhiệm vụ', dm.content, dm.sender_id, () => moNhiemVuCuaTin(dm.nhiem_vu_id, maCua(dm.content)), 'Mở nhiệm vụ');
 }
 
@@ -88,5 +107,6 @@ function onClickNgoai(e) {
 export function mountThongBao() {
   $('currentUserDisplay').closest('.nguoi').insertAdjacentHTML('beforebegin', thongBaoTemplate);
   document.addEventListener('click', onClickNgoai);
+  onSoChuaXuLy((so) => { if (so && 'thong_bao' in so) veHuyHieuChuong(so.thong_bao); }); // schema cũ (chưa 0041) giữ số đếm cục bộ
   registerActions({ toggleThongBao, moThongBao, docHetThongBao });
 }

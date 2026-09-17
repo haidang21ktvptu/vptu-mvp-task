@@ -6,9 +6,10 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-const A1 = 'Lãnh đạo Văn phòng (A1)';
-const A2 = 'Trưởng phòng chuyên môn (A2)';
-const A3 = 'Cán bộ thực hiện (A3)';
+// GĐ23: dòng 2 dải nhận diện = chức danh theo mẫu dhtn (không mã vai): "Chánh Văn phòng", "Trưởng phòng · Phòng …", "Chuyên viên · Phòng …".
+const A1 = 'Văn phòng';
+const A2 = 'Trưởng phòng · Phòng Tổng hợp';
+const A3 = 'Chuyên viên · Phòng Tổng hợp';
 const DH = '#viewDieuHanh';
 
 export const USERS = {
@@ -36,5 +37,5 @@ export const storageStatePath = sessionPath; // tên cũ, giữ cho các spec ki
 // demo_qtht (A3 giữ quan_tri_he_thong, GĐ8), demo_a0 (Thường trực Tỉnh ủy, GĐ18 — có từ migration 0030 + seed mới).
 export const OPTIONAL_USERS = {
   QTHT: { username: 'demo_qtht', fullName: 'Demo Quản trị hệ thống', roleLabel: A3 },
-  A0: { username: 'demo_a0', fullName: 'Demo Thường trực Tỉnh ủy', section: DH, roleLabel: 'Thường trực Tỉnh ủy (A0)' },
+  A0: { username: 'demo_a0', fullName: 'Demo Thường trực Tỉnh ủy', section: DH, roleLabel: 'Thường trực Tỉnh ủy' },
 };

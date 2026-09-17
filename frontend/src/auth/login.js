@@ -1,9 +1,10 @@
 // Đăng nhập bằng Supabase Auth (SPEC AUTH-1): email quy ước <username>@vptu.caobang.local.
 import { supabase } from '../lib/supabase.js';
 import { AUTH_EMAIL_DOMAIN } from '../lib/constants.js';
-import { $, show, showInlineError } from '../lib/dom.js';
+import { $, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
 import { loadAccountsCache, enterApp } from './session.js';
+import { datMatKhauTam, moTrangDoiMatKhau } from './change-password.js';
 
 function loginErrorMessage(error) {
   // Giới hạn theo IP của Supabase (30 lượt/5 phút): cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm.
@@ -35,6 +36,7 @@ async function handleLogin(e) {
       showInlineError('loginError', loginErrorMessage(error));
       return;
     }
+    datMatKhauTam(password); // để trang đặt mật khẩu mới chặn trùng mật khẩu tạm (chỉ giữ trong bộ nhớ)
     await startSession(data.session);
   } finally {
     btn.disabled = false;
@@ -59,9 +61,7 @@ export async function startSession(session) {
   state.user = profile;
   await loadAccountsCache();
   if (profile.must_change_password) {
-    show('loginSection', false);
-    show('changePasswordModal', true);
-    $('newPassword').focus();
+    moTrangDoiMatKhau(true); // chặn mọi màn hình tới khi đặt mật khẩu mới (AUTH-2)
     return;
   }
   enterApp();

@@ -25,3 +25,21 @@ export function senderRoleTag(roleGroup) {
   if (roleGroup === 'A2') return 'Trưởng phòng';
   return 'Cán bộ thực hiện';
 }
+
+// Tên phòng ngắn cho dòng 2 dải nhận diện ("Phó Chánh Văn phòng · Phụ trách CĐS-CY").
+export const TEN_PHONG_NGAN = { LANH_DAO_VAN_PHONG: 'Lãnh đạo VP', TONG_HOP: 'Tổng hợp', HC_LT: 'HC-LT', CDS_CY: 'CĐS-CY', TAI_CHINH_DANG: 'Tài chính Đảng', QUAN_TRI: 'Quản trị' };
+
+// Dòng 2 dưới tên trên dải (mẫu dhtn.dcs.vn): chức danh theo vai · đơn vị; không mã vai, không lặp chữ.
+// phongPhuTrach: danh sách mã phòng PCVP đang phụ trách (shell nạp từ phu_trach_phong), chỉ dùng cho A1 không phải Chánh VP.
+export function nhanChucDanh(user, phongPhuTrach = []) {
+  if (!user) return '';
+  if (user.role_group === 'A0') return 'Thường trực Tỉnh ủy';
+  if (user.role_group === 'A1') {
+    if (user.is_chief) return 'Chánh Văn phòng';
+    const pt = phongPhuTrach.map((p) => TEN_PHONG_NGAN[p] || p).join(', ');
+    return pt ? `Phó Chánh Văn phòng · Phụ trách ${pt}` : 'Phó Chánh Văn phòng';
+  }
+  const phong = DEPT_NAMES[user.department] || user.department || '';
+  const chucDanh = user.role_group === 'A2' ? 'Trưởng phòng' : (user.position_title || 'Chuyên viên');
+  return phong ? `${chucDanh} · ${phong}` : chucDanh;
+}
