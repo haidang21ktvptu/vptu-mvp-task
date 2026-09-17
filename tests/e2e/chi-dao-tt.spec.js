@@ -1,7 +1,7 @@
 // GĐ19/20 (CH-16, 0032) — chỉ đạo Thường trực trên giao diện v7: A0 mở việc ở Toàn bộ nhiệm vụ, chọn "Chỉ đạo" trên ô nhập chung → luồng
 // có dòng CHI_DAO_TT chờ phản hồi, người nhận tự tính → "Chỉ đạo đã gửi" có dòng chờ → PCVP phụ trách (người nhận) thấy thẻ ở khối đầu
-// "Điều hành hôm nay", bấm "Phản hồi Thường trực" → gửi → A0 thấy "Đã phản hồi" ở Chỉ đạo đã gửi. Dữ liệu ở phòng Quản trị (Owner/theo dõi
-// demo_cv2, người nhận = Chánh VP + demo_pcvp2) vì không spec nào khác ghi ở đó (2 worker); hội nghị 991, tự dọn. Bỏ qua khi thiếu demo_a0.
+// "Điều hành hôm nay", bấm "Phản hồi Thường trực" → gửi → A0 thấy "Đã phản hồi" ở Chỉ đạo đã gửi. Dữ liệu ở phòng thử demo_pcvp2 phụ trách (Owner = phòng, theo dõi = demo_pcvp2,
+// người nhận = Chánh VP (+ Chánh VP thật nếu có) + demo_pcvp2) vì không spec nào khác ghi ở đó (2 worker); hội nghị 991, tự dọn. Bỏ qua khi thiếu demo_a0.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -9,9 +9,9 @@ import { pageAs, contextAs, nav, moViec } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec, phongPhuTrach } from './lib/du-lieu.mjs';
 
-const CV2_ID = '00000000-0000-4000-8000-000000000005'; // demo_cv2 — chuyên viên phòng Quản trị
+const PCVP2_ID = '00000000-0000-4000-8000-000000000006'; // demo_pcvp2 — PCVP phụ trách phòng thử E2E (seed-demo)
 const SO_HOI_NGHI = 991;
 const RT = { timeout: 20_000 };   // realtime trên gói Free có thể trễ vài giây
 
@@ -27,13 +27,16 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     test.skip(Boolean(co.error), 'Project chưa có migration 0032 (chỉ đạo Thường trực).');
     hnKhoa = khoaRieng('TT', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
     const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
+    const phong = await phongPhuTrach(db, PCVP2_ID); // phòng demo_pcvp2 đang phụ trách (phòng thử E2E do seed-demo tạo), không gõ cứng QUAN_TRI
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
-      van_ban_id: hn.id, nguoi_theo_doi: CV2_ID, owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: CV2_ID,
+      van_ban_id: hn.id, nguoi_theo_doi: PCVP2_ID, owner_don_vi_ma: phong, // Owner = phòng thử, theo dõi = chính PCVP2 → người nhận chỉ đạo TT không kéo thêm lãnh đạo thật phụ trách phòng của người theo dõi
       noi_dung: `${E2E_TAG} chỉ đạo Thường trực ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP',
     }).select('id, ma').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id; ma = nv.ma;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('PCVP2', nvId, ma);
     a0 = await (await contextAs(browser, 'A0', testInfo)).newPage(); // A0 là tài khoản tuỳ chọn (không trong USERS)
     await a0.goto('./');
     await expect(a0.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
@@ -60,7 +63,8 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     await expect(goc).toHaveCount(1, RT);
     await expect(goc).toHaveAttribute('data-trang-thai', 'CHO_PHAN_HOI');
     await expect(goc).toContainText('Chỉ đạo Thường trực');
-    await expect(goc).toContainText('Người nhận: Demo Chánh Văn phòng, Demo Phó Chánh Văn phòng Hai');
+    await expect(goc).toContainText('Người nhận: Demo Chánh Văn phòng'); // trên project có Chánh VP thật (is_chief) thì danh sách có thêm tên thật ở giữa
+    await expect(goc).toContainText('Demo Phó Chánh Văn phòng Hai');
     await expect(goc).toContainText('Hạn phản hồi');
     await expect(goc.locator('[data-action=dongChiDao]')).toHaveCount(1); // A0 đóng được luồng TT của mình (0032)
     await expect(goc.locator('.cd-form-ph')).toHaveCount(0);            // A0 không phản hồi

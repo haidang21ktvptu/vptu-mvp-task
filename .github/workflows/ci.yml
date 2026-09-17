@@ -14,7 +14,7 @@ on:
   push:
     branches: [main]
 
-# shell: bash để bật pipefail — lỗi trong lệnh trước dấu | (db dump, db push --dry-run) không bị nuốt.
+# shell: bash để bật pipefail — lỗi trong lệnh trước dấu | (db dump, db push) không bị nuốt.
 defaults:
   run:
     shell: bash
@@ -204,8 +204,7 @@ jobs:
             echo "::error::Thiếu secret SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD ở cấp kho (job này không dùng environment production)."
             exit 1
           fi
-          supabase db push --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD" --dry-run 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-          supabase db push --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD" --yes
+          supabase db push --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD" --yes 2>&1 | tee -a "$GITHUB_STEP_SUMMARY" # push thật, kết quả vào Summary (không dry-run: dễ đọc nhầm là chưa áp)
       - name: Nạp tài khoản demo (idempotent, không chạm dữ liệu thật)
         if: env.KIEM_THU_MOI_TRUONG == 'production'
         run: |

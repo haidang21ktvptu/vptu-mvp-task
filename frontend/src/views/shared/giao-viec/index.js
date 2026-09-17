@@ -11,6 +11,7 @@ import { homNayVN, formatNgay, ghiChuHan, congNgay } from '../../../lib/kl/ngay.
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { setActiveNav, showSection } from '../../shell/index.js';
 import { openKl } from '../kl/index.js';
+import { napLaiViec } from '../kl/nap-lai-viec.js';
 import { giaoViecTemplate } from './template.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, tenLoaiVanBan, canNganh } from '../kl/them-owner.js';
 
@@ -170,7 +171,7 @@ async function luu(nhapTiep) {
       vanBan.unshift(vb);
       $('klThVanBan').insertAdjacentHTML('afterbegin', opt(vb.id, nhanVanBan(vb)));
     }
-    if (!nhapTiep) { openKl({ tuKhoa: kq.ma }); return; }
+    if (!nhapTiep) { await napLaiViec(kq.id); openKl({ tuKhoa: kq.ma }); return; } // dòng vừa giao vào bộ nhớ danh sách trước → hiện ngay, không chờ nạp cả danh sách
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
     ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
     $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = '';

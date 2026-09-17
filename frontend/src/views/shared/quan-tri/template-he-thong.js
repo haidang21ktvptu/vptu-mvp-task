@@ -31,7 +31,7 @@ export const quanTriHeThongTemplate = `
       <div id="qtDonBackup" class="luong-canh-bao" role="status"></div>
       <form id="qtDonForm" class="qt-form" novalidate>
         <label>Loại dữ liệu<select id="qtDonLoai" class="o-nhap">
-          <option value="du_lieu_thu">Bộ sẵn: dữ liệu thử (NV-T*, E2E-*, tài khoản demo_* và mọi thứ liên quan)</option>
+          <option value="du_lieu_thu">Bộ sẵn: dữ liệu thử (NV-T*, E2E-TEST*, E2E-SEED*, tài khoản demo_* và mọi thứ liên quan)</option>
           <option value="tin_nhan">Tin nhắn và thông báo</option>
           <option value="chi_dao_canh_bao_lich_su">Chỉ đạo, cảnh báo, lịch sử</option>
           <option value="minh_chung">Minh chứng</option>
