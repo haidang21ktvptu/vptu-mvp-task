@@ -9,7 +9,7 @@ import { pageAs, contextAs, nav, moViec } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const CV2_ID = '00000000-0000-4000-8000-000000000005'; // demo_cv2 — chuyên viên phòng Quản trị
 const SO_HOI_NGHI = 991;
@@ -34,6 +34,8 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     }).select('id, ma').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id; ma = nv.ma;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('PCVP2', nvId, ma);
     a0 = await (await contextAs(browser, 'A0', testInfo)).newPage(); // A0 là tài khoản tuỳ chọn (không trong USERS)
     await a0.goto('./');
     await expect(a0.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);

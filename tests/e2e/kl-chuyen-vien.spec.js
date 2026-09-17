@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000010'; // demo_e2e_kl — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 997;
@@ -23,18 +23,20 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     hnKhoa = khoaRieng('KL', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
     const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
-      van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} KL ${testInfo.project.name} ${Date.now()}`,
-      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND',
+      van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, owner_tai_khoan: CV1_ID, noi_dung: `${E2E_TAG} KL ${testInfo.project.name} ${Date.now()}`, // Owner + người theo dõi = chính tài khoản → chắc chắn trong kl_pham_vi (A3)
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP', // đơn vị = phòng của tài khoản (đơn vị ngoài Văn phòng không được gắn tài khoản, CHECK 0025)
     }).select('id').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id;
     // Dòng "Cần điền hạn" (app, có lý do, không hạn): hoàn thành mà không điền hạn vẫn phải lưu được (CHECK 0014).
     const { data: nv2, error: e3 } = await db.from('nhiem_vu').insert({
-      van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} KL cần điền hạn ${Date.now()}`,
-      loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)', nganh_ma: 'KINH_TE_TONG_HOP',
+      van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, owner_tai_khoan: CV1_ID, noi_dung: `${E2E_TAG} KL cần điền hạn ${Date.now()}`,
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP',
     }).select('id').single();
     if (e3) throw new Error(`Tạo nhiệm vụ mẫu 2 thất bại: ${e3.message}`);
     nv2Id = nv2.id;
+    // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).
+    await kiemThayViec('E2E_KL', nvId, 'KL'); await kiemThayViec('E2E_KL', nv2Id, 'KL cần điền hạn');
     page = await pageAs(browser, 'E2E_KL', testInfo);
   });
   test.afterAll(async () => {
