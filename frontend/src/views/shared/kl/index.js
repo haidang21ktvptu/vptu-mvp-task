@@ -8,10 +8,11 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
 import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
+import { napLaiViec } from './nap-lai-viec.js';
 import { klTemplate } from './template.js';
 import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
-import { toggleKlChiTiet, chonKlRow, dongKlChiTiet } from './chi-tiet.js';
+import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
 import { mountMinhChung } from './minh-chung.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
@@ -41,12 +42,19 @@ export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
   $(`klRow-${id}`)?.scrollIntoView({ block: 'nearest' });
 }
 
+// Sau MỌI hành động ghi thành công (GĐ23): nạp lại đúng việc đó ngay (ngăn chi tiết, dòng, thẻ điều hành — không chờ realtime hay cả danh sách),
+// rồi nạp lại cả danh sách phía sau. Không có id (chỉ đạo / minh chứng gọi không tham số) → việc đang mở ở ngăn chi tiết.
+async function napLaiSauHanhDong(id) {
+  await napLaiViec(id || idDangMo());
+  loadKl();
+}
+
 // Xác nhận đã nhận việc (GV-5): chỉ ghi lịch sử, không đổi trạng thái/hạn — đồng hồ không dừng (CN-2.2).
 async function xacNhanNhanViecAction({ id }) {
   try {
     const moi = await xacNhanNhanViec(id);
     notifySuccess(moi ? 'Đã ghi nhận đồng chí xác nhận nhận việc. Hạn và trạng thái không đổi.' : 'Đồng chí đã xác nhận nhận việc này trước đó.');
-    loadKl();
+    await napLaiSauHanhDong(id);
   } catch (e) {
     notifyError('Không xác nhận được: ' + e.message);
   }
@@ -59,7 +67,7 @@ async function tuChoiNhanViec({ id, ma }, form) {
   try {
     await deNghiTuChoi(id, lyDo);
     notifySuccess(`Đã gửi đề nghị từ chối ${ma}. Lãnh đạo trực tiếp của đồng chí sẽ duyệt; hạn và trạng thái việc không đổi.`);
-    loadKl();
+    await napLaiSauHanhDong(id);
   } catch (e) { notifyError(e.message); }
 }
 
@@ -71,7 +79,7 @@ async function onDoiCap(e) {
   try {
     await datCapQuyetDinh(sel.dataset.id, sel.value);
     notifySuccess(sel.value ? 'Đã xác định cấp cần quyết định.' : 'Đã bỏ cấp cần quyết định.');
-    loadKl();
+    await napLaiSauHanhDong(sel.dataset.id);
   } catch (err) {
     notifyError(err.message);
     sel.disabled = false;
@@ -82,8 +90,8 @@ export function registerKlView() {
   $('viewKl').innerHTML = klTemplate;
   $('klChiTiet').addEventListener('change', onDoiCap);
   mountKlCapNhatModal(loadKl);
-  mountChiDao(registerActions, loadKl);
-  mountMinhChung(registerActions, loadKl);
+  mountChiDao(registerActions, napLaiSauHanhDong);
+  mountMinhChung(registerActions, napLaiSauHanhDong);
   ganBoLoc();
   registerActions({ openKl: () => openKl(), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
 }
