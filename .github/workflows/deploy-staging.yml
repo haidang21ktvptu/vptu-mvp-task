@@ -1,4 +1,4 @@
-# Mỗi lần push main: áp migration lên STAGING → (test RLS token thật ‖ build hai bản frontend) → deploy GitHub Pages.
+# Mỗi lần push main (trừ push chỉ đổi docs/*.md/workflow backup, cảnh báo — job phan-loai): áp migration lên STAGING → (test RLS token thật ‖ build hai bản frontend) → deploy GitHub Pages.
 # Migration luôn chạy TRƯỚC deploy frontend (bài học GĐ1: frontend mới gọi hàm chưa có trong DB).
 # Test RLS bằng token thật (7 tài khoản seed) chuyển từ ci.yml sang đây để chạy SAU db push — tức trên
 # schema staging đã có migration mới; trong PR, RLS đã chạy trên Supabase cục bộ (job supabase-db).
@@ -43,8 +43,34 @@ defaults:
     shell: bash
 
 jobs:
+  # Push main chỉ đổi docs/**, *.md, workflows backup-dinh-ky / canh-bao (script dùng chung .github/scripts/phan-loai.sh, cùng ci.yml) →
+  # không có gì để áp/dựng: bỏ qua cả run (các job sau `needs: migration` bỏ qua theo). workflow_dispatch luôn chạy đủ. Không đọc được
+  # danh sách file / push đầu tiên → chạy đủ. Không đụng artifact Pages (chỉ bỏ qua khi bản staging không đổi; bản production do deploy-prod).
+  phan-loai:
+    name: Phân loại thay đổi (không ảnh hưởng app?)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      khong_anh_huong_app: ${{ steps.xet.outputs.khong_anh_huong_app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
+      - id: xet
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: bash .github/scripts/phan-loai.sh
+
   migration:
     name: Áp migration lên staging
+    needs: phan-loai
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.phan-loai.outputs.khong_anh_huong_app != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

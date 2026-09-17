@@ -50,3 +50,17 @@ Mã ở `supabase/functions/quan-tri-tai-khoan/index.ts` (Deno). Việc cần `s
 
 - Trước go-live: `node scripts/bat-co-doi-mat-khau.mjs --project-ref frwyxcmbonjaimziiuqr` in danh sách tài khoản thật (bỏ `demo_*`, `smoke_test`, `is_system`); chạy lại với `--thuc-hien` để bật cờ; script đếm lại số dòng sau khi ghi.
 - Màn hình Dọn dữ liệu (`quan_tri_he_thong`): xem trước số dòng → gõ `XOÁ`. App chỉ cho xoá khi mốc backup (dòng `nhat_ky_he_thong` hành động `backup` mới nhất, do `backup-dinh-ky.yml` và bước backup của `deploy-prod.yml` ghi qua RPC `ghi_moc_backup` bằng `SUPABASE_SERVICE_ROLE_KEY`) trong 24 giờ. Bộ sẵn "dữ liệu thử" xoá NV-T*, E2E-TEST*, **E2E-SEED*** (0043), phòng thử `E2E_*` và phân công vào đó (0044), văn bản RLS-TEST / hội nghị 991–999, tài khoản `demo_*` và mọi thứ gắn với chúng (thay cho mục "Dọn dữ liệu thử trước go-live" ở trên; vẫn giữ `smoke_test`).
+
+## Phân loại thay đổi trong CI/CD (từ 18/9/2026)
+
+Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một chỗ) chạy ở job `phan-loai` của `ci.yml` (pull_request và push `main`) và `deploy-staging.yml` (push `main`). Kết luận `khong_anh_huong_app = true` chỉ khi đọc được **đủ** danh sách file (API `pulls/N/files` hoặc `compare/before...sha`, phân trang `per_page=100`, đối chiếu `changed_files`; compare chạm trần 300 file coi là không đủ), có ít nhất một file, và **mọi** file khớp `docs/**`, `*.md`, `.github/workflows/backup-dinh-ky.yml`, `.github/workflows/canh-bao.yml`. Không có ngoại lệ theo tên nhánh: PR release chỉ tài liệu cũng bỏ qua (job `kiem-tra` của `deploy-prod` đọc 4 check theo **tên** nên job rỗng cùng tên vẫn được chấp nhận — `v3.6.0`, `v3.6.1`).
+
+| Loại thay đổi | PR (`ci.yml`) | Push `main` (`ci.yml` + `deploy-staging.yml`) |
+|---|---|---|
+| Chỉ `docs/**`, `*.md`, workflow backup-dinh-ky / canh-bao | gitleaks chạy; `Áp migration + lint schema`, `Build frontend + giới hạn 300 dòng`, `Kiểm thử RLS + e2e trên staging` = job rỗng cùng tên (xanh) | gitleaks chạy; hai job rỗng (không có e2e khi push main); **deploy-staging bỏ qua cả run** (không db push, không RLS, không dựng Pages) |
+| Bất kỳ file khác (`frontend/**`, `supabase/**`, `tests/**`, `scripts/**`, `package*.json`, `ci.yml`, `deploy-*.yml`, chính script phân loại…) | chạy đủ 4 check | chạy đủ; deploy-staging: db push → RLS ‖ build → Pages |
+| Không chắc (PR rỗng, API lỗi, lấy không đủ danh sách, push đầu tiên, `workflow_dispatch`) | chạy đủ | chạy đủ |
+
+`ci.yml` có `concurrency` theo nhánh PR (`cancel-in-progress` cho pull_request: push mới huỷ lượt cũ đang chạy; push `main` mỗi sha một nhóm, không huỷ). `deploy-prod.yml` không đổi.
+
+**Phát hành trước go-live — không cần backup tay**: `deploy-prod.yml` đã `pg_dump` (mã hoá, artifact 90 ngày) ngay trước `db push` production và ghi mốc backup; *Backup định kỳ production* vẫn giữ lịch 3 ngày/lần; bản local (`scripts/backup-db.sh`) chỉ chạy khi muốn có bản ngoài GitHub, không phải bước bắt buộc của quy trình tag.
