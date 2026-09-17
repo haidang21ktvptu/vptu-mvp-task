@@ -1,5 +1,5 @@
-// GĐ20 (0033) — (1) v_ngoai_le.khau: 4 khâu theo thứ tự ưu tiên CHO_QUYET → CHO_MINH_CHUNG → CHUA_NHAN → CHUA_SAN_PHAM, việc Xanh không
-// vào view; (2) kl_so_lieu_tai(p_ngay): cùng ngày, cùng phạm vi (A0, A2, A3) phải bằng đếm trên v_nhiem_vu; anon bị chặn; p_ngay = 14/9/2026
+// GĐ20 (0033) — (1) v_ngoai_le.khau: 4 khâu theo thứ tự ưu tiên CHO_QUYET → CHO_MINH_CHUNG → CHUA_NHAN (chỉ việc theo_1400) → CHUA_SAN_PHAM,
+// việc cũ (theo_1400 = false) không bao giờ là CHUA_NHAN; việc Xanh không vào view; (2) kl_so_lieu_tai(p_ngay): cùng ngày, cùng phạm vi (A0, A2, A3) phải bằng đếm trên v_nhiem_vu; anon bị chặn; p_ngay = 14/9/2026
 // khớp mốc kl-moc-2026-09-14 (185 dòng Excel = MOC; phần dư ngoài 185 dòng tính bằng tinh_trang_thai). Mã NV-T33x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,7 +16,7 @@ const db = () => adminClient();
 let fx; const id = {};
 const them = async (ma, row = {}) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: `KL-0033 ${ma}`, loai_thoi_han_ma: 'CO_HAN_CU_THE',
-    han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', ma, ...row }).select('id').single();
+    han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', theo_1400: true, ma, ...row }).select('id').single();
   assertOk(r, ma); id[ma] = r.data.id;
 };
 const minhChung = async (ma, hop_le) => assertOk(await db().from('minh_chung').insert({ nhiem_vu_id: id[ma], loai: 'so_hieu', so_hieu: `33/${ma}`,
@@ -40,12 +40,14 @@ describe('0033 — v_ngoai_le.khau và kl_so_lieu_tai', { skip: SKIP }, () => {
     await them('NV-T334');
     await them('NV-T335'); await daNhan('NV-T335');
     await them('NV-T336', { han_xu_ly: '2026-12-31' });                                                  // Xanh → không vào view
+    await them('NV-T337', { theo_1400: false });                                                            // việc cũ, không có xác nhận → không phải CHUA_NHAN
   });
   after(don);
 
-  test('khau: 4 khâu đúng thứ tự ưu tiên, việc Xanh không có trong v_ngoai_le', async () => {
+  test('khau: 4 khâu đúng thứ tự ưu tiên; việc cũ (theo_1400 = false) chưa xác nhận vẫn là CHUA_SAN_PHAM; việc Xanh không có trong v_ngoai_le', async () => {
     const k = await khauCua();
-    assert.deepEqual(k, { 'NV-T331': 'CHO_QUYET', 'NV-T332': 'CHO_MINH_CHUNG', 'NV-T333': 'CHUA_SAN_PHAM', 'NV-T334': 'CHUA_NHAN', 'NV-T335': 'CHUA_SAN_PHAM' });
+    assert.deepEqual(k, { 'NV-T331': 'CHO_QUYET', 'NV-T332': 'CHO_MINH_CHUNG', 'NV-T333': 'CHUA_SAN_PHAM', 'NV-T334': 'CHUA_NHAN', 'NV-T335': 'CHUA_SAN_PHAM', 'NV-T337': 'CHUA_SAN_PHAM' });
+    assert.notEqual(k['NV-T337'], 'CHUA_NHAN', 'việc cũ nhập Excel không có bước xác nhận nhận việc');
   });
 
   test('khau: minh chứng đã thẩm định (hop_le = false) không còn là CHO_MINH_CHUNG', async () => {
@@ -62,7 +64,7 @@ describe('0033 — v_ngoai_le.khau và kl_so_lieu_tai', { skip: SKIP }, () => {
       assert.deepEqual(r.data.nhom_dem, dem(rows.data, 'nhom_dem'), `${vai}: nhom_dem`);
       assert.deepEqual(r.data.muc_canh_bao, dem(rows.data, 'muc_canh_bao'), `${vai}: muc_canh_bao`);
       assert.deepEqual(r.data.ket_qua, dem(rows.data, 'ket_qua'), `${vai}: ket_qua`);
-      if (vai === 'A3') assert.ok(r.data.tong >= 5 && r.data.muc_canh_bao.DO_DAC_BIET >= 5, 'A3 thấy 5 việc Đỏ đặc biệt NV-T33x của mình');
+      if (vai === 'A3') assert.ok(r.data.tong >= 6 && r.data.muc_canh_bao.DO_DAC_BIET >= 6, 'A3 thấy 6 việc Đỏ đặc biệt NV-T33x của mình');
     });
   }
 

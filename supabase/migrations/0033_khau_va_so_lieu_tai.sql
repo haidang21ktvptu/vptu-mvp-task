@@ -1,6 +1,7 @@
 -- 0033 — GĐ20 (giao diện v7, không đổi nghiệp vụ): (1) v_ngoai_le thêm cột "khau" (khâu đang tắc của việc Đỏ) tính từ dữ liệu sẵn có,
 -- thứ tự ưu tiên: CHO_QUYET khi đã đặt cap_quyet_dinh → CHO_MINH_CHUNG khi có minh chứng chưa thẩm định (hop_le IS NULL) → CHUA_NHAN khi
--- chưa ai xác nhận nhận việc (lich_su cot = 'xac_nhan_nhan_viec', 0025) → còn lại CHUA_SAN_PHAM. Cột thêm vào cuối (CREATE OR REPLACE),
+-- việc theo quy tắc 1400 (theo_1400) chưa ai xác nhận nhận việc (lich_su cot = 'xac_nhan_nhan_viec', 0025; việc cũ nhập Excel không có
+-- bước này) → còn lại CHUA_SAN_PHAM. Cột thêm vào cuối (CREATE OR REPLACE),
 -- các cột cũ giữ nguyên thứ tự/kiểu; đếm theo khâu/đơn vị làm ở client trên dòng RLS trả về (DB-5).
 -- (2) kl_so_lieu_tai(p_ngay): đếm nhiệm vụ trong phạm vi (SECURITY INVOKER → RLS nhiem_vu lọc) theo nhom_dem / muc_canh_bao / ket_qua
 -- tại ngày p_ngay bằng trang_thai(nv, p_ngay) (0024). Client gọi hai lần (hôm nay, hôm nay − 7) để hiện "tăng/giảm N so với tuần trước";
@@ -20,7 +21,7 @@ SELECT v."id", v."ma", v."noi_dung", v."theo_1400", v."so_hoi_nghi", v."so_ket_l
        CASE
          WHEN v."cap_quyet_dinh" IS NOT NULL THEN 'CHO_QUYET'
          WHEN EXISTS (SELECT 1 FROM "public"."minh_chung" m WHERE m."nhiem_vu_id" = v."id" AND m."hop_le" IS NULL) THEN 'CHO_MINH_CHUNG'
-         WHEN NOT EXISTS (SELECT 1 FROM "public"."lich_su" l WHERE l."nhiem_vu_id" = v."id" AND l."cot" = 'xac_nhan_nhan_viec') THEN 'CHUA_NHAN'
+         WHEN v."theo_1400" AND NOT EXISTS (SELECT 1 FROM "public"."lich_su" l WHERE l."nhiem_vu_id" = v."id" AND l."cot" = 'xac_nhan_nhan_viec') THEN 'CHUA_NHAN'
          ELSE 'CHUA_SAN_PHAM' END AS "khau"
 FROM "public"."v_nhiem_vu" v
 WHERE v."muc_canh_bao" IN ('DO', 'DO_DAC_BIET')
@@ -38,8 +39,8 @@ LANGUAGE "sql" STABLE SECURITY INVOKER SET "search_path" = "public" AS $$
   SELECT jsonb_build_object(
     'ngay', "p_ngay",
     'tong', (SELECT count(*) FROM t),
-    'nhom_dem', (SELECT coalesce(jsonb_object_agg(k, n), '{}'::jsonb) FROM (SELECT nhom_dem AS k, count(*) AS n FROM t GROUP BY 1) a),
-    'muc_canh_bao', (SELECT coalesce(jsonb_object_agg(k, n), '{}'::jsonb) FROM (SELECT muc_canh_bao AS k, count(*) AS n FROM t GROUP BY 1) b),
+    'nhom_dem', (SELECT coalesce(jsonb_object_agg(k, n), '{}'::jsonb) FROM (SELECT nhom_dem AS k, count(*) AS n FROM t WHERE nhom_dem IS NOT NULL GROUP BY 1) a),
+    'muc_canh_bao', (SELECT coalesce(jsonb_object_agg(k, n), '{}'::jsonb) FROM (SELECT muc_canh_bao AS k, count(*) AS n FROM t WHERE muc_canh_bao IS NOT NULL GROUP BY 1) b),
     'ket_qua', (SELECT coalesce(jsonb_object_agg(k, n), '{}'::jsonb) FROM (SELECT ket_qua AS k, count(*) AS n FROM t WHERE ket_qua IS NOT NULL GROUP BY 1) c)
   );
 $$;
