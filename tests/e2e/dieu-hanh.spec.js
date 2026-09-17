@@ -29,6 +29,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
       van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} ngoại lệ ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP',
       theo_1400: true, ngay_nhan_van_ban: '2026-08-05', ngay_nhan_uoc_tinh: false, // 0033: khâu "Chưa nhận việc" chỉ với việc theo quy tắc 1400
+      do_khan: 'KHAN', // nhãn độ khẩn trên thẻ nghẽn (kiểm nhãn gọn, không giãn ngang — sau kiểm tra v3.6.0)
     }).select('id, ma').single();
     if (e2) throw new Error(`Tạo nhiệm vụ mẫu thất bại: ${e2.message}`);
     nvId = nv.id; ma = nv.ma;
@@ -56,6 +57,11 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(212, 32, 24)'); // --do
     await expect.poll(() => the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(168, 20, 15)');      // --do-dam: Đỏ đặc biệt
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
+    // Nhãn độ khẩn trong tiêu đề thẻ phải là nhãn gọn (inline-flex), không bị `.the .ten span { display: block }` kéo giãn hết chiều ngang (lỗi v3.6.0).
+    const dk = the.locator('.ten .dk');
+    await expect(dk).toHaveText(/Khẩn/);
+    await expect.poll(() => dk.evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('inline-flex');
+    expect((await dk.boundingBox()).width).toBeLessThan((await the.boundingBox()).width / 2);
     await expect(a3.locator('#chuongBadge')).toBeHidden();
     // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (v_dien_bien: có dòng tạo việc), không rời Điều hành; bấm lại để gập.
     await the.locator('[data-action=xemDienBien]').click();

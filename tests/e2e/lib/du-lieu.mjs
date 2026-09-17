@@ -31,14 +31,19 @@ export async function donNhiemVuTheoNoiDung(db, tienTo) {
   await db.from('nhiem_vu').delete().like('noi_dung', `${tienTo}%`);
 }
 
+// Client Supabase chạy DƯỚI QUYỀN một vai (anon key + access token đã lưu ở global-setup): RLS đúng như người dùng thấy; dùng cho đọc kiểm
+// và cho hành động của chính vai đó (RPC xac_nhan_nhan_viec…) mà không cần service_role. Token JWT 1 giờ đủ cho một lần chạy.
+export function clientCuaVai(role) {
+  const k = getKeys();
+  const { access_token } = JSON.parse(readFileSync(sessionPath(role), 'utf8'));
+  return createClient(k.url, k.anon, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: `Bearer ${access_token}` } } });
+}
+
 // Sau khi tạo việc mẫu bằng service_role: đọc lại v_nhiem_vu bằng token (đã lưu ở global-setup, không tốn refresh) của vai sẽ xem việc đó.
 // Không thấy → ném lỗi rõ ngay ở beforeAll (RLS kl_pham_vi / dữ liệu tài khoản trên project không như spec giả định) thay vì để test chờ 10 giây
 // ở #klRow-<id>. Nhiều vai / nhiều việc: gọi lần lượt.
 export async function kiemThayViec(role, id, nhan = '') {
-  const k = getKeys();
-  const { access_token } = JSON.parse(readFileSync(sessionPath(role), 'utf8'));
-  const c = createClient(k.url, k.anon, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: `Bearer ${access_token}` } } });
-  const { data, error } = await c.from('v_nhiem_vu').select('id').eq('id', id);
+const { data, error } = await clientCuaVai(role).from('v_nhiem_vu').select('id').eq('id', id);
   if (error) throw new Error(`Đọc v_nhiem_vu bằng vai ${role}: ${error.message}`);
   if (!data.length) throw new Error(`Việc mẫu ${nhan || id} không nằm trong phạm vi của vai ${role} (kl_pham_vi) — kiểm owner_tai_khoan / nguoi_theo_doi / owner_don_vi_ma và tài khoản trên project.`);
 }

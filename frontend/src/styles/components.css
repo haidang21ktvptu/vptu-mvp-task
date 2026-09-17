@@ -46,7 +46,7 @@
   .the.vang { border-left-color: var(--vang); } .the.luc { border-left-color: var(--luc); } .the.lam { border-left-color: var(--lam); }
   .the-dau { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
   .the .ten b { display: block; font-size: 16px; }
-  .the .ten span { color: var(--chu-phu); font-size: 14px; display: block; max-width: 60ch; }
+  .the .ten > span { color: var(--chu-phu); font-size: 14px; display: block; max-width: 60ch; }
   .the .tre { font-size: 26px; font-weight: 800; color: var(--do); line-height: 1; text-align: right; }
   .the .tre small { display: block; font-size: 11px; font-weight: 500; color: var(--chu-phu); }
   .the .dot { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 10px; font-size: 14px; }

@@ -33,7 +33,7 @@ export const KHAU = {
   BI_TU_CHOI:     { ten: 'Bị từ chối, chờ giao lại',  phu: 'đề nghị từ chối đã duyệt',  mau: 'do' },
   CHO_QUYET:      { ten: 'Chờ cấp trên quyết',        phu: 'đã trình, chưa có ý kiến',  mau: 'cam' },
   CHUA_SAN_PHAM:  { ten: 'Chưa có sản phẩm',          phu: 'đang làm, đã quá hạn',      mau: 'cam' },
-  CHO_MINH_CHUNG: { ten: 'Chờ xác nhận minh chứng',   phu: 'đã nộp, chờ Văn phòng',     mau: 'lam' },
+  CHO_MINH_CHUNG: { ten: 'Việc Đỏ chờ xác nhận minh chứng', phu: 'đã nộp, chờ Văn phòng',     mau: 'lam' },
   CHUA_NHAN:      { ten: 'Chưa nhận việc',            phu: 'giao rồi, chưa xác nhận',   mau: 'cam' },
 };
 export const THU_TU_KHAU = Object.keys(KHAU);
