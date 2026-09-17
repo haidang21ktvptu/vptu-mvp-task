@@ -81,6 +81,18 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 
 ---
 
+## GĐ20–24 — Giao diện v7, Trung tâm điều hành A0, độ khẩn, giao thay mặt, từ chối có duyệt, quản trị hệ thống · **đã phát hành `v3.6.0` (17/9/2026)**
+
+| GĐ | PR | Nội dung | Migration |
+|---|---|---|---|
+| 20 | #73 | Giao diện v7 theo mockup (token màu/chữ, Be Vietnam Pro tự chứa, menu pill / thanh dưới); A0 Trung tâm điều hành (4 số-lọc có xu hướng từ `kl_so_lieu_tai`, thanh trái khâu/đơn vị, thẻ việc có vòng khép kín); `v_ngoai_le.khau`; `CHUA_NHAN` chỉ với việc `theo_1400` | 0033 |
+| 21 | #74 | Từ chối nhận việc có duyệt (A3 đề nghị, lãnh đạo trực tiếp duyệt; cấp duyệt Thường trực → bất kỳ A0); A0 Cán bộ + Nhắn tin; bộ lọc một hàng | 0034 |
+| 22 | #75 | Độ khẩn 4 cấp (Thường/Khẩn/Thượng khẩn/Hoả tốc, ngưỡng nhắc theo độ khẩn); giao thay mặt; Thường trực giao việc trên biểu mẫu rút gọn; diễn biến tại chỗ `v_dien_bien`; cảnh báo TT chưa nhận / hoả tốc chưa nhận; công tắc kiểm thử `KIEM_THU_MOI_TRUONG` | 0035–0037 |
+| 23 | #76 | Dải nhận diện + menu bánh răng theo vai; đổi mật khẩu lần đầu; Edge Function `quan-tri-tai-khoan` (service_role chỉ trong function, nhật ký `nhat_ky_he_thong`); Dọn dữ liệu hai bước (xem trước → gõ `XOÁ`, mốc backup < 24 giờ); bản tin 7h30; nạp lại đúng việc sau mọi hành động ghi | 0038–0042 |
+| 24 | #77–#79 | Hộp thả xuống chuông/bánh răng; dải "Cần xử lý ngay" có nút hành động dẫn tới việc; bộ dữ liệu mẫu `E2E-SEED` + phòng thử `E2E_PT` (e2e chạy trên DB rỗng, kiểm phạm vi việc mẫu ngay ở beforeAll); bộ sẵn dọn dữ liệu thử xoá cả `E2E-SEED*` và phòng thử | 0043–0044 |
+
+Phát hành `v3.6.0` (PR tài liệu `release/v3.6.0`, tag gắn lên commit đầu nhánh, không merge trước tag): production DB đã ở `0044` (CI kiểm thử trên production `db push` từng PR) nên deploy chỉ còn frontend + Edge Function; backup trước phát hành `prod-20260917-1605-truoc-v3.6.0`. Lỗi đã biết: bước "Ghi mốc backup" trong `backup-dinh-ky.yml` thoát mã 127 (artifact vẫn đúng). Bốn hạng mục CV-2 hoãn từ GĐ19 vẫn chờ (xem trên).
+
 ## Tổng hợp
 
 | GĐ | Đích 1400 | Migration | Phát hành | Ước lượng |
@@ -91,6 +103,7 @@ Tải tệp minh chứng (Storage, policy, NF-12) là **việc chờ điều ki�
 | 17 | CN-5, QT-5, CN-4.3 (+ vai trò A0) | 0026–0027 | v3.3.0 | 3 ngày |
 | 18 | dọn + QT-5 (chỉ đạo) | 0028–0029 | v3.4.0 | 3 ngày |
 | 19 | CH-16 (xong, `v3.5.0`); CV-2 hoãn `v3.6` | 0032 | v3.5.0 | 4 ngày |
+| 20–24 | giao diện v7, A0 điều hành, độ khẩn, giao thay mặt, từ chối có duyệt, quản trị hệ thống (xong, `v3.6.0`) | 0033–0044 | v3.6.0 | — |
 | **Tổng** | | | | **19–22 ngày làm việc** |
 
 Mốc CV-1 (28/9/2026) không đạt được với toàn bộ 5 chức năng; nếu cần một mốc trình bày, sau GĐ14 (v3.0.0) hệ thống đã có 1-1-1 (Owner, Product, Deadline) trên dữ liệu thật và form giao việc theo 1400 — đủ để chứng minh hướng đi.
