@@ -3,7 +3,7 @@
 // thì lưu, dòng đổi nhóm, ô số đổi theo; ngăn chi tiết ghi "nhập bởi" chính chuyên viên. Nhiệm vụ mẫu ở hội nghị 997 (E2E), tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav } from './lib/app.js';
+import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
@@ -44,9 +44,9 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
 
   test('mở màn hình: ô Tổng = số dòng; dòng mẫu ở nhóm Đang thực hiện; bấm ô lọc đúng; không có Giao việc', async () => {
     await nav(page, 'navKl');
-    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible(NAP);
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
     await expect(row).toHaveClass(/\blam\b/); // mép trái lam: Xanh
     const tong = Number(await page.locator('#klSo-TONG').innerText());
@@ -56,7 +56,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await page.locator('#klStats [data-nhom="DANG_THUC_HIEN"]').click();
     const dth = Number(await page.locator('#klSo-DANG_THUC_HIEN').innerText());
     await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(dth);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible(NAP);
     await page.locator('#klStats [data-nhom=""]').click();
   });
 
@@ -64,14 +64,14 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     const row = page.locator(`#klRow-${nvId}`);
     await row.click();
     const ngan = page.locator(`#klChiTiet-${nvId}`);
-    await expect(ngan).toBeVisible();
+    await expect(ngan).toBeVisible(NAP);
     await expect(row).toHaveClass(/\bdang\b/);
     await expect(ngan).toContainText('chưa xác nhận nhận việc');
     const truoc = (await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma, cap_nhat_luc').eq('id', nvId).single()).data;
     await ngan.getByRole('button', { name: 'Xác nhận đã nhận việc' }).click();
     await expect(page.locator('#toastContainer')).toContainText('xác nhận nhận việc');
     await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Xác nhận đã nhận việc' })).toHaveCount(0);
-    await expect(page.locator(`#klChiTiet-${nvId}`)).toContainText('đã nhận việc');
+    await expect(page.locator(`#klChiTiet-${nvId}`)).toContainText('đã nhận việc', NAP);
     const sau = (await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma, cap_nhat_luc').eq('id', nvId).single()).data;
     expect(sau).toEqual(truoc);
     const { data: ls } = await db.from('lich_su').select('id').eq('nhiem_vu_id', nvId).eq('cot', 'xac_nhan_nhan_viec');
@@ -94,7 +94,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await expect(page.locator('#klCapNhatModal')).toBeHidden();
     await expect(page.locator('#toastContainer')).toContainText('Đã cập nhật');
     const row = page.locator(`#klRow-${nvId}`);
-    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH', NAP);
     await expect(row).toHaveClass(/\bluc\b/);
     await expect(page.locator('#klSo-HOAN_THANH')).toHaveText(String(truoc + 1));
     const { data } = await db.from('nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, thieu_minh_chung').eq('id', nvId).single();
@@ -103,7 +103,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
 
   test('việc "Cần điền hạn" hoàn thành không cần điền hạn: lưu được, lý do chưa có hạn giữ nguyên', async () => {
     const row = page.locator(`#klRow-${nv2Id}`);
-    await expect(row).toHaveAttribute('data-nhom', 'CAN_DIEN_HAN');
+    await expect(row).toHaveAttribute('data-nhom', 'CAN_DIEN_HAN', NAP);
     await row.click();
     await page.locator(`#klChiTiet-${nv2Id}`).getByRole('button', { name: 'Cập nhật' }).click();
     await page.locator('#klCnTienDo').selectOption('HOAN_THANH');
@@ -111,7 +111,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await page.locator('#klCnMinhChung').fill(`Công văn 20/CV-VPTU ngày 10/9/2026 (${E2E_TAG})`);
     await page.locator('#klCnLuu').click();
     await expect(page.locator('#klCapNhatModal')).toBeHidden();
-    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH', NAP);
     const { data } = await db.from('nhiem_vu').select('tien_do_ma, han_xu_ly, ly_do_chua_co_han').eq('id', nv2Id).single();
     expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', han_xu_ly: null, ly_do_chua_co_han: 'Phụ thuộc yếu tố bên ngoài (e2e)' });
   });
@@ -119,7 +119,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
   test('ngăn chi tiết: tiến độ ghi "nhập bởi" chuyên viên, nguồn hệ thống, lịch sử có 4 thay đổi (kể cả xác nhận nhận việc)', async () => {
     await page.locator(`#klRow-${nvId}`).click();
     const ct = page.locator(`#klChiTiet-${nvId}`);
-    await expect(ct).toBeVisible();
+    await expect(ct).toBeVisible(NAP);
     await expect(ct.locator('.chi-tiet-them')).not.toHaveAttribute('open', ''); // bấm dòng: bảng căn cứ gập, chỉ đạo/minh chứng ở đầu ngăn
     await ct.locator('.chi-tiet-them > summary').click();
     await expect(ct).toContainText('nhập bởi Demo E2E Chuyên viên KL');

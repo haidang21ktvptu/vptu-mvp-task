@@ -4,7 +4,7 @@
 // cần xác nhận, chỉ có nút xác nhận tuỳ chọn ở ngăn chi tiết.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, moViec } from './lib/app.js';
+import { pageAs, nav, moViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
@@ -35,12 +35,12 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
 
   test('Kịch bản 4a: A3 có việc cũ chưa xác nhận → KHÔNG có thẻ cần xác nhận, chỉ nút xác nhận tuỳ chọn ở ngăn chi tiết', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
-    await expect(page.locator('#vctTom')).toContainText('việc cần làm');
+    await expect(page.locator('#vctTom')).toContainText('việc cần làm', NAP);
     await expect(page.locator('#vctMuc-moi')).toHaveCount(0);
     await moViec(page, cuId, cuMa);
     await expect(page.locator('#klChipLoc')).toContainText('Việc của tôi');
     const ngan = page.locator(`#klChiTiet-${cuId}`);
-    await expect(ngan).toContainText('chưa xác nhận nhận việc');
+    await expect(ngan).toContainText('chưa xác nhận nhận việc', NAP);
     await expect(ngan.getByRole('button', { name: 'Xác nhận đã nhận việc' })).toBeVisible();
     await page.context().close();
   });
@@ -67,7 +67,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     expect(data).toMatchObject({ theo_1400: true, owner_tai_khoan: CV1_ID, nguoi_theo_doi: '00000000-0000-4000-8000-000000000003' });
     moiId = data.id; moiMa = data.ma;
     const row = page.locator(`#klRow-${moiId}`);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible(NAP);
     await expect(row).toContainText('Demo E2E Chuyên viên NV');
     await expect(row).toHaveAttribute('data-muc', 'VANG'); // còn 3 ngày, chưa có minh chứng → VÀNG (CN-4.1)
     await expect(row).toHaveClass(/\bvang\b/);
@@ -77,22 +77,22 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
   test('Kịch bản 5: A3 xác nhận đã nhận việc trên thẻ (hạn, trạng thái không đổi); việc theo 1400 không chọn Hoàn thành ở Cập nhật, nút Đóng mờ', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     const muc = page.locator('#vctMuc-moi');
-    await expect(muc).toBeVisible();
+    await expect(muc).toBeVisible(NAP);
     await expect(muc).toContainText('Việc mới giao — cần xác nhận đã nhận');
     const the = page.locator(`#vct-${moiId}`);
-    await expect(the).toContainText(title);
+    await expect(the).toContainText(title, NAP);
     const truoc = (await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma').eq('id', moiId).single()).data;
     await the.getByRole('button', { name: 'Xác nhận đã nhận việc' }).click();
     await expect(page.locator('#toastContainer')).toContainText('Đã xác nhận nhận việc');
     await expect(page.locator('#vctMuc-moi')).toHaveCount(0);
     expect((await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma').eq('id', moiId).single()).data).toEqual(truoc);
     // Việc Vàng chưa có minh chứng → thẻ "Sắp đến hạn" có ô nộp 3 trường ngay trên thẻ.
-    await expect(page.locator(`#vctMuc-minh-chung #vct-${moiId} form.mc-inline`)).toBeVisible();
+    await expect(page.locator(`#vctMuc-minh-chung #vct-${moiId} form.mc-inline`)).toBeVisible(NAP);
 
     // GĐ16 (16B): việc theo 1400 đóng bằng "Đóng nhiệm vụ" sau khi nộp minh chứng có cấu trúc; modal Cập nhật không có Hoàn thành; nút Đóng mờ.
     await moViec(page, moiId, moiMa); // GĐ22: nút Xem trên thẻ mở diễn biến tại chỗ; ngăn chi tiết mở từ màn hình Nhiệm vụ
     const ngan = page.locator(`#klChiTiet-${moiId}`);
-    await expect(ngan).toBeVisible();
+    await expect(ngan).toBeVisible(NAP);
     await expect(ngan).toContainText('đã nhận việc');
     await expect(ngan.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeDisabled();
     await ngan.getByRole('button', { name: 'Cập nhật' }).click();

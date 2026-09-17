@@ -3,7 +3,7 @@
 // chữ hiện nhãn "Minh chứng cũ". Dữ liệu mẫu tạo bằng service_role trong hội nghị 992, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav } from './lib/app.js';
+import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
@@ -41,14 +41,14 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
 
   test('chưa có minh chứng: nút Đóng mờ; nộp thiếu ngày bị chặn ở form; nộp đủ ba ô → khối liệt kê, nút Đóng sáng', async () => {
     await nav(page, 'navKl');
-    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible(NAP);
     await row.click();
     const ngan = page.locator(`#klChiTiet-${nvId}`);
     await expect(ngan.getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeDisabled();
     const khoi = page.locator(`#klMinhChung-${nvId}`);
-    await expect(khoi).toContainText('chưa có');
+    await expect(khoi).toContainText('chưa có', NAP);
     await ngan.getByRole('button', { name: 'Nộp minh chứng' }).click();
     await expect(page.locator('#klMcModal')).toBeVisible();
     await expect(page.locator('#klMcCap')).toHaveValue('CHANH_VAN_PHONG'); // cấp nhận gợi ý = cấp nhận sản phẩm của nhiệm vụ
@@ -75,9 +75,9 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator('#klDongModal')).toBeHidden();
     await expect(page.locator('#toastContainer')).toContainText('Đã đóng nhiệm vụ');
     const row = page.locator(`#klRow-${nvId}`);
-    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH');
+    await expect(row).toHaveAttribute('data-nhom', 'HOAN_THANH', NAP);
     await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toHaveCount(0);
-    await expect(page.locator(`#klChiTiet-${nvId}`)).toContainText('lead time 15 ngày');
+    await expect(page.locator(`#klChiTiet-${nvId}`)).toContainText('lead time 15 ngày', NAP);
     const { data } = await db.from('v_nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, thieu_minh_chung, lead_time_ngay, so_minh_chung_hop_le').eq('id', nvId).single();
     expect(data).toEqual({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-20', thieu_minh_chung: false, lead_time_ngay: 15, so_minh_chung_hop_le: 1 });
     const { data: ls } = await db.from('lich_su').select('cot').eq('nhiem_vu_id', nvId).in('cot', ['minh_chung_nop', 'dong_nhiem_vu']);

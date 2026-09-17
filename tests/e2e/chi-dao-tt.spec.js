@@ -5,7 +5,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, contextAs, nav, moViec } from './lib/app.js';
+import { pageAs, contextAs, nav, moViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -58,7 +58,7 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     await form.locator('button[type=submit]').click();
     const goc = a0.locator(`#klChiDao-${nvId} .cd-goc[data-loai=CHI_DAO_TT]`);
     await expect(goc).toHaveCount(1, RT);
-    await expect(goc).toHaveAttribute('data-trang-thai', 'CHO_PHAN_HOI');
+    await expect(goc).toHaveAttribute('data-trang-thai', 'CHO_PHAN_HOI', NAP);
     await expect(goc).toContainText('Chỉ đạo Thường trực');
     await expect(goc).toContainText('Người nhận: Demo Chánh Văn phòng, Demo Phó Chánh Văn phòng Hai');
     await expect(goc).toContainText('Hạn phản hồi');

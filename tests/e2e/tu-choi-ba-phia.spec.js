@@ -4,7 +4,7 @@
 // có số, hội thoại của việc trong Nhắn tin có tin duyệt. Dữ liệu tạo bằng service_role, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav } from './lib/app.js';
+import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 
@@ -44,8 +44,8 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     await o.locator('input[name=noi_dung]').fill('Đang đi công tác, không thể nhận (e2e)');
     await o.getByRole('button', { name: 'Gửi đề nghị' }).click();
     await expect(page.locator('#toastContainer')).toContainText('Đã gửi đề nghị từ chối');
-    await expect(page.locator(`#vct-${id}`)).toContainText('Đã đề nghị từ chối');
-    await expect(page.locator(`#vct-${id}`)).toContainText('chờ Demo Trưởng phòng duyệt');
+    await expect(page.locator(`#vct-${id}`)).toContainText('Đã đề nghị từ chối', NAP);
+    await expect(page.locator(`#vct-${id}`)).toContainText('chờ Demo Trưởng phòng duyệt', NAP);
     await page.context().close();
   });
 
@@ -53,11 +53,11 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     const page = await pageAs(browser, 'A2', testInfo);
     const btc = page.locator(`#btc-${id}`);
     await expect(btc).toBeVisible({ timeout: 15_000 });
-    await expect(btc).toHaveAttribute('data-tu-choi', 'cho');
+    await expect(btc).toHaveAttribute('data-tu-choi', 'cho', NAP);
     await expect(btc).toContainText('đề nghị từ chối');
     const { data: tc } = await db.from('tu_choi').select('id').eq('nhiem_vu_id', id).eq('trang_thai', 'CHO_DUYET').single();
     const de = page.locator(`#tc-${tc.id}`);
-    await expect(de).toBeVisible();
+    await expect(de).toBeVisible(NAP);
     await expect(de).toContainText('Lý do:');
     await de.getByRole('button', { name: 'Đồng ý từ chối' }).click();
     await expect(page.locator('#toastContainer')).toContainText('Đã đồng ý từ chối');
@@ -87,13 +87,13 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
   test('A3: thấy "Đã đồng ý từ chối, chờ giao lại"; huy hiệu Nhắn tin có số; hội thoại của việc có tin duyệt', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     await expect(page.locator('#vctThanhTuChoi')).toBeVisible({ timeout: 15_000 });
-    await expect(page.locator(`#vctThanhTuChoi p[data-nhiem-vu="${id}"]`)).toContainText('Đã đồng ý từ chối, chờ giao lại');
-    await expect(page.locator(`#vctMuc-tu-choi #vct-${id}`)).toContainText('Đã đồng ý từ chối');
+    await expect(page.locator(`#vctThanhTuChoi p[data-nhiem-vu="${id}"]`)).toContainText('Đã đồng ý từ chối, chờ giao lại', NAP);
+    await expect(page.locator(`#vctMuc-tu-choi #vct-${id}`)).toContainText('Đã đồng ý từ chối', NAP);
     await expect(page.locator('#dmBubbleBadge')).toBeVisible();
     await expect(page.locator('#dmBubbleBadge')).toHaveText(/^[1-9]\d*$/);
     await nav(page, 'dmBubbleLauncher');
     const viec = page.locator(`#dmViecList [data-nv="${id}"]`);
-    await expect(viec).toBeVisible();
+    await expect(viec).toBeVisible(NAP);
     await viec.click();
     await expect(page.locator('#dmChatBox')).toContainText(`Duyệt đề nghị từ chối · ${ma}`);
     await page.context().close();

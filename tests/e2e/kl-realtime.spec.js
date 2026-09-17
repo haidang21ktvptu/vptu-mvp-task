@@ -3,7 +3,7 @@
 // tiếp". Kiểm màu chấm xanh / chữ vàng trên bản build. Nhiệm vụ mẫu ở hội nghị 996 (E2E), tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav } from './lib/app.js';
+import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
@@ -27,7 +27,7 @@ test.describe.serial('Nhiệm vụ — thời gian thực', () => {
     await nav(page, 'navKl');
     // Lúc mở màn hình không được nháy cảnh báo vàng: chỉ "Đang kết nối…" rồi "Cập nhật trực tiếp".
     await expect(page.locator('#klKetNoi')).not.toContainText('Mất kết nối');
-    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT);
     // Chạy trên bản build (vite preview): lớp trong @layer components phải còn sau Tailwind — chấm xanh có màu lục.
     await expect.poll(() => page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(30, 142, 90)');

@@ -4,7 +4,7 @@
 // Kiểm màu/lớp trên bản build (Tailwind giữ lớp trong @layer components). Nhiệm vụ mẫu ở hội nghị 993 (E2E), Owner = phòng Tổng hợp, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, moViec } from './lib/app.js';
+import { pageAs, nav, moViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
@@ -42,7 +42,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
 
   test('Điều hành hôm nay (A1): thẻ Đỏ đủ 4 điều, khâu "Chưa nhận việc", sản phẩm "chưa định nghĩa", cấp "chưa xác định"; màu đỏ trên bản build', async () => {
     const the = a1.locator(`#the-${nvId}`);
-    await expect(the).toBeVisible();
+    await expect(the).toBeVisible(NAP);
     await expect(the).toHaveAttribute('data-muc', 'DO_DAC_BIET');
     await expect(the).toHaveAttribute('data-khau', 'CHUA_NHAN');
     await expect(the).toContainText('Phòng Tổng hợp');
@@ -58,10 +58,10 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (v_dien_bien: có dòng tạo việc), không rời Điều hành; bấm lại để gập.
     await the.locator('[data-action=xemDienBien]').click();
     await expect(a1.locator('#viewDieuHanh')).toBeVisible();
-    await expect(the.locator(`#db-${nvId} .dien-bien li`).first()).toBeVisible();
+    await expect(the.locator(`#db-${nvId} .dien-bien li`).first()).toBeVisible(NAP);
     await the.locator('[data-action=xemDienBien]').click();
     await expect(the.locator(`#db-${nvId}`)).toHaveCount(0);
-    await expect(the).toBeVisible();
+    await expect(the).toBeVisible(NAP);
   });
 
   test('A1 Đôn đốc tại thẻ → A3 nhận chuông + toast realtime, mở nhiệm vụ từ toast và phản hồi', async () => {
@@ -83,7 +83,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(a3.locator(`#thongBaoList [data-nv="${nvId}"]`)).toHaveCount(1);
     await a3.locator('#toastActionBtn').click();
     const luongA3 = a3.locator(`#klChiDao-${nvId}`);
-    await expect(luongA3.locator('.cd-goc')).toContainText('Khẩn trương hoàn thành trong tuần (e2e)');
+    await expect(luongA3.locator('.cd-goc')).toContainText('Khẩn trương hoàn thành trong tuần (e2e)', NAP);
     await expect(a3.locator('#chuongBadge')).toBeHidden();
     await expect(luongA3.locator('.cd-form')).toHaveCount(0); // A3 không có ô ra chỉ đạo
     await expect(luongA3.locator('.cd-form-ph')).toHaveClass(/cd-form-dau/); // ô phản hồi ở đầu khối

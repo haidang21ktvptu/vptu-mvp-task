@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs, nav } from './lib/app.js';
+import { contextAs, nav, NAP } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 
@@ -59,8 +59,8 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
   test('biểu mẫu một khối: thiếu sản phẩm → nút Giao mờ, chấm 3 chưa sáng; văn bản mới + Owner cán bộ + thay mặt + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
     await nav(page, 'navKl');
     await expect(page.locator('#klNutThem')).toBeVisible();
-    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
-    await expect(page.locator(`#klRow-${mocId}`)).toBeVisible();           // việc mốc của tài khoản này có mặt
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
+    await expect(page.locator(`#klRow-${mocId}`)).toBeVisible(NAP);           // việc mốc của tài khoản này có mặt
     await page.locator('#klNutThem').click();
     await expect(page.locator('#viewGiaoViec')).toBeVisible();
     await expect(page.locator('#viewKl')).toBeHidden();
@@ -100,7 +100,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',
       cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: QTHT_ID, tao_boi: QTHT_ID, do_khan: 'THUONG', giao_thay_mat_cho: TRUONG_PHONG_ID });
     const row = page.locator(`#klRow-${data.id}`);
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible(NAP);
     await expect(page.locator('#klTimKiem')).toHaveValue(data.ma);
     await expect(row).toHaveAttribute('data-muc', 'XANH');
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
@@ -108,7 +108,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — mép trái lam của việc Xanh.
     await expect.poll(() => row.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(10, 98, 199)');
     await row.click();
-    await expect(page.locator(`#klChiTiet-${data.id}`)).toContainText('Tờ trình'); // sản phẩm ở ngăn chi tiết
+    await expect(page.locator(`#klChiTiet-${data.id}`)).toContainText('Tờ trình', NAP); // sản phẩm ở ngăn chi tiết
   });
 
   test('Ký ban hành: hạn tự tính = ngày BH + 10, ô hạn khoá; văn bản vừa tạo có trong danh sách chọn; Huỷ về Nhiệm vụ', async () => {
