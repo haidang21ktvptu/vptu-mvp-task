@@ -1,18 +1,21 @@
-/* Bố cục (mockup v7): dải nhận diện mỏng 58px (cờ Đảng, cờ Tổ quốc, biểu trưng trên tấm trắng bo góc), hàng menu theo vai,
-   trang một cột rộng tối đa 1040px; điện thoại ≤ 860px: thanh dưới 3 mục theo vai. Màn đăng nhập ở cuối. */
+/* Bố cục (mockup v7, GĐ21): dải nhận diện 60px (nền đỏ + lớp sóng SVG mờ, cụm cờ bay SVG 84×48, biểu trưng trên tấm trắng, tên hai dòng),
+   menu theo vai: ≥ 901px hàng pill; 601–900px thanh biểu tượng dọc bên trái; ≤ 600px thanh dưới 3 mục theo vai. Trang một cột rộng tối đa
+   1040px. Màn đăng nhập ở cuối. */
 @layer components {
   /* ================= DẢI NHẬN DIỆN ================= */
-  .dai { background: linear-gradient(90deg, var(--do-dam), var(--do)); color: #fff; }
-  .dai .max { display: flex; align-items: center; gap: 16px; min-height: 58px; }
-  .co { width: 32px; height: 21px; border-radius: 2px; box-shadow: 0 1px 0 rgba(0, 0, 0, .25); flex: none; }
+  .dai { background: linear-gradient(90deg, var(--do-dam), var(--do)); color: #fff; position: relative; overflow: hidden; }
+  .dai-song { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .dai .max { display: flex; align-items: center; gap: 14px; min-height: 60px; position: relative; }
+  .co-cum { flex: none; width: 84px; height: 48px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .3)); }
   .logo { height: 42px; width: auto; background: #fff; border-radius: 8px; padding: 4px 7px; display: block; flex: none; }
-  .ten b { display: block; font-size: 14px; letter-spacing: .03em; }
-  .ten span { font-size: 12px; opacity: .9; }
+  .ten b { display: block; font-size: 14px; letter-spacing: .03em; white-space: nowrap; }
+  .ten span { font-size: 12px; opacity: .9; display: block; }
   .dai .phai { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; }
   .dai .nguoi { text-align: right; line-height: 1.25; }
   .dai .nguoi b { display: block; font-weight: 600; }
   .dai .nguoi span { font-size: 12px; opacity: .9; }
-  .nut-thoat { border: 1px solid rgba(255, 255, 255, .5); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: #fff; }
+  .nut-thoat { border: 1px solid rgba(255, 255, 255, .5); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: #fff; white-space: nowrap; }
+  .dai .nguoi span { white-space: nowrap; }
   .nut-thoat:hover { background: rgba(255, 255, 255, .14); }
   .chuong { position: relative; }
   .chuong-nut { position: relative; width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, .14); display: grid; place-items: center; color: #fff; }
@@ -22,7 +25,8 @@
   /* ================= MENU THEO VAI ================= */
   .menu { display: flex; gap: 8px; flex-wrap: wrap; padding: 18px 0 6px; }
   .menu button { border: 1px solid var(--vien); background: #fff; padding: 9px 16px; border-radius: 999px; font-weight: 600; color: var(--chu-phu);
-    position: relative; }
+    position: relative; display: inline-flex; align-items: center; gap: 8px; }
+  .menu button .ico { width: 18px; height: 18px; flex: none; }
   .menu button[aria-selected="true"] { background: var(--chu); border-color: var(--chu); color: #fff; }
   .menu button .huy-hieu { margin-left: 6px; }
 
@@ -51,6 +55,7 @@
     box-shadow: 0 20px 50px -30px rgba(27, 36, 48, .35); }
   .dn-the .logo-lon { height: 96px; width: auto; margin: 0 auto; display: block; }
   .dn-the .co-hang { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
+  .dn-the .co { width: 32px; height: 21px; border-radius: 2px; box-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
   .dn-the .dang { margin-top: 18px; font-size: 12px; letter-spacing: .14em; color: var(--chu-phu); font-weight: 600; }
   .dn-the h1 { font-size: 22px; letter-spacing: .06em; margin-top: 6px; color: var(--do-dam); font-weight: 800; }
   .dn-the .vp { font-size: 13px; letter-spacing: .1em; font-weight: 600; color: var(--lam); margin-top: 2px; }
@@ -60,10 +65,24 @@
   .dn-the .nut { width: 100%; margin-top: 22px; padding: 13px; }
   .dn-the .cuoi { margin-top: 16px; font-size: 13px; color: var(--chu-phu); }
 
-  @media (max-width: 860px) {
+  /* ================= 601–900px: THANH BIỂU TƯỢNG DỌC BÊN TRÁI ================= */
+  @media (min-width: 601px) and (max-width: 900px) {
+    .menu { position: fixed; left: 0; top: 60px; bottom: 0; z-index: 40; width: 56px; flex-direction: column; flex-wrap: nowrap; gap: 4px; padding: 10px 6px;
+      background: #fff; border-right: 1px solid var(--vien); overflow-y: auto; }
+    .menu button { width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 12px; }
+    .menu button .ico { width: 22px; height: 22px; }
+    .menu button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .menu button .huy-hieu { position: absolute; top: 2px; right: 2px; margin: 0; }
+    .trang { padding-left: 72px; padding-right: 16px; }
+    .dai .max { padding: 0 16px; }
+    .ten span { display: none; }
+  }
+
+  /* ================= ≤ 600px: ĐIỆN THOẠI ================= */
+  @media (max-width: 600px) {
     .max { padding: 0 16px; }
     .dai .max { gap: 8px; min-height: 52px; }
-    .co { width: 24px; height: 16px; }
+    .co-cum { width: 56px; height: 32px; }
     .logo { height: 32px; padding: 3px 5px; }
     .ten { display: none; }
     html { scroll-padding-bottom: 76px; }

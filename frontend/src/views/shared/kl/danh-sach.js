@@ -17,12 +17,10 @@ export const setKlSauKhiNap = (fn) => { sauKhiNap = fn; };
 export const getKlRows = () => kl.rows;
 export const timKlRow = (id) => kl.rows.find((r) => r.id === id);
 
-// Khoá lọc do màn hình điều hành / cán bộ / báo cáo đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm không hiện chip.
+// Khoá lọc do màn hình điều hành đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm (đơn vị, kết luận, hội nghị, ngành, lĩnh vực) không hiện chip.
 const NHAN_CHIP = {
   nguoiTheoDoi: (v) => `Người theo dõi: ${kl.rows.find((r) => r.nguoi_theo_doi === v)?.nguoi_theo_doi_ten || v}`,
   canBo: (v) => `Cán bộ: ${state.accounts.find((a) => a.id === v)?.full_name || v}`,
-  donVi: (v) => `Chịu trách nhiệm: ${tenTrongDanhMuc('donVi', v)}`,
-  ketLuan: (v) => `Kết luận: ${v}`,
   cuaToi: () => 'Việc của tôi (chịu trách nhiệm hoặc theo dõi)',
   theoDoiCuaToi: () => 'Việc tôi theo dõi (không phải Owner)',
   chiMo: () => 'Chỉ việc đang mở',
@@ -34,7 +32,7 @@ const NHAN_CHIP = {
   chuaCapQuyetDinh: () => 'Đang mở, chưa xác định cấp cần quyết định',
   nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
-const MAP_O = { klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klTimKiem: 'tuKhoa' };
+const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klTimKiem: 'tuKhoa' };
 
 export function setKlLoc(loc, thayThe = false) {
   kl.loc = thayThe ? { ...loc } : { ...kl.loc, ...loc };
@@ -69,9 +67,11 @@ function dienBoLoc() {
   $('klLocNganh').innerHTML = opt('', 'Mọi ngành') + danhMucKl().nganh.map((n) => opt(n.ma, n.ten, kl.loc.nganh === n.ma)).join('')
     + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa có ngành', kl.loc.nganh === CHUA_CO_NGANH) : '');
   dienLinhVuc();
-  // Chip phòng/đơn vị Owner (A0/A1: nhiều phòng trong phạm vi; A2/A3 chỉ một → ẩn).
-  const dv = new Map(); kl.rows.forEach((r) => { if (r.owner_don_vi_ma) dv.set(r.owner_don_vi_ma, boSoThuTu(r.owner_don_vi_ten)); });
-  $('klPhongChips').innerHTML = dv.size > 1 ? `<span class="sep"></span>${[...dv].map(([ma, ten]) => `<button type="button" data-action="locKlDonVi" data-dv="${escapeHtml(ma)}" aria-pressed="false">${escapeHtml(ten)}</button>`).join('')}` : '';
+  // Ô chọn Đơn vị chịu trách nhiệm (có đếm), nhiều việc trước; A2/A3 thường chỉ một đơn vị → ẩn ô.
+  const dv = new Map(); kl.rows.forEach((r) => { if (!r.owner_don_vi_ma) return; const c = dv.get(r.owner_don_vi_ma) || { ten: boSoThuTu(r.owner_don_vi_ten), n: 0 }; c.n++; dv.set(r.owner_don_vi_ma, c); });
+  const ds = [...dv].sort((a, b) => b[1].n - a[1].n || a[1].ten.localeCompare(b[1].ten, 'vi'));
+  $('klLocDonVi').innerHTML = opt('', `Đơn vị (${dv.size})`) + ds.map(([ma, c]) => opt(ma, `${c.ten} (${c.n})`, kl.loc.donVi === ma)).join('');
+  show('klLocDonVi', dv.size > 1 || Boolean(kl.loc.donVi));
 }
 function dienLinhVuc() {
   const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;
@@ -88,7 +88,6 @@ export function render(veLaiNgan = false) {
   setText('klSo-TONG', t.tong);
   THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
   document.querySelectorAll('#klStats .o-so').forEach((el) => el.setAttribute('aria-pressed', String((el.dataset.nhom || '') === (nhom || ''))));
-  document.querySelectorAll('#klPhongChips [data-dv]').forEach((el) => el.setAttribute('aria-pressed', String(el.dataset.dv === kl.loc.donVi)));
   const list = sapXep(locRows(trongNguCanh, { nhom }));
   const homNay = homNayVN();
   const dangMo = idDangMo();
@@ -117,5 +116,4 @@ export function ganBoLoc() {
   }));
 }
 export const locKlNhom = ({ nhom }) => { kl.loc.nhom = nhom || ''; render(); };
-export const locKlDonVi = ({ dv }) => { kl.loc.donVi = kl.loc.donVi === dv ? '' : dv; render(); };
 export const boKlLoc = ({ khoa }) => { delete kl.loc[khoa]; render(); };

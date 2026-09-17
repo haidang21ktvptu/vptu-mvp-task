@@ -75,7 +75,8 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
     assertNoRows(await me.from('nhiem_vu').update({ ghi_chu: 'A0 sửa' }).eq('id', id['NV-T88']).select('id'), 'update nhiem_vu');
     assertDenied(await me.from('minh_chung').insert({ nhiem_vu_id: id['NV-T88'], loai: 'so_hieu', so_hieu: 'x' }).select('id'), 'insert minh_chung');
     assertDenied(await me.from('chi_dao').insert({ nhiem_vu_id: id['NV-T88'], nguoi_gui: IDS.a0, loai: 'Y_KIEN', noi_dung: 'x' }).select('id'), 'insert chi_dao trực tiếp');
-    assertDenied(await me.from('direct_messages').insert({ sender_id: IDS.a0, receiver_id: IDS.cv1, content: 'KL-0030 A0 nhắn', is_read: false }).select('id'), 'A0 gửi tin nhắn 1-1');
+    assertOk(await me.from('direct_messages').insert({ sender_id: IDS.a0, receiver_id: IDS.cv1, content: 'KL-0030 A0 nhắn', is_read: false }).select('id'), 'A0 gửi tin nhắn 1-1 (0034 cho phép)');
+    await db().from('direct_messages').delete().eq('content', 'KL-0030 A0 nhắn');
     const nv = await db().from('nhiem_vu').select('ghi_chu, tien_do_ma, cap_quyet_dinh').eq('id', id['NV-T88']).single();
     assert.equal(nv.data.ghi_chu, null); assert.equal(nv.data.cap_quyet_dinh, null); assert.notEqual(nv.data.tien_do_ma, 'HOAN_THANH');
   });

@@ -22,6 +22,7 @@ function ve() {
   const canLam = n.moi.length + n.chiDao.length + n.canMinhChung.length;
   setText('vctTom', `${canLam} việc cần làm, ${n.dangLam.length} đang thực hiện, ${n.theoDoi.length} đang theo dõi`);
   $('vctMuc').innerHTML = [
+    mucHtml('do', 'Bị từ chối, chờ lãnh đạo giao lại', n.tuChoi, 'tu-choi'),
     mucHtml('lam', 'Việc mới giao — cần xác nhận đã nhận', n.moi, 'moi'),
     mucHtml('do', 'Chỉ đạo cần trả lời', n.chiDao, 'chi-dao'),
     mucHtml('vang', 'Sắp đến hạn hoặc quá hạn, chưa có minh chứng', n.canMinhChung, 'minh-chung'),
@@ -36,6 +37,7 @@ async function loadViecCuaToi() {
 function openDieuHanh() {
   showSection('viewDieuHanh');
   setActiveNav('navDieuHanh');
+  datNapLai(loadViecCuaToi);
   loadViecCuaToi();
   batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadViecCuaToi(); }, (m) => hienKetNoi('dhKetNoi', m));
 }

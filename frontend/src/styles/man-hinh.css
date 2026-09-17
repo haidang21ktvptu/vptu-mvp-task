@@ -14,6 +14,27 @@
   .tai span { display: block; height: 100%; }
   .tai .t-do { background: var(--do); } .tai .t-vang { background: var(--vang); } .tai .t-lam { background: var(--lam); }
   .tai-so { font-size: 12px; color: var(--chu-phu); white-space: nowrap; } .tai-so b { color: var(--do); }
+  .nguoi-hang.dang { background: var(--lam-nhat); }
+
+  /* ---- Ngăn bên phải trong trang (Cán bộ, Báo cáo — GĐ21, không rời mục) ---- */
+  .hai-ngan { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+  .hai-ngan.mo { grid-template-columns: 1fr 380px; }
+  .hai-ngan.mo .cb { grid-template-columns: 1fr; }
+  .ngan-ben { position: sticky; top: 12px; background: #fff; border: 1px solid var(--vien); border-radius: 12px; padding: 14px 16px; margin-top: 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
+  .ngan-dau { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .ngan-dau b { font-size: 15px; display: block; } .ngan-dau small { font-size: 12px; color: var(--chu-phu); display: block; }
+  .ngan-noi h3 { font-size: 16px; margin-top: 8px; } .ngan-noi h4 { font-size: 12px; color: var(--chu-phu); font-weight: 600; margin-top: 14px; letter-spacing: .02em; }
+  .ngan-noi > .tai { width: 100%; margin-top: 10px; } .ngan-noi > .chu-phu { font-size: 13px; margin-top: 6px; }
+  .ngan-noi dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; margin-top: 10px; }
+  .ngan-noi dt { color: var(--chu-phu); font-size: 13px; } .ngan-noi .hanh-dong { margin-top: 10px; } .ngan-noi .o { margin-top: 8px; }
+  .nv-dong { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 10px; border-left: 4px solid var(--vien); border-top: 1px solid var(--vien); }
+  .nv-dong:first-of-type { border-top: 0; }
+  .nv-dong.do { border-left-color: var(--do); } .nv-dong.dac-biet { border-left-color: var(--do-dam); } .nv-dong.vang { border-left-color: var(--vang); }
+  .nv-dong.luc { border-left-color: var(--luc); } .nv-dong.lam { border-left-color: var(--lam); }
+  .nv-dong p { font-size: 14px; min-width: 0; } .nv-dong p b { font-weight: 700; } .nv-dong small { display: block; font-size: 12px; color: var(--chu-phu); }
+  .nv-ds { padding: 4px 8px 8px; }
+  .bc-hang { cursor: pointer; } .bc-hang:hover { background: var(--nen-phu); } .bc-hang.dang { background: var(--lam-nhat); }
+  .mo-rong > td { background: var(--nen-phu); padding: 6px 12px 10px; }
 
   /* ---- Nhắn tin ---- */
   .nt { display: grid; grid-template-columns: 300px 1fr; gap: 0; margin-top: 14px; background: #fff; border: 1px solid var(--vien); border-radius: 12px; overflow: hidden; min-height: 420px; }
@@ -65,7 +86,8 @@
   .form-hang .nhan { margin-top: 0; }
 
   @media (max-width: 860px) {
-    .cb, .nt { grid-template-columns: 1fr; }
+    .cb, .nt, .hai-ngan.mo { grid-template-columns: 1fr; }
+    .ngan-ben { position: static; max-height: none; }
     .nt .ds-ht { border-right: 0; border-bottom: 1px solid var(--vien); max-height: 40vh; }
     .bang table thead { display: none; }
     .bang table, .bang tbody, .bang tr, .bang td { display: block; }

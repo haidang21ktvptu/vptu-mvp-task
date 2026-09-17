@@ -37,32 +37,51 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await expect(o).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('Báo cáo: số Tổng của phòng đầu tiên → danh sách đúng số dòng, có chip Chịu trách nhiệm; mục Nhiệm vụ đặt lại bộ lọc', async () => {
+  test('Báo cáo: số Tổng của phòng đầu tiên → hàng mở rộng đúng số việc ngay dưới dòng; Xem chi tiết → ngăn phải; không rời mục (GĐ21)', async () => {
     await nav(page, 'navBaoCao');
-    await expect(page.locator('#viewBaoCao .tq button').first()).toContainText('việc trong phạm vi');
-    const tong = await so(page.locator('#viewBaoCao .tq button').first().locator('b'));
-    const nut = page.locator('#viewBaoCao .bang').first().locator('tbody tr').first().locator('td.so').first().locator('button');
+    await expect(page.locator('#viewBaoCao .tq .o-so').first()).toContainText('việc trong phạm vi');
+    const nut = page.locator('#viewBaoCao .bang').first().locator('tbody tr.bc-hang').first().locator('td.so').first().locator('button');
     if (await nut.count() === 0) return;
     const n = await so(nut);
     await nut.click();
-    await expect(page.locator('#viewKl')).toBeVisible();
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
-    await expect(page.locator('#klChipLoc')).toContainText('Chịu trách nhiệm:');
-    await expect(page.locator('#klChipLoc')).toContainText('Về điều hành');
-    await nav(page, 'navKl');
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(tong);
-    await expect(page.locator('#klChipLoc')).toBeHidden();
+    await expect(page.locator('#viewBaoCao #bcMoRong .nv-dong')).toHaveCount(n);
+    await expect(page.locator('#viewKl')).toBeHidden();
+    await page.locator('#viewBaoCao #bcMoRong [data-action=moNganViec]').first().click();
+    await expect(page.locator('#bcNgan .ngan-noi')).toBeVisible();
+    await expect(page.locator('#viewBaoCao')).toBeVisible();
+    await page.locator('#bcNgan [data-action=dongNganBaoCao]').click();
+    await expect(page.locator('#bcNgan')).toBeHidden();
+    await nut.click(); // bấm lại cùng ô → gập
+    await expect(page.locator('#viewBaoCao #bcMoRong')).toHaveCount(0);
   });
 
-  test('Cán bộ thuộc quyền: mỗi phòng một khối, mỗi người một thanh tải việc; bấm tên mở danh sách của người đó', async () => {
+  test('Cán bộ thuộc quyền: mỗi phòng một khối, mỗi người một thanh tải việc; bấm tên mở ngăn bên phải ngay trong trang (GĐ21)', async () => {
     await nav(page, 'navCanBo');
     const khoi = page.locator('#viewCanBo .cb section');
     await expect(khoi.first()).toBeVisible();
     const nguoi = page.locator('#viewCanBo .nguoi-hang').first();
     if (await nguoi.count() === 0) return;
     await expect(nguoi.locator('.tai')).toBeVisible();
+    const ten = await nguoi.locator('b').first().innerText();
     await nguoi.click();
-    await expect(page.locator('#viewKl')).toBeVisible();
-    await expect(page.locator('#klChipLoc')).toContainText('Cán bộ:');
+    await expect(page.locator('#cbNgan .ngan-noi')).toBeVisible();
+    await expect(page.locator('#cbNgan .ngan-dau')).toContainText(ten);
+    await expect(page.locator('#viewCanBo')).toBeVisible();
+    await expect(page.locator('#viewKl')).toBeHidden();
+    await expect(nguoi).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('Nhiệm vụ: thanh trạng thái một hàng, ô chọn Đơn vị có đếm cùng hàng ô tìm; chọn đơn vị → danh sách đúng số dòng (GĐ21)', async () => {
+    await nav(page, 'navKl');
+    await expect(page.locator('#klStats')).toBeVisible();
+    const cao = (await page.locator('#klStats').boundingBox()).height;
+    expect(cao, 'thanh trạng thái một hàng').toBeLessThan(60);
+    const chon = page.locator('#klLocDonVi');
+    if (!(await chon.isVisible())) return; // phạm vi chỉ một đơn vị → ô ẩn
+    const opt = chon.locator('option').nth(1);
+    const n = Number((await opt.innerText()).match(/\((\d+)\)\s*$/)?.[1] || 0); // "Phòng X (n)"
+    await chon.selectOption({ index: 1 });
+    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
+    await chon.selectOption('');
   });
 });
