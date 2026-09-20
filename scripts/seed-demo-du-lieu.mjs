@@ -31,12 +31,24 @@ function danhSach(tk, homNay, phong) {
   ];
 }
 
+// Đơn vị dm_don_vi cho phòng E2E_RT (phòng của demo_e2e_tp / demo_e2e_cv / demo_e2e_cv2): việc có Owner là tài khoản ở phòng này cần đơn vị
+// có phong = 'E2E_RT' (trigger 0023); giao lại đổi chủ trì (0045) cũng cần. Idempotent; 0044 dọn ma LIKE 'E2E\_%'.
+async function donViE2ERT(db, dryRun) {
+  const co = loi(await db.from('dm_don_vi').select('ma').eq('ma', 'E2E_RT').maybeSingle(), 'Đọc dm_don_vi E2E_RT');
+  if (co || dryRun) return;
+  const { data: tt } = await db.from('dm_don_vi').select('thu_tu').order('thu_tu', { ascending: false }).limit(1).maybeSingle();
+  loi(await db.from('dm_don_vi').insert({ ma: 'E2E_RT', ten: `Phòng E2E RT (${SEED_TAG})`, thu_tu: (tt?.thu_tu || 0) + 1, trong_van_phong: true, phong: 'E2E_RT' }), 'Tạo đơn vị E2E_RT');
+  console.log('Đơn vị E2E_RT: tạo mới');
+}
 // Phòng thử E2E cho PCVP demo (demo_pcvp2) phụ trách — không đụng phòng thật (trên production phòng thật đã có lãnh đạo thật phụ trách nên
 // seed không chèn được, spec cần "PCVP phụ trách phòng X" sẽ đỏ). Dùng phòng E2E_RT nếu dm_don_vi đã có, không thì tạo E2E_PT (trong Văn phòng,
 // phong = mã). Phân công phu_trach_phong đang hiệu lực demo_pcvp2 ↔ phòng đó, ly_do 'seed kiểm thử'. Idempotent; Dọn dữ liệu xoá (0044).
 export async function napPhongThu(db, dryRun) {
   const lanhDao = loi(await db.from('accounts').select('id').eq('username', 'demo_pcvp2').maybeSingle(), 'Đọc demo_pcvp2');
   if (!lanhDao) throw new Error('Thiếu tài khoản demo_pcvp2 — không tạo phòng thử E2E.');
+  await donViE2ERT(db, dryRun);
+  const daCo = loi(await db.from('phu_trach_phong').select('phong').eq('lanh_dao_id', lanhDao.id).is('den_ngay', null).like('phong', 'E2E_%'), 'Đọc phân công E2E');
+  if (daCo.length) { console.log(`Phòng thử E2E: ${daCo[0].phong} (demo_pcvp2 đã phụ trách)`); return daCo[0].phong; } // không thêm phân công thứ hai khi đã có
   const co = loi(await db.from('dm_don_vi').select('ma, phong').in('ma', ['E2E_RT', 'E2E_PT']).order('ma', { ascending: false }), 'Đọc dm_don_vi'); // E2E_RT trước
   let phong = co[0]?.phong || co[0]?.ma;
   if (!phong) {

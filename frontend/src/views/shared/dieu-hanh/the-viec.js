@@ -7,6 +7,8 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { formatNgay, homNayVN } from '../../../lib/kl/ngay.js';
 import { tenKhau, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
+import { danhMucKl } from '../../../lib/kl/du-lieu.js';
+import { goiYTheoDoi } from '../kl/them-owner.js';
 import { canToiQuyet, ttCuaViec } from './du-lieu.js';
 
 export const GOI_Y_A0 = ['Báo cáo Thường trực lý do chậm', 'Hoàn thành trước ngày …', 'Chánh Văn phòng trực tiếp xử lý', 'Trình Ban Thường vụ kỳ họp tới'];
@@ -48,18 +50,29 @@ function oHtml(r) {
     </form>`;
 }
 
-// Người theo dõi mới cho ô Giao lại: cán bộ Văn phòng (không A0, không hệ thống), A2 chỉ phòng mình; hàm chi_dao_gui là chốt.
-export function nguoiTheoDoiMoiOptions(r) {
+// Cán bộ Văn phòng chọn được trong ô Giao lại (không A0, không hệ thống; A2 chỉ phòng mình), trừ `loai` (chủ trì hiện tại / không); chi_dao_gui là chốt.
+function canBoOptions(loai, chon) {
   const me = state.user;
-  return state.accounts.filter((a) => !a.is_system && a.role_group !== 'A0' && a.id !== r.nguoi_theo_doi && (me?.role_group !== 'A2' || a.department === me.department))
+  return state.accounts.filter((a) => !a.is_system && a.role_group !== 'A0' && a.id !== loai && (me?.role_group !== 'A2' || a.department === me.department))
     .sort((a, b) => (a.department || '').localeCompare(b.department || '') || a.full_name.localeCompare(b.full_name, 'vi'))
-    .map((a) => `<option value="${a.id}">${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('');
+    .map((a) => `<option value="${a.id}"${a.id === chon ? ' selected' : ''}>${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('');
 }
-// Ô giao lại (A1/A2) dưới thẻ việc bị từ chối: người theo dõi mới + lý do một dòng.
+export const chuTriMoiOptions = (r) => canBoOptions(r.owner_tai_khoan, null);
+export const nguoiTheoDoiOptions = (r, chon = r.nguoi_theo_doi) => canBoOptions(null, chon);
+// Người theo dõi gợi ý theo cấp quản lý của chủ trì mới — cùng quy tắc goiYTheoDoi của biểu mẫu giao việc: lãnh đạo A1/A2 → chính họ;
+// chuyên viên → Trưởng phòng của phòng mình (nhánh "dv:" theo đơn vị của phòng); không suy được → null (giữ người theo dõi hiện tại).
+export function goiYTheoDoiCuaChuTri(chuTriId) {
+  const dm = danhMucKl(); const a = state.accounts.find((x) => x.id === chuTriId);
+  const dv = dm.donVi.find((d) => d.phong && d.phong === a?.department);
+  return goiYTheoDoi(`tk:${chuTriId}`, dm, state.accounts) || (dv ? goiYTheoDoi(`dv:${dv.ma}`, dm, state.accounts) : null);
+}
+// Ô giao lại (A1/A2) dưới thẻ việc bị từ chối / trong ngăn: CHỦ TRÌ mới (đổi người chịu trách nhiệm) + người theo dõi (gợi ý theo chủ trì mới,
+// sửa được) + lý do một dòng. Sau khi giao lại: cờ "bị từ chối" tự xoá, chủ trì mới phải xác nhận nhận việc lại (0045).
 export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
   return `<form class="o" id="${tienTo}-${r.id}" data-submit="giaoLaiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
-      <small>Giao lại cho người theo dõi mới; người cũ và người mới nhận thông báo; cờ "bị từ chối" tự xoá.</small>
-      <select name="nguoi_theo_doi_moi" required aria-label="Người theo dõi mới"><option value="">Chọn người theo dõi mới</option>${nguoiTheoDoiMoiOptions(r)}</select>
+      <small>Giao lại = đổi chủ trì (người chịu trách nhiệm); người cũ và người mới nhận thông báo; cờ "bị từ chối" tự xoá; chủ trì mới xác nhận nhận việc lại.</small>
+      <select name="chu_tri_moi" required aria-label="Chủ trì mới"><option value="">Chọn chủ trì mới</option>${chuTriMoiOptions(r)}</select>
+      <select name="nguoi_theo_doi_moi" aria-label="Người theo dõi (gợi ý theo chủ trì mới, sửa được)"><option value="">Người theo dõi: giữ như hiện tại</option>${nguoiTheoDoiOptions(r)}</select>
       <input name="noi_dung" required placeholder="Lý do giao lại" aria-label="Lý do giao lại">
       <button type="submit" class="nut chinh">Giao lại</button><button type="button" class="nut" data-action="dongO" data-o="${tienTo}-${r.id}">Huỷ</button>
     </form>`;

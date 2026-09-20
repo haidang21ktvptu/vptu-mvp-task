@@ -87,7 +87,7 @@ export function khoiBiTuChoiHtml() {
   if (ds.length === 0) return '';
   const giaoLai = ['A1', 'A2'].includes(vai());
   return `<div class="muc do" id="khoiBiTuChoi"><b>Việc đồng chí giao bị từ chối / đang đề nghị từ chối (${ds.length})</b>
-    <p>${giaoLai ? 'Giao lại cho người theo dõi mới ngay tại đây; cờ "bị từ chối" tự xoá.' : 'Lãnh đạo Văn phòng giao lại cho người khác.'}</p>
+    <p>${giaoLai ? 'Giao lại = đổi chủ trì ngay tại đây; cờ "bị từ chối" tự xoá; chủ trì mới xác nhận nhận việc lại.' : 'Lãnh đạo Văn phòng giao lại cho chủ trì khác.'}</p>
     ${ds.map((r) => {
     const dn = r.tu_choi_cho; const nd = dn ? findAccount(dn.nguoi_de_nghi) : null;
     const tt = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : `<span class="nhan-xam">${escapeHtml(nd?.full_name || 'Cán bộ')} đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(findAccount(dn.cap_duyet)?.full_name || 'cấp duyệt')} duyệt</span>`;

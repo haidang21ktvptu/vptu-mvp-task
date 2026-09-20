@@ -1,13 +1,13 @@
 // Ngăn bên phải dùng chung cho Cán bộ (thuộc quyền / trong phòng / toàn Văn phòng) và Báo cáo — mở ngay trong trang, KHÔNG chuyển sang mục
 // Nhiệm vụ: một người (thanh tải + việc mở của người đó) hoặc một việc (điều then chốt). Hành động tại chỗ cho A1/A2: Giao lại (GIAO_LAI,
-// người theo dõi mới + lý do) và Nhắc (DON_DOC) — hàm chi_dao_gui là chốt; A0/A3 chỉ đọc. Mỗi màn hình gọi datNapLai để nạp lại sau hành động.
+// chủ trì mới + người theo dõi + lý do, 0045) và Nhắc (DON_DOC) — hàm chi_dao_gui là chốt; A0/A3 chỉ đọc. Mỗi màn hình gọi datNapLai để nạp lại sau hành động.
 import { $, escapeHtml, show } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
 import { nhanTrangThai, lopMep, boSoThuTu } from '../../lib/kl/nhan.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
-import { nguoiTheoDoiMoiOptions } from './dieu-hanh/the-viec.js';
+import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const duocChiDao = () => ['A1', 'A2'].includes(state.user?.role_group);
@@ -29,10 +29,7 @@ function hanhDongViecHtml(r, tienTo) {
   const ma = escapeHtml(r.ma);
   return `<div class="hanh-dong"><button type="button" class="nut lam" data-action="moO" data-o="${tienTo}GL-${r.id}">Giao lại</button>
       <button type="button" class="nut" data-action="moO" data-o="${tienTo}Nhac-${r.id}">Nhắc</button></div>
-    <form class="o" id="${tienTo}GL-${r.id}" data-submit="giaoLaiThe" data-id="${r.id}" data-ma="${ma}">
-      <select name="nguoi_theo_doi_moi" required aria-label="Người theo dõi mới"><option value="">Chọn người theo dõi mới</option>${nguoiTheoDoiMoiOptions(r)}</select>
-      <input name="noi_dung" required placeholder="Lý do giao lại" aria-label="Lý do giao lại">
-      <button type="submit" class="nut chinh">Giao lại</button><button type="button" class="nut" data-action="dongO" data-o="${tienTo}GL-${r.id}">Huỷ</button></form>
+    ${oGiaoLaiHtml(r, `${tienTo}GL`)}
     <form class="o" id="${tienTo}Nhac-${r.id}" data-submit="guiDonDocThe" data-id="${r.id}" data-ma="${ma}">
       <input name="noi_dung" required placeholder="Nội dung nhắc" aria-label="Nội dung nhắc">
       <button type="submit" class="nut chinh">Gửi nhắc</button><button type="button" class="nut" data-action="dongO" data-o="${tienTo}Nhac-${r.id}">Huỷ</button></form>`;

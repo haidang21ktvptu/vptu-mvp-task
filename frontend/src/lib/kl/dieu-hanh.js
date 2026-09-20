@@ -38,7 +38,7 @@ export async function loadChiDao(nhiemVuId) {
   return { rows, daDoc: new Set(dd.map((x) => x.chi_dao_id)) };
 }
 
-// p: { nhiem_vu_id, loai, noi_dung, han_phan_hoi?, han_moi? (GIA_HAN), nguoi_theo_doi_moi? (GIAO_LAI), tra_loi_cho? } → id chỉ đạo.
+// p: { nhiem_vu_id, loai, noi_dung, han_phan_hoi?, han_moi? (GIA_HAN), chu_tri_moi (GIAO_LAI, 0045: đổi chủ trì) + nguoi_theo_doi_moi? (tuỳ chọn), tra_loi_cho? } → id chỉ đạo.
 export const chiDaoGui = (p) => rpc('chi_dao_gui', { p });
 // p: { chi_dao_id (gốc hoặc một phản hồi), noi_dung } → id phản hồi.
 export const chiDaoPhanHoi = (p) => rpc('chi_dao_phan_hoi', { p });
