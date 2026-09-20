@@ -37,8 +37,16 @@ export async function napDienBien(el, nhiemVuId) {
   if (!el) return;
   el.innerHTML = '<p class="chu-phu">Đang tải diễn biến…</p>';
   // Trong lúc đọc, vùng chứa có thể đã bị vẽ lại (giuDienBien gắn lại bản sao) → ghi vào phần tử đang có trong trang, không vào phần tử đã rời DOM.
+  // Phải tính xong HTML (sau await) RỒI mới gọi dich(): trong `dich().innerHTML = await …` vế trái được đánh giá trước await → trỏ phần tử cũ.
   const dich = () => (el.isConnected ? el : $(`db-${nhiemVuId}`)?.querySelector(':scope > div')) || el;
-  try { dich().innerHTML = dienBienHtml(await loadDienBien(nhiemVuId)); } catch (e) { notifyError(e.message); dich().innerHTML = `<p class="loi-inline">${escapeHtml(e.message)}</p>`; }
+  try {
+    const html = dienBienHtml(await loadDienBien(nhiemVuId));
+    dich().innerHTML = html;
+  } catch (e) {
+    const loi = `<p class="loi-inline">${escapeHtml(e.message)}</p>`;
+    notifyError(e.message);
+    dich().innerHTML = loi;
+  }
 }
 
 // "Xem diễn biến" trên thẻ/dòng: mở rộng ngay dưới thẻ chứa nút (bấm lại để gập); không có thẻ chứa (chuông, ngăn) → mở ngăn chi tiết như cũ.

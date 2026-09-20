@@ -4,15 +4,21 @@ name: CI
 # Job "Kiểm thử RLS + e2e trên staging" chỉ chạy cho pull_request (không chạy khi push main để không
 # chen vào deploy-staging đang áp migration). Secrets cần có: xem docs/kien-truc.md.
 #
-# PR chỉ tài liệu (mọi file đổi khớp `docs/**` hoặc `*.md`, job `phan-loai`): hai job chậm
-# `supabase-db` và `kiem-thu-staging` được thay bằng job rỗng CÙNG TÊN hiển thị để ruleset `main`
-# (bắt buộc 4 check theo tên) vẫn xanh. Không chắc là docs-only (push main, diff lỗi, PR rỗng) → chạy đủ.
-# `gitleaks` và `frontend` luôn chạy. Test RLS bằng token thật trên staging đã chuyển sang
-# deploy-staging.yml (chạy sau db push); trong PR, RLS chạy trên Supabase cục bộ ở `supabase-db`.
+# Phân loại thay đổi (job `phan-loai`, script dùng chung .github/scripts/phan-loai.sh — cùng deploy-staging.yml), cho cả
+# pull_request và push main: mọi file đổi khớp `docs/**`, `*.md`, workflows backup-dinh-ky / canh-bao → "không ảnh hưởng app":
+# ba job `supabase-db`, `frontend`, `kiem-thu-staging` thay bằng job rỗng CÙNG TÊN hiển thị (ruleset `main` bắt 4 check theo tên;
+# deploy-prod `kiem-tra` cũng đọc theo tên nên PR release chỉ tài liệu vẫn tag được). `gitleaks` luôn chạy. Không chắc (PR rỗng,
+# API lỗi, lấy không đủ danh sách, push đầu tiên) hoặc đổi chính script / ci.yml / deploy-*.yml → chạy đủ.
+# Test RLS bằng token thật trên staging đã chuyển sang deploy-staging.yml (chạy sau db push); trong PR, RLS chạy cục bộ ở `supabase-db`.
 on:
   pull_request:
   push:
     branches: [main]
+
+# PR: lượt CI mới trên cùng nhánh huỷ lượt cũ đang chạy (push liên tiếp không xếp hàng); push main: mỗi sha một nhóm, không huỷ.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # shell: bash để bật pipefail — lỗi trong lệnh trước dấu | (db dump, db push) không bị nuốt.
 defaults:
@@ -41,39 +47,35 @@ jobs:
           fi
           echo "Đạt: không có file dữ liệu thật."
 
-  # Phân loại PR: docs_only = 'true' chỉ khi danh sách file của PR đọc được (API), có ít nhất một file và
-  # KHÔNG file nào ngoài `docs/**` / `*.md`. Nhánh phát hành (`*phat-hanh*`) luôn 'false': commit đầu nhánh
-  # đó được gắn tag `v*` và `deploy-prod` (job kiem-tra) chỉ tin 4 check của đúng commit ấy, mà push main
-  # không chạy e2e — nên PR phát hành phải chạy đủ dù chỉ đổi tài liệu. Mọi lỗi → 'false'; job không đọc
-  # mã nguồn (không checkout) và không bao giờ đỏ. Chỉ chạy cho pull_request; khi bị bỏ qua (push main)
-  # output rỗng → các job dưới (điều kiện `!cancelled()` + `!= 'true'`) vẫn chạy đủ.
+  # Phân loại thay đổi: chạy cho cả pull_request và push main; chỉ checkout thư mục script (sparse), quyền tối thiểu; không bao giờ đỏ
+  # (script luôn exit 0, mọi lỗi → 'false' = chạy đủ). Các job dưới dùng `!cancelled()` để không bị bỏ qua theo job này.
   phan-loai:
-    name: Phân loại PR (chỉ tài liệu?)
-    if: github.event_name == 'pull_request'
+    name: Phân loại thay đổi (không ảnh hưởng app?)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
-      docs_only: ${{ steps.xet.outputs.docs_only }}
+      khong_anh_huong_app: ${{ steps.xet.outputs.khong_anh_huong_app }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+          sparse-checkout-cone-mode: false
       - id: xet
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
           SO_PR: ${{ github.event.pull_request.number }}
-          NHANH: ${{ github.head_ref }}
-        run: |
-          KQ=false
-          FILES=$(gh api "repos/$REPO/pulls/$SO_PR/files" --paginate --jq '.[].filename' 2>/dev/null || true)
-          NGOAI=$(printf '%s\n' "$FILES" | grep -Ev '^docs/|\.md$' || true)
-          case "$NHANH" in *phat-hanh*) NGOAI="(nhánh phát hành — luôn chạy đủ)";; esac
-          if [ -n "$FILES" ] && [ -z "$NGOAI" ]; then KQ=true; fi
-          echo "docs_only=$KQ" >> "$GITHUB_OUTPUT"
-          echo "docs_only=$KQ"
-          printf 'File đổi:\n%s\nNgoài docs/*.md:\n%s\n' "${FILES:-(không đọc được)}" "${NGOAI:-(không có)}"
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: bash .github/scripts/phan-loai.sh
 
   supabase-db:
     name: Áp migration + lint schema
     needs: phan-loai
-    if: ${{ !cancelled() && needs.phan-loai.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,18 +107,29 @@ jobs:
         env:
           RLS_LOCAL: '1'
         run: npm ci && npm test
-
+  # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ khi thay đổi không ảnh hưởng app (ruleset bắt check theo tên).
   # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ cho PR docs-only (ruleset bắt check theo tên).
   supabase-db-tai-lieu:
     name: Áp migration + lint schema
     needs: phan-loai
-    if: ${{ !cancelled() && needs.phan-loai.outputs.docs_only == 'true' }}
+    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "PR chỉ tài liệu — bỏ qua áp migration, lint schema và test RLS cục bộ."
+      - run: echo "Thay đổi không ảnh hưởng app — bỏ qua áp migration, lint schema và test RLS cục bộ."
+
+  # Job rỗng cùng tên hiển thị với `frontend`, chỉ khi thay đổi không ảnh hưởng app.
+  frontend-tai-lieu:
+    name: Build frontend + giới hạn 300 dòng
+    needs: phan-loai
+    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Thay đổi không ảnh hưởng app — bỏ qua build, unit test, lint và giới hạn 300 dòng."
 
   frontend:
     name: Build frontend + giới hạn 300 dòng
+    needs: phan-loai
+    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -155,7 +168,7 @@ jobs:
   kiem-thu-staging:
     name: Kiểm thử RLS + e2e trên staging
     needs: phan-loai
-    if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.phan-loai.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.phan-loai.outputs.khong_anh_huong_app != 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: kiem-thu-${{ vars.KIEM_THU_MOI_TRUONG || 'staging' }}
@@ -249,11 +262,11 @@ jobs:
           path: tests/e2e/playwright-report
           retention-days: 7
 
-  # Job rỗng cùng tên hiển thị với `kiem-thu-staging`, chỉ cho PR docs-only.
+  # Job rỗng cùng tên hiển thị với `kiem-thu-staging`, chỉ cho pull_request khi thay đổi không ảnh hưởng app.
   kiem-thu-staging-tai-lieu:
     name: Kiểm thử RLS + e2e trên staging
     needs: phan-loai
-    if: ${{ !cancelled() && needs.phan-loai.outputs.docs_only == 'true' }}
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.phan-loai.outputs.khong_anh_huong_app == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "PR chỉ tài liệu — bỏ qua e2e trên staging."
+      - run: echo "Thay đổi không ảnh hưởng app — bỏ qua e2e trên staging."
