@@ -55,8 +55,12 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
   });
 
   test('thẻ việc Đỏ: số ngày trễ, khâu, nút Chỉ đạo mở ô một dòng có gợi ý; Xem diễn biến mở ngăn chi tiết ở Toàn bộ nhiệm vụ', async () => {
-    const the = page.locator('#dsThe .the').first();
-    if (await the.count() === 0) return; // phạm vi không có việc Đỏ
+    const dau = page.locator('#dsThe .the').first();
+    if (await dau.count() === 0) return; // phạm vi không có việc Đỏ
+    // Neo cố định theo id ngay từ đầu: `.first()` là locator động — danh sách vẽ lại theo realtime (CI 2 worker, spec khác tạo việc) có thể
+    // đổi thẻ đầu giữa chừng, làm các bước sau (ô Chỉ đạo, Xem diễn biến, #db-<id>) trỏ sang việc khác.
+    const id = (await dau.getAttribute('id')).replace('the-', '');
+    const the = page.locator(`#the-${id}`);
     await expect(the.locator('.tre')).toBeVisible();
     await expect(the.locator('.khau')).toBeVisible();
     await the.locator('[data-action="moO"]').click();
@@ -67,7 +71,6 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(o.locator('input[name=noi_dung]')).toHaveValue('Báo cáo Thường trực lý do chậm');
     await o.locator('[data-action="dongO"]').click();
     await expect(o).not.toHaveClass(/\bmo\b/);
-    const id = (await the.getAttribute('id')).replace('the-', '');
     // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (không rời trang); bấm lại để gập.
     await the.locator('[data-action="xemDienBien"]').click();
     await expect(page.locator('#viewDieuHanh')).toBeVisible();
