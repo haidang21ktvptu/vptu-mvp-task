@@ -7,7 +7,9 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { chiDaoGui, chiDaoPhanHoi, deNghiTuChoi, duyetTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { xacNhanMinhChung } from '../../../lib/kl/minh-chung.js';
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
+import { findAccount } from '../../../lib/state.js';
 import { dh } from './du-lieu.js';
+import { goiYTheoDoiCuaChuTri } from './the-viec.js';
 import { veDieuHanh } from './man-hinh.js';
 import { napLaiViec } from '../kl/nap-lai-viec.js';
 import { chonDoKhan } from '../../../lib/kl/do-khan.js';
@@ -33,7 +35,8 @@ const noiDung = (form) => (new FormData(form).get('noi_dung') || '').trim();
 // Việc của một nút/biểu mẫu trên thẻ: data-id là việc, hoặc khối cha có data-nhiem-vu / id="the-<id>" (đề nghị từ chối, minh chứng, phản hồi).
 const nvCua = (el, ds) => ds?.nv || el?.closest?.('[data-nhiem-vu]')?.dataset.nhiemVu || el?.closest?.('[id^="the-"]')?.id.slice(4) || null;
 // Sau hành động ghi thành công (GĐ23): nạp lại đúng việc đó ngay (thẻ / ngăn / dòng), rồi nạp lại trang; không phụ thuộc realtime.
-const thanhCong = async (form, chu, nvId) => { form.classList.remove('mo'); form.reset(); notifySuccess(chu); await napLaiViec(nvId); await napLai(); };
+// Sau mọi hành động ghi: nạp lại đúng việc, làm mới SỐ CHƯA XỬ LÝ (dải "Cần xử lý ngay", huy hiệu menu — lỗi v3.6.2: duyệt từ chối xong số vẫn cũ), rồi cả trang.
+const thanhCong = async (form, chu, nvId) => { form.classList.remove('mo'); form.reset(); notifySuccess(chu); await napLaiViec(nvId); await lamMoiHuyHieu(); await napLai(); };
 
 // A0: chỉ đạo Thường trực — người nhận tự tính, hạn phản hồi 2 ngày làm việc (0032).
 async function guiChiDaoTTThe(ds, form) {
@@ -64,22 +67,29 @@ async function phanHoiThe(ds, form) {
 }
 // Minh chứng chờ xác nhận: Hợp lệ (một bấm) / Không hợp lệ (ô lý do bắt buộc, MC-6).
 async function mcHopLeThe(ds) {
-  try { await xacNhanMinhChung(ds.id, true); notifySuccess('Đã xác nhận minh chứng hợp lệ.'); await napLaiViec(ds.nv); await napLai(); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(ds.id, true); notifySuccess('Đã xác nhận minh chứng hợp lệ.'); await napLaiViec(ds.nv); await lamMoiHuyHieu(); await napLai(); } catch (e) { notifyError(e.message); }
 }
 async function mcKhongHopLeThe(ds, form) {
   const lyDo = noiDung(form);
   if (!lyDo) { notifyError('Bác minh chứng phải ghi lý do.'); return; }
   try { await xacNhanMinhChung(ds.id, false, lyDo); await thanhCong(form, 'Đã ghi minh chứng không hợp lệ. Người nộp nhận thông báo.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
-// Giao lại tại chỗ (GIAO_LAI 0026): người theo dõi mới + một dòng lý do; cờ bị từ chối tự xoá (0034).
+// Giao lại tại chỗ (GIAO_LAI, 0045): đổi CHỦ TRÌ + người theo dõi (tuỳ chọn, gợi ý theo chủ trì mới) + một dòng lý do; cờ bị từ chối tự xoá (0034).
 async function giaoLaiThe(ds, form) {
-  const moi = new FormData(form).get('nguoi_theo_doi_moi'); const nd = noiDung(form);
-  if (!moi) { notifyError('Chọn người theo dõi mới.'); return; }
+  const f = new FormData(form); const moi = f.get('chu_tri_moi'); const theoDoi = f.get('nguoi_theo_doi_moi') || ''; const nd = noiDung(form);
+  if (!moi) { notifyError('Chọn chủ trì mới.'); return; }
   if (!nd) { notifyError('Cần một dòng lý do giao lại.'); return; }
   try {
-    await chiDaoGui({ nhiem_vu_id: ds.id, loai: 'GIAO_LAI', noi_dung: nd, nguoi_theo_doi_moi: moi });
-    await thanhCong(form, `Đã giao lại ${ds.ma}. Người theo dõi mới và người cũ nhận thông báo.`, ds.id);
+    await chiDaoGui({ nhiem_vu_id: ds.id, loai: 'GIAO_LAI', noi_dung: nd, chu_tri_moi: moi, nguoi_theo_doi_moi: theoDoi });
+    await thanhCong(form, `Đã giao lại ${ds.ma} cho ${findAccount(moi)?.full_name || 'chủ trì mới'} chủ trì. Người cũ và người mới nhận thông báo; chủ trì mới xác nhận nhận việc lại.`, ds.id);
   } catch (e) { notifyError(e.message); }
+}
+// Chọn chủ trì mới trong ô Giao lại (mọi màn hình) → ô người theo dõi gợi ý theo cấp quản lý của chủ trì mới; người dùng sửa được.
+function onDoiChuTri(e) {
+  const sel = e.target;
+  if (!(sel instanceof HTMLSelectElement) || sel.name !== 'chu_tri_moi') return;
+  const theoDoi = sel.form?.querySelector('select[name=nguoi_theo_doi_moi]'); const goiY = sel.value ? goiYTheoDoiCuaChuTri(sel.value) : null;
+  if (theoDoi && goiY && theoDoi.querySelector(`option[value="${goiY}"]`)) theoDoi.value = goiY;
 }
 // Từ chối nhận việc (0034): đề nghị (lý do bắt buộc, chỉ cấp duyệt và cấp trên đọc) / duyệt (nút bấm quyết định đồng ý hay không).
 async function deNghiTuChoiThe(ds, form) {
@@ -115,6 +125,7 @@ async function xacNhanNhanTT({ id, ma }) {
 const cuonToi = ({ toi }) => { const el = $(toi); if (el && !el.classList.contains('hidden')) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
 export function mountHanhDongDieuHanh() {
+  document.addEventListener('change', onDoiChuTri);
   registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
     giaoLaiThe, deNghiTuChoiThe, duyetTuChoiThe, xacNhanNhanTT, chonDoKhan, cuonToi });
 }

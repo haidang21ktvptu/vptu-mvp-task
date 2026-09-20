@@ -9,6 +9,7 @@ import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
 import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
+import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
 import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
@@ -46,6 +47,7 @@ export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
 // rồi nạp lại cả danh sách phía sau. Không có id (chỉ đạo / minh chứng gọi không tham số) → việc đang mở ở ngăn chi tiết.
 async function napLaiSauHanhDong(id) {
   await napLaiViec(id || idDangMo());
+  await lamMoiHuyHieu(); // số chưa xử lý (dải Cần xử lý ngay, huy hiệu) đổi ngay sau ghi, không chờ realtime
   loadKl();
 }
 

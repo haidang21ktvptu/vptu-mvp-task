@@ -126,19 +126,25 @@ describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin h
 assertOk(await phanHoi('demo_cv1', { chi_dao_id: y.data, noi_dung: 'Đã trao đổi với Ban Tổ chức' }), 'A3 (người theo dõi) trả lời Ý kiến');    assert.equal((await (await userClient('demo_cvp')).from('v_nhiem_vu').select('so_chi_dao_cho_phan_hoi').eq('id', id['NV-T91']).single()).data.so_chi_dao_cho_phan_hoi, 0, 'Ý kiến không tính chờ phản hồi');    assertOk(await (await userClient('demo_truongphong')).rpc('chi_dao_dong', { p_id: y.data }), 'người ra ý kiến đóng');    assertLoi(await phanHoi('demo_cv1', { chi_dao_id: y.data, noi_dung: 'muộn' }), 'trả lời Ý kiến đã đóng');
   });
 
-  test('6. GIAO_LAI: người theo dõi mới phải trong phạm vi người ra chỉ đạo (A2 cùng phòng, PCVP phòng phụ trách); Chánh VP mọi phòng; người cũ nhận tin', async () => {
-    assertDenied(await gui('demo_truongphong', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'sang QT', nguoi_theo_doi_moi: IDS.cv2 }), 'A2 giao sang phòng khác');
-    assertDenied(await gui('demo_pcvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'sang QT', nguoi_theo_doi_moi: IDS.cv2 }), 'PCVP giao sang phòng không phụ trách');
-    assertLoi(await gui('demo_cvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'trùng', nguoi_theo_doi_moi: IDS.cv1 }), 'giao lại chính người cũ');
-    assertOk(await gui('demo_truongphong', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'Chuyển trưởng phòng theo dõi', nguoi_theo_doi_moi: IDS.truongphong }), 'A2 giao trong phòng');
-    assert.equal((await nv('NV-T91')).nguoi_theo_doi, IDS.truongphong);
-    assertOk(await gui('demo_cvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'Chuyển phòng Quản trị', nguoi_theo_doi_moi: IDS.cv2 }), 'Chánh VP giao sang phòng khác');
-    const n = await nv('NV-T91');
-    assert.equal(n.nguoi_theo_doi, IDS.cv2);
-    assert.deepEqual((await lichSu('NV-T91', 'nguoi_theo_doi')).map((l) => [l.gia_tri_cu, l.gia_tri_moi]), [[IDS.cv1, IDS.truongphong], [IDS.truongphong, IDS.cv2]]);
+  test('6. GIAO_LAI (0045) đổi CHỦ TRÌ: chủ trì mới trong phạm vi người ra chỉ đạo; đơn vị + cấp nhận theo chủ trì mới; người theo dõi tuỳ chọn; đóng thì chặn; cũ và mới nhận tin', async () => {
+    assertDenied(await gui('demo_truongphong', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'sang QT', chu_tri_moi: IDS.cv2 }), 'A2 giao sang phòng khác');
+    assertDenied(await gui('demo_pcvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'sang QT', chu_tri_moi: IDS.cv2 }), 'PCVP giao sang phòng không phụ trách');
+    assertLoi(await gui('demo_cvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'thiếu', nguoi_theo_doi_moi: IDS.cv1 }), 'thiếu chu_tri_moi (khoá cũ không còn đủ)');
+    // A2 giao trong phòng: chủ trì = cv1 (A3 Tổng hợp) → đơn vị TONG_HOP, cấp nhận Trưởng phòng; người theo dõi truyền = trưởng phòng.
+    assertOk(await gui('demo_truongphong', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'Giao cv1 chủ trì', chu_tri_moi: IDS.cv1, nguoi_theo_doi_moi: IDS.truongphong }), 'A2 giao trong phòng');
+    let n = await nv('NV-T91');
+    assert.deepEqual([n.owner_tai_khoan, n.owner_don_vi_ma, n.cap_nhan_san_pham, n.nguoi_theo_doi], [IDS.cv1, 'TONG_HOP', 'TRUONG_PHONG', IDS.truongphong]);
+    assertLoi(await gui('demo_cvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'trùng', chu_tri_moi: IDS.cv1 }), 'giao lại chính chủ trì hiện tại');
+    // Chánh VP giao sang phòng khác: chủ trì cv2 (QUAN_TRI) → đơn vị QUAN_TRI; không truyền người theo dõi → giữ trưởng phòng.
+    assertOk(await gui('demo_cvp', { nhiem_vu_id: id['NV-T91'], loai: 'GIAO_LAI', noi_dung: 'Chuyển phòng Quản trị', chu_tri_moi: IDS.cv2 }), 'Chánh VP giao sang phòng khác');
+    n = await nv('NV-T91');
+    assert.deepEqual([n.owner_tai_khoan, n.owner_don_vi_ma, n.cap_nhan_san_pham, n.nguoi_theo_doi], [IDS.cv2, 'QUAN_TRI', 'TRUONG_PHONG', IDS.truongphong]);
+    assert.deepEqual((await lichSu('NV-T91', 'owner_tai_khoan')).map((l) => [l.gia_tri_cu, l.gia_tri_moi]), [[null, IDS.cv1], [IDS.cv1, IDS.cv2]], 'trigger ghi cột owner');
+    const gl = await lichSu('NV-T91', 'giao_lai');
+    assert.equal(gl.length, 2); assert.match(gl[1].gia_tri_moi, /^Chuyển chủ trì từ Demo Chuyên viên Một sang Demo Chuyên viên Hai/);
     const tin = (await tinCua('NV-T91')).filter((t) => t.content.startsWith('Giao lại · NV-T91: Chuyển phòng'));
-    assert.ok(tin.some((t) => t.receiver_id === IDS.truongphong) && tin.some((t) => t.receiver_id === IDS.cv2), 'người theo dõi cũ và mới đều nhận');
-    assert.equal(tin.filter((t) => t.receiver_id === IDS.truongphong).length, 1, 'người cũ (cũng là trưởng phòng) một tin');
+    assert.ok(tin.some((t) => t.receiver_id === IDS.cv1) && tin.some((t) => t.receiver_id === IDS.cv2) && tin.some((t) => t.receiver_id === IDS.truongphong), 'chủ trì cũ, mới và người theo dõi đều nhận');
+    // Việc HOAN_THANH bị chặn ở kiểm chung trong hàm ('không gia hạn hay giao lại', từ 0026); dong_luc chỉ có khi HOAN_THANH (trigger 0028) nên kiểm thêm là phòng hờ.
   });
 
   test('7. v_ngoai_le: chỉ DO/DO_DAC_BIET, tổng = ô Quá hạn + Đang đính chính, sắp số ngày trễ giảm dần, 4 trường bắt buộc có giá trị thay thế', async () => {

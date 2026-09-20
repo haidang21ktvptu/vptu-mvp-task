@@ -1,17 +1,17 @@
 // Khối "Chỉ đạo" trong ngăn chi tiết của MỌI nhiệm vụ (GĐ15, thiết kế luồng bình luận theo thời gian): dòng chỉ đạo gốc
-// (loại, người, lúc, nội dung, hạn mới nếu gia hạn, người theo dõi mới nếu giao lại) → các phản hồi thụt vào → ô phản hồi /
+// (loại, người, lúc, nội dung, hạn mới nếu gia hạn, chủ trì mới nếu giao lại) → các phản hồi thụt vào → ô phản hồi /
 // nút Đóng; cuối khối là ô nhập nhanh có chọn loại cho A1/A2. Nút chỉ ẩn/hiện cho đẹp — quyền thật trong hàm 0026/0030/0032.
 // A0 (GĐ18/19): một ô nhập với hai lựa chọn "Ý kiến" (Y_KIEN) / "Chỉ đạo" (CHI_DAO_TT, CH-16: người nhận tự tính, hạn phản
 // hồi mặc định 2 ngày làm việc, sửa được); A0 đóng được luồng CHI_DAO_TT của mình. Người nhận luồng TT (A1) phản hồi hoặc
 // chuyển thành chỉ đạo con (ô "Chuyển thành chỉ đạo" gửi kèm tra_loi_cho). Chỉ đạo con là gốc riêng, có ghi "theo chỉ đạo TT".
 // Cập nhật realtime: chi_dao trong kênh kl_feed → loadKl() vẽ lại và mở lại ngăn chi tiết đang mở (danh-sach.js).
 import { $, escapeHtml, formatDateTime } from '../../../lib/dom.js';
-import { DEPT_NAMES } from '../../../lib/constants.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { loadChiDao, chiDaoGui, chiDaoPhanHoi, chiDaoDong, chiDaoDanhDauDoc, xacNhanDaNhanChiDao, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../../lib/kl/dieu-hanh.js';
 import { nutDoKhanHtml, nhanDoKhanHtml } from '../../../lib/kl/do-khan.js';
+import { chuTriMoiOptions, nguoiTheoDoiOptions } from '../dieu-hanh/the-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
@@ -51,7 +51,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
   const me = state.user?.id;
   const phu = [
     g.loai === 'GIA_HAN' && g.han_moi ? `Hạn mới: ${formatNgay(g.han_moi)}` : '',
-    g.loai === 'GIAO_LAI' && g.chu_tri_moi ? `Người theo dõi mới: ${escapeHtml(tenNguoi(g.chu_tri_moi))}` : '',
+    g.loai === 'GIAO_LAI' && g.chu_tri_moi ? `Chủ trì mới: ${escapeHtml(tenNguoi(g.chu_tri_moi))}` : '',
     g.loai === 'CHI_DAO_TT' ? `Người nhận: ${(g.nguoi_nhan || []).map((u) => escapeHtml(tenNguoi(u))).join(', ')}` : '',
     g.han_phan_hoi ? `Hạn phản hồi: ${formatNgay(g.han_phan_hoi)}` : '',
     g.loai !== 'CHI_DAO_TT' && g.tra_loi_cho ? 'Theo chỉ đạo Thường trực' : '',
@@ -84,7 +84,6 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
 
 // traLoiCho: ô "Chuyển thành chỉ đạo" của người nhận luồng TT (chỉ đạo con gắn với luồng đó).
 function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
-  const ds = (state.accounts || []).filter((a) => !a.is_system && a.id !== r.nguoi_theo_doi);
   const a0 = laA0();
   const ten = (l) => (a0 ? TEN_A0[l] : TEN_LOAI_CHI_DAO[l]) || TEN_LOAI_CHI_DAO[l];
   const nhan = traLoiCho ? 'Chuyển thành chỉ đạo' : a0 ? 'Gửi' : 'Gửi chỉ đạo';
@@ -97,10 +96,8 @@ function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
         </select>
         <input type="date" name="han_moi" class="o-nhap nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
         <input type="date" name="han_phan_hoi" class="o-nhap nho hidden" aria-label="Hạn phản hồi (mặc định 2 ngày làm việc)" title="Hạn phản hồi — để trống = 2 ngày làm việc">
-        <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi mới">
-          <option value="">— Chọn người theo dõi mới —</option>
-          ${ds.map((a) => `<option value="${a.id}">${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('')}
-        </select>
+        <select name="chu_tri_moi" class="o-nhap nho hidden" aria-label="Chủ trì mới"><option value="">— Chọn chủ trì mới —</option>${chuTriMoiOptions(r)}</select>
+        <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi (gợi ý theo chủ trì mới, sửa được)"><option value="">— Người theo dõi: giữ như hiện tại —</option>${nguoiTheoDoiOptions(r)}</select>
       </div>
       <div class="cd-form-hang">
         <input type="text" name="noi_dung" required class="o-nhap nho" placeholder="${traLoiCho ? 'Nội dung chỉ đạo điều hành theo chỉ đạo Thường trực' : a0 ? 'Nội dung ý kiến / chỉ đạo Thường trực' : 'Nội dung chỉ đạo (lý do nếu gia hạn/giao lại)'}" aria-label="Nội dung chỉ đạo">
@@ -151,7 +148,7 @@ async function guiChiDao(ds, form) {
   const f = new FormData(form);
   const p = { nhiem_vu_id: ds.nv, loai: f.get('loai'), noi_dung: (f.get('noi_dung') || '').trim(), do_khan: f.get('do_khan') || 'THUONG' };
   if (p.loai === 'GIA_HAN') p.han_moi = f.get('han_moi') || '';
-  if (p.loai === 'GIAO_LAI') p.nguoi_theo_doi_moi = f.get('nguoi_theo_doi_moi') || '';
+  if (p.loai === 'GIAO_LAI') { p.chu_tri_moi = f.get('chu_tri_moi') || ''; p.nguoi_theo_doi_moi = f.get('nguoi_theo_doi_moi') || ''; }
   if (p.loai === 'CHI_DAO_TT') p.han_phan_hoi = f.get('han_phan_hoi') || '';
   if (ds.traLoiCho) p.tra_loi_cho = ds.traLoiCho;
   try {
@@ -193,12 +190,13 @@ async function daNhanChiDao(ds) {
     notifyError(e.message);
   }
 }
-// Chọn loại → hiện ô hạn mới (GIA_HAN) / người theo dõi mới (GIAO_LAI) / hạn phản hồi (CHI_DAO_TT). Uỷ quyền một lần cho cả trang.
+// Chọn loại → hiện ô hạn mới (GIA_HAN) / chủ trì mới + người theo dõi (GIAO_LAI) / hạn phản hồi (CHI_DAO_TT). Uỷ quyền một lần cho cả trang.
 function onDoiLoai(e) {
   const sel = e.target;
   if (!(sel instanceof HTMLSelectElement) || sel.name !== 'loai' || !sel.closest('.cd-form')) return;
   const form = sel.closest('.cd-form');
   form.querySelector('[name=han_moi]').classList.toggle('hidden', sel.value !== 'GIA_HAN');
+  form.querySelector('[name=chu_tri_moi]').classList.toggle('hidden', sel.value !== 'GIAO_LAI');
   form.querySelector('[name=nguoi_theo_doi_moi]').classList.toggle('hidden', sel.value !== 'GIAO_LAI');
   form.querySelector('[name=han_phan_hoi]').classList.toggle('hidden', sel.value !== 'CHI_DAO_TT');
 }

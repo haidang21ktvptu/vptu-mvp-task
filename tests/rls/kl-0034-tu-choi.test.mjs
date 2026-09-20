@@ -135,13 +135,13 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
     assertOk(await rpc('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T94'], p_ly_do: 'đề nghị lại sau khi bị bác' }), 'sau khi bị bác được đề nghị lại');
   });
 
-  test('6. Cờ tự xoá khi GIAO_LAI (người theo dõi mới) và khi giao lại cho Owner khác', async () => {
-    assertOk(await rpc('demo_truongphong', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T92'], loai: 'GIAO_LAI', noi_dung: 'giao lại', nguoi_theo_doi_moi: E2E_KL } }), 'GIAO_LAI');
+  test('6. Cờ tự xoá khi GIAO_LAI (đổi chủ trì, 0045) và khi đổi Owner trực tiếp', async () => {
+    assertOk(await rpc('demo_truongphong', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T92'], loai: 'GIAO_LAI', noi_dung: 'giao lại', chu_tri_moi: E2E_KL } }), 'GIAO_LAI');
     assert.equal((await nv('NV-T92')).bi_tu_choi, false, 'GIAO_LAI xoá cờ');
     await db().from('nhiem_vu').update({ bi_tu_choi: true }).eq('id', id['NV-T92']);
     await db().from('nhiem_vu').update({ ghi_chu: 'đổi cột khác' }).eq('id', id['NV-T92']);
     assert.equal((await nv('NV-T92')).bi_tu_choi, true, 'đổi cột khác không xoá cờ');
-    assertOk(await db().from('nhiem_vu').update({ owner_tai_khoan: E2E_KL }).eq('id', id['NV-T92']).select('id'), 'giao lại cho Owner khác');
+    assertOk(await db().from('nhiem_vu').update({ owner_tai_khoan: IDS.cv1 }).eq('id', id['NV-T92']).select('id'), 'đổi Owner trực tiếp (E2E_KL → cv1)');
     assert.equal((await nv('NV-T92')).bi_tu_choi, false, 'đổi Owner tài khoản xoá cờ');
   });
 

@@ -14,6 +14,7 @@ import { dh, napDieuHanh } from '../shared/dieu-hanh/du-lieu.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN, datCauHinhDieuHanh } from '../shared/dieu-hanh/man-hinh.js';
 import { napLaiViec } from '../shared/kl/nap-lai-viec.js';
+import { lamMoiHuyHieu } from '../../features/huy-hieu.js';
 import { openKl } from '../shared/kl/index.js';
 import { openKlCapNhat } from '../shared/kl/cap-nhat-modal.js';
 import { nhomViecCuaToi, mucHtml, thanhTuChoiHtml } from './viec-cua-toi.js';
@@ -56,7 +57,7 @@ async function xacNhanNhanThe({ id }) {
   try {
     const moi = await xacNhanNhanViec(id);
     notifySuccess(moi ? 'Đã xác nhận nhận việc. Hạn và trạng thái không đổi — đồng hồ đã chạy từ ngày nhận văn bản.' : 'Đồng chí đã xác nhận nhận việc này trước đó.');
-    await napLaiViec(id); await loadViecCuaToi(); // thẻ đổi ngay, rồi nạp lại cả trang
+    await napLaiViec(id); await lamMoiHuyHieu(); await loadViecCuaToi(); // thẻ + số chưa xử lý đổi ngay, rồi nạp lại cả trang
   } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
 }
 // Nộp minh chứng 3 ô ngay trên thẻ (MC-3): số hiệu, ngày văn bản, cấp nhận — DB là chốt (nop_minh_chung 0028).
@@ -67,7 +68,7 @@ async function nopMinhChungThe(ds, form) {
   try {
     await nopMinhChung(p);
     notifySuccess(`Đã nộp minh chứng số ${p.so_hieu}. Người liên quan nhận thông báo trên hệ thống.`);
-    await napLaiViec(ds.id); await loadViecCuaToi();
+    await napLaiViec(ds.id); await lamMoiHuyHieu(); await loadViecCuaToi();
   } catch (e) { notifyError(e.message); }
 }
 const capNhatThe = ({ id }) => openKlCapNhat({ id, rows: dh.rows });

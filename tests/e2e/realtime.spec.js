@@ -4,6 +4,9 @@ import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
+import { USERS } from './lib/roles.mjs';
+
+const E2E_CV_ID = '00000000-0000-4000-8000-000000000016'; // demo_e2e_cv — neo danh bạ theo id (không lọc theo tên: tên có thể là tiền tố của tài khoản khác)
 
 const CV1_ID = '00000000-0000-4000-8000-000000000016';         // demo_e2e_cv
 const TRUONGPHONG_ID = '00000000-0000-4000-8000-000000000015'; // demo_e2e_tp
@@ -34,8 +37,8 @@ test.describe.serial('Realtime nhắn tin 1-1', () => {
     await expect(a2Page.locator('#viewNhanTin')).toBeVisible();
     // Tài khoản hệ thống (is_system) không có trong danh bạ.
     await expect(a2Page.locator('#dmContactList')).not.toContainText('Tài khoản kiểm thử hệ thống');
-    await a2Page.locator('#dmContactList [data-action=openDMChat]', { hasText: 'Demo E2E Chuyên viên RT' }).click();
-    await expect(a2Page.locator('#dmChatHeaderName')).toHaveText('Demo E2E Chuyên viên RT');
+    await a2Page.locator(`#dmContactList [data-action=openDMChat][data-peer-id="${E2E_CV_ID}"]`).click();
+    await expect(a2Page.locator('#dmChatHeaderName')).toHaveText(USERS.E2E_CV.fullName);
     await a2Page.locator('#dmInput').fill('Đồng chí lên phòng gặp tôi (e2e)');
     await a2Page.locator('#dmInput').press('Enter');
     await expect(a2Page.locator('#dmChatBox')).toContainText('Đồng chí lên phòng gặp tôi (e2e)');
