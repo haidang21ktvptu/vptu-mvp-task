@@ -73,12 +73,12 @@ test.describe.serial('Giao lại đổi chủ trì; số đếm dải Cần xử
     await o.locator('input[name=noi_dung]').fill('Chuyển đồng chí Hai chủ trì (e2e)');
     await o.locator('button[type=submit]').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao lại');
-    await expect(page.locator('#toastContainer')).toContainText('Demo E2E Chuyên viên RT Hai');
+    await expect(page.locator('#toastContainer')).toContainText('Demo E2E Chuyên viên GL');
     await expect(dong).toHaveCount(0, NAP);
     const { data: nv } = await db.from('nhiem_vu').select('owner_tai_khoan, owner_don_vi_ma, nguoi_theo_doi, bi_tu_choi, cap_nhan_san_pham').eq('id', id).single();
     expect(nv).toEqual({ owner_tai_khoan: CV2_ID, owner_don_vi_ma: 'E2E_RT', nguoi_theo_doi: TP_ID, bi_tu_choi: false, cap_nhan_san_pham: 'TRUONG_PHONG' });
     const { data: ls } = await db.from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', id);
-    expect(ls.some((l) => l.cot === 'giao_lai' && /Chuyển chủ trì từ Demo E2E Chuyên viên RT sang Demo E2E Chuyên viên RT Hai/.test(l.gia_tri_moi))).toBe(true);
+    expect(ls.some((l) => l.cot === 'giao_lai' && /Chuyển chủ trì từ Demo E2E Chuyên viên RT sang Demo E2E Chuyên viên GL/.test(l.gia_tri_moi))).toBe(true);
     expect(ls.some((l) => (l.gia_tri_moi || '').includes(LY_DO_TU_CHOI))).toBe(false);                 // lý do từ chối không vào lịch sử việc
     const cu = await clientCuaVai('E2E_CV').from('v_nhiem_vu').select('id').eq('id', id);
     expect(cu.data).toHaveLength(0);                                                                     // chủ trì cũ không còn thấy việc

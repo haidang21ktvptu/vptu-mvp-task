@@ -36,7 +36,7 @@ const TAI_KHOAN = [
   [14, 'demo_e2e_owner', 'Demo E2E Chuyên viên Owner', 'A3', 'Chuyên viên', null, 'TONG_HOP', false, false, false],
   [15, 'demo_e2e_tp', 'Demo E2E Trưởng phòng RT', 'A2', 'Trưởng phòng', null, 'E2E_RT', false, false, false],
   [16, 'demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'Chuyên viên', null, 'E2E_RT', false, false, false],
-  [17, 'demo_e2e_cv2', 'Demo E2E Chuyên viên RT Hai', 'A3', 'Chuyên viên', null, 'E2E_RT', false, false, false], // giao lại đổi chủ trì (0045): chủ trì mới cùng phòng E2E_RT
+  [17, 'demo_e2e_cv2', 'Demo E2E Chuyên viên GL', 'A3', 'Chuyên viên', null, 'E2E_RT', false, false, false], // giao lại đổi chủ trì (0045): chủ trì mới cùng phòng E2E_RT
 ];
 const PHU_TRACH = [[2, 'TONG_HOP'], [6, 'QUAN_TRI']];
 
