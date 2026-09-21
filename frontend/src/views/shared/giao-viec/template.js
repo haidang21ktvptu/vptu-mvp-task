@@ -5,7 +5,9 @@
 // id ô giữ tiền tố klTh* và #gvCham1..3, #gvTomTatChu, .gv-the, .gv-phan (e2e). Độ khẩn: lib/kl/do-khan.js. Quyền và 1-1-1 kiểm trong hàm giao_viec (0035).
 import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 
-const truong = (id, nhan, o, them = '') => `<div class="gv-truong" id="${id}Wrap"${them}><label for="${id}" class="nhan">${nhan}</label>${o}</div>`;
+// Nhãn MỘT dòng ngắn; phần giải thích là chú thích nhỏ dưới ô (.gv-chu-thich); dấu * đỏ (.gv-bb) khi bắt buộc — id ô/wrap giữ nguyên (e2e).
+const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
+const truong = (id, nhan, o, them = '', chuThich = '') => `<div class="gv-truong" id="${id}Wrap"${them}><label for="${id}" class="nhan">${nhan}</label>${o}${chuThich ? `<small class="gv-chu-thich">${chuThich}</small>` : ''}</div>`;
 const sel = (id) => `<select id="${id}" class="o-nhap"></select>`;
 const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" class="o-nhap"${them}>`;
 
@@ -22,24 +24,24 @@ export const giaoViecTemplate = `
         <div id="klThVanBanMoi" class="hidden">
           <div class="cot-2">
             ${truong('klThLoaiVB', 'Loại văn bản', sel('klThLoaiVB'))}
-            <div class="gv-truong" id="klThSoHNWrap"><label for="klThSoHN" class="nhan">Số hội nghị</label>${inp('klThSoHN', 'number', ' min="1"')}</div>
+            <div class="gv-truong" id="klThSoHNWrap"><label for="klThSoHN" class="nhan">Số hội nghị${BB}</label>${inp('klThSoHN', 'number', ' min="1"')}</div>
           </div>
           <div class="cot-3">
-            ${truong('klThSoKL', 'Số hiệu', inp('klThSoKL', 'text', ' placeholder="123-KL/TU"'))}
-            ${truong('klThNgayBH', 'Ngày ban hành', inp('klThNgayBH', 'date'))}
-            ${truong('klThNgayNhanVB', 'Ngày nhận (nếu biết)', inp('klThNgayNhanVB', 'date'))}
+            ${truong('klThSoKL', `Số hiệu${BB}`, inp('klThSoKL', 'text', ' placeholder="123-KL/TU"'))}
+            ${truong('klThNgayBH', `Ngày ban hành${BB}`, inp('klThNgayBH', 'date'))}
+            ${truong('klThNgayNhanVB', 'Ngày nhận', inp('klThNgayNhanVB', 'date'), '', 'nếu biết')}
           </div>
-          ${truong('klThTrichYeu', 'Trích yếu văn bản (không bắt buộc)', inp('klThTrichYeu', 'text', ' placeholder="Về việc…" maxlength="300" autocomplete="off"'))}
+          ${truong('klThTrichYeu', 'Trích yếu văn bản', inp('klThTrichYeu', 'text', ' placeholder="Về việc…" maxlength="300" autocomplete="off"'), '', 'không bắt buộc')}
           <p class="chu-phu hidden" id="gvVbA0">Thường trực giao trực tiếp không kèm văn bản: để trống số hiệu và ngày ban hành, hệ thống ghi mốc "Thường trực giao &lt;thời điểm&gt;". Đã điền thì dùng đúng số hiệu, ngày và trích yếu vừa nhập.</p>
         </div>
       </section>
 
       <section class="gv-phan" id="gvPhan2"><h2><i id="gvCham2" class="gv-so">2</i>Nội dung và người chịu trách nhiệm</h2>
-        ${truong('klThNoiDung', 'Nội dung nhiệm vụ', '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>')}
+        ${truong('klThNoiDung', `Nội dung nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>')}
         <div class="cot-3">
-          ${truong('klThOwner', 'Chịu trách nhiệm (Owner)', sel('klThOwner'))}
-          ${truong('klThNguoiTheoDoi', 'Người theo dõi — gợi ý theo Owner', sel('klThNguoiTheoDoi'))}
-          ${truong('klThThayMat', 'Thay mặt (bắt buộc)', sel('klThThayMat'), ' class="gv-truong hidden"')}
+          ${truong('klThOwner', `Chịu trách nhiệm${BB}`, sel('klThOwner'), '', 'một Owner: đơn vị, phòng hoặc cán bộ')}
+          ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, sel('klThNguoiTheoDoi'), '', 'gợi ý theo người chịu trách nhiệm')}
+          ${truong('klThThayMat', `Thay mặt${BB}`, sel('klThThayMat'), ' class="gv-truong hidden"', 'lãnh đạo mà đồng chí giao thay mặt')}
         </div>
         <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
         <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
@@ -47,19 +49,19 @@ export const giaoViecTemplate = `
 
       <section class="gv-phan" id="gvPhan3"><h2><i id="gvCham3" class="gv-so">3</i>Sản phẩm và hạn</h2>
         <div class="cot-3">
-          ${truong('klThSanPham', 'Sản phẩm đầu ra', sel('klThSanPham'))}
-          ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm — ví dụ: Tờ trình đề án X', inp('klThSanPhamMoTa'))}
-          ${truong('klThCapNhan', 'Cấp nhận sản phẩm — mặc định = cấp trên Owner', sel('klThCapNhan'))}
+          ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
+          ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
+          ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của người chịu trách nhiệm')}
         </div>
         <div class="cot-3">
-          ${truong('klThNgayNhan', 'Ngày nhận văn bản — mốc bắt đầu đếm', inp('klThNgayNhan', 'date'))}
+          ${truong('klThNgayNhan', `Ngày nhận văn bản${BB}`, inp('klThNgayNhan', 'date'), '', 'mốc bắt đầu tính hạn')}
           ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
-          ${truong('klThHan', 'Hạn hoàn thành <span id="klThHanLoai" class="chu-phu"></span>', `${inp('klThHan', 'date')}<small id="klThHanGhiChu" class="chu-phu" aria-live="polite"></small>`)}
+          ${truong('klThHan', 'Hạn hoàn thành<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
         </div>
         <div class="cot-3" id="gvNganhWrap">
-          ${truong('klThCapQD', 'Cấp cần quyết định — để mở, điền khi việc Đỏ', sel('klThCapQD'))}
-          ${truong('klThNganh', 'Ngành <span id="klThNganhGhiChu" class="chu-phu"></span>', sel('klThNganh'))}
-          ${truong('klThLinhVuc', 'Lĩnh vực — theo ngành đã chọn', sel('klThLinhVuc'))}
+          ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
+          ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
+          ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', 'theo ngành đã chọn')}
         </div>
         <div class="cot-2" id="gvPhuWrap">
           ${truong('klThVanBanTK', 'Văn bản triển khai', inp('klThVanBanTK'))}
