@@ -136,6 +136,7 @@ export async function napChiDao(r) {
   try {
     const d = await loadChiDao(r.id);
     o.outerHTML = chiDaoHtml(r, d);
+    khoiPhucNhap($(`klChiDao-${r.id}`)); // ngăn vẽ lại (realtime / nạp lại nền) không được xoá loại, độ khẩn, nội dung đang nhập
     if (d.rows.some((c) => !d.daDoc.has(c.id))) chiDaoDanhDauDoc(r.id);
   } catch (e) {
     notifyError('Không đọc được chỉ đạo: ' + e.message);
@@ -153,6 +154,7 @@ async function guiChiDao(ds, form) {
   if (ds.traLoiCho) p.tra_loi_cho = ds.traLoiCho;
   try {
     await chiDaoGui(p);
+    dangNhap.delete(khoaForm(form)); // chỉ xoá bản nháp sau khi gửi thành công
     notifySuccess(p.loai === 'CHI_DAO_TT' ? 'Đã gửi chỉ đạo Thường trực. Chánh Văn phòng và PCVP phụ trách nhận thông báo trên hệ thống.'
       : `Đã gửi ${TEN_LOAI_CHI_DAO[p.loai].toLowerCase()}. Người liên quan nhận thông báo trên hệ thống.`);
     sauHanhDong();
@@ -194,14 +196,35 @@ async function daNhanChiDao(ds) {
 function onDoiLoai(e) {
   const sel = e.target;
   if (!(sel instanceof HTMLSelectElement) || sel.name !== 'loai' || !sel.closest('.cd-form')) return;
-  const form = sel.closest('.cd-form');
-  form.querySelector('[name=han_moi]').classList.toggle('hidden', sel.value !== 'GIA_HAN');
-  form.querySelector('[name=chu_tri_moi]').classList.toggle('hidden', sel.value !== 'GIAO_LAI');
-  form.querySelector('[name=nguoi_theo_doi_moi]').classList.toggle('hidden', sel.value !== 'GIAO_LAI');
-  form.querySelector('[name=han_phan_hoi]').classList.toggle('hidden', sel.value !== 'CHI_DAO_TT');
+  hienOTheoLoai(sel.closest('.cd-form'), sel.value);
+}
+function hienOTheoLoai(form, loai) {
+  form.querySelector('[name=han_moi]').classList.toggle('hidden', loai !== 'GIA_HAN');
+  form.querySelector('[name=chu_tri_moi]').classList.toggle('hidden', loai !== 'GIAO_LAI');
+  form.querySelector('[name=nguoi_theo_doi_moi]').classList.toggle('hidden', loai !== 'GIAO_LAI');
+  form.querySelector('[name=han_phan_hoi]').classList.toggle('hidden', loai !== 'CHI_DAO_TT');
+}
+// Bản nháp ô gửi chỉ đạo theo form (việc + luồng TT trả lời): ghi ở mọi input/change, khôi phục sau mỗi lần vẽ lại khối (không mất "Chỉ đạo"
+// / Thượng khẩn vừa chọn khi ngăn tự nạp lại), xoá khi gửi thành công.
+const dangNhap = new Map();
+const khoaForm = (form) => `${form.dataset.nv}|${form.dataset.traLoiCho || ''}`;
+function ghiNhap(e) {
+  const form = e.target?.closest?.('.cd-form'); const ten = e.target?.name;
+  if (!form || !ten) return;
+  const v = dangNhap.get(khoaForm(form)) || {}; v[ten] = e.target.value; dangNhap.set(khoaForm(form), v);
+}
+function khoiPhucNhap(khoi) {
+  khoi?.querySelectorAll('.cd-form').forEach((form) => {
+    const v = dangNhap.get(khoaForm(form)); if (!v) return;
+    Object.entries(v).forEach(([ten, gt]) => { const el = form.querySelector(`[name="${ten}"]`); if (el) el.value = gt; });
+    if (v.do_khan) form.querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === v.do_khan)));
+    if (v.loai) hienOTheoLoai(form, form.querySelector('[name=loai]').value);
+  });
 }
 export function mountChiDao(registerActions, napLaiDanhSach) {
   sauHanhDong = napLaiDanhSach;
   document.body.addEventListener('change', onDoiLoai);
+  document.body.addEventListener('input', ghiNhap);
+  document.body.addEventListener('change', ghiNhap);
   registerActions({ guiChiDao, guiPhanHoi, dongChiDao, daNhanChiDao });
 }
