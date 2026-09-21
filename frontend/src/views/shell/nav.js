@@ -68,7 +68,9 @@ async function veChanMenu() {
     if (!r.ok) return;
     const pb = await r.json();
     const luc = pb.build_luc ? new Date(pb.build_luc).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '';
-    setText('menuPhienBan', `Phiên bản ${pb.phien_ban}${luc ? ` · cập nhật ${luc}` : ''}`);
+    const ten = String(pb.phien_ban || '').replace(/@[0-9a-f]{7,}$/i, ''); // staging ghi "main@<sha>" → "main"
+    const sha = String(pb.commit || '').slice(0, 7);
+    setText('menuPhienBan', [ten, sha, luc && `cập nhật ${luc}`].filter(Boolean).join(' · ')); // gọn: "v3.6.3 · 309c1de · 20/09 10:15", không tràn
   } catch { return; }
 }
 

@@ -55,7 +55,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(the).toContainText('chưa xác định');
     expect(Number((await the.locator('.tre').innerText()).split('\n')[0])).toBeGreaterThan(3);
     await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe(await mauToken(a1, '--do'));
-    await expect.poll(() => the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe(await mauToken(a1, '--do-dam')); // Đỏ đặc biệt
+    await expect.poll(() => the.locator('.stt').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)).toBe(await mauToken(a1, '--do-dam')); // v8: chấm trạng thái Đỏ đặc biệt
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
     // Nhãn độ khẩn trong tiêu đề thẻ phải là nhãn gọn (inline-flex), không bị `.the .ten span { display: block }` kéo giãn hết chiều ngang (lỗi v3.6.0).
     const dk = the.locator('.ten .dk');

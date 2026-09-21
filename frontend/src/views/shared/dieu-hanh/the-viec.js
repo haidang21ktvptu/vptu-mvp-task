@@ -1,4 +1,4 @@
-// Thẻ việc Đỏ (mockup bản 5): mã (+ "cần X quyết"), nội dung, số ngày trễ; dòng 4 điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết);
+// Thẻ việc Đỏ (v8 đợt 2: một HÀNG): mã (+ "cần X quyết"), nội dung, số ngày trễ; dòng phụ 4 điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết);
 // vòng khép kín của chỉ đạo Thường trực (Đã gửi → Văn phòng trả lời (hạn) → Đóng); hành động: Chỉ đạo (A0: một ô + gợi ý, chi_dao_gui
 // CHI_DAO_TT) / Đôn đốc (A1/A2: DON_DOC) và Xem diễn biến (mở ngăn chi tiết ở màn hình Nhiệm vụ). Nút chỉ ẩn/hiện; quyền thật ở hàm DB.
 import { escapeHtml } from '../../../lib/dom.js';
@@ -78,25 +78,28 @@ export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
     </form>`;
 }
 
+// Hàng việc (v8 đợt 2): chấm trạng thái · mã · nội dung (+ cần X quyết, nhãn) với dòng phụ xám (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết · theo dõi)
+// · số ngày trễ · nút; vòng khép kín và các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau, .vong, .dk, #the-<id>, data-*).
 export function theHtml(r) {
   const quyet = canToiQuyet(r);
   const lop = r.bi_tu_choi && r.nhom !== 'DO' ? 'tu-choi' : r.muc_canh_bao === 'DO_DAC_BIET' ? 'dac-biet' : 'do';
+  const cham = lop === 'tu-choi' ? 'cam' : lop;
   const tre = r.nhom === 'DO' ? `<div class="tre">${r.so_ngay_qua}<small>ngày trễ</small></div>` : '<div class="tre cam">!<small>chờ giao lại</small></div>';
   const nhanTC = nhanPhuHtml(r); // độ khẩn · Thường trực giao · Thay mặt … giao · Bị từ chối (GĐ22)
   const nutGiaoLai = r.bi_tu_choi && !laA0() ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : '';
-  const owner = r.owner_tai_khoan_ten ? `${escapeHtml(r.owner_tai_khoan_ten)}<span>${escapeHtml(boSoThuTu(r.owner_don_vi_ten))}</span>`
-    : `${escapeHtml(boSoThuTu(r.owner_don_vi_ten) || '(chưa xác định)')}<span>${r.owner_trong_van_phong ? 'theo dõi: ' + escapeHtml(r.nguoi_theo_doi_ten || '—') : 'đơn vị ngoài Văn phòng'}</span>`;
+  const owner = r.owner_tai_khoan_ten ? `${escapeHtml(r.owner_tai_khoan_ten)} · ${escapeHtml(boSoThuTu(r.owner_don_vi_ten))}`
+    : `${escapeHtml(boSoThuTu(r.owner_don_vi_ten) || '(chưa xác định)')} · ${r.owner_trong_van_phong ? 'theo dõi: ' + escapeHtml(r.nguoi_theo_doi_ten || '—') : 'đơn vị ngoài Văn phòng'}`;
+  const theoDoi = r.nguoi_theo_doi_ten && r.owner_tai_khoan_ten ? ` · theo dõi: ${escapeHtml(r.nguoi_theo_doi_ten)} (${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || '')})` : '';
   const daCo = ttCuaViec(r.id).length > 0;
   const nutChinh = laA0() ? (daCo ? 'Chỉ đạo thêm' : 'Chỉ đạo') : 'Đôn đốc';
-  return `<article class="the ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
-      <div class="the-dau"><div class="ten"><b>${escapeHtml(r.ma)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''} ${nhanTC}</b><span>${escapeHtml(r.noi_dung)}</span></div>
-        ${tre}</div>
-      <div class="dot"><div>${owner}</div><div><span class="khau">${tenKhau(r.khau)}</span></div>
-        <div>${escapeHtml(sanPhamThieu(r))}<span>sản phẩm còn thiếu</span></div><div>${escapeHtml(r.cap_quyet_dinh_ten)}<span>cấp cần quyết</span></div>
-        ${r.nguoi_theo_doi_ten && r.owner_tai_khoan_ten ? `<div>${escapeHtml(r.nguoi_theo_doi_ten)}<span>người theo dõi · ${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || '')}</span></div>` : ''}</div>
+  return `<article class="the hang ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
+      <div class="the-dau"><span class="stt ${cham}"></span><span class="ma">${escapeHtml(r.ma)}</span>
+        <div class="ten"><b>${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''} ${nhanTC}</b>
+          <span>${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}${theoDoi}</span></div>
+        ${tre}
+        <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
+          <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div></div>
       ${vongHtml(r)}
-      <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
-        <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div>
       ${nutGiaoLai ? oGiaoLaiHtml(r) : ''}${oHtml(r)}
     </article>`;
 }

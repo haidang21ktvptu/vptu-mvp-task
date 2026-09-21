@@ -1,7 +1,7 @@
-// View A3 — Chuyên viên (mockup "Việc của tôi"): thẻ theo mức khẩn, hành động tại chỗ — việc mới giao cần xác nhận đã nhận (thay modal
+// View A3 — Chuyên viên (v8 đợt 2, mockup 05 "Việc của tôi": hai cột, hàng việc, cột phụ 340px hạn 7 ngày + hướng dẫn nhanh): thẻ theo mức khẩn, hành động tại chỗ — việc mới giao cần xác nhận đã nhận (thay modal
 // bắt buộc), chỉ đạo cần trả lời (ô một dòng), sắp đến hạn / quá hạn chưa có minh chứng (nộp minh chứng 3 ô ngay trên thẻ), đang thực
 // hiện (Cập nhật tiến độ). "Việc tôi theo dõi" = màn hình Nhiệm vụ lọc việc mình theo dõi. Quyền thật ở hàm DB / policy 0025, 0028.
-import { $, setText, formatDateTime } from '../../lib/dom.js';
+import { $, setText, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
@@ -9,6 +9,7 @@ import { registerView } from '../registry.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { xacNhanNhanViec } from '../../lib/kl/du-lieu.js';
 import { nopMinhChung } from '../../lib/kl/minh-chung.js';
+import { homNayVN, ghiChuHan } from '../../lib/kl/ngay.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { dh, napDieuHanh } from '../shared/dieu-hanh/du-lieu.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
@@ -34,10 +35,23 @@ function ve() {
     mucHtml('lam', 'Việc mới giao — cần xác nhận đã nhận', n.moi, 'moi'),
     mucHtml('do', 'Chỉ đạo cần trả lời', n.chiDao, 'chi-dao'),
     mucHtml('vang', 'Sắp đến hạn hoặc quá hạn, chưa có minh chứng', n.canMinhChung, 'minh-chung'),
-    mucHtml('', 'Đang thực hiện, còn thời gian', n.dangLam, 'dang-lam'),
+    mucHtml('luc', 'Đang thực hiện, còn thời gian', n.dangLam, 'dang-lam'),
   ].join('') || '<div class="muc"><b>Hôm nay đồng chí không có việc nào cần làm.</b></div>';
   traDienBien();
+  $('vctTuan').innerHTML = hanTuanHtml();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
+}
+
+// Cột phụ "Hạn trong 7 ngày tới" (thay "lịch tuần" của mockup 05 — hệ thống chưa có nguồn lịch): việc tôi chủ trì hoặc theo dõi đang mở, hạn từ
+// quá hạn tới 7 ngày tới, tính từ dòng đã tải, không truy vấn thêm. Thứ lấy theo UTC vì han_xu_ly là chuỗi ngày (không lệch theo múi giờ máy); Đỏ = đã quá hạn, Vàng = trong 3 ngày.
+const THU = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+function hanTuanHtml() {
+  const me = state.user?.id; const homNay = homNayVN();
+  const ds = dh.rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH' && r.han_xu_ly && (r.owner_tai_khoan === me || r.nguoi_theo_doi === me))
+    .map((r) => ({ r, ngay: Math.round((new Date(r.han_xu_ly) - new Date(homNay)) / 864e5) })).filter((x) => x.ngay <= 7).sort((a, b) => a.ngay - b.ngay).slice(0, 8);
+  if (!ds.length) return '<p class="trong">Không có hạn nào trong 7 ngày tới.</p>';
+  return ds.map(({ r, ngay }) => `<div class="han-tuan"><b>${THU[new Date(r.han_xu_ly).getUTCDay()]}</b><span class="${ngay < 0 ? 'do' : ngay <= 3 ? 'vang' : ''}" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.ma)} · ${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()}</span></div>`).join('')
+    + '<p class="huong-dan" style="padding-top:8px">Theo hạn xử lý của việc đồng chí chủ trì hoặc theo dõi.</p>';
 }
 
 async function loadViecCuaToi() {
@@ -82,8 +96,14 @@ export function registerA3View() {
         <div class="dau"><h1>Việc của tôi</h1><span id="dhTinhDen">${ngayDaiVN()}, đang nạp…</span>
           <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
         <div id="dhCanXuLy"></div>
-        <div class="khung"><div class="tieu"><b>Hôm nay của tôi</b><span id="vctTom"></span></div><div id="vctMuc"></div>
-          <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem toàn bộ việc của tôi</button></div></div>`;
+        <div class="hai-cot" style="--rong-phu:340px">
+          <section class="tam"><div class="tam-dau"><h2>Hôm nay của tôi</h2><span id="vctTom"></span></div><div id="vctMuc"></div>
+            <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem toàn bộ việc của tôi</button></div></section>
+          <aside class="cot-phu">
+            <section class="tam"><div class="tam-dau"><h2>Hạn trong 7 ngày tới</h2></div><div id="vctTuan"></div></section>
+            <section class="tam"><div class="tam-dau"><h2>Hướng dẫn nhanh</h2></div><p class="huong-dan">Việc hoàn thành khi có minh chứng hợp lệ: số hiệu, ngày văn bản, cấp nhận — nộp ngay trên hàng việc. Sau khi nộp, lãnh đạo xác nhận thì việc mới đóng. Việc mới giao cần xác nhận đã nhận trong ngày làm việc.</p></section>
+          </aside>
+        </div>`;
       datNapLai(loadViecCuaToi);
       datCauHinhDieuHanh({ kpi: () => [], phuDe: () => '', veThem: ve }); // napLaiViec → veDieuHanh → vẽ lại thẻ A3 ngay sau mỗi hành động ghi
       openDieuHanh();

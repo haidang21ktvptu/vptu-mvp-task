@@ -79,7 +79,7 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     const the = pcvp.locator('#dhTT article.viec', { hasText: ma });
     await expect(the).toBeVisible(RT);
     await expect(pcvp.locator('#dhTT h2')).toContainText('chỉ đạo của Thường trực đang chờ Văn phòng');
-    expect((await the.boundingBox()).y).toBeLessThan((await pcvp.locator('#dhKpi').boundingBox()).y); // đầu trang, trên 4 số-lọc
+    expect((await the.boundingBox()).x).toBeGreaterThan((await pcvp.locator('#dhMcKhoi').boundingBox()).x); // v8: cột phụ bên phải, cạnh khối minh chứng chờ xác nhận
     await expect(the).toContainText('Báo cáo Thường trực tiến độ trước thứ Sáu (e2e)');
     await expect(the.locator('[data-action=dongChiDao]')).toHaveCount(0); // người nhận không đóng luồng TT
     await the.getByRole('button', { name: 'Phản hồi Thường trực' }).click();

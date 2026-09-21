@@ -4,7 +4,7 @@
 import { $, show } from '../../lib/dom.js';
 import { registerView } from '../registry.js';
 import { khungHtml, datCauHinhDieuHanh, openDieuHanh, ngayDaiVN, dangKyDieuHanhVai } from '../shared/dieu-hanh/man-hinh.js';
-import { kpiQuaHan, kpiChiDaoTT, kpiMinhChung, kpiHoanThanh } from '../shared/dieu-hanh/kpi.js';
+import { kpiQuaHan, kpiChiDaoTT, kpiMinhChung, kpiSapHan, kpiHoanThanh } from '../shared/dieu-hanh/kpi.js';
 import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
 import { dh } from '../shared/dieu-hanh/du-lieu.js';
 import { khoiChiDaoTTHtml } from './chi-dao-tt.js';
@@ -13,10 +13,11 @@ import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can
 import { registerBaoCao } from './bao-cao.js';
 import { registerCanBo } from '../shared/can-bo.js';
 
-// Đầu trang: dải "Cần xử lý ngay" (GĐ22), việc Thường trực giao chờ xác nhận, đề nghị từ chối cần duyệt (0034), việc mình giao bị từ chối
-// (chỉ hiện khi có) rồi chỉ đạo Thường trực chờ Văn phòng.
-const DAU = '<div id="dhCanXuLy"></div><section class="cau hidden" id="dhTC"></section><section class="cau" id="dhTT"></section>';
-const CUOI = '<section class="cau" id="dhMcKhoi"><h2><em class="lam" id="dhMcSo">0</em> minh chứng đã nộp, chờ xác nhận</h2><div id="dhMc"></div></section>';
+// v8 đợt 2 (mockup 03): tầng 2 dải "Cần xử lý ngay" + tấm việc Thường trực giao chờ nhận / đề nghị từ chối cần duyệt / việc mình giao bị từ chối;
+// sau 5 ô số là hai cột: minh chứng chờ xác nhận (chính) và chỉ đạo Thường trực chờ trả lời (phụ 380px); rồi thanh trái + danh sách việc nghẽn.
+const DAU = '<div id="dhCanXuLy"></div><section class="tam hidden" id="dhTC"></section>';
+const GIUA = `<div class="hai-cot"><section class="tam" id="dhMcKhoi"><div class="tam-dau"><h2><em class="lam" id="dhMcSo">0</em> minh chứng đã nộp, chờ xác nhận</h2><span>Hợp lệ một bấm; không hợp lệ cần lý do</span></div><div id="dhMc"></div></section>
+  <aside class="tam cot-phu" id="dhTT"></aside></div>`;
 
 function veThem() {
   $('dhCanXuLy').innerHTML = canXuLyHtml();
@@ -33,9 +34,9 @@ export function registerA1View() {
   registerView('A1', {
     init() {
       dangKyDieuHanhVai();
-      $('viewDieuHanh').innerHTML = khungHtml('Điều hành hôm nay', `${ngayDaiVN()}, đang nạp số liệu…`, DAU, CUOI);
+      $('viewDieuHanh').innerHTML = khungHtml('Điều hành hôm nay', `${ngayDaiVN()}, đang nạp số liệu…`, DAU, '', GIUA);
       datCauHinhDieuHanh({
-        kpi: () => [kpiQuaHan(), kpiChiDaoTT('chỉ đạo của Thường trực đang chờ Văn phòng'), kpiMinhChung(), kpiHoanThanh()],
+        kpi: () => [kpiQuaHan(), kpiChiDaoTT('chỉ đạo của Thường trực đang chờ Văn phòng'), kpiMinhChung(), kpiSapHan(), kpiHoanThanh()],
         phuDe: () => 'mỗi thẻ đúng bốn điều: ai chậm, chậm bao nhiêu ngày, thiếu sản phẩm gì, cấp nào phải quyết — hành động ngay tại thẻ',
         veThem,
       });

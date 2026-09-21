@@ -5,7 +5,8 @@ import { tongHop } from '../../../lib/kl/tong-hop.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { dh, viecDo, viecTuChoi, ttCho, canToiQuyet, xuHuong, chuXuHuong } from './du-lieu.js';
 
-const o = (k) => `<button type="button" class="${k.lop}" data-action="locKpi" data-loc="${k.loc}" aria-pressed="${String(dh.loc.kpi === k.loc)}">
+// Ô có `action` riêng (v8: sắp đến hạn → mở danh sách Nhiệm vụ lọc nhóm) không phải bộ lọc trang, không có aria-pressed.
+const o = (k) => `<button type="button" class="${k.lop}" ${k.action ? `data-action="${k.action}" data-loc='${k.loc}'` : `data-action="locKpi" data-loc="${k.loc}" aria-pressed="${String(dh.loc.kpi === k.loc)}"`}>
     <b>${k.so}</b><span>${escapeHtml(k.nhan)}</span>${k.phu ? `<small class="${k.phuLop || ''}">${escapeHtml(k.phu)}</small>` : ''}</button>`;
 
 // Số quá hạn (Đỏ + Đỏ đặc biệt) với xu hướng; số khâu đang nghẽn.
@@ -36,6 +37,11 @@ export function kpiCanQuyet(nhan) {
 export function kpiTuChoi() {
   const n = viecTuChoi().length;
   return { lop: 'cam', loc: 'tuchoi', so: n, nhan: 'việc bị từ chối, chờ giao lại', phu: n ? 'đề nghị từ chối đã được cấp duyệt đồng ý' : '' };
+}
+// Việc sắp đến hạn (nhóm Vàng SAP_DEN_HAN trong phạm vi, từ dòng đã tải) — A1 v8 (mockup 03); bấm mở danh sách Nhiệm vụ lọc nhóm.
+export function kpiSapHan() {
+  const n = dh.rows.filter((r) => r.nhom_dem === 'SAP_DEN_HAN').length;
+  return { lop: 'vang', loc: JSON.stringify({ nhom: 'SAP_DEN_HAN' }), action: 'moKlDanhSach', so: n, nhan: 'việc sắp đến hạn', phu: n ? 'mở danh sách Nhiệm vụ để nhắc' : 'không có việc nào sắp đến hạn' };
 }
 // Minh chứng chờ xác nhận (A1/A2).
 export function kpiMinhChung() {

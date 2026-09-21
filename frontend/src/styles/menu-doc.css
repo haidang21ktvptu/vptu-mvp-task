@@ -4,17 +4,17 @@
    thanh dưới 3 mục (layout.css) giữ nguyên. Vùng nội dung .trang nằm cạnh menu, padding 24/28px. Tên lớp viết nguyên văn (Tailwind cắt lớp ghép). */
 @layer components {
   .than { display: flex; align-items: flex-start; min-height: calc(100vh - var(--cao-dau-trang)); }
-  .menu { flex: none; width: var(--rong-menu); position: sticky; top: 0; min-height: calc(100vh - var(--cao-dau-trang)); max-height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+  .menu { flex: none; width: var(--rong-menu); position: sticky; top: 0; min-height: calc(100vh - var(--cao-dau-trang)); max-height: 100vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 4px;
     padding: 16px 12px; background: #fff; border-right: 1px solid var(--vien); }
   .menu-nhom { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8A8F99; padding: 14px 12px 6px; }
   .menu-nhom:first-child { padding-top: 0; }
-  .menu button { display: flex; align-items: center; gap: 10px; width: 100%; height: 42px; padding: 0 12px; border-radius: 8px; color: var(--chu); font-size: 14px; font-weight: 500; text-align: left; }
+  .menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 8px; color: var(--chu); font-size: 14px; font-weight: 500; text-align: left; }
   .menu button:hover { background: var(--nen-phu); }
   .menu button .ico { width: 18px; height: 18px; flex: none; }
-  .menu button .nhan-menu { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu button .nhan-menu { flex: 1; min-width: 0; line-height: 1.25; overflow-wrap: anywhere; } /* nhãn hiện đủ, xuống dòng khi dài; huy hiệu không đè chữ */
   .menu button[aria-selected="true"] { background: var(--do-nhat); color: var(--do); font-weight: 700; }
   .menu button .huy-hieu { flex: none; min-width: 22px; height: 22px; border-radius: 11px; font-size: 12px; padding: 0 7px; }
-  .menu-chan { margin-top: auto; padding: 12px; font-size: 11px; color: #8A8F99; line-height: 1.5; }
+  .menu-chan { margin-top: auto; padding: 12px; font-size: 11px; color: #8A8F99; line-height: 1.5; overflow-wrap: anywhere; }
   .menu-nen { display: none; }
   .trang { flex: 1; min-width: 0; padding: 24px 28px 60px; }
 

@@ -21,14 +21,16 @@ export function ngayDaiVN(d = new Date()) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export const khungHtml = (tieuDe, phu, dau = '', cuoi = '') => `
+// v8 đợt 2: ba tầng — tiêu đề + ngày; dải Cần xử lý ngay (trong `dau`); KPI; `giua` (A1: hai cột minh chứng chờ / chỉ đạo Thường trực); thanh trái 300px + tấm danh sách hàng việc.
+export const khungHtml = (tieuDe, phu, dau = '', cuoi = '', giua = '') => `
   <div class="dau"><h1 id="dhTieuDeTrang">${tieuDe}</h1><span id="dhTinhDen">${phu}</span>
     <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
   ${dau}
   <div class="kpi" id="dhKpi"></div>
+  ${giua}
   <div class="dieu-hanh">
-    <aside class="ray" id="dhRay" aria-label="Lọc theo khâu và đơn vị"></aside>
-    <section class="danh-sach"><div class="ds-dau"><h2 id="dsTieuDe"></h2><span id="dsPhu"></span></div><div id="dsThe"></div></section>
+    <aside class="ray tam" id="dhRay" aria-label="Lọc theo khâu và đơn vị"></aside>
+    <section class="danh-sach tam"><div class="ds-dau tam-dau"><h2 id="dsTieuDe"></h2><span id="dsPhu"></span></div><div id="dsThe"></div></section>
   </div>
   ${cuoi}`;
 

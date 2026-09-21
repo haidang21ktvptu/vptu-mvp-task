@@ -26,6 +26,6 @@ function theTTHtml(c) {
 
 export function khoiChiDaoTTHtml() {
   const cho = chiDaoTTCuaToi().filter((c) => c.trang_thai === 'CHO_PHAN_HOI');
-  if (cho.length === 0) return '<h2><em class="luc">0</em> chỉ đạo của Thường trực đang chờ Văn phòng</h2><p class="dan">Không có chỉ đạo Thường trực nào chờ đồng chí phản hồi.</p>';
-  return `<h2><em class="do">${cho.length}</em> chỉ đạo của Thường trực đang chờ Văn phòng</h2>${cho.map(theTTHtml).join('')}`;
+  if (cho.length === 0) return '<div class="tam-dau"><h2><em class="luc">0</em> chỉ đạo của Thường trực đang chờ Văn phòng</h2></div><p class="dan">Không có chỉ đạo Thường trực nào chờ đồng chí phản hồi.</p>';
+  return `<div class="tam-dau"><h2><em class="do">${cho.length}</em> chỉ đạo của Thường trực đang chờ Văn phòng</h2><span>trả lời ngay trên việc</span></div>${cho.map(theTTHtml).join('')}`;
 }

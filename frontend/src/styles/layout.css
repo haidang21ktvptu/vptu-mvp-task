@@ -1,5 +1,5 @@
 /* Bố cục chung (v8 đợt 1): thanh đầu trang ở dau-trang.css, menu dọc + vùng nội dung ở menu-doc.css. Ở đây: trang chặn, bản gọn, tiêu đề
-   trang / chương / tầng, thanh dưới 3 mục theo vai (≤ 600px, giữ từ v7), màn đăng nhập (đợt 2 làm lại theo 01-dang-nhap.html). */
+   trang / chương / tầng, thanh dưới 3 mục theo vai (≤ 600px, giữ từ v7). Đăng nhập ở dang-nhap.css; tấm/hàng việc ở v8-hang.css. */
 @layer components {
   /* Trang chặn đặt mật khẩu mới: che toàn màn hình, không có nút đóng khi bắt buộc */
   .trang-chan { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--nen); overflow-y: auto; }
@@ -23,23 +23,6 @@
   /* ================= THANH DƯỚI ĐIỆN THOẠI ================= */
   .thanh-duoi { display: none; }
 
-  /* ================= ĐĂNG NHẬP ================= */
-  .dn { min-height: 100vh; display: grid; place-items: center; padding: 40px 16px 60px;
-    background: radial-gradient(1200px 500px at 50% -10%, #FBE9EA, transparent 60%), radial-gradient(900px 500px at 100% 100%, var(--navy-nhat), transparent 60%); }
-  .dn-the { width: min(460px, 100%); background: #fff; border: 1px solid var(--vien); border-radius: 20px; padding: 36px 36px 30px; text-align: center;
-    box-shadow: 0 20px 50px -30px rgba(27, 27, 27, .35); }
-  .dn-the .logo-lon { height: 96px; width: auto; margin: 0 auto; display: block; }
-  .dn-the .co-hang { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
-  .dn-the .co { width: 32px; height: 21px; border-radius: 2px; box-shadow: 0 1px 0 rgba(0, 0, 0, .25); }
-  .dn-the .dang { margin-top: 18px; font-size: 12px; letter-spacing: .14em; color: var(--chu-phu); font-weight: 600; }
-  .dn-the h1 { font-size: 22px; letter-spacing: .06em; margin-top: 6px; color: var(--do-dam); font-weight: 700; }
-  .dn-the .vp { font-size: 13px; letter-spacing: .1em; font-weight: 600; color: var(--navy); margin-top: 2px; }
-  .dn-the .phu { color: var(--chu-phu); font-size: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--vien); }
-  .dn-the label { display: block; text-align: left; font-size: 13px; color: var(--chu-phu); margin-top: 18px; }
-  .dn-the input { width: 100%; min-height: 46px; padding: 10px 14px; border: 1px solid var(--vien); border-radius: var(--bo-nut); margin-top: 6px; background: #fff; }
-  .dn-the .nut { width: 100%; min-height: 46px; margin-top: 22px; font-size: 15px; }
-  .dn-the .cuoi { margin-top: 16px; font-size: 13px; color: var(--chu-phu); }
-
   /* ================= ≤ 600px: ĐIỆN THOẠI ================= */
   @media (max-width: 600px) {
     .max { padding: 0 16px; }
@@ -54,6 +37,5 @@
       padding: 6px; display: grid; gap: 2px; box-shadow: 0 -8px 24px rgba(27, 27, 27, .12); }
     .thanh-khac button { text-align: left; padding: 10px 14px; border-radius: 8px; font-size: 14px; }
     .thanh-khac button[aria-selected="true"] { background: var(--do-nhat); color: var(--do); font-weight: 600; }
-    .dn-the { padding: 26px 20px 22px; }
   }
 }
