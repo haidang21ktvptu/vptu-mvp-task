@@ -2,7 +2,7 @@
 
 Phiên bản 3.0 · Ngày lập 16/9/2026 · Trạng thái: **đã chốt câu hỏi nghiệp vụ (16/9/2026), đủ điều kiện mở GĐ14** · Thay thế `SPEC-v2-luu.md` (v2, giữ để tra cứu).
 
-> Nguồn sự thật về "app phải làm gì" từ nay. Thước đo: `MUC-TIEU-1400.md` (mã NT/CN/QT). Mọi điểm phụ thuộc quyết định của chủ dự án đánh dấu **`[CH-n]`**, trỏ về `CAU-HOI-NGHIEP-VU.md`; văn bản dưới đây viết theo **phương án đề xuất** của câu hỏi đó, chủ dự án quyết khác thì sửa đúng chỗ đánh dấu. Hiện trạng và lý do giữ/bỏ: `RA-SOAT-HIEN-TRANG.md`. Lộ trình: `LO-TRINH-V3.md`. Giao diện: `DESIGN.md` (không đổi). Pipeline: `kien-truc.md`.
+> Nguồn sự thật về "app phải làm gì" từ nay. Thước đo: `MUC-TIEU-1400.md` (mã NT/CN/QT). Mọi điểm phụ thuộc quyết định của chủ dự án đánh dấu **`[CH-n]`**, trỏ về `CAU-HOI-NGHIEP-VU.md`; văn bản dưới đây viết theo **phương án đề xuất** của câu hỏi đó, chủ dự án quyết khác thì sửa đúng chỗ đánh dấu. Hiện trạng và lý do giữ/bỏ: `RA-SOAT-HIEN-TRANG.md`. Lộ trình: `LO-TRINH-V3.md`. Giao diện: `DESIGN.md` (hệ thống thiết kế) + **đặc tả UI/UX hiện hành `ui-ux/mockup-v8/`** (`DESIGN-V8.md` + 7 màn hình HTML tĩnh, chốt 21/9/2026; `ui-ux/mockup-v7.html` giữ làm lịch sử, đã thay bằng v8). Pipeline: `kien-truc.md`.
 
 ---
 
@@ -193,6 +193,7 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 - Không server riêng (giữ). **Cảnh báo tự động (KT-4, chốt 16/9)**: workflow `canh-bao-tu-dong.yml` chạy theo `schedule` mỗi giờ (+ `workflow_dispatch`), gọi RPC `canh_bao_quet()` trên production bằng `SUPABASE_SERVICE_ROLE_KEY` production để trong **repository secret** (chỉ workflow này dùng; không đưa key vào URL, không log); hàm `security definer`, chỉ `service_role` gọi được, **idempotent** theo (nhiệm vụ, mức) nên chạy trễ/chạy lặp không gửi trùng; có test với ngày cố định. Giới hạn của GitHub Actions: cron có thể trễ vài phút tới vài chục phút giờ cao điểm, và GitHub tắt schedule sau 60 ngày repo không có commit (cùng cơ chế với `backup-dinh-ky.yml`, đã có mục theo dõi trong TRANG-THAI). Chuyển sang `pg_cron` khi có gói Pro là một PR nhỏ (chỉ đổi nơi gọi).
 - Tệp minh chứng: **chưa có nơi lưu** (`[CH-6]` = B); cột `tep_path` để sẵn. Khi có kinh phí: Supabase Storage bucket `minh-chung`, policy dùng cùng `kl_pham_vi`, đường dẫn `nhiem_vu/<id>/<uuid>.<đuôi>`, không đưa key vào URL bên thứ ba.
 - Realtime: một kênh `nhiem_vu_feed` cho `nhiem_vu`, `chi_dao`, `minh_chung`, `dinh_chinh`, `direct_messages`.
+- **Giao diện (chốt 21/9)**: triển khai theo `ui-ux/mockup-v8/` — thanh đầu trang 72px nền navy + menu dọc trái 236px (thay menu pill ngang v7), dải "Cần xử lý ngay", thẻ việc dạng hàng, tab Nhiệm vụ có ngăn chi tiết cố định 520px, biểu mẫu Giao việc 3 khối; token màu/chữ trong `DESIGN-V8.md` (tiêu đề Lora thay Noto Serif, nội dung Be Vietnam Pro). Giữ nguyên hành vi nghiệp vụ, hàm nạp dữ liệu, `#klBody[data-nap]` và id vùng dùng trong e2e; chỉ đổi lớp trình bày.
 - Thư mục frontend: đổi `views/shared/kl/` → `views/shared/nhiem-vu/`, `lib/kl/` → `lib/nhiem-vu/` khi đụng tới; giữ giới hạn 300 dòng/file.
 
 ---

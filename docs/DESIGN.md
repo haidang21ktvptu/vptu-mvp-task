@@ -2,7 +2,7 @@
 
 Mục tiêu: giao diện **trang trọng như một văn bản của Đảng**, **mang dấu ấn Cao Bằng**, và **dùng được cả ngày** cho 49 cán bộ trên máy tính văn phòng lẫn điện thoại. Không phải giao diện "startup". Không màu mè. Một điểm nhấn duy nhất, còn lại kỷ luật.
 
-Bản mẫu chạy được ở `mockup/index.html`. Claude Code làm theo file này; khi phân vân, chọn phương án **trầm và ít hơn**.
+**Đặc tả UI/UX hiện hành: `docs/ui-ux/mockup-v8/`** (`DESIGN-V8.md` + 7 màn hình HTML tĩnh, chốt 21/9/2026) — khi khác với file này, `DESIGN-V8.md` thắng (ví dụ chữ tiêu đề Lora, menu dọc trái). Bản cũ `docs/ui-ux/mockup-v7.html` và `mockup/index.html` giữ làm lịch sử, đã thay bằng v8. Khi phân vân, chọn phương án **trầm và ít hơn**.
 
 ---
 
@@ -177,4 +177,4 @@ Dải cao 6px lặp ngang, hình thoi lồng nhau, màu vàng sao 60% trên nề
 - [ ] 360px không vỡ bố cục
 - [ ] Không chữ hoa toàn bộ ở nhãn, không tiếng Anh
 - [ ] Hoa văn thổ cẩm đúng 3 chỗ
-- [ ] So với `mockup/index.html`, cùng tinh thần
+- [ ] So với `docs/ui-ux/mockup-v8/` (màn hình tương ứng), đúng bố cục, màu, chữ
