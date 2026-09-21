@@ -3,7 +3,7 @@
 // tiếp". Kiểm màu chấm xanh / chữ vàng trên bản build. Nhiệm vụ mẫu ở hội nghị 996 (E2E), tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, NAP } from './lib/app.js';
+import { pageAs, nav, mauToken, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
@@ -30,7 +30,7 @@ test.describe.serial('Nhiệm vụ — thời gian thực', () => {
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', RT);
     // Chạy trên bản build (vite preview): lớp trong @layer components phải còn sau Tailwind — chấm xanh có màu lục.
-    await expect.poll(() => page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el, '::before').backgroundColor)).toBe('rgb(30, 142, 90)');
+    await expect.poll(() => page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el, '::before').backgroundColor)).toBe(await mauToken(page, '--luc'));
   });
   test.afterAll(async () => {
     await page?.context().close();
@@ -53,7 +53,7 @@ test.describe.serial('Nhiệm vụ — thời gian thực', () => {
   test('mất mạng → chỉ báo "làm mới mỗi 60 giây" trong ≤ 5 giây; có mạng lại → "Cập nhật trực tiếp"', async () => {
     await page.context().setOffline(true);
     await expect(page.locator('#klKetNoi')).toContainText('làm mới mỗi 60 giây', KN);
-    await expect.poll(() => page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(154, 123, 0)'); // chữ vàng --vang-chu trên bản build
+    await expect.poll(() => page.locator('#klKetNoi').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe(await mauToken(page, '--vang-chu')); // chữ vàng trên bản build
     await page.context().setOffline(false);
     await expect(page.locator('#klKetNoi')).toHaveText('Cập nhật trực tiếp', { timeout: 60_000 }); // kênh mới mở lại khi có mạng; runner CI có thể theo backoff
   });

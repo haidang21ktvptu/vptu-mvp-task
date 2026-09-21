@@ -4,6 +4,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys, EMAIL_DOMAIN } from './lib/keys.mjs';
+import { mauToken } from './lib/app.js';
 
 const USERNAME = 'e2e_doi_mk';
 const MK_TAM = 'Tam123456';
@@ -72,7 +73,7 @@ test.describe.serial('Đặt mật khẩu mới lần đầu', () => {
     await expect(page.locator('#mainHeader .nut-thoat')).toHaveCount(0);
     await expect(page.locator('#chuongBadge')).toHaveText('1');
     const badge = await page.locator('#chuongBadge').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor);
-    expect(badge).toBe('rgb(229, 57, 53)'); // huy hiệu đỏ
+    expect(badge).toBe(await mauToken(page, '--vang')); // huy hiệu chuông màu vàng (v8)
     const co = await admin.from('accounts').select('must_change_password').eq('id', userId).single();
     expect(co.data.must_change_password).toBe(false);
 

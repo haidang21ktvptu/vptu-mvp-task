@@ -4,7 +4,7 @@
 // Kiểm màu/lớp trên bản build (Tailwind giữ lớp trong @layer components). Nhiệm vụ mẫu ở hội nghị 993 (E2E), Owner = phòng Tổng hợp, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, moViec, NAP } from './lib/app.js';
+import { pageAs, nav, moViec, mauToken, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
@@ -54,8 +54,8 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(the).toContainText('Chưa ai xác nhận đã nhận việc');
     await expect(the).toContainText('chưa xác định');
     expect(Number((await the.locator('.tre').innerText()).split('\n')[0])).toBeGreaterThan(3);
-    await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe('rgb(212, 32, 24)'); // --do
-    await expect.poll(() => the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(168, 20, 15)');      // --do-dam: Đỏ đặc biệt
+    await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe(await mauToken(a1, '--do'));
+    await expect.poll(() => the.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe(await mauToken(a1, '--do-dam')); // Đỏ đặc biệt
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
     // Nhãn độ khẩn trong tiêu đề thẻ phải là nhãn gọn (inline-flex), không bị `.the .ten span { display: block }` kéo giãn hết chiều ngang (lỗi v3.6.0).
     const dk = the.locator('.ten .dk');
@@ -105,7 +105,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     const goc = a1.locator(`#klChiDao-${nvId} .cd-goc`);
     await expect(goc.locator('.cd-ph')).toContainText('Đã trình dự thảo, chờ ký (e2e)', RT);
     await expect(goc).toHaveAttribute('data-trang-thai', 'DA_PHAN_HOI');
-    await expect.poll(() => goc.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe('rgb(30, 142, 90)'); // --luc: đã phản hồi (bản build)
+    await expect.poll(() => goc.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe(await mauToken(a1, '--luc')); // đã phản hồi (bản build)
     await expect(a1.locator(`#thongBaoList [data-nv="${nvId}"]`)).toHaveCount(1, RT); // gom theo nhiệm vụ: spec chi-dao-tt (worker kia) cũng gửi tin cho demo_cvp
     await goc.locator('[data-action=dongChiDao]').click();
     await expect(a1.locator(`#klChiDao-${nvId} .cd-goc`)).toHaveAttribute('data-trang-thai', 'DA_DONG', RT);
