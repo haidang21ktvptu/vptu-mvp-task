@@ -2,7 +2,7 @@
 // Tổng; ô Quá hạn → chỉ dòng quá hạn; Báo cáo: mỗi con số bấm ra đúng danh sách có chip "Chịu trách nhiệm"; mục menu Nhiệm vụ đặt lại bộ lọc;
 // Cán bộ thuộc quyền: bức tranh tải việc theo phòng. Không tạo dữ liệu (bộ vàng trên staging); bỏ qua khi project chưa có module KL.
 import { test, expect } from '@playwright/test';
-import { pageAs, nav, NAP } from './lib/app.js';
+import { pageAs, nav, mauToken, NAP } from './lib/app.js';
 
 test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn phòng', () => {
   let page;
@@ -23,7 +23,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     expect(cong).toBe(tong);
   });
 
-  test('ô Quá hạn (nếu có) → danh sách chỉ dòng quá hạn, đúng số, mép trái đỏ trên bản build', async () => {
+  test('ô Quá hạn (nếu có) → danh sách chỉ dòng quá hạn, đúng số, chấm trạng thái đỏ trên bản build', async () => {
     const o = page.locator('#klStats [data-nhom="QUA_HAN"]');
     if (!(await o.isVisible())) return; // không có việc quá hạn trong phạm vi — ô ẩn
     const n = await so(o.locator('b'));
@@ -31,8 +31,9 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await expect(o).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
     await expect(page.locator('#klBody [id^="klRow-"]:not([data-nhom="QUA_HAN"])')).toHaveCount(0);
-    await expect.poll(() => page.locator('#klBody [id^="klRow-"]').first().evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor))
-      .toMatch(/^rgb\((212, 32, 24|168, 20, 15)\)$/); // --do / --do-dam; poll: dòng có thể vừa vẽ lại (realtime)
+    const mauDo = [await mauToken(page, '--do'), await mauToken(page, '--do-dam')]; // Đỏ / Đỏ đặc biệt — đọc từ token, không ghi cứng
+    await expect.poll(() => page.locator('#klBody [id^="klRow-"] .stt').first().evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)) // v8: chấm trạng thái (viền trái đã bỏ); poll: dòng có thể vừa vẽ lại (realtime)
+      .toMatch(new RegExp(`^(${mauDo.map((m) => m.replace(/[()]/g, '\\$&')).join('|')})$`));
     await page.locator('#klStats [data-nhom=""]').click();
     await expect(o).toHaveAttribute('aria-pressed', 'false');
   });

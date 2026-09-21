@@ -1,5 +1,6 @@
 // Trang "Đặt mật khẩu mới" (SPEC AUTH-2, GĐ23): bắt buộc khi accounts.must_change_password = true (chặn toàn màn hình, không có nút quay lại;
 // trigger trên auth.users tắt cờ khi đổi, RPC xoa_co_doi_mat_khau() chính chủ xoá thêm cho chắc), hoặc tự nguyện từ menu bánh răng (có Quay lại).
+// Lối ra khi bị chặn: nút "Đăng xuất" (#dmkDangXuatBtn, action dangXuat của shell/banh-rang.js → handleLogout) — huỷ phiên, về đăng nhập, cờ giữ nguyên.
 // Mật khẩu mới ≥ 8 ký tự, có chữ và số, khác mật khẩu tạm (giữ trong bộ nhớ module từ lúc đăng nhập, không lưu storage).
 import { supabase } from '../lib/supabase.js';
 import { $, show, setText, showInlineError } from '../lib/dom.js';
@@ -18,6 +19,7 @@ export function moTrangDoiMatKhau(bat) {
   show('loginSection', false);
   show('changePasswordModal', true);
   show('changePasswordHuy', !bat);
+  show('dmkDangXuatBtn', bat); // bắt buộc: lối ra duy nhất là Đăng xuất; tự nguyện: chỉ Quay lại
   setText('changePasswordMoTa', bat ? 'Đồng chí đang dùng mật khẩu tạm do quản trị cấp. Đặt mật khẩu mới để tiếp tục.' : 'Đặt mật khẩu mới cho tài khoản của đồng chí.');
   showInlineError('changePasswordError', '');
   $('newPassword').value = ''; $('newPasswordConfirm').value = '';
