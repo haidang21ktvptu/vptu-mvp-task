@@ -1,6 +1,8 @@
 // Nạp tài khoản demo (demo_*, demo_e2e_*, smoke_test) + phân công PCVP phụ trách phòng giả cho kiểm thử RLS/e2e lên MỘT project bất kỳ
 // bằng service_role — an toàn khi chạy lại (idempotent), KHÔNG chạm dữ liệu thật: chỉ tạo auth user + dòng accounts còn thiếu (cùng id với
 // supabase/seed.sql), không sửa dòng đã có; rồi nạp bộ dữ liệu mẫu E2E-SEED (seed-demo-du-lieu.mjs, idempotent) để e2e chạy được trên DB rỗng.
+// Auth user cùng email đã tồn tại với id KHÁC (tạo bằng cách khác trước đó): không lỗi — tìm theo email, dùng lại id đó cho dòng accounts,
+// ghi "đã có, dùng lại"; chỉ nuốt đúng lỗi trùng email, mọi lỗi khác vẫn dừng script (mã thoát 1).
 //
 //   node scripts/seed-demo.mjs [--project-ref <ref>] [--dry-run]
 //   Key: biến môi trường SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (CI) → hoặc Supabase CLI đã `supabase login` với --project-ref.
@@ -18,6 +20,19 @@ const EMAIL_DOMAIN = 'vptu.caobang.local';
 const PRODUCTION_REF = 'frwyxcmbonjaimziiuqr';
 const MAT_KHAU = '123456';
 const ID = (n) => `00000000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`;
+const TRUNG_EMAIL = /already been registered|already registered|already exists|email_exists/i;
+
+// Tìm auth user theo email (GoTrue admin không có API tra theo email → duyệt trang listUsers).
+async function timUserTheoEmail(db, email) {
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw new Error(`Tra auth theo email ${email}: ${error.message}`);
+    const u = data.users.find((x) => (x.email || '').toLowerCase() === email.toLowerCase());
+    if (u) return u;
+    if (data.users.length < 1000) return null;
+  }
+  return null;
+}
 // Thứ tự = seed.sql (quản lý trước, cấp dưới sau vì manager_id là FK).
 const TAI_KHOAN = [
   [1, 'demo_cvp', 'Demo Chánh Văn phòng', 'A1', 'Chánh Văn phòng', null, 'LANH_DAO_VAN_PHONG', true, false, false],
@@ -66,21 +81,34 @@ async function main() {
   }
   const db = createClient(k.url, k.key, { auth: { persistSession: false, autoRefreshToken: false } });
   const hash = bcrypt.hashSync(MAT_KHAU, 10);
-  const kq = { tao: [], daCo: [], boQua: [] };
+  const kq = { tao: [], daCo: [], boQua: [], dungLai: [] };
   for (const [n, username, full_name, role_group, position_title, ql, department, is_chief, is_system, quan_tri_he_thong] of TAI_KHOAN) {
     const id = ID(n);
     const { data: u } = await db.auth.admin.getUserById(id);
     const { data: acc, error } = await db.from('accounts').select('id, username').or(`id.eq.${id},username.eq.${username}`);
     if (error) throw new Error(`Đọc accounts: ${error.message}`);
+    const email = `${username}@${EMAIL_DOMAIN}`;
     if (u?.user && acc.some((a) => a.id === id)) { kq.daCo.push(username); continue; }
-    if (acc.some((a) => a.username === username && a.id !== id)) { kq.boQua.push(`${username} (đã có với id khác — tài khoản thật, không đụng)`); continue; }
-    if (dryRun) { kq.tao.push(username); continue; }
-    if (!u?.user) {
-      const r = await db.auth.admin.createUser({ id, email: `${username}@${EMAIL_DOMAIN}`, password_hash: hash, email_confirm: true, user_metadata: { username, full_name } });
-      if (r.error) throw new Error(`Tạo auth ${username}: ${r.error.message}`);
+    const khac = acc.find((a) => a.username === username && a.id !== id);
+    if (khac) {
+      const { data: uk } = await db.auth.admin.getUserById(khac.id);
+      if (uk?.user?.email?.toLowerCase() === email) { kq.daCo.push(`${username} (id khác, auth cùng email — dùng lại)`); continue; }
+      kq.boQua.push(`${username} (đã có với id khác — tài khoản thật, không đụng)`); continue;
     }
-    if (!acc.some((a) => a.id === id)) {
-      const r = await db.from('accounts').insert({ id, username, full_name, role_group, position_title, manager_id: ql ? ID(ql) : null, department, is_chief,
+    if (dryRun) { kq.tao.push(username); continue; }
+    let uid = id;
+    if (!u?.user) {
+      const r = await db.auth.admin.createUser({ id, email, password_hash: hash, email_confirm: true, user_metadata: { username, full_name } });
+      if (r.error && !TRUNG_EMAIL.test(r.error.message)) throw new Error(`Tạo auth ${username}: ${r.error.message}`);
+      if (r.error) { // trùng email: auth user đã có với id khác → dùng lại, không đổi mật khẩu
+        const cu = await timUserTheoEmail(db, email);
+        if (!cu) throw new Error(`Tạo auth ${username}: ${r.error.message} (nhưng không tìm thấy user theo email)`);
+        uid = cu.id;
+        kq.dungLai.push(`${username} (auth đã có, id ${uid.slice(0, 8)}…, dùng lại)`);
+      }
+    }
+    if (!acc.some((a) => a.id === uid)) {
+      const r = await db.from('accounts').insert({ id: uid, username, full_name, role_group, position_title, manager_id: ql ? ID(ql) : null, department, is_chief,
         must_change_password: false, is_system, quan_tri_he_thong });
       if (r.error) throw new Error(`Tạo accounts ${username}: ${r.error.message}`);
     }
@@ -98,7 +126,7 @@ async function main() {
     }
     pt.tao.push(phong);
   }
-  console.log(`${dryRun ? '[dry-run] ' : ''}Tài khoản: tạo ${kq.tao.length} [${kq.tao.join(', ')}] · đã có ${kq.daCo.length} · bỏ qua ${kq.boQua.length} ${kq.boQua.join('; ')}`);
+  console.log(`${dryRun ? '[dry-run] ' : ''}Tài khoản: tạo ${kq.tao.length} [${kq.tao.join(', ')}] · đã có ${kq.daCo.length} · dùng lại auth ${kq.dungLai.length} ${kq.dungLai.join('; ')} · bỏ qua ${kq.boQua.length} ${kq.boQua.join('; ')}`);
   console.log(`Phụ trách phòng: tạo [${pt.tao.join(', ')}] · đã có [${pt.daCo.join(', ')}] · bỏ qua ${pt.boQua.join('; ')}`);
   await napPhongThu(db, dryRun);
   await napDuLieuMau(db, dryRun);

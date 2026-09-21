@@ -1,21 +1,21 @@
-/* Thành phần dùng chung (mockup v7): nút, ô nhập một dòng, nhãn trạng thái, thẻ việc, mép trái theo mức, vòng khép kín,
+/* Thành phần dùng chung (v8 đợt 1: nút hành động 32px bo 8px, ô nhập 42px, thẻ trắng viền E3DED4 bo 12px): nút, ô nhập một dòng, nhãn trạng thái, thẻ việc, mép trái theo mức, vòng khép kín,
    khâu, huy hiệu, dòng "đã gửi", toast, modal. Tên lớp khai báo NGUYÊN VĂN trong JS (Tailwind cắt lớp ghép chuỗi). */
 @layer components {
   /* ---- Nút ---- */
   .nut { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--vien); background: #fff; color: var(--chu);
-    padding: 10px 16px; border-radius: var(--bo-nut); font-weight: 600; font-size: 14px; line-height: 1.2; white-space: nowrap; }
+    min-height: 32px; padding: 5px 12px; border-radius: var(--bo-nut); font-weight: 600; font-size: 13px; line-height: 1.2; white-space: nowrap; }
   .nut:hover:not(:disabled) { background: var(--nen-phu); }
   .nut.chinh { background: var(--do); border-color: var(--do); color: #fff; }
   .nut.chinh:hover:not(:disabled) { background: var(--do-dam); }
   .nut.lam { background: var(--lam); border-color: var(--lam); color: #fff; }
   .nut.lam:hover:not(:disabled) { filter: brightness(.94); }
-  .nut.nho { padding: 6px 12px; font-size: 13px; }
+  .nut.nho { min-height: 28px; padding: 3px 10px; font-size: 13px; }
   .nut:disabled { opacity: .5; cursor: not-allowed; }
   .hanh-dong { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
 
   /* ---- Ô nhập ---- */
-  .o-nhap { display: block; width: 100%; padding: 12px 14px; border: 1px solid var(--vien); border-radius: var(--bo-nut); background: #fff; }
-  .o-nhap.nho { padding: 9px 12px; font-size: 14px; border-radius: var(--bo-o); }
+  .o-nhap { display: block; width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--vien); border-radius: var(--bo-nut); background: #fff; }
+  .o-nhap.nho { min-height: 40px; padding: 7px 12px; font-size: 14px; border-radius: var(--bo-o); }
   .o-nhap:focus { outline: 3px solid var(--vang); outline-offset: 1px; }
   textarea.o-nhap { min-height: 80px; resize: vertical; line-height: 1.5; }
   select.o-nhap { appearance: none; -webkit-appearance: none; padding-right: 32px;
@@ -25,7 +25,7 @@
   /* Ô một dòng mở ngay dưới nút (form.o): input nền vàng nhạt + Gửi + Huỷ; .mo = đang mở. */
   .o { display: none; margin-top: 14px; gap: 10px; flex-wrap: wrap; align-items: center; }
   .o.mo { display: flex; }
-  .o input, .o select { flex: 1 1 320px; padding: 12px 14px; border: 1px solid var(--vien); border-radius: var(--bo-nut); background: var(--vang-nhat); min-width: 0; }
+  .o input, .o select { flex: 1 1 320px; min-height: 42px; padding: 8px 12px; border: 1px solid var(--vien); border-radius: var(--bo-nut); background: var(--vang-nhat); min-width: 0; }
   .o input[type="date"], .o select { flex: 0 1 200px; }
   .o small { flex-basis: 100%; color: var(--chu-phu); font-size: 13px; }
   .goi-y { display: flex; gap: 8px; flex-wrap: wrap; flex-basis: 100%; }
@@ -41,7 +41,7 @@
   .khau { display: inline-block; background: var(--cam-nhat); color: var(--cam-chu); border-radius: 6px; padding: 2px 8px; font-weight: 600; font-size: 13px; }
 
   /* ---- Thẻ việc (A0/A1): mép trái theo mức ---- */
-  .the { background: #fff; border: 1px solid var(--vien); border-left: 6px solid var(--vien); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
+  .the { background: var(--the); border: 1px solid var(--vien); border-left: 6px solid var(--vien); border-radius: var(--bo-the); padding: 14px 16px; margin-bottom: 12px; }
   .the.dac-biet { border-left-color: var(--do-dam); background: var(--nen-do-the); } .the.do { border-left-color: var(--do); }
   .the.vang { border-left-color: var(--vang); } .the.luc { border-left-color: var(--luc); } .the.lam { border-left-color: var(--lam); }
   .the-dau { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }

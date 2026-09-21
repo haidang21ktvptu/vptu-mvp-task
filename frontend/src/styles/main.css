@@ -1,8 +1,10 @@
-/* Điểm vào CSS (mockup v7): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
+/* Điểm vào CSS (v8 đợt 1): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
 @import './layout.css';
+@import './dau-trang.css';
+@import './menu-doc.css';
 @import './components.css';
 @import './dieu-hanh.css';
 @import './nhiem-vu.css';

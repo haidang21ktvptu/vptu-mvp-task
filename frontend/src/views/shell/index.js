@@ -1,4 +1,4 @@
-// Khung sau đăng nhập (mockup v7, dải theo mẫu dhtn.dcs.vn GĐ23): dải nhận diện (Tìm → Chuông → avatar + tên hai dòng → Bánh răng), menu theo vai,
+// Khung sau đăng nhập (v8 đợt 1): thanh đầu trang (Tìm → Chuông → avatar + tên hai dòng → Bánh răng), menu dọc theo vai bên trái,
 // hiện đúng một section trong trang; gọi view.init() theo vai. Đăng xuất nằm trong menu bánh răng (shell/banh-rang.js).
 import { $, show, setText, escapeHtml } from '../../lib/dom.js';
 import { nhanChucDanh } from '../../lib/constants.js';
@@ -6,7 +6,7 @@ import { state } from '../../lib/state.js';
 import { supabase } from '../../lib/supabase.js';
 import { registerActions } from '../../lib/actions.js';
 import { getView } from '../registry.js';
-import { renderNav, toggleNavKhac } from './nav.js';
+import { renderNav, toggleNavKhac, toggleMenuDoc } from './nav.js';
 import { renderBanhRang } from './banh-rang.js';
 
 export { setActiveNav, setNavBadge } from './nav.js';
@@ -60,4 +60,4 @@ export function reloadCurrentView() {
   getView(state.user?.role_group)?.reload();
 }
 
-registerActions({ toggleNavKhac });
+registerActions({ toggleNavKhac, toggleMenuDoc });

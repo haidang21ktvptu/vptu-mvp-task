@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#A8140F">
+  <meta name="theme-color" content="#1F3A5F">
   <title>Hệ thống quản trị nhiệm vụ — Tỉnh ủy Cao Bằng</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png">
@@ -45,46 +45,32 @@
     </form>
   </section>
 
-  <!-- ================= KHUNG ỨNG DỤNG: dải nhận diện, menu theo vai, trang một cột ================= -->
+  <!-- ================= KHUNG ỨNG DỤNG (v8 đợt 1): thanh đầu trang, menu dọc bên trái, vùng nội dung ================= -->
   <div id="appShell" class="hidden">
     <header id="mainHeader" class="dai">
-      <!-- Lớp họa tiết sóng mờ vẽ SVG (tham khảo dhtn.dcs.vn), không dùng ảnh raster -->
-      <svg class="dai-song" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 38C150 8 300 68 450 38S750 8 900 38s250 30 300 0V60H0Z" fill="#fff" opacity=".07"/>
-        <path d="M0 22C200 52 400 -8 600 22s400 30 600 0V60H0Z" fill="#fff" opacity=".05"/>
-        <path d="M0 50C300 20 600 60 900 30s200 10 300 20V60H0Z" fill="#000" opacity=".06"/>
-      </svg>
-      <div class="max">
-        <!-- Cụm cờ bay 84×48 vẽ SVG: cờ Đảng trước, cờ Tổ quốc sau; hai cột chéo nhẹ; lá cờ 36×24 (3:2), nếp gợn ba lớp sáng/tối -->
-        <svg class="co-cum" viewBox="0 0 84 48" width="84" height="48" role="img" aria-label="Cờ Đảng Cộng sản Việt Nam và cờ Tổ quốc">
-          <defs>
-            <path id="coLa" d="M0 0C6-2 12 2 18 0S30-2 36 0V24C30 26 24 22 18 24S6 26 0 24Z"/>
-            <path id="coSang" d="M8 .4C10.5-.6 13 .6 15.5 .2V24.2C13 24.6 10.5 23.4 8 24.4Z"/>
-            <path id="coToi" d="M23 .2C26 -.8 29 .4 32 0V24C29 24.4 26 23.2 23 24.2Z"/>
-          </defs>
-          <line x1="40" y1="47" x2="46" y2="3" stroke="#F2D27A" stroke-width="1.6" stroke-linecap="round"/>
-          <g transform="translate(46 3) rotate(6)">
-            <use href="#coLa" fill="#D42018"/><use href="#coSang" fill="#fff" opacity=".22"/><use href="#coToi" fill="#000" opacity=".16"/>
-            <polygon points="18,5 20.2,11.3 26.7,11.3 21.4,15 23.4,21.3 18,17.5 12.6,21.3 14.6,15 9.3,11.3 15.8,11.3" fill="#F5D000"/>
-          </g>
-          <line x1="30" y1="47" x2="14" y2="3" stroke="#F2D27A" stroke-width="1.6" stroke-linecap="round"/>
-          <g transform="translate(14 3) rotate(-6)">
-            <use href="#coLa" fill="#D42018"/><use href="#coSang" fill="#fff" opacity=".22"/><use href="#coToi" fill="#000" opacity=".16"/>
-            <path d="M21.5 8.5A6.3 6.3 0 1 0 25.5 18.5" fill="none" stroke="#F5D000" stroke-width="2.4" stroke-linecap="round"/>
-            <path d="M12.5 8.5l9.5 9.5" stroke="#F5D000" stroke-width="2.2" stroke-linecap="round"/>
-            <path d="M10.2 6.4l4.2 4.2" stroke="#F5D000" stroke-width="4.2" stroke-linecap="round"/>
-          </g>
+      <!-- Nền: ảnh Bản Giốc (bản 1200px, public/brand/README.md: ảnh tạm), lớp phủ navy→đỏ, dải núi đá vôi + vệt vàng vẽ SVG -->
+      <div class="dai-nen" aria-hidden="true">
+        <img class="dai-anh" src="/brand/ban-gioc-thanh-dau.jpg" width="1200" height="800" alt="" decoding="async">
+        <div class="dai-phu"></div>
+        <svg class="dai-nui" viewBox="0 0 760 72" preserveAspectRatio="none">
+          <path d="M0 62 L70 34 L120 52 L190 22 L250 48 L320 18 L380 44 L450 26 L520 50 L590 24 L660 46 L720 30 L760 44 L760 72 L0 72 Z" fill="rgba(255,255,255,.08)"/>
+          <path d="M0 68 L100 56 L200 64 L300 52 L400 62 L500 50 L600 60 L700 52 L760 58 L760 72 L0 72 Z" fill="rgba(232,185,35,.35)"/>
         </svg>
-        <img class="logo" src="/brand/bieu-trung.png" width="66" height="42" alt="Biểu trưng tỉnh Cao Bằng">
-        <div class="ten"><b>TỈNH ỦY CAO BẰNG</b><span>Hệ thống quản trị nhiệm vụ theo kết quả</span></div>
-        <!-- Cụm phải theo mẫu dhtn.dcs.vn: Tìm → Chuông (features/thong-bao chèn trước .nguoi) → avatar + tên hai dòng → Bánh răng (shell/banh-rang.js) -->
+      </div>
+      <div class="dai-trong">
+        <button type="button" id="menuMoBtn" class="nut-dai menu-mo-nut" data-action="toggleMenuDoc" aria-label="Mở menu" aria-expanded="false" aria-controls="mainNav">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <img class="logo" src="/brand/bieu-trung.png" width="52" height="40" alt="Biểu trưng tỉnh Cao Bằng">
+        <div class="ten"><span>Văn phòng Tỉnh ủy Cao Bằng</span><b>Hệ thống quản trị nhiệm vụ theo kết quả</b></div>
+        <!-- Cụm phải: Tìm → Chuông (features/thong-bao chèn trước .nguoi) → avatar + tên hai dòng → Bánh răng (shell/banh-rang.js) -->
         <div class="phai">
           <div class="tim-nhanh">
             <button type="button" id="timNhanhBtn" class="nut-dai" data-action="toggleTimNhanh" aria-label="Tìm nhanh mã hoặc nội dung việc" aria-expanded="false" aria-controls="timNhanhForm">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             </button>
             <form id="timNhanhForm" class="tim-nhanh-o hidden" role="search" novalidate>
-              <input type="search" id="timNhanhO" placeholder="Mã (NV-…) hoặc nội dung việc" aria-label="Từ khoá tìm nhanh" autocomplete="off">
+              <input type="search" id="timNhanhO" placeholder="Tìm mã việc, nội dung…" aria-label="Từ khoá tìm nhanh" autocomplete="off">
             </form>
           </div>
           <div class="nguoi">
@@ -100,10 +86,11 @@
         </div>
       </div>
     </header>
-    <div class="max"><nav id="mainNav" class="menu" role="tablist" aria-label="Điều hướng chính"></nav></div>
-
-    <!-- Markup của từng màn hình được các module trong src/views, src/features gắn vào lúc khởi động -->
-    <main class="max trang">
+    <!-- Menu dọc theo vai (shell/nav.js) + vùng nội dung; ≤ 600px menu thành ngăn kéo, .menu-nen là lớp mờ đóng ngăn kéo -->
+    <div class="than">
+      <nav id="mainNav" class="menu" role="tablist" aria-label="Điều hướng chính"></nav>
+      <div id="menuNen" class="menu-nen" data-action="toggleMenuDoc"></div>
+    <main class="trang">
       <section id="viewDieuHanh" class="hidden"></section>
       <section id="viewChiDaoDaGui" class="hidden"></section>
       <section id="viewKl" class="hidden"></section>
@@ -116,6 +103,7 @@
       <section id="viewTroGiup" class="hidden"></section>
       <footer class="chan-in">Văn phòng Tỉnh ủy Cao Bằng · Hệ thống quản trị nhiệm vụ · Bản in từ hệ thống</footer>
     </main>
+    </div>
     <nav id="thanhDuoi" class="thanh-duoi" aria-label="Điều hướng điện thoại"></nav>
     <div id="thanhKhac" class="thanh-khac hidden" role="menu"></div>
   </div>

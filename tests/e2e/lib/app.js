@@ -110,6 +110,15 @@ export async function moViec(page, id, ma) {
 }
 
 // Đăng xuất qua nút — supabase-js huỷ phiên ở mọi thiết bị của tài khoản, nên chỉ gọi trong kịch bản đăng nhập (chạy sau cùng).
+// Màu tính toán của một biến CSS (token) trên chính trang, ở dạng rgb(...) như getComputedStyle trả về — spec so màu KHÔNG ghi cứng
+// chuỗi rgb (đổi token là đổi một chỗ: frontend/src/styles/tokens.css).
+export async function mauToken(page, ten) {
+  return page.evaluate((t) => {
+    const el = globalThis.document.createElement('span'); el.style.color = `var(${t})`; globalThis.document.body.appendChild(el);
+    const mau = globalThis.getComputedStyle(el).color; el.remove(); return mau;
+  }, ten);
+}
+
 export async function logout(page) {
   await page.locator('#banhRangBtn').click(); // GĐ23: Đăng xuất nằm cuối menu bánh răng
   await page.locator('#logoutBtn').click();
