@@ -1,9 +1,11 @@
-// Vẽ menu theo vai: hàng pill dưới dải (máy tính, ≥ 901px), thanh biểu tượng dọc bên trái (601–900px: cùng các nút, chỉ hiện biểu tượng,
-// nhãn ở title) và thanh dưới 3 mục + "Khác" (điện thoại ≤ 600px). Cùng một bảng MENU; nút điện thoại có id <id>Duoi để không trùng id.
-import { $, show, escapeHtml } from '../../lib/dom.js';
+// Vẽ menu theo vai (v8 đợt 1): menu dọc bên trái chia nhóm (máy tính, ≥ 901px; 601–900px thu thành thanh biểu tượng, nhãn ở title),
+// ≤ 600px menu dọc thành ngăn kéo (body.menu-mo, nút ☰ trên thanh đầu trang) và thanh dưới 3 mục + "Khác". Cùng một bảng MENU; nút điện thoại
+// có id <id>Duoi để không trùng id. Chân menu ghi phiên bản + giờ build đọc từ phien-ban.json (không có khi chạy local → để trống).
+import { $, show, setText, escapeHtml } from '../../lib/dom.js';
 import { menuCuaVai } from './menu.js';
 
 let items = [];
+const NHOM = ['Điều hành', 'Theo dõi', 'Trao đổi', 'Hệ thống'];
 
 // Biểu tượng nét đơn (viewBox 24, stroke = màu chữ) theo id mục; mục lạ dùng dấu chấm tròn.
 const ICON = {
@@ -22,7 +24,7 @@ const badge = (it) => (it.badgeId ? `<span id="${it.badgeId}" class="huy-hieu hi
 const badgeDuoi = (it) => (it.badgeId ? `<span id="${it.badgeId}Duoi" class="huy-hieu hidden">0</span>` : '');
 
 function pillHtml(it) {
-  return `<button type="button" id="${it.id}" role="tab" aria-selected="false" data-action="${it.action}" data-nav="${it.id}" title="${escapeHtml(it.label)}">${icon(it)}<span>${escapeHtml(it.label)}</span>${badge(it)}</button>`;
+  return `<button type="button" id="${it.id}" role="tab" aria-selected="false" data-action="${it.action}" data-nav="${it.id}" title="${escapeHtml(it.label)}">${icon(it)}<span class="nhan-menu">${escapeHtml(it.label)}</span>${badge(it)}</button>`;
 }
 function duoiHtml(it) {
   return `<button type="button" id="${it.id}Duoi" role="tab" aria-selected="false" data-action="${it.action}" data-nav="${it.id}">${escapeHtml(it.ngan)}${badgeDuoi(it)}</button>`;
@@ -30,7 +32,9 @@ function duoiHtml(it) {
 
 export function renderNav(user) {
   items = menuCuaVai(user);
-  $('mainNav').innerHTML = items.map(pillHtml).join('');
+  $('mainNav').innerHTML = NHOM.map((n) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? `<div class="menu-nhom">${n}</div>${ds.map(pillHtml).join('')}` : ''; }).join('')
+    + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>';
+  veChanMenu();
   const chinh = items.filter((it) => it.duoi).slice(0, 3);
   const khac = items.filter((it) => !chinh.includes(it));
   $('thanhDuoi').innerHTML = chinh.map(duoiHtml).join('')
@@ -48,6 +52,24 @@ export function setActiveNav(id) {
   document.querySelectorAll('#mainNav [data-nav], #thanhDuoi [data-nav], #thanhKhac [data-nav]').forEach((el) => el.setAttribute('aria-selected', String(el.dataset.nav === id)));
   show('thanhKhac', false);
   $('navKhacDuoi')?.setAttribute('aria-expanded', 'false');
+  if (document.body.classList.contains('menu-mo')) toggleMenuDoc();
+}
+
+// Ngăn kéo menu dọc trên điện thoại (nút ☰ hoặc lớp mờ .menu-nen); chọn một mục (setActiveNav) thì đóng.
+export function toggleMenuDoc() {
+  const mo = !document.body.classList.contains('menu-mo');
+  document.body.classList.toggle('menu-mo', mo);
+  $('menuMoBtn')?.setAttribute('aria-expanded', String(mo));
+}
+
+async function veChanMenu() {
+  try {
+    const r = await fetch(`${import.meta.env.BASE_URL}phien-ban.json`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const pb = await r.json();
+    const luc = pb.build_luc ? new Date(pb.build_luc).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : '';
+    setText('menuPhienBan', `Phiên bản ${pb.phien_ban}${luc ? ` · cập nhật ${luc}` : ''}`);
+  } catch { return; }
 }
 
 export function toggleNavKhac() {
@@ -55,5 +77,7 @@ export function toggleNavKhac() {
   show('thanhKhac', mo);
   $('navKhacDuoi')?.setAttribute('aria-expanded', String(mo));
 }
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.body.classList.contains('menu-mo')) toggleMenuDoc(); });
 
 export const navItems = () => items;

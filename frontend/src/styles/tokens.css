@@ -1,20 +1,26 @@
-/* Token thiết kế theo docs/ui-ux/mockup-v7.html (bản 5). Chỉ khai báo biến; không có quy tắc trình bày.
-   Bảng màu lấy đỏ #D42018 và lam của biểu trưng Cao Bằng (lam đậm thêm cho chữ trắng đủ tương phản); đỏ chỉ dùng cho con số
-   và mép trái việc Đỏ; lam là màu cấu trúc; thân trang trắng, viền xám rất nhạt. */
+/* Token thiết kế theo docs/ui-ux/mockup-v8/DESIGN-V8.md (đợt 1 giao diện v8). Chỉ khai báo biến; không có quy tắc trình bày.
+   Giữ TÊN biến của v7 để CSS các màn hình chưa đổi vẫn chạy, chỉ đổi GIÁ TRỊ theo bảng v8. Đối chiếu tên: "--nen" của v8 (nền trang F6F4EF)
+   là --nen-phu ở đây; "--the" (nền thẻ) = --the/--nen; --lam (màu cấu trúc cũ) nay = navy v8. --cam (từ chối nhận việc) không có trong
+   bảng v8, giữ nguyên. Chữ: tiêu đề Lora 700, nội dung Be Vietnam Pro (fonts.css). */
 :root {
-  --do: #D42018; --do-dam: #A8140F; --do-nhat: #FBE6E9;
-  --vang: #F2B705; --vang-nhat: #FFF6D6; --vang-chu: #9A7B00; --vang-chu-dam: #7A5A00;
-  --lam: #0A62C7; --lam-nhat: #E7F0FB;
-  --luc: #1E8E5A; --luc-nhat: #E4F3EA;
+  --do: #B3121B; --do-dam: #7A0C12; --do-nhat: #FBE9EA;
+  --navy: #1F3A5F; --navy-nhat: #EEF1F6;
+  --vang: #E8B923; --vang-nhat: #FFF3D6; --vang-chu: #8A5A00; --vang-chu-dam: #8A5A00;
+  --lam: #1F3A5F; --lam-nhat: #EEF1F6;
+  --luc: #1B7A43; --luc-nhat: #E6F4EA;
   --cam: #D9711C; --cam-nhat: #FBEBDC; --cam-chu: #7A3E0E;
-  --nen: #FFFFFF; --nen-phu: #F7F8FA; --nen-do-mo: #FFF7F6; --nen-do-the: #FFF9F8; --nen-vang-mo: #FFFDF3; --nen-do-muc: #FFF8F8;
-  --vien: #E3E7EC; --chu: #1B2430; --chu-phu: #606B7A;
+  --nen: #FFFFFF; --the: #FFFFFF; --nen-phu: #F6F4EF; --nen-do-mo: #FFF7F6; --nen-do-the: #FFF9F8; --nen-vang-mo: #FFF8E6; --nen-do-muc: #FFF8F8;
+  --vien: #E3DED4; --vien-nhat: #EEEAE2; --chu: #1B1B1B; --chu-phu: #5B6270;
 
   --font-sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-tieu-de: "Lora", Georgia, "Times New Roman", serif;
   --max-w: 1040px;
-  --bo-the: 14px; --bo-nut: 10px; --bo-o: 8px;
+  --cao-dau-trang: 72px; --rong-menu: 236px;
+  --bo-the: 12px; --bo-nut: 8px; --bo-o: 8px;
   --nui-dao: 160ms;
 }
+/* Điện thoại (≤ 600px): thanh đầu trang 56px — dau-trang.css, menu-doc.css (ngăn kéo mở dưới thanh) đều đọc biến này. */
+@media (max-width: 600px) { :root { --cao-dau-trang: 56px; } }
 /* Ứng dụng nội bộ chỉ có nền sáng (mockup bỏ chế độ tối); khai báo để trình duyệt không tự đảo màu. */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --nen: #FFFFFF; } }
 :root[data-theme="dark"] { --nen: #FFFFFF; }

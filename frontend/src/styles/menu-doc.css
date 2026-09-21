@@ -1,0 +1,37 @@
+/* Menu dọc v8 (DESIGN-V8 mục 2): 236px bên trái, nền trắng, nhóm Điều hành / Theo dõi / Trao đổi (/ Hệ thống) bằng nhãn nhỏ in hoa; mục đang
+   chọn nền đỏ nhạt chữ đỏ đậm; huy hiệu số tròn đỏ (nguồn số giữ nguyên: features/huy-hieu.js, messages); chân menu ghi phiên bản + giờ build.
+   601–900px: thu thành thanh biểu tượng 56px (nhãn ở title). ≤ 600px: ẩn, bấm ☰ trên thanh đầu trang mở thành ngăn kéo (body.menu-mo);
+   thanh dưới 3 mục (layout.css) giữ nguyên. Vùng nội dung .trang nằm cạnh menu, padding 24/28px. Tên lớp viết nguyên văn (Tailwind cắt lớp ghép). */
+@layer components {
+  .than { display: flex; align-items: flex-start; min-height: calc(100vh - var(--cao-dau-trang)); }
+  .menu { flex: none; width: var(--rong-menu); position: sticky; top: 0; min-height: calc(100vh - var(--cao-dau-trang)); max-height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+    padding: 16px 12px; background: #fff; border-right: 1px solid var(--vien); }
+  .menu-nhom { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #8A8F99; padding: 14px 12px 6px; }
+  .menu-nhom:first-child { padding-top: 0; }
+  .menu button { display: flex; align-items: center; gap: 10px; width: 100%; height: 42px; padding: 0 12px; border-radius: 8px; color: var(--chu); font-size: 14px; font-weight: 500; text-align: left; }
+  .menu button:hover { background: var(--nen-phu); }
+  .menu button .ico { width: 18px; height: 18px; flex: none; }
+  .menu button .nhan-menu { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu button[aria-selected="true"] { background: var(--do-nhat); color: var(--do); font-weight: 700; }
+  .menu button .huy-hieu { flex: none; min-width: 22px; height: 22px; border-radius: 11px; font-size: 12px; padding: 0 7px; }
+  .menu-chan { margin-top: auto; padding: 12px; font-size: 11px; color: #8A8F99; line-height: 1.5; }
+  .menu-nen { display: none; }
+  .trang { flex: 1; min-width: 0; padding: 24px 28px 60px; }
+
+  @media (min-width: 601px) and (max-width: 900px) {
+    .menu { width: 56px; padding: 10px 6px; }
+    .menu-nhom, .menu-chan, .menu button .nhan-menu { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .menu button { position: relative; width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 12px; }
+    .menu button .ico { width: 22px; height: 22px; }
+    .menu button .huy-hieu { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }
+    .trang { padding: 20px 16px 60px; }
+  }
+  @media (max-width: 600px) {
+    .than { display: block; }
+    .menu { display: none; }
+    /* Ngăn kéo mở DƯỚI thanh đầu trang (dính, 56px) để nút ☰ vẫn bấm được để đóng; lớp mờ .menu-nen cũng đóng khi chạm */
+    body.menu-mo .menu { display: flex; position: fixed; left: 0; top: var(--cao-dau-trang); bottom: 0; z-index: 47; max-height: none; width: min(var(--rong-menu), 84vw); box-shadow: 0 0 40px rgba(0, 0, 0, .3); }
+    body.menu-mo .menu-nen { display: block; position: fixed; left: 0; right: 0; top: var(--cao-dau-trang); bottom: 0; z-index: 46; background: rgba(27, 27, 27, .45); }
+    .trang { padding: 18px 16px 92px; }
+  }
+}

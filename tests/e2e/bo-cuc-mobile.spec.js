@@ -1,5 +1,5 @@
-// GĐ20 (giao diện v7) — bố cục điện thoại cho từng vai (chỉ chạy ở project `mobile`, 360×740): không cuộn ngang; hàng menu ẩn, thanh dưới có
-// 3 mục theo vai (+ "Khác" khi còn mục); dải nhận diện gọn (cờ, biểu trưng, tên người dùng); màn hình điều hành của vai hiện; sang Nhiệm vụ:
+// GĐ20 (giao diện v7, cập nhật v8 đợt 1) — bố cục điện thoại cho từng vai (chỉ chạy ở project `mobile`, 360×740): không cuộn ngang; menu dọc ẩn,
+// mở thành ngăn kéo bằng nút ☰; thanh dưới có 3 mục theo vai (+ "Khác" khi còn mục); thanh đầu trang 56px (☰, biểu trưng, avatar);
 // danh sách và ngăn chi tiết xếp một cột; màn đăng nhập vừa khung. Không tạo dữ liệu.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
@@ -44,8 +44,10 @@ for (const v of VAI) {
     await expect(page.locator('#avatarNguoi')).toBeVisible(); // GĐ23: điện thoại chỉ hiện avatar, tên ẩn
     await expect(page.locator('#chuongBtn')).toBeVisible();
     await expect(page.locator('#mainHeader .logo')).toBeVisible();
-    await expect(page.locator('#mainHeader .co-cum')).toBeVisible(); // GĐ21: cụm cờ SVG
-    expect((await page.locator('#mainHeader').boundingBox()).height).toBeLessThan(80);
+    expect(Math.round((await page.locator('#mainHeader').boundingBox()).height)).toBe(56); // v8: thanh đầu trang 56px trên điện thoại
+    await page.locator('#menuMoBtn').click(); await expect(page.locator('#mainNav')).toBeVisible(); // v8: ngăn kéo menu dọc
+    await expect(page.locator('#mainNav #navDieuHanh')).toBeVisible();
+    await page.locator('#menuMoBtn').click(); await expect(page.locator('#mainNav')).toBeHidden();
     await khongCuonNgang(page);
     await page.locator('#chuongBtn').click(); await hopNoiTren(page, 'thongBaoPanel'); await page.locator('#chuongBtn').click(); // chuông nổi trên nội dung
     await expect(page.locator('#thongBaoPanel')).toBeHidden();
@@ -86,18 +88,19 @@ test('A0: thanh dưới Điều hành · Giao việc · Chỉ đạo; số-lọc
 });
 
 // GĐ21: 601–900px → menu thành thanh biểu tượng dọc bên trái (chỉ biểu tượng, nhãn ở title), thanh dưới ẩn; dải cao 60px với cụm cờ SVG.
-test('A1 ở 768px: thanh biểu tượng trái thay hàng pill, thanh dưới ẩn, dải 60px, không cuộn ngang', async ({ browser }, testInfo) => {
+test('A1 ở 768px: menu dọc thu thành thanh biểu tượng dính bên trái, thanh dưới ẩn, thanh đầu trang 72px, không cuộn ngang', async ({ browser }, testInfo) => {
   const page = await pageAs(browser, 'A1', testInfo);
   await page.setViewportSize({ width: 768, height: 900 });
   await expect(page.locator('#thanhDuoi')).toBeHidden();
   const menu = page.locator('#mainNav');
   await expect(menu).toBeVisible();
   const kieu = await menu.evaluate((el) => { const s = globalThis.getComputedStyle(el); return { pos: s.position, w: el.getBoundingClientRect().width, left: el.getBoundingClientRect().left }; });
-  expect(kieu.pos).toBe('fixed'); expect(kieu.left).toBe(0); expect(kieu.w).toBeLessThan(70);
+  expect(kieu.pos).toBe('sticky'); expect(kieu.left).toBe(0); expect(kieu.w).toBeLessThan(70); // v8: menu dọc dính (sticky) trong .than
   await expect(menu.locator('#navKl .ico')).toBeVisible();
   await expect(menu.locator('#navKl')).toHaveAttribute('title', 'Nhiệm vụ');
-  expect(Math.round((await page.locator('#mainHeader').boundingBox()).height)).toBe(60);
-  await expect(page.locator('#mainHeader .co-cum')).toBeVisible();
+  expect(Math.round((await page.locator('#mainHeader').boundingBox()).height)).toBe(72); // v8: 72px từ 601px trở lên
+  await expect(page.locator('#mainHeader .ten b')).toBeVisible(); // tên hệ thống in hoa
+  await expect(page.locator('#menuMoBtn')).toBeHidden();
   await khongCuonNgang(page);
   await page.locator('#chuongBtn').click(); await hopNoiTren(page, 'thongBaoPanel'); await page.locator('#chuongBtn').click(); // 768px: nổi trên thanh trái
   await page.locator('#banhRangBtn').click(); await hopNoiTren(page, 'banhRangMenu'); await page.keyboard.press('Escape');

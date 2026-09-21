@@ -1,4 +1,4 @@
-/* Nền tảng (mockup v7): chữ 16px Be Vietnam Pro, nền phụ xám rất nhạt, tiêu đề 700, tiêu điểm bàn phím vàng. */
+/* Nền tảng (v8): chữ 16px Be Vietnam Pro, nền trang F6F4EF, tiêu đề Lora 700, liên kết đỏ, tiêu điểm bàn phím vàng. */
 @layer base {
   * { box-sizing: border-box; }
   html { font-size: 16px; }
@@ -6,11 +6,11 @@
     margin: 0; font-family: var(--font-sans); font-size: 16px; line-height: 1.55; color: var(--chu); background: var(--nen-phu);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { margin: 0; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
+  h1, h2, h3, h4 { margin: 0; font-family: var(--font-tieu-de); font-weight: 700; line-height: 1.25; }
   p { margin: 0; }
   button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; padding: 0; }
   input, select, textarea { font: inherit; color: inherit; }
-  a { color: var(--lam); text-decoration: underline; text-underline-offset: 2px; }
+  a { color: var(--do); text-decoration: underline; text-underline-offset: 2px; }
   :focus-visible { outline: 3px solid var(--vang); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 }
