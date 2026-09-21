@@ -81,7 +81,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.117.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Khởi động Supabase cục bộ (tự áp toàn bộ migrations)
         run: supabase start
       - name: Lint schema
@@ -206,7 +208,9 @@ jobs:
       - uses: supabase/setup-cli@v1
         if: env.KIEM_THU_MOI_TRUONG == 'production'
         with:
-          version: latest
+          version: 2.117.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: db push migration lên production (công tắc kiểm thử)
         if: env.KIEM_THU_MOI_TRUONG == 'production'
         env:
