@@ -11,7 +11,7 @@ import { setActiveNav, showSection } from '../../shell/index.js';
 import { quanTriTemplate } from './template.js';
 import { mountLyDoModal } from './ly-do-modal.js';
 import { loadDanhMuc } from './danh-muc.js';
-import { renderTaiKhoan, renderNhatKy, toggleQuanTriKl, toggleQuanTriHeThong, khoaTaiKhoan, resetMatKhau } from './tai-khoan.js';
+import { renderTaiKhoan, renderNhatKy, toggleQuanTriKl, toggleThuKyTT, toggleQuanTriHeThong, khoaTaiKhoan, resetMatKhau } from './tai-khoan.js';
 import { mountTaiKhoanForm } from './tai-khoan-form.js';
 import { renderPhuTrach, togglePhuTrach, ketThucKiemNhiem } from './phu-trach.js';
 import { mountKiemNhiemModal } from './kiem-nhiem-modal.js';
@@ -76,6 +76,7 @@ export function registerQuanTriView() {
     openQuanTri, loadQuanTri, chonTabQuanTri,
     toggleQuanTriKl: (ds) => toggleQuanTriKl(ds, loadQuanTri),
     toggleQuanTriHeThong: (ds) => toggleQuanTriHeThong(ds, loadQuanTri),
+    toggleThuKyTT: (ds) => toggleThuKyTT(ds, loadQuanTri),
     khoaTaiKhoan: (ds) => khoaTaiKhoan(ds, loadQuanTri),
     resetMatKhau: (ds) => resetMatKhau(ds, loadQuanTri),
     togglePhuTrach: (ds) => togglePhuTrach(ds, loadQuanTri),

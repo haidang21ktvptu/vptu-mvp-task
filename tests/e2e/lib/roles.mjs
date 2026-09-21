@@ -43,4 +43,5 @@ export const OPTIONAL_USERS = {
   QTHT: tk('demo_qtht', 'Demo Quản trị hệ thống', 'A3', 'CDS_CY'),
   A0: tk('demo_a0', 'Demo Thường trực Tỉnh ủy', 'A0', null),
   E2E_CV2: tk('demo_e2e_cv2', 'Demo E2E Chuyên viên GL', 'A3', 'E2E_RT'), // chủ trì mới khi giao lại (0045); seed-demo.mjs tạo, seed.sql không có
+  E2E_TK: tk('demo_e2e_tk', 'Demo E2E Thư ký TT', 'A3', 'TONG_HOP'),       // thư ký Thường trực (0047); spec thu-ky-tt cấp cờ lúc chạy rồi thu lại
 };

@@ -59,11 +59,15 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
   ].filter(Boolean).join(' · ');
   const mo = g.trang_thai !== 'DA_DONG';
   const dongDuoc = mo && g.nguoi_gui === me && (g.loai === 'CHI_DAO_TT' ? laA0() : !laA0());
+  // Thư ký Thường trực (0047): đóng thay mặt luồng CHI_DAO_TT (hàm chi_dao_dong là chốt; không đóng loại khác).
+  const thayMat = mo && g.loai === 'CHI_DAO_TT' && Boolean(state.user?.thu_ky_thuong_truc) && g.nguoi_gui !== me;
   // Hỏa tốc (GĐ22): người nhận (luồng TT: nguoi_nhan; luồng thường: Owner/người theo dõi) phải bấm "Đã nhận" — hàm 0036 là chốt.
   const laNhan = g.loai === 'CHI_DAO_TT' ? laNguoiNhan(g) : me === r.nguoi_theo_doi || me === r.owner_tai_khoan;
   const daNhan = (g.da_nhan || []).includes(me);
   const nutNhan = mo && g.do_khan === 'HOA_TOC' && laNhan && !daNhan && !laA0() ? `<button type="button" class="nut nho do" data-action="daNhanChiDao" data-id="${g.id}" data-nv="${r.id}">Đã nhận</button>` : '';
-  const nut = `${nutNhan}${dongDuoc ? `<button type="button" class="nut nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : ''}`;
+  const nut = `${nutNhan}${dongDuoc ? `<button type="button" class="nut nho" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}">Đóng</button>` : ''}${
+    thayMat ? `<button type="button" class="nut nho chinh" data-action="dongChiDao" data-id="${g.id}" data-nv="${r.id}" data-thay-mat="1">Đóng thay mặt Thường trực</button>` : ''}`;
+  const daDongThayMat = g.trang_thai === 'DA_DONG' && g.dong_boi && g.dong_boi !== g.nguoi_gui ? `<p class="chu-phu cd-phu">Đã đóng thay mặt Thường trực — ${escapeHtml(tenNguoi(g.dong_boi))}${g.dong_luc ? `, ${formatDateTime(g.dong_luc)}` : ''}</p>` : '';
   const formPh = mo && !laA0() && trongLuong(g, phanHoi, r) && g.id !== gocDau ? formPhHtml(g, r) : '';
   const formCon = mo && g.loai === 'CHI_DAO_TT' && duocChiDao() && laNguoiNhan(g) ? formGuiHtml(r, LOAI_CON, g.id) : '';
   return `
@@ -77,6 +81,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
       <p class="cd-noi-dung">${escapeHtml(g.noi_dung)}</p>
       ${phu ? `<p class="chu-phu cd-phu">${phu}</p>` : ''}
       ${g.loai === 'CHI_DAO_TT' && g.phan_hoi && g.phan_hoi.startsWith('Chuyển thành') ? `<p class="chu-phu cd-phu">${escapeHtml(g.phan_hoi)} (${escapeHtml(tenNguoi(g.phan_hoi_boi))})</p>` : ''}
+      ${daDongThayMat}
       <div class="cd-cac-ph">${phanHoi.map((p) => phanHoiHtml(p, daDoc)).join('')}</div>
       ${formPh}${formCon}
     </div>`;
@@ -175,7 +180,7 @@ async function guiPhanHoi(ds, form) {
 async function dongChiDao(ds) {
   try {
     await chiDaoDong(ds.id);
-    notifySuccess('Đã đóng chỉ đạo.');
+    notifySuccess(ds.thayMat ? 'Đã đóng chỉ đạo thay mặt Thường trực. Thường trực và người nhận được báo.' : 'Đã đóng chỉ đạo.');
     sauHanhDong();
   } catch (e) {
     notifyError(e.message);

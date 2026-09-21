@@ -34,6 +34,8 @@ export const MENU = {
 // Mục dùng chung mọi vai (A0 nhắn tin 1-1 từ 0034): Nhắn tin có huy hiệu; Quản trị chỉ khi có cờ.
 export const NHAN_TIN_NAV = { id: 'dmBubbleLauncher', label: 'Nhắn tin', ngan: 'Nhắn tin', action: 'openNhanTin', section: 'viewNhanTin', badgeId: 'dmBubbleBadge', nhom: 'Trao đổi' };
 export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Quản trị', action: 'openQuanTri', section: 'viewQuanTri', nhom: 'Hệ thống' };
+// Thư ký Thường trực (0047, cờ thu_ky_thuong_truc, mọi vai trừ A0): đóng chỉ đạo Thường trực thay mặt.
+export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thường trực', ngan: 'Chỉ đạo TT', action: 'openChiDaoTTThuKy', section: 'viewChiDaoTTThuKy', nhom: 'Theo dõi' };
 
 // Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Giao việc và Nhiệm vụ toàn phạm vi.
 const QTKL_A3 = [MENU.A1[1], { ...MENU.A1[2], label: 'Toàn bộ nhiệm vụ' }];
@@ -41,6 +43,7 @@ const QTKL_A3 = [MENU.A1[1], { ...MENU.A1[2], label: 'Toàn bộ nhiệm vụ' }
 export function menuCuaVai(user) {
   const goc = [...(MENU[user?.role_group] || []), ...(user?.role_group === 'A3' && user?.quan_tri_kl ? QTKL_A3 : [])];
   const nhanTin = [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
+  const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
-  return [...goc, ...nhanTin, ...quanTri];
+  return [...goc, ...thuKy, ...nhanTin, ...quanTri];
 }

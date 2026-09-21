@@ -32,4 +32,7 @@
     .cn-ho-so, .cn-thong-tin { grid-template-columns: 1fr; }
     .qt-form label { min-width: 0; flex: 1 1 100%; }
   }
+  /* 0047: xác nhận một bước tại dòng "Chỉ đạo Thường trực" của thư ký */
+  .tk-xac-nhan { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px dashed var(--do); border-radius: 8px; font-size: 13px; color: var(--do-dam); background: var(--do-nhat); }
+  .tk-xac-nhan.hidden { display: none; }
 }

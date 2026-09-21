@@ -13,6 +13,7 @@
 -- Tài khoản riêng cho từng spec e2e (GĐ18, Playwright 2 worker — spec không dùng chung tài khoản; test RLS vẫn dùng bộ trên):
 --   demo_e2e_kl / demo_e2e_mc / demo_e2e_nv / demo_e2e_dh  A3 TONG_HOP — kl-chuyen-vien / kl-minh-chung / nhiem-vu / dieu-hanh
 --   demo_e2e_owner   A3  TONG_HOP, chỉ làm Owner dữ liệu (kl-realtime, kl-them-nhiem-vu), không đăng nhập
+--   demo_e2e_tk      A3  TONG_HOP — thư ký Thường trực (0047): spec thu-ky-tt cấp cờ lúc chạy rồi thu lại
 --   demo_e2e_tp / demo_e2e_cv  A2 / A3 phòng giả E2E_RT — realtime (nhắn tin 1-1)
 -- Mật khẩu chung: 123456 (chỉ tài khoản giả). Từ migration 0011, accounts.id là FK tới
 -- auth.users.id nên phải tạo auth user TRƯỚC, cùng id, rồi mới INSERT accounts.
@@ -37,7 +38,8 @@ WITH demo(id, username) AS (
     ('00000000-0000-4000-8000-000000000013'::uuid, 'demo_e2e_dh'),
     ('00000000-0000-4000-8000-000000000014'::uuid, 'demo_e2e_owner'),
     ('00000000-0000-4000-8000-000000000015'::uuid, 'demo_e2e_tp'),
-    ('00000000-0000-4000-8000-000000000016'::uuid, 'demo_e2e_cv')
+    ('00000000-0000-4000-8000-000000000016'::uuid, 'demo_e2e_cv'),
+    ('00000000-0000-4000-8000-000000000018'::uuid, 'demo_e2e_tk')
 )
 INSERT INTO "auth"."users"
   ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at",
@@ -83,7 +85,8 @@ VALUES
   ('00000000-0000-4000-8000-000000000013', 'demo_e2e_dh', 'Demo E2E Chuyên viên DH', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
   ('00000000-0000-4000-8000-000000000014', 'demo_e2e_owner', 'Demo E2E Chuyên viên Owner', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
   ('00000000-0000-4000-8000-000000000015', 'demo_e2e_tp', 'Demo E2E Trưởng phòng RT', 'A2', 'Trưởng phòng', NULL, 'E2E_RT', false, false, false, false),
-  ('00000000-0000-4000-8000-000000000016', 'demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'Chuyên viên', NULL, 'E2E_RT', false, false, false, false)
+  ('00000000-0000-4000-8000-000000000016', 'demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'Chuyên viên', NULL, 'E2E_RT', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000018', 'demo_e2e_tk', 'Demo E2E Thư ký TT', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false)
 ON CONFLICT ("id") DO UPDATE SET
   "manager_id" = EXCLUDED."manager_id",
   "department" = EXCLUDED."department",
