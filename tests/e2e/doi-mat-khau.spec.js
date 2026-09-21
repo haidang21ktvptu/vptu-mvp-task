@@ -47,6 +47,14 @@ test.describe.serial('Đặt mật khẩu mới lần đầu', () => {
     await page.reload(); // tải lại vẫn bị chặn (cờ ở DB)
     await expect(trang).toBeVisible({ timeout: 20_000 });
     await expect(page.locator('#mainHeader')).toBeHidden();
+    // Lối ra: Đăng xuất ngay trên trang chặn → về đăng nhập; đăng nhập lại vẫn bị chặn (chưa đổi mật khẩu, cờ giữ nguyên)
+    await expect(page.locator('#dmkDangXuatBtn')).toBeVisible();
+    await page.locator('#dmkDangXuatBtn').click();
+    await expect(page.locator('#loginSection')).toBeVisible({ timeout: 20_000 });
+    await expect(trang).toBeHidden();
+    await page.locator('#loginUsername').fill(USERNAME); await page.locator('#loginPassword').fill(MK_TAM); await page.locator('#loginSubmitBtn').click();
+    await expect(trang).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator('#mainHeader')).toBeHidden();
 
     await page.locator('#newPassword').fill('abcdefgh'); await page.locator('#newPasswordConfirm').fill('abcdefgh');
     await page.locator('#changePasswordBtn').click();

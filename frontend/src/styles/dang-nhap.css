@@ -29,6 +29,8 @@
   .trang-chan .dn-the { text-align: center; gap: 16px; }
   .trang-chan .dn-the .logo-lon { height: 64px; width: auto; margin: 0 auto; display: block; }
   .trang-chan .dn-the .phu { margin-top: 0; }
+  .dmk-thoat { width: auto; min-height: 0; margin: 4px auto 0; padding: 4px 8px; border: 0; background: none; font-size: 13px; font-weight: 500; color: var(--chu-phu); text-decoration: underline; text-underline-offset: 3px; } /* lối ra phụ, không lấn át nút Lưu */
+  .dmk-thoat:hover:not(:disabled) { background: none; color: var(--do); }
 
   @media (max-width: 1100px) { .dn .dn-the { right: 48px; } .dn-hieu { padding: 48px 48px 0; } .dn-chan { left: 48px; } }
   @media (max-width: 700px) {
