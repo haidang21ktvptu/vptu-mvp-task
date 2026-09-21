@@ -47,7 +47,7 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     if (db) await donVanBan(db, hnKhoa);
   });
 
-  test('A0: ô nhập chung có "Ý kiến" / "Chỉ đạo"; gửi Chỉ đạo → dòng CHI_DAO_TT chờ phản hồi, người nhận tự tính; Chỉ đạo đã gửi có dòng', async () => {
+  test('A0: ô nhập chung có "Ý kiến" / "Chỉ đạo"; chọn Chỉ đạo + Thượng khẩn giữ nguyên khi ngăn nạp lại; gửi → dòng CHI_DAO_TT chờ phản hồi; Chỉ đạo đã gửi có dòng', async () => {
     await moViec(a0, nvId, ma);
     const form = a0.locator(`#klChiDao-${nvId} form.cd-form`);
     await expect(form.locator('input[name=noi_dung]')).toBeVisible();
@@ -56,13 +56,27 @@ test.describe.serial('Chỉ đạo Thường trực — A0 gửi → PCVP phụ 
     await expect(form.locator('input[name=han_phan_hoi]')).toBeHidden();
     await form.locator('select[name=loai]').selectOption('CHI_DAO_TT');
     await expect(form.locator('input[name=han_phan_hoi]')).toBeVisible(); // để trống = 2 ngày làm việc
+    await form.locator('.dk-chon button[data-gia-tri=THUONG_KHAN]').click();
     await form.locator('input[name=noi_dung]').click();
     await form.locator('input[name=noi_dung]').fill('Báo cáo Thường trực tiến độ trước thứ Sáu (e2e)');
-    await form.locator('button[type=submit]').click();
+    // v3.8.1: "Tải lại" nạp lại danh sách và vẽ lại ngăn (như realtime / nạp lại nền) — loại, độ khẩn, nội dung đang nhập phải còn nguyên.
+    await a0.locator('#viewKl [data-action=loadKl]').click();
+    await expect(a0.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+    await expect(a0.locator(`#klChiTiet-${nvId}`)).toBeVisible(NAP);
+    const form2 = a0.locator(`#klChiDao-${nvId} form.cd-form`);
+    await expect(form2.locator('select[name=loai]')).toHaveValue('CHI_DAO_TT', NAP);
+    await expect(form2.locator('input[name=do_khan]')).toHaveValue('THUONG_KHAN');
+    await expect(form2.locator('.dk-chon button[data-gia-tri=THUONG_KHAN]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(form2.locator('input[name=han_phan_hoi]')).toBeVisible();
+    await expect(form2.locator('input[name=noi_dung]')).toHaveValue('Báo cáo Thường trực tiến độ trước thứ Sáu (e2e)');
+    await form2.locator('button[type=submit]').click();
     const goc = a0.locator(`#klChiDao-${nvId} .cd-goc[data-loai=CHI_DAO_TT]`);
     await expect(goc).toHaveCount(1, RT);
     await expect(goc).toHaveAttribute('data-trang-thai', 'CHO_PHAN_HOI', NAP);
     await expect(goc).toContainText('Chỉ đạo Thường trực');
+    await expect(goc).toContainText('Thượng khẩn');
+    const cd = await db.from('chi_dao').select('loai, do_khan').eq('nhiem_vu_id', nvId).eq('loai', 'CHI_DAO_TT');
+    expect(cd.data).toEqual([{ loai: 'CHI_DAO_TT', do_khan: 'THUONG_KHAN' }]);
     await expect(goc).toContainText('Người nhận: Demo Chánh Văn phòng'); // trên project có Chánh VP thật (is_chief) thì danh sách có thêm tên thật ở giữa
     await expect(goc).toContainText('Demo Phó Chánh Văn phòng Hai');
     await expect(goc).toContainText('Hạn phản hồi');

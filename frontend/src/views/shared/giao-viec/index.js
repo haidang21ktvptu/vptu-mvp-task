@@ -25,7 +25,11 @@ const MOI = '__moi__';
 const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 const laA0 = () => state.user?.role_group === 'A0';
 const canThayMat = () => state.user?.role_group === 'A3'; // người giao không phải lãnh đạo (giữ quan_tri_kl) → giao thay mặt
-const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'klThNgayNhanWrap', 'klThLoaiWrap', 'klThCapQDWrap', 'gvNganhWrap', 'gvPhuWrap', 'klThLuuTiep'];
+const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'klThCapQDWrap', 'gvPhuWrap', 'klThLuuTiep'];
+// A0 với văn bản kết luận / thông báo: giao_viec bắt buộc ngành + lĩnh vực (và ngày nhận, loại hạn như A1) → hiện các ô này theo loại văn bản.
+const THEO_LOAI_A0 = ['gvNganhWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];
+const canNganhHienTai = () => canNganh(loaiVanBan());
+const canNgayNhan = () => !laA0() || canNganhHienTai();
 
 const vanBanChon = () => vanBan.find((h) => h.id === $('klThVanBan').value);
 const laMoi = () => $('klThVanBan').value === MOI;
@@ -33,7 +37,8 @@ const laMoi = () => $('klThVanBan').value === MOI;
 const vbTrong = () => laA0() && laMoi() && !$('klThSoKL').value.trim() && !$('klThNgayBH').value;
 const vanBanOk = () => (laMoi() ? vbTrong() || Boolean($('klThSoKL').value.trim() && $('klThNgayBH').value) : Boolean($('klThVanBan').value));
 const ngayBH = () => (laMoi() ? $('klThNgayBH').value : vanBanChon()?.ngay_ban_hanh) || '';
-const loaiVanBan = () => (laMoi() ? $('klThLoaiVB').value : vanBanChon()?.loai) || 'KHAC';
+// Loại văn bản đang áp dụng; A0 để trống văn bản → DB tạo văn bản KHAC (mốc giao) nên không đòi ngành/lĩnh vực.
+const loaiVanBan = () => (laMoi() ? (vbTrong() ? 'KHAC' : $('klThLoaiVB').value) : vanBanChon()?.loai) || 'KHAC';
 const nhanVanBan = (h) => `${tenLoaiVanBan(h.loai)} · ${h.so_hoi_nghi ? `HN ${h.so_hoi_nghi} · ` : ''}${h.so_ket_luan} · BH ${formatNgay(h.ngay_ban_hanh)}${h.trich_yeu ? ` · ${h.trich_yeu.slice(0, 60)}` : ''}`;
 
 function capNhatHienThi() {
@@ -79,16 +84,19 @@ function ownerDoi() {
 export function trangThaiPhan() {
   const p1 = vanBanOk(); // v8: khối 1 = văn bản; khối 2 = nội dung + người
   const p2 = Boolean($('klThNoiDung').value.trim()) && Boolean($('klThOwner').value) && (laA0() || Boolean($('klThNguoiTheoDoi').value)) && (!canThayMat() || Boolean($('klThThayMat').value));
-  const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && (laA0() || Boolean($('klThNgayNhan').value));
+  const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && (!canNgayNhan() || Boolean($('klThNgayNhan').value))
+    && (!canNganhHienTai() || (Boolean($('klThNganh').value) && Boolean($('klThLinhVuc').value)));
   return [p1, p2, p3];
 }
 // Các yếu tố bắt buộc còn thiếu (theo thứ tự khối) — dòng "Còn thiếu: …" cạnh nút Giao việc.
 function conThieu() {
   return [[!vanBanOk(), 'văn bản'], [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'người chịu trách nhiệm'],
     [!laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!$('klThSanPham').value, 'sản phẩm'],
-    [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [!laA0() && !$('klThNgayNhan').value, 'ngày nhận văn bản']].filter(([t]) => t).map(([, n]) => n);
+    [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [canNgayNhan() && !$('klThNgayNhan').value, 'ngày nhận văn bản'],
+    [canNganhHienTai() && !$('klThNganh').value, 'ngành'], [canNganhHienTai() && !$('klThLinhVuc').value, 'lĩnh vực']].filter(([t]) => t).map(([, n]) => n);
 }
 function capNhatTomTat() {
+  if (laA0()) THEO_LOAI_A0.forEach((id) => show(id, canNganhHienTai())); // theo từng ô gõ (số hiệu / ngày / loại văn bản)
   const [p1, p2, p3] = trangThaiPhan();
   [p1, p2, p3].forEach((ok, i) => $(`gvCham${i + 1}`).classList.toggle('xong', ok));
   $('klThLuu').disabled = !(p1 && p2 && p3);
@@ -150,10 +158,10 @@ function kiemTra(p) {
   if (!p.owner_don_vi_ma) return 'Chọn đơn vị hoặc cán bộ chịu trách nhiệm — mỗi việc đúng một Owner.';
   if (canThayMat() && !p.thay_mat_cho) return 'Chọn lãnh đạo mà đồng chí giao thay mặt — lãnh đạo đó là cấp duyệt nếu việc bị từ chối.';
   if (!p.san_pham_loai) return 'Chọn loại sản phẩm đầu ra — mỗi việc phải định nghĩa sản phẩm ngay từ đầu.';
-  if (!laA0() && !p.ngay_nhan_van_ban) return 'Nhập ngày nhận văn bản (mốc bắt đầu đếm).';
+  if (canNgayNhan() && !p.ngay_nhan_van_ban) return 'Nhập ngày nhận văn bản (mốc bắt đầu đếm).';
   if (p.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly) return 'Nhập hạn hoàn thành — mỗi việc phải có một hạn cụ thể.';
   if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
-  if (!laA0() && canNganh(loaiVanBan()) && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
+  if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
   if (!laA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
   return null;
 }
@@ -169,6 +177,7 @@ function docForm() {
   if (cha) p.nhiem_vu_cha = cha.id;
   if (laA0()) {   // A0: DB tự suy người theo dõi, đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
     if (laMoi() && !vbTrong()) p.van_ban = vanBanMoi(); else if (!laMoi()) p.van_ban_id = $('klThVanBan').value;
+    if (canNganhHienTai()) Object.assign(p, { nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null, ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value });
     return p;
   }
   Object.assign(p, {

@@ -61,6 +61,38 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await context.close();
   });
 
+  // v3.8.1: A0 giao từ Kết luận BTV → giao_viec bắt buộc ngành + lĩnh vực → biểu mẫu phải hiện Ngành/Lĩnh vực/Ngày nhận/Loại hạn và tính vào "Còn thiếu".
+  test('A0 giao việc từ Kết luận BTV: thiếu ngành → nút mờ, "Còn thiếu" ghi ngành; chọn ngành + lĩnh vực → giao thành công', async ({ browser }, testInfo) => {
+    const context = await contextAs(browser, 'A0', testInfo);
+    const page = await context.newPage();
+    const soKL = `E2E-TEST-TTKL-${duAn}`; const nd = `${E2E_TAG} TT giao ${duAn} từ KL ${Date.now()}`;
+    await page.goto('./');
+    await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
+    await nav(page, 'navGiaoViec');
+    await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', { timeout: 20_000 });
+    await expect(page.locator('#gvNganhWrap')).toBeHidden(); // chưa nhập văn bản → giao trực tiếp (văn bản KHAC), không đòi ngành
+    await page.locator('#klThLoaiVB').selectOption('KL_BTV');
+    await page.locator('#klThSoHN').fill('99'); await page.locator('#klThSoKL').fill(soKL); await page.locator('#klThNgayBH').fill(congNgay(homNayVN(), -3));
+    await expect(page.locator('#gvNganhWrap')).toBeVisible();
+    await expect(page.locator('#klThNgayNhanWrap')).toBeVisible();
+    await expect(page.locator('#klThLoaiWrap')).toBeVisible();
+    await page.locator('#klThNoiDung').fill(nd);
+    await page.locator('#klThOwner').selectOption(`tk:${CVP_ID}`);
+    await page.locator('#klThSanPham').selectOption('BAO_CAO');
+    await page.locator('#klThHan').fill(congNgay(homNayVN(), 10));
+    await expect(page.locator('#klThLuu')).toBeDisabled();
+    await expect(page.locator('#gvConThieu')).toContainText('ngành');
+    await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
+    await page.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+    await expect(page.locator('#gvConThieu')).toHaveText('');
+    await expect(page.locator('#klThLuu')).toBeEnabled();
+    await page.locator('#klThLuu').click();
+    await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
+    const { data } = await db.from('nhiem_vu').select('nganh_ma, linh_vuc_ma, uu_tien, van_ban_giao_viec(loai, so_ket_luan)').eq('noi_dung', nd).single();
+    expect(data).toMatchObject({ nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH', uu_tien: 'THUONG_TRUC', van_ban_giao_viec: { loai: 'KL_BTV', so_ket_luan: soKL } });
+    await context.close();
+  });
+
   test('Chánh VP: khối "Việc Thường trực giao" đầu trang với nhãn Thường trực giao + Khẩn; dải Cần xử lý; Xác nhận đã nhận → khối biến mất', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A1', testInfo);
     const the = page.locator(`#tt-viec-${id}`);
@@ -82,6 +114,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
 // Việc của project này (nội dung có tên project); văn bản "Thường trực giao …" do app đặt tên (không gắn tag được) chỉ xoá khi không còn nhiệm vụ.
 async function don(db, duAn) {
   await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG} TT giao ${duAn}%`);
+  await db.from('van_ban_giao_viec').delete().eq('so_ket_luan', `E2E-TEST-TTKL-${duAn}`); // văn bản KL do A0 nhập trên biểu mẫu (v3.8.1)
   const { data } = await db.from('van_ban_giao_viec').select('id, nhiem_vu(id)').eq('tao_boi', A0_ID).like('so_ket_luan', 'Thường trực giao %');
   for (const vb of data || []) if (!vb.nhiem_vu?.length) await db.from('van_ban_giao_viec').delete().eq('id', vb.id);
 }
