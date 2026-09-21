@@ -52,6 +52,7 @@
   .gv-so { font-style: normal; width: 26px; height: 26px; border-radius: 13px; border: 2px solid var(--vien); color: var(--chu-phu); font-family: var(--font-sans); font-size: 13px; font-weight: 800; display: grid; place-items: center; flex: none; }
   .gv-so.xong { background: var(--navy); border-color: var(--navy); color: #fff; }
   .gv-truong { margin-top: 14px; } .cot-2 .gv-truong, .cot-3 .gv-truong { margin-top: 14px; }
+  .gv-cha { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--navy); background: var(--navy-nhat); font-size: 13px; } /* v8 đợt 4: giao tiếp xuống */
   .gv-truong .nhan { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--navy); }
   .gv-vb { gap: 0 12px; } .gv-vb .o-nhap { margin: 0; }
   .gv-the .o-nhap { border: 1px solid #C9C4B9; box-shadow: none; border-radius: 8px; }

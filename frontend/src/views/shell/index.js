@@ -11,7 +11,7 @@ import { renderBanhRang } from './banh-rang.js';
 
 export { setActiveNav, setNavBadge } from './nav.js';
 
-const SECTIONS = ['viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', 'viewGiaoViec', 'viewCanBo', 'viewBaoCao', 'viewNhanTin', 'viewQuanTri', 'viewCaNhan', 'viewTroGiup'];
+const SECTIONS = ['viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', 'viewTheoVanBan', 'viewGiaoViec', 'viewCanBo', 'viewBaoCao', 'viewNhanTin', 'viewQuanTri', 'viewCaNhan', 'viewTroGiup'];
 
 // Hiện đúng một section trong vùng nội dung.
 export function showSection(id) {

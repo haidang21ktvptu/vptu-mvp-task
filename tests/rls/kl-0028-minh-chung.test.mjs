@@ -16,7 +16,9 @@ const them = async (row) => {
   assertOk(r, row.ma); id[row.ma] = r.data.id;
 };
 const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, args);
-const nop = (username, ma, p) => rpc(username, 'nop_minh_chung', { p: { nhiem_vu_id: id[ma], so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', ...p } });
+// 0046: minh chứng nộp mới bắt buộc thêm trích yếu + mô tả kết quả (≤ 600 ký tự); bản ghi cũ (chèn thẳng bằng service_role) giữ NULL vẫn hợp lệ.
+const nop = (username, ma, p) => rpc(username, 'nop_minh_chung', { p: { nhiem_vu_id: id[ma], so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG',
+  trich_yeu: 'Báo cáo kết quả (RLS 0028)', mo_ta_ket_qua: 'Đã tổng hợp, gửi Chánh Văn phòng.', ...p } });
 const xacNhan = (username, mcId, hopLe, lyDo) => rpc(username, 'xac_nhan_minh_chung', { p_id: mcId, p_hop_le: hopLe, p_ly_do: lyDo ?? null });
 const dong = (username, ma, ngay) => rpc(username, 'dong_nhiem_vu', { p_id: id[ma], p_ngay_hoan_thanh: ngay ?? null });
 const view = async (ma) => (await db().from('v_nhiem_vu').select('*').eq('id', id[ma]).single()).data;
@@ -49,6 +51,8 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertDenied(await nop('demo_truongphong', 'NV-T61'), 'A2 không phải Owner/theo dõi');
     assertDenied(await nop('demo_cvp', 'NV-T61'), 'Chánh VP không phải Owner/theo dõi');
     for (const thieu of [{ so_hieu: '' }, { ngay_van_ban: null }, { cap_nhan: '  ' }]) assertLoi(await nop('demo_cv2', 'NV-T60', thieu), /đủ ba trường/, `thiếu ${Object.keys(thieu)}`);
+    for (const thieu of [{ trich_yeu: '' }, { mo_ta_ket_qua: '  ' }]) assertLoi(await nop('demo_cv2', 'NV-T60', thieu), /trích yếu văn bản và mô tả kết quả/, `thiếu ${Object.keys(thieu)} (0046)`);
+    assertLoi(await nop('demo_cv2', 'NV-T60', { mo_ta_ket_qua: 'x'.repeat(601) }), /tối đa 600/, 'mô tả quá 600 ký tự (0046)');
     assertLoi(await nop('demo_cv2', 'NV-T60', { cap_nhan: 'KHONG_CO' }), /không có trong danh mục/, 'cấp sai');
     assertLoi(await nop('demo_cv2', 'NV-T60', { ngay_van_ban: '2026-07-31' }), /từ ngày ban hành\/ngày nhận \(01\/08\/2026\)/, 'trước ngày ban hành');
     assertLoi(await nop('demo_cv2', 'NV-T60', { ngay_van_ban: '2030-01-01' }), /sau hôm nay/, 'sau hôm nay');
@@ -57,7 +61,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     const row = (await db().from('minh_chung').select('*').eq('id', mc.a).single()).data;
     assert.deepEqual([row.loai, row.so_hieu, row.ngay_van_ban, row.cap_nhan, row.hop_le, row.nop_boi], ['so_hieu', '12/CV-VPTU', '2026-08-20', 'CHANH_VAN_PHONG', null, IDS.cv2]);
     const ls = await lichSu('NV-T60', 'minh_chung_nop');
-    assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, IDS.cv2); assert.match(ls[0].gia_tri_moi, /Nộp minh chứng · NV-T60: số 12\/CV-VPTU ngày 20\/08\/2026, Chánh Văn phòng/);
+    assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, IDS.cv2); assert.match(ls[0].gia_tri_moi, /Nộp minh chứng · NV-T60: số 12\/CV-VPTU · Báo cáo kết quả \(RLS 0028\) \(ngày 20\/08\/2026, Chánh Văn phòng\)/);
     const tin = await tinCua('NV-T60');
     assert.deepEqual(tin.map((t) => t.receiver_id).sort(), [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1, IDS.pcvp2].sort(), 'người liên quan trừ người nộp');
   });

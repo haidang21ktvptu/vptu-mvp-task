@@ -1,39 +1,47 @@
 // Màn hình Giao việc một khối (GĐ22; SPEC GV-2: người giao chỉ thiết lập Owner, Product, Deadline — hệ thống tự điền, cho sửa: ngày nhận, cấp
-// nhận, người theo dõi). Dùng chung: A1/A2 (đầy đủ), A3 quan_tri_kl (thêm ô Thay mặt bắt buộc), A0 (bản rút gọn: ẩn văn bản, người theo dõi,
-// ngày nhận, loại hạn, cấp quyết định, ngành/lĩnh vực, ghi chú — DB tự suy; mặc định Khẩn, uu_tien Thường trực). Kiểm phía form để báo lỗi
-// sớm; DB là chốt qua giao_viec (0035). Thanh tóm tắt + chấm bước cập nhật theo từng ô; "Giao, nhập tiếp" giữ văn bản/ngành/lĩnh vực/loại hạn.
+// nhận, người theo dõi). Dùng chung: A1/A2 (đầy đủ), A3 quan_tri_kl (thêm ô Thay mặt bắt buộc), A0 (bản rút gọn: ẩn người theo dõi, ngày nhận,
+// loại hạn, cấp quyết định, ngành/lĩnh vực, ghi chú — DB tự suy; mặc định Khẩn, uu_tien Thường trực; v8 đợt 4: khối 1 văn bản hiện đủ, để trống
+// số hiệu + ngày → DB ghi mốc "Thường trực giao …"). Kiểm phía form để báo lỗi sớm; DB là chốt qua giao_viec (0035). Thanh tóm tắt + chấm bước cập
+// nhật theo từng ô; "Giao, nhập tiếp" giữ văn bản/ngành/lĩnh vực/loại hạn. Trích yếu văn bản lưu bằng van_ban_dat_trich_yeu (0046) sau giao_viec —
+// lỗi thì báo rõ "đã giao nhưng chưa lưu trích yếu". Giao tiếp xuống từ ngăn chi tiết (action giaoTiepXuong): điền sẵn văn bản của việc cha, gửi nhiem_vu_cha.
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, loadVanBan, giaoViec } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, loadVanBan, giaoViec, datTrichYeuVanBan } from '../../../lib/kl/du-lieu.js';
 import { homNayVN, formatNgay, ghiChuHan, congNgay } from '../../../lib/kl/ngay.js';
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { setActiveNav, showSection } from '../../shell/index.js';
 import { openKl } from '../kl/index.js';
 import { napLaiViec } from '../kl/nap-lai-viec.js';
+import { timKlRow } from '../kl/danh-sach.js';
 import { giaoViecTemplate } from './template.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, tenLoaiVanBan, canNganh } from '../kl/them-owner.js';
 
 let vanBan = [];
 let homNay = homNayVN();
+let cha = null; // việc cha khi giao tiếp xuống (nhiem_vu_cha)
 const MOI = '__moi__';
 const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 const laA0 = () => state.user?.role_group === 'A0';
 const canThayMat = () => state.user?.role_group === 'A3'; // người giao không phải lãnh đạo (giữ quan_tri_kl) → giao thay mặt
-const AN_A0 = ['klThVanBanWrap', 'klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'klThNgayNhanWrap', 'klThLoaiWrap', 'klThCapQDWrap', 'gvNganhWrap', 'gvPhuWrap', 'klThLuuTiep'];
+const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'klThNgayNhanWrap', 'klThLoaiWrap', 'klThCapQDWrap', 'gvNganhWrap', 'gvPhuWrap', 'klThLuuTiep'];
 
 const vanBanChon = () => vanBan.find((h) => h.id === $('klThVanBan').value);
-const laMoi = () => !laA0() && $('klThVanBan').value === MOI;
+const laMoi = () => $('klThVanBan').value === MOI;
+// A0 chọn "mới" mà để trống cả số hiệu lẫn ngày → giao không kèm văn bản (DB ghi mốc); vai khác bắt buộc đủ số hiệu + ngày.
+const vbTrong = () => laA0() && laMoi() && !$('klThSoKL').value.trim() && !$('klThNgayBH').value;
+const vanBanOk = () => (laMoi() ? vbTrong() || Boolean($('klThSoKL').value.trim() && $('klThNgayBH').value) : Boolean($('klThVanBan').value));
 const ngayBH = () => (laMoi() ? $('klThNgayBH').value : vanBanChon()?.ngay_ban_hanh) || '';
 const loaiVanBan = () => (laMoi() ? $('klThLoaiVB').value : vanBanChon()?.loai) || 'KHAC';
-const nhanVanBan = (h) => `${tenLoaiVanBan(h.loai)} · ${h.so_hoi_nghi ? `HN ${h.so_hoi_nghi} · ` : ''}${h.so_ket_luan} · BH ${formatNgay(h.ngay_ban_hanh)}`;
+const nhanVanBan = (h) => `${tenLoaiVanBan(h.loai)} · ${h.so_hoi_nghi ? `HN ${h.so_hoi_nghi} · ` : ''}${h.so_ket_luan} · BH ${formatNgay(h.ngay_ban_hanh)}${h.trich_yeu ? ` · ${h.trich_yeu.slice(0, 60)}` : ''}`;
 
 function capNhatHienThi() {
   const loai = $('klThLoai').value;
   const bh = ngayBH();
   show('klThVanBanMoi', laMoi());
   show('klThSoHNWrap', laMoi() && $('klThLoaiVB').value === 'KL_BTV');
+  show('gvVbA0', laA0() && laMoi());
   $('klThHan').min = bh;
   $('klThNgayNhan').min = bh; $('klThNgayNhan').max = homNay;
   if (loai === 'KY_BAN_HANH') {
@@ -69,16 +77,14 @@ function ownerDoi() {
 
 // Ba phần đã điền đủ chưa → chấm sáng; đủ cả ba → nút Giao sáng; thanh tóm tắt đọc lại các ô.
 export function trangThaiPhan() {
-  const vb = laA0() || (laMoi() ? Boolean($('klThSoKL').value.trim() && $('klThNgayBH').value) : Boolean($('klThVanBan').value));
-  const p1 = vb; // v8: khối 1 = văn bản; khối 2 = nội dung + người
+  const p1 = vanBanOk(); // v8: khối 1 = văn bản; khối 2 = nội dung + người
   const p2 = Boolean($('klThNoiDung').value.trim()) && Boolean($('klThOwner').value) && (laA0() || Boolean($('klThNguoiTheoDoi').value)) && (!canThayMat() || Boolean($('klThThayMat').value));
   const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && (laA0() || Boolean($('klThNgayNhan').value));
   return [p1, p2, p3];
 }
 // Các yếu tố bắt buộc còn thiếu (theo thứ tự khối) — dòng "Còn thiếu: …" cạnh nút Giao việc.
 function conThieu() {
-  const vb = laA0() || (laMoi() ? Boolean($('klThSoKL').value.trim() && $('klThNgayBH').value) : Boolean($('klThVanBan').value));
-  return [[!vb, 'văn bản'], [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'người chịu trách nhiệm'],
+  return [[!vanBanOk(), 'văn bản'], [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'người chịu trách nhiệm'],
     [!laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!$('klThSanPham').value, 'sản phẩm'],
     [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [!laA0() && !$('klThNgayNhan').value, 'ngày nhận văn bản']].filter(([t]) => t).map(([, n]) => n);
 }
@@ -96,19 +102,22 @@ function capNhatTomTat() {
   setText('gvXtPhu', `Chủ trì ${$('klThOwner').value ? owner : '…'} · hạn ${han} · sản phẩm ${$('klThSanPham').value ? sp : '…'}`);
 }
 
-export async function openGiaoViec() {
+export async function openGiaoViec(opts = {}) {
+  cha = opts.cha || null;
   showSection('viewGiaoViec');
   $('giaoViecForm').removeAttribute('data-san-sang'); // đang khởi tạo theo vai/dữ liệu — spec chờ cờ này trước khi đọc ô
   setActiveNav('navGiaoViec');
   $('klThVanBan').innerHTML = opt('', 'Đang tải văn bản…'); $('klThLoai').innerHTML = opt('', 'Đang tải…');
   $('klThLuu').disabled = true;
-  try { await loadDanhMucKl(); vanBan = laA0() ? [] : await loadVanBan(); } catch (e) { notifyError(e.message); $('giaoViecForm').dataset.sanSang = 'loi'; return; }
+  try { await loadDanhMucKl(); vanBan = await loadVanBan(); } catch (e) { notifyError(e.message); $('giaoViecForm').dataset.sanSang = 'loi'; return; }
   homNay = (await homNayTheoDb()) || homNayVN();
   const dm = danhMucKl(); const a0 = laA0();
   AN_A0.forEach((id) => show(id, !a0));
   show('klThThayMatWrap', canThayMat());
-  $('klThVanBan').innerHTML = (a0 ? '' : opt(MOI, 'Văn bản giao việc mới…')) + vanBan.map((h) => opt(h.id, nhanVanBan(h))).join('');
-  if (vanBan.length) $('klThVanBan').value = vanBan[0].id;
+  $('klThVanBan').innerHTML = opt(MOI, a0 ? 'Văn bản mới hoặc giao trực tiếp…' : 'Văn bản giao việc mới…') + vanBan.map((h) => opt(h.id, nhanVanBan(h))).join('');
+  if (vanBan.length && !a0) $('klThVanBan').value = vanBan[0].id;
+  if (cha && vanBan.some((h) => h.id === cha.van_ban_id)) $('klThVanBan').value = cha.van_ban_id; // giao tiếp xuống: cùng văn bản với việc cha
+  setText('gvCha', cha ? `Giao tiếp xuống từ ${cha.ma}: ${cha.noi_dung}` : ''); show('gvCha', Boolean(cha));
   $('klThVanBanTim').value = '';
   $('klThLoaiVB').innerHTML = LOAI_VAN_BAN.map(([ma, ten]) => opt(ma, ten, ma === 'KL_BTV')).join('');
   $('klThNgayBH').max = homNay; $('klThNgayNhanVB').max = homNay;
@@ -120,7 +129,7 @@ export async function openGiaoViec() {
   $('klThCapQD').innerHTML = opt('', 'Chưa xác định') + dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThNganh').innerHTML = opt('', 'Chọn ngành') + dm.nganh.map((n) => opt(n.ma, n.ten)).join('');
   $('klThLoai').innerHTML = dm.loaiThoiHan.filter((l) => l.cho_phep_tao_moi).map((l) => opt(l.ma, l.ten, l.ma === 'CO_HAN_CU_THE')).join('');
-  ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
+  ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThTrichYeu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
   $('klThNgayNhan').value = homNay;
   $('klThDoKhan').value = a0 ? 'KHAN' : 'THUONG';
   $('giaoViecForm').querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === $('klThDoKhan').value)));
@@ -157,18 +166,21 @@ function docForm() {
     han_xu_ly: $('klThLoai').value === 'KY_BAN_HANH' ? null : $('klThHan').value || null, cap_nhan_san_pham: $('klThCapNhan').value || null, theo_1400: true,
   };
   if (canThayMat()) p.thay_mat_cho = $('klThThayMat').value || null;
-  if (laA0()) return p;   // A0: DB tự tạo văn bản, tự suy người theo dõi, đặt uu_tien Thường trực
+  if (cha) p.nhiem_vu_cha = cha.id;
+  if (laA0()) {   // A0: DB tự suy người theo dõi, đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
+    if (laMoi() && !vbTrong()) p.van_ban = vanBanMoi(); else if (!laMoi()) p.van_ban_id = $('klThVanBan').value;
+    return p;
+  }
   Object.assign(p, {
     ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value, cap_quyet_dinh: $('klThCapQD').value || null,
     nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null, nguoi_theo_doi: $('klThNguoiTheoDoi').value || null,
     van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThGhiChu').value.trim() || null,
   });
-  if (laMoi()) {
-    p.van_ban = { loai: $('klThLoaiVB').value, so_hoi_nghi: Number($('klThSoHN').value) || null, so_ket_luan: $('klThSoKL').value.trim(),
-      ngay_ban_hanh: $('klThNgayBH').value, ngay_nhan: $('klThNgayNhanVB').value || null };
-  } else p.van_ban_id = $('klThVanBan').value;
+  if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;
   return p;
 }
+const vanBanMoi = () => ({ loai: $('klThLoaiVB').value, so_hoi_nghi: Number($('klThSoHN').value) || null, so_ket_luan: $('klThSoKL').value.trim(),
+  ngay_ban_hanh: $('klThNgayBH').value, ngay_nhan: $('klThNgayNhanVB').value || null });
 
 async function luu(nhapTiep) {
   const p = docForm();
@@ -178,8 +190,12 @@ async function luu(nhapTiep) {
   try {
     const kq = await giaoViec(p);
     notifySuccess(`Đã giao việc ${kq.ma}.${laA0() ? ' Người nhận và Chánh Văn phòng có thông báo; xác nhận nhận việc trong 1 ngày làm việc.' : ''}`);
+    const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';
+    if (trichYeu) { // văn bản vừa tạo (kể cả mốc "Thường trực giao …" của A0): đặt trích yếu; lỗi → báo rõ, việc đã giao vẫn còn
+      try { await datTrichYeuVanBan(kq.van_ban_id, trichYeu); } catch (e) { notifyError(`Đã giao việc ${kq.ma} nhưng chưa lưu được trích yếu văn bản: ${e.message}`); }
+    }
     if (p.van_ban) {
-      const vb = { id: kq.van_ban_id, ...p.van_ban };
+      const vb = { id: kq.van_ban_id, ...p.van_ban, trich_yeu: trichYeu || null };
       vanBan.unshift(vb);
       $('klThVanBan').insertAdjacentHTML('afterbegin', opt(vb.id, nhanVanBan(vb)));
     }
@@ -204,5 +220,6 @@ export function registerGiaoViec() {
   $('klThOwner').addEventListener('change', ownerDoi);
   $('giaoViecForm').addEventListener('input', capNhatTomTat);
   $('giaoViecForm').addEventListener('change', capNhatTomTat);
-  registerActions({ openGiaoViec, huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true) });
+  registerActions({ openGiaoViec: () => openGiaoViec(), giaoTiepXuong: ({ id }) => openGiaoViec({ cha: timKlRow(id) }),
+    huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true) });
 }

@@ -1,5 +1,6 @@
-// GĐ16 (PR 16B; giao diện v7 GĐ20): minh chứng có cấu trúc. Chuyên viên (người theo dõi) mở ngăn chi tiết → nút "Đóng nhiệm vụ" mờ khi chưa có
-// minh chứng → nộp thiếu một ô bị chặn ở form → nộp đủ ba ô → nút Đóng sáng → đóng → HOAN_THANH, lead time = 15 ngày; việc cũ có minh chứng
+// GĐ16 (PR 16B; giao diện v7 GĐ20; v8 đợt 4 = 4 yếu tố): minh chứng có cấu trúc. Chuyên viên (người theo dõi) mở ngăn chi tiết → nút "Đóng nhiệm vụ"
+// mờ khi chưa có minh chứng → nộp thiếu ngày, rồi thiếu trích yếu/mô tả bị chặn ở form → nộp đủ → khối hiện đủ 4 yếu tố, nút Đóng sáng → đóng →
+// HOAN_THANH, lead time = 15 ngày; việc cũ có minh chứng
 // chữ hiện nhãn "Minh chứng cũ". Dữ liệu mẫu tạo bằng service_role trong hội nghị 992, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -41,7 +42,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     if (db) await donVanBan(db, hnKhoa);
   });
 
-  test('chưa có minh chứng: nút Đóng mờ; nộp thiếu ngày bị chặn ở form; nộp đủ ba ô → khối liệt kê, nút Đóng sáng', async () => {
+  test('chưa có minh chứng: nút Đóng mờ; nộp thiếu ngày rồi thiếu trích yếu/mô tả bị chặn ở form; nộp đủ → khối hiện 4 yếu tố, nút Đóng sáng', async () => {
     await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
@@ -59,11 +60,20 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator('#toastContainer')).toContainText('đủ ba trường');
     await expect(page.locator('#klMcModal')).toBeVisible();
     await page.locator('#klMcNgay').fill('2026-08-20');
+    await page.locator('#klMcLuu').click(); // 0046: đủ ba ô cũ nhưng thiếu trích yếu + mô tả → chặn ở form, hộp vẫn mở
+    await expect(page.locator('#toastContainer')).toContainText('trích yếu văn bản và mô tả kết quả');
+    await expect(page.locator('#klMcModal')).toBeVisible();
+    await page.locator('#klMcTrichYeu').fill('Báo cáo kết quả rà soát (e2e MC)');
+    await page.locator('#klMcMoTaKq').fill('Đã rà soát, tổng hợp và gửi Chánh Văn phòng.');
+    await expect(page.locator('#klMcDem')).toHaveText('44'); // đếm ký tự theo ô mô tả
     await page.locator('#klMcLuu').click();
     await expect(page.locator('#klMcModal')).toBeHidden();
     await expect(page.locator('#toastContainer')).toContainText('Đã nộp minh chứng');
     await expect(page.locator(`#klMinhChung-${nvId}`)).toContainText('1 hợp lệ / 1 đã nộp');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('15/BC-VPTU');
+    await expect(page.locator(`#klMinhChung-${nvId} .mc-dong .mc-trich-yeu`)).toHaveText('Báo cáo kết quả rà soát (e2e MC)');
+    await expect(page.locator(`#klMinhChung-${nvId} .mc-dong .mc-mo-ta`)).toContainText('gửi Chánh Văn phòng');
+    await expect(page.locator(`#klDienBien-${nvId}`)).toContainText('Nộp minh chứng 15/BC-VPTU · Báo cáo kết quả rà soát (e2e MC)');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('Chưa xác nhận');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`).getByRole('button', { name: 'Xác nhận hợp lệ' })).toHaveCount(0); // người nộp không tự xác nhận
     await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeEnabled();

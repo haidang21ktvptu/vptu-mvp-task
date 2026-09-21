@@ -20,7 +20,7 @@ export async function loadSoLieuTai(ngay = null) {
 
 // Minh chứng chưa thẩm định (hop_le NULL) trong phạm vi (RLS minh_chung theo phạm vi nhiệm vụ) — khối "chờ xác nhận" A1/A2.
 export async function loadMinhChungCho() {
-  return loi(await supabase.from('minh_chung').select('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, cap_nhan, nop_boi, nop_luc')
+  return loi(await supabase.from('minh_chung').select('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, cap_nhan, trich_yeu, mo_ta_ket_qua, nop_boi, nop_luc')
     .is('hop_le', null).order('nop_luc', { ascending: false }), 'đọc minh chứng chờ xác nhận') || [];
 }
 

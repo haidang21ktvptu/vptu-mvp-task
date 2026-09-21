@@ -102,8 +102,13 @@ export async function capNhatNhiemVu(id, thayDoi) {
 
 // Văn bản giao việc (GV-1): danh sách để chọn trên form; văn bản mới tạo trong hàm giao_viec.
 export async function loadVanBan() {
-  return loi(await supabase.from('van_ban_giao_viec').select('id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan')
+  return loi(await supabase.from('van_ban_giao_viec').select('id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu')
     .order('ngay_ban_hanh', { ascending: false }).order('so_ket_luan'), 'đọc văn bản');
+}
+// Trích yếu văn bản (0046): đặt sau giao_viec qua hàm có allowlist (người tạo, A1, quan_tri_kl) và ghi vết — không ghi thẳng bảng.
+export async function datTrichYeuVanBan(id, trichYeu) {
+  const r = await supabase.rpc('van_ban_dat_trich_yeu', { p_id: id, p_trich_yeu: trichYeu });
+  if (r.error) throw new Error(r.error.message);
 }
 // Giao việc (GV-2, GV-3): một RPC kiểm quyền và 1-1-1 phía DB (0025). Trả { id, ma, van_ban_id }.
 export async function giaoViec(p) {

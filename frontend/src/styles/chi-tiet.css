@@ -61,6 +61,9 @@
   .mc-loai { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 999px; color: #fff; background: var(--luc); }
   .mc-loai-cu { background: var(--chu-phu); }
   .mc-chu { margin: 4px 0; font-size: 12px; white-space: pre-wrap; } .mc-phu { font-size: 12px; }
+  /* v8 đợt 4: bốn yếu tố — trích yếu (đậm, một dòng) + mô tả kết quả (chữ phụ, giữ xuống dòng); dùng cả ở khối chờ xác nhận (.da-gui) */
+  .mc-trich-yeu { display: block; margin: 4px 0 0; font-size: 13px; font-weight: 600; color: var(--navy); }
+  .mc-mo-ta { display: block; margin: 2px 0 0; font-size: 12px; color: var(--chu-phu); white-space: pre-wrap; }
   .mc-form-ly-do { display: flex; gap: 6px; margin-top: 6px; } .mc-form-ly-do .o-nhap { flex: 1; }
   .mc-hop { margin-top: 8px; }
 
