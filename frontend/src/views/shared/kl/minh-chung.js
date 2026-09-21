@@ -1,12 +1,12 @@
 // Khối "Minh chứng" trong ngăn chi tiết (GĐ16, MC-2…MC-6) + hộp Nộp minh chứng + hộp Đóng nhiệm vụ. Nút chỉ ẩn/hiện cho đẹp —
-// quyền thật trong hàm 0028 (nop_minh_chung: Owner/người theo dõi; xac_nhan_minh_chung: người theo dõi hoặc lãnh đạo trong
+// quyền thật trong hàm 0028/0046 (nop_minh_chung: Owner/người theo dõi, 5 ô bắt buộc; xac_nhan_minh_chung: người theo dõi hoặc lãnh đạo trong
 // phạm vi, không tự xác nhận; dong_nhiem_vu: cần ≥ 1 minh chứng hợp lệ). Sau mỗi hành động: loadKl() vẽ lại và mở lại ngăn.
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { danhMucKl, homNayTheoDb, tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
 import { homNayVN, formatNgay } from '../../../lib/kl/ngay.js';
-import { loadMinhChung, nopMinhChung, xacNhanMinhChung, dongNhiemVu, mcHopLe, TEN_LOAI_MC } from '../../../lib/kl/minh-chung.js';
+import { loadMinhChung, nopMinhChung, loiMinhChung, xacNhanMinhChung, dongNhiemVu, mcHopLe, TEN_LOAI_MC } from '../../../lib/kl/minh-chung.js';
 import { klMinhChungTemplate } from './minh-chung-template.js';
 import { timKlRow } from './danh-sach.js';
 import { duocChiDao } from './chi-dao.js';
@@ -25,6 +25,7 @@ function mcHtml(m, r) {
   const k = String(m.hop_le);
   const dau = m.loai === 'chu_cu' ? (m.so_hieu || 'không tách được số hiệu') : m.so_hieu;
   const chiTiet = [m.ngay_van_ban ? `ngày ${formatNgay(m.ngay_van_ban)}` : '', m.cap_nhan ? tenTrongDanhMuc('cap', m.cap_nhan) : ''].filter(Boolean).join(' · ');
+  const bonYeuTo = m.trich_yeu || m.mo_ta_ket_qua ? `<p class="mc-trich-yeu">${escapeHtml(m.trich_yeu || '')}</p><p class="mc-mo-ta">${escapeHtml(m.mo_ta_ket_qua || '')}</p>` : '';
   const xacNhan = m.hop_le === null ? '' : `<p class="chu-phu mc-phu">${m.hop_le ? 'Hợp lệ' : `Không hợp lệ: ${escapeHtml(m.ly_do_khong_hop_le || '')}`} — ${escapeHtml(tenNguoi(m.xac_nhan_boi))}, ${formatDateTime(m.xac_nhan_luc)}</p>`;
   const nut = duocXacNhan(r, m) ? `
         <button type="button" class="nut nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === true ? ' disabled' : ''}>Xác nhận hợp lệ</button>
@@ -39,6 +40,7 @@ function mcHtml(m, r) {
         <span class="mc-nut">${nut}</span>
       </div>
       ${m.loai === 'chu_cu' ? `<p class="mc-chu">${escapeHtml(m.noi_dung_chu || '')}</p>` : ''}
+      ${bonYeuTo}
       ${xacNhan}
       <form class="mc-form-ly-do hidden" id="mcBac-${m.id}" data-submit="bacMinhChung" data-id="${m.id}" data-nv="${r.id}">
         <input type="text" name="ly_do" required class="o-nhap nho" placeholder="Lý do không hợp lệ (bắt buộc)" aria-label="Lý do không hợp lệ">
@@ -78,7 +80,7 @@ export async function openMinhChung({ id }) {
   homNay = (await homNayTheoDb()) || homNayVN();
   $('klMcId').value = r.id;
   setText('klMcMoTa', `${r.ma} — ${r.noi_dung}`);
-  $('klMcSoHieu').value = '';
+  $('klMcSoHieu').value = ''; $('klMcTrichYeu').value = ''; $('klMcMoTaKq').value = ''; demKyTu();
   $('klMcNgay').value = ''; $('klMcNgay').min = r.ngay_ban_hanh; $('klMcNgay').max = homNay;
   $('klMcCap').innerHTML = '<option value="">— Chọn cấp nhận —</option>' + danhMucKl().cap.map((c) => `<option value="${c.ma}"${c.ma === r.cap_nhan_san_pham ? ' selected' : ''}>${escapeHtml(c.ten)}</option>`).join('');
   $('klMcLuu').disabled = false;
@@ -87,9 +89,12 @@ export async function openMinhChung({ id }) {
 }
 export const closeMinhChung = () => show('klMcModal', false);
 
+const demKyTu = () => setText('klMcDem', String($('klMcMoTaKq').value.length));
 async function luuMinhChung() {
-  const p = { nhiem_vu_id: $('klMcId').value, so_hieu: $('klMcSoHieu').value.trim(), ngay_van_ban: $('klMcNgay').value, cap_nhan: $('klMcCap').value };
-  if (!p.so_hieu || !p.ngay_van_ban || !p.cap_nhan) { notifyError('Minh chứng phải đủ ba trường: số hiệu, ngày văn bản và cấp nhận.'); return; }
+  const p = { nhiem_vu_id: $('klMcId').value, so_hieu: $('klMcSoHieu').value.trim(), ngay_van_ban: $('klMcNgay').value, cap_nhan: $('klMcCap').value,
+    trich_yeu: $('klMcTrichYeu').value.trim(), mo_ta_ket_qua: $('klMcMoTaKq').value.trim() };
+  const loiForm = loiMinhChung(p);
+  if (loiForm) { notifyError(loiForm); return; }
   if (p.ngay_van_ban > homNay) { notifyError('Ngày văn bản không được sau hôm nay.'); return; }
   $('klMcLuu').disabled = true;
   try {
@@ -161,6 +166,7 @@ async function luuDongNhiemVu() {
 export function mountMinhChung(registerActions, napLaiDanhSach) {
   sauHanhDong = napLaiDanhSach;
   $('modalRoot').insertAdjacentHTML('beforeend', klMinhChungTemplate);
+  $('klMcMoTaKq').addEventListener('input', demKyTu);
   registerActions({ openMinhChung, closeMinhChung, luuMinhChung, xacNhanMinhChung: xacNhanMinhChungAction, moBacMinhChung, bacMinhChung,
     openDongNhiemVu, closeDongNhiemVu, luuDongNhiemVu });
 }

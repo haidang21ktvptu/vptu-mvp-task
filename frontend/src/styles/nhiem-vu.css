@@ -27,7 +27,9 @@
   .muc .the-con { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--vien); }
   .muc .the-con:first-of-type { margin-top: 6px; padding-top: 0; border-top: 0; }
   .mc-inline { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; margin-top: 10px; }
-  .mc-inline input, .mc-inline select { font-size: 13px; padding: 9px 10px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: #fff; min-width: 0; }
+  .mc-inline input, .mc-inline select, .mc-inline textarea { font-size: 13px; padding: 9px 10px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: #fff; min-width: 0; font-family: inherit; }
+  .mc-inline .mc-rong { grid-column: 1 / -1; } /* v8 đợt 4: trích yếu + mô tả kết quả chiếm cả hàng; nút Nộp xuống hàng cuối */
+  .mc-inline button[type="submit"] { grid-column: -2 / -1; justify-self: end; }
   .khung .them { padding: 12px 18px; border-top: 1px solid var(--vien); font-size: 14px; }
 
   @media (max-width: 860px) {

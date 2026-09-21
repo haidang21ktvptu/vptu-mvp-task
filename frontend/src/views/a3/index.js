@@ -8,7 +8,7 @@ import { notifySuccess, notifyError } from '../../components/toast.js';
 import { registerView } from '../registry.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { xacNhanNhanViec } from '../../lib/kl/du-lieu.js';
-import { nopMinhChung } from '../../lib/kl/minh-chung.js';
+import { nopMinhChung, loiMinhChung } from '../../lib/kl/minh-chung.js';
 import { homNayVN, ghiChuHan } from '../../lib/kl/ngay.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { dh, napDieuHanh } from '../shared/dieu-hanh/du-lieu.js';
@@ -75,11 +75,13 @@ async function xacNhanNhanThe({ id }) {
     await napLaiViec(id); await lamMoiHuyHieu(); await loadViecCuaToi(); // thẻ + số chưa xử lý đổi ngay, rồi nạp lại cả trang
   } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
 }
-// Nộp minh chứng 3 ô ngay trên thẻ (MC-3): số hiệu, ngày văn bản, cấp nhận — DB là chốt (nop_minh_chung 0028).
+// Nộp minh chứng ngay trên thẻ (MC-3, 0046): số hiệu, ngày văn bản, cấp nhận + trích yếu + mô tả kết quả — DB là chốt (nop_minh_chung).
 async function nopMinhChungThe(ds, form) {
   const f = new FormData(form);
-  const p = { nhiem_vu_id: ds.id, so_hieu: (f.get('so_hieu') || '').trim(), ngay_van_ban: f.get('ngay_van_ban'), cap_nhan: f.get('cap_nhan') };
-  if (!p.so_hieu || !p.ngay_van_ban || !p.cap_nhan) { notifyError('Minh chứng phải đủ ba trường: số hiệu, ngày văn bản và cấp nhận.'); return; }
+  const p = { nhiem_vu_id: ds.id, so_hieu: (f.get('so_hieu') || '').trim(), ngay_van_ban: f.get('ngay_van_ban'), cap_nhan: f.get('cap_nhan'),
+    trich_yeu: (f.get('trich_yeu') || '').trim(), mo_ta_ket_qua: (f.get('mo_ta_ket_qua') || '').trim() };
+  const loiForm = loiMinhChung(p);
+  if (loiForm) { notifyError(loiForm); return; }
   try {
     await nopMinhChung(p);
     notifySuccess(`Đã nộp minh chứng số ${p.so_hieu}. Người liên quan nhận thông báo trên hệ thống.`);

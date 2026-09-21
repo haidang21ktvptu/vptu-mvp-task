@@ -1,4 +1,4 @@
-// Khối "minh chứng đã nộp, chờ xác nhận" (A1/A2, mockup): mỗi dòng = mã việc, số hiệu · ngày · cấp nhận, ai nộp lúc nào; nút Hợp lệ
+// Khối "minh chứng đã nộp, chờ xác nhận" (A1/A2, mockup): mỗi dòng = mã việc, số hiệu · ngày · cấp nhận, trích yếu + mô tả kết quả (0046), ai nộp lúc nào; nút Hợp lệ
 // (một bấm) và Không hợp lệ (mở ô lý do). Người nộp không tự xác nhận (MC-6) — ẩn nút; hàm xac_nhan_minh_chung là chốt.
 import { escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
@@ -17,6 +17,7 @@ export function minhChungChoHtml() {
       <button type="button" class="nut lam" data-action="mcHopLeThe" data-id="${m.id}">Hợp lệ</button>
       <button type="button" class="nut" data-action="moO" data-o="oMc-${m.id}">Không hợp lệ</button>`;
     return `<div id="mcCho-${m.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(m.loai === 'chu_cu' ? 'Minh chứng cũ' : `Văn bản ${m.so_hieu || ''}`)}${m.ngay_van_ban ? ` ngày ${formatNgay(m.ngay_van_ban)}` : ''}${m.cap_nhan ? `, cấp nhận: ${escapeHtml(tenTrongDanhMuc('cap', m.cap_nhan))}` : ''}
+        ${m.trich_yeu ? `<span class="mc-trich-yeu">${escapeHtml(m.trich_yeu)}</span>` : ''}${m.mo_ta_ket_qua ? `<span class="mc-mo-ta">${escapeHtml(m.mo_ta_ket_qua)}</span>` : ''}
         <small>${escapeHtml(r.noi_dung)} · ${escapeHtml(nguoi?.full_name || 'không xác định')}${nguoi?.department ? ` (${escapeHtml(DEPT_NAMES[nguoi.department] || nguoi.department)})` : ''} nộp ${formatDateTime(m.nop_luc)}</small></p>
       ${nut}
       <form class="o" id="oMc-${m.id}" data-submit="mcKhongHopLeThe" data-id="${m.id}"><input name="noi_dung" required placeholder="Lý do không hợp lệ (bắt buộc)" aria-label="Lý do không hợp lệ">

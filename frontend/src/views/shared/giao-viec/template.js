@@ -15,6 +15,7 @@ export const giaoViecTemplate = `
   <form id="giaoViecForm" class="gv-the tam" data-submit="luuKlThem" novalidate>
     <div class="gv-noi">
       <section class="gv-phan" id="gvPhan1"><h2><i id="gvCham1" class="gv-so">1</i>Văn bản giao việc</h2>
+        <p class="chu-phu hidden gv-cha" id="gvCha"></p>
         <div class="gv-truong" id="klThVanBanWrap"><label for="klThVanBanTim" class="nhan">Chọn văn bản có sẵn</label>
           <div class="cot-2 gv-vb"><input type="search" id="klThVanBanTim" class="o-nhap" placeholder="Gõ số hiệu, số hội nghị hoặc loại để lọc" autocomplete="off" aria-controls="klThVanBan">
           <select id="klThVanBan" class="o-nhap" aria-label="Chọn văn bản giao việc"></select></div></div>
@@ -28,6 +29,8 @@ export const giaoViecTemplate = `
             ${truong('klThNgayBH', 'Ngày ban hành', inp('klThNgayBH', 'date'))}
             ${truong('klThNgayNhanVB', 'Ngày nhận (nếu biết)', inp('klThNgayNhanVB', 'date'))}
           </div>
+          ${truong('klThTrichYeu', 'Trích yếu văn bản (không bắt buộc)', inp('klThTrichYeu', 'text', ' placeholder="Về việc…" maxlength="300" autocomplete="off"'))}
+          <p class="chu-phu hidden" id="gvVbA0">Thường trực giao trực tiếp không kèm văn bản: để trống số hiệu và ngày ban hành, hệ thống ghi mốc "Thường trực giao &lt;thời điểm&gt;". Đã điền thì dùng đúng số hiệu, ngày và trích yếu vừa nhập.</p>
         </div>
       </section>
 

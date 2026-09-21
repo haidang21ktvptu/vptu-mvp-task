@@ -67,7 +67,7 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
     }
     assertDenied(await me.rpc('dat_cap_quyet_dinh', { p_id: id['NV-T88'], p_cap: 'CHANH_VAN_PHONG' }), 'dat_cap_quyet_dinh');
     assertDenied(await me.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T88'] }), 'xac_nhan_nhan_viec');
-    assertDenied(await me.rpc('nop_minh_chung', { p: { nhiem_vu_id: id['NV-T88'], so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG' } }), 'nop_minh_chung');
+    assertDenied(await me.rpc('nop_minh_chung', { p: { nhiem_vu_id: id['NV-T88'], so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nop_minh_chung');
     assertDenied(await me.rpc('xac_nhan_minh_chung', { p_id: mcId, p_hop_le: true, p_ly_do: null }), 'xac_nhan_minh_chung');
     assertDenied(await me.rpc('dong_nhiem_vu', { p_id: id['NV-T88'], p_ngay_hoan_thanh: null }), 'dong_nhiem_vu');
     assertDenied(await me.rpc('chi_dao_dong', { p_id: donDocId }), 'chi_dao_dong chỉ đạo của Chánh VP');

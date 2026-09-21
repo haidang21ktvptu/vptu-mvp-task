@@ -1,4 +1,4 @@
-// GĐ22 — Thường trực (A0) giao việc trên biểu mẫu chung, bản rút gọn (ẩn văn bản, người theo dõi, ngày nhận…; độ khẩn mặc định Khẩn) cho Chánh
+// GĐ22 — Thường trực (A0) giao việc trên biểu mẫu chung, bản rút gọn (ẩn người theo dõi, ngày nhận…; v8 đợt 4: khối văn bản hiện, để trống = mốc tự ghi; độ khẩn mặc định Khẩn) cho Chánh
 // Văn phòng → DB: uu_tien THUONG_TRUC, do_khan KHAN, theo dõi = chính Chánh VP (0035) → Chánh VP thấy khối "Việc Thường trực giao" đầu Điều
 // hành hôm nay với nhãn Thường trực giao + Khẩn, dải "Cần xử lý ngay" đếm việc mới → bấm Xác nhận đã nhận → khối biến mất, lich_su ghi vết.
 // Bỏ qua khi thiếu demo_a0. Dữ liệu tự dọn (nhiệm vụ theo E2E_TAG, văn bản tự tạo của A0).
@@ -38,7 +38,9 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await nav(page, 'navGiaoViec');
     await expect(page.locator('#viewGiaoViec .gv-the')).toBeVisible();
     await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', { timeout: 20_000 }); // biểu mẫu đã khởi tạo theo vai (mặc định Khẩn đặt sau khi phiên + danh mục sẵn sàng)
-    await expect(page.locator('#klThVanBanWrap')).toBeHidden();          // rút gọn: không chọn văn bản
+    await expect(page.locator('#klThVanBanWrap')).toBeVisible();         // v8 đợt 4: A0 nhập được văn bản; để trống số hiệu + ngày → DB ghi mốc "Thường trực giao …"
+    await expect(page.locator('#klThVanBan')).toHaveValue('__moi__');
+    await expect(page.locator('#gvVbA0')).toBeVisible();
     await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();    // người theo dõi tự suy
     await expect(page.locator('#klThThayMatWrap')).toBeHidden();
     await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');

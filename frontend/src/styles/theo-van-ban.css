@@ -1,0 +1,46 @@
+/* Màn hình cây "Theo văn bản" (v8 đợt 4, mockup v8: tấm trắng viền --vien, chữ Lora tiêu đề, chấm trạng thái theo mức cảnh bảo, thanh tiến độ ba màu
+   lục/đỏ/vàng). Gốc .tvb-goc = tấm; nhánh .tvb-nhanh lùi theo cấp bằng đường dọc; lá .tvb-la nhạt hơn. data-mo="0" ẩn .tvb-con. */
+@layer components {
+  .tvb-loc { margin-top: 16px; }
+  .tvb-ket-noi { min-height: 18px; margin-top: 6px; font-size: 12px; }
+  .tvb-cay { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
+  .tvb-cay .trong { padding: 24px; text-align: center; color: var(--chu-phu); }
+  .tvb-goc { padding: 12px 16px 10px; }
+  .tvb-goc-dau { display: grid; grid-template-columns: 24px minmax(0, 1fr) 260px; gap: 6px 10px; align-items: start; }
+  .tvb-vb b { font-family: var(--font-tieu-de); font-size: 15px; color: var(--navy); }
+  .tvb-trich-yeu { margin: 2px 0 0; font-size: 13px; color: var(--chu); }
+  .tvb-tien { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .tvb-thanh { display: flex; width: 100%; height: 8px; border-radius: 4px; overflow: hidden; background: var(--vien-nhat); }
+  .tvb-thanh i { display: block; height: 100%; } .tvb-thanh .luc { background: var(--luc); } .tvb-thanh .do { background: var(--do); } .tvb-thanh .vang { background: var(--vang); }
+  .tvb-tien-chu { font-size: 12px; color: var(--chu-phu); white-space: nowrap; }
+  .tvb-gap { width: 22px; height: 22px; flex: none; border: 1px solid var(--vien); border-radius: 6px; background: var(--the); color: var(--navy); cursor: pointer; position: relative; }
+  .tvb-gap::before { content: ''; position: absolute; left: 7px; top: 5px; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+  [data-mo="0"] > .tvb-goc-dau > .tvb-gap::before, [data-mo="0"] > .tvb-hang > .tvb-gap::before { transform: rotate(-45deg); left: 6px; top: 7px; }
+  .tvb-gap.trong { border-color: transparent; background: transparent; cursor: default; } .tvb-gap.trong::before { display: none; }
+  .tvb-goc > .tvb-con { margin-top: 8px; }
+  [data-mo="0"] > .tvb-con { display: none; }
+  .tvb-nhanh { position: relative; }
+  .tvb-nhanh .tvb-con { margin-left: 30px; padding-left: 12px; border-left: 1px solid var(--vien); }
+  .tvb-hang { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; }
+  .tvb-nut { flex: 1; min-width: 0; display: grid; grid-template-columns: 12px 64px minmax(0, 1fr) 160px 88px; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; font: inherit; text-align: left; cursor: pointer; color: var(--chu); }
+  .tvb-nut:hover { background: var(--nen-phu); border-color: var(--vien); }
+  .tvb-cham { width: 10px; height: 10px; border-radius: 50%; background: var(--vien); }
+  .tvb-cham.lam { background: var(--navy); } .tvb-cham.vang { background: var(--vang); } .tvb-cham.do, .tvb-cham.dac-biet { background: var(--do); } .tvb-cham.luc { background: var(--luc); } .tvb-cham.mc { background: var(--luc-nhat); border: 1px solid var(--luc); }
+  .tvb-nut .ma { font-size: 12px; font-weight: 700; color: var(--navy); }
+  .tvb-nut .nd { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tvb-nut .chu-tri { font-size: 12px; color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tvb-nut .han { font-size: 12px; color: var(--chu-phu); text-align: right; white-space: nowrap; }
+  .tvb-nhanh[data-nhom="QUA_HAN"] > .tvb-hang .han, .tvb-nhanh[data-nhom="DANG_DINH_CHINH"] > .tvb-hang .han { color: var(--do); font-weight: 600; }
+  .tvb-la { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 4px 8px 4px 30px; font-size: 12px; color: var(--chu-phu); }
+  .tvb-la b { color: var(--chu); }
+  .tvb-la .tt-cho, .tvb-la .tt-xong, .tvb-la .tt-qua { padding: 0 6px; border-radius: 6px; font-weight: 600; }
+
+  @media (max-width: 860px) {
+    .tvb-goc-dau { grid-template-columns: 24px minmax(0, 1fr); }
+    .tvb-tien { grid-column: 1 / -1; align-items: stretch; }
+    .tvb-nut { grid-template-columns: 12px 1fr; }
+    .tvb-nut .nd { white-space: normal; grid-column: 2; } .tvb-nut .chu-tri, .tvb-nut .han { grid-column: 2; text-align: left; }
+    .tvb-nhanh .tvb-con { margin-left: 12px; padding-left: 8px; }
+    .tvb-la { padding-left: 8px; }
+  }
+}

@@ -2,7 +2,7 @@
 // gập). Căn cứ từng trường từ lich_su (RLS theo phạm vi thấy nhiệm vụ); đính chính đang chờ; nguồn dòng. Một ngăn cho cả danh sách:
 // #klChiTiet chứa <div id="klChiTiet-<id>"> của việc đang chọn; toggleKlChiTiet({id, cheDo}) mở việc (cheDo 'chi-dao' → con trỏ vào ô nhập).
 import { $, escapeHtml, formatDateTime } from '../../../lib/dom.js';
-import { findAccount } from '../../../lib/state.js';
+import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
@@ -51,11 +51,14 @@ function hanhDongHtml(r) {
   const coMC = (r.so_minh_chung_hop_le || 0) > 0;
   // Từ chối (0034): cạnh "Xác nhận đã nhận việc", chỉ khi chưa xác nhận và chưa có đề nghị chờ duyệt; lý do bắt buộc, chỉ cấp duyệt và cấp trên đọc.
   const tuChoi = laBenTrong(r) && mo && !r.toi_da_xac_nhan && !r.tu_choi_cho; // chính tôi chưa nhận
+  // Giao tiếp xuống (v8 đợt 4): chủ trì hoặc người theo dõi của việc chưa hoàn thành, và vai được giao việc (A1/A2/quan_tri_kl — giao_viec là chốt).
+  const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
   return `<div class="hanh-dong">
     ${laBenTrong(r) && mo && !r.toi_da_xac_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc', 'lam') : ''}
     ${tuChoi ? nut('moO', 'Từ chối', '', `data-o="oTcNgan-${r.id}"`) : ''}
     ${duocCapNhat(r) && mo ? nut('openKlCapNhat', 'Cập nhật') : ''}
     ${duocDong(r) && mo ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
+    ${giaoTiep ? nut('giaoTiepXuong', 'Giao tiếp xuống', '', `id="klGiaoTiep-${r.id}"`) : ''}
     <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
       <small>Lý do chỉ lãnh đạo trực tiếp và cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>

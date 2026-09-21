@@ -73,7 +73,10 @@ function dongMinhChung(r, homNay) {
   const han = r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : 'chưa có hạn';
   return `<div class="the-con ${r.muc_canh_bao === 'VANG' ? '' : 'do'}" id="vct-${r.id}" data-muc="${escapeHtml(r.muc_canh_bao)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, ${han}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>
     <form class="mc-inline" data-submit="nopMinhChungThe" data-id="${r.id}"><input name="so_hieu" placeholder="Số hiệu văn bản" aria-label="Số hiệu" autocomplete="off"><input type="date" name="ngay_van_ban" aria-label="Ngày văn bản" max="${homNay}">
-      <select name="cap_nhan" aria-label="Cấp nhận"><option value="">Cấp nhận</option>${cap}</select><button type="submit" class="nut chinh">Nộp minh chứng</button></form>
+      <select name="cap_nhan" aria-label="Cấp nhận"><option value="">Cấp nhận</option>${cap}</select>
+      <input name="trich_yeu" placeholder="Trích yếu văn bản" aria-label="Trích yếu văn bản" autocomplete="off" maxlength="300" class="mc-rong">
+      <textarea name="mo_ta_ket_qua" rows="2" maxlength="600" placeholder="Mô tả kết quả (khoảng 100 chữ: đã làm gì, kết quả, gửi ai)" aria-label="Mô tả kết quả" class="mc-rong"></textarea>
+      <button type="submit" class="nut chinh">Nộp minh chứng</button></form>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }
 function dongDangLam(r) {
