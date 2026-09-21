@@ -1,0 +1,43 @@
+/* Trang đăng nhập v8 (mockup 01-dang-nhap.html): ảnh Bản Giốc gốc toàn nền (public/brand/ban-gioc.jpg — ảnh tạm, xem brand/README.md) + 2 lớp phủ
+   + 3 lớp dải núi SVG + vệt vàng; trên ảnh CHỈ có biểu trưng, dòng cơ quan chữ nhỏ, tên hệ thống IN HOA 26px giãn .04em; thẻ đăng nhập 440px nổi
+   bên phải (bóng + lớp trắng mờ lệch phía sau); chân trang ghi đầu mối hỗ trợ. Không số liệu hay nội dung nội bộ trên ảnh.
+   ≤ 700px: ảnh thành dải trên cùng, thẻ full chiều ngang. .dn-the dùng chung với trang đặt mật khẩu (.trang-chan, căn giữa). */
+@layer components {
+  .dn { position: relative; min-height: max(100vh, 760px); background: var(--navy); color: #fff; display: flex; flex-direction: column; }
+  .dn-nen { position: absolute; inset: 0; overflow: hidden; }
+  .dn-anh { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .dn-phu1 { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(31, 58, 95, .72) 0%, rgba(31, 58, 95, .35) 45%, rgba(31, 58, 95, .15) 70%, rgba(122, 12, 18, .55) 100%); }
+  .dn-phu2 { position: absolute; left: 0; right: 0; bottom: 0; height: 46%; background: linear-gradient(180deg, rgba(122, 12, 18, 0) 0%, rgba(122, 12, 18, .7) 100%); }
+  .dn-nui { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 300px; }
+  .dn-hieu { position: relative; display: flex; align-items: center; gap: 18px; padding: 72px 96px 0; }
+  .dn-hieu img { width: 84px; height: 68px; object-fit: contain; background: rgba(255, 255, 255, .96); border-radius: 12px; padding: 8px; flex: none; }
+  .dn-hieu span { display: block; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; opacity: .9; }
+  .dn-hieu b { display: block; font-family: var(--font-tieu-de); font-size: 26px; line-height: 1.35; letter-spacing: .04em; text-transform: uppercase; max-width: 16em; }
+  .dn-the { position: relative; width: min(440px, 100%); background: rgba(255, 255, 255, .96); color: var(--chu); border: 0; border-radius: 18px; padding: 40px 44px;
+    text-align: left; box-shadow: 0 30px 60px rgba(0, 0, 0, .35); display: flex; flex-direction: column; gap: 22px; }
+  .dn .dn-the { position: absolute; right: 120px; top: 50%; transform: translateY(-50%); min-height: 600px; }
+  .dn .dn-the::before { content: ''; position: absolute; left: -14px; top: 22px; right: 14px; bottom: -14px; border-radius: 18px; background: rgba(255, 255, 255, .18); z-index: -1; }
+  .dn-the h1 { font-size: 28px; color: var(--navy); letter-spacing: 0; }
+  .dn-the .phu { color: var(--chu-phu); font-size: 13px; margin-top: 4px; border: 0; padding: 0; }
+  .dn-the label { display: flex; flex-direction: column; gap: 8px; margin: 0; font-size: 13px; font-weight: 600; color: var(--navy); text-align: left; }
+  .dn-the input { width: 100%; min-height: 50px; margin: 0; padding: 0 14px; border: 1px solid #C9C4B9; border-radius: 10px; font-size: 15px; background: #fff; }
+  .dn-the .nut { width: 100%; min-height: 52px; margin: 0; font-size: 16px; font-weight: 700; border-radius: 10px; }
+  .dn-the .loi-inline { margin: 0; }
+  .dn-the .cuoi { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--vien); font-size: 12px; line-height: 1.55; color: var(--chu-phu); }
+  .dn-chan { position: absolute; left: 96px; bottom: 44px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: rgba(255, 255, 255, .85); }
+  /* Trang đặt mật khẩu (trang chặn) dùng lại thẻ: căn giữa, có biểu trưng */
+  .trang-chan .dn-the { text-align: center; gap: 16px; }
+  .trang-chan .dn-the .logo-lon { height: 64px; width: auto; margin: 0 auto; display: block; }
+  .trang-chan .dn-the .phu { margin-top: 0; }
+
+  @media (max-width: 1100px) { .dn .dn-the { right: 48px; } .dn-hieu { padding: 48px 48px 0; } .dn-chan { left: 48px; } }
+  @media (max-width: 700px) {
+    .dn { display: block; min-height: 100vh; background: var(--nen-phu); }
+    .dn-nen { position: relative; height: 220px; } .dn-nui { height: 90px; }
+    .dn-hieu { position: absolute; top: 0; left: 0; right: 0; padding: 20px 16px; gap: 12px; z-index: 1; }
+    .dn-hieu img { width: 52px; height: 42px; padding: 4px; border-radius: 8px; } .dn-hieu span { font-size: 11px; } .dn-hieu b { font-size: 15px; }
+    .dn .dn-the { position: relative; right: auto; top: auto; transform: none; width: auto; min-height: 0; margin: -24px 16px 20px; padding: 24px 20px; box-shadow: 0 16px 40px rgba(0, 0, 0, .18); }
+    .dn .dn-the::before { display: none; }
+    .dn-chan { position: static; padding: 0 16px 24px; color: var(--chu-phu); }
+  }
+}

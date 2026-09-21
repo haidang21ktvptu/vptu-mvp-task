@@ -11,24 +11,31 @@
 </head>
 <body>
 
-  <!-- ================= ĐĂNG NHẬP (mockup v7) ================= -->
+  <!-- ================= ĐĂNG NHẬP (v8, mockup-v8/01-dang-nhap.html) ================= -->
   <section id="loginSection" class="dn">
+    <!-- Nền: ảnh Bản Giốc gốc (public/brand/README.md: ảnh tạm), 2 lớp phủ, 3 lớp dải núi + vệt vàng vẽ SVG; trên ảnh chỉ biểu trưng, cơ quan, tên hệ thống -->
+    <div class="dn-nen" aria-hidden="true">
+      <img class="dn-anh" src="/brand/ban-gioc.jpg" width="1800" height="1200" alt="" decoding="async">
+      <div class="dn-phu1"></div><div class="dn-phu2"></div>
+      <svg class="dn-nui" viewBox="0 0 1440 300" preserveAspectRatio="none">
+        <path d="M0 220 L90 160 L160 205 L250 130 L330 190 L420 120 L500 175 L600 105 L690 180 L780 135 L880 195 L980 115 L1080 175 L1180 140 L1290 200 L1370 160 L1440 195 L1440 300 L0 300 Z" fill="rgba(31,58,95,.5)"/>
+        <path d="M0 255 L120 220 L220 245 L340 205 L460 240 L580 200 L700 235 L820 210 L940 245 L1060 215 L1180 240 L1300 220 L1440 235 L1440 300 L0 300 Z" fill="rgba(122,12,18,.8)"/>
+        <path d="M0 286 L1440 274 L1440 300 L0 300 Z" fill="#E8B923"/>
+      </svg>
+    </div>
+    <div class="dn-hieu">
+      <img src="/brand/bieu-trung.png" width="84" height="68" alt="Biểu trưng tỉnh Cao Bằng">
+      <div><span>Tỉnh ủy Cao Bằng · Văn phòng Tỉnh ủy</span><b>Hệ thống quản trị nhiệm vụ theo kết quả</b></div>
+    </div>
     <form id="loginForm" class="dn-the" novalidate>
-      <img class="logo-lon" src="/brand/bieu-trung.png" width="150" height="96" alt="Biểu trưng tỉnh Cao Bằng">
-      <div class="co-hang">
-        <img class="co" src="/brand/co-dang.svg" width="32" height="21" alt="Cờ Đảng">
-        <img class="co" src="/brand/co-to-quoc.svg" width="32" height="21" alt="Cờ Tổ quốc">
-      </div>
-      <p class="dang">ĐẢNG CỘNG SẢN VIỆT NAM</p>
-      <h1>TỈNH ỦY CAO BẰNG</h1>
-      <p class="vp">VĂN PHÒNG TỈNH ỦY</p>
-      <p class="phu">Hệ thống quản trị nhiệm vụ theo kết quả</p>
+      <div><h1>Đăng nhập</h1><p class="phu">Dành cho cán bộ Văn phòng Tỉnh ủy</p></div>
       <label for="loginUsername">Tên đăng nhập<input type="text" id="loginUsername" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Nhập tên đăng nhập được cấp"></label>
       <label for="loginPassword">Mật khẩu<input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Nhập mật khẩu"></label>
       <div id="loginError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
-      <button type="submit" id="loginSubmitBtn" class="nut chinh">Đăng nhập hệ thống</button>
-      <p class="cuoi">Hệ thống phục vụ công tác chỉ đạo, điều hành của Tỉnh ủy. Hỗ trợ kỹ thuật: Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy.</p>
+      <button type="submit" id="loginSubmitBtn" class="nut chinh">Đăng nhập</button>
+      <p class="cuoi">Tài khoản do Văn phòng Tỉnh ủy cấp. Đăng nhập lần đầu cần đổi mật khẩu. Không dùng chung tài khoản.</p>
     </form>
+    <footer class="dn-chan"><span>Hỗ trợ kỹ thuật: Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy</span></footer>
   </section>
 
   <!-- ================= ĐẶT MẬT KHẨU MỚI (trang chặn toàn màn hình khi accounts.must_change_password — AUTH-2; mở lại từ bánh răng để đổi tự nguyện) ================= -->

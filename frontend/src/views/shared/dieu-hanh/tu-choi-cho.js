@@ -21,7 +21,7 @@ function dongHtml(t) {
 export function tuChoiChoHtml() {
   const ds = tuChoiChoToiDuyet();
   if (ds.length === 0) return '';
-  return `<div class="muc do" id="dhTuChoi"><b>Đề nghị từ chối nhận việc, cần đồng chí duyệt (${ds.length})</b>
+  return `<div class="muc do vien-vang" id="dhTuChoi"><b>Đề nghị từ chối nhận việc, cần đồng chí duyệt (${ds.length})</b>
     <p>Đồng ý → việc chờ giao lại cho người khác (cờ tự xoá khi giao lại); không đồng ý → người đề nghị tiếp tục thực hiện. Lý do không ghi vào lịch sử việc.</p>
     ${ds.map(dongHtml).join('')}</div>`;
 }
