@@ -33,7 +33,7 @@
   .the.hang .ten { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .the.hang .ten b { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; line-height: 1.4; white-space: nowrap; min-width: 0; } /* một dòng: nội dung co (…) trước, nhãn luôn thấy */
   .the.hang .ten b .nd { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .the.hang .ten b .dk, .the.hang .ten b .nhan-tt { flex: none; }
+  .the.hang .ten b .nhan-cum { flex: none; display: inline; white-space: nowrap; } /* nhãn nằm trong span inline → .dk/.vong/.tag giữ inline-flex (flex item trực tiếp bị đổi thành flex) */
   .the.hang .ten > span { display: block; font-size: 12px; color: var(--chu-phu); max-width: none; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* một dòng, tooltip đủ */
   .the.hang .khau { font-size: 12px; padding: 1px 6px; }
   .the.hang .tre { flex: none; min-width: 64px; font-family: var(--font-tieu-de); font-size: 22px; font-weight: 700; color: var(--do); text-align: right; line-height: 1; }

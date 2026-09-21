@@ -38,9 +38,11 @@
   .md .chi-tiet { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 0; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
   .chi-tiet .trong-nho, .chi-tiet > .loi-inline { margin: 16px; }
   .ct-dau { padding: 16px 18px; border-bottom: 1px solid var(--vien-nhat); display: flex; flex-direction: column; gap: 8px; }
-  .ct-nhan { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .ct-nhan .ma { font-size: 16px; min-width: 0; }
-  .ct-nhan .trang-thai { margin-left: auto; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11px; display: inline-flex; align-items: center; }
+  /* .ct-nhan là block (không flex) để .dk/.tag/.trang-thai giữ display inline-flex ở mọi ngữ cảnh */
+  .ct-nhan { display: block; line-height: 26px; }
+  .ct-nhan > * { vertical-align: middle; margin-right: 8px; }
+  .ct-nhan .ma { display: inline-block; font-size: 16px; min-width: 0; }
+  .ct-nhan .trang-thai { float: right; margin-right: 0; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11px; display: inline-flex; align-items: center; }
   .ct-dau h3 { font-size: 15px; line-height: 1.4; }
   .ct-dau .ma { font-size: 12px; color: var(--chu-phu); font-weight: 400; }
   .chi-tiet .ct-luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--vien-nhat); font-size: 13px; }
