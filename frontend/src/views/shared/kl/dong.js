@@ -1,4 +1,4 @@
-// HTML một dòng nhiệm vụ trong danh sách gọn (mockup .hang-nv): mã · nội dung + dòng phụ (chịu trách nhiệm, sản phẩm thiếu / chỉ đạo
+// HTML một dòng nhiệm vụ (v8: chấm trạng thái · mã · nội dung + dòng phụ một dòng (chịu trách nhiệm, sản phẩm thiếu / chỉ đạo
 // chờ / chưa nhận việc) · hạn (trễ N ngày / còn N ngày / xong); mép trái theo mức. Bấm dòng = mở ngăn chi tiết bên phải. Các vị từ
 // "ai được làm gì" chỉ để ẩn/hiện nút trong ngăn (policy + hàm DB là chốt).
 import { escapeHtml } from '../../../lib/dom.js';
@@ -41,8 +41,8 @@ function phuText(r) {
 
 export function dongHtml(r, homNay, dangChon) {
   return `<button type="button" class="hang-nv ${lopMep(r)}${dangChon ? ' dang' : ''}" id="klRow-${r.id}" data-action="chonKlRow" data-id="${r.id}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}" aria-pressed="${String(Boolean(dangChon))}">
-      <span class="ma">${escapeHtml(r.ma)}</span>
-      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanPhuHtml(r)}</b><span>${escapeHtml(phuText(r))}</span></span>
+      <span class="stt ${lopMep(r)}"></span><span class="ma">${escapeHtml(r.ma)}</span>
+      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanPhuHtml(r)}</b><span title="${escapeHtml(phuText(r))}">${escapeHtml(phuText(r))}</span></span>
       <span class="han">${hanHtml(r, homNay)}</span>
     </button>`;
 }

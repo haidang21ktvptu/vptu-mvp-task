@@ -1,4 +1,4 @@
-// Ngăn chi tiết bên phải (mockup, giữ thứ tự của mọi vai: thông tin then chốt → hành động → khối chỉ đạo → minh chứng → chi tiết và lịch sử
+// Ngăn chi tiết bên phải (v8 đợt 3: cố định 520px — đầu mã + nhãn + nội dung + văn bản, lưới 2 cột, hàng nút, chỉ đạo, minh chứng, diễn biến nền màu; thứ tự của mọi vai: thông tin then chốt → hành động → khối chỉ đạo → minh chứng → chi tiết và lịch sử
 // gập). Căn cứ từng trường từ lich_su (RLS theo phạm vi thấy nhiệm vụ); đính chính đang chờ; nguồn dòng. Một ngăn cho cả danh sách:
 // #klChiTiet chứa <div id="klChiTiet-<id>"> của việc đang chọn; toggleKlChiTiet({id, cheDo}) mở việc (cheDo 'chi-dao' → con trỏ vào ô nhập).
 import { $, escapeHtml, formatDateTime } from '../../../lib/dom.js';
@@ -69,14 +69,18 @@ export function chiTietHtml(r, ls, dc) {
   const dinhChinh = dc.length === 0 ? 'chưa có' : dc.map((d) => `${tenCot(d.cot)}: ${hienGiaTri(d.cot, d.gia_tri_cu)} → ${hienGiaTri(d.cot, d.gia_tri_moi)} (${d.ly_do})`).join('; ');
   const nhanViec = ls.filter((l) => l.cot === 'xac_nhan_nhan_viec');
   const hanLop = r.nhom_dem === 'QUA_HAN' || r.nhom_dem === 'DANG_DINH_CHINH' ? ' style="color:var(--do)"' : '';
+  const nhanTT = `<span class="trang-thai ${r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : r.nhom_dem === 'QUA_HAN' ? 'tt-qua' : 'tt-cho'}">${nhanTrangThai(r)}</span>`; // nhãn đã kèm số ngày trễ
+  const o = (nhan, gt) => `<div><dt>${nhan}</dt><dd>${gt}</dd></div>`;
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
-      <p class="ma">${escapeHtml(r.ma)}${r.so_ket_luan ? `, ${escapeHtml(r.so_ket_luan)}` : ''}, ban hành ${formatNgay(r.ngay_ban_hanh)} · <span class="trang-thai ${r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : r.nhom_dem === 'QUA_HAN' ? 'tt-qua' : 'tt-xam'}">${escapeHtml(nhanTrangThai(r))}</span> ${nhanPhuHtml(r)}</p>
-      <h3>${escapeHtml(r.noi_dung)}</h3>
-      <dl><dt>Chủ trì</dt><dd>${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}</dd>
-        <dt>Theo dõi</dt><dd>${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}</dd>
-        <dt>Sản phẩm</dt><dd>${escapeHtml(sanPhamText(r) || 'chưa định nghĩa')}</dd>
-        <dt>Hạn</dt><dd><b${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</b>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}</dd>
-        <dt>Cấp quyết</dt><dd>${capQuyetHtml(r)}${r.cap_nhan_san_pham_ten ? ` · cấp nhận: ${escapeHtml(r.cap_nhan_san_pham_ten)}` : ''}</dd></dl>
+      <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${nhanPhuHtml(r)}${nhanTT}</div>
+        <h3>${escapeHtml(r.noi_dung)}</h3>
+        <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · nhận ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
+      <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
+        ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
+        ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'))}
+        ${o('Hạn', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
+        ${o('Cấp quyết', capQuyetHtml(r))}
+        ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'))}</dl>
       ${hanhDongHtml(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <div class="khoi-nho khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>

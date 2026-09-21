@@ -107,8 +107,8 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(row).toHaveAttribute('data-muc', 'XANH');
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
     await expect(row).toHaveClass(/\blam\b/);
-    // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — mép trái lam của việc Xanh.
-    await expect.poll(() => row.evaluate((el) => globalThis.getComputedStyle(el).borderLeftColor)).toBe(await mauToken(page, '--lam'));
+    // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — v8 đợt 3: chấm trạng thái .stt màu lam của việc Xanh.
+    await expect.poll(() => row.locator('.stt').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)).toBe(await mauToken(page, '--lam'));
     await row.click();
     await expect(page.locator(`#klChiTiet-${data.id}`)).toContainText('Tờ trình', NAP); // sản phẩm ở ngăn chi tiết
   });

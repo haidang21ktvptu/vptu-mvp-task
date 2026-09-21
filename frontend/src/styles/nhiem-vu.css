@@ -1,37 +1,10 @@
 /* Màn hình Nhiệm vụ (mockup "Các mục còn lại"): dải tổng quan bấm để lọc (.tq), danh sách gọn (.md .list, .hang-nv) và ngăn chi
    tiết bên phải (.md .chi-tiet); giao việc ba bước một trang (.buoc); khung/mục của A2/A3 (.khung, .muc, .mc-inline). */
 @layer components {
-  /* Thanh trạng thái phân đoạn một hàng (GĐ21): các ô nối liền trong một viền, cuộn ngang khi hẹp; ô đang chọn nền sẫm. */
-  .tq { display: inline-flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; margin-top: 14px; align-items: stretch; background: #fff; border: 1px solid var(--vien); border-radius: 999px; }
-  .tq button, .tq .o-so { border: 0; border-left: 1px solid var(--vien); background: transparent; padding: 8px 14px; font-size: 14px; display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
-  .tq > :first-child { border-left: 0; }
-  .tq button b, .tq .o-so b { font-size: 16px; }
-  .tq button[aria-pressed="true"] { background: var(--chu); color: #fff; }
-  .tq button[aria-pressed="true"] b { color: #fff; }
-  .tq .sep { display: none; }
-  .tq .s-do b { color: var(--do); } .tq .s-vang b { color: var(--vang-chu); } .tq .s-lam b { color: var(--lam); } .tq .s-luc b { color: var(--luc); }
+  /* .tq / .md / .hang-nv / .chi-tiet: v8 đợt 3 ở nhiem-vu-v8.css. Ở đây còn chip lọc, giao việc cũ (.buoc), khung/mục A2/A3, ô nộp minh chứng. */
   .chip-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--vien); font-size: 13px; }
   .chip button { color: var(--chu-phu); font-size: 12px; line-height: 1; padding: 2px; }
-
-  .md { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-top: 14px; align-items: start; }
-  .md .list { background: #fff; border: 1px solid var(--vien); border-radius: 12px; overflow: hidden; }
-  .md .tim { display: flex; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--vien); background: var(--nen-phu); flex-wrap: wrap; align-items: center; }
-  .md .tim input { flex: 1 1 200px; padding: 9px 12px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: #fff; min-width: 0; }
-  .md .tim select { font-size: 13px; padding: 9px 10px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: #fff; max-width: 220px; }
-  .md .tim details { flex-basis: 100%; font-size: 13px; }
-  .md .tim summary { cursor: pointer; color: var(--lam); }
-  .md .tim .them-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .hang-nv { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--vien); border-left: 4px solid var(--vien);
-    cursor: pointer; width: 100%; text-align: left; }
-  .hang-nv:first-of-type { border-top: 0; }
-  .hang-nv.do { border-left-color: var(--do); } .hang-nv.dac-biet { border-left-color: var(--do-dam); } .hang-nv.vang { border-left-color: var(--vang); }
-  .hang-nv.luc { border-left-color: var(--luc); } .hang-nv.lam { border-left-color: var(--lam); } .hang-nv.dang { background: var(--lam-nhat); }
-  .hang-nv .ma { font-weight: 700; font-size: 13px; color: var(--chu-phu); min-width: 58px; }
-  .hang-nv .ten b { display: block; font-size: 14px; } .hang-nv .ten span { font-size: 12px; color: var(--chu-phu); display: block; }
-  .hang-nv .han { font-size: 12px; color: var(--chu-phu); text-align: right; white-space: nowrap; } .hang-nv .han b { display: block; font-size: 14px; color: var(--chu); }
-  .hang-nv.do .han b, .hang-nv.dac-biet .han b { color: var(--do); }
-  .ds-chan { padding: 10px 14px; font-size: 13px; color: var(--chu-phu); border-top: 1px solid var(--vien); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
   /* Giao việc ba bước một trang */
   .buoc { background: #fff; border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 20px 24px; margin-top: 16px; }
@@ -58,8 +31,6 @@
   .khung .them { padding: 12px 18px; border-top: 1px solid var(--vien); font-size: 14px; }
 
   @media (max-width: 860px) {
-    .md { grid-template-columns: 1fr; }
-    .md .chi-tiet { position: static; }
     .mc-inline { grid-template-columns: 1fr 1fr; }
     .buoc { padding: 16px; }
     .buoc-chan { bottom: 56px; }

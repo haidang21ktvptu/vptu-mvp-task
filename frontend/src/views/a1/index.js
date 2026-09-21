@@ -6,7 +6,7 @@ import { registerView } from '../registry.js';
 import { khungHtml, datCauHinhDieuHanh, openDieuHanh, ngayDaiVN, dangKyDieuHanhVai } from '../shared/dieu-hanh/man-hinh.js';
 import { kpiQuaHan, kpiChiDaoTT, kpiMinhChung, kpiSapHan, kpiHoanThanh } from '../shared/dieu-hanh/kpi.js';
 import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
-import { dh } from '../shared/dieu-hanh/du-lieu.js';
+import { dh, ttCho } from '../shared/dieu-hanh/du-lieu.js';
 import { khoiChiDaoTTHtml } from './chi-dao-tt.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
 import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
@@ -24,8 +24,10 @@ function veThem() {
   const tc = khoiThuongTrucHtml() + tuChoiChoHtml() + khoiBiTuChoiHtml();
   $('dhTC').innerHTML = tc; show('dhTC', Boolean(tc));
   $('dhTT').innerHTML = khoiChiDaoTTHtml();
+  $('dhTT').classList.toggle('mong', ttCho().length === 0); // 0 chỉ đạo Thường trực chờ → một dòng mảnh
   $('dhMcSo').textContent = dh.mcCho.length;
   $('dhMc').innerHTML = minhChungChoHtml();
+  $('dhMcKhoi').classList.toggle('mong', dh.mcCho.length === 0);
 }
 
 export function registerA1View() {

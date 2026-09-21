@@ -70,10 +70,17 @@ function ownerDoi() {
 // Ba phần đã điền đủ chưa → chấm sáng; đủ cả ba → nút Giao sáng; thanh tóm tắt đọc lại các ô.
 export function trangThaiPhan() {
   const vb = laA0() || (laMoi() ? Boolean($('klThSoKL').value.trim() && $('klThNgayBH').value) : Boolean($('klThVanBan').value));
-  const p1 = vb && Boolean($('klThNoiDung').value.trim());
-  const p2 = Boolean($('klThOwner').value) && (laA0() || Boolean($('klThNguoiTheoDoi').value)) && (!canThayMat() || Boolean($('klThThayMat').value));
+  const p1 = vb; // v8: khối 1 = văn bản; khối 2 = nội dung + người
+  const p2 = Boolean($('klThNoiDung').value.trim()) && Boolean($('klThOwner').value) && (laA0() || Boolean($('klThNguoiTheoDoi').value)) && (!canThayMat() || Boolean($('klThThayMat').value));
   const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && (laA0() || Boolean($('klThNgayNhan').value));
   return [p1, p2, p3];
+}
+// Các yếu tố bắt buộc còn thiếu (theo thứ tự khối) — dòng "Còn thiếu: …" cạnh nút Giao việc.
+function conThieu() {
+  const vb = laA0() || (laMoi() ? Boolean($('klThSoKL').value.trim() && $('klThNgayBH').value) : Boolean($('klThVanBan').value));
+  return [[!vb, 'văn bản'], [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'người chịu trách nhiệm'],
+    [!laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!$('klThSanPham').value, 'sản phẩm'],
+    [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [!laA0() && !$('klThNgayNhan').value, 'ngày nhận văn bản']].filter(([t]) => t).map(([, n]) => n);
 }
 function capNhatTomTat() {
   const [p1, p2, p3] = trangThaiPhan();
@@ -82,6 +89,11 @@ function capNhatTomTat() {
   const owner = $('klThOwner').selectedOptions[0]?.text || '…'; const sp = $('klThSanPham').selectedOptions[0]?.text || '…';
   const nd = $('klThNoiDung').value.trim(); const han = $('klThHan').value ? formatNgay($('klThHan').value) : '…';
   setText('gvTomTatChu', `Giao "${nd ? nd.slice(0, 60) + (nd.length > 60 ? '…' : '') : '…'}" cho ${$('klThOwner').value ? owner : '…'}, hạn ${han}, sản phẩm ${$('klThSanPham').value ? sp : '…'}, độ khẩn ${tenDoKhan($('klThDoKhan').value)}`);
+  const thieu = conThieu(); setText('gvConThieu', thieu.length ? `Còn thiếu: ${thieu.join(', ')}` : '');
+  // Xem trước thẻ việc (cột phụ) đọc lại các ô
+  setText('gvXtDoKhan', tenDoKhan($('klThDoKhan').value)); $('gvXtDoKhan').className = `tag ${['THUONG_KHAN', 'HOA_TOC'].includes($('klThDoKhan').value) ? 'do' : $('klThDoKhan').value === 'KHAN' ? 'vang' : ''}`;
+  setText('gvXtNoiDung', nd || 'Nội dung nhiệm vụ…');
+  setText('gvXtPhu', `Chủ trì ${$('klThOwner').value ? owner : '…'} · hạn ${han} · sản phẩm ${$('klThSanPham').value ? sp : '…'}`);
 }
 
 export async function openGiaoViec() {

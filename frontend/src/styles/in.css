@@ -2,7 +2,7 @@
    sau mọi quy tắc thành phần. */
 @layer utilities {
   @media print {
-    .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim,
+    .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc,
     .ray, .tb-panel { display: none !important; }
     body { background: #fff; }
     .max { max-width: none; padding: 0; }
