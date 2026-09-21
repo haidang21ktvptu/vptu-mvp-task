@@ -53,7 +53,12 @@
   .gv-so.xong { background: var(--navy); border-color: var(--navy); color: #fff; }
   .gv-truong { margin-top: 14px; } .cot-2 .gv-truong, .cot-3 .gv-truong { margin-top: 14px; }
   .gv-cha { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--navy); background: var(--navy-nhat); font-size: 13px; } /* v8 đợt 4: giao tiếp xuống */
-  .gv-truong .nhan { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--navy); }
+  /* v8 đợt 4: nhãn một dòng (cắt "…" ở màn rộng, xuống dòng ở màn hẹp), ô nhập cùng hàng thẳng mép; chú thích 12px xám dưới ô; * đỏ khi bắt buộc */
+  .gv-truong .nhan { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--navy); line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gv-the .cot-2, .gv-the .cot-3 { align-items: start; }
+  .gv-truong .o-nhap:not(textarea) { height: 42px; min-height: 42px; }
+  .gv-chu-thich { display: block; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--chu-phu); min-height: 16px; }
+  .gv-bb { color: var(--do); font-weight: 700; margin-left: 3px; }
   .gv-vb { gap: 0 12px; } .gv-vb .o-nhap { margin: 0; }
   .gv-the .o-nhap { border: 1px solid #C9C4B9; box-shadow: none; border-radius: 8px; }
   .gv-the .o-nhap:focus { outline: 0; border-color: var(--navy); background: var(--navy-nhat); }
@@ -71,6 +76,10 @@
   .gv-buoc-sau li { display: flex; gap: 10px; }
   .gv-buoc-sau i { font-style: normal; width: 22px; height: 22px; border-radius: 11px; background: var(--navy-nhat); color: var(--navy); font-weight: 800; display: grid; place-items: center; flex: none; }
 
+  @media (max-width: 767px) {
+    .gv-the .cot-2, .gv-the .cot-3 { grid-template-columns: 1fr; }
+    .gv-truong .nhan { white-space: normal; overflow: visible; text-overflow: clip; }
+  }
   @media (max-width: 600px) {
     .thanh-hoa-toc { top: 0; }
     .gv-the { padding: 4px 16px 0; }

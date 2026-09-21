@@ -72,7 +72,12 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', { timeout: 20_000 });
     await expect(page.locator('#gvNganhWrap')).toBeHidden(); // chưa nhập văn bản → giao trực tiếp (văn bản KHAC), không đòi ngành
     await page.locator('#klThLoaiVB').selectOption('KL_BTV');
-    await page.locator('#klThSoHN').fill('99'); await page.locator('#klThSoKL').fill(soKL); await page.locator('#klThNgayBH').fill(congNgay(homNayVN(), -3));
+    await page.locator('#klThSoKL').fill(soKL); await page.locator('#klThNgayBH').fill(congNgay(homNayVN(), -3));
+    await expect(page.locator('#gvConThieu')).toContainText('số hội nghị'); // KL_BTV thiếu số hội nghị → liệt kê ngay, khớp kiemTra
+    await expect(page.locator('#klThLuu')).toBeDisabled();
+    await expect(page.locator('#klThNganhBatBuoc')).toBeVisible();        // dấu * động: kết luận → ngành/lĩnh vực bắt buộc
+    await page.locator('#klThSoHN').fill('99');
+    await expect(page.locator('#gvConThieu')).not.toContainText('số hội nghị');
     await expect(page.locator('#gvNganhWrap')).toBeVisible();
     await expect(page.locator('#klThNgayNhanWrap')).toBeVisible();
     await expect(page.locator('#klThLoaiWrap')).toBeVisible();
