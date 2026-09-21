@@ -93,24 +93,25 @@ BEGIN
 END;
 $$;
 
--- 4. Policy SELECT: thêm nhánh thư ký (chỉ đọc). Tên policy giữ như 0016/0025/0028 (đổi tên bảng không đổi tên policy).
+-- 4. Policy SELECT: thêm nhánh thư ký (chỉ đọc). Tên policy giữ như 0016/0025/0028 (đổi tên bảng không đổi tên policy). Nhánh viết
+--    "(SELECT me_thu_ky_tt()) AND thu_ky_tt_thay(x)": InitPlan tính một lần/truy vấn → người không phải thư ký tắt nhánh ngay, không gọi hàm từng dòng.
 DROP POLICY "nhiem_vu_select" ON "public"."nhiem_vu";
 CREATE POLICY "nhiem_vu_select" ON "public"."nhiem_vu" FOR SELECT TO "authenticated"
-  USING ((SELECT "public"."kl_pham_vi"("nguoi_theo_doi", "nganh_ma", "linh_vuc_ma", "owner_tai_khoan", "owner_don_vi_ma")) OR "public"."thu_ky_tt_thay"("id"));
+  USING ((SELECT "public"."kl_pham_vi"("nguoi_theo_doi", "nganh_ma", "linh_vuc_ma", "owner_tai_khoan", "owner_don_vi_ma")) OR ((SELECT "public"."me_thu_ky_tt"()) AND "public"."thu_ky_tt_thay"("id")));
 DROP POLICY "van_ban_giao_viec_select" ON "public"."van_ban_giao_viec";
 CREATE POLICY "van_ban_giao_viec_select" ON "public"."van_ban_giao_viec" FOR SELECT TO "authenticated"
   USING ((SELECT "public"."me_quan_tri_kl"())
          OR EXISTS (SELECT 1 FROM "public"."nhiem_vu" n WHERE n."van_ban_id" = "van_ban_giao_viec"."id"
-                    AND ("public"."kl_pham_vi"(n."nguoi_theo_doi", n."nganh_ma", n."linh_vuc_ma", n."owner_tai_khoan", n."owner_don_vi_ma") OR "public"."thu_ky_tt_thay"(n."id"))));
+                    AND ("public"."kl_pham_vi"(n."nguoi_theo_doi", n."nganh_ma", n."linh_vuc_ma", n."owner_tai_khoan", n."owner_don_vi_ma") OR ((SELECT "public"."me_thu_ky_tt"()) AND "public"."thu_ky_tt_thay"(n."id")))));
 DROP POLICY "kl_chi_dao_select" ON "public"."chi_dao";
 CREATE POLICY "kl_chi_dao_select" ON "public"."chi_dao" FOR SELECT TO "authenticated"
-  USING ((SELECT "public"."kl_thay_nhiem_vu"("nhiem_vu_id")) OR "public"."thu_ky_tt_thay"("nhiem_vu_id"));
+  USING ((SELECT "public"."kl_thay_nhiem_vu"("nhiem_vu_id")) OR ((SELECT "public"."me_thu_ky_tt"()) AND "public"."thu_ky_tt_thay"("nhiem_vu_id")));
 DROP POLICY "kl_lich_su_select" ON "public"."lich_su";
 CREATE POLICY "kl_lich_su_select" ON "public"."lich_su" FOR SELECT TO "authenticated"
-  USING ((SELECT "public"."kl_thay_nhiem_vu"("nhiem_vu_id")) OR "public"."thu_ky_tt_thay"("nhiem_vu_id"));
+  USING ((SELECT "public"."kl_thay_nhiem_vu"("nhiem_vu_id")) OR ((SELECT "public"."me_thu_ky_tt"()) AND "public"."thu_ky_tt_thay"("nhiem_vu_id")));
 DROP POLICY "minh_chung_select" ON "public"."minh_chung";
 CREATE POLICY "minh_chung_select" ON "public"."minh_chung" FOR SELECT TO "authenticated"
-  USING ("public"."kl_thay_nhiem_vu"("nhiem_vu_id") OR "public"."thu_ky_tt_thay"("nhiem_vu_id"));
+  USING ("public"."kl_thay_nhiem_vu"("nhiem_vu_id") OR ((SELECT "public"."me_thu_ky_tt"()) AND "public"."thu_ky_tt_thay"("nhiem_vu_id")));
 
 -- 5. v_chi_dao_tt: thêm ba cột cuối.
 CREATE OR REPLACE VIEW "public"."v_chi_dao_tt" WITH ("security_invoker" = true) AS
