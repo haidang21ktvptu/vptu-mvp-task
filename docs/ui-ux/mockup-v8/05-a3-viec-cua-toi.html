@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>A3 · Việc của tôi</title>
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;font-family:'Be Vietnam Pro',system-ui,sans-serif;background:#F6F4EF;color:#1B1B1B}
+a{color:#B3121B}a:hover{color:#7A0C12}
+.h{font-family:Lora,serif;font-weight:700}
+.mut{color:#5B6270}
+.top{position:relative;height:72px;background:#1F3A5F;color:#fff;overflow:hidden}
+.top img.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.22;filter:saturate(.6)}
+.top .tint{position:absolute;inset:0;background:linear-gradient(90deg,rgba(31,58,95,.95) 0%,rgba(31,58,95,.7) 45%,rgba(122,12,18,.8) 100%)}
+.top .karst{position:absolute;right:0;bottom:0;height:72px;width:760px}
+.top .in{position:relative;height:72px;display:flex;align-items:center;gap:16px;padding:0 24px;box-sizing:border-box}
+.top .ib{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;border:0;color:#fff;cursor:pointer}
+.side{width:236px;background:#fff;border-right:1px solid #E3DED4;display:flex;flex-direction:column;padding:16px 12px;box-sizing:border-box;gap:4px}
+.side .g{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8A8F99;padding:14px 12px 6px}
+.side a{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px;border-radius:8px;text-decoration:none;color:#1B1B1B;font-size:14px;font-weight:500}
+.side a.on{background:#FBE9EA;color:#B3121B;font-weight:700}
+.side a .n{margin-left:auto;min-width:22px;height:22px;border-radius:11px;background:#B3121B;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 7px;box-sizing:border-box}
+.side a .n.nv{background:#1F3A5F}
+.side svg{width:18px;height:18px;flex:none}
+.main{flex:1;padding:24px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;overflow:hidden}
+.card{background:#fff;border:1px solid #E3DED4;border-radius:12px;box-sizing:border-box}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi .card{padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.kpi .v{font-family:Lora,serif;font-size:34px;font-weight:700;line-height:1}
+.kpi .l{font-size:13px;font-weight:600;color:#1F3A5F}
+.kpi .s{font-size:12px;color:#5B6270}
+.now{display:flex;align-items:center;gap:12px;background:#FFF8E6;border:1px solid #F1D98A;border-radius:12px;padding:12px 16px}
+.now b{color:#7A0C12;font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;background:#fff;border:1px solid #E3DED4;font-size:13px;font-weight:600;color:#1B1B1B}
+.pill.on{background:#1F3A5F;color:#fff;border-color:#1F3A5F}
+.pill .n{color:#B3121B;font-weight:800}
+.row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-top:1px solid #EEEAE2;font-size:13px}
+.row:first-child{border-top:0}
+.ma{font-weight:700;color:#1F3A5F;width:64px;flex:none}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;background:#EEF1F6;color:#1F3A5F}
+.tag.r{background:#FBE9EA;color:#B3121B}.tag.y{background:#FFF3D6;color:#8A5A00}.tag.g{background:#E6F4EA;color:#1B7A43}
+.act{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:8px;border:1px solid #C9C4B9;background:#fff;font-size:13px;font-weight:600;font-family:inherit;color:#1B1B1B;cursor:pointer}
+.act.p{background:#B3121B;border-color:#B3121B;color:#fff}.act.s{background:#1F3A5F;border-color:#1F3A5F;color:#fff}
+.stt{width:8px;height:8px;border-radius:4px;flex:none}
+.ttl{display:flex;align-items:baseline;gap:14px}
+.ttl .h{font-size:24px;color:#1F3A5F}
+.sec{font-size:15px;font-weight:700;color:#1F3A5F;padding:14px 16px 10px}
+.ins{display:flex;gap:16px;align-items:stretch}
+.lft{width:300px;flex:none}
+</style>
+
+<div style="width: 1440px; height: 1000px; display: flex; flex-direction: column; background: #F6F4EF; overflow: hidden;">
+
+<div class="top">
+  <img class="ph" src="assets/ban-gioc.jpg" alt="">
+  <div class="tint"></div>
+  <svg class="karst" viewBox="0 0 760 72" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 62 L70 34 L120 52 L190 22 L250 48 L320 18 L380 44 L450 26 L520 50 L590 24 L660 46 L720 30 L760 44 L760 72 L0 72 Z" fill="rgba(255,255,255,.08)"></path>
+    <path d="M0 68 L100 56 L200 64 L300 52 L400 62 L500 50 L600 60 L700 52 L760 58 L760 72 L0 72 Z" fill="rgba(232,185,35,.35)"></path>
+  </svg>
+  <div class="in">
+    <img src="assets/logo-cao-bang.png" alt="Biểu trưng Cao Bằng" style="width: 52px; height: 40px; object-fit: contain; background: #fff; border-radius: 8px; padding: 4px; box-sizing: border-box;">
+    <div style="display: flex; flex-direction: column;">
+      <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .85;">Văn phòng Tỉnh ủy Cao Bằng</div>
+      <div class="h" style="font-size: 15px; letter-spacing: .05em; text-transform: uppercase; line-height: 1.35;">Hệ thống quản trị nhiệm vụ theo kết quả</div>
+    </div>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+      <label style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; background: rgba(255,255,255,.12); border-radius: 10px; width: 280px; box-sizing: border-box;"><span style="width: 18px; height: 18px; display: inline-flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input type="search" placeholder="Tìm mã việc, nội dung, người…" style="border: 0; background: transparent; color: #fff; font-family: inherit; font-size: 13px; outline: 0; width: 100%;"></label>
+      <button type="button" class="ib" aria-label="Thông báo" style="position: relative;"><span style="width: 18px; height: 18px; display: inline-flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span style="position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; background: #E8B923; color: #1B1B1B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;">3</span></button>
+      <div style="display: flex; align-items: center; gap: 10px; padding-left: 8px; border-left: 1px solid rgba(255,255,255,.2);">
+        <div style="width: 36px; height: 36px; border-radius: 18px; background: #E8B923; color: #1B1B1B; font-weight: 800; display: flex; align-items: center; justify-content: center;">N</div>
+        <div style="display: flex; flex-direction: column; line-height: 1.2;"><div style="font-size: 13px; font-weight: 700;">Nguyễn Văn A</div><div style="font-size: 11px; opacity: .85;">Vai A3 · Chuyên viên Phòng Tổng hợp</div></div>
+      </div>
+      <button type="button" class="ib" aria-label="Cài đặt"><span style="width: 18px; height: 18px; display: inline-flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span></button>
+    </div>
+  </div>
+</div>
+<div style="display: flex; flex: 1; min-height: 0;">
+<nav class="side">
+<div class="g">Công việc</div>
+<a href="05-a3-viec-cua-toi.html" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span>Việc của tôi</span><span class="n">2</span></a>
+<a href="05-a3-viec-cua-toi.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Việc tôi theo dõi</span></a>
+<div class="g">Trao đổi</div>
+<a href="05-a3-viec-cua-toi.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Nhắn tin</span><span class="n">1</span></a>
+<div style="margin-top: auto; padding: 12px; font-size: 11px; color: #8A8F99; line-height: 1.5;">Phiên bản v4.0 · Dữ liệu cập nhật 08:15</div></nav>
+<main class="main">
+
+<div class="ttl"><div class="h">Việc của tôi</div><div class="mut" style="font-size:13px;">Nguyễn Văn A · Chuyên viên Phòng Tổng hợp · 4 việc cần làm, 1 đang theo dõi</div></div>
+<div class="now"><b>Cần xử lý ngay</b><span class="pill on"><span class="n" style="color:#E8B923">1</span> việc mới chờ xác nhận</span><span class="pill"><span class="n">1</span> chỉ đạo chờ phản hồi</span><span class="pill"><span class="n">2</span> tin chưa đọc</span><span class="mut" style="margin-left:auto;font-size:12px;">Bấm một mục để mở danh sách kèm nút hành động</span></div>
+<div class="card">
+  <div class="sec">Việc mới giao, cần xác nhận đã nhận (1)</div>
+  <div class="row"><span class="stt" style="background:#1F3A5F;"></span><span class="ma">NV-406</span><span style="flex:1;display:flex;flex-direction:column;gap:4px;"><span style="font-weight:600;">Soạn dự thảo báo cáo tổng hợp tình hình cơ sở tháng 9</span><span class="mut" style="font-size:12px;">Trưởng phòng giao 20/9 · hạn 24/9 · sản phẩm: Báo cáo</span></span><span style="display:flex;gap:6px;"><span class="tag r">Khẩn</span></span><span style="width:110px;text-align:right;font-weight:600;color:#1F3A5F;">còn 3 ngày</span><span style="display:flex;gap:6px;"><button type="button" class="act p">Xác nhận đã nhận</button><button type="button" class="act ">Từ chối</button><button type="button" class="act ">Xem</button></span></div>
+</div>
+<div class="ins" style="flex:1;min-height:0;">
+  <div class="card" style="flex:1;display:flex;flex-direction:column;">
+    <div class="sec">Sắp đến hạn hoặc quá hạn, chưa có minh chứng (2)</div>
+    <div class="row" style="flex-direction:column;align-items:stretch;gap:10px;">
+      <div style="display:flex;align-items:center;gap:12px;"><span class="stt" style="background:#B3121B;"></span><span class="ma">NV-218</span><span style="flex:1;font-weight:600;">Báo cáo kết quả kiểm tra công tác chuẩn bị Đại hội chi bộ</span><span class="tag r">Khẩn</span><span style="font-weight:700;color:#B3121B;">trễ 12 ngày</span></div>
+      <div style="display:flex;gap:10px;align-items:center;padding-left:34px;">
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#5B6270;flex:1;">Số hiệu văn bản<input type="text" placeholder="vd. 120-BC/VPTU" style="height:38px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;"></label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#5B6270;width:170px;">Ngày văn bản<input type="date" style="height:38px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;"></label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:#5B6270;width:170px;">Cấp nhận<select style="height:38px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;background:#fff;"><option>Trưởng phòng</option></select></label>
+        <button type="button" class="act p" style="height:38px;margin-top:16px;">Nộp minh chứng</button>
+      </div>
+      <div style="display:flex;gap:8px;padding-left:34px;"><button type="button" class="act">Cập nhật tiến độ</button><button type="button" class="act">Xem diễn biến</button><span class="mut" style="font-size:12px;align-self:center;">Chánh VP đôn đốc 19/9: báo cáo tiến độ trước 12h · <a href="05-a3-viec-cua-toi.html">Phản hồi</a></span></div>
+    </div>
+    <div class="row"><span class="stt" style="background:#B8860B;"></span><span class="ma">NV-219</span><span style="flex:1;display:flex;flex-direction:column;gap:4px;"><span style="font-weight:600;">Rà soát danh sách cán bộ quy hoạch nhiệm kỳ 2025–2030</span><span class="mut" style="font-size:12px;">Hạn 23/9 · sản phẩm: Danh sách</span></span><span style="display:flex;gap:6px;"><span class="tag y">Sắp đến hạn</span></span><span style="width:110px;text-align:right;font-weight:600;color:#B8860B;">còn 2 ngày</span><span style="display:flex;gap:6px;"><button type="button" class="act ">Cập nhật tiến độ</button><button type="button" class="act ">Nộp minh chứng</button></span></div>
+    <div class="sec" style="padding-top:18px;">Đang thực hiện, còn thời gian (2)</div>
+    <div class="row"><span class="stt" style="background:#1B7A43;"></span><span class="ma">NV-217</span><span style="flex:1;display:flex;flex-direction:column;gap:4px;"><span style="font-weight:600;">Chuẩn bị tài liệu hội nghị giao ban tháng 10</span><span class="mut" style="font-size:12px;">Hạn 10/10</span></span><span style="display:flex;gap:6px;"><span class="tag ">Thường</span></span><span style="width:110px;text-align:right;font-weight:600;color:#1B7A43;">còn 19 ngày</span><span style="display:flex;gap:6px;"><button type="button" class="act ">Cập nhật</button><button type="button" class="act ">Xem</button></span></div><div class="row"><span class="stt" style="background:#1B7A43;"></span><span class="ma">NV-222</span><span style="flex:1;display:flex;flex-direction:column;gap:4px;"><span style="font-weight:600;">Tổng hợp kiến nghị cử tri sau kỳ họp HĐND</span><span class="mut" style="font-size:12px;">Chờ Phó Chánh VP xác nhận</span></span><span style="display:flex;gap:6px;"><span class="tag g">Đã có minh chứng</span></span><span style="width:110px;text-align:right;font-weight:600;color:#1B7A43;">còn 29 ngày</span><span style="display:flex;gap:6px;"><button type="button" class="act ">Xem</button></span></div>
+  </div>
+  <div class="card lft" style="width:340px;display:flex;flex-direction:column;">
+    <div class="sec">Tuần này của tôi</div>
+    <div style="padding:0 16px 14px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="width:44px;text-align:center;font-weight:700;color:#1F3A5F;">T2</span><span style="flex:1;padding:8px 10px;border-radius:8px;background:#FBE9EA;">NV-218 · hạn đã qua, nộp sớm</span></div><div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="width:44px;text-align:center;font-weight:700;color:#1F3A5F;">T3</span><span style="flex:1;padding:8px 10px;border-radius:8px;background:#EEF1F6;">NV-406 · xác nhận nhận việc</span></div><div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="width:44px;text-align:center;font-weight:700;color:#1F3A5F;">T4</span><span style="flex:1;padding:8px 10px;border-radius:8px;background:#FFF3D6;">NV-219 · hạn 23/9</span></div><div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="width:44px;text-align:center;font-weight:700;color:#1F3A5F;">T5</span><span style="flex:1;padding:8px 10px;border-radius:8px;background:#F6F4EF;">—</span></div><div style="display:flex;gap:10px;align-items:center;font-size:13px;"><span style="width:44px;text-align:center;font-weight:700;color:#1F3A5F;">T6</span><span style="flex:1;padding:8px 10px;border-radius:8px;background:#F6F4EF;">Giao ban phòng</span></div>
+    </div>
+    <div class="sec">Hướng dẫn nhanh</div>
+    <div class="mut" style="padding:0 16px 16px;font-size:12px;line-height:1.6;">Việc hoàn thành khi có minh chứng hợp lệ: số hiệu, ngày văn bản, cấp nhận. Sau khi nộp, lãnh đạo xác nhận thì việc mới đóng.</div>
+  </div>
+</div>
+
+</main>
+</div>
+</div>
+
+</body>
+</html>

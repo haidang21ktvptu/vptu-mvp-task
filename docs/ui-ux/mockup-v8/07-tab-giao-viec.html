@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Tab Giao việc</title>
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap">
+<style>
+body{margin:0;font-family:'Be Vietnam Pro',system-ui,sans-serif;background:#F6F4EF;color:#1B1B1B}
+a{color:#B3121B}a:hover{color:#7A0C12}
+.h{font-family:Lora,serif;font-weight:700}
+.mut{color:#5B6270}
+.top{position:relative;height:72px;background:#1F3A5F;color:#fff;overflow:hidden}
+.top img.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.22;filter:saturate(.6)}
+.top .tint{position:absolute;inset:0;background:linear-gradient(90deg,rgba(31,58,95,.95) 0%,rgba(31,58,95,.7) 45%,rgba(122,12,18,.8) 100%)}
+.top .karst{position:absolute;right:0;bottom:0;height:72px;width:760px}
+.top .in{position:relative;height:72px;display:flex;align-items:center;gap:16px;padding:0 24px;box-sizing:border-box}
+.top .ib{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;border:0;color:#fff;cursor:pointer}
+.side{width:236px;background:#fff;border-right:1px solid #E3DED4;display:flex;flex-direction:column;padding:16px 12px;box-sizing:border-box;gap:4px}
+.side .g{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8A8F99;padding:14px 12px 6px}
+.side a{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px;border-radius:8px;text-decoration:none;color:#1B1B1B;font-size:14px;font-weight:500}
+.side a.on{background:#FBE9EA;color:#B3121B;font-weight:700}
+.side a .n{margin-left:auto;min-width:22px;height:22px;border-radius:11px;background:#B3121B;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 7px;box-sizing:border-box}
+.side a .n.nv{background:#1F3A5F}
+.side svg{width:18px;height:18px;flex:none}
+.main{flex:1;padding:24px 28px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;overflow:hidden}
+.card{background:#fff;border:1px solid #E3DED4;border-radius:12px;box-sizing:border-box}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi .card{padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.kpi .v{font-family:Lora,serif;font-size:34px;font-weight:700;line-height:1}
+.kpi .l{font-size:13px;font-weight:600;color:#1F3A5F}
+.kpi .s{font-size:12px;color:#5B6270}
+.now{display:flex;align-items:center;gap:12px;background:#FFF8E6;border:1px solid #F1D98A;border-radius:12px;padding:12px 16px}
+.now b{color:#7A0C12;font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:16px;background:#fff;border:1px solid #E3DED4;font-size:13px;font-weight:600;color:#1B1B1B}
+.pill.on{background:#1F3A5F;color:#fff;border-color:#1F3A5F}
+.pill .n{color:#B3121B;font-weight:800}
+.row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-top:1px solid #EEEAE2;font-size:13px}
+.row:first-child{border-top:0}
+.ma{font-weight:700;color:#1F3A5F;width:64px;flex:none}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;background:#EEF1F6;color:#1F3A5F}
+.tag.r{background:#FBE9EA;color:#B3121B}.tag.y{background:#FFF3D6;color:#8A5A00}.tag.g{background:#E6F4EA;color:#1B7A43}
+.act{display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:8px;border:1px solid #C9C4B9;background:#fff;font-size:13px;font-weight:600;font-family:inherit;color:#1B1B1B;cursor:pointer}
+.act.p{background:#B3121B;border-color:#B3121B;color:#fff}.act.s{background:#1F3A5F;border-color:#1F3A5F;color:#fff}
+.stt{width:8px;height:8px;border-radius:4px;flex:none}
+.ttl{display:flex;align-items:baseline;gap:14px}
+.ttl .h{font-size:24px;color:#1F3A5F}
+.sec{font-size:15px;font-weight:700;color:#1F3A5F;padding:14px 16px 10px}
+.ins{display:flex;gap:16px;align-items:stretch}
+.lft{width:300px;flex:none}
+</style>
+
+<div style="width: 1440px; height: 1000px; display: flex; flex-direction: column; background: #F6F4EF; overflow: hidden;">
+
+<div class="top">
+  <img class="ph" src="assets/ban-gioc.jpg" alt="">
+  <div class="tint"></div>
+  <svg class="karst" viewBox="0 0 760 72" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 62 L70 34 L120 52 L190 22 L250 48 L320 18 L380 44 L450 26 L520 50 L590 24 L660 46 L720 30 L760 44 L760 72 L0 72 Z" fill="rgba(255,255,255,.08)"></path>
+    <path d="M0 68 L100 56 L200 64 L300 52 L400 62 L500 50 L600 60 L700 52 L760 58 L760 72 L0 72 Z" fill="rgba(232,185,35,.35)"></path>
+  </svg>
+  <div class="in">
+    <img src="assets/logo-cao-bang.png" alt="Biểu trưng Cao Bằng" style="width: 52px; height: 40px; object-fit: contain; background: #fff; border-radius: 8px; padding: 4px; box-sizing: border-box;">
+    <div style="display: flex; flex-direction: column;">
+      <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .85;">Văn phòng Tỉnh ủy Cao Bằng</div>
+      <div class="h" style="font-size: 15px; letter-spacing: .05em; text-transform: uppercase; line-height: 1.35;">Hệ thống quản trị nhiệm vụ theo kết quả</div>
+    </div>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+      <label style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; background: rgba(255,255,255,.12); border-radius: 10px; width: 280px; box-sizing: border-box;"><span style="width: 18px; height: 18px; display: inline-flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><input type="search" placeholder="Tìm mã việc, nội dung, người…" style="border: 0; background: transparent; color: #fff; font-family: inherit; font-size: 13px; outline: 0; width: 100%;"></label>
+      <button type="button" class="ib" aria-label="Thông báo" style="position: relative;"><span style="width: 18px; height: 18px; display: inline-flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span style="position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; border-radius: 9px; background: #E8B923; color: #1B1B1B; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center;">3</span></button>
+      <div style="display: flex; align-items: center; gap: 10px; padding-left: 8px; border-left: 1px solid rgba(255,255,255,.2);">
+        <div style="width: 36px; height: 36px; border-radius: 18px; background: #E8B923; color: #1B1B1B; font-weight: 800; display: flex; align-items: center; justify-content: center;">C</div>
+        <div style="display: flex; flex-direction: column; line-height: 1.2;"><div style="font-size: 13px; font-weight: 700;">Chánh Văn phòng</div><div style="font-size: 11px; opacity: .85;">Vai A1 · Lãnh đạo Văn phòng</div></div>
+      </div>
+      <button type="button" class="ib" aria-label="Cài đặt"><span style="width: 18px; height: 18px; display: inline-flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span></button>
+    </div>
+  </div>
+</div>
+<div style="display: flex; flex: 1; min-height: 0;">
+<nav class="side">
+<div class="g">Điều hành</div>
+<a href="03-a1-dieu-hanh-hom-nay.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span>Điều hành hôm nay</span></a>
+<a href="07-tab-giao-viec.html" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span>Giao việc</span></a>
+<div class="g">Theo dõi</div>
+<a href="06-tab-nhiem-vu.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Nhiệm vụ</span></a>
+<a href="03-a1-dieu-hanh-hom-nay.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-6-6.9"/></svg><span>Cán bộ thuộc quyền</span></a>
+<a href="03-a1-dieu-hanh-hom-nay.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>Báo cáo</span></a>
+<div class="g">Trao đổi</div>
+<a href="03-a1-dieu-hanh-hom-nay.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Nhắn tin</span><span class="n">2</span></a>
+<div style="margin-top: auto; padding: 12px; font-size: 11px; color: #8A8F99; line-height: 1.5;">Phiên bản v4.0 · Dữ liệu cập nhật 08:15</div></nav>
+<main class="main">
+
+<div class="ttl"><div class="h">Giao việc</div><div class="mut" style="font-size:13px;">Một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ bốn yếu tố bắt buộc</div></div>
+<div class="ins" style="flex:1;min-height:0;">
+  <form class="card" style="flex:1;padding:22px 24px;display:flex;flex-direction:column;gap:22px;overflow:hidden;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;"><span style="width:26px;height:26px;border-radius:13px;background:#1F3A5F;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;">1</span><span style="font-size:15px;font-weight:700;color:#1F3A5F;">Văn bản giao việc</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;"><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 2;">Chọn văn bản có sẵn<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>Kết luận số 118-KL/TU · ban hành 18/8/2026</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Loại văn bản<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>Thông báo của Thường trực</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Số hiệu<input type="text" placeholder="vd. 120-TB/TU" style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 12px;font-family:inherit;font-size:14px;"></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Ngày ban hành<input type="date" style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 12px;font-family:inherit;font-size:14px;"></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Ngày nhận văn bản<input type="date" style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 12px;font-family:inherit;font-size:14px;"></label></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;"><span style="width:26px;height:26px;border-radius:13px;background:#1F3A5F;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;">2</span><span style="font-size:15px;font-weight:700;color:#1F3A5F;">Nội dung và người chịu trách nhiệm</span></div>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;">Nội dung nhiệm vụ<textarea rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…" style="border:1px solid #C9C4B9;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:14px;resize:none;"></textarea></label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Chịu trách nhiệm (Owner)<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>Phòng Tổng hợp</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Người theo dõi — gợi ý theo Owner<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>Hoàng Văn Kiên · Trưởng phòng</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Thay mặt (nếu có)<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>—</option></select></label></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;"><span style="font-weight:600;color:#1F3A5F;margin-right:6px;">Độ khẩn</span><span class="pill">Thường</span><span class="pill on">Khẩn</span><span class="pill">Thượng khẩn</span><span class="pill">Hỏa tốc</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;"><span style="width:26px;height:26px;border-radius:13px;background:#1F3A5F;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;">3</span><span style="font-size:15px;font-weight:700;color:#1F3A5F;">Sản phẩm và hạn</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;"><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Sản phẩm đầu ra<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>Báo cáo</option></select></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Mô tả sản phẩm<input type="text" placeholder="vd. Báo cáo kết quả kiểm tra…" style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 12px;font-family:inherit;font-size:14px;"></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Hạn hoàn thành<input type="date" style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 12px;font-family:inherit;font-size:14px;"></label><label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#1F3A5F;grid-column:span 1;">Cấp nhận sản phẩm — mặc định cấp trên Owner<select style="height:42px;border:1px solid #C9C4B9;border-radius:8px;padding:0 10px;font-family:inherit;font-size:14px;background:#fff;"><option>Phó Chánh Văn phòng</option></select></label></div>
+    </div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:12px;border-top:1px solid #EEEAE2;padding-top:16px;"><span class="mut" style="font-size:12px;">Còn thiếu: hạn hoàn thành</span><button type="button" class="act" style="margin-left:auto;">Huỷ</button><button type="button" class="act p" style="opacity:.5;">Giao việc</button></div>
+  </form>
+  <aside class="card" style="width:340px;flex:none;padding:18px;display:flex;flex-direction:column;gap:14px;">
+    <div style="font-size:14px;font-weight:700;color:#1F3A5F;">Xem trước thẻ việc</div>
+    <div style="border:1px solid #E3DED4;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px;"><div style="display:flex;gap:8px;align-items:center;"><b style="color:#1F3A5F;">NV-mới</b><span class="tag r">Khẩn</span><span class="tag">Thường trực giao</span></div><div style="font-weight:600;">[Nội dung nhiệm vụ]</div><div class="mut" style="font-size:12px;">Phòng Tổng hợp · theo dõi: Hoàng Văn Kiên</div><div class="mut" style="font-size:12px;">Sản phẩm: Báo cáo · hạn: [chưa chọn] · cấp nhận: Phó Chánh VP</div></div>
+    <div style="font-size:13px;font-weight:700;color:#1F3A5F;">Ba bước sau khi giao</div>
+    <div style="display:flex;gap:10px;font-size:12px;line-height:1.5;"><span style="width:22px;height:22px;border-radius:11px;background:#EEF1F6;color:#1F3A5F;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;">1</span><span>Người nhận và người theo dõi mỗi người tự xác nhận đã nhận trong 1 ngày làm việc.</span></div><div style="display:flex;gap:10px;font-size:12px;line-height:1.5;"><span style="width:22px;height:22px;border-radius:11px;background:#EEF1F6;color:#1F3A5F;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;">2</span><span>Việc hiện ở "Cần xử lý ngay" của người nhận; quá 1 ngày chưa nhận, hệ thống nhắc cả cấp trên.</span></div><div style="display:flex;gap:10px;font-size:12px;line-height:1.5;"><span style="width:22px;height:22px;border-radius:11px;background:#EEF1F6;color:#1F3A5F;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;">3</span><span>Hoàn thành khi có minh chứng hợp lệ và cấp nhận sản phẩm xác nhận.</span></div>
+  </aside>
+</div>
+
+</main>
+</div>
+</div>
+
+</body>
+</html>
