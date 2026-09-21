@@ -13,7 +13,8 @@ let rows = []; let loc = '';
 
 function dongHtml(c) {
   const phanHoi = c.trang_thai === 'CHO_PHAN_HOI' ? '' : `<small>Phản hồi: ${escapeHtml(c.phan_hoi || '')} — ${escapeHtml(findAccount(c.phan_hoi_boi)?.full_name || '')}${c.phan_hoi_luc ? `, ${formatDateTime(c.phan_hoi_luc)}` : ''}</small>`;
-  const trangThai = `<span class="${LOP_TT[c.trang_thai] || 'trang-thai'}">${TEN_TRANG_THAI_CHI_DAO[c.trang_thai] || c.trang_thai}${c.qua_han_phan_hoi ? ' · quá hạn' : ''}</span>`;
+  const thayMat = c.trang_thai === 'DA_DONG' && c.dong_boi && c.dong_boi !== c.nguoi_gui ? ` — thay mặt: ${escapeHtml(c.dong_boi_ten || findAccount(c.dong_boi)?.full_name || '')}` : ''; // 0047: thư ký đóng
+  const trangThai = `<span class="${LOP_TT[c.trang_thai] || 'trang-thai'}">${TEN_TRANG_THAI_CHI_DAO[c.trang_thai] || c.trang_thai}${thayMat}${c.qua_han_phan_hoi ? ' · quá hạn' : ''}</span>`;
   const nut = `<span class="hanh-dong" style="margin:0"><button type="button" class="nut nho" data-action="moChiDaoViec" data-id="${c.nhiem_vu_id}" data-ma="${escapeHtml(c.ma)}">Mở việc</button>
     ${c.trang_thai !== 'DA_DONG' ? `<button type="button" class="nut nho" data-action="dongChiDaoDaGui" data-id="${c.id}">Đóng</button>` : ''}</span>`;
   return `<div id="cdg-${c.id}" data-trang-thai="${c.trang_thai}"><p><b>${escapeHtml(c.ma)}</b> ${escapeHtml(c.noi_dung)}

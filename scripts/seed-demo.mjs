@@ -52,6 +52,7 @@ const TAI_KHOAN = [
   [15, 'demo_e2e_tp', 'Demo E2E Trưởng phòng RT', 'A2', 'Trưởng phòng', null, 'E2E_RT', false, false, false],
   [16, 'demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'Chuyên viên', null, 'E2E_RT', false, false, false],
   [17, 'demo_e2e_cv2', 'Demo E2E Chuyên viên GL', 'A3', 'Chuyên viên', null, 'E2E_RT', false, false, false], // giao lại đổi chủ trì (0045): chủ trì mới cùng phòng E2E_RT
+  [18, 'demo_e2e_tk', 'Demo E2E Thư ký TT', 'A3', 'Chuyên viên', null, 'TONG_HOP', false, false, false], // thư ký Thường trực (0047): spec cấp cờ lúc chạy, thu lại khi xong
 ];
 const PHU_TRACH = [[2, 'TONG_HOP'], [6, 'QUAN_TRI']];
 

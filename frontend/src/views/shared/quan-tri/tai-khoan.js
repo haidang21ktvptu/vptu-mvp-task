@@ -18,10 +18,12 @@ function taiKhoanRowHtml(a) {
   const search = `${a.full_name} ${a.username}`.toLowerCase();
   const kl = a.quan_tri_kl ? `<span class="trang-thai tt-xong">Có quyền${a.quan_tri_kl_het_han ? ` đến ${a.quan_tri_kl_het_han.split('-').reverse().join('/')}` : ''}</span>` : '<span class="trang-thai tt-xam">Không</span>';
   const ht = a.quan_tri_he_thong ? '<span class="trang-thai tt-cho">Quản trị hệ thống</span>' : '';
+  const tk = a.thu_ky_thuong_truc ? '<span class="trang-thai tt-xong nhan-thu-ky-tt">Thư ký Thường trực</span>' : ''; // 0047: đóng chỉ đạo TT thay mặt
   const khoa = a.bi_khoa ? '<span class="trang-thai tt-qua">Đã khoá</span>' : '';
   const btnKl = `<button type="button" class="nut nho ${a.quan_tri_kl ? 'chinh' : ''}" data-action="toggleQuanTriKl" data-username="${escapeHtml(a.username)}" data-bat="${a.quan_tri_kl ? '0' : '1'}"
       aria-label="${a.quan_tri_kl ? 'Thu' : 'Cấp'} quyền quản trị KL của ${escapeHtml(a.full_name)}">${a.quan_tri_kl ? 'Thu quyền' : 'Cấp quyền'}</button>`;
   const btnHt = me ? '' : nut(a.quan_tri_he_thong ? 'Thu QTHT' : 'Cấp QTHT', 'toggleQuanTriHeThong', a, `data-bat="${a.quan_tri_he_thong ? '0' : '1'}"`);
+  const btnTk = a.role_group === 'A0' ? '' : nut(a.thu_ky_thuong_truc ? 'Thu thư ký TT' : 'Cấp thư ký TT', 'toggleThuKyTT', a, `data-bat="${a.thu_ky_thuong_truc ? '0' : '1'}"`);
   const btnKhoa = me || a.quan_tri_he_thong ? '' : nut(a.bi_khoa ? 'Mở khoá' : 'Khoá', 'khoaTaiKhoan', a, `data-bat="${a.bi_khoa ? '0' : '1'}"`);
   return `
     <tr data-search="${escapeHtml(search)}">
@@ -29,8 +31,8 @@ function taiKhoanRowHtml(a) {
       <td data-nhan="Phòng">${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</td>
       <td data-nhan="Vai trò">${escapeHtml(ROLE_LABELS[a.role_group] || a.role_group)}</td>
       <td data-nhan="Quản trị KL BTVTU">${kl}</td>
-      <td data-nhan="Hệ thống">${ht}${khoa}</td>
-      <td><div class="thao-tac">${btnKl}${btnHt}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
+      <td data-nhan="Hệ thống">${ht}${tk}${khoa}</td>
+      <td><div class="thao-tac">${btnKl}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
     </tr>`;
 }
 
@@ -91,6 +93,23 @@ export async function toggleQuanTriKl({ username, bat }, onDone) {
   const { error } = await supabase.rpc('admin_dat_co', { p_username: username, p_co: 'quan_tri_kl', p_bat: turnOn, p_ly_do: answer.lyDo });
   if (error) { notifyError('Không thực hiện được: ' + error.message); return; }
   notifySuccess(`${turnOn ? 'Đã cấp' : 'Đã thu'} quyền quản trị KL BTVTU ${turnOn ? 'cho' : 'của'} ${acc.full_name}.`);
+  await onDone();
+}
+
+// Cờ thư ký Thường trực (0047): cùng hàm admin_dat_co (chỉ quan_tri_he_thong; lý do bắt buộc; quyen_lich_su + nhat_ky_he_thong).
+export async function toggleThuKyTT({ username, bat }, onDone) {
+  const acc = state.accounts.find((a) => a.username === username);
+  if (!acc) return;
+  const turnOn = bat === '1';
+  const answer = await askLyDo({
+    title: turnOn ? 'Cấp quyền thư ký Thường trực' : 'Thu quyền thư ký Thường trực',
+    moTa: `${turnOn ? 'Cấp cho' : 'Thu của'} ${acc.full_name} (${username}). Thư ký ${turnOn ? 'sẽ' : 'sẽ không còn'} xem việc có chỉ đạo Thường trực và đóng chỉ đạo Thường trực thay mặt; không gửi chỉ đạo, không ghi gì khác.`,
+    nhanXacNhan: turnOn ? 'Cấp quyền' : 'Thu quyền',
+  });
+  if (!answer) return;
+  const { error } = await supabase.rpc('admin_dat_co', { p_username: username, p_co: 'thu_ky_thuong_truc', p_bat: turnOn, p_ly_do: answer.lyDo });
+  if (error) { notifyError('Không thực hiện được: ' + error.message); return; }
+  notifySuccess(`${turnOn ? 'Đã cấp' : 'Đã thu'} quyền thư ký Thường trực ${turnOn ? 'cho' : 'của'} ${acc.full_name}.`);
   await onDone();
 }
 
