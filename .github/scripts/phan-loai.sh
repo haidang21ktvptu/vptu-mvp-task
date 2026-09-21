@@ -2,12 +2,15 @@
 # Phân loại thay đổi cho CI/CD (ci.yml và deploy-staging.yml cùng gọi) — MỘT nơi khai báo mẫu "không ảnh hưởng app".
 #   khong_anh_huong_app=true  ⇔ đọc được ĐỦ danh sách file, có ít nhất một file, và MỌI file khớp KHONG_ANH_HUONG.
 #   Mọi trường hợp khác (PR rỗng, API lỗi, lấy không đủ danh sách, push đầu tiên) → false = chạy đủ.
+#   cham_rls=true ⇔ có file khớp CHAM_RLS (supabase/** hoặc tests/rls/**) — hoặc không đọc được danh sách (an toàn: chạy). Chỉ deploy-staging
+#   dùng để quyết định chạy job RLS token thật trên staging; KHÔNG đổi nghĩa/cách tính khong_anh_huong_app.
 # Sửa chính file này, ci.yml hay deploy-*.yml đều không khớp mẫu → tự chạy đủ. Không có ngoại lệ theo tên nhánh (PR release chỉ tài liệu
 # cũng bỏ qua: job kiem-tra của deploy-prod chấp nhận job rỗng cùng tên, v3.6.0/v3.6.1 đã chứng minh).
 # Biến vào: GH_TOKEN, REPO, EVENT (pull_request | push), SO_PR (PR), BEFORE + SHA (push). Ghi GITHUB_OUTPUT và GITHUB_STEP_SUMMARY.
 set -u
 KHONG_ANH_HUONG='^docs/|\.md$|^\.github/workflows/(backup-dinh-ky|canh-bao)\.yml$'
-KQ=false; LY_DO=''; FILES=''
+CHAM_RLS='^supabase/|^tests/rls/'
+KQ=false; LY_DO=''; FILES=''; RLS=true
 
 lay_files_pr() {
   local mong_doi
@@ -29,10 +32,13 @@ if [ "${EVENT:-}" = pull_request ]; then lay_files_pr; else lay_files_push; fi
 if [ -z "$LY_DO" ]; then
   NGOAI=$(printf '%s\n' "$FILES" | grep -v -E "$KHONG_ANH_HUONG" || true)
   if [ -z "$NGOAI" ]; then KQ=true; LY_DO='mọi file đổi đều không ảnh hưởng app'; else LY_DO="có file ảnh hưởng app"; fi
+  if printf '%s
+' "$FILES" | grep -q -E "$CHAM_RLS"; then RLS=true; else RLS=false; fi
 fi
 echo "khong_anh_huong_app=$KQ" >> "${GITHUB_OUTPUT:-/dev/null}"
+echo "cham_rls=$RLS" >> "${GITHUB_OUTPUT:-/dev/null}"
 {
-  echo "### Phân loại thay đổi: khong_anh_huong_app=**$KQ** — $LY_DO"
+  echo "### Phân loại thay đổi: khong_anh_huong_app=**$KQ** — $LY_DO · cham_rls=**$RLS**"
   echo '```'; printf '%s\n' "${FILES:-(không đọc được danh sách file)}"; echo '```'
   [ -n "${NGOAI:-}" ] && { echo 'File ảnh hưởng app:'; echo '```'; printf '%s\n' "$NGOAI"; echo '```'; }
 } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"

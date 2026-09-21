@@ -53,6 +53,7 @@ jobs:
       contents: read
     outputs:
       khong_anh_huong_app: ${{ steps.xet.outputs.khong_anh_huong_app }}
+      cham_rls: ${{ steps.xet.outputs.cham_rls }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -104,10 +105,15 @@ jobs:
   # RLS bằng token thật trên staging (7 lượt đăng nhập, dưới giới hạn 30 lượt/5 phút/IP), sau khi migration
   # đã áp. Chạy song song với build; không chặn deploy. Cùng nhóm concurrency với job e2e của ci.yml để không
   # ghi dữ liệu mẫu lên staging cùng lúc với một PR đang kiểm thử.
+  # Từ v8 đợt 3 (docs/KIEM-THU.md): CHỈ chạy khi push chạm supabase/** hoặc tests/rls/** (output cham_rls của phan-loai.sh) — RLS của mọi PR đã
+  # chạy đủ trên Supabase cục bộ trong ci.yml; staging quá tải làm job này đỏ hàng loạt (17 phút mới hỏng) che lỗi thật. Giới hạn 8 phút; bước
+  # test continue-on-error nên job/run không đỏ, nhưng lỗi ghi rõ vào Step Summary + cảnh báo.
   kiem-thu-rls:
     name: Test RLS trên staging (token thật)
-    needs: migration
+    needs: [migration, phan-loai]
+    if: ${{ !cancelled() && needs.migration.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.phan-loai.outputs.cham_rls == 'true') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # bước test giới hạn 8 phút (quá giờ → outcome failure → bước cảnh báo vẫn chạy)
     concurrency:
       group: kiem-thu-staging
       cancel-in-progress: false
@@ -120,6 +126,9 @@ jobs:
           cache-dependency-path: tests/rls/package-lock.json
       # env ở cấp bước để dùng được STAGING_URL của workflow (cấp job không đọc được context `env`).
       - name: Test RLS (token thật, 7 tài khoản seed)
+        id: rls
+        continue-on-error: true
+        timeout-minutes: 8
         working-directory: tests/rls
         env:
           SUPABASE_URL: ${{ env.STAGING_URL }}
@@ -131,6 +140,11 @@ jobs:
             exit 1
           fi
           npm ci && npm test
+      - name: Ghi cảnh báo khi RLS staging lỗi (không chặn deploy)
+        if: steps.rls.outcome != 'success'
+        run: |
+          echo "::warning::RLS staging lỗi hoặc quá 8 phút — không chặn deploy, xem log job 'Test RLS trên staging (token thật)'."
+          echo "### ⚠️ RLS staging lỗi — không chặn deploy, xem log job này (outcome: ${{ steps.rls.outcome }})" >> "$GITHUB_STEP_SUMMARY"
 
   build:
     name: Build hai bản frontend

@@ -28,14 +28,14 @@ export function sanPhamThieu(r) {
 export function vongHtml(r) {
   const tt = ttCuaViec(r.id).sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0];
   if (!tt) {
-    const cho = r.so_chi_dao_cho_phan_hoi > 0 ? `<i>·</i><span>${r.so_chi_dao_cho_phan_hoi} chỉ đạo điều hành chờ phản hồi</span>` : '';
-    return `<div class="vong"><em>${laA0() ? 'Chưa chỉ đạo' : 'Thường trực chưa chỉ đạo'}</em>${cho}</div>`;
+    const cho = r.so_chi_dao_cho_phan_hoi > 0 ? `<em class="dang">${r.so_chi_dao_cho_phan_hoi} chỉ đạo điều hành chờ phản hồi</em>` : '';
+    return `<span class="vong"><em>${laA0() ? 'Chưa chỉ đạo' : 'Thường trực chưa chỉ đạo'}</em>${cho}</span>`;
   }
   const buoc2 = tt.trang_thai === 'CHO_PHAN_HOI'
     ? `<em class="${tt.qua_han_phan_hoi ? 'qua' : 'dang'}">Văn phòng chưa trả lời, hạn ${formatNgay(tt.han_phan_hoi)}${tt.qua_han_phan_hoi ? ' (quá hạn)' : ''}</em>`
     : '<em class="xong">Đã phản hồi</em>';
   const buoc3 = tt.trang_thai === 'DA_DONG' ? '<em class="xong">Đã đóng</em>' : '<em>Đóng khi xong</em>';
-  return `<div class="vong"><em class="xong">Đã gửi ${formatNgay(homNayVN(new Date(tt.created_at)))}</em><i>→</i>${buoc2}<i>→</i>${buoc3}</div>`;
+  return `<span class="vong"><em class="xong">Đã gửi ${formatNgay(homNayVN(new Date(tt.created_at)))}</em><i>→</i>${buoc2}<i>→</i>${buoc3}</span>`;
 }
 
 // Ô một dòng dưới thẻ: A0 gửi chỉ đạo Thường trực (người nhận, hạn tự tính); A1/A2 đôn đốc (DON_DOC, người liên quan nhận tin).
@@ -94,12 +94,11 @@ export function theHtml(r) {
   const nutChinh = laA0() ? (daCo ? 'Chỉ đạo thêm' : 'Chỉ đạo') : 'Đôn đốc';
   return `<article class="the hang ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
       <div class="the-dau"><span class="stt ${cham}"></span><span class="ma">${escapeHtml(r.ma)}</span>
-        <div class="ten"><b>${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''} ${nhanTC}</b>
-          <span>${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}${theoDoi}</span></div>
+        <div class="ten"><b><span class="nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}</span> <span class="nhan-cum">${nhanTC}${vongHtml(r)}</span></b>
+          <span title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}${theoDoi}</span></div>
         ${tre}
         <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
           <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div></div>
-      ${vongHtml(r)}
       ${nutGiaoLai ? oGiaoLaiHtml(r) : ''}${oHtml(r)}
     </article>`;
 }

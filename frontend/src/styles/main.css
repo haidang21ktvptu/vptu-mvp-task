@@ -1,4 +1,4 @@
-/* Điểm vào CSS (v8 đợt 2): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
+/* Điểm vào CSS (v8 đợt 3): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
@@ -14,6 +14,7 @@
 @import './gd22.css';
 @import './gd23.css';
 @import './v8-hang.css';
+@import './nhiem-vu-v8.css';
 @import './in.css';
 
 @tailwind base;

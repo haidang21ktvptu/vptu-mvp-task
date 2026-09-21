@@ -64,3 +64,10 @@ Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một c
 `ci.yml` có `concurrency` theo nhánh PR (`cancel-in-progress` cho pull_request: push mới huỷ lượt cũ đang chạy; push `main` mỗi sha một nhóm, không huỷ). `deploy-prod.yml` không đổi.
 
 **Phát hành trước go-live — không cần backup tay**: `deploy-prod.yml` đã `pg_dump` (mã hoá, artifact 90 ngày) ngay trước `db push` production và ghi mốc backup; *Backup định kỳ production* vẫn giữ lịch 3 ngày/lần; bản local (`scripts/backup-db.sh`) chỉ chạy khi muốn có bản ngoài GitHub, không phải bước bắt buộc của quy trình tag.
+
+## RLS token thật trên staging (deploy-staging.yml) — từ v8 đợt 3
+
+- Job "Test RLS trên staging (token thật)" **chỉ chạy** khi push lên `main` chạm `supabase/**` hoặc `tests/rls/**` (output `cham_rls` của `.github/scripts/phan-loai.sh`, dùng chung với `ci.yml`; `workflow_dispatch` luôn chạy). PR chỉ frontend/tests e2e/docs không chạy job này.
+- Lý do: RLS của mọi PR đã chạy **đủ** trên Supabase cục bộ ở job "Áp migration + lint schema" của `ci.yml`; staging là instance nhỏ, quá tải làm job token thật đỏ ở mọi lần merge gần đây (lần cuối 17 phút 16 giây mới hỏng) — vừa tốn máy chạy vừa che lỗi thật.
+- `timeout-minutes: 8`; bước test `continue-on-error: true` nên job và cả lượt deploy staging **không đỏ** vì RLS; khi lỗi/quá giờ, một dòng cảnh báo được ghi vào Step Summary của job ("⚠️ RLS staging lỗi — không chặn deploy, xem log") và annotation `::warning` — vẫn nhìn thấy trên trang run.
+- `khong_anh_huong_app` giữ nguyên nghĩa và cách tính (đã kiểm lại với PR #83 → true, #85 → false + cham_rls=true, #88 → false + cham_rls=false).

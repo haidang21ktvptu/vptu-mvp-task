@@ -12,6 +12,7 @@
   .tam-dau span, .tam-dau p { font-size: 12px; color: var(--chu-phu); font-weight: 400; }
   .tam-dau .phai-dau { margin-left: auto; }
   .tam.vien-vang { border-color: #F1D98A; }
+  .tam.mong .tam-dau { padding: 10px 16px; } .tam.mong .dan, .tam.mong > div:not(.tam-dau) { display: none; } /* khối rỗng thu thành một dòng */
   .tam .trong, .tam .dan { border: 0; padding: 4px 16px 16px; text-align: left; font-size: 13px; }
   .tam > .muc:first-child, .tam-dau + .muc { border-top: 0; }
   .tam .them { padding: 12px 16px; border-top: 1px solid var(--vien-nhat); font-size: 14px; }
@@ -20,7 +21,7 @@
 
   /* Chấm trạng thái, mã, nhãn, hạn */
   .stt { width: 8px; height: 8px; border-radius: 4px; flex: none; background: var(--navy); }
-  .stt.do { background: var(--do); } .stt.dac-biet { background: var(--do-dam); } .stt.vang { background: var(--vang-chu); } .stt.luc { background: var(--luc); } .stt.cam { background: var(--cam); }
+  .stt.lam { background: var(--lam); } .stt.do { background: var(--do); } .stt.dac-biet { background: var(--do-dam); } .stt.vang { background: var(--vang-chu); } .stt.luc { background: var(--luc); } .stt.cam { background: var(--cam); }
   .ma { font-weight: 700; color: var(--navy); flex: none; min-width: 64px; }
   .han { flex: none; min-width: 96px; text-align: right; font-weight: 600; font-size: 13px; color: var(--navy); }
   .han.do { color: var(--do); } .han.vang { color: var(--vang-chu); } .han.luc { color: var(--luc); }
@@ -30,14 +31,18 @@
   .the.hang:first-child { border-top: 0; }
   .the.hang .the-dau { display: flex; align-items: center; gap: 12px; }
   .the.hang .ten { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .the.hang .ten b { display: block; font-size: 13px; font-weight: 600; line-height: 1.4; }
-  .the.hang .ten > span { display: block; font-size: 12px; color: var(--chu-phu); max-width: none; line-height: 1.45; }
+  .the.hang .ten b { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; line-height: 1.4; white-space: nowrap; min-width: 0; } /* một dòng: nội dung co (…) trước, nhãn luôn thấy */
+  .the.hang .ten b .nd { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .the.hang .ten b .nhan-cum { flex: none; display: inline; white-space: nowrap; } /* nhãn nằm trong span inline → .dk/.vong/.tag giữ inline-flex (flex item trực tiếp bị đổi thành flex) */
+  .the.hang .ten > span { display: block; font-size: 12px; color: var(--chu-phu); max-width: none; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* một dòng, tooltip đủ */
   .the.hang .khau { font-size: 12px; padding: 1px 6px; }
   .the.hang .tre { flex: none; min-width: 64px; font-family: var(--font-tieu-de); font-size: 22px; font-weight: 700; color: var(--do); text-align: right; line-height: 1; }
   .the.hang .tre.cam { color: var(--cam); }
   .the.hang .tre small { display: block; font-size: 11px; font-weight: 500; color: var(--chu-phu); font-family: var(--font-sans); }
   .the.hang .hanh-dong { margin: 0; flex: none; gap: 6px; }
-  .the.hang .vong { margin: 6px 0 0 20px; }
+  .the.hang .ten b { overflow: hidden; }
+  .the.hang .vong { display: inline-flex; flex: none; flex-wrap: nowrap; gap: 4px; margin: 0 0 0 4px; font-size: 11px; vertical-align: 2px; } /* nhãn vòng khép kín cùng hàng với nhãn độ khẩn, không xuống dòng */
+  .the.hang .vong em { padding: 1px 7px; font-size: 11px; } .the.hang .vong i { display: none; }
   .the.hang .o { margin-top: 8px; } .the.hang .db-khoi { margin-top: 10px; }
 
   /* .muc = khối trong tấm (tiêu đề Lora navy), .the-con = hàng có chấm trạng thái theo mức của khối */
@@ -66,7 +71,8 @@
   .tai-nguoi > span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .tai-nguoi > span b { font-weight: 600; } .tai-nguoi > span small { font-size: 11px; color: var(--chu-phu); }
   .tai-nguoi .tai { width: 90px; flex: none; }
   .han-tuan { display: flex; gap: 10px; align-items: center; font-size: 13px; padding: 4px 16px; }
-  .han-tuan b { width: 44px; text-align: center; color: var(--navy); flex: none; }
+  .han-tuan b { width: 56px; text-align: center; color: var(--navy); flex: none; font-size: 12px; } .han-tuan b.do { color: var(--do); }
+  .tai-chua { color: var(--chu-phu); } .tai-chua .av { background: transparent; }
   .han-tuan span { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; background: var(--nen-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .han-tuan span.do { background: var(--do-nhat); } .han-tuan span.vang { background: var(--vang-nhat); }
   .huong-dan { padding: 0 16px 16px; font-size: 12px; line-height: 1.6; color: var(--chu-phu); }

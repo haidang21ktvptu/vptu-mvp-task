@@ -43,14 +43,15 @@ function ve() {
 }
 
 // Cột phụ "Hạn trong 7 ngày tới" (thay "lịch tuần" của mockup 05 — hệ thống chưa có nguồn lịch): việc tôi chủ trì hoặc theo dõi đang mở, hạn từ
-// quá hạn tới 7 ngày tới, tính từ dòng đã tải, không truy vấn thêm. Thứ lấy theo UTC vì han_xu_ly là chuỗi ngày (không lệch theo múi giờ máy); Đỏ = đã quá hạn, Vàng = trong 3 ngày.
+// quá hạn tới 7 ngày tới, tính từ dòng đã tải, không truy vấn thêm; loại việc mà chính tôi đã được duyệt từ chối (đang chờ giao lại). Quá hạn ghi "Quá hạn" thay thứ. Thứ lấy theo UTC vì han_xu_ly là chuỗi ngày (không lệch theo múi giờ máy); Đỏ = đã quá hạn, Vàng = trong 3 ngày.
 const THU = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 function hanTuanHtml() {
   const me = state.user?.id; const homNay = homNayVN();
-  const ds = dh.rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH' && r.han_xu_ly && (r.owner_tai_khoan === me || r.nguoi_theo_doi === me))
+  const daTuChoi = (r) => r.bi_tu_choi && r.tu_choi_moi_nhat?.nguoi_de_nghi === me && r.tu_choi_moi_nhat?.trang_thai === 'DONG_Y'; // tôi đã được duyệt từ chối, chờ giao lại → không còn hạn của tôi
+  const ds = dh.rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH' && r.han_xu_ly && (r.owner_tai_khoan === me || r.nguoi_theo_doi === me) && !daTuChoi(r))
     .map((r) => ({ r, ngay: Math.round((new Date(r.han_xu_ly) - new Date(homNay)) / 864e5) })).filter((x) => x.ngay <= 7).sort((a, b) => a.ngay - b.ngay).slice(0, 8);
   if (!ds.length) return '<p class="trong">Không có hạn nào trong 7 ngày tới.</p>';
-  return ds.map(({ r, ngay }) => `<div class="han-tuan"><b>${THU[new Date(r.han_xu_ly).getUTCDay()]}</b><span class="${ngay < 0 ? 'do' : ngay <= 3 ? 'vang' : ''}" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.ma)} · ${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()}</span></div>`).join('')
+  return ds.map(({ r, ngay }) => `<div class="han-tuan"><b class="${ngay < 0 ? 'do' : ''}">${ngay < 0 ? 'Quá hạn' : THU[new Date(r.han_xu_ly).getUTCDay()]}</b><span class="${ngay < 0 ? 'do' : ngay <= 3 ? 'vang' : ''}" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.ma)} · ${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()}</span></div>`).join('')
     + '<p class="huong-dan" style="padding-top:8px">Theo hạn xử lý của việc đồng chí chủ trì hoặc theo dõi.</p>';
 }
 

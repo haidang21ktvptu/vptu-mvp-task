@@ -32,11 +32,13 @@ function taiViecHtml() {
     return { a, n: ds.length, doN: ds.filter(laDo).length, vangN: ds.filter((r) => r.muc_canh_bao === 'VANG').length };
   }).sort((x, y) => y.n - x.n || x.a.full_name.localeCompare(y.a.full_name, 'vi'));
   if (!dem.length) return '<p class="trong">Phòng chưa có cán bộ nào khác trong danh bạ.</p>';
+  const coViec = dem.filter((d) => d.n > 0); const chua = dem.length - coViec.length; // v8 đợt 3: chỉ hiện người có việc, gom người 0 việc
   const max = Math.max(1, ...dem.map((d) => d.n));
   const pc = (n) => `${Math.round((n / max) * 100)}%`;
-  return dem.map(({ a, n, doN, vangN }) => `<div class="tai-nguoi" data-cb="${a.id}"><span class="av">${escapeHtml((a.full_name.trim().split(/\s+/).pop() || '?').charAt(0).toUpperCase())}</span>
+  const dongChua = chua ? `<div class="tai-nguoi tai-chua"><span class="av">–</span><span><small>${coViec.length ? 'và ' : ''}${chua} cán bộ chưa có việc đang mở</small></span></div>` : '';
+  return coViec.map(({ a, n, doN, vangN }) => `<div class="tai-nguoi" data-cb="${a.id}"><span class="av">${escapeHtml((a.full_name.trim().split(/\s+/).pop() || '?').charAt(0).toUpperCase())}</span>
       <span><b>${escapeHtml(a.full_name)}</b><small>${n} việc${doN ? ` · ${doN} Đỏ` : ''}${vangN ? ` · ${vangN} Vàng` : ''}</small></span>
-      <span class="tai"><span class="t-do" style="width:${pc(doN)}"></span><span class="t-vang" style="width:${pc(vangN)}"></span><span class="t-lam" style="width:${pc(n - doN - vangN)}"></span></span></div>`).join('');
+      <span class="tai"><span class="t-do" style="width:${pc(doN)}"></span><span class="t-vang" style="width:${pc(vangN)}"></span><span class="t-lam" style="width:${pc(n - doN - vangN)}"></span></span></div>`).join('') + dongChua;
 }
 
 // Việc do chính Trưởng phòng chủ trì, đang mở, hạn gần nhất trước.
