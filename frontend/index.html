@@ -38,7 +38,7 @@
     <footer class="dn-chan"><span>Hỗ trợ kỹ thuật: Phòng Chuyển đổi số – Cơ yếu, Văn phòng Tỉnh ủy</span></footer>
   </section>
 
-  <!-- ================= ĐẶT MẬT KHẨU MỚI (trang chặn toàn màn hình khi accounts.must_change_password — AUTH-2; mở lại từ bánh răng để đổi tự nguyện) ================= -->
+  <!-- ================= ĐẶT MẬT KHẨU MỚI (trang chặn toàn màn hình khi accounts.must_change_password — AUTH-2; mở lại từ bánh răng để đổi tự nguyện). Lối ra duy nhất khi bị chặn: Đăng xuất (không đổi mật khẩu, cờ giữ nguyên) ================= -->
   <section id="changePasswordModal" class="trang-chan hidden" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
     <form id="changePasswordForm" class="dn-the modal-bat-buoc" novalidate>
       <img class="logo-lon" src="/brand/bieu-trung.png" width="150" height="96" alt="Biểu trưng tỉnh Cao Bằng" style="height:64px">
@@ -49,6 +49,7 @@
       <div id="changePasswordError" class="loi-inline hidden" role="alert" aria-live="polite"></div>
       <button type="submit" id="changePasswordBtn" class="nut chinh">Lưu mật khẩu và tiếp tục</button>
       <button type="button" id="changePasswordHuy" class="nut hidden" data-action="dongDoiMatKhau" style="width:100%;margin-top:10px">Quay lại</button>
+      <button type="button" id="dmkDangXuatBtn" class="nut dmk-thoat hidden" data-action="dangXuat">Đăng xuất, dùng tài khoản khác</button>
     </form>
   </section>
 
