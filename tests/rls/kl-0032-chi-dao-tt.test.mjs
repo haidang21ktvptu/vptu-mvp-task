@@ -9,7 +9,7 @@ import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
-let fx; const id = {}; let t0; let tt1; let tt2; let tt3; let conId;
+let fx; const id = {}; let tt1; let tt2; let tt3; let conId;
 const assertLoi = (r, label) => assert.ok(r.error, `${label}: phải bị từ chối (22023)`);
 const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, args);
 const them = async (row) => {
@@ -25,20 +25,21 @@ const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/
 const congNgay = (iso, n) => { const d = new Date(`${iso}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const ngayLamViecSau = (iso, n) => { let d = iso; while (n > 0) { d = congNgay(d, 1); if (new Date(`${d}T00:00:00Z`).getUTCDay() % 6 !== 0) n--; } return d; };
 const don = async () => {
+  // Chỉ dọn dấu vết trên nhiệm vụ của test này (không xoá theo mốc thời gian — không chạm dữ liệu của test/người khác).
+  const cua = Object.values(id);
+  if (cua.length) {
+    await db().from('canh_bao').delete().in('nhiem_vu_id', cua);
+    await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
+    await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
+  }
   await db().from('nhiem_vu').delete().in('ma', ['NV-T90', 'NV-T91']);
   await db().from('dm_don_vi').update({ lanh_dao_phu_trach: null }).eq('ma', 'DANG_UY_UBND');
-  if (t0) {
-    await db().from('canh_bao').delete().gte('gui_luc', t0);
-    await db().from('direct_messages').delete().eq('loai', 'he_thong').is('sender_id', null).gte('created_at', t0);
-    await db().from('lich_su').delete().eq('cot', 'canh_bao').gte('luc', t0);
-  }
 };
 
 describe('0032 — chỉ đạo Thường trực: người gửi, người nhận, hạn, phản hồi, chỉ đạo con, đóng, quá hạn', { skip: SKIP }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    t0 = new Date().toISOString();
     await them({ ma: 'NV-T90', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2 });   // phòng Quản trị → PCVP2
     await them({ ma: 'NV-T91', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 });                        // đơn vị ngoài + theo dõi Tổng hợp → PCVP
     await db().from('dm_don_vi').update({ lanh_dao_phu_trach: IDS.pcvp }).eq('ma', 'DANG_UY_UBND');                // trùng PCVP → phải khử trùng
