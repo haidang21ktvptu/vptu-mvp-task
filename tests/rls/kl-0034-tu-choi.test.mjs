@@ -32,12 +32,15 @@ const nv = async (ma) => (await db().from('nhiem_vu').select('bi_tu_choi').eq('i
 const tin = async (nguoi, ma) => (await db().from('direct_messages').select('content').eq('receiver_id', nguoi).eq('loai', 'he_thong').eq('nhiem_vu_id', id[ma]).gte('created_at', t0)).data;
 const docTuChoi = async (username, tcId) => (await userClient(username)).from('tu_choi').select('id, ly_do').eq('id', tcId);
 const don = async () => {
-  await db().from('nhiem_vu').delete().in('ma', ['NV-T92', 'NV-T93', 'NV-T94', 'NV-T95', 'NV-T96', 'NV-T97']);
-  if (t0) {
-    await db().from('canh_bao').delete().gte('gui_luc', t0);
-    await db().from('direct_messages').delete().gte('created_at', t0).or('loai.eq.he_thong,content.like.KL-0034%');
-    await db().from('lich_su').delete().eq('cot', 'canh_bao').gte('luc', t0);
+  // Chỉ dọn dấu vết trên nhiệm vụ của test này (không xoá theo mốc thời gian — không chạm dữ liệu của test/người khác). Tin 1-1 của A0 lọc theo khoá KL-0034 trong nội dung.
+  const cua = Object.values(id);
+  if (cua.length) {
+    await db().from('canh_bao').delete().in('nhiem_vu_id', cua);
+    await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
+    await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
   }
+  await db().from('direct_messages').delete().like('content', 'KL-0034%');
+  await db().from('nhiem_vu').delete().in('ma', ['NV-T92', 'NV-T93', 'NV-T94', 'NV-T95', 'NV-T96', 'NV-T97']);
   const cu = (await db().from('accounts').select('id').eq('username', A0B)).data || [];
   for (const a of cu) { await db().from('accounts').delete().eq('id', a.id); await db().auth.admin.deleteUser(a.id); }
 };

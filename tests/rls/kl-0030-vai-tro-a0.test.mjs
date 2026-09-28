@@ -9,7 +9,7 @@ import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const NGAY = '2026-08-20';   // hạn 15/08 → quá 5 ngày → Đỏ đặc biệt (cùng ngày quét với kl-0029 để idempotent)
 const db = () => adminClient();
-let fx; const id = {}; let t0; let mcId; let donDocId; let yKienId;
+let fx; const id = {}; let mcId; let donDocId; let yKienId;
 const them = async (row) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: `KL-0030 ${row.ma}`, loai_thoi_han_ma: 'CO_HAN_CU_THE',
     han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', theo_1400: true, ngay_nhan_van_ban: '2026-08-05', ngay_nhan_uoc_tinh: false, ...row }).select('id').single();
@@ -19,12 +19,14 @@ const a0 = () => userClient('demo_a0');
 const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, args);
 const tinA0 = async (ma) => (await db().from('direct_messages').select('content').eq('receiver_id', IDS.a0).eq('loai', 'he_thong').eq('nhiem_vu_id', id[ma])).data;
 const don = async () => {
-  await db().from('nhiem_vu').delete().in('ma', ['NV-T88', 'NV-T89']);
-  if (t0) {
-    await db().from('canh_bao').delete().gte('gui_luc', t0);
-    await db().from('direct_messages').delete().eq('loai', 'he_thong').is('sender_id', null).gte('created_at', t0);
-    await db().from('lich_su').delete().eq('cot', 'canh_bao').gte('luc', t0);
+  // Chỉ dọn dấu vết trên nhiệm vụ của test này (không xoá theo mốc thời gian — không chạm dữ liệu của test/người khác).
+  const cua = Object.values(id);
+  if (cua.length) {
+    await db().from('canh_bao').delete().in('nhiem_vu_id', cua);
+    await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
+    await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
   }
+  await db().from('nhiem_vu').delete().in('ma', ['NV-T88', 'NV-T89']);
 };
 
 describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN, tin hệ thống tối thiểu', { skip: SKIP }, () => {
@@ -101,7 +103,6 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
   });
 
   test('4. Cảnh báo Đỏ đặc biệt (canh_bao_quet) không gửi A0; A0 đọc được canh_bao', async () => {
-    t0 = new Date().toISOString();
     assertOk(await db().rpc('canh_bao_quet', { p_ngay: NGAY }), 'quét');
     const cb = await db().from('canh_bao').select('muc, nguoi_nhan').eq('nhiem_vu_id', id['NV-T88']).eq('ngay', NGAY).single();
     assertOk(cb, 'canh_bao T88'); assert.equal(cb.data.muc, 'DO_DAC_BIET'); assert.ok(!cb.data.nguoi_nhan.includes(IDS.a0), 'A0 không nhận cảnh báo');

@@ -28,14 +28,16 @@ const nv = async (i) => (await db().from('nhiem_vu').select('*').eq('id', i).sin
 const tin = async (nguoi, i, mau) => (await db().from('direct_messages').select('content').eq('receiver_id', nguoi).eq('loai', 'he_thong').eq('nhiem_vu_id', i).gte('created_at', t0)).data.filter((t) => mau.test(t.content));
 const canhBao = async (muc, i) => (await db().from('canh_bao').select('id, nguoi_nhan, chi_dao_id').eq('muc', muc).eq('nhiem_vu_id', i).gte('gui_luc', t0)).data;
 const don = async () => {
+  // Chỉ dọn dấu vết trên nhiệm vụ của test này (kể cả việc tạo qua giao_viec: lọc theo khoá KL-0035 trong noi_dung) — không xoá theo mốc thời gian.
+  const cua = ((await db().from('nhiem_vu').select('id').like('noi_dung', 'KL-0035%')).data || []).map((r) => r.id);
+  if (cua.length) {
+    await db().from('canh_bao').delete().in('nhiem_vu_id', cua);
+    await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
+    await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
+  }
   await db().from('nhiem_vu').delete().like('noi_dung', 'KL-0035%');
   await db().from('van_ban_giao_viec').delete().eq('tao_boi', IDS.a0).like('so_ket_luan', 'Thường trực giao %');
   await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.qtht);
-  if (t0) {
-    await db().from('canh_bao').delete().gte('gui_luc', t0);
-    await db().from('direct_messages').delete().eq('loai', 'he_thong').gte('created_at', t0);
-    await db().from('lich_su').delete().eq('cot', 'canh_bao').gte('luc', t0);
-  }
 };
 
 describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, Đã nhận hỏa tốc, nhắc, diễn biến, thứ tự, đếm', { skip: SKIP }, () => {
