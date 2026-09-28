@@ -612,3 +612,4 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - **Sửa cách dọn** `kl-0029`, `kl-0030`, `kl-0032`, `kl-0034`, `kl-0035`: chỉ xoá `canh_bao`/`direct_messages`/`lich_su` theo `nhiem_vu_id` (và khoá `KL-0034`) của chính test, không theo mốc thời gian.
 - **Lỗi phát hiện, ghi thành test `todo`** (sửa ở PR RLS): `van_ban_dat_trich_yeu` không chặn khi văn bản `tao_boi NULL`; `anh-ho-so` thiếu policy SELECT (chủ ảnh không upsert/xoá được); bucket `public = true` (ai có URL/API đều đọc được ảnh).
 - Test `[hanh-vi-hien-tai]` (chờ xác nhận nghiệp vụ): PCVP kiêm nhiệm ngành–lĩnh vực không giao việc cho phòng đó.
+- `kl-pham-vi-tong-hop` dọn phân công kiêm nhiệm ngay sau khối test của nó (trước đây `after` ở cấp ngoài cùng chỉ chạy lúc cả tiến trình kết thúc → dòng kiêm nhiệm đã kết thúc còn sót, làm đỏ test chạy sau vì trùng kỳ).

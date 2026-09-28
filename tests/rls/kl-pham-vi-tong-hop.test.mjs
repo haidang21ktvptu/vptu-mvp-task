@@ -20,7 +20,6 @@ before(async () => {
   const { data } = await adminClient().from('accounts').select('id, username, role_group, department, is_chief, quan_tri_kl');
   taiKhoan = new Map(data.map((a) => [a.id, a]));
 });
-after(async () => { if (!SKIP) await adminClient().from('phu_trach_phong').delete().like('ly_do', `${LY_DO}%`); });
 
 // Kỳ vọng tập id thấy được của một tài khoản, tính lại từ dữ liệu bằng service_role theo quyết định 7 + 5.4.
 async function kyVong(username) {
@@ -70,6 +69,9 @@ async function kiemMotVai(username, nhan) {
 }
 
 describe('KL phạm vi và bất biến tổng hợp theo vai', { skip: SKIP }, () => {
+  // Dọn phân công 'RLS-TEST TH%' ngay khi khối này xong (hook cấp ngoài cùng chỉ chạy lúc cả tiến trình kết thúc với
+  // --test-isolation=none → dòng kiêm nhiệm đã kết thúc còn sót, làm trùng kỳ với test chạy sau).
+  after(async () => { await adminClient().from('phu_trach_phong').delete().like('ly_do', `${LY_DO}%`); });
   test('kiêm nhiệm RỖNG (hiện trạng production): 7 vai, tập dòng = kỳ vọng, tổng nhóm = tổng dòng, lĩnh vực NULL không mất', async () => {
     await adminClient().from('phu_trach_phong').delete().like('ly_do', `${LY_DO}%`);
     const { data: kn } = await adminClient().from('phu_trach_phong').select('id').not('nganh_ma', 'is', null).is('den_ngay', null);
