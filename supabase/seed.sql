@@ -15,9 +15,17 @@
 --   demo_e2e_owner   A3  TONG_HOP, chỉ làm Owner dữ liệu (kl-realtime, kl-them-nhiem-vu), không đăng nhập
 --   demo_e2e_tk      A3  TONG_HOP — thư ký Thường trực (0047): spec thu-ky-tt cấp cờ lúc chạy rồi thu lại
 --   demo_e2e_tp / demo_e2e_cv  A2 / A3 phòng giả E2E_RT — realtime (nhắn tin 1-1)
+--   demo_e2e_cv2    A3  E2E_RT — giao lại đổi chủ trì (0045): chủ trì mới cùng phòng
+-- Đơn vị E2E_RT (dm_don_vi) và phân công demo_pcvp2 ↔ E2E_RT (mục 0, 3) khớp scripts/seed-demo.mjs — staging = seed.sql (PR-2a, D1).
 -- Mật khẩu chung: 123456 (chỉ tài khoản giả). Từ migration 0011, accounts.id là FK tới
 -- auth.users.id nên phải tạo auth user TRƯỚC, cùng id, rồi mới INSERT accounts.
 -- ON CONFLICT DO NOTHING/UPDATE để chạy lại vẫn đồng bộ được manager_id/is_chief.
+
+-- 0. Đơn vị phòng giả E2E_RT (như seed-demo-du-lieu.mjs donViE2ERT): việc có Owner ở phòng này cần đơn vị có phong = 'E2E_RT'
+--    (trigger 0023). Dọn dữ liệu (0044) xoá ma LIKE 'E2E_%' — chạy lại seed-demo.mjs để tạo lại.
+INSERT INTO "public"."dm_don_vi" ("ma", "ten", "thu_tu", "trong_van_phong", "phong")
+SELECT 'E2E_RT', 'Phòng E2E RT (E2E-SEED)', coalesce(max("thu_tu"), 0) + 1, true, 'E2E_RT' FROM "public"."dm_don_vi"
+ON CONFLICT ("ma") DO NOTHING;
 
 -- 1. auth.users + auth.identities (băm bcrypt bằng pgcrypto, cost 10 như GoTrue).
 --    Các cột token đặt '' (không NULL) để GoTrue đọc được dòng.
@@ -39,6 +47,7 @@ WITH demo(id, username) AS (
     ('00000000-0000-4000-8000-000000000014'::uuid, 'demo_e2e_owner'),
     ('00000000-0000-4000-8000-000000000015'::uuid, 'demo_e2e_tp'),
     ('00000000-0000-4000-8000-000000000016'::uuid, 'demo_e2e_cv'),
+    ('00000000-0000-4000-8000-000000000017'::uuid, 'demo_e2e_cv2'),
     ('00000000-0000-4000-8000-000000000018'::uuid, 'demo_e2e_tk')
 )
 INSERT INTO "auth"."users"
@@ -86,6 +95,7 @@ VALUES
   ('00000000-0000-4000-8000-000000000014', 'demo_e2e_owner', 'Demo E2E Chuyên viên Owner', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false),
   ('00000000-0000-4000-8000-000000000015', 'demo_e2e_tp', 'Demo E2E Trưởng phòng RT', 'A2', 'Trưởng phòng', NULL, 'E2E_RT', false, false, false, false),
   ('00000000-0000-4000-8000-000000000016', 'demo_e2e_cv', 'Demo E2E Chuyên viên RT', 'A3', 'Chuyên viên', NULL, 'E2E_RT', false, false, false, false),
+  ('00000000-0000-4000-8000-000000000017', 'demo_e2e_cv2', 'Demo E2E Chuyên viên GL', 'A3', 'Chuyên viên', NULL, 'E2E_RT', false, false, false, false),
   ('00000000-0000-4000-8000-000000000018', 'demo_e2e_tk', 'Demo E2E Thư ký TT', 'A3', 'Chuyên viên', NULL, 'TONG_HOP', false, false, false, false)
 ON CONFLICT ("id") DO UPDATE SET
   "manager_id" = EXCLUDED."manager_id",
@@ -95,14 +105,15 @@ ON CONFLICT ("id") DO UPDATE SET
   "quan_tri_he_thong" = EXCLUDED."quan_tri_he_thong";
 
 -- 3. Phân công PCVP phụ trách phòng (GĐ8, bảng phu_trach_phong) — chỉ dữ liệu giả cho test RLS:
---    demo_pcvp ↔ TONG_HOP, demo_pcvp2 ↔ QUAN_TRI, hiệu lực từ 01/01/2026. Migration 0013 tạo
+--    demo_pcvp ↔ TONG_HOP, demo_pcvp2 ↔ QUAN_TRI + E2E_RT (ly_do 'seed kiểm thử' như seed-demo.mjs), hiệu lực từ 01/01/2026. Migration 0013 tạo
 --    bảng RỖNG; phân công thật trên production do chủ dự án nhập ở màn hình Quản trị.
 INSERT INTO "public"."phu_trach_phong" ("lanh_dao_id", "phong", "tu_ngay", "ly_do")
-SELECT v."id"::uuid, v."phong", DATE '2026-01-01', 'seed'
+SELECT v."id"::uuid, v."phong", DATE '2026-01-01', v."ly_do"
 FROM (VALUES
-  ('00000000-0000-4000-8000-000000000002', 'TONG_HOP'),
-  ('00000000-0000-4000-8000-000000000006', 'QUAN_TRI')
-) AS v("id", "phong")
+  ('00000000-0000-4000-8000-000000000002', 'TONG_HOP', 'seed'),
+  ('00000000-0000-4000-8000-000000000006', 'QUAN_TRI', 'seed'),
+  ('00000000-0000-4000-8000-000000000006', 'E2E_RT', 'seed kiểm thử')
+) AS v("id", "phong", "ly_do")
 WHERE NOT EXISTS (
   SELECT 1 FROM "public"."phu_trach_phong" p
   WHERE p."lanh_dao_id" = v."id"::uuid AND p."phong" = v."phong" AND p."den_ngay" IS NULL

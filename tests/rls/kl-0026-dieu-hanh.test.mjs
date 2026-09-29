@@ -4,7 +4,7 @@
 // khớp ô Quá hạn, dat_cap_quyet_dinh, ghi trực tiếp chi_dao/tin hệ thống bị chặn, đã đọc. Mã NV-T9x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -33,33 +33,37 @@ describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin h
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    await them({ ma: 'NV-T90', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 });   // Owner cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
-    await them({ ma: 'NV-T91', owner_don_vi_ma: 'TONG_HOP' });                             // Owner = phòng Tổng hợp, không tài khoản
-    await them({ ma: 'NV-T92', owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.pcvp }); // Owner = Văn phòng, tài khoản A1
-    await them({ ma: 'NV-T93', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv2 }); // Owner đơn vị ngoài, theo dõi cv2 (QUAN_TRI)
-    await them({ ma: 'NV-T94', owner_don_vi_ma: 'TONG_HOP', loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: null }); // hạn tự tính 11/08
+    await songSong([   // năm việc độc lập (mã cố định) — songSong giới hạn 4 (D3)
+      () => them({ ma: 'NV-T90', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 }),   // Owner cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
+      () => them({ ma: 'NV-T91', owner_don_vi_ma: 'TONG_HOP' }),                             // Owner = phòng Tổng hợp, không tài khoản
+      () => them({ ma: 'NV-T92', owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.pcvp }), // Owner = Văn phòng, tài khoản A1
+      () => them({ ma: 'NV-T93', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv2 }), // Owner đơn vị ngoài, theo dõi cv2 (QUAN_TRI)
+      () => them({ ma: 'NV-T94', owner_don_vi_ma: 'TONG_HOP', loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: null })]); // hạn tự tính 11/08
   });
   after(don);
 
   test('1. nguoi_lien_quan đúng 4 kiểu Owner (tài khoản / phòng / Văn phòng / đơn vị ngoài), mỗi người một lần', async () => {
-    assert.deepEqual(await lienQuan('NV-T90'), [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1, IDS.cv2, IDS.pcvp2].sort(), 'Owner cv2: + trưởng phòng TH, PCVP TH và QT, Chánh VP');
-    assert.deepEqual(await lienQuan('NV-T91'), [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1].sort(), 'Owner phòng TH: PCVP phụ trách TH không lặp');
-    assert.deepEqual(await lienQuan('NV-T92'), [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1].sort(), 'Owner Văn phòng (pcvp): không có trưởng phòng/PCVP của Lãnh đạo VP');
-    assert.deepEqual(await lienQuan('NV-T93'), [IDS.cvp, IDS.cv2, IDS.pcvp2].sort(), 'Đơn vị ngoài: chỉ theo người theo dõi (QUAN_TRI không có A2)');
     const cv1 = await userClient('demo_cv1');
-    const r = await cv1.rpc('nguoi_lien_quan', { p_nhiem_vu: id['NV-T90'] });
+    const [l90, l91, l92, l93, r, r2] = await songSong([() => lienQuan('NV-T90'), () => lienQuan('NV-T91'), () => lienQuan('NV-T92'), () => lienQuan('NV-T93'),
+      () => cv1.rpc('nguoi_lien_quan', { p_nhiem_vu: id['NV-T90'] }), () => cv1.rpc('nguoi_lien_quan', { p_nhiem_vu: id['NV-T93'] })]);   // chỉ đọc (D3)
+    assert.deepEqual(l90, [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1, IDS.cv2, IDS.pcvp2].sort(), 'Owner cv2: + trưởng phòng TH, PCVP TH và QT, Chánh VP');
+    assert.deepEqual(l91, [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1].sort(), 'Owner phòng TH: PCVP phụ trách TH không lặp');
+    assert.deepEqual(l92, [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1].sort(), 'Owner Văn phòng (pcvp): không có trưởng phòng/PCVP của Lãnh đạo VP');
+    assert.deepEqual(l93, [IDS.cvp, IDS.cv2, IDS.pcvp2].sort(), 'Đơn vị ngoài: chỉ theo người theo dõi (QUAN_TRI không có A2)');
     assertOk(r, 'người theo dõi gọi'); assert.ok(!r.data.includes(IDS.cv1) && r.data.includes(IDS.cv2), 'trừ chính người gọi');
-    const r2 = await cv1.rpc('nguoi_lien_quan', { p_nhiem_vu: id['NV-T93'] });
     assertOk(r2, 'ngoài phạm vi'); assert.equal(r2.data.length, 0);
   });
 
   test('2. chi_dao_gui: A3 bị chặn; A2/PCVP ngoài phạm vi bị chặn; ghi trực tiếp chi_dao bị chặn; Chánh VP đôn đốc → chỉ đạo + lịch sử + tin cho mọi người liên quan trừ người gửi', async () => {
-    assertDenied(await gui('demo_cv1', { nhiem_vu_id: id['NV-T90'], loai: 'DON_DOC', noi_dung: 'A3 thử' }), 'A3 ra chỉ đạo');
-    assertDenied(await gui('demo_truongphong', { nhiem_vu_id: id['NV-T93'], loai: 'DON_DOC', noi_dung: 'ngoài phòng' }), 'A2 ngoài phạm vi');
-    assertDenied(await gui('demo_pcvp2', { nhiem_vu_id: id['NV-T91'], loai: 'DON_DOC', noi_dung: 'ngoài phụ trách' }), 'PCVP ngoài phạm vi');
     const tp = await userClient('demo_truongphong');
-    assertDenied(await tp.from('chi_dao').insert({ nhiem_vu_id: id['NV-T90'], nguoi_gui: IDS.truongphong, loai: 'DON_DOC', noi_dung: 'trực tiếp' }).select('id'), 'INSERT trực tiếp');
-    assertLoi(await gui('demo_cvp', { nhiem_vu_id: id['NV-T90'], loai: 'DON_DOC', noi_dung: '  ' }), 'thiếu nội dung');
+    const chan = await songSong([   // năm ca bị chặn độc lập (D3)
+      () => gui('demo_cv1', { nhiem_vu_id: id['NV-T90'], loai: 'DON_DOC', noi_dung: 'A3 thử' }),
+      () => gui('demo_truongphong', { nhiem_vu_id: id['NV-T93'], loai: 'DON_DOC', noi_dung: 'ngoài phòng' }),
+      () => gui('demo_pcvp2', { nhiem_vu_id: id['NV-T91'], loai: 'DON_DOC', noi_dung: 'ngoài phụ trách' }),
+      () => tp.from('chi_dao').insert({ nhiem_vu_id: id['NV-T90'], nguoi_gui: IDS.truongphong, loai: 'DON_DOC', noi_dung: 'trực tiếp' }).select('id'),
+      () => gui('demo_cvp', { nhiem_vu_id: id['NV-T90'], loai: 'DON_DOC', noi_dung: '  ' })]);
+    ['A3 ra chỉ đạo', 'A2 ngoài phạm vi', 'PCVP ngoài phạm vi', 'INSERT trực tiếp'].forEach((nhan, i) => assertDenied(chan[i], nhan));
+    assertLoi(chan[4], 'thiếu nội dung');
     const r = await gui('demo_cvp', { nhiem_vu_id: id['NV-T90'], loai: 'DON_DOC', noi_dung: 'Khẩn trương hoàn thành trong tuần', han_phan_hoi: '2026-09-20' });
     assertOk(r, 'Chánh VP đôn đốc'); cd.d1 = r.data;
     const c = (await db().from('chi_dao').select('*').eq('id', cd.d1).single()).data;
@@ -148,9 +152,11 @@ assertOk(await phanHoi('demo_cv1', { chi_dao_id: y.data, noi_dung: 'Đã trao đ
   });
 
   test('7. v_ngoai_le: chỉ DO/DO_DAC_BIET, tổng = ô Quá hạn + Đang đính chính, sắp số ngày trễ giảm dần, 4 trường bắt buộc có giá trị thay thế', async () => {
-    for (const u of ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv1']) {
-      const c = await userClient(u);
-      const [nl, tat] = await Promise.all([c.from('v_ngoai_le').select('*'), c.from('v_nhiem_vu').select('id, nhom_dem')]);
+    const U = ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv1'];
+    // Đọc độc lập theo vai: songSong 2 vai × 2 truy vấn = tối đa 4 lời gọi cùng lúc (D3, PR-2a).
+    const doc = await songSong(U.map((u) => async () => { const c = await userClient(u); return Promise.all([c.from('v_ngoai_le').select('*'), c.from('v_nhiem_vu').select('id, nhom_dem')]); }), 2);
+    for (const [k, u] of U.entries()) {
+      const [nl, tat] = doc[k];
       assertOk(nl, u); assertOk(tat, u);
       // 0034: hàng bị từ chối chưa Đỏ (nhom TU_CHOI) đếm riêng, không cộng vào ô Quá hạn; GĐ22: thứ tự ngày trễ giảm dần trong cùng độ khẩn / ưu tiên.
       const doNl = nl.data.filter((r) => r.nhom !== 'TU_CHOI');

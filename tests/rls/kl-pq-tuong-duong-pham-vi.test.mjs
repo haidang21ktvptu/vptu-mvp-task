@@ -7,7 +7,7 @@
 // Khoá dữ liệu "KL-PQ-TD"; tự dọn, cờ khôi phục ở before lẫn after.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady, linhVucReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) && (await linhVucReady()) ? false : 'Chưa có migration KL / dm_linh_vuc trên project này.';
@@ -31,10 +31,12 @@ async function tatCa(taoTruyVan, label) {
 
 async function doiChieu(username, bang = BANG) {
   const c = await userClient(username);
-  const r = await c.rpc('kl_tham_chieu_pham_vi'); assertOk(r, `${username} tham chiếu`);   // mỗi bảng một dòng (bảng, mảng id)
+  // Tham chiếu + đọc từng bảng độc lập ⇒ songSong giới hạn 4 (D3, PR-2a: ít lượt khứ hồi trên staging).
+  const [r, ...doc] = await songSong([() => c.rpc('kl_tham_chieu_pham_vi'), ...bang.map((b) => () => tatCa(() => c.from(b).select('id'), `${username} ${b}`))]);
+  assertOk(r, `${username} tham chiếu`);   // mỗi bảng một dòng (bảng, mảng id)
   const goc = Object.fromEntries(r.data.map((x) => [x.bang, x.ids]));
-  for (const b of bang) {
-    const moi = new Set((await tatCa(() => c.from(b).select('id'), `${username} ${b}`)).map((r) => String(r.id)));
+  for (const [k, b] of bang.entries()) {
+    const moi = new Set(doc[k].map((r) => String(r.id)));
     const cu = new Set(goc[b] || []);
     const chiMoi = [...moi].filter((x) => !cu.has(x)); const chiCu = [...cu].filter((x) => !moi.has(x));
     assert.deepEqual([chiMoi.length, chiCu.length], [0, 0],

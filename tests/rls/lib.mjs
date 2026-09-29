@@ -9,6 +9,7 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import './dem-goi.mjs'; // đếm lời gọi HTTP khi DEM_GOI đặt (PR-2a, D3)
 import { createClient } from '@supabase/supabase-js';
 
 export const STAGING_REF = 'vojmrjezspdftovzinek';
@@ -73,16 +74,41 @@ export function adminClient() {
   return createClient(k.url, k.service, opts);
 }
 
+// Chạy các lời gọi ĐỘC LẬP song song, tối đa gioiHan cùng lúc (mặc định 4), giữ thứ tự kết quả — PR-2a D3: trên staging mỗi lời gọi
+// ≈ 0,25 s độ trễ mạng nên gộp lượt khứ hồi rút ngắn cả bộ. Chỉ dùng cho ca không phụ thuộc nhau (đọc, ghi bị chặn, ghi khác dòng).
+export async function songSong(ds, gioiHan = 4) {
+  const kq = new Array(ds.length); let i = 0;
+  const chay = async () => { while (i < ds.length) { const j = i++; kq[j] = await ds[j](); } };
+  await Promise.all(Array.from({ length: Math.min(gioiHan, ds.length) }, chay));
+  return kq;
+}
+
+// Phân công seed dùng chung demo_pcvp2 ↔ E2E_RT (seed.sql / seed-demo.mjs, D1 PR-2a). Ca bật pcvp2 ↔ phòng khác vướng giới hạn 2 phòng nên
+// tạm kết thúc dòng này (datPcvp2E2ERT('2026-08-31') — trước kỳ bật) rồi trả GIÁ TRỊ GỐC ghi cứng (datPcvp2E2ERT()) ở before, finally, after.
+// Project chưa có dòng này (chưa nạp seed mới) thì không tạo, không đụng.
+export const E2E_RT_GOC = { phong: 'E2E_RT', tu_ngay: '2026-01-01', den_ngay: null, ly_do: 'seed kiểm thử' };
+export async function datPcvp2E2ERT(denNgay) {
+  const db = adminClient();
+  const r = await db.from('phu_trach_phong').select('id').eq('lanh_dao_id', IDS.pcvp2).eq('phong', E2E_RT_GOC.phong)
+    .eq('tu_ngay', E2E_RT_GOC.tu_ngay).is('nganh_ma', null);
+  if (!r.data?.length) return;
+  const gt = denNgay === undefined ? { den_ngay: E2E_RT_GOC.den_ngay, ly_do: E2E_RT_GOC.ly_do } : { den_ngay: denNgay };
+  assertOk(await db.from('phu_trach_phong').update(gt).in('id', r.data.map((x) => x.id)), 'đặt phân công pcvp2 ↔ E2E_RT');
+}
+
 const users = new Map();
 // Client đã đăng nhập bằng tài khoản seed (username: demo_cvp, demo_cv1, ...).
 export async function userClient(username) {
-  if (users.has(username)) return users.get(username);
-  const k = getKeys();
-  const c = createClient(k.url, k.anon, opts);
-  const { error } = await c.auth.signInWithPassword({ email: `${username}@${EMAIL_DOMAIN}`, password: SEED_PASSWORD });
-  if (error) throw new Error(`Đăng nhập ${username} thất bại: ${error.message}`);
-  users.set(username, c);
-  return c;
+  // Nhớ PROMISE (không phải client) để các lời gọi song song (songSong) dùng chung một lần đăng nhập.
+  if (!users.has(username)) {
+    const k = getKeys();
+    const c = createClient(k.url, k.anon, opts);
+    users.set(username, c.auth.signInWithPassword({ email: `${username}@${EMAIL_DOMAIN}`, password: SEED_PASSWORD }).then(({ error }) => {
+      if (error) { users.delete(username); throw new Error(`Đăng nhập ${username} thất bại: ${error.message}`); }
+      return c;
+    }));
+  }
+  return users.get(username);
 }
 
 // Khẳng định: ghi bị RLS/quyền chặn (PostgREST trả 42501 hoặc lỗi quyền).

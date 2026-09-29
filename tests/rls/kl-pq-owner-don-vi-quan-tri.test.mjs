@@ -5,7 +5,7 @@
 // B5/B6 (minh chứng, đóng) KHÔNG kiểm ở đây (logic sẽ đổi ở PR sau). Khoá dữ liệu: "KL-PQ4"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -48,10 +48,9 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
   after(don);
 
   test('1. E1: Owner đơn vị ngoài, theo dõi A3 — mọi vai không phải người theo dõi bị chặn 42501 (kể cả CVP, PCVP phụ trách phòng, A0, quan_tri_kl, QTHT, thư ký TT, anon)', async () => {
-    for (const u of ['demo_cv2', 'demo_truongphong', 'demo_cvp', 'demo_pcvp', 'demo_pcvp2', 'demo_a0', 'demo_qtht', TK.username]) {
-      assertDenied(await nhan(u, 'DV-A3'), `${u} xác nhận nhận việc DV-A3`);
-    }
-    assertDenied(await anonClient().rpc('xac_nhan_nhan_viec', { p_id: id['DV-A3'] }), 'anon');
+    const U = ['demo_cv2', 'demo_truongphong', 'demo_cvp', 'demo_pcvp', 'demo_pcvp2', 'demo_a0', 'demo_qtht', TK.username];
+    const kq = await songSong([...U.map((u) => () => nhan(u, 'DV-A3')), () => anonClient().rpc('xac_nhan_nhan_viec', { p_id: id['DV-A3'] })]);   // bị chặn, độc lập (D3)
+    kq.forEach((r, i) => assertDenied(r, U[i] ? `${U[i]} xác nhận nhận việc DV-A3` : 'anon'));
     assert.equal((await db().from('lich_su').select('id').eq('nhiem_vu_id', id['DV-A3']).eq('cot', 'xac_nhan_nhan_viec')).data.length, 0, 'chưa ai nhận');
   });
 
@@ -64,7 +63,8 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
   });
 
   test('3. E1: Owner đơn vị ngoài, theo dõi A2 — Trưởng phòng nhận được; A3 cùng phòng (cv1), CVP, PCVP phụ trách, A0, QTHT bị chặn', async () => {
-    for (const u of ['demo_cv1', 'demo_cvp', 'demo_pcvp', 'demo_a0', 'demo_qtht']) assertDenied(await nhan(u, 'DV-A2'), `${u} nhận DV-A2`);
+    const U2 = ['demo_cv1', 'demo_cvp', 'demo_pcvp', 'demo_a0', 'demo_qtht'];
+    (await songSong(U2.map((u) => () => nhan(u, 'DV-A2')))).forEach((r, i) => assertDenied(r, `${U2[i]} nhận DV-A2`));
     const r = await nhan('demo_truongphong', 'DV-A2');
     assertOk(r, 'Trưởng phòng (theo dõi) nhận'); assert.equal(r.data, true);
   });

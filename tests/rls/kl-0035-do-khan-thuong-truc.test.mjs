@@ -5,7 +5,7 @@
 // giờ làm việc), TT_CHUA_NHAN (hằng ngày); v_dien_bien không lộ lý do từ chối ngoài chuỗi; thứ tự v_ngoai_le; kl_so_chua_xu_ly. Tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -31,9 +31,8 @@ const don = async () => {
   // Chỉ dọn dấu vết trên nhiệm vụ của test này (kể cả việc tạo qua giao_viec: lọc theo khoá KL-0035 trong noi_dung) — không xoá theo mốc thời gian.
   const cua = ((await db().from('nhiem_vu').select('id').like('noi_dung', 'KL-0035%')).data || []).map((r) => r.id);
   if (cua.length) {
-    await db().from('canh_bao').delete().in('nhiem_vu_id', cua);
-    await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
-    await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
+    await Promise.all([db().from('canh_bao').delete().in('nhiem_vu_id', cua), db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua),
+      db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua)]);   // dấu vết độc lập — một lượt (D3)
   }
   await db().from('nhiem_vu').delete().like('noi_dung', 'KL-0035%');
   await db().from('van_ban_giao_viec').delete().eq('tao_boi', IDS.a0).like('so_ket_luan', 'Thường trực giao %');
@@ -45,18 +44,18 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
   after(don);
 
   test('1. Ngưỡng theo cấp và giờ làm việc (7h30–17h VN, bỏ T7/CN; mốc 17–23h UTC = sáng sớm VN)', async () => {
-    const ng = async (c) => (await rpc('demo_cvp', 'kl_nguong_do_khan', { p_do_khan: c })).data;
-    assert.deepEqual(await ng('THUONG'), { vang: 3, nhac_lai: 3, han_phan_hoi: 2 });
-    assert.deepEqual(await ng('KHAN'), { vang: 5, nhac_lai: 2, han_phan_hoi: 1 });
-    assert.deepEqual(await ng('THUONG_KHAN'), { vang: 5, nhac_lai: 1, han_phan_hoi: 0 });
-    assert.deepEqual(await ng('HOA_TOC'), { vang: 5, nhac_lai: 1, han_phan_hoi: 0 });
-    const g = async (tu, gio) => new Date((await rpc('demo_cvp', 'gio_lam_viec_sau', { p_tu: tu, p_gio: gio })).data).toISOString();
-    assert.equal(await g('2026-09-16T02:00:00Z', 2), '2026-09-16T04:00:00.000Z', 'Thứ Tư 9h + 2h = 11h');
-    assert.equal(await g('2026-09-16T09:00:00Z', 2), '2026-09-17T01:30:00.000Z', '16h + 2h: 1h còn lại dồn sang 7h30 hôm sau → 8h30');
-    assert.equal(await g('2026-09-18T09:00:00Z', 2), '2026-09-21T01:30:00.000Z', 'Thứ Sáu 16h → Thứ Hai 8h30');
-    assert.equal(await g('2026-09-19T03:00:00Z', 0), '2026-09-21T00:30:00.000Z', 'Thứ Bảy → Thứ Hai 7h30');
-    assert.equal(await g('2026-09-15T23:30:00Z', 2), '2026-09-16T02:30:00.000Z', '23h30 UTC = 6h30 VN → 7h30 + 2h = 9h30 VN');
-    assert.equal(await g('2026-09-16T17:30:00Z', 2), '2026-09-17T02:30:00.000Z', '17h30 UTC = 0h30 VN hôm sau → 9h30 VN hôm sau');
+    // Hàm thuần, lời gọi độc lập — songSong giới hạn 4 (D3, PR-2a).
+    const NG = [['THUONG', { vang: 3, nhac_lai: 3, han_phan_hoi: 2 }], ['KHAN', { vang: 5, nhac_lai: 2, han_phan_hoi: 1 }],
+      ['THUONG_KHAN', { vang: 5, nhac_lai: 1, han_phan_hoi: 0 }], ['HOA_TOC', { vang: 5, nhac_lai: 1, han_phan_hoi: 0 }]];
+    (await songSong(NG.map(([c]) => () => rpc('demo_cvp', 'kl_nguong_do_khan', { p_do_khan: c })))).forEach((r, i) => assert.deepEqual(r.data, NG[i][1], NG[i][0]));
+    const G = [['2026-09-16T02:00:00Z', 2, '2026-09-16T04:00:00.000Z', 'Thứ Tư 9h + 2h = 11h'],
+      ['2026-09-16T09:00:00Z', 2, '2026-09-17T01:30:00.000Z', '16h + 2h: 1h còn lại dồn sang 7h30 hôm sau → 8h30'],
+      ['2026-09-18T09:00:00Z', 2, '2026-09-21T01:30:00.000Z', 'Thứ Sáu 16h → Thứ Hai 8h30'],
+      ['2026-09-19T03:00:00Z', 0, '2026-09-21T00:30:00.000Z', 'Thứ Bảy → Thứ Hai 7h30'],
+      ['2026-09-15T23:30:00Z', 2, '2026-09-16T02:30:00.000Z', '23h30 UTC = 6h30 VN → 7h30 + 2h = 9h30 VN'],
+      ['2026-09-16T17:30:00Z', 2, '2026-09-17T02:30:00.000Z', '17h30 UTC = 0h30 VN hôm sau → 9h30 VN hôm sau']];
+    (await songSong(G.map(([tu, gio]) => () => rpc('demo_cvp', 'gio_lam_viec_sau', { p_tu: tu, p_gio: gio })))).forEach((r, i) =>
+      assert.equal(new Date(r.data).toISOString(), G[i][2], G[i][3]));
   });
 
   test('2. trang_thai: Vàng theo độ khẩn — còn 4 ngày: Thường XANH, Khẩn VÀNG', async () => {
@@ -81,17 +80,21 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
 
   test('4. Giao thay mặt: A3 quan_tri_kl phải ghi lãnh đạo A1/A2 trong phạm vi Owner; vết + tin; cấp duyệt từ chối = lãnh đạo đó', async () => {
     await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.qtht);
-    assertLoi(await giao('demo_qtht', { ma: 'khong tm', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'thiếu thay mặt');
-    assertLoi(await giao('demo_qtht', { ma: 'tm a3', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.cv2 }), 'thay mặt một A3');
-    assertLoi(await giao('demo_qtht', { ma: 'tm khac phong', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, thay_mat_cho: IDS.truongphong }), 'Trưởng phòng Tổng hợp không thay mặt cho Owner phòng Quản trị');
-    assertLoi(await giao('demo_cvp', { ma: 'a1 tm', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.pcvp }), 'lãnh đạo giao trực tiếp, không thay mặt');
+    const loi4 = await Promise.all([   // bốn ca bị chặn độc lập — một lượt (D3)
+      giao('demo_qtht', { ma: 'khong tm', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }),
+      giao('demo_qtht', { ma: 'tm a3', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.cv2 }),
+      giao('demo_qtht', { ma: 'tm khac phong', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, thay_mat_cho: IDS.truongphong }),
+      giao('demo_cvp', { ma: 'a1 tm', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.pcvp })]);
+    ['thiếu thay mặt', 'thay mặt một A3', 'Trưởng phòng Tổng hợp không thay mặt cho Owner phòng Quản trị', 'lãnh đạo giao trực tiếp, không thay mặt']
+      .forEach((nhan, i) => assertLoi(loi4[i], nhan));
     const r = await giao('demo_qtht', { ma: 'thay mat', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.pcvp });
     assertOk(r, 'quản trị KL giao thay mặt PCVP'); id['NV-T43'] = r.data.id;
     assert.equal((await nv(id['NV-T43'])).giao_thay_mat_cho, IDS.pcvp);
     const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', id['NV-T43']).eq('cot', 'giao_thay_mat')).data;
     assert.equal(ls.length, 1); assert.match(ls[0].gia_tri_moi, /Demo Quản trị hệ thống giao thay mặt Demo Phó Chánh Văn phòng/);
-    assert.equal((await tin(IDS.pcvp, id['NV-T43'], /^Giao việc thay mặt Demo Phó Chánh Văn phòng · NV-/)).length, 1, 'lãnh đạo được thay mặt nhận tin ngay');
-    assert.equal((await tin(IDS.cv1, id['NV-T43'], /Giao việc thay mặt/)).length, 1, 'Owner nhận tin');
+    const [tPcvp, tOwner] = await Promise.all([tin(IDS.pcvp, id['NV-T43'], /^Giao việc thay mặt Demo Phó Chánh Văn phòng · NV-/), tin(IDS.cv1, id['NV-T43'], /Giao việc thay mặt/)]);
+    assert.equal(tPcvp.length, 1, 'lãnh đạo được thay mặt nhận tin ngay');
+    assert.equal(tOwner.length, 1, 'Owner nhận tin');
     const tc = await rpc('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T43'], p_ly_do: LY_DO });
     assertOk(tc, 'cv1 đề nghị từ chối'); tcId = tc.data;
     assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', tcId).single()).data.cap_duyet, IDS.pcvp, 'cấp duyệt = PCVP được thay mặt, không phải Trưởng phòng');
@@ -109,8 +112,9 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     const r2 = await rpc('demo_a0', 'giao_viec', { p: { noi_dung: 'KL-0035 TT giao phòng', owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'BAO_CAO', han_xu_ly: '2026-12-31', do_khan: 'THUONG_KHAN' } });
     assertOk(r2, 'A0 giao cho phòng Tổng hợp'); id['NV-T45'] = r2.data.id;
     const v2 = await nv(id['NV-T45']); assert.equal(v2.nguoi_theo_doi, IDS.truongphong, 'người theo dõi = Trưởng phòng'); assert.equal(v2.owner_tai_khoan, null);
-    assert.equal((await tin(IDS.truongphong, v2.id, /^Thường trực giao việc · Thượng khẩn/)).length, 1, 'Trưởng phòng nhận tin');
-    assert.equal((await tin(IDS.cvp, v2.id, /Thường trực giao việc/)).length, 1, 'Chánh VP vẫn nhận tin khi giao cho phòng');
+    const [tTp, tCvp] = await Promise.all([tin(IDS.truongphong, v2.id, /^Thường trực giao việc · Thượng khẩn/), tin(IDS.cvp, v2.id, /Thường trực giao việc/)]);
+    assert.equal(tTp.length, 1, 'Trưởng phòng nhận tin');
+    assert.equal(tCvp.length, 1, 'Chánh VP vẫn nhận tin khi giao cho phòng');
     assertDenied(await (await userClient('demo_qtht')).from('nhiem_vu').insert({ van_ban_id: fx.hn, noi_dung: 'KL-0035 chen uu tien', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31',
       nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.cv1, uu_tien: 'THUONG_TRUC' }).select('id'), 'quản trị KL chèn thẳng uu_tien');
     const tc = await rpc('demo_cvp', 'de_nghi_tu_choi', { p_nhiem_vu: ttId, p_ly_do: LY_DO });
@@ -124,14 +128,15 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assertOk(r, 'A2 đôn đốc Hỏa tốc'); cdHoaToc = r.data;
     const c = (await db().from('chi_dao').select('do_khan, han_phan_hoi, da_nhan').eq('id', cdHoaToc).single()).data;
     assert.equal(c.do_khan, 'HOA_TOC'); assert.equal(c.han_phan_hoi, ngayLamViecSau(homNayVN(), 0), 'hạn phản hồi trong ngày'); assert.deepEqual(c.da_nhan, []);
-    assert.equal((await tin(IDS.cv1, id['NV-T42'], /^Đôn đốc · NV-.*\[Hỏa tốc\]/)).length, 1, 'người nhận có tin kèm cấp');
-    assert.equal((await tin(IDS.cvp, id['NV-T42'], /^Đôn đốc · NV-.*\[Hỏa tốc\]/)).length, 1, 'Chánh VP nhận tin (Hỏa tốc)');
+    const [tNhan, tCvpHt] = await Promise.all([tin(IDS.cv1, id['NV-T42'], /^Đôn đốc · NV-.*\[Hỏa tốc\]/), tin(IDS.cvp, id['NV-T42'], /^Đôn đốc · NV-.*\[Hỏa tốc\]/)]);
+    assert.equal(tNhan.length, 1, 'người nhận có tin kèm cấp');
+    assert.equal(tCvpHt.length, 1, 'Chánh VP nhận tin (Hỏa tốc)');
     const tt = await rpc('demo_a0', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T42'], loai: 'CHI_DAO_TT', noi_dung: 'KL-0035 TT chỉ đạo' } });
     assertOk(tt, 'A0 CHI_DAO_TT mặc định Khẩn');
     const ct = (await db().from('chi_dao').select('do_khan, han_phan_hoi').eq('id', tt.data).single()).data;
     assert.equal(ct.do_khan, 'KHAN'); assert.equal(ct.han_phan_hoi, ngayLamViecSau(homNayVN(), 1), 'Khẩn: 1 ngày làm việc');
-    assertDenied(await rpc('demo_cv2', 'xac_nhan_da_nhan_chi_dao', { p_id: cdHoaToc }), 'người ngoài bấm Đã nhận');
-    assertDenied(await rpc('demo_a0', 'xac_nhan_da_nhan_chi_dao', { p_id: cdHoaToc }), 'A0 bấm Đã nhận');
+    const [ngoai, a0Nhan] = await Promise.all([rpc('demo_cv2', 'xac_nhan_da_nhan_chi_dao', { p_id: cdHoaToc }), rpc('demo_a0', 'xac_nhan_da_nhan_chi_dao', { p_id: cdHoaToc })]);
+    assertDenied(ngoai, 'người ngoài bấm Đã nhận'); assertDenied(a0Nhan, 'A0 bấm Đã nhận');
   });
 
   test('7. canh_bao_quet: Hỏa tốc quá 2 giờ làm việc chưa Đã nhận → nhắc người nhận + cấp trên + Chánh VP mỗi lần quét trong giờ; ngoài giờ không; sau Đã nhận không', async () => {
@@ -184,9 +189,10 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
   });
 
   test('10. Thứ tự v_ngoai_le: độ khẩn → Thường trực giao → số ngày trễ; kl_so_chua_xu_ly đếm đúng vai', async () => {
-    await them({ ma: 'NV-T46', han_xu_ly: '2026-08-15' });                                                       // Thường, trễ nhiều
-    await them({ ma: 'NV-T47', han_xu_ly: congNgay(homNayVN(), -1), do_khan: 'KHAN' });                            // Khẩn, trễ 1 ngày
-    await them({ ma: 'NV-T48', han_xu_ly: congNgay(homNayVN(), -1), do_khan: 'KHAN', uu_tien: 'THUONG_TRUC', tao_boi: IDS.a0 });
+    await Promise.all([   // ba việc độc lập (mã cố định) — một lượt (D3)
+      them({ ma: 'NV-T46', han_xu_ly: '2026-08-15' }),                                                       // Thường, trễ nhiều
+      them({ ma: 'NV-T47', han_xu_ly: congNgay(homNayVN(), -1), do_khan: 'KHAN' }),                            // Khẩn, trễ 1 ngày
+      them({ ma: 'NV-T48', han_xu_ly: congNgay(homNayVN(), -1), do_khan: 'KHAN', uu_tien: 'THUONG_TRUC', tao_boi: IDS.a0 })]);
     const nl = await (await userClient('demo_cvp')).from('v_ngoai_le').select('id, thu_tu_do_khan, uu_tien');
     assertOk(nl, 'v_ngoai_le'); const vt = (ma) => nl.data.findIndex((r) => r.id === id[ma]);
     assert.ok(vt('NV-T48') >= 0 && vt('NV-T48') < vt('NV-T47') && vt('NV-T47') < vt('NV-T46'), `thứ tự ${vt('NV-T48')} < ${vt('NV-T47')} < ${vt('NV-T46')}`);

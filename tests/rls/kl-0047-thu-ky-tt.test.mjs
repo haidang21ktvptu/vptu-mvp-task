@@ -4,7 +4,7 @@
 // cập nhật tiến độ). A1/A2/A3 thường không đóng CHI_DAO_TT; A0 người gửi vẫn đóng được. Thư ký = demo_e2e_kl (A3 Tổng hợp, không là Owner/theo dõi việc mẫu → ngoài phạm vi).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -68,7 +68,8 @@ describe('0047 — thư ký Thường trực: cấp cờ, phạm vi đọc, đó
   });
 
   test('3. Thư ký KHÔNG ghi gì khác: chi_dao_gui mọi loại, nop_minh_chung, giao_viec, xac_nhan_nhan_viec, cập nhật tiến độ', async () => {
-    for (const loai of ['CHI_DAO_TT', 'DON_DOC', 'Y_KIEN', 'GIA_HAN']) assertDenied(await rpc('demo_e2e_kl', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T95'], loai, noi_dung: 'x' } }), `thư ký gửi ${loai}`);
+    const LOAI = ['CHI_DAO_TT', 'DON_DOC', 'Y_KIEN', 'GIA_HAN'];
+    (await songSong(LOAI.map((loai) => () => rpc('demo_e2e_kl', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T95'], loai, noi_dung: 'x' } })))).forEach((r, i) => assertDenied(r, `thư ký gửi ${LOAI[i]}`));
     assertDenied(await rpc('demo_e2e_kl', 'nop_minh_chung', { p: { nhiem_vu_id: id['NV-T95'], so_hieu: '1/BC', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nộp minh chứng');
     assertDenied(await rpc('demo_e2e_kl', 'giao_viec', { p: { van_ban_id: fx.hn, noi_dung: 'x', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, san_pham_loai: 'BAO_CAO', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nhiem_vu_cha: id['NV-T95'] } }), 'giao việc');
     assertDenied(await rpc('demo_e2e_kl', 'xac_nhan_nhan_viec', { p_id: id['NV-T95'] }), 'xác nhận nhận việc');
@@ -79,7 +80,8 @@ describe('0047 — thư ký Thường trực: cấp cờ, phạm vi đọc, đó
   test('4. Đóng: thư ký KHÔNG đóng DON_DOC của Chánh VP / Y_KIEN của A0; A1, A2, A3 thường KHÔNG đóng CHI_DAO_TT', async () => {
     assertDenied(await dong('demo_e2e_kl', dd1), 'thư ký đóng DON_DOC');
     assertDenied(await dong('demo_e2e_kl', yk1), 'thư ký đóng Y_KIEN');
-    for (const u of ['demo_cvp', 'demo_truongphong', 'demo_cv1']) assertDenied(await dong(u, tt1), `${u} đóng CHI_DAO_TT`);
+    const U = ['demo_cvp', 'demo_truongphong', 'demo_cv1'];
+    (await songSong(U.map((u) => () => dong(u, tt1)))).forEach((r, i) => assertDenied(r, `${U[i]} đóng CHI_DAO_TT`));
     assert.equal((await db().from('chi_dao').select('trang_thai').eq('id', tt1).single()).data.trang_thai, 'CHO_PHAN_HOI');
   });
 

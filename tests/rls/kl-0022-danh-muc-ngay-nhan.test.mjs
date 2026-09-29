@@ -25,13 +25,17 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     await db().from('van_ban_giao_viec').delete().eq('so_hoi_nghi', 997);
   });
 
+  // Số đơn vị lấy từ bảng (service_role): seed.sql / seed-demo.mjs thêm phòng giả E2E_RT (D1, PR-2a) — 18 đơn vị của 0025 + đơn vị E2E_%.
   test('1. dm_don_vi: 13 đơn vị + 5 phòng (0025) với 3 cột mới; Văn phòng và 5 phòng trong_van_phong, phong = mã phòng', async () => {
     const cv1 = await userClient('demo_cv1');
-    const r = await cv1.from('dm_don_vi').select('ma, trong_van_phong, phong, lanh_dao_phu_trach').order('thu_tu');
-    assertOk(r, 'A3 đọc dm_don_vi');
-    assert.equal(r.data.length, 18);
-    assert.deepEqual(r.data.filter((d) => d.trong_van_phong).map((d) => d.ma), ['VAN_PHONG_TINH_UY', 'TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI']);
-    assert.ok(r.data.every((d) => (d.phong === null) === !['TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI'].includes(d.ma) && d.lanh_dao_phu_trach === null));
+    const [r, tat] = await Promise.all([cv1.from('dm_don_vi').select('ma, trong_van_phong, phong, lanh_dao_phu_trach').order('thu_tu'),
+      db().from('dm_don_vi').select('ma')]);
+    assertOk(r, 'A3 đọc dm_don_vi'); assertOk(tat, 'service_role đọc dm_don_vi');
+    assert.equal(r.data.length, tat.data.length, 'A3 thấy mọi đơn vị');
+    const goc = r.data.filter((d) => !d.ma.startsWith('E2E_'));   // đơn vị của migration 0025; phòng giả E2E_% do seed tạo
+    assert.equal(goc.length, 18);
+    assert.deepEqual(goc.filter((d) => d.trong_van_phong).map((d) => d.ma), ['VAN_PHONG_TINH_UY', 'TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI']);
+    assert.ok(goc.every((d) => (d.phong === null) === !['TONG_HOP', 'HC_LT', 'CDS_CY', 'TAI_CHINH_DANG', 'QUAN_TRI'].includes(d.ma) && d.lanh_dao_phu_trach === null));
     assert.ok(r.data.filter((d) => d.phong).every((d) => d.phong === d.ma), 'phong = mã phòng');
     // CHECK: phong chỉ khi trong_van_phong.
     assert.ok((await db().from('dm_don_vi').update({ phong: 'TONG_HOP' }).eq('ma', 'BAN_TO_CHUC').select('ma')).error, 'phong trên đơn vị ngoài bị chặn');

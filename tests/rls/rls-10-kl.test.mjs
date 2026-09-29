@@ -4,7 +4,7 @@
 // phạm vi, lịch sử chỉ trigger ghi, đính chính qua hai hàm. Thứ tự file: chạy sau kl-trang-thai (cùng fixtures).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { userClient, anonClient, adminClient, assertDenied, assertNoRows, assertOk, IDS } from './lib.mjs';
+import { userClient, anonClient, adminClient, assertDenied, assertNoRows, assertOk, IDS, datPcvp2E2ERT, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration 0014–0016 trên project này (chạy lại sau khi merge).';
@@ -15,6 +15,18 @@ before(async () => { if (!SKIP) fx = await setupKlFixtures(); });
 // sẽ muộn hơn rls-9 chạy sau file này và làm EXCLUDE chống chồng kỳ chặn phân công của rls-9).
 const donPhanCong = async () => { if (!SKIP) await adminClient().from('phu_trach_phong').delete().eq('lanh_dao_id', IDS.pcvp2).eq('phong', 'TONG_HOP'); };
 const donCo = async () => { if (!SKIP) await adminClient().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2); };
+
+// Kỳ vọng PCVP tính từ phu_trach_phong đang hiệu lực (seed có thể thêm phòng giả E2E_RT — D1 PR-2a): cộng số việc fixture
+// RLS-TEST theo từng phòng cả-phòng mà PCVP đang phụ trách. Fixture chỉ đặt việc ở TONG_HOP (6) và QUAN_TRI (1).
+const VIEC_FX = { TONG_HOP: 6, QUAN_TRI: 1 };
+let homNay;
+async function kyVongPcvp(id) {
+  homNay ??= (await adminClient().rpc('kl_hom_nay')).data;
+  const r = await adminClient().from('phu_trach_phong').select('phong').eq('lanh_dao_id', id).is('nganh_ma', null)
+    .lte('tu_ngay', homNay).or(`den_ngay.is.null,den_ngay.gte.${homNay}`);
+  assertOk(r, 'đọc phân công');
+  return [...new Set(r.data.map((p) => p.phong))].reduce((a, p) => a + (VIEC_FX[p] || 0), 0);
+}
 
 async function soThay(username) {
   const c = await userClient(username);
@@ -34,16 +46,23 @@ describe('RLS-10 phạm vi đọc nhiem_vu (quyết định 7)', { skip: SKIP },
     assert.equal(await soThay('demo_truongphong'), 6);
     assert.equal(await soThay('demo_cvp'), 7);
   });
-  test('PCVP theo phân công: pcvp (TONG_HOP) 6; pcvp2 (QUAN_TRI) 1', async () => {
-    assert.equal(await soThay('demo_pcvp'), 6);
-    assert.equal(await soThay('demo_pcvp2'), 1);
+  test('PCVP theo phân công đang hiệu lực: pcvp (TONG_HOP) 6; pcvp2 (QUAN_TRI + phòng giả) 1', async () => {
+    assert.equal(await soThay('demo_pcvp'), await kyVongPcvp(IDS.pcvp));
+    assert.equal(await soThay('demo_pcvp2'), await kyVongPcvp(IDS.pcvp2));
+    assert.equal(await kyVongPcvp(IDS.pcvp), 6, 'seed: pcvp phụ trách TONG_HOP');
   });
-  test('PCVP đổi phòng giữa chừng: phân công pcvp2 ↔ TONG_HOP → thấy ngay 7; kết thúc → còn 1', async () => {
-    const qtht = await userClient('demo_qtht');
-    assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: true, p_ly_do: LY_DO, p_tu_ngay: '2026-09-01' }), 'bật');
-    assert.equal(await soThay('demo_pcvp2'), 7);
-    assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: false, p_ly_do: LY_DO }), 'tắt');
-    assert.equal(await soThay('demo_pcvp2'), 1);
+  test('PCVP đổi phòng giữa chừng: phân công pcvp2 ↔ TONG_HOP → thấy ngay thêm 6; kết thúc → về như cũ', async () => {
+    await datPcvp2E2ERT();   // giá trị gốc (dọn lần chạy lỗi trước)
+    const truoc = await kyVongPcvp(IDS.pcvp2);
+    await datPcvp2E2ERT('2026-08-31');   // tạm kết thúc pcvp2 ↔ E2E_RT trước kỳ bật (giới hạn 2 phòng); finally trả giá trị gốc
+    try {
+      const qtht = await userClient('demo_qtht');
+      assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: true, p_ly_do: LY_DO, p_tu_ngay: '2026-09-01' }), 'bật');
+      assert.equal(await soThay('demo_pcvp2'), await kyVongPcvp(IDS.pcvp2));
+      assert.equal(await soThay('demo_pcvp2'), truoc + VIEC_FX.TONG_HOP, 'thấy ngay việc Tổng hợp');
+      assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: false, p_ly_do: LY_DO }), 'tắt');
+      assert.equal(await soThay('demo_pcvp2'), truoc);
+    } finally { await datPcvp2E2ERT(); }
   });
   test('Hội nghị: thấy khi có nhiệm vụ trong phạm vi; danh mục và cấu hình ai cũng đọc; v_nhiem_vu lọc theo RLS', async () => {
     const cv1 = await userClient('demo_cv1');
@@ -61,9 +80,8 @@ describe('RLS-10 phạm vi đọc nhiem_vu (quyết định 7)', { skip: SKIP },
     assert.equal(v.data.find((r) => r.ma === 'NV-T05').trang_thai, 'CHO_DIEU_KIEN');
   });
   test('bị chặn: anon mọi bảng KL và view', async () => {
-    for (const t of ['nhiem_vu', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'dinh_chinh', 'kl_cau_hinh', 'dm_nganh', 'v_nhiem_vu']) {
-      assertDenied(await anonClient().from(t).select('*').limit(1), `anon ${t}`);
-    }
+    const T = ['nhiem_vu', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'dinh_chinh', 'kl_cau_hinh', 'dm_nganh', 'v_nhiem_vu'];
+    (await songSong(T.map((t) => () => anonClient().from(t).select('*').limit(1)))).forEach((r, i) => assertDenied(r, `anon ${T[i]}`));
   });
 });
 
@@ -73,19 +91,20 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     const cv1 = await userClient('demo_cv1');
     const ok = await cv1.from('nhiem_vu').update({ minh_chung: 'RLS-TEST minh chứng', van_ban_trien_khai: 'KH 01' }).eq('id', fx.n1).select('id');
     assertOk(ok, 'sửa minh chứng'); assert.equal(ok.data.length, 1);
-    assertDenied(await cv1.from('nhiem_vu').update({ noi_dung: 'đổi' }).eq('id', fx.n1).select('id'), 'đổi nội dung');
-    assertDenied(await cv1.from('nhiem_vu').update({ nguoi_theo_doi: IDS.cv2 }).eq('id', fx.n1).select('id'), 'đổi chủ trì');
-    assertNoRows(await cv1.from('nhiem_vu').update({ minh_chung: 'x' }).eq('id', fx.n4).select('id'), 'việc người khác');
-    assertDenied(await cv1.from('nhiem_vu').delete().eq('id', fx.n1).select('id'), 'xoá');
+    const [a, b, c, d] = await Promise.all([cv1.from('nhiem_vu').update({ noi_dung: 'đổi' }).eq('id', fx.n1).select('id'),
+      cv1.from('nhiem_vu').update({ nguoi_theo_doi: IDS.cv2 }).eq('id', fx.n1).select('id'), cv1.from('nhiem_vu').update({ minh_chung: 'x' }).eq('id', fx.n4).select('id'),
+      cv1.from('nhiem_vu').delete().eq('id', fx.n1).select('id')]);   // bốn ca bị chặn độc lập — một lượt (D3)
+    assertDenied(a, 'đổi nội dung'); assertDenied(b, 'đổi chủ trì'); assertNoRows(c, 'việc người khác'); assertDenied(d, 'xoá');
   });
   test('bị chặn: A3/A2/Chánh VP không có quan_tri_kl thêm nhiệm vụ, hội nghị; sửa cấu hình', async () => {
     const row = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST mới', loai_thoi_han_ma: 'CHO_QUYET_DINH' };
-    for (const u of ['demo_cv1', 'demo_truongphong', 'demo_cvp']) {
-      const c = await userClient(u);
-      assertDenied(await c.from('nhiem_vu').insert(row).select('id'), `${u} insert nhiệm vụ`);
-      assertDenied(await c.from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: '2026-08-01' }).select('id'), `${u} insert hội nghị`);
-      assertNoRows(await c.from('kl_cau_hinh').update({ gia_tri: '9' }).eq('khoa', 'nguong_sap_den_han_ngay').select('khoa'), `${u} sửa cấu hình`);
-    }
+    const U = ['demo_cv1', 'demo_truongphong', 'demo_cvp'];
+    const kq = await songSong(U.flatMap((u) => [async () => (await userClient(u)).from('nhiem_vu').insert(row).select('id'),
+      async () => (await userClient(u)).from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: '2026-08-01' }).select('id'),
+      async () => (await userClient(u)).from('kl_cau_hinh').update({ gia_tri: '9' }).eq('khoa', 'nguong_sap_den_han_ngay').select('khoa')]));
+    U.forEach((u, i) => {
+      assertDenied(kq[3 * i], `${u} insert nhiệm vụ`); assertDenied(kq[3 * i + 1], `${u} insert hội nghị`); assertNoRows(kq[3 * i + 2], `${u} sửa cấu hình`);
+    });
   });
   test('quan_tri_kl (cấp tạm cho cv2): thấy tất cả, thêm hội nghị + nhiệm vụ, sửa mọi cột; thu cờ → mất ngay', async () => {
     const qtht = await userClient('demo_qtht');

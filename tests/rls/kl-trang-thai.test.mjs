@@ -4,7 +4,7 @@
 // không mang tiền tố RLS-TEST để rls-10 đếm phạm vi không đổi; dọn theo hội nghị 999 ở teardown.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, assertOk, IDS } from './lib.mjs';
+import { adminClient, assertOk, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration 0014–0016 trên project này (chạy lại sau khi merge).';
@@ -73,8 +73,7 @@ describe('trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip: SK
   });
   test('9. Bất biến: tổng nhom_dem của bộ mẫu = 7 dòng, đúng phân bố tại 14/09', async () => {
     const dem = {};
-    for (const id of [fx.n1, fx.n2, fx.n3, fx.n4, fx.n5, fx.n6, fx.n7]) {
-      const r = await tt(id, '2026-09-14');
+    for (const r of await songSong([fx.n1, fx.n2, fx.n3, fx.n4, fx.n5, fx.n6, fx.n7].map((id) => () => tt(id, '2026-09-14')))) {   // hàm thuần, độc lập (D3)
       dem[r.nhom_dem] = (dem[r.nhom_dem] || 0) + 1;
     }
     assert.deepEqual(dem, { QUA_HAN: 2, HOAN_THANH: 2, CAN_DIEN_HAN: 1, CHO_DIEU_KIEN: 1, THUONG_XUYEN: 1 });
