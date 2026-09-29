@@ -47,7 +47,8 @@ function openTroGiup() {
 async function luuHoSo(e) {
   e.preventDefault();
   const btn = $('cnLuuHoSo'); btn.disabled = true;
-  const uid = state.user.id; const cu = state.user.anh_url || null; let moi = null;
+  // URL công khai cũ (trước 0052) không phải đường dẫn trong thư mục của mình → bỏ, không gửi lại (cap_nhat_ho_so sẽ từ chối).
+  const uid = state.user.id; const cu = state.user.anh_url?.startsWith(`${uid}/`) ? state.user.anh_url : null; let moi = null;
   try {
     const file = $('cnAnhFile').files[0];
     if (file) moi = await taiAnhHoSo(file, uid);

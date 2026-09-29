@@ -76,7 +76,7 @@ Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một c
 
 | Bộ | Cục bộ | Staging | Production (công tắc) |
 |---|---|---|---|
-| `tests/rls` | `RLS_LOCAL=1` | `RLS_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` |
+| `tests/rls` | `RLS_LOCAL=1` | `RLS_STAGING=1` | **không chạy** (`KIEM_THU_MOI_TRUONG=production` ⇒ dừng) |
 | `tests/e2e` | `E2E_LOCAL=1` | `E2E_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` |
 
 Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi lời gọi mạng (kể cả Supabase CLI); `tests/rls/dich-tuong-minh.test.mjs` chứng minh (đếm kết nối TCP, `fetch`, tiến trình con = 0). Với staging/production, `SUPABASE_URL` (nếu đặt) phải đúng project của đích. CI: job "Áp migration + lint schema" đặt `RLS_LOCAL=1`; `deploy-staging.yml` job RLS đặt `RLS_STAGING=1`; `ci.yml` job e2e đặt `E2E_STAGING=1` khi `KIEM_THU_MOI_TRUONG` ≠ production. Bỏ `RLS_PROJECT_REF` / `E2E_PROJECT_REF`.

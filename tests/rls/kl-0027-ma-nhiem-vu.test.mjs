@@ -4,12 +4,12 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { adminClient, assertOk, IDS, STAGING_REF, PRODUCTION_REF, DICH } from './lib.mjs';
+import { adminClient, assertOk, IDS, STAGING_REF, DICH } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
-const dich = DICH === 'local' ? ['--local'] : ['--linked', '--project-ref', DICH === 'staging' ? STAGING_REF : PRODUCTION_REF];   // đích tường minh (lib.mjs)
+const dich = DICH === 'local' ? ['--local'] : ['--linked', '--project-ref', STAGING_REF];   // đích tường minh (lib.mjs)
 
 // Chạy một câu SQL qua CLI; trả chuỗi kết quả thô (JSON) hoặc null khi CLI không chạy được.
 function sql(cau) {

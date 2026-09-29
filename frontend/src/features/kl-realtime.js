@@ -1,6 +1,7 @@
 // Thời gian thực cho module KL (GĐ10 PR 10D, thiết kế 3.5, quyết định 8; PR-2a B6): Supabase Realtime postgres_changes, chỉ INSERT/UPDATE
-// trên nhiem_vu, chi_dao, minh_chung (publication từ 0051), tu_choi (0037) — RLS SELECT của người nghe lọc sự kiện (test kl-realtime-su-kien);
-// bỏ dinh_chinh (không màn hình nào nghe) và DELETE. Sự kiện chỉ là TÍN HIỆU kèm {bang, id việc}: gộp 1,5 giây (tối đa 5 giây kể từ sự kiện
+// trên nhiem_vu, chi_dao, minh_chung (publication từ 0051), tu_choi (0037), dinh_chinh (0016: đề nghị / duyệt đính chính chỉ ghi dinh_chinh
+// nhưng đổi dang_dinh_chinh, nhóm "Đang tra soát" của việc) — RLS SELECT của người nghe lọc sự kiện (test kl-realtime-su-kien); bỏ DELETE
+// (chỉ quản trị dọn dữ liệu — dự phòng 60 giây / chuyển màn nạp lại). Sự kiện chỉ là TÍN HIỆU kèm {bang, id việc}: gộp 1,5 giây (tối đa 5 giây kể từ sự kiện
 // đầu) rồi giao cho hàm của màn hình đang mở — màn hình tự quyết nạp lại một việc (đã có trong danh sách) hay cả màn; trạng thái vẫn do SQL
 // tính, không vá dòng ở client. Dự phòng: kênh rời SUBSCRIBED (CHANNEL_ERROR / TIMED_OUT / CLOSED) → làm mới
 // mỗi 60 giây và báo trên màn hình; kênh nối lại → tắt polling. Thêm: làm mới khi tab quay lại foreground; sự kiện window
@@ -13,7 +14,7 @@ const GOP_MS = 1500;
 const GOP_TOI_DA_MS = 5000;
 const CHU_KY_DU_PHONG_MS = 60_000;
 const CHO_KET_NOI_MS = 4_000;   // chưa SUBSCRIBED sau chừng này mới coi là mất kết nối (tránh nháy vàng lúc mở màn hình)
-const BANG = ['nhiem_vu', 'chi_dao', 'minh_chung', 'tu_choi'];   // tên bảng thật (0023); view bí danh kl_* không phát sự kiện
+const BANG = ['nhiem_vu', 'chi_dao', 'minh_chung', 'tu_choi', 'dinh_chinh'];   // tên bảng thật (0023); view bí danh kl_* không phát sự kiện
 
 let channel = null;
 let onChange = null;        // hàm đọc lại do màn hình đang mở cung cấp

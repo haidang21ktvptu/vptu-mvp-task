@@ -31,7 +31,8 @@ function thay(rows, id, moi) {
 }
 
 // Cập nhật bộ nhớ hai màn hình và vẽ lại màn hình đang hiện. Lỗi đọc (mạng, staging bận) không chặn luồng: lần nạp cả danh sách phía sau xử lý.
-export async function napLaiViec(id) {
+// Realtime (su-kien.js, kl/index.js) gọi { nemLoi: true, veLai: false }: lỗi ném ra để nạp cả màn thay thế; tự vẽ một lần sau cả lượt.
+export async function napLaiViec(id, { nemLoi = false, veLai = true } = {}) {
   if (!id) return;
   try {
     const { row, ngoaiLe, tuChoi } = await docMotViec(id);
@@ -40,7 +41,8 @@ export async function napLaiViec(id) {
     thay(dh.ngoaiLe, id, ngoaiLe);
     dh.ngoaiLe.sort(soSanhNgoaiLe);
     dh.tuChoiCho = [...(dh.tuChoiCho || []).filter((t) => t.nhiem_vu_id !== id), ...tuChoi.filter((t) => t.trang_thai === 'CHO_DUYET')];
+    if (!veLai) return;
     if (sectionDangHien('viewKl')) render(true);
     if (sectionDangHien('viewDieuHanh')) veDieuHanh();
-  } catch { /* nạp lại toàn danh sách phía sau vẫn chạy */ }
+  } catch (e) { if (nemLoi) throw e; /* nạp lại toàn danh sách phía sau vẫn chạy */ }
 }

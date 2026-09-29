@@ -11,7 +11,7 @@ import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
@@ -39,7 +39,9 @@ export function openKl(loc) {
 async function klTheoSuKien(su) {
   if (!sectionDangHien('viewKl')) return;
   const ids = [...new Set(su.map((e) => e.id))];
-  if (su.length && ids.length <= 5 && ids.every((id) => id && timKlRow(id))) { await Promise.all(ids.map((id) => napLaiViec(id))); return; }
+  if (su.length && ids.length <= 5 && ids.every((id) => id && timKlRow(id))) {
+    try { await Promise.all(ids.map((id) => napLaiViec(id, { nemLoi: true, veLai: false }))); render(true); return; } catch { /* nạp cả danh sách */ }
+  }
   loadKl();
 }
 

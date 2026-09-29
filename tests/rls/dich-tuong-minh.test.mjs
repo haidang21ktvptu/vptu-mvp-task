@@ -39,4 +39,12 @@ describe('Đích kiểm thử phải chọn tường minh — thiếu/thừa th�
       assert.equal(r.goi, 0);
     });
   }
+  test('tests/rls: KIEM_THU_MOI_TRUONG=production (kể cả kèm RLS_STAGING=1) ⇒ dừng mã 2, 0 lời gọi mạng — bộ RLS không chạy trên production', () => {
+    for (const them of [{ KIEM_THU_MOI_TRUONG: 'production' }, { KIEM_THU_MOI_TRUONG: 'production', RLS_STAGING: '1' }]) {
+      const r = napKhong('./lib.mjs', them);
+      assert.equal(r.ma, 2, r.loi);
+      assert.match(r.loi, /Không chạy bộ RLS trên production/);
+      assert.equal(r.goi, 0);
+    }
+  });
 });

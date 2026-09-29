@@ -121,7 +121,7 @@ export const loadVanBan = () => taiTheoTrang(vanBanTheoThuTu, 'đọc văn bản
 // Ô chọn văn bản ở Giao việc (B6): tìm theo số hiệu / trích yếu, 50 dòng mỗi lần ("Xem thêm" lấy trang kế). Trả { ds, conNua }.
 export async function timVanBan(tuKhoa = '', trang = 0, co = 50) {
   let q = vanBanTheoThuTu();
-  const kw = tuKhoa.trim().replace(/[%_,()*]/g, ' ').trim();
+  const kw = tuKhoa.trim().replace(/[%_,()*"\\:]/g, ' ').trim();
   if (kw) q = q.or(`so_ket_luan.ilike.*${kw}*,trich_yeu.ilike.*${kw}*`);
   const ds = loi(await q.range(trang * co, trang * co + co), 'đọc văn bản');   // lấy co + 1 dòng để biết còn nữa không
   return { ds: ds.slice(0, co), conNua: ds.length > co };

@@ -14,7 +14,7 @@ export async function dieuHanhTheoSuKien(suKien, napCa, ve) {
   const bang = new Set(suKien.map((e) => e.bang));
   try {
     await Promise.all([
-      ...ids.map((id) => napLaiViec(id)),
+      ...ids.map((id) => napLaiViec(id, { nemLoi: true, veLai: false })),
       napSoLieu(),
       bang.has('chi_dao') ? Promise.all([loadChiDaoTT(), loadChiDaoCho()]).then(([tt, cd]) => { dh.chiDaoTT = tt; dh.chiDaoCho = cd; }) : null,
       bang.has('minh_chung') ? loadMinhChungCho().then((mc) => { dh.mcCho = mc; }) : null,
