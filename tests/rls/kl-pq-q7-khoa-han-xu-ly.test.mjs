@@ -1,6 +1,6 @@
 // Q7 (thiết kế PR-2, chốt 28/9/2026) — DL-5/CB-4: chỉ GIA_HAN đổi hạn. Owner / người theo dõi (không phải quan_tri_kl) chỉ được
 // ĐIỀN han_xu_ly khi đang NULL (việc cũ "Cần điền hạn"); đổi hạn đang có phải bị chặn. Hiện guard 0026 để han_xu_ly trong danh
-// sách cột được sửa, policy UPDATE cho Owner/người theo dõi ⇒ lỗ hổng. Test 1–2 khẳng định hành vi ĐÚNG, đánh dấu todo (đang đỏ).
+// sách cột được sửa, policy UPDATE cho Owner/người theo dõi ⇒ lỗ hổng. Vá ở 0052 (PR-2a): guard chặn đổi hạn đang có qua API.
 // Khoá dữ liệu: "KL-PQ-Q7"; tự dọn ở before lẫn after.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,7 +11,6 @@ const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên pro
 const db = () => adminClient();
 const KHOA = 'KL-PQ-Q7';
 const HAN = '2026-12-31';
-const TODO = 'lỗ hổng Q7, vá ở Lượt 2 PR-2a';
 let fx; const id = {};
 const them = async (ma, row) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: fx.hn, noi_dung: `${KHOA} ${ma}`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: HAN,
@@ -38,11 +37,11 @@ describe('Q7 — Owner / người theo dõi không tự đổi han_xu_ly (chỉ 
   });
   after(don);
 
-  test('1. Owner A3 (cv1) lùi han_xu_ly của việc đang có hạn phải bị chặn', { todo: TODO }, async () => {
+  test('1. Owner A3 (cv1) lùi han_xu_ly của việc đang có hạn phải bị chặn', async () => {
     await assertChan(await doiHan('demo_cv1', 'Q7A', '2027-06-30'), 'Q7A', HAN, 'Owner cv1 đổi hạn');
   });
 
-  test('2. Người theo dõi (truongphong) đổi han_xu_ly của việc đang có hạn phải bị chặn', { todo: TODO }, async () => {
+  test('2. Người theo dõi (truongphong) đổi han_xu_ly của việc đang có hạn phải bị chặn', async () => {
     await assertChan(await doiHan('demo_truongphong', 'Q7B', '2027-03-31'), 'Q7B', HAN, 'Người theo dõi đổi hạn');
   });
 

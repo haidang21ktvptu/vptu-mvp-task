@@ -88,11 +88,13 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
     assert.equal((await db().from('chi_dao').select('id').eq('nhiem_vu_id', id['DV-A3'])).data.length, 0, 'không có chỉ đạo nào được ghi');
   });
 
-  // LỖI HIỆN TẠI (phát hiện 2026-09-22, chờ PR RLS): văn bản có tao_boi NULL (nhập bằng script/service_role) → biểu thức
-  // "tao_boi = auth.uid() OR A1 OR quan_tri_kl" cho NULL, IF NOT NULL không chặn → MỌI người đăng nhập sửa được trích yếu.
-  test('5b. [hanh-vi-hien-tai] văn bản tao_boi NULL: QTHT / A3 đặt trích yếu phải bị chặn — hiện KHÔNG chặn (lỗi NULL trong allowlist)', { todo: 'chờ PR RLS sửa van_ban_dat_trich_yeu (tao_boi NULL)' }, async () => {
-    assertDenied(await rpc('demo_qtht', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu` }), 'QTHT đặt trích yếu văn bản tao_boi NULL');
-    assertDenied(await rpc('demo_cv1', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu` }), 'A3 đặt trích yếu văn bản tao_boi NULL');
+  // 0052 (C1): văn bản tao_boi NULL (nhập bằng script) — allowlist viết IS NOT TRUE nên NULL không còn lọt; chỉ A1 và quan_tri_kl sửa được.
+  test('5b. văn bản tao_boi NULL: A3, QTHT, A2, A0 bị chặn (42501); A1, quan_tri_kl được', async () => {
+    for (const u of ['demo_cv1', 'demo_qtht', 'demo_truongphong', 'demo_a0']) {
+      assertDenied(await rpc(u, 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu ${u}` }), `${u} đặt trích yếu văn bản tao_boi NULL`);
+    }
+    assertOk(await rpc('demo_pcvp', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu A1` }), 'A1 đặt trích yếu');
+    assertOk(await rpc('demo_cv2', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu qtkl` }), 'quan_tri_kl (cv2) đặt trích yếu');
   });
 
   test('6. quan_tri_kl là A3 (cv2): xac_nhan_nhan_viec / chi_dao_gui / dat_cap_quyet_dinh trên việc người khác → 42501 (cờ nhập liệu không thêm quyền điều hành); thư ký TT cũng vậy', async () => {
