@@ -36,6 +36,15 @@ describe('Realtime — sự kiện tới đúng người theo RLS (nhiem_vu, chi
       owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.cvp }).select('id').single();
     assertOk(r, 'tạo việc'); nvId = r.data.id;
     await Promise.all([nghe('cv1', 'demo_cv1'), nghe('cv2', 'demo_cv2')]);
+    // Mồi: ngay sau `supabase start`/reset, SUBSCRIBED có thể tới trước khi Realtime đọc được WAL (lượt 5: cv1 nhận 0 sự kiện dù kênh đã
+    // SUBSCRIBED). Sửa việc tới khi cv1 nhận sự kiện đầu (tối đa 20 giây) rồi mới đo; mảng nhận được làm trống trước test.
+    for (let i = 0; i < 20 && !nhan.cv1.length; i += 1) {
+      assertOk(await db().from('nhiem_vu').update({ ghi_chu: `${KHOA} mồi ${i}` }).eq('id', nvId), 'mồi realtime');
+      for (let j = 0; j < 5 && !nhan.cv1.length; j += 1) await cho(200);
+    }
+    assert.ok(nhan.cv1.length, 'Realtime chưa phát sự kiện cho cv1 sau 20 giây mồi');
+    await cho(1000);
+    nhan.cv1.length = 0; nhan.cv2.length = 0;
   });
   after(async () => {
     await Promise.all(kenh.map(([c, ch]) => c.removeChannel(ch)));

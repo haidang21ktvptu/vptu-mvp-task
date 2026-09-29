@@ -65,6 +65,11 @@ Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một c
 
 **Phát hành trước go-live — không cần backup tay**: `deploy-prod.yml` đã `pg_dump` (mã hoá, artifact 90 ngày) ngay trước `db push` production và ghi mốc backup; *Backup định kỳ production* vẫn giữ lịch 3 ngày/lần; bản local (`scripts/backup-db.sh`) chỉ chạy khi muốn có bản ngoài GitHub, không phải bước bắt buộc của quy trình tag.
 
+## e2e PR-2a — project `pr2a` (chỉ máy tính)
+
+- `ca-nhan-anh` (tài khoản riêng `demo_e2e_anh`), `id-duy-nhat` (`demo_e2e_mc`), `cap-nhat-nhanh-han` (`demo_e2e_nv`), `giao-viec-kiem-nhiem` (PCVP2, PCVP, Chánh VP, Trưởng phòng — mỗi vai một phiên, đổi 5 loại văn bản trên biểu mẫu, chỉ bấm Giao ở ô đại diện). Chạy sau `gd22` vì đổi phân công PCVP/PCVP2 lúc chạy; `dang-nhap` phụ thuộc `pr2a`. Logic nên không chạy điện thoại. Chạy riêng: `npx playwright test --project=pr2a --no-deps` (kèm biến đích).
+- Đếm lời gọi DB mỗi màn (đo tay, không chạy trong CI): spec `tests/e2e/_dem-goi/` nằm ngoài repo (`.git/info/exclude`); kết quả trước/sau ở thư mục bàn giao PR-2a.
+
 ## Đích kiểm thử phải chọn tường minh (PR-2a, từ 29/9/2026)
 
 `tests/rls/lib.mjs` và `tests/e2e/lib/keys.mjs` **không còn đích mặc định** (trước đây thiếu biến cục bộ là trỏ staging qua Supabase CLI — sự cố 29/9: một file RLS chạy nhầm lên staging). Phải đặt **đúng một**:
