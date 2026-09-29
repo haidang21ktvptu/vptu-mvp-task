@@ -14,6 +14,7 @@ import { theHtml } from './the-viec.js';
 import { giuDienBien } from '../dien-bien.js';
 import { kpiHtml, NHAN_KPI } from './kpi.js';
 import { datNapLai, mountHanhDongDieuHanh } from './hanh-dong.js';
+import { dieuHanhTheoSuKien } from './su-kien.js';
 
 // "Thứ Tư 16 tháng 9" theo giờ Việt Nam.
 export function ngayDaiVN(d = new Date()) {
@@ -92,7 +93,7 @@ export function openDieuHanh() {
   setActiveNav('navDieuHanh');
   datNapLai(loadDieuHanh); // Cán bộ / Báo cáo đặt hàm nạp lại riêng khi mở — quay về đây đặt lại
   loadDieuHanh();
-  batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadDieuHanh(); }, (m) => hienKetNoi('dhKetNoi', m));
+  batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadDieuHanh, veDieuHanh); }, (m) => hienKetNoi('dhKetNoi', m));
 }
 
 const locKhau = ({ khau }) => { dh.loc.khau = dh.loc.khau === khau ? null : khau; if (dh.loc.kpi === 'tat') dh.loc.kpi = null; veDieuHanh(); };

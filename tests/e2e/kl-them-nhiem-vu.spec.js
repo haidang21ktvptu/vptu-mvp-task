@@ -117,7 +117,8 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await nav(page, 'navGiaoViec');
     await expect(page.locator('#viewGiaoViec')).toBeVisible();
     const vb = await db.from('van_ban_giao_viec').select('id').eq('so_ket_luan', vbKhoa).single();
-    await page.locator('#klThVanBan').selectOption(vb.data.id);
+    await page.locator('#klThVanBanTim').fill(vbKhoa);   // PR-2a B6: ô văn bản chỉ tải 50 dòng đầu — tìm theo số hiệu ở DB, tự chọn kết quả đầu
+    await expect(page.locator('#klThVanBan')).toHaveValue(vb.data.id, NAP);
     await page.locator('#klThLoai').selectOption('KY_BAN_HANH');
     await expect(page.locator('#klThHan')).toBeDisabled();
     await expect(page.locator('#klThHan')).toHaveValue('2026-09-11');

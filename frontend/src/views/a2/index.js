@@ -12,6 +12,7 @@ import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { dh, napDieuHanh, viecDo } from '../shared/dieu-hanh/du-lieu.js';
+import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
@@ -75,7 +76,7 @@ function openDieuHanh() {
   setActiveNav('navDieuHanh');
   datNapLai(loadPhongToi);
   loadPhongToi();
-  batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadPhongToi(); }, (m) => hienKetNoi('dhKetNoi', m));
+  batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadPhongToi, ve); }, (m) => hienKetNoi('dhKetNoi', m));
 }
 
 export function registerA2View() {

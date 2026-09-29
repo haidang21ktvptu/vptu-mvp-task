@@ -1,6 +1,7 @@
 // Khu "Ngưỡng cảnh báo": bảng kl_cau_hinh (mọi khoá đều là số ngày/giờ). Chánh Văn phòng / quan_tri_he_thong sửa qua qt_dat_cau_hinh
 // (số nguyên ngày, lý do bắt buộc, ghi nhat_ky_he_thong); Phó Chánh Văn phòng chỉ xem.
 import { supabase } from '../../../lib/supabase.js';
+import { xoaDanhMucDaNho } from '../../../lib/kl/du-lieu.js';
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state, isChief } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
@@ -28,6 +29,7 @@ export async function luuCauHinh({ khoa }, onDone) {
   if (!lyDo) { notifyError('Phải ghi lý do thay đổi — lý do được lưu vào nhật ký hệ thống.'); $(`qtChLd-${khoa}`).focus(); return; }
   const { error } = await supabase.rpc('qt_dat_cau_hinh', { p_khoa: khoa, p_gia_tri: giaTri, p_ly_do: lyDo });
   if (error) { notifyError('Không lưu được: ' + error.message); return; }
+  xoaDanhMucDaNho();   // ngưỡng nằm trong bản danh mục nhớ trong phiên (B6)
   notifySuccess(`Đã đổi ${khoa} = ${giaTri}.`);
   await onDone();
 }

@@ -1,4 +1,5 @@
 // Vòng đời phiên: nạp danh bạ, vào app, đăng xuất, khôi phục phiên khi tải lại trang.
+import { COT_TAI_KHOAN } from '../lib/kl/cot.js';
 import { supabase, sessionStorageKey } from '../lib/supabase.js';
 import { show } from '../lib/dom.js';
 import { state } from '../lib/state.js';
@@ -12,7 +13,7 @@ export function onSessionLeave(fn) { hooks.onLeave.push(fn); }
 // Danh bạ dùng cho mọi danh sách cán bộ (chọn người, cây phân cấp, KPI, nhắn tin). Tài khoản hệ thống
 // (is_system, ví dụ smoke_test sau phát hành) bị lọc ngay tại đây nên không xuất hiện ở đâu cả.
 export async function loadAccountsCache() {
-  const { data } = await supabase.from('accounts_public').select('*');
+  const { data } = await supabase.from('accounts_public').select(COT_TAI_KHOAN);
   if (data) state.accounts = data.filter((a) => !a.is_system);
 }
 

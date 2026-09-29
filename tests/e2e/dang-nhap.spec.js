@@ -13,6 +13,14 @@ test.describe.serial('Đăng nhập theo vai trò', () => {
     await page.goto('./');
     await expect(page.locator('#loginSection')).toBeVisible();
     await expect(page.locator('#mainHeader')).toBeHidden();
+    // PR-2a lỗi (2): máy tính 1280x800 — thẻ co theo nội dung: nút Đăng nhập → dòng cuối đúng bằng khoảng cách giữa các ô, dòng cuối → đáy thẻ
+    // đúng bằng padding (không còn khoảng trống do chiều cao cố định).
+    const the = await page.locator('#loginForm').evaluate((f) => {
+      const cs = globalThis.getComputedStyle(f); const b = f.querySelector('#loginSubmitBtn').getBoundingClientRect(); const c = f.querySelector('.cuoi').getBoundingClientRect(); const r = f.getBoundingClientRect();
+      return { nutDenCuoi: c.top - b.bottom, cuoiDenDay: r.bottom - c.bottom, gap: parseFloat(cs.rowGap), pad: parseFloat(cs.paddingBottom) };
+    });
+    expect(the.nutDenCuoi).toBeLessThanOrEqual(the.gap + 1);
+    expect(the.cuoiDenDay).toBeLessThanOrEqual(the.pad + 1);
 
     await page.locator('#loginUsername').fill('demo_cvp');
     await page.locator('#loginPassword').fill('sai-mat-khau');

@@ -3,6 +3,7 @@
 // transaction; không ghi thẳng bảng, không xoá, không chuyển ngành. Khi chọn ngành để thêm, cảnh báo nếu ngành đang có
 // PCVP kiêm nhiệm: lĩnh vực mới sẽ thuộc PCVP phụ trách phòng cho tới khi được phân công thêm (chủ dự án 15/9/2026).
 import { supabase } from '../../../lib/supabase.js';
+import { xoaDanhMucDaNho } from '../../../lib/kl/du-lieu.js';
 import { $, show, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { findAccount } from '../../../lib/state.js';
@@ -94,6 +95,7 @@ async function themLinhVuc() {
   if (!answer) return;
   const { data, error } = await supabase.rpc('admin_them_linh_vuc', { p_nganh_ma: nganhMa, p_ten: ten, p_ly_do: answer.lyDo });
   if (error) { notifyError('Không thêm được: ' + error.message); return; }
+  xoaDanhMucDaNho();   // danh mục nhớ trong phiên (B6) đọc lại ở lần mở màn hình kế tiếp
   $('qtLvTen').value = '';
   notifySuccess(`Đã thêm lĩnh vực "${ten}" (${data}) vào ${tenNganhNgan(nganhMa)}.`);
   await onDone(); // loadQuanTri: nạp lại danh mục + vẽ lại mọi phần
@@ -113,6 +115,7 @@ async function luuLinhVuc({ ma }) {
   if (!answer) return;
   const { error } = await supabase.rpc('admin_sua_linh_vuc', { p_ma: ma, p_ten: ten, p_thu_tu: thuTu, p_ly_do: answer.lyDo });
   if (error) { notifyError('Không sửa được: ' + error.message); return; }
+  xoaDanhMucDaNho();
   notifySuccess(`Đã lưu lĩnh vực ${ma}.`);
   await onDone();
 }

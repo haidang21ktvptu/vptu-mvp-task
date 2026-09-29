@@ -1,7 +1,9 @@
-// Màn hình Cá nhân (GĐ23): Hồ sơ (chỉ sửa ảnh, điện thoại → cap_nhat_ho_so; ảnh lên bucket anh-ho-so thư mục <uid>/), Thông báo (dat_tuy_chon),
+// Màn hình Cá nhân (GĐ23): Hồ sơ (chỉ sửa ảnh, điện thoại → cap_nhat_ho_so; ảnh lên bucket riêng tư anh-ho-so thư mục <uid>/, lưu ĐƯỜNG DẪN,
+// hiện bằng signed URL — PR-2a C2, lib/anh-ho-so.js), Thông báo (dat_tuy_chon),
 // trang Trợ giúp theo vai; A0 có "Bản gọn" (tuy_chon.ban_gon → body.ban-gon). Quyền thật ở hàm SQL/RLS Storage.
 import { supabase } from '../../../lib/supabase.js';
-import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
+import { $, show, setText } from '../../../lib/dom.js';
+import { veAnh, taiAnhHoSo, xoaAnhHoSo } from '../../../lib/anh-ho-so.js';
 import { DEPT_NAMES, nhanChucDanh } from '../../../lib/constants.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
@@ -25,7 +27,7 @@ function renderHoSo() {
   setText('cnPhong', DEPT_NAMES[u.department] || (u.role_group === 'A0' ? 'Thường trực Tỉnh ủy' : u.department || '—'));
   setText('cnUsername', u.username);
   $('cnDienThoai').value = u.dien_thoai || '';
-  $('cnAvatar').innerHTML = u.anh_url ? `<img src="${escapeHtml(u.anh_url)}" alt="">` : escapeHtml((u.full_name || '?').trim().split(/\s+/).pop().charAt(0).toUpperCase());
+  veAnh($('cnAvatar'), u);
   $('cnAmChuong').checked = u.tuy_chon?.am_chuong === true;
   $('cnGomTin').checked = u.tuy_chon?.gom_tin === true;
 }
@@ -41,24 +43,17 @@ function openTroGiup() {
   $('tgNoiDung').innerHTML = troGiupHtml(state.user?.role_group);
 }
 
-// Tải ảnh lên Storage (ghi đè <uid>/anh.<ext>), rồi lưu URL công khai kèm điện thoại hiện có.
-async function taiAnh(file) {
-  if (!file) return null;
-  if (file.size > 2 * 1024 * 1024) throw new Error('Ảnh vượt 2 MB.');
-  const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[file.type];
-  if (!ext) throw new Error('Chỉ nhận ảnh JPG, PNG hoặc WebP.');
-  const path = `${state.user.id}/anh.${ext}`;
-  const { error } = await supabase.storage.from('anh-ho-so').upload(path, file, { upsert: true, contentType: file.type });
-  if (error) throw new Error('Không tải được ảnh: ' + error.message);
-  return `${supabase.storage.from('anh-ho-so').getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
-}
-
+// Ảnh mới: tải lên tên mới → lưu đường dẫn kèm điện thoại → xoá ảnh cũ của mình. Lưu hồ sơ lỗi thì xoá ảnh vừa tải (không để tệp mồ côi).
 async function luuHoSo(e) {
   e.preventDefault();
   const btn = $('cnLuuHoSo'); btn.disabled = true;
+  const uid = state.user.id; const cu = state.user.anh_url || null; let moi = null;
   try {
-    const anh = (await taiAnh($('cnAnhFile').files[0])) || state.user.anh_url || null;
-    await rpc('cap_nhat_ho_so', { p_dien_thoai: $('cnDienThoai').value, p_anh_url: anh });
+    const file = $('cnAnhFile').files[0];
+    if (file) moi = await taiAnhHoSo(file, uid);
+    const anh = moi || cu;
+    try { await rpc('cap_nhat_ho_so', { p_dien_thoai: $('cnDienThoai').value, p_anh_url: anh }); } catch (err) { await xoaAnhHoSo(moi, uid); throw err; }
+    if (moi && cu && cu !== moi) xoaAnhHoSo(cu, uid);
     state.user = { ...state.user, dien_thoai: $('cnDienThoai').value.trim() || null, anh_url: anh };
     $('cnAnhFile').value = '';
     renderHoSo(); renderAvatar();

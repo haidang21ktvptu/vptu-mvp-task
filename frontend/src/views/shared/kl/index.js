@@ -31,8 +31,16 @@ export function openKl(loc) {
   const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
   const nap = loadKl();
-  batKlRealtime(() => { if (sectionDangHien('viewKl')) loadKl(); }, (m) => hienKetNoi('klKetNoi', m));
+  batKlRealtime(klTheoSuKien, (m) => hienKetNoi('klKetNoi', m));
   return nap;
+}
+
+// Realtime (B6): sự kiện của việc đã có trong danh sách → nạp lại riêng việc đó (dòng + ngăn chi tiết đang mở); còn lại nạp cả danh sách.
+async function klTheoSuKien(su) {
+  if (!sectionDangHien('viewKl')) return;
+  const ids = [...new Set(su.map((e) => e.id))];
+  if (su.length && ids.length <= 5 && ids.every((id) => id && timKlRow(id))) { await Promise.all(ids.map((id) => napLaiViec(id))); return; }
+  loadKl();
 }
 
 // Mở đúng một việc từ màn hình khác (thẻ điều hành, chuông, chỉ đạo đã gửi): lọc theo mã rồi mở ngăn chi tiết.

@@ -2,6 +2,7 @@
 // trigger trên auth.users tắt cờ khi đổi, RPC xoa_co_doi_mat_khau() chính chủ xoá thêm cho chắc), hoặc tự nguyện từ menu bánh răng (có Quay lại).
 // Lối ra khi bị chặn: nút "Đăng xuất" (#dmkDangXuatBtn, action dangXuat của shell/banh-rang.js → handleLogout) — huỷ phiên, về đăng nhập, cờ giữ nguyên.
 // Mật khẩu mới ≥ 8 ký tự, có chữ và số, khác mật khẩu tạm (giữ trong bộ nhớ module từ lúc đăng nhập, không lưu storage).
+import { COT_TAI_KHOAN } from '../lib/kl/cot.js';
 import { supabase } from '../lib/supabase.js';
 import { $, show, setText, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
@@ -56,7 +57,7 @@ async function handleChangePassword(e) {
     const { error } = await supabase.auth.updateUser({ password: pw });
     if (error) { showInlineError('changePasswordError', changePasswordErrorMessage(error)); return; }
     await supabase.rpc('xoa_co_doi_mat_khau');
-    const { data: profile } = await supabase.from('accounts_public').select('*').eq('id', state.user.id).single();
+    const { data: profile } = await supabase.from('accounts_public').select(COT_TAI_KHOAN).eq('id', state.user.id).single();
     if (profile) state.user = profile;
     matKhauTam = null;
     if (batBuoc) { batBuoc = false; show('changePasswordModal', false); enterApp(); return; }

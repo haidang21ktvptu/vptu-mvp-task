@@ -12,6 +12,7 @@ import { nopMinhChung, loiMinhChung } from '../../lib/kl/minh-chung.js';
 import { homNayVN, ghiChuHan } from '../../lib/kl/ngay.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { dh, napDieuHanh } from '../shared/dieu-hanh/du-lieu.js';
+import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN, datCauHinhDieuHanh } from '../shared/dieu-hanh/man-hinh.js';
 import { napLaiViec } from '../shared/kl/nap-lai-viec.js';
@@ -63,7 +64,7 @@ function openDieuHanh() {
   setActiveNav('navDieuHanh');
   datNapLai(loadViecCuaToi);
   loadViecCuaToi();
-  batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadViecCuaToi(); }, (m) => hienKetNoi('dhKetNoi', m));
+  batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadViecCuaToi, ve); }, (m) => hienKetNoi('dhKetNoi', m));
 }
 const openTheoDoi = () => { openKl({ theoDoiCuaToi: state.user.id }); setActiveNav('navTheoDoi'); };
 

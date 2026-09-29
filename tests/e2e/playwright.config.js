@@ -39,7 +39,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/smoke/**'] },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
     // GĐ19: chi-dao-tt ghi nhiệm vụ vào phạm vi PCVP2 (Quản trị) — chạy SAU desktop để không đua với bộ số kl-dashboard (PCVP2).
     { name: 'chi-dao-tt', use: DESKTOP, testMatch: /chi-dao-tt\.spec\.js/, dependencies: ['desktop'] },
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở project riêng bên dưới).
@@ -49,8 +49,12 @@ export default defineConfig({
     { name: 'bo-cuc', use: MOBILE, testMatch: /bo-cuc-mobile\.spec\.js/, dependencies: ['mobile'] },
     // GĐ22: Thường trực giao việc (A0 → CVP) và từ chối ba phía (E2E_NV ↔ A2) đổi trang chủ của A1/A2/E2E_NV — chạy sau các project trên.
     { name: 'gd22', use: DESKTOP, testMatch: [/tt-giao-viec\.spec\.js/, /tu-choi-ba-phia\.spec\.js/, /viec-moi-tung-nguoi\.spec\.js/, /giao-lai-chu-tri\.spec\.js/], dependencies: ['desktop', 'mobile', 'bo-cuc', 'chi-dao-tt'] },
+    // PR-2a (logic, chỉ máy tính): ảnh hồ sơ, id duy nhất, Cập nhật nhanh khoá hạn (Q7), Giao việc theo phạm vi kiêm nhiệm (C3 — đổi phân công
+    // PCVP/PCVP2 trong lúc chạy nên chạy SAU mọi project đọc số liệu của hai tài khoản này; tài khoản A3 riêng mỗi spec).
+    { name: 'pr2a', use: DESKTOP, testMatch: [/ca-nhan-anh\.spec\.js/, /id-duy-nhat\.spec\.js/, /cap-nhat-nhanh-han\.spec\.js/, /giao-viec-kiem-nhiem\.spec\.js/],
+      dependencies: ['desktop', 'mobile', 'bo-cuc', 'chi-dao-tt', 'gd22'] },
     // GĐ23: doi-mat-khau tạo tài khoản tạm bằng service_role và đăng nhập qua form — chạy cùng lượt cuối với dang-nhap.
-    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22'] },
+    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',

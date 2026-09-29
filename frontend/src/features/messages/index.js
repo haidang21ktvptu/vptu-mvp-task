@@ -10,7 +10,7 @@ import { setActiveNav, showSection } from '../../views/shell/index.js';
 import { gomTheoViec } from '../thong-bao/index.js';
 import { lamMoiHuyHieu } from '../huy-hieu.js';
 import { messagesTemplate, toastTinTemplate } from './template.js';
-import { openDMChat, openViecChat, moViecTuHoiThoai, handleSendDM, closeToast, datMoNhanTin } from './chat.js';
+import { openDMChat, openViecChat, moViecTuHoiThoai, handleSendDM, closeToast, datMoNhanTin, xemTinCu } from './chat.js';
 
 let tuKhoa = '';
 let nhomViec = [];
@@ -69,5 +69,5 @@ export function mountMessages() {
   document.body.insertAdjacentHTML('beforeend', toastTinTemplate);
   $('dmSearchContact').addEventListener('input', (e) => { tuKhoa = e.target.value.trim(); veDanhBa(); });
   datMoNhanTin(openNhanTin);
-  registerActions({ openNhanTin, openDMChat, openViecChat: (ds) => { viecDangChon = ds.nv; return openViecChat(ds); }, moViecTuHoiThoai, handleSendDM, closeToast });
+  registerActions({ openNhanTin, openDMChat, openViecChat: (ds) => { viecDangChon = ds.nv; return openViecChat(ds); }, moViecTuHoiThoai, handleSendDM, closeToast, xemTinCu });
 }

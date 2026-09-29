@@ -7,6 +7,7 @@
 -- 3. kl_so_lieu_cac_moc(date[]): một lần RLS, nhiều ngày ⇒ jsonb mảng, mỗi phần tử y hệt kl_so_lieu_tai; kl_so_lieu_tai gọi với 1 ngày.
 -- 4. kl_so_chua_xu_ly: nhánh can_quyet dùng trang_thai_dong (bản cũ 2 lời gọi trang_thai mỗi dòng).
 -- 5. Index B4: KHÔNG thêm — xem cuối file.
+-- 6. kl_danh_muc() một lời gọi cho 8 danh mục (Lượt 4). 7. minh_chung vào publication supabase_realtime (Lượt 4).
 
 CREATE OR REPLACE VIEW "public"."v_nhiem_vu" WITH (security_invoker = true) AS
  SELECT nv.id, nv.ma, nv.van_ban_id, vb.loai AS van_ban_loai, vb.so_hoi_nghi, vb.so_ket_luan, vb.ngay_ban_hanh, vb.ngay_nhan AS van_ban_ngay_nhan,
@@ -125,6 +126,32 @@ LANGUAGE sql STABLE SET search_path = public AS $$
         SELECT 'viec' AS loai, "id", "id" AS nhiem_vu_id, "ma", "noi_dung" FROM cua_toi WHERE "do_khan" = 'HOA_TOC'
         UNION ALL SELECT 'chi_dao', "id", "nhiem_vu_id", "ma", "noi_dung" FROM ht_cd) x), '[]'::jsonb));
 $$;
+
+-- 6. kl_danh_muc() (B6, Lượt 4): 7 danh mục + kl_cau_hinh trong MỘT lời gọi (frontend nhớ sessionStorage 30 phút, xoá khi Quản trị ghi).
+--    SECURITY INVOKER: mỗi bảng vẫn qua RLS của người gọi — chỉ trả dữ liệu người gọi vốn đọc được bằng 8 truy vấn cũ; cùng cột, cùng thứ tự.
+CREATE OR REPLACE FUNCTION "public"."kl_danh_muc"() RETURNS jsonb
+LANGUAGE sql STABLE SECURITY INVOKER SET search_path = public AS $$
+  SELECT jsonb_build_object(
+    'nganh', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "ten", "thu_tu" FROM "public"."dm_nganh") x),
+    'linhVuc', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "nganh_ma", "ten", "thu_tu" FROM "public"."dm_linh_vuc") x),
+    'donVi', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "ten", "thu_tu", "trong_van_phong", "phong" FROM "public"."dm_don_vi") x),
+    'sanPham', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "ten", "thu_tu" FROM "public"."dm_san_pham") x),
+    'cap', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "ten", "thu_tu" FROM "public"."dm_cap") x),
+    'loaiThoiHan', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "ten", "thu_tu", "cho_phep_tao_moi" FROM "public"."dm_loai_thoi_han") x),
+    'tienDo', (SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x."thu_tu"), '[]') FROM (SELECT "ma", "ten", "thu_tu" FROM "public"."dm_tien_do") x),
+    'cauHinh', (SELECT coalesce(jsonb_object_agg("khoa", "gia_tri"), '{}') FROM "public"."kl_cau_hinh"));
+$$;
+REVOKE ALL ON FUNCTION "public"."kl_danh_muc"() FROM public, "anon";
+GRANT EXECUTE ON FUNCTION "public"."kl_danh_muc"() TO "authenticated";
+
+-- 7. Realtime (B6, Lượt 4): minh_chung vào publication (khối "minh chứng chờ xác nhận", PR-2b dùng cho nghiệm thu). nhiem_vu, chi_dao
+--    (0016, tên mới 0023), tu_choi (0037) đã có. Realtime lọc sự kiện theo RLS SELECT của người nghe (minh_chung_select, 0049) — test
+--    kl-realtime-su-kien. Idempotent: môi trường đã có bảng trong publication thì bỏ qua.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'minh_chung') THEN
+    ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."minh_chung";
+  END IF;
+END $$;
 
 -- Index B4: đo 29/9 ở 1 400 việc (giao dịch rollback) — không ứng viên nào có lợi đo được nên KHÔNG thêm (chỉ giữ index có số đo):
 --   lich_su (nhiem_vu_id) WHERE cot = 'xac_nhan_nhan_viec': v_nhiem_vu CVP 12,8 → 12,9 ms; đọc xác nhận nhận việc 1,15 → 0,95 ms;

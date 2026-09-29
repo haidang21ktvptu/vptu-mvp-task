@@ -1,19 +1,21 @@
 // Minh chứng có cấu trúc (GĐ16, migration 0028): đọc bảng minh_chung (RLS theo phạm vi nhiệm vụ); MỌI thao tác ghi đi qua
 // hàm SECURITY DEFINER nop_minh_chung / xac_nhan_minh_chung / dong_nhiem_vu — frontend không ghi thẳng bảng, quyền thật trong hàm.
 import { supabase } from '../supabase.js';
+import { COT_MINH_CHUNG, taiTheoTrang } from './cot.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
 
 // Mọi minh chứng của một nhiệm vụ, mới nhất trước.
 export async function loadMinhChung(nhiemVuId) {
-  return loi(await supabase.from('minh_chung').select('*').eq('nhiem_vu_id', nhiemVuId).order('nop_luc', { ascending: false }), 'đọc minh chứng') || [];
+  return loi(await supabase.from('minh_chung').select(COT_MINH_CHUNG).eq('nhiem_vu_id', nhiemVuId).order('nop_luc', { ascending: false }), 'đọc minh chứng') || [];
 }
 
-// Minh chứng của mọi nhiệm vụ trong phạm vi (cây Theo văn bản; v_minh_chung 0046 có thêm tên người nộp / xác nhận / cấp nhận).
-export async function loadMinhChungTatCa() {
-  return loi(await supabase.from('v_minh_chung').select('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, trich_yeu, hop_le, xac_nhan_boi_ten, nop_luc')
-    .order('nop_luc', { ascending: false }), 'đọc minh chứng') || [];
+// Minh chứng của mọi nhiệm vụ trong phạm vi (cây Theo văn bản; v_minh_chung 0046 có thêm tên người nộp / xác nhận / cấp nhận). Cây ghép
+// minh chứng vào từng nhiệm vụ nên cần ĐỦ dòng — đọc theo trang (B6), không cắt "Xem thêm" (cắt sẽ làm nút việc thiếu minh chứng).
+export function loadMinhChungTatCa() {
+  return taiTheoTrang(() => supabase.from('v_minh_chung').select('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, trich_yeu, hop_le, xac_nhan_boi_ten, nop_luc')
+    .order('nop_luc', { ascending: false }).order('id'), 'đọc minh chứng');
 }
 
 // p: { nhiem_vu_id, so_hieu, ngay_van_ban, cap_nhan, trich_yeu, mo_ta_ket_qua } — năm trường bắt buộc (MC-3, 0046) → id minh chứng.
