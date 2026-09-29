@@ -30,7 +30,7 @@ const CAU = {
   v_minh_chung: 'SELECT * FROM public.v_minh_chung',
 };
 const DIEU_HANH = ['v_nhiem_vu', 'lich_su_xac_nhan', 'tu_choi', 'v_ngoai_le', 'v_chi_dao_tt', 'minh_chung_cho', 'chi_dao_cho', 'so_lieu_hom_nay', 'so_lieu_7_ngay'];
-const HAM_THEO_DOI = ['kl_pham_vi', 'kl_thay_nhiem_vu', 'kl_pham_vi_pcvp', 'trang_thai', 'kl_nguong_do_khan', 'me_role', 'me_quan_tri_kl', 'kl_phong_owner'];
+const HAM_THEO_DOI = ['kl_nhiem_vu_thay_duoc', 'kl_pham_vi', 'kl_thay_nhiem_vu', 'kl_pham_vi_pcvp', 'trang_thai', 'kl_nguong_do_khan', 'me_role', 'me_quan_tri_kl', 'kl_phong_owner'];
 
 const boc = (sql) => `SELECT coalesce(json_agg(_t), '[]') FROM (${sql}) _t`;
 const trungVi = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
@@ -94,10 +94,10 @@ function baoCao(nhan, kq, rt, ghiChu) {
     const c = DIEU_HANH.map((k) => kq[v][k]);
     L.push(`| ${v} (${VAI[v]}) | ${f1(c.reduce((s, x) => s + x.ms, 0))} | ${kq[v].v_nhiem_vu.dong} | ${c.reduce((s, x) => s + x.goi.kl_pham_vi, 0)} | ${c.reduce((s, x) => s + x.goi.trang_thai, 0)} |`);
   }
-  L.push('', '## Chi tiết từng câu', '', 'Cột: ms (trung vị 5 lần) · block (shared hit+read) · dòng · lời gọi kl_pham_vi / kl_thay_nhiem_vu / kl_pham_vi_pcvp / trang_thai · tổng lời gọi hàm được theo dõi (track_functions=all).', '');
+  L.push('', '## Chi tiết từng câu', '', 'Cột: ms (trung vị 5 lần) · block (shared hit+read) · dòng · lời gọi kl_pham_vi / kl_thay_nhiem_vu / kl_pham_vi_pcvp / trang_thai / kl_nhiem_vu_thay_duoc (hàm tập hợp, 0048) · tổng lời gọi hàm được theo dõi (track_functions=all).', '');
   for (const v of vai) {
-    L.push(`### ${v} (${VAI[v]})`, '', '| Câu | ms | block | dòng | kl_pham_vi | kl_thay_nhiem_vu | kl_pham_vi_pcvp | trang_thai | tổng lời gọi hàm |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|');
-    for (const [k, x] of Object.entries(kq[v])) L.push(`| ${k} | ${f1(x.ms)} | ${x.hit} | ${x.dong} | ${x.goi.kl_pham_vi} | ${x.goi.kl_thay_nhiem_vu} | ${x.goi.kl_pham_vi_pcvp} | ${x.goi.trang_thai} | ${x.tongGoi} |`);
+    L.push(`### ${v} (${VAI[v]})`, '', '| Câu | ms | block | dòng | kl_pham_vi | kl_thay_nhiem_vu | kl_pham_vi_pcvp | trang_thai | kl_nhiem_vu_thay_duoc | tổng lời gọi hàm |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|');
+    for (const [k, x] of Object.entries(kq[v])) L.push(`| ${k} | ${f1(x.ms)} | ${x.hit} | ${x.dong} | ${x.goi.kl_pham_vi} | ${x.goi.kl_thay_nhiem_vu} | ${x.goi.kl_pham_vi_pcvp} | ${x.goi.trang_thai} | ${x.goi.kl_nhiem_vu_thay_duoc} | ${x.tongGoi} |`);
     L.push('');
   }
   L.push('## Mô phỏng kiểm RLS của Realtime (1 thay đổi việc, mọi tài khoản tổng hợp)', '',
