@@ -23,7 +23,7 @@ Chỉ khi cần kiểm thử trên dữ liệu thật trước go-live (ví dụ
 
 ## Điều gì được ghi lên project khi test
 
-- `scripts/seed-demo.mjs`: **thêm** auth user + dòng `accounts` còn thiếu cho 17 tài khoản `demo_*`, `demo_e2e_*` (có `demo_e2e_cv2` — chủ trì mới khi giao lại, 0045), `smoke_test` (cùng id với `supabase/seed.sql`, mật khẩu `123456`); tài khoản đã có, hoặc username đã tồn tại với id khác (tài khoản thật), thì bỏ qua. Phân công `phu_trach_phong` giả chỉ chèn khi phòng chưa có lãnh đạo thật phụ trách. Chạy tay: `KIEM_THU_MOI_TRUONG=production node scripts/seed-demo.mjs --project-ref frwyxcmbonjaimziiuqr` (CLI đã `supabase login`).
+- `scripts/seed-demo.mjs`: **thêm** auth user + dòng `accounts` còn thiếu cho 19 tài khoản `demo_*`, `demo_e2e_*` (có `demo_e2e_cv2` — chủ trì mới khi giao lại, 0045; `demo_e2e_anh` — ảnh hồ sơ, PR-2a), `smoke_test` (cùng id với `supabase/seed.sql`, mật khẩu `123456`); tài khoản đã có, hoặc username đã tồn tại với id khác (tài khoản thật), thì bỏ qua. Phân công `phu_trach_phong` giả chỉ chèn khi phòng chưa có lãnh đạo thật phụ trách. Chạy tay: `KIEM_THU_MOI_TRUONG=production node scripts/seed-demo.mjs --project-ref frwyxcmbonjaimziiuqr` (CLI đã `supabase login`).
 - Bộ dữ liệu mẫu `E2E-SEED` (`scripts/seed-demo-du-lieu.mjs`, chạy cuối `seed-demo.mjs`): văn bản `so_ket_luan = E2E-SEED` + 6 nhiệm vụ `noi_dung` bắt đầu `E2E-SEED` (đang thực hiện, quá hạn Đỏ, sắp đến hạn, hoàn thành có minh chứng, việc cũ `theo_1400=false`, việc mới chưa xác nhận) ở phòng `TONG_HOP` (hoặc phòng đầu tiên có PCVP phụ trách), owner/người giao là tài khoản `demo_*` tra theo username. Idempotent: chỉ chèn dòng thiếu, tính lại hạn theo hôm nay; thiếu tài khoản demo nào thì dừng và báo tên. Sau khi nạp, script đọc `v_nhiem_vu` bằng token `demo_cvp` và `demo_a0`, đỏ nếu không thấy đủ 6 dòng. Cần có vì `a0.spec`, `bo-cuc-mobile`, `kl-dashboard` giả định phạm vi A0/A1 có sẵn dòng. Trước đó script tạo đơn vị `E2E_RT` (phòng của `demo_e2e_tp/cv/cv2`, để việc có Owner tài khoản ở đó và giao lại đổi chủ trì) và **phòng thử** `E2E_PT` trong `dm_don_vi` (giữ phân công đang có của `demo_pcvp2`) và phân công `demo_pcvp2` phụ trách (`ly_do = seed kiểm thử`) — spec cần "PCVP phụ trách phòng X" (`chi-dao-tt`) đọc phòng lúc chạy qua `phongPhuTrach()`, không gõ cứng phòng thật.
 - Test RLS/e2e tự tạo và tự dọn: văn bản `RLS-TEST`, hội nghị 991–999, nhiệm vụ `NV-T*`, nhiệm vụ có nội dung bắt đầu bằng `E2E-TEST`, đề nghị từ chối, minh chứng, chỉ đạo trên các việc đó.
 - Trên production, các file RLS gọi `canh_bao_quet` **tự bỏ qua** (`kl-0029`, `kl-0030`, `kl-0032`, `kl-0034`, `kl-0035`): hàm quét gửi cảnh báo tới mọi việc thật và phần dọn của chúng xoá tin hệ thống sau mốc t0. Vài test phạm vi PCVP (`rls-9/10/11`, `kl-pham-vi-tong-hop`) có thể đỏ nếu phòng thật đã có lãnh đạo phụ trách (seed không chèn phân công giả) — đọc log để phân biệt với lỗi mã.
@@ -64,6 +64,17 @@ Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một c
 `ci.yml` có `concurrency` theo nhánh PR (`cancel-in-progress` cho pull_request: push mới huỷ lượt cũ đang chạy; push `main` mỗi sha một nhóm, không huỷ). `deploy-prod.yml` không đổi.
 
 **Phát hành trước go-live — không cần backup tay**: `deploy-prod.yml` đã `pg_dump` (mã hoá, artifact 90 ngày) ngay trước `db push` production và ghi mốc backup; *Backup định kỳ production* vẫn giữ lịch 3 ngày/lần; bản local (`scripts/backup-db.sh`) chỉ chạy khi muốn có bản ngoài GitHub, không phải bước bắt buộc của quy trình tag.
+
+## Đích kiểm thử phải chọn tường minh (PR-2a, từ 29/9/2026)
+
+`tests/rls/lib.mjs` và `tests/e2e/lib/keys.mjs` **không còn đích mặc định** (trước đây thiếu biến cục bộ là trỏ staging qua Supabase CLI — sự cố 29/9: một file RLS chạy nhầm lên staging). Phải đặt **đúng một**:
+
+| Bộ | Cục bộ | Staging | Production (công tắc) |
+|---|---|---|---|
+| `tests/rls` | `RLS_LOCAL=1` | `RLS_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` |
+| `tests/e2e` | `E2E_LOCAL=1` | `E2E_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` |
+
+Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi lời gọi mạng (kể cả Supabase CLI); `tests/rls/dich-tuong-minh.test.mjs` chứng minh (đếm kết nối TCP, `fetch`, tiến trình con = 0). Với staging/production, `SUPABASE_URL` (nếu đặt) phải đúng project của đích. CI: job "Áp migration + lint schema" đặt `RLS_LOCAL=1`; `deploy-staging.yml` job RLS đặt `RLS_STAGING=1`; `ci.yml` job e2e đặt `E2E_STAGING=1` khi `KIEM_THU_MOI_TRUONG` ≠ production. Bỏ `RLS_PROJECT_REF` / `E2E_PROJECT_REF`.
 
 ## RLS token thật trên staging (deploy-staging.yml) — từ v8 đợt 3
 

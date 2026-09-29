@@ -4,11 +4,11 @@ Mỗi dòng RLS-2…7 có ít nhất một test "được phép" và một test 
 
 ```
 cd tests/rls && npm install
-npm test                 # staging (RLS_PROJECT_REF mặc định vojmrjezspdftovzinek)
 RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset`; seed.sql đã tạo sẵn auth user)
+RLS_STAGING=1 npm test   # staging vojmrjezspdftovzinek — không có đích mặc định: thiếu biến ⇒ dừng trước mọi lời gọi mạng
 # kl-moc chạy thật khi đã nạp bộ vàng: node ../../scripts/nhap-kl-btvtu.mjs --file du-lieu-vang/kl-btvtu.json --local --ghi
 ```
 
-- Key lấy theo thứ tự: biến môi trường `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI dùng secret **staging**) → `RLS_LOCAL=1` → Supabase CLI đã `supabase login`. Không có `.env` chứa service_role; từ chối chạy nếu URL là project production.
+- Đích chọn tường minh, đúng một: `RLS_LOCAL=1` | `RLS_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` (docs/KIEM-THU.md, từ PR-2a). Key: cục bộ từ `supabase status`; staging/production từ `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI) hoặc Supabase CLI đã `supabase login`. Không có `.env` chứa service_role; từ chối chạy nếu URL là project production.
 - Chạy chung tiến trình (`--test-isolation=none`) để 7 phiên đăng nhập dùng lại giữa các file (giới hạn 30 lượt/5 phút/IP).
 - Chạy trong CI hai nơi: mọi PR ở job `Áp migration + lint schema` (`ci.yml`, Supabase cục bộ, `RLS_LOCAL=1`, migration của chính PR) và sau mỗi push `main` ở job `Test RLS trên staging (token thật)` (`deploy-staging.yml`, sau `db push`, 7 lượt đăng nhập) — xem `docs/kien-truc.md`.

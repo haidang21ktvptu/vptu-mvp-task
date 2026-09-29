@@ -100,4 +100,17 @@ describe('C3 — kl_pham_vi_giao ≡ quyền của giao_viec (một nguồn kl_d
     assert.deepEqual([...new Set([...coTp].map((k) => k.split('|')[0]))], ['TONG_HOP'], 'thay mặt Trưởng phòng Tổng hợp: chỉ phòng Tổng hợp');
     await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.qtht);
   });
+
+  test('7. Quyết định 29/9: PCVP KHÔNG giao việc cho lãnh đạo Văn phòng (Chánh VP, PCVP khác) — Owner hay người theo dõi đều bị chặn; phòng lãnh đạo không có trong phạm vi; Chánh VP thì được', async () => {
+    const PHONG_LD = (await db().from('accounts').select('department').eq('id', IDS.cvp).single()).data.department;
+    assert.ok(!(await phamVi('demo_pcvp')).some((t) => t.phong === PHONG_LD), `phạm vi PCVP không có phòng lãnh đạo ${PHONG_LD}`);
+    const th = { phong: KN.phong, nganh_ma: null, linh_vuc_ma: null };   // đơn vị Tổng hợp (PCVP phụ trách) không "mở" được Owner là lãnh đạo
+    for (const [ld, ten] of [[IDS.cvp, 'Chánh VP'], [IDS.pcvp2, 'PCVP khác']]) {
+      biChan(await thuGiao('demo_pcvp', th, ld), `pcvp giao Owner = ${ten}`);
+      const r = await (await userClient('demo_pcvp')).rpc('giao_viec', { p: { van_ban_id: fx.hn, noi_dung: 'KL-PVG thử quyền', han_xu_ly: '2026-12-31',
+        owner_don_vi_ma: donViCuaPhong[KN.phong], owner_tai_khoan: IDS.cv1, nguoi_theo_doi: ld } });
+      biChan(r, `pcvp đặt người theo dõi = ${ten}`);
+    }
+    quaQuyen(await thuGiao('demo_cvp', th, IDS.pcvp), 'Chánh VP giao Owner = PCVP');
+  });
 });

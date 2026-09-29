@@ -133,6 +133,7 @@ jobs:
         timeout-minutes: 12
         working-directory: tests/rls
         env:
+          RLS_STAGING: '1'   # đích tường minh (tests/rls/lib.mjs không có mặc định)
           SUPABASE_URL: ${{ env.STAGING_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}

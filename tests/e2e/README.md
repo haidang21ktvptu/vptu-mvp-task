@@ -11,12 +11,12 @@
 
 ```
 cd tests/e2e && npm ci && npx playwright install chromium
-npm test                  # 43 test: desktop + mobile (phiên sẵn) rồi dang-nhap (form)
-npm run test:desktop      # hoặc test:mobile
+E2E_LOCAL=1 npm test      # Supabase cục bộ (E2E_STAGING=1 cho staging; thiếu biến đích ⇒ dừng): desktop + mobile (phiên sẵn) … rồi dang-nhap (form)
+E2E_LOCAL=1 npm run test:desktop      # hoặc test:mobile
 npm run report            # mở báo cáo HTML của lần chạy gần nhất
 ```
 
-- Key lấy theo thứ tự: biến môi trường `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI dùng secret **staging**) → `E2E_LOCAL=1` (Supabase cục bộ) → Supabase CLI đã `supabase login` (`lib/keys.mjs`, như `tests/rls`). Không có `.env` chứa key; từ chối chạy nếu URL là project production.
+- Đích chọn tường minh, đúng một: `E2E_LOCAL=1` (Supabase cục bộ) | `E2E_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` — thiếu ⇒ dừng trước mọi lời gọi mạng (docs/KIEM-THU.md, từ PR-2a). Key: cục bộ từ `supabase status`; còn lại từ `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (CI) hoặc Supabase CLI đã `supabase login` (`lib/keys.mjs`, như `tests/rls`). Không có `.env` chứa key; từ chối chạy nếu URL là project production.
 - Kịch bản 9 (`kl-chuyen-vien.spec.js`, GĐ10): màn hình Kết luận BTVTU của chuyên viên — ô số = số dòng, cập nhật nhanh (chặn thiếu minh chứng, gợi ý ngày từ minh chứng, lưu), ngăn chi tiết truy vết; nhiệm vụ mẫu ở hội nghị 997, tự dọn; bỏ qua khi project chưa có module KL.
 - Kịch bản 10 (`kl-dashboard.spec.js`, GĐ10): dashboard "Tổng quan KL BTVTU" của A1 — tổng các ô = ô Tổng, mỗi ô/đoạn thanh/ô bảng bấm ra đúng số dòng danh sách (truy vết); không tạo dữ liệu, dùng bộ vàng trên staging.
 - Kịch bản 11 (`kl-realtime.spec.js`, GĐ10): A1 mở danh sách KL, DB đổi (service_role) → ô số/dòng tự đổi; mất mạng → chỉ báo "làm mới mỗi 60 giây", có mạng lại → "Cập nhật trực tiếp" (chờ heartbeat ~30 giây, timeout riêng 150 giây); nhiệm vụ mẫu ở hội nghị 996, tự dọn.

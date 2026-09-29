@@ -218,3 +218,12 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | KT-5 | Tệp minh chứng ở Supabase Storage, bucket `minh-chung`, RLS theo phạm vi nhiệm vụ; không lưu tệp trong repo/Pages. | Duy nhất chỗ lưu tệp trong stack hiện có. |
 
 **Quyết định (16/9):** KT-1, 2, 3, 5 ☑ **không phản đối**; KT-4 ☑ **đổi** như trên.
+
+## Nhóm G — Quyết định khi làm PR-2a (tối ưu DB và phân quyền giao việc, migration 0048–0052)
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| G-1 | Phó Chánh Văn phòng có giao việc cho lãnh đạo Văn phòng (Chánh VP, PCVP khác) được không? | **Không (29/9/2026) — giữ nguyên hành vi DB.** Lãnh đạo Văn phòng thuộc `department` = lãnh đạo, ngoài mọi phòng PCVP phụ trách; Owner hay người theo dõi là lãnh đạo đều bị chặn. Chỉ Chánh VP giao việc cho lãnh đạo Văn phòng. Biểu mẫu Giao việc của PCVP không hiện các lựa chọn này. | RLS `kl-pq-pham-vi-giao` #7 |
+| G-2 | PCVP kiêm nhiệm theo ngành–lĩnh vực giao việc thế nào (C3)? | **Giao đúng lĩnh vực kiêm nhiệm (28/9/2026).** Quyền giao theo đúng quy tắc phạm vi xem (phòng, ngành, lĩnh vực): PCVP kiêm nhiệm chỉ giao việc thuộc lĩnh vực mình kiêm nhiệm ở phòng đó; lĩnh vực đã có lãnh đạo khác kiêm nhiệm thì PCVP phụ trách cả phòng **không** giao được. Biểu mẫu chỉ liệt kê tổ hợp được giao (`kl_pham_vi_giao`, cùng hàm `giao_viec` dùng để chặn). | RLS `kl-pq-pham-vi-giao` #1–6; e2e `giao-viec-kiem-nhiem` |
+| G-3 | Ai xem được ảnh hồ sơ (Q5)? | **(a) Mọi người đã đăng nhập (28/9/2026); anon bị chặn.** Bucket riêng tư, hiển thị bằng signed URL. | RLS `kl-pq-storage-anh-ho-so`; e2e `ca-nhan-anh` |
+| G-4 | Owner/người theo dõi có tự đổi hạn xử lý được không (Q7)? | **Không (28/9/2026).** Chỉ điền hạn khi đang trống (việc "Cần điền hạn"); mọi lần đổi khác đi qua chỉ đạo `GIA_HAN`; `quan_tri_kl` giữ quyền sửa. | RLS `kl-pq-q7-khoa-han-xu-ly`; e2e `cap-nhat-nhanh-han` |

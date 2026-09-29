@@ -177,6 +177,7 @@ jobs:
       cancel-in-progress: false
     env:
       KIEM_THU_MOI_TRUONG: ${{ vars.KIEM_THU_MOI_TRUONG || 'staging' }}
+      E2E_STAGING: ${{ vars.KIEM_THU_MOI_TRUONG != 'production' && '1' || '' }}   # đích e2e tường minh (tests/e2e/lib/keys.mjs); production: KIEM_THU_MOI_TRUONG
       PROJECT_REF: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && 'frwyxcmbonjaimziiuqr' || 'vojmrjezspdftovzinek' }}
       SUPABASE_URL: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && 'https://frwyxcmbonjaimziiuqr.supabase.co' || 'https://vojmrjezspdftovzinek.supabase.co' }}
       SUPABASE_ANON_KEY: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && secrets.VITE_SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}

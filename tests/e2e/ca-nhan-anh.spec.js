@@ -1,6 +1,6 @@
 // PR-2a C2 (0052): ảnh hồ sơ trên bucket riêng tư anh-ho-so — tải ảnh ở Cá nhân → accounts.anh_url là ĐƯỜNG DẪN <uid>/anh-<thời điểm>.png, ảnh hiện
 // qua signed URL (Cá nhân + vỏ ứng dụng); tải lại trang vẫn hiện; đổi ảnh thì tệp cũ bị xoá; người khác đã đăng nhập tải được ảnh; người chưa
-// đăng nhập (anon, URL công khai) thì không. Tài khoản demo_e2e_tk (demo_e2e_kl đã được gd22 dùng trong cùng lượt — chuỗi refresh token không dùng lại được);
+// đăng nhập (anon, URL công khai) thì không. Tài khoản RIÊNG demo_e2e_anh (không spec nào khác đăng nhập — chuỗi refresh token không bị dùng chung trong lượt);
 // trước và sau: xoá mọi tệp trong thư mục của tài khoản, anh_url về NULL (gốc).
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -36,9 +36,9 @@ test.describe.serial('Ảnh hồ sơ riêng tư, hiện bằng signed URL (C2)',
   test.beforeAll(async ({ browser }, testInfo) => {
     const k = getKeys();
     db = createClient(k.url, k.service, { auth: { persistSession: false, autoRefreshToken: false } });
-    uid = (await db.from('accounts').select('id').eq('username', 'demo_e2e_tk').single()).data.id;
+    uid = (await db.from('accounts').select('id').eq('username', 'demo_e2e_anh').single()).data.id;
     await don();
-    page = await (await contextAs(browser, 'E2E_TK', testInfo)).newPage();   // E2E_TK là tài khoản tuỳ chọn (OPTIONAL_USERS)
+    page = await (await contextAs(browser, 'E2E_ANH', testInfo)).newPage();   // E2E_ANH là tài khoản tuỳ chọn (OPTIONAL_USERS)
     await page.goto('./');
     await expect(page.locator('#mainHeader')).toBeVisible(NAP);
   });
@@ -61,7 +61,7 @@ test.describe.serial('Ảnh hồ sơ riêng tư, hiện bằng signed URL (C2)',
     const path = (await db.from('accounts').select('anh_url').eq('id', uid).single()).data.anh_url;
     const khac = clientCuaVai('E2E_MC');
     const tai = await khac.storage.from(BUCKET).download(path);
-    expect(tai.error, 'demo_e2e_mc tải ảnh của demo_e2e_tk').toBeNull();
+    expect(tai.error, 'demo_e2e_mc tải ảnh của demo_e2e_anh').toBeNull();
     const ky = await khac.storage.from(BUCKET).createSignedUrl(path, 60);
     expect((await fetch(ky.data.signedUrl)).status).toBe(200);
     const k = getKeys();

@@ -1,9 +1,9 @@
 // Tiện ích chung cho test RLS: client theo từng tài khoản seed (token thật), client
 // service_role để dựng dữ liệu mẫu, và các hàm khẳng định "bị chặn".
 //
-// Key lấy theo thứ tự: biến môi trường SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
-// (CI: GitHub Secrets của staging) → RLS_LOCAL=1 (Supabase cục bộ) → Supabase CLI đã `supabase login`
-// (RLS_PROJECT_REF mặc định staging). Không có .env chứa service_role; luôn từ chối production.
+// Đích chọn tường minh (DICH bên dưới — không có mặc định). Key: cục bộ từ `supabase status`; staging/production từ biến môi trường
+// SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY (CI: GitHub Secrets) hoặc Supabase CLI đã `supabase login`.
+// Không có .env chứa service_role; production chỉ khi KIEM_THU_MOI_TRUONG=production.
 // Chạy với --test-isolation=none để phiên đăng nhập dùng chung giữa các file
 // (tránh vượt giới hạn 30 lượt đăng nhập/5 phút/IP của Supabase).
 
@@ -20,6 +20,19 @@ export const SEED_PASSWORD = '123456';
 export const LA_PRODUCTION = process.env.KIEM_THU_MOI_TRUONG === 'production';
 export const BO_QUA_PRODUCTION = 'Bỏ qua trên production: test gọi canh_bao_quet (gửi cảnh báo tới mọi việc thật) hoặc xoá tin hệ thống sau t0.';
 export const EMAIL_DOMAIN = 'vptu.caobang.local';
+
+// Đích kiểm thử phải chọn TƯỜNG MINH, đúng một (PR-2a, sau sự cố 29/9/2026 — chạy nhầm lên staging vì thiếu biến cục bộ):
+//   RLS_LOCAL=1 (Supabase cục bộ) | RLS_STAGING=1 (staging) | KIEM_THU_MOI_TRUONG=production (công tắc kiểm thử, docs/KIEM-THU.md).
+// Thiếu hoặc thừa ⇒ dừng NGAY khi nạp module, trước mọi lời gọi mạng (kể cả Supabase CLI).
+function chonDich() {
+  const env = process.env;
+  const ds = [env.RLS_LOCAL === '1' && 'local', env.RLS_STAGING === '1' && 'staging', env.KIEM_THU_MOI_TRUONG === 'production' && 'production'].filter(Boolean);
+  if (ds.length === 1) return ds[0];
+  console.error(`[RLS] ${ds.length ? `Chọn nhiều đích (${ds.join(', ')})` : 'Chưa chọn đích kiểm thử'} — đặt đúng một: RLS_LOCAL=1 (Supabase cục bộ) | `
+    + 'RLS_STAGING=1 (staging) | KIEM_THU_MOI_TRUONG=production. Dừng, chưa có lời gọi mạng nào.');
+  process.exit(2);
+}
+export const DICH = chonDich();
 
 // id cố định trong supabase/seed.sql
 export const IDS = {
@@ -44,18 +57,19 @@ let keys = null;
 export function getKeys() {
   if (keys) return keys;
   const env = process.env;
-  if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY && env.SUPABASE_SERVICE_ROLE_KEY) {
-    keys = { url: env.SUPABASE_URL, anon: env.SUPABASE_ANON_KEY, service: env.SUPABASE_SERVICE_ROLE_KEY };
-  } else if (env.RLS_LOCAL === '1') {
+  if (DICH === 'local') {
     const s = runCli(['status', '-o', 'json']);
     keys = { url: s.API_URL, anon: s.ANON_KEY || s.PUBLISHABLE_KEY, service: s.SERVICE_ROLE_KEY || s.SECRET_KEY };
-  } else {
-    const ref = env.RLS_PROJECT_REF || STAGING_REF;
-    const data = runCli(['projects', 'api-keys', '--project-ref', ref, '-o', 'json']);
+  } else if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY && env.SUPABASE_SERVICE_ROLE_KEY) {   // CI: GitHub Secrets của đích đã chọn
+    keys = { url: env.SUPABASE_URL, anon: env.SUPABASE_ANON_KEY, service: env.SUPABASE_SERVICE_ROLE_KEY };
+  } else {   // máy dev: Supabase CLI đã `supabase login`
+    const data = runCli(['projects', 'api-keys', '--project-ref', DICH === 'staging' ? STAGING_REF : PRODUCTION_REF, '-o', 'json']);
     const list = Array.isArray(data) ? data : data.keys;
     const pick = (id) => list.find((k) => k.id === id || k.name === id)?.api_key;
-    keys = { url: `https://${ref}.supabase.co`, anon: pick('anon'), service: pick('service_role') };
+    keys = { url: `https://${DICH === 'staging' ? STAGING_REF : PRODUCTION_REF}.supabase.co`, anon: pick('anon'), service: pick('service_role') };
   }
+  const ref = { staging: STAGING_REF, production: PRODUCTION_REF }[DICH];
+  if (ref && !keys.url.includes(ref)) throw new Error(`Đích ${DICH} nhưng SUPABASE_URL không phải project ${ref}.`);
   if (!keys.anon || !keys.service) throw new Error('Không lấy được anon/service_role key.');
   // Test tạo/xoá dữ liệu bằng service_role nên tuyệt đối không được trỏ vào production.
   if (keys.url.includes(PRODUCTION_REF) && !LA_PRODUCTION) throw new Error('Từ chối chạy test trên project production (đặt KIEM_THU_MOI_TRUONG=production nếu cố ý — docs/KIEM-THU.md).');
