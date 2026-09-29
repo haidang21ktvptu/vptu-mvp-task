@@ -7,7 +7,7 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "lint": "eslint frontend/src frontend/*.js frontend/tests tests/e2e scripts eslint.config.js",
+    "lint": "eslint frontend/src frontend/*.js frontend/tests tests/e2e tests/perf scripts eslint.config.js",
     "check:lines": "node scripts/check-line-limit.mjs"
   },
   "devDependencies": {
