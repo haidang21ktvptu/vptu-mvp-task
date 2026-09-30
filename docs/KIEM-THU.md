@@ -107,8 +107,14 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - Xem trước tập test staging sẽ chạy ngay trên máy: `RLS_LOCAL=1 RLS_NHU_STAGING=1 node --test tests/rls/`.
 - Test mới gọi `giao_viec` qua client bọc sẵn trong `lib.mjs`: thiếu `han_nop_minh_chung` thì tự điền (= hạn hoàn thành nếu chưa qua, không thì hôm nay) để test cũ không phải sửa.
 
-## e2e PR-2b — project `pr2b` (chỉ máy tính)
+## e2e — tối đa 2 phiên mở cùng lúc (từ 30/9/2026, sau CI #97)
+
+- Một spec e2e **không mở quá 2 phiên trình duyệt cùng lúc**; spec kiểm nhiều vai chạy **tuần tự** — mở phiên một vai, kiểm, đóng rồi mới sang vai sau (`voiPhien` trong `tests/e2e/lib/pr2b.mjs`). Không mở sẵn hàng loạt phiên ở `beforeAll`.
+- Spec nặng / nhiều phiên không chạy chồng nhau: xếp thành chuỗi project nối `dependencies` (như `pr2b-*`), sau mọi project nặng khác.
+- Lý do: mỗi thao tác ghi → realtime → MỌI trang đang mở cùng gọi `kl_so_chua_xu_ly` và nạp lại `v_nhiem_vu` trong vài giây; nhiều phiên song song làm staging (Nano) chậm 3–16 s rồi `57014 statement timeout` (CI #97 đỏ 2 test, e2e 9 phút 44 giây) — lỗi giả, không phải lỗi logic.
+
+## e2e PR-2b — chuỗi project `pr2b-*` (chỉ máy tính)
 
 - `han-nop-minh-chung` (ma trận 7 vai × 5 loại văn bản, giao thật A2 và A0 từ Kết luận, sửa hạn nộp, nhãn cam), `nghiem-thu` (A3 nộp → A2 trả lại kèm hạn nộp lại → nộp lại → nghiệm thu; thư ký Thường trực), `hanh-trinh-5-loai-van-ban`, `b4-b6-lanh-dao`. Dùng chung `tests/e2e/lib/pr2b.mjs`; dữ liệu theo khoá riêng, cờ tạm (`quan_tri_kl`, `thu_ky_thuong_truc`, phân công kiêm nhiệm) khôi phục ở `beforeAll` lẫn `afterAll`.
-- Chạy sau `pr2a`; `dang-nhap` phụ thuộc `pr2b`. Chạy riêng: `npx playwright test --project=pr2b --no-deps` (kèm biến đích).
+- Bốn project nối tiếp `pr2b-han-nop` → `pr2b-nghiem-thu` → `pr2b-hanh-trinh` → `pr2b-b4-b6` (mỗi lúc một spec), sau `pr2a`; `dang-nhap` phụ thuộc `pr2b-b4-b6`. Chạy riêng cả chuỗi: `npx playwright test --project='pr2b-*' --no-deps --workers=1` (kèm biến đích).
 

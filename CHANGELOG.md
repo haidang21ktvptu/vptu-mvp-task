@@ -627,4 +627,5 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - **Phân quyền**: GIAO_LAI của PCVP theo phạm vi giao (kể cả kiêm nhiệm); quản trị KL trong chỉ đạo xét hạn uỷ quyền; `kl_tham_chieu_pham_vi` chỉ service_role.
 - **Giao diện**: ô hạn nộp + lý do việc gấp, người theo dõi lọc theo phạm vi, ngăn chi tiết hai mốc + sửa hạn nộp, màn "Cần nghiệm thu", Quản trị › Ngày nghỉ.
 - **Sau review (0061)**: việc Thường trực giao Chánh VP chỉ thư ký (không có: quản trị KL) nghiệm thu, không bao giờ chính Chánh VP; người giao không còn vai lãnh đạo ⇒ quản trị KL sửa hạn nộp; việc vừa có hạn mà chưa có hạn nộp ⇒ tin nhắc người giao đặt hạn nộp.
+- **Sau CI #97**: bốn spec e2e PR-2b chạy nối tiếp (`pr2b-*`), mỗi spec tối đa 2 phiên mở cùng lúc (ma trận vai tuần tự — quy tắc ở `docs/KIEM-THU.md`); huy hiệu gộp 2 giây + trễ ngẫu nhiên 0–3 giây.
 - **Test**: RLS 7 file mới (logic thuần chỉ chạy cục bộ — `CHI_CUC_BO`), e2e project `pr2b` (4 spec) + minh chứng 600 ký tự NFC; Điều hành ≤ 190 ms/vai trên 1 400 việc.

@@ -45,6 +45,11 @@ export async function moApp(browser, role, testInfo) {
   await expect(page.locator('#mainHeader')).toBeVisible(NAP);
   return page;
 }
+// Một phiên cho một đoạn việc: mở, chạy fn(page), ĐÓNG ngay kể cả khi lỗi — spec không mở quá 2 phiên cùng lúc (docs/KIEM-THU.md, CI #97).
+export async function voiPhien(browser, role, testInfo, fn) {
+  const page = await moApp(browser, role, testInfo);
+  try { return await fn(page); } finally { await page.context().close(); }
+}
 // Mở màn "Cần nghiệm thu" và chờ danh sách nạp xong.
 export async function moNghiemThu(page) {
   await page.locator('#navNghiemThu').click();

@@ -88,6 +88,7 @@ test.describe.serial('PR-2b — nghiệm thu minh chứng', () => {
   });
 
   test('5. Việc Thường trực giao cho Chánh VP: thư ký nghiệm thu thay mặt Thường trực', async ({ browser }, testInfo) => {
+    await cv.context().close(); cv = null;   // tối đa 2 phiên cùng lúc (docs/KIEM-THU.md)
     await datCo(db, ID.e2eTk, { thu_ky_thuong_truc: true });
     const tk = await moApp(browser, 'E2E_TK', testInfo);
     try {

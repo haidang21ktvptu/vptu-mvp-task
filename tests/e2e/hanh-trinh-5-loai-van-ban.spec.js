@@ -69,8 +69,10 @@ test.describe.serial('PR-2b — hành trình 5 loại văn bản: giao → nhậ
     }
     const { data } = await db.from('v_nhiem_vu').select('trang_thai, ngay_hoan_thanh, nghiem_thu_dung_han, nop_dung_han').in('id', LOAI.map((l) => viec[l].id));
     expect(data).toEqual(LOAI.map(() => ({ trang_thai: 'HOAN_THANH', ngay_hoan_thanh: homNay(), nghiem_thu_dung_han: 'DUNG_HAN', nop_dung_han: 'DUNG_HAN' })));
+    await tp.context().close(); tp = null;   // tối đa 2 phiên cùng lúc (docs/KIEM-THU.md)
     await moViec(cv, viec.CONG_VAN.id, viec.CONG_VAN.ma);
     await expect(cv.locator(`#klChiTiet-${viec.CONG_VAN.id} .ct-nhan .trang-thai`)).toHaveText('Hoàn thành đúng hạn', NAP);
+    await cv.context().close(); cv = null;
     const cvp = await moApp(browser, 'A1', testInfo);
     try {
       await nav(cvp, 'navTheoVanBan');
