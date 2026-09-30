@@ -39,7 +39,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/han-nop-minh-chung.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
     // GĐ19: chi-dao-tt ghi nhiệm vụ vào phạm vi PCVP2 (Quản trị) — chạy SAU desktop để không đua với bộ số kl-dashboard (PCVP2).
     { name: 'chi-dao-tt', use: DESKTOP, testMatch: /chi-dao-tt\.spec\.js/, dependencies: ['desktop'] },
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở project riêng bên dưới).
@@ -53,8 +53,15 @@ export default defineConfig({
     // PCVP/PCVP2 trong lúc chạy nên chạy SAU mọi project đọc số liệu của hai tài khoản này; tài khoản A3 riêng mỗi spec).
     { name: 'pr2a', use: DESKTOP, testMatch: [/ca-nhan-anh\.spec\.js/, /id-duy-nhat\.spec\.js/, /cap-nhat-nhanh-han\.spec\.js/, /giao-viec-kiem-nhiem\.spec\.js/],
       dependencies: ['desktop', 'mobile', 'bo-cuc', 'chi-dao-tt', 'gd22'] },
+    // PR-2b (logic, chỉ máy tính): hạn nộp minh chứng, nghiệm thu, hành trình 5 loại văn bản, B4–B6 — chạy SAU mọi project nặng (pr2a đổi cờ /
+    // phân công tạm) và NỐI TIẾP nhau (mỗi lúc một spec): CI #97 — nhiều phiên realtime cùng nạp lại làm staging Nano statement timeout.
+    // Chạy riêng cả chuỗi: npx playwright test --project='pr2b-*' --no-deps --workers=1 (kèm biến đích).
+    { name: 'pr2b-han-nop', use: DESKTOP, testMatch: /han-nop-minh-chung\.spec\.js/, dependencies: ['desktop', 'mobile', 'bo-cuc', 'chi-dao-tt', 'gd22', 'pr2a'] },
+    { name: 'pr2b-nghiem-thu', use: DESKTOP, testMatch: /nghiem-thu\.spec\.js/, dependencies: ['pr2b-han-nop'] },
+    { name: 'pr2b-hanh-trinh', use: DESKTOP, testMatch: /hanh-trinh-5-loai-van-ban\.spec\.js/, dependencies: ['pr2b-nghiem-thu'] },
+    { name: 'pr2b-b4-b6', use: DESKTOP, testMatch: /b4-b6-lanh-dao\.spec\.js/, dependencies: ['pr2b-hanh-trinh'] },
     // GĐ23: doi-mat-khau tạo tài khoản tạm bằng service_role và đăng nhập qua form — chạy cùng lượt cuối với dang-nhap.
-    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a'] },
+    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',

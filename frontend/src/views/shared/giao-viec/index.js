@@ -12,7 +12,8 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, giaoViec, datTrichYeuVanBan } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { MOI, vb, timTrongDs, napVanBan, datLaiVanBan, themVanBanMoi, timKhiGo } from './van-ban.js';
-import { napPhamVi, phongCuaOwner, locOwner, nganhDuocChon, linhVucDuocChon, duocGiao, thongBaoPhamVi } from './pham-vi.js';
+import { napPhamVi, phongCuaOwner, locOwner, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi, theoDoiHopLe, locTheoDoi, lanhDaoLoc } from './pham-vi.js';
+import { datLaiHanNop, napKhungHanNop, capNhatLyDo, dungNgayGoiY, thieuHanNop, loiHanNop, docHanNop, tomTatHanNop } from './han.js';
 import { homNayVN, formatNgay, ghiChuHan, congNgay } from '../../../lib/kl/ngay.js';
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { setActiveNav, showSection } from '../../shell/index.js';
@@ -55,15 +56,17 @@ const hanTruocBH = () => Boolean($('klThHan').value && ngayBH()) && $('klThHan')
 const ngayBH = () => (laMoi() ? $('klThNgayBH').value : vanBanChon()?.ngay_ban_hanh) || '';
 // Loại văn bản đang áp dụng; A0 để trống văn bản → DB tạo văn bản KHAC (mốc giao) nên không đòi ngành/lĩnh vực.
 const loaiVanBan = () => (laMoi() ? (vbTrong() ? 'KHAC' : $('klThLoaiVB').value) : vanBanChon()?.loai) || 'KHAC';
-// C3: tổ hợp (phòng Owner, ngành, lĩnh vực) đang chọn có trong phạm vi giao (kl_pham_vi_giao) không; người theo dõi khác người giao phải cùng
-// phạm vi khi người giao là PCVP (giao_viec kiểm) — Trưởng phòng đã bị giới hạn danh sách theo dõi trong phòng.
+// C3: tổ hợp (phòng Owner, ngành, lĩnh vực) đang chọn có trong phạm vi giao (kl_pham_vi_giao) không; người theo dõi: pham-vi.js (3.4, F).
 const phamViThieu = () => thongBaoPhamVi(phongOwner(), $('klThNganh').value, $('klThLinhVuc').value, danhMucKl().linhVuc);
-const pcvpTrucTiep = () => state.user?.role_group === 'A1' && !state.user.is_chief && !state.user.quan_tri_kl;
-const theoDoiNgoaiPhamVi = () => {
-  const td = $('klThNguoiTheoDoi').value;
-  if (!pcvpTrucTiep() || !td || td === state.user.id) return false;
-  return !duocGiao(state.accounts.find((a) => a.id === td)?.department || null, $('klThNganh').value, $('klThLinhVuc').value);
-};
+const theoDoiNgoaiPhamVi = () => !theoDoiHopLe($('klThNguoiTheoDoi').value, $('klThThayMat').value, $('klThNganh').value, $('klThLinhVuc').value);
+// Danh sách người theo dõi theo phạm vi hiện tại; giữ lựa chọn nếu còn hợp lệ, không thì gợi ý theo người chịu trách nhiệm.
+function dienTheoDoi() {
+  const s = $('klThNguoiTheoDoi'); const cu = s.value;
+  s.innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user);
+  locTheoDoi(s, $('klThThayMat').value, $('klThNganh').value, $('klThLinhVuc').value);
+  const goiY = goiYTheoDoi($('klThOwner').value, danhMucKl(), state.accounts, state.user);
+  s.value = [cu, goiY, lanhDaoLoc($('klThThayMat').value)].find((v) => v && s.querySelector(`option[value="${v}"]`)) || s.options[0]?.value || '';
+}
 
 function capNhatHienThi() {
   const loai = $('klThLoai').value;
@@ -83,6 +86,7 @@ function capNhatHienThi() {
   }
   show('klThHanBatBuoc', loai !== 'KY_BAN_HANH');
   setText('klThHanGhiChu', $('klThHan').value ? `${$('klThHanLoai').textContent ? ' · ' : ''}${ghiChuHan($('klThHan').value, homNay)}` : '');
+  napKhungHanNop({ han: loai === 'KY_BAN_HANH' ? null : $('klThHan').value, ngayBH: bh, loai }, capNhatTomTat);
   capNhatNganh();
   capNhatTomTat();
 }
@@ -101,6 +105,7 @@ function dienNganh() {
 function dienLinhVuc() {
   const cho = linhVucDuocChon(phongOwner()); const cu = $('klThLinhVuc').value;
   $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + linhVucCuaNganh($('klThNganh').value).filter((l) => !cho || cho.has(l.ma)).map((l) => opt(l.ma, l.ten, l.ma === cu)).join('');
+  dienTheoDoi();
 }
 function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || homNay; capNhatHienThi(); }
 // Người quản trị KL đổi lãnh đạo được thay mặt → phạm vi của người đó; lọc lại Owner / ngành / lĩnh vực.
@@ -132,7 +137,7 @@ export function trangThaiPhan() {
   const p1 = vanBanOk(); // v8: khối 1 = văn bản; khối 2 = nội dung + người
   const p2 = Boolean($('klThNoiDung').value.trim()) && Boolean($('klThOwner').value) && (laA0() || Boolean($('klThNguoiTheoDoi').value)) && (!canThayMat() || Boolean($('klThThayMat').value));
   const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && !hanTruocBH() && (!canNgayNhan() || Boolean($('klThNgayNhan').value))
-    && (!canNganhHienTai() || (Boolean($('klThNganh').value) && Boolean($('klThLinhVuc').value))) && !phamViThieu().thieu && !theoDoiNgoaiPhamVi();
+    && (!canNganhHienTai() || (Boolean($('klThNganh').value) && Boolean($('klThLinhVuc').value))) && !phamViThieu().thieu && !theoDoiNgoaiPhamVi() && !thieuHanNop().length;
   return [p1, p2, p3];
 }
 // Các yếu tố bắt buộc còn thiếu (theo thứ tự khối) — dòng "Còn thiếu: …" cạnh nút Giao việc.
@@ -142,16 +147,18 @@ function conThieu() {
     [!laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!$('klThSanPham').value, 'sản phẩm'],
     [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [hanTruocBH(), 'hạn sau ngày ban hành'], [canNgayNhan() && !$('klThNgayNhan').value, 'ngày nhận văn bản'],
     [canNganhHienTai() && !$('klThNganh').value, 'ngành'], [canNganhHienTai() && !$('klThLinhVuc').value, 'lĩnh vực'],
-    [Boolean(phamViThieu().thieu), phamViThieu().thieu], [theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n);
+    [Boolean(phamViThieu().thieu), phamViThieu().thieu], [theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
+    .concat(thieuHanNop());
 }
 function capNhatTomTat() {
   if (laA0()) { THEO_LOAI_A0.forEach((id) => show(id, canNganhHienTai())); capNhatNganh(); } // theo từng ô gõ (số hiệu / ngày / loại văn bản)
+  capNhatLyDo();
   const [p1, p2, p3] = trangThaiPhan();
   [p1, p2, p3].forEach((ok, i) => $(`gvCham${i + 1}`).classList.toggle('xong', ok));
   $('klThLuu').disabled = !(p1 && p2 && p3);
   const owner = $('klThOwner').selectedOptions[0]?.text || '…'; const sp = $('klThSanPham').selectedOptions[0]?.text || '…';
   const nd = $('klThNoiDung').value.trim(); const han = $('klThHan').value ? formatNgay($('klThHan').value) : '…';
-  setText('gvTomTatChu', `Giao "${nd ? nd.slice(0, 60) + (nd.length > 60 ? '…' : '') : '…'}" cho ${$('klThOwner').value ? owner : '…'}, hạn ${han}, sản phẩm ${$('klThSanPham').value ? sp : '…'}, độ khẩn ${tenDoKhan($('klThDoKhan').value)}`);
+  setText('gvTomTatChu', `Giao "${nd ? nd.slice(0, 60) + (nd.length > 60 ? '…' : '') : '…'}" cho ${$('klThOwner').value ? owner : '…'}, hạn ${han}${tomTatHanNop()}, sản phẩm ${$('klThSanPham').value ? sp : '…'}, độ khẩn ${tenDoKhan($('klThDoKhan').value)}`);
   const thieu = conThieu(); setText('gvConThieu', thieu.length ? `Còn thiếu: ${thieu.join(', ')}` : '');
   setText('gvPhamViGhiChu', phamViThieu().chuThich || 'theo ngành đã chọn');
   // Xem trước thẻ việc (cột phụ) đọc lại các ô
@@ -185,8 +192,9 @@ export async function openGiaoViec(opts = {}) {
   $('klThLoaiVB').innerHTML = LOAI_VAN_BAN.map(([ma, ten]) => opt(ma, ten, ma === 'KL_BTV')).join('');
   $('klThNgayBH').max = homNay; $('klThNgayNhanVB').max = homNay;
   $('klThOwner').innerHTML = ''; dienOwner();
-  $('klThNguoiTheoDoi').innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user);
+  $('klThNguoiTheoDoi').innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user); $('klThNguoiTheoDoi').value = state.user?.id || '';
   $('klThThayMat').innerHTML = opt('', 'Chọn lãnh đạo được thay mặt') + thayMatOptionsHtml(state.accounts);
+  datLaiHanNop();
   $('klThSanPham').innerHTML = opt('', 'Chọn loại sản phẩm') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
   $('klThCapNhan').innerHTML = dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThCapQD').innerHTML = opt('', 'Chưa xác định') + dm.cap.map((c) => opt(c.ma, c.ten)).join('');
@@ -219,7 +227,7 @@ function kiemTra(p) {
   if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
   if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
   if (!laA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
-  return null;
+  return loiHanNop();
 }
 
 function docForm() {
@@ -228,6 +236,7 @@ function docForm() {
     noi_dung: $('klThNoiDung').value.trim(), owner_don_vi_ma: owner.owner_don_vi_ma, owner_tai_khoan: owner.owner_tai_khoan, do_khan: $('klThDoKhan').value,
     san_pham_loai: $('klThSanPham').value || null, san_pham_mo_ta: $('klThSanPhamMoTa').value.trim() || null,
     han_xu_ly: $('klThLoai').value === 'KY_BAN_HANH' ? null : $('klThHan').value || null, cap_nhan_san_pham: $('klThCapNhan').value || null, theo_1400: true,
+    ...docHanNop(),
   };
   if (canThayMat()) p.thay_mat_cho = $('klThThayMat').value || null;
   if (cha) p.nhiem_vu_cha = cha.id;
@@ -263,7 +272,7 @@ async function luu(nhapTiep) {
     if (!nhapTiep) { await napLaiViec(kq.id); openKl({ tuKhoa: kq.ma }); return; } // dòng vừa giao vào bộ nhớ danh sách trước → hiện ngay, không chờ nạp cả danh sách
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
     ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
-    $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; dienNganh();
+    $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; datLaiHanNop(); dienNganh();
     capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus();
   } catch (e) {
     notifyError('Không giao được việc: ' + loiDeHieu(e));
@@ -279,10 +288,11 @@ export function registerGiaoViec() {
   $('klThThayMat').addEventListener('change', thayMatDoi);
   $('klThHan').addEventListener('input', capNhatHienThi);
   $('klThNganh').addEventListener('change', dienLinhVuc);
+  $('klThLinhVuc').addEventListener('change', dienTheoDoi);
   $('klThOwner').addEventListener('change', ownerDoi);
   $('giaoViecForm').addEventListener('input', capNhatTomTat);
   $('giaoViecForm').addEventListener('change', capNhatTomTat);
   registerActions({ openGiaoViec: () => openGiaoViec(), giaoTiepXuong: ({ id }) => openGiaoViec({ cha: timKlRow(id) }),
-    huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true),
+    huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true), gvDungHanNop: () => { dungNgayGoiY(); capNhatTomTat(); },
     gvVbXemThem: () => napVanBan({ them: true, nhanMoi: nhanMoi() }).catch((e) => notifyError(e.message)) });
 }

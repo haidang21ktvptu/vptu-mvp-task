@@ -3,7 +3,7 @@
 // Mã NV-T6x, nội dung 'KL-1400 …', tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, assertOk, IDS } from './lib.mjs';
+import { adminClient, assertOk, IDS, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -19,7 +19,7 @@ const sua = (ma, patch) => db().from('nhiem_vu').update(patch).eq('ma', ma).sele
 const loi = (r) => r.error?.message || '';
 const don = async () => { await db().from('nhiem_vu').delete().like('ma', 'NV-T6%'); };
 
-describe('0022 — cha–con và Owner tài khoản', { skip: SKIP }, () => {
+describe('0022 — cha–con và Owner tài khoản', { skip: SKIP || CHI_CUC_BO }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await don();

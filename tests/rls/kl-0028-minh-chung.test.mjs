@@ -2,9 +2,10 @@
 // khoảng ngày, danh mục cấp); phạm vi đọc theo kl_pham_vi; xac_nhan_minh_chung (theo dõi/A1/A2 trong phạm vi, không tự xác nhận);
 // dong_nhiem_vu (chặn khi không có minh chứng hợp lệ, ngày mặc định = ngày văn bản mới nhất, lead time); việc theo_1400 không đóng
 // bằng chữ; chữ cũ (chu_cu) hợp lệ; cờ thieu_minh_chung tính lại; tách số hiệu/ngày; kiểm ngày với cận dưới NULL; múi giờ. Mã NV-T6x, tự dọn.
+// PR-2b (0057): xác nhận hợp lệ = NGHIỆM THU và đóng việc cùng giao dịch (Q2); trả lại việc đang mở bắt buộc hạn nộp lại (Q3).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, songSong, homNayVN, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -19,7 +20,7 @@ const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, a
 // 0046: minh chứng nộp mới bắt buộc thêm trích yếu + mô tả kết quả (≤ 600 ký tự); bản ghi cũ (chèn thẳng bằng service_role) giữ NULL vẫn hợp lệ.
 const nop = (username, ma, p) => rpc(username, 'nop_minh_chung', { p: { nhiem_vu_id: id[ma], so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG',
   trich_yeu: 'Báo cáo kết quả (RLS 0028)', mo_ta_ket_qua: 'Đã tổng hợp, gửi Chánh Văn phòng.', ...p } });
-const xacNhan = (username, mcId, hopLe, lyDo) => rpc(username, 'xac_nhan_minh_chung', { p_id: mcId, p_hop_le: hopLe, p_ly_do: lyDo ?? null });
+const xacNhan = (username, mcId, hopLe, lyDo, hanNopLai) => rpc(username, 'xac_nhan_minh_chung', { p_id: mcId, p_hop_le: hopLe, p_ly_do: lyDo ?? null, p_han_nop_lai: hanNopLai ?? null });
 const dong = (username, ma, ngay) => rpc(username, 'dong_nhiem_vu', { p_id: id[ma], p_ngay_hoan_thanh: ngay ?? null });
 const view = async (ma) => (await db().from('v_nhiem_vu').select('*').eq('id', id[ma]).single()).data;
 const docMc = async (username, ma) => (await userClient(username)).from('minh_chung').select('id, loai, so_hieu, hop_le, nop_boi').eq('nhiem_vu_id', id[ma]);
@@ -98,17 +99,18 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertDenied(await dong('demo_pcvp2', 'NV-T61'), 'PCVP ngoài phạm vi');
   });
 
-  test('6. xac_nhan_minh_chung: người nộp không tự xác nhận; A3/A2 ngoài phạm vi chặn; theo dõi xác nhận hợp lệ; PCVP bác phải có lý do → không còn đếm', async () => {
+  test('6. xac_nhan_minh_chung: người nộp không tự xác nhận; A3/A2 ngoài phạm vi chặn; PCVP trả lại phải có lý do + hạn nộp lại; theo dõi nghiệm thu → đóng việc (Q2)', async () => {
     const r2 = await nop('demo_cv2', 'NV-T60', { so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-25' }); assertOk(r2, 'nộp thứ hai'); mc.b = r2.data;
     assertDenied(await xacNhan('demo_cv2', mc.a, true), 'Owner tài khoản (A3) không có quyền xác nhận');
     const r3 = await nop('demo_cv1', 'NV-T60', { so_hieu: '14/CV-VPTU', ngay_van_ban: '2026-08-18' }); assertOk(r3, 'người theo dõi nộp'); mc.d = r3.data;
     assertLoi(await xacNhan('demo_cv1', mc.d, true), /chính mình nộp/, 'người theo dõi tự xác nhận minh chứng mình nộp');
     const [x1, x2, x3] = await Promise.all([xacNhan('demo_cv1', mc.c, true), xacNhan('demo_truongphong', mc.c, true), xacNhan('demo_pcvp', mc.c, true)]);   // bị chặn (D3)
     assertDenied(x1, 'A3 ngoài nhiệm vụ'); assertDenied(x2, 'A2 ngoài phòng'); assertDenied(x3, 'PCVP ngoài khối');
-    assertOk(await xacNhan('demo_cv1', mc.a, true), 'người theo dõi xác nhận hợp lệ');
     assertLoi(await xacNhan('demo_pcvp2', mc.b, false), /ghi lý do/, 'bác thiếu lý do');
-    assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), 'PCVP phụ trách Owner bác');
-    assertOk(await xacNhan('demo_pcvp2', mc.d, false, 'Nộp trùng'), 'bác minh chứng thứ ba');
+    assertLoi(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), /hạn nộp lại/, 'trả lại việc đang mở thiếu hạn nộp lại (Q3)');
+    assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu', homNayVN()), 'PCVP phụ trách Owner trả lại');
+    assertOk(await xacNhan('demo_pcvp2', mc.d, false, 'Nộp trùng', homNayVN()), 'trả lại minh chứng thứ ba');
+    assertOk(await xacNhan('demo_cv1', mc.a, true), 'người theo dõi nghiệm thu (đóng việc — Q2)');
     const rows = (await db().from('minh_chung').select('id, hop_le, xac_nhan_boi, ly_do_khong_hop_le').eq('nhiem_vu_id', id['NV-T60']).order('nop_luc')).data;
     assert.deepEqual(rows.map((x) => [x.hop_le, x.xac_nhan_boi, x.ly_do_khong_hop_le]), [[true, IDS.cv1, null], [false, IDS.pcvp2, 'Sai số hiệu'], [false, IDS.pcvp2, 'Nộp trùng']]);
     const v = await view('NV-T60'); assert.equal(v.so_minh_chung_hop_le, 1); assert.equal(v.minh_chung_moi_nhat.hop_le, false);
@@ -116,20 +118,19 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertOk(await xacNhan('demo_truongphong', mc.a, true), 'A2 cùng phòng người theo dõi được xác nhận');
   });
 
-  test('7. dong_nhiem_vu: ngày mặc định = ngày văn bản minh chứng hợp lệ mới nhất; HOAN_THANH, dong_luc, lead time = 15; đóng lại bị chặn; bác hết → cờ thiếu', async () => {
-    assertLoi(await dong('demo_cv1', 'NV-T60', '2026-07-01'), /từ ngày ban hành tới hôm nay/, 'ngày trước ban hành');
-    assertOk(await dong('demo_cv1', 'NV-T60'), 'người theo dõi đóng');
+  test('7. nghiệm thu đóng việc: ngày hoàn thành = ngày văn bản minh chứng; HOAN_THANH, dong_luc, lead time = 15; dong_nhiem_vu lại bị chặn; bác hết → cờ thiếu', async () => {
+    // Q2 (0057): việc đã đóng ở test 6 khi người theo dõi nghiệm thu mc.a — ngày hoàn thành = ngày văn bản của minh chứng được nghiệm thu.
     const v = await view('NV-T60');
     assert.deepEqual([v.tien_do_ma, v.ngay_hoan_thanh, v.thieu_minh_chung, v.lead_time_ngay, v.ket_qua, v.so_ngay_tre], ['HOAN_THANH', '2026-08-20', false, 15, 'TRE', 5]);
     assert.ok(v.dong_luc, 'dong_luc');
-    assert.match((await lichSu('NV-T60', 'dong_nhiem_vu'))[0].gia_tri_moi, /Đóng nhiệm vụ · NV-T60: hoàn thành ngày 20\/08\/2026/);
+    assert.match((await lichSu('NV-T60', 'dong_nhiem_vu'))[0].gia_tri_moi, /Nghiệm thu và đóng nhiệm vụ · NV-T60: hoàn thành ngày 20\/08\/2026/);
     assertLoi(await dong('demo_cv1', 'NV-T60'), /đã đóng/, 'đóng lại');
     assertOk(await xacNhan('demo_pcvp2', mc.a, false, 'Văn bản bị thu hồi'), 'bác minh chứng còn lại sau khi đóng');
     const v2 = await view('NV-T60'); assert.deepEqual([v2.so_minh_chung_hop_le, v2.thieu_minh_chung, v2.tien_do_ma], [0, true, 'HOAN_THANH']);
-    assert.equal(v2.cap_nhat_boi, IDS.cv1, 'tính lại cờ không ghi đè người cập nhật cuối (vẫn là người đóng)');
+    assert.equal(v2.cap_nhat_boi, IDS.cv1, 'tính lại cờ không ghi đè người cập nhật cuối (vẫn là người nghiệm thu đóng việc)');
   });
 
-  test('8. chữ cũ (chu_cu, chưa xác nhận) là hợp lệ: đếm được, đóng được việc cũ với ngày văn bản tách được; tách số hiệu/ngày', async () => {
+  test('8. chữ cũ (chu_cu, chưa xác nhận) là hợp lệ: đếm được, đóng được việc cũ với ngày văn bản tách được; tách số hiệu/ngày', { skip: CHI_CUC_BO }, async () => {
     const ins = await db().from('minh_chung').insert({ nhiem_vu_id: id['NV-T62'], loai: 'chu_cu', noi_dung_chu: 'Công văn 12/CV-VPTU ngày 10/08/2026', so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-10' });
     assertOk(ins, 'service_role chuyển chữ cũ');
     const v = await view('NV-T62'); assert.equal(v.so_minh_chung_hop_le, 1); assert.equal(v.minh_chung_moi_nhat.loai, 'chu_cu');
@@ -141,7 +142,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assert.deepEqual(await tach('Đã gửi bằng V-Office ngày 31/02/2026'), { so_hieu: null, ngay_van_ban: null });
   });
 
-  test('9. minh_chung_kiem_ngay: cận dưới = ngày ban hành, không có thì ngày nhận, cả hai NULL chỉ kiểm ≤ hôm nay', async () => {
+  test('9. minh_chung_kiem_ngay: cận dưới = ngày ban hành, không có thì ngày nhận, cả hai NULL chỉ kiểm ≤ hôm nay', { skip: CHI_CUC_BO }, async () => {
     const kiem = async (p_ngay, p_ngay_ban_hanh, p_ngay_nhan) => { const r = await db().rpc('minh_chung_kiem_ngay', { p_ngay, p_ngay_ban_hanh, p_ngay_nhan }); assertOk(r, 'kiem'); return r.data; };
     assert.equal(await kiem('2020-01-01', null, null), null, 'cả hai NULL: ngày cũ vẫn nhận');
     assert.match(await kiem('2026-01-01', null, '2026-02-01'), /\(01\/02\/2026\)/, 'không có ngày ban hành → ngày nhận');
@@ -150,7 +151,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assert.match(await kiem('2999-01-01', null, null), /sau hôm nay/, 'cận trên vẫn kiểm');
   });
 
-  test('10. múi giờ: ngày văn bản = kl_hom_nay() (giờ Việt Nam) được nhận ở mọi giờ chạy; hôm nay + 1 bị chặn', async () => {
+  test('10. múi giờ: ngày văn bản = kl_hom_nay() (giờ Việt Nam) được nhận ở mọi giờ chạy; hôm nay + 1 bị chặn', { skip: CHI_CUC_BO }, async () => {
     const homNay = (await db().rpc('kl_hom_nay')).data;
     const mai = new Date(`${homNay}T00:00:00Z`); mai.setUTCDate(mai.getUTCDate() + 1);
     assertLoi(await nop('demo_cv1', 'NV-T61', { ngay_van_ban: mai.toISOString().slice(0, 10) }), /sau hôm nay/, 'hôm nay + 1');

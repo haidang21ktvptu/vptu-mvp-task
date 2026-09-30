@@ -71,15 +71,18 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 - **MC-5 [Giữ]** 76 minh chứng chữ cũ → `minh_chung.loai = chu_cu`, tách số hiệu/ngày khi nhận dạng được; không coi là vi phạm; 146 việc đã đóng không đánh giá lại; 78 việc đóng không minh chứng giữ cờ `thieu_minh_chung`.
 - **MC-6 [Mới]** Xác nhận minh chứng: người theo dõi hoặc lãnh đạo trong phạm vi bấm "Xác nhận hợp lệ" / "Không hợp lệ (lý do)" — hành động ghi vết, không phải trạng thái; Owner tài khoản không tự xác nhận minh chứng của mình.
 - **MC-7 [Mới]** Cấp nhận sản phẩm và **cấp cần quyết định** **`[CH-7]`**: hai danh mục riêng (Thường trực / BTV / Chánh VP / PCVP / Trưởng phòng / Đơn vị trình); cấp nhận bắt buộc khi tạo mới (mặc định = cấp trên Owner); cấp quyết định để mở, điền khi việc Đỏ; dashboard ngoại lệ đếm việc Đỏ chưa có cấp quyết định.
+- **MC-8 [Mới, PR-2b 0053–0055]** **Hạn nộp minh chứng** `han_nop_minh_chung` bắt buộc khi giao việc có hạn (phiên người dùng; service_role không ép): trong [hôm nay, H]; muộn hơn `ngay_lam_viec_truoc(H, 1)` phải ghi `ly_do_han_nop_sat` (việc gấp); H đã qua ⇒ trong [hôm nay, `ngay_lam_viec_sau(hôm nay, 2)`], việc vẫn tính Quá hạn. Khung/gợi ý do `kl_khung_han_nop()` trả. Chỉ người giao sửa (`dat_han_nop_minh_chung`, có lý do, ghi lịch sử); người giao không còn ⇒ quản trị KL. Ngày làm việc tính theo `dm_ngay_nghi` (nghỉ lễ, nghỉ bù, làm bù — Quản trị › Ngày nghỉ), đọc một lần mỗi truy vấn.
+- **MC-9 [Mới, PR-2b 0057]** **Nghiệm thu** thay MC-6 cho việc có hạn nộp: "Nghiệm thu, hoàn thành" = xác nhận hợp lệ **và** đóng việc trong cùng giao dịch (`ngay_hoan_thanh` = ngày văn bản minh chứng; Q2 — không đóng bằng nút MC-4); "Trả lại" bắt buộc lý do + `han_nop_lai` ∈ [hôm nay, H] (Q3). Người nghiệm thu: `kl_duoc_nghiem_thu()` (người theo dõi, lãnh đạo có quyền chỉ đạo, quản trị KL; việc Thường trực giao Chánh VP ⇒ thư ký Thường trực, ghi "thay mặt Thường trực" — Q8); người nhận nhắc chính: `nguoi_nghiem_thu_chinh()`. Màn "Cần nghiệm thu" cho A1/A2/quản trị KL/thư ký.
 
 ### 3.4 CB — Cảnh báo tự động và leo thang (CN-4, NT-5)
 
 - **CB-1 [Mới]** Hàm `trang_thai(nv, ngay)` (mở rộng `kl_trang_thai`) trả thêm `muc_canh_bao`: `XANH` (còn > ngưỡng Vàng), `VANG` (còn ≤ `nguong_vang_ngay` = 3 và chưa có minh chứng hợp lệ), `DO` (quá hạn), `DO_DAC_BIET` (quá hạn ≥ `nguong_do_dac_biet_ngay` = 3) **`[CH-10]`**, `KHONG_AP_DUNG` (đã đóng, thường xuyên, chờ điều kiện, cần điền hạn). Một hàm, một nguồn; frontend không tự tính.
-- **CB-2 [Mới]** Hàm `canh_bao_quet(p_ngay)` được **workflow cron GitHub Actions** gọi mỗi giờ qua RPC bằng service_role (mục 6, **KT-4 đổi**: không có `pg_cron` vì không có gói Pro): với mỗi việc đang mở, so `muc_canh_bao` với mức đã gửi lần cuối trong bảng `canh_bao`; lên mức → ghi dòng `canh_bao(nhiem_vu_id, muc, gui_luc, nguoi_nhan[])` và tạo tin `he_thong` trong `direct_messages` cho người nhận. Không gửi lặp cùng mức; hạ mức (gia hạn) → ghi dòng "hạ mức". Áp cho mọi việc đang mở kể cả cũ **`[CH-10]`**.
+- **CB-2 [Mới]** Hàm `canh_bao_quet(p_ngay)` được **workflow cron GitHub Actions** gọi **một lần mỗi ngày lúc 07:30 giờ Việt Nam** (`canh-bao.yml`, cron `30 0 * * *` UTC; sửa 30/9 — trước ghi "mỗi giờ" không khớp thực tế) qua RPC bằng service_role (mục 6, **KT-4 đổi**: không có `pg_cron` vì không có gói Pro): với mỗi việc đang mở, so `muc_canh_bao` với mức đã gửi lần cuối trong bảng `canh_bao`; lên mức → ghi dòng `canh_bao(nhiem_vu_id, muc, gui_luc, nguoi_nhan[])` và tạo tin `he_thong` trong `direct_messages` cho người nhận. Không gửi lặp cùng mức; hạ mức (gia hạn) → ghi dòng "hạ mức". Áp cho mọi việc đang mở kể cả cũ **`[CH-10]`**.
 - **CB-3 [Mới]** Người nhận theo mức (CN-4.1–4.3, **`[CH-4]`**): VÀNG → Owner tài khoản (nếu có) và người theo dõi; ĐỎ → thêm **thủ trưởng trực tiếp**: chuyên viên → trưởng phòng; phòng → PCVP phụ trách phòng; Văn phòng → Chánh VP; đơn vị ngoài → lãnh đạo Văn phòng phụ trách lĩnh vực/phòng theo dõi; ĐỎ ĐẶC BIỆT → thêm Chánh VP và xuất hiện trên dashboard cấp Thường trực (CB-5).
 - **CB-4 [Mới]** Luân chuyển nội bộ (xác nhận nhận việc, đọc, chuyển người theo dõi) **không** đổi `ngay_nhan_van_ban`, không đổi deadline (CN-2.2); chỉ chỉ đạo `GIA_HAN` đổi deadline.
 - **CB-5 [Mới]** **Dashboard cấp Thường trực** = màn hình mặc định của vai trò `A0` (**`[CH-11]` = A**): dashboard ngoại lệ với bộ lọc mặc định `DO_DAC_BIET`, mở rộng được sang mọi việc Đỏ và tổng quan; Chánh Văn phòng cũng xem được chế độ này; xuất được bản HTML/PDF (giai đoạn sau, GĐ cũ 13).
 - **CB-6 [Giữ]** Kênh: trong app (chuông + tin hệ thống, realtime) **`[CH-12]`**; nhật ký gửi trong `canh_bao`; kênh ngoài là giai đoạn sau.
+- **CB-7 [Mới, PR-2b 0060]** Ba mức nhắc thêm trong cùng lượt quét hằng ngày: `CHAM_NOP_MC` (qua hạn nộp/hạn nộp lại — người nộp + người nghiệm thu chính), `NGHIEM_THU` (chờ ≥ 1 ngày làm việc — người nghiệm thu chính), `NGHIEM_THU_QUA_HAN` (chờ nghiệm thu mà đã qua H — mỗi ngày làm việc một lần, người nghiệm thu chính + thủ trưởng trực tiếp, thêm Chánh VP khi Đỏ đặc biệt; không gửi chủ trì/người nộp). Ngày không làm việc không gửi nhắc lặp.
 
 ### 3.5 DB — Dashboard quản trị ngoại lệ (CN-5, QT-5)
 
@@ -120,6 +123,18 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 | 7 | hạn − ngày tính ≤ `nguong_sap_den_han_ngay` (7) | `SAP_DEN_HAN` | `VANG` nếu còn ≤ `nguong_vang_ngay` (3) và chưa có minh chứng hợp lệ, ngược lại `XANH` **`[CH-10b]`** |
 | 8 | còn lại | `DANG_THUC_HIEN` | `XANH` |
 
+**4.1b Hạn nộp minh chứng (PR-2b, 0058)** — chèn vào bảng trên, N* = hạn nộp lại của lần trả lại gần nhất, không có thì hạn nộp gốc:
+
+| Thứ tự | Điều kiện | `trang_thai` | `muc_canh_bao` |
+|---|---|---|---|
+| 5 | có minh chứng chờ nghiệm thu, ngày tính > H | `QUA_HAN_NGHIEM_THU` (Đỏ tính cho lãnh đạo nghiệm thu — `nguoi_chiu_cham`) | `DO` / `DO_DAC_BIET` |
+| 6 | có minh chứng chờ nghiệm thu | `CHO_NGHIEM_THU` | `XANH` |
+| 7 | ngày tính > H | `QUA_HAN` (như cũ) | `DO` / `DO_DAC_BIET` |
+| 8 | N* < ngày tính | `CHAM_NOP_MINH_CHUNG` (nhãn cam) | `VANG` (không leo thang) |
+| 9–12 | còn lại | như dòng 7–8 cũ; Vàng theo N* khi có hạn nộp | |
+
+Trường mới của `trang_thai_kq`: `han_nop_hieu_luc`, `minh_chung_buoc`, `nop_dung_han`, `nghiem_thu_dung_han`, `so_lan_tra_lai` (hai tỉ lệ đúng hạn chỉ tính việc có hạn nộp). Chủ trì A3 thấy nhãn trung tính "Đã nộp — chờ nghiệm thu".
+
 Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" (7 ngày) để xem/lọc, mức Vàng (3 ngày) để gửi nhắc; chọn (ii) thì hai ngưỡng bằng nhau. Đang đính chính: `nhom_dem = DANG_DINH_CHINH`, không đếm vào Đỏ. Ngưỡng đọc từ `kl_cau_hinh`; "ngày tính" theo giờ Việt Nam.
 
 **4.2 Hành động không phải trạng thái** (CN-1.2): xác nhận nhận việc, nộp minh chứng, xác nhận minh chứng, chỉ đạo, phản hồi, gia hạn, giao lại — đều là dòng trong `lich_su`/`chi_dao`/`minh_chung`, không có cột trạng thái quy trình.
@@ -151,6 +166,8 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 | `dong_luc` (← `ghi_hoan_thanh_luc`) | timestamptz | | QT-4 |
 | `theo_1400` | boolean | true cho việc tạo từ v3; false cho 185 việc cũ — bật các ràng buộc bắt buộc | |
 | giữ nguyên: `ma`, `nganh_ma`, `linh_vuc_ma`, `linh_vuc_chi_tiet`, `noi_dung`, `loai_thoi_han_ma`, `ly_do_chua_co_han`, `tien_do_ma`, `ngay_hoan_thanh`, `minh_chung` (chữ, di sản), `van_ban_trien_khai`, `so_lan_gia_han`, `nguon`, `ghi_chu`, `thieu_minh_chung`, `cap_nhat_luc/boi`, `tao_boi`, `created_at` | | | |
+
+**5.3b PR-2b:** `nhiem_vu.han_nop_minh_chung date`, `ly_do_han_nop_sat text` (≤ 500); `v_nhiem_vu` thêm `han_nop_hieu_luc`, `minh_chung_buoc`, `nop_dung_han`, `nghiem_thu_dung_han`, `so_lan_tra_lai`, `nguoi_nop_cho`, `nguoi_chiu_cham(_ten)`, `phong_chiu_cham`; khâu `CHO_NGHIEM_THU`, nhóm ngoại lệ `NGHIEM_THU`. `minh_chung.han_nop_lai date` (chỉ khi `hop_le = false`). Bảng mới `dm_ngay_nghi(ngay, loai NGHI_LE/NGHI_BU/LAM_BU, ten)`.
 
 **5.4 `minh_chung`** (mới; ý tưởng từ `task_evidences`): `id`, `nhiem_vu_id` FK, `loai` (`tep`/`so_hieu`/`chu_cu`), `so_hieu`, `ngay_van_ban`, `cap_nhan` FK `dm_cap`, `tep_path`, `tep_ten`, `tep_kich_thuoc`, `noi_dung_chu` (cho `chu_cu`), `nop_boi`, `nop_luc`, `hop_le` (NULL/true/false), `xac_nhan_boi`, `xac_nhan_luc`, `ly_do_khong_hop_le`. Không xoá; thay bằng minh chứng mới.
 
@@ -190,7 +207,7 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 
 ## 6. Kiến trúc kỹ thuật bổ sung
 
-- Không server riêng (giữ). **Cảnh báo tự động (KT-4, chốt 16/9)**: workflow `canh-bao-tu-dong.yml` chạy theo `schedule` mỗi giờ (+ `workflow_dispatch`), gọi RPC `canh_bao_quet()` trên production bằng `SUPABASE_SERVICE_ROLE_KEY` production để trong **repository secret** (chỉ workflow này dùng; không đưa key vào URL, không log); hàm `security definer`, chỉ `service_role` gọi được, **idempotent** theo (nhiệm vụ, mức) nên chạy trễ/chạy lặp không gửi trùng; có test với ngày cố định. Giới hạn của GitHub Actions: cron có thể trễ vài phút tới vài chục phút giờ cao điểm, và GitHub tắt schedule sau 60 ngày repo không có commit (cùng cơ chế với `backup-dinh-ky.yml`, đã có mục theo dõi trong TRANG-THAI). Chuyển sang `pg_cron` khi có gói Pro là một PR nhỏ (chỉ đổi nơi gọi).
+- Không server riêng (giữ). **Cảnh báo tự động (KT-4, chốt 16/9)**: workflow `canh-bao.yml` chạy theo `schedule` một lần mỗi ngày 07:30 giờ VN (+ `workflow_dispatch`), gọi RPC `canh_bao_quet()` trên production bằng `SUPABASE_SERVICE_ROLE_KEY` production để trong **repository secret** (chỉ workflow này dùng; không đưa key vào URL, không log); hàm `security definer`, chỉ `service_role` gọi được, **idempotent** theo (nhiệm vụ, mức) nên chạy trễ/chạy lặp không gửi trùng; có test với ngày cố định. Giới hạn của GitHub Actions: cron có thể trễ vài phút tới vài chục phút giờ cao điểm, và GitHub tắt schedule sau 60 ngày repo không có commit (cùng cơ chế với `backup-dinh-ky.yml`, đã có mục theo dõi trong TRANG-THAI). Chuyển sang `pg_cron` khi có gói Pro là một PR nhỏ (chỉ đổi nơi gọi).
 - Tệp minh chứng: **chưa có nơi lưu** (`[CH-6]` = B); cột `tep_path` để sẵn. Khi có kinh phí: Supabase Storage bucket `minh-chung`, policy dùng cùng `kl_pham_vi`, đường dẫn `nhiem_vu/<id>/<uuid>.<đuôi>`, không đưa key vào URL bên thứ ba.
 - Realtime: một kênh `nhiem_vu_feed` cho `nhiem_vu`, `chi_dao`, `minh_chung`, `dinh_chinh`, `direct_messages` (`minh_chung` vào publication `supabase_realtime` từ 0051). PR-2a: sự kiện của một việc chỉ nạp lại việc đó, gộp 1,5 s.
 - **Ảnh hồ sơ (Q5, PR-2a, G-3):** bucket `anh-ho-so` riêng tư — mọi người đã đăng nhập xem được, anon bị chặn; `accounts.anh_url` lưu đường dẫn `<uid>/anh-<thời điểm>.<đuôi>`, giao diện hiển thị bằng signed URL.

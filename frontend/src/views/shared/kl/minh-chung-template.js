@@ -26,7 +26,7 @@ export const klMinhChungTemplate = `
     </div>
     <div class="mt-3">
       <label for="klMcMoTaKq" class="nhan">Mô tả kết quả <span class="chu-phu">khoảng 100 chữ: đã làm gì, kết quả, gửi ai</span></label>
-      <textarea id="klMcMoTaKq" class="o-nhap" rows="4" maxlength="600" placeholder="Đã làm gì, kết quả ra sao, đã gửi tới ai…"></textarea>
+      <textarea id="klMcMoTaKq" class="o-nhap" rows="4" placeholder="Đã làm gì, kết quả ra sao, đã gửi tới ai…"></textarea>
       <p class="chu-phu mt-1"><span id="klMcDem">0</span>/600 ký tự</p>
     </div>
     <p class="chu-phu mt-3">Cả năm ô đều bắt buộc; văn bản tra được trên V-Office theo số hiệu. Tệp đính kèm chưa nhận (chờ điều kiện kinh phí).</p>

@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { demTheoNhom, tongHop, sapXep, locRows, theoNganhLinhVuc, theoChuTriMo, theoHoiNghi, chatLuong, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH } from '../src/lib/kl/tong-hop.js';
 import { homNayVN, soNgay, formatNgay, congNgay, ghiChuHan, ngayTruoc, ngayTrongMinhChung } from '../src/lib/kl/ngay.js';
-import { nhanTrangThai, THU_TU_NHOM } from '../src/lib/kl/nhan.js';
+import { nhanTrangThai, THU_TU_NHOM, lopMep } from '../src/lib/kl/nhan.js';
 
 const MOC = { HOAN_THANH: 146, THUONG_XUYEN: 16, QUA_HAN: 8, DANG_THUC_HIEN: 6, CHO_DIEU_KIEN: 6, CAN_DIEN_HAN: 3, SAP_DEN_HAN: 0 };
 
@@ -112,5 +112,22 @@ describe('ngày theo giờ Việt Nam', () => {
     assert.equal(ngayTrongMinhChung('Số 12/CV-VPTU ngày 5/9/2026'), '2026-09-05');
     assert.equal(ngayTrongMinhChung('CV 12'), null);
     assert.equal(ngayTrongMinhChung('1/13/2026'), null);
+  });
+});
+
+// PR-2b: ba nhóm mới (Chậm nộp minh chứng — cam, Chờ nghiệm thu, Quá hạn ở bước nghiệm thu) và góc nhìn người nộp (Mới 2).
+describe('PR-2b — nhóm trạng thái hạn nộp / nghiệm thu', () => {
+  test('THU_TU_NHOM có đủ 3 nhóm mới; đếm đủ khoá (0 khi không có); tổng các nhóm = tổng dòng', () => {
+    for (const k of ['CHAM_NOP_MINH_CHUNG', 'CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU']) assert.ok(THU_TU_NHOM.includes(k), k);
+    const rows = [{ nhom_dem: 'CHAM_NOP_MINH_CHUNG' }, { nhom_dem: 'QUA_HAN_NGHIEM_THU' }, { nhom_dem: 'HOAN_THANH' }];
+    const d = demTheoNhom(rows);
+    assert.equal(d.CHO_NGHIEM_THU, 0); assert.equal(Object.values(d).reduce((s, n) => s + n, 0), rows.length);
+  });
+  test('người nộp thấy nhãn trung tính kể cả khi quá hạn ở bước nghiệm thu; lãnh đạo thấy "Cần nghiệm thu" / "Quá hạn ở bước nghiệm thu"; chậm nộp = mép cam', () => {
+    const r = { nhom_dem: 'QUA_HAN_NGHIEM_THU', so_ngay_qua: 2, owner_tai_khoan: 'cv', nguoi_nop_cho: 'cv', muc_canh_bao: 'DO' };
+    assert.equal(nhanTrangThai(r, 'cv'), 'Đã nộp — chờ nghiệm thu'); assert.equal(lopMep(r, 'cv'), 'lam');
+    assert.equal(nhanTrangThai(r, 'tp'), 'Quá hạn ở bước nghiệm thu · 2 ngày'); assert.equal(lopMep(r, 'tp'), 'do');
+    assert.equal(nhanTrangThai({ ...r, nhom_dem: 'CHO_NGHIEM_THU' }, 'tp'), 'Cần nghiệm thu');
+    assert.equal(lopMep({ nhom_dem: 'CHAM_NOP_MINH_CHUNG', muc_canh_bao: 'VANG' }), 'cam');
   });
 });

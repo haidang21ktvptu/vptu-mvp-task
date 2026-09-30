@@ -5,7 +5,7 @@
 // giờ làm việc), TT_CHUA_NHAN (hằng ngày); v_dien_bien không lộ lý do từ chối ngoài chuỗi; thứ tự v_ngoai_le; kl_so_chua_xu_ly. Tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -43,7 +43,7 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
   before(async () => { fx = await setupKlFixtures(); await don(); t0 = new Date().toISOString(); });
   after(don);
 
-  test('1. Ngưỡng theo cấp và giờ làm việc (7h30–17h VN, bỏ T7/CN; mốc 17–23h UTC = sáng sớm VN)', async () => {
+  test('1. Ngưỡng theo cấp và giờ làm việc (7h30–17h VN, bỏ T7/CN; mốc 17–23h UTC = sáng sớm VN)', { skip: CHI_CUC_BO }, async () => {
     // Hàm thuần, lời gọi độc lập — songSong giới hạn 4 (D3, PR-2a).
     const NG = [['THUONG', { vang: 3, nhac_lai: 3, han_phan_hoi: 2 }], ['KHAN', { vang: 5, nhac_lai: 2, han_phan_hoi: 1 }],
       ['THUONG_KHAN', { vang: 5, nhac_lai: 1, han_phan_hoi: 0 }], ['HOA_TOC', { vang: 5, nhac_lai: 1, han_phan_hoi: 0 }]];
@@ -58,7 +58,7 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
       assert.equal(new Date(r.data).toISOString(), G[i][2], G[i][3]));
   });
 
-  test('2. trang_thai: Vàng theo độ khẩn — còn 4 ngày: Thường XANH, Khẩn VÀNG', async () => {
+  test('2. trang_thai: Vàng theo độ khẩn — còn 4 ngày: Thường XANH, Khẩn VÀNG', { skip: CHI_CUC_BO }, async () => {
     await them({ ma: 'NV-T40', han_xu_ly: congNgay(homNayVN(), 4) });
     await them({ ma: 'NV-T41', han_xu_ly: congNgay(homNayVN(), 4), do_khan: 'KHAN' });
     const r = await (await userClient('demo_cvp')).from('v_nhiem_vu').select('id, muc_canh_bao, do_khan, thu_tu_do_khan').in('id', [id['NV-T40'], id['NV-T41']]);

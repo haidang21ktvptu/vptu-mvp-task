@@ -25,7 +25,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước', NAP);
     await expect(page.locator('#dhKpi button')).toHaveCount(5); // GĐ21: thêm ô "bị từ chối" riêng
     await expect(page.locator('#dhKpi [data-loc="tuchoi"]')).toContainText('bị từ chối');
-    await expect(page.locator('#dhRay [data-khau]')).toHaveCount(5);
+    await expect(page.locator('#dhRay [data-khau]')).toHaveCount(6); // PR-2b: thêm khâu "Chờ nghiệm thu"
     await expect(page.locator('#navDieuHanh')).toBeVisible();
     await expect(page.locator('#navChiDaoDaGui')).toBeVisible();
     await expect(page.locator('#navKl')).toBeVisible();

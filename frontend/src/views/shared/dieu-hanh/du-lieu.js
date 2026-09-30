@@ -53,7 +53,8 @@ export const ttCuaViec = (nhiemVuId) => chiDaoTTCuaToi().filter((c) => c.nhiem_v
 export const ttCho = () => chiDaoTTCuaToi().filter((c) => c.trang_thai === 'CHO_PHAN_HOI');
 
 // Việc Đỏ (nhóm DO của v_ngoai_le; việc đang tra soát tách riêng). Việc bị từ chối (0034) đếm riêng, KHÔNG cộng vào Đỏ (có thể trùng).
-export const viecDo = () => dh.ngoaiLe.filter((r) => r.nhom === 'DO');
+// PR-2b: việc quá hạn ở bước nghiệm thu (nhom NGHIEM_THU, khâu CHO_NGHIEM_THU) cũng là việc Đỏ của lãnh đạo — đứng cùng danh sách, khâu riêng.
+export const viecDo = () => dh.ngoaiLe.filter((r) => r.nhom === 'DO' || r.nhom === 'NGHIEM_THU');
 export const viecTuChoi = () => dh.ngoaiLe.filter((r) => r.bi_tu_choi);
 export const CAP_CUA_VAI = { A0: ['THUONG_TRUC', 'BAN_THUONG_VU'], A1: ['CHANH_VAN_PHONG', 'PHO_CHANH_VAN_PHONG'], A2: ['TRUONG_PHONG'] };
 export const canToiQuyet = (r) => (CAP_CUA_VAI[state.user?.role_group] || []).includes(r.cap_quyet_dinh);

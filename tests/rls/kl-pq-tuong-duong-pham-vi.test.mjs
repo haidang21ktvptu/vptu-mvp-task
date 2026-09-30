@@ -5,6 +5,8 @@
 // bắt đầu ngày mai; thư ký bật; quan_tri_kl hết hạn hôm qua / còn hạn hôm nay. Ngày tính theo kl_hom_nay() của DB (giờ Việt Nam) nên đúng cả
 // khung 17–24h UTC. Phép so nặng trên 1 400 việc (mọi tài khoản, mọi cột) chạy cục bộ: scripts/anh-chup-pham-vi.mjs, anh-chup-gia-tri.mjs.
 // Khoá dữ liệu "KL-PQ-TD"; tự dọn, cờ khôi phục ở before lẫn after.
+// PR-2b (0057): kl_tham_chieu_pham_vi(p_nguoi) chỉ service_role gọi được (tài khoản thật không gọi được) — test gọi bằng adminClient với id
+// tài khoản cần đối chiếu; phía policy vẫn đọc bằng chính tài khoản đó (userClient). Thư ký thêm nhánh Q8: việc Thường trực giao cho Chánh VP.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, IDS, songSong } from './lib.mjs';
@@ -31,8 +33,10 @@ async function tatCa(taoTruyVan, label) {
 
 async function doiChieu(username, bang = BANG) {
   const c = await userClient(username);
+  const uid = IDS[username.replace(/^demo_/, '')];
+  assert.ok(uid, `không có id của ${username}`);
   // Tham chiếu + đọc từng bảng độc lập ⇒ songSong giới hạn 4 (D3, PR-2a: ít lượt khứ hồi trên staging).
-  const [r, ...doc] = await songSong([() => c.rpc('kl_tham_chieu_pham_vi'), ...bang.map((b) => () => tatCa(() => c.from(b).select('id'), `${username} ${b}`))]);
+  const [r, ...doc] = await songSong([() => db().rpc('kl_tham_chieu_pham_vi', { p_nguoi: uid }), ...bang.map((b) => () => tatCa(() => c.from(b).select('id'), `${username} ${b}`))]);
   assertOk(r, `${username} tham chiếu`);   // mỗi bảng một dòng (bảng, mảng id)
   const goc = Object.fromEntries(r.data.map((x) => [x.bang, x.ids]));
   for (const [k, b] of bang.entries()) {
@@ -72,6 +76,10 @@ describe('PR-2a — policy tập hợp tương đương quy tắc gốc (hiệu 
     await them('QT1', { owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2 });
     await them('TT1', { owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.truongphong });
     assertOk(await (await userClient('demo_a0')).rpc('chi_dao_gui', { p: { nhiem_vu_id: id.TT1, loai: 'CHI_DAO_TT', noi_dung: `${KHOA} chỉ đạo TT` } }), 'A0 gửi CHI_DAO_TT');
+    // Q8: việc Thường trực (A0) giao cho Chánh VP (chủ trì = theo dõi = CVP), có một minh chứng đang chờ nghiệm thu.
+    await them('CVP1', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.cvp, nguoi_theo_doi: IDS.cvp, tao_boi: IDS.a0 });
+    assertOk(await db().from('minh_chung').insert({ nhiem_vu_id: id.CVP1, loai: 'so_hieu', so_hieu: `${KHOA}/1`, ngay_van_ban: homNay, cap_nhan: 'THUONG_TRUC',
+      nop_boi: IDS.cvp }), 'minh chứng CVP1');
   });
   after(don);
 
@@ -92,12 +100,16 @@ describe('PR-2a — policy tập hợp tương đương quy tắc gốc (hiệu 
     await kiemNhiem(null);
   });
 
-  test('3. Thư ký Thường trực bật (A3 cv2): thấy thêm việc có CHI_DAO_TT ở nhiem_vu/lich_su/chi_dao/minh_chung, KHÔNG ở canh_bao/dinh_chinh', async () => {
+  test('3. Thư ký Thường trực bật (A3 cv2): thấy thêm việc có CHI_DAO_TT và việc A0 giao cho Chánh VP (Q8) ở nhiem_vu/lich_su/chi_dao/minh_chung, KHÔNG ở canh_bao/dinh_chinh', async () => {
     assertOk(await db().from('accounts').update({ thu_ky_thuong_truc: true }).eq('id', IDS.cv2), 'bật thư ký');
     await doiChieu('demo_cv2', THU_KY);
     const r = await (await userClient('demo_cv2')).from('nhiem_vu').select('id').eq('id', id.TT1);
     assert.equal(r.data.length, 1, 'thư ký thấy TT1');
+    const q8 = await (await userClient('demo_cv2')).from('minh_chung').select('id').eq('nhiem_vu_id', id.CVP1);
+    assert.equal(q8.data.length, 1, 'thư ký thấy minh chứng việc A0 giao cho Chánh VP (Q8)');
     await khoiPhuc();
+    const tat = await (await userClient('demo_cv2')).from('nhiem_vu').select('id').eq('id', id.CVP1);
+    assert.equal(tat.data.length, 0, 'thu cờ thư ký ⇒ mất phạm vi Q8 ngay');
   });
 
   test('4. quan_tri_kl cấp tạm (A3 cv2): hết hạn hôm qua ⇒ phạm vi A3; còn hạn hôm nay ⇒ thấy tất cả — trùng khớp', async () => {
@@ -106,5 +118,16 @@ describe('PR-2a — policy tập hợp tương đương quy tắc gốc (hiệu 
       await doiChieu('demo_cv2', VIEC);
     }
     await khoiPhuc();
+  });
+});
+
+describe('PR-2b — kl_tham_chieu_pham_vi chỉ cho service_role', { skip: SKIP }, () => {
+  test('authenticated (kể cả Chánh VP, quan trị) và anon không gọi được; service_role gọi được', async () => {
+    const [cvp, qt] = await Promise.all([userClient('demo_cvp'), userClient('demo_qtht')]);
+    for (const [c, nhan] of [[cvp, 'CVP'], [qt, 'QTHT']]) {
+      const r = await c.rpc('kl_tham_chieu_pham_vi', { p_nguoi: IDS.cvp });
+      assert.ok(r.error, `${nhan} phải bị chặn`);
+    }
+    assertOk(await db().rpc('kl_tham_chieu_pham_vi', { p_nguoi: IDS.cv1 }), 'service_role');
   });
 });

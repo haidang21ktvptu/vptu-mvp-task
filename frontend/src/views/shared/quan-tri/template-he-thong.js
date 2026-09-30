@@ -1,6 +1,7 @@
 // Markup các khu quản trị GĐ23: Ngưỡng cảnh báo (kl_cau_hinh), Ủy quyền giao việc (A2), Dọn dữ liệu (hai bước), Nhật ký hệ thống, hộp tạo tài khoản
 // và hộp hiện mật khẩu tạm (một lần). Quyền thật ở hàm SQL / Edge Function; ở đây chỉ ẩn/hiện.
 export const quanTriHeThongTemplate = `
+  <div id="qtKhuNgayNghi" class="qt-khu hidden"></div>
   <div id="qtKhuCauHinh" class="qt-khu hidden">
     <div class="bang">
       <div class="bang-dau"><h2>Ngưỡng cảnh báo<span class="chu-phu">Chánh Văn phòng sửa, có lý do; Phó Chánh Văn phòng xem</span></h2></div>

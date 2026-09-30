@@ -18,13 +18,17 @@ const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const TIEU_DE = { A0: 'Cán bộ', A2: 'Cán bộ trong phòng' };
 let rowsHienTai = []; let nguoiDangMo = null;
 
-function nguoiHtml(a, rows) {
+// PR-2b (Mới 2): Đỏ = việc người này CHỊU CHẬM (nguoi_chiu_cham, DB tính — kể cả việc của phòng khác chờ họ nghiệm thu); việc họ chủ trì đã nộp,
+// quá hạn ở bước nghiệm thu tính "đang làm" (trung tính). tatCa: mọi dòng trong phạm vi (không chỉ của phòng) để thấy việc chờ nghiệm thu.
+function nguoiHtml(a, rows, tatCa = rows) {
   const owner = rows.filter((r) => r.owner_tai_khoan === a.id && mo(r));
   const theoDoi = rows.filter((r) => r.nguoi_theo_doi === a.id && r.owner_tai_khoan !== a.id && mo(r)).length;
-  const dem = { do: owner.filter(DO).length, vang: owner.filter(VANG).length };
-  const lam = owner.length - dem.do - dem.vang;
-  const pct = (n) => (owner.length ? (n / owner.length) * 100 : 0);
-  const soChu = owner.length === 0 ? (theoDoi ? `${theoDoi} đang theo dõi` : 'rảnh, có thể nhận thêm')
+  const doRows = tatCa.filter((r) => r.nguoi_chiu_cham === a.id && DO(r) && mo(r));
+  const dem = { do: doRows.length, vang: owner.filter((r) => VANG(r) && !doRows.includes(r)).length };
+  const lam = owner.filter((r) => !doRows.includes(r) && !VANG(r)).length;
+  const tong = dem.do + dem.vang + lam;
+  const pct = (n) => (tong ? (n / tong) * 100 : 0);
+  const soChu = tong === 0 ? (theoDoi ? `${theoDoi} đang theo dõi` : 'rảnh, có thể nhận thêm')
     : [dem.do ? `<b>${dem.do}</b> Đỏ` : '', dem.vang ? `${dem.vang} Vàng` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
   return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}">
       <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc theo dõi` : ''}</small></div>
@@ -38,8 +42,8 @@ function phongHtml(ma, rows) {
   const cuaPhong = rows.filter((r) => laOwnerPhong(r, ma) || canBo.some((a) => a.id === r.owner_tai_khoan));
   const k = calculateGroupKPI(canBo.map((a) => a.id), rows, ma);
   const phongOwner = rows.filter((r) => laOwnerPhong(r, ma) && mo(r)).length;
-  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span>${canBo.length} cán bộ, ${k.dangMo} việc mở, ${k.quaHan} Đỏ${phongOwner ? `, ${phongOwner} việc phòng là Owner` : ''}</span></div>
-    ${canBo.map((a) => nguoiHtml(a, cuaPhong)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
+  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì: việc cán bộ trong phòng hoặc chính phòng chủ trì. Đỏ: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì đang mở · ${k.quaHan} Đỏ (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là Owner` : ''}</span></div>
+    ${canBo.map((a) => nguoiHtml(a, cuaPhong, rows)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
 }
 
 // Phòng hiện: A2 phòng mình; A0 toàn Văn phòng (Lãnh đạo Văn phòng đứng đầu); A1 phòng có việc trong phạm vi hoặc có cán bộ dưới quyền.

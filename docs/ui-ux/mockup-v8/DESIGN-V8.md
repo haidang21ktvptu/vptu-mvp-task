@@ -17,6 +17,8 @@ Bộ mockup HTML tĩnh trong thư mục này là **đặc tả UI/UX đã chốt
 | Xanh OK | #1B7A43 · nền #E6F4EA | hoàn thành, đúng hạn |
 | Vàng | #8A5A00 · nền #FFF3D6 | sắp đến hạn, chờ duyệt |
 | Đỏ | #B3121B · nền #FBE9EA | quá hạn, khẩn |
+| --cam / --cam-nhat / --cam-chu | #D9711C · nền #FBEBDC · chữ #7A3E0E (tương phản chữ/nền ≈ 7,2:1) | PR-2b: nhãn riêng **"Chậm nộp minh chứng"** (chấm, nhãn, pill đếm, mép thẻ); mức Vàng, không dùng Đỏ, không vào dải "Cần xử lý ngay". Dùng chung tông với "Đang đính chính", "Bị từ chối" (token có sẵn trong tokens.css) |
+| Trung tính | chữ --chu-phu · nền --nen-phu | PR-2b: người nộp thấy **"Đã nộp — chờ nghiệm thu"** (kể cả khi việc quá hạn ở bước nghiệm thu — chậm tính cho lãnh đạo nghiệm thu) |
 
 Chữ: tiêu đề **Lora** 700 (Google Fonts, hỗ trợ tiếng Việt); nội dung **Be Vietnam Pro** (đã có trong dự án). Bo góc thẻ 12px, nút 8px, ô nhập 8–10px. Chiều cao nút hành động 32px, ô nhập 42–50px.
 

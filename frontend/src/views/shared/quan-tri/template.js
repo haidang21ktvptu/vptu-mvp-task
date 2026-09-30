@@ -13,6 +13,7 @@ export const quanTriTemplate = `
     <button type="button" id="qtTabTaiKhoan" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuTaiKhoan" aria-selected="false">Tài khoản và cờ</button>
     <button type="button" id="qtTabDanhMuc" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDanhMuc" aria-selected="false">Danh mục lĩnh vực</button>
     <button type="button" id="qtTabCauHinh" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuCauHinh" aria-selected="false">Ngưỡng cảnh báo</button>
+    <button type="button" id="qtTabNgayNghi" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNgayNghi" aria-selected="false">Ngày nghỉ</button>
     <button type="button" id="qtTabUyQuyen" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuUyQuyen" aria-selected="false">Ủy quyền giao việc</button>
     <button type="button" id="qtTabNhatKy" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKy" aria-selected="false">Nhật ký cấp quyền</button>
     <button type="button" id="qtTabDonDuLieu" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDonDuLieu" aria-selected="false">Dọn dữ liệu</button>

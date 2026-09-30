@@ -614,9 +614,18 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Test `[hanh-vi-hien-tai]` (chờ xác nhận nghiệp vụ): PCVP kiêm nhiệm ngành–lĩnh vực không giao việc cho phòng đó.
 - `kl-pham-vi-tong-hop` dọn phân công kiêm nhiệm ngay sau khối test của nó (trước đây `after` ở cấp ngoài cùng chỉ chạy lúc cả tiến trình kết thúc → dòng kiêm nhiệm đã kết thúc còn sót, làm đỏ test chạy sau vì trùng kỳ).
 
-## 39. PR-2a — Tối ưu DB và phân quyền giao việc (**có migration 0048–0052**)
+## 39. PR-2a — Tối ưu DB và phân quyền giao việc (**có migration 0048–0052**) — **đã phát hành v3.10.0** (30/9/2026, tag trên `75ec144`)
 - **DB**: hàm tập hợp phạm vi + policy gộp (0048–0049), `trang_thai_dong` (0050), `v_nhiem_vu` thêm cột, `v_ngoai_le` mỏng, `kl_so_lieu_cac_moc`, index, `kl_danh_muc()`, `minh_chung` vào publication realtime (0051); C1, bucket `anh-ho-so` riêng tư (Q5), Q7 khoá `han_xu_ly`, quyền `quan_tri_kl` xét hạn ủy quyền trong `giao_viec`, C3 `kl_duoc_giao_cho_phong` một nguồn cho `giao_viec` và `kl_pham_vi_giao()` (0052). Không đổi tập dòng đọc theo vai (so giá trị 68 tài khoản).
 - **Frontend**: gom truy vấn (mở app 22 → 12 lời gọi, Điều hành 9 → 6, realtime một việc 9 → 3), cột tường minh + phân trang 500, danh mục nhớ phiên 30 phút; ảnh hồ sơ bằng signed URL; Giao việc chỉ hiện lựa chọn được giao, tìm văn bản ở DB; Cập nhật nhanh ẩn ô hạn khi đã có hạn; thẻ đăng nhập co theo nội dung; id duy nhất + nhãn ô minh chứng.
 - **Seed/CI**: `seed.sql` = staging (E2E_RT, `demo_e2e_cv2`, `demo_e2e_anh`); RLS staging đỏ không chặn Pages; **đích kiểm thử tường minh** (`RLS_LOCAL`/`RLS_STAGING`, `E2E_LOCAL`/`E2E_STAGING` — thiếu thì dừng trước mọi lời gọi mạng).
 - **Test**: RLS `kl-pq-pham-vi-giao` (đối chiếu danh sách ↔ `giao_viec`, PCVP không giao cho lãnh đạo VP), `kl-realtime-su-kien`, `dich-tuong-minh`; e2e project `pr2a` (ảnh hồ sơ, id duy nhất, khoá hạn, giao việc kiêm nhiệm). Quyết định G-1…G-4 ở `CAU-HOI-NGHIEP-VU.md`. Staging đã áp 0048–0052 ngày 30/9 (RLS staging 230 xanh / 0 đỏ, 3,4 phút).
 - **Lỗi đua (CI #96)**: biểu mẫu Giao việc khoá ô nhập tới khi khởi tạo xong (trước đó chọn "Văn bản mới" sớm bị ghi đè); nạp lại một việc chờ lượt nạp cả màn; lượt nạp cũ không ghi đè lượt mới (Điều hành, Theo văn bản); vẽ lại màn điều hành giữ ô đang gõ. Công tắc e2e `E2E_TRE_MS` (mặc định tắt) giả lập mạng chậm.
+
+## 40. PR-2b — Hạn nộp minh chứng, nghiệm thu, ngày nghỉ (**có migration 0053–0061**, phát hành dự kiến v3.11.0)
+- **DB**: danh mục ngày nghỉ (0053, trống — quản trị nhập); hạn nộp minh chứng bắt buộc khi giao (hạn đã qua: trong 2 ngày làm việc), chỉ người giao sửa (quản trị khi không còn người giao); nghiệm thu = hoàn thành trong cùng giao dịch, trả lại kèm hạn nộp lại; thư ký Thường trực nghiệm thu việc Thường trực giao Chánh VP.
+- **Trạng thái mới**: Chậm nộp minh chứng (cam), Chờ nghiệm thu, Quá hạn ở bước nghiệm thu (Đỏ tính cho lãnh đạo nghiệm thu); 3 mức nhắc mới trong lượt quét 07:30 mỗi ngày; KPI "Đỏ" theo người chịu chậm; 2 tỉ lệ đúng hạn.
+- **Phân quyền**: GIAO_LAI của PCVP theo phạm vi giao (kể cả kiêm nhiệm); quản trị KL trong chỉ đạo xét hạn uỷ quyền; `kl_tham_chieu_pham_vi` chỉ service_role.
+- **Giao diện**: ô hạn nộp + lý do việc gấp, người theo dõi lọc theo phạm vi, ngăn chi tiết hai mốc + sửa hạn nộp, màn "Cần nghiệm thu", Quản trị › Ngày nghỉ.
+- **Sau review (0061)**: việc Thường trực giao Chánh VP chỉ thư ký (không có: quản trị KL) nghiệm thu, không bao giờ chính Chánh VP; người giao không còn vai lãnh đạo ⇒ quản trị KL sửa hạn nộp; việc vừa có hạn mà chưa có hạn nộp ⇒ tin nhắc người giao đặt hạn nộp.
+- **Sau CI #97**: bốn spec e2e PR-2b chạy nối tiếp (`pr2b-*`), mỗi spec tối đa 2 phiên mở cùng lúc (ma trận vai tuần tự — quy tắc ở `docs/KIEM-THU.md`); huy hiệu gộp 2 giây + trễ ngẫu nhiên 0–3 giây.
+- **Test**: RLS 7 file mới (logic thuần chỉ chạy cục bộ — `CHI_CUC_BO`), e2e project `pr2b` (4 spec) + minh chứng 600 ký tự NFC; Điều hành ≤ 190 ms/vai trên 1 400 việc.

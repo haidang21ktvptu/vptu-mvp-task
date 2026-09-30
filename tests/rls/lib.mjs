@@ -34,6 +34,10 @@ function chonDich() {
   process.exit(2);
 }
 export const DICH = chonDich();
+// PR-2b (quyết định 30/9/2026): test chỉ kiểm LOGIC thuần (ngày làm việc, bảng trạng thái, nhắc) chạy ở CI cục bộ — job supabase-db chạy TOÀN BỘ
+// bộ RLS; staging chỉ giữ phần kiểm quyền bằng token thật (mục tiêu bộ RLS staging ≤ 6 phút). Danh sách file/khối: docs/KIEM-THU.md.
+// RLS_NHU_STAGING=1 (chỉ cục bộ): bỏ qua như trên staging — để scripts/dem-goi-rls.mjs đếm lời gọi của bộ staging.
+export const CHI_CUC_BO = DICH === 'local' && process.env.RLS_NHU_STAGING !== '1' ? false : 'Logic thuần — chạy ở CI cục bộ (job supabase-db), không chạy trên staging';
 
 // id cố định trong supabase/seed.sql
 export const IDS = {
@@ -110,6 +114,22 @@ export async function datPcvp2E2ERT(denNgay) {
   assertOk(await db.from('phu_trach_phong').update(gt).in('id', r.data.map((x) => x.id)), 'đặt phân công pcvp2 ↔ E2E_RT');
 }
 
+// PR-2b (0054): giao_viec bắt buộc hạn nộp minh chứng khi việc có hạn. Test viết trước PR-2b không truyền khoá này ⇒ userClient điền MẶC ĐỊNH
+// (chỉ khi p KHÔNG có khoá han_nop_minh_chung; test hạn nộp truyền tường minh, kể cả null): hạn hoàn thành còn ≥ hôm nay (giờ VN) ⇒ = hạn
+// hoàn thành (gần ngữ nghĩa cũ nhất: Vàng theo hạn); đã qua hoặc Ký ban hành ⇒ = hôm nay. Kèm lý do vì có thể sát hạn (quy tắc việc gấp).
+export const homNayVN = () => new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+export function hanNopMacDinh(p) {
+  if (!p || typeof p !== 'object' || 'han_nop_minh_chung' in p) return p;
+  if (!p.han_xu_ly && p.loai_thoi_han_ma !== 'KY_BAN_HANH') return p;
+  const hom = homNayVN();
+  return { ...p, han_nop_minh_chung: p.han_xu_ly && p.han_xu_ly >= hom ? p.han_xu_ly : hom, ly_do_han_nop_sat: p.ly_do_han_nop_sat ?? 'Kiểm thử — hạn nộp mặc định' };
+}
+function boc(c) {
+  const goc = c.rpc.bind(c);
+  c.rpc = (fn, args, o) => goc(fn, fn === 'giao_viec' && args?.p ? { ...args, p: hanNopMacDinh(args.p) } : args, o);
+  return c;
+}
+
 const users = new Map();
 // Client đã đăng nhập bằng tài khoản seed (username: demo_cvp, demo_cv1, ...).
 export async function userClient(username) {
@@ -119,7 +139,7 @@ export async function userClient(username) {
     const c = createClient(k.url, k.anon, opts);
     users.set(username, c.auth.signInWithPassword({ email: `${username}@${EMAIL_DOMAIN}`, password: SEED_PASSWORD }).then(({ error }) => {
       if (error) { users.delete(username); throw new Error(`Đăng nhập ${username} thất bại: ${error.message}`); }
-      return c;
+      return boc(c);
     }));
   }
   return users.get(username);

@@ -11,6 +11,7 @@ import { registerKlView } from './shared/kl/index.js';
 import { registerGiaoViec } from './shared/giao-viec/index.js';
 import { registerTheoVanBan } from './shared/theo-van-ban/index.js';
 import { registerChiDaoTTThuKy } from './shared/chi-dao-tt-thu-ky/index.js';
+import { registerNghiemThu } from './shared/nghiem-thu.js';
 import { mountDieuHanh } from './shared/dieu-hanh/man-hinh.js';
 import { mountMessages, loadDMUnreadMap } from '../features/messages/index.js';
 import { mountThongBao, loadThongBao } from '../features/thong-bao/index.js';
@@ -26,6 +27,7 @@ export function registerViews() {
   registerGiaoViec();    // Giao việc ba bước một trang (A1/A2/quan_tri_kl)
   registerTheoVanBan();  // Cây "Theo văn bản" (A0/A1, v8 đợt 4)
   registerChiDaoTTThuKy(); // "Chỉ đạo Thường trực" của thư ký Thường trực (0047)
+  registerNghiemThu();   // "Cần nghiệm thu" (PR-2b): A1, A2, quan_tri_kl, thư ký
   mountDieuHanh();       // hành động dùng chung của các màn hình điều hành (A0/A1)
   registerA0View();      // Trung tâm điều hành Thường trực, Chỉ đạo đã gửi
   registerA1View();      // Điều hành hôm nay, Cán bộ thuộc quyền, Báo cáo

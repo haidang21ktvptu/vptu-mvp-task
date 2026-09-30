@@ -1,20 +1,17 @@
-// Ghép nháp supabase/nhap-0048/*.sql thành các migration PR-2a (thiết kế §0.4 A: mỗi file ≤ 300 dòng, tên gạch dưới, theo thứ tự phụ thuộc).
-// Trong lúc còn nháp (lượt 2–4), file sinh ra KHÔNG được commit: mỗi đường dẫn được ghi ngay vào .git/info/exclude.
-// Lượt ghép cuối (lượt 5): chạy với --commit để bỏ các dòng exclude rồi commit một lần, xoá nháp.
-// Dùng: node scripts/ghep-migration.mjs            (sinh / cập nhật 0048–0052)
-//       node scripts/ghep-migration.mjs --xoa      (xoá các file đã sinh — quay DB cục bộ về 0047 bằng supabase db reset)
+// Ghép nháp supabase/nhap-0053/*.sql thành các migration PR-2b (mỗi file ≤ 300 dòng, tên gạch dưới, theo thứ tự phụ thuộc — cách của PR-2a,
+// thiết kế §0.4 A). Bảng ánh xạ 0048–0052 của PR-2a đã bỏ: các file đó đã commit và áp lên staging/production (--xoa không được chạm tới).
+// Trong lúc còn nháp (lượt 6–7), file sinh ra KHÔNG được commit: mỗi đường dẫn được ghi ngay vào .git/info/exclude.
+// Lượt ghép cuối (lượt 8): chạy với --commit để bỏ các dòng exclude rồi commit một lần, xoá nháp.
+// Dùng: node scripts/ghep-migration.mjs            (sinh / cập nhật 0053–0060)
+//       node scripts/ghep-migration.mjs --xoa      (xoá các file đã sinh — quay DB cục bộ về 0052 bằng supabase db reset)
 //       node scripts/ghep-migration.mjs --commit   (sinh + bỏ khỏi .git/info/exclude để commit)
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
-export const BAN_DO = [
-  ['10-pham-vi-tap-hop.sql', '0048_pham_vi_tap_hop.sql'],
-  ['20-policy-pham-vi.sql', '0049_policy_pham_vi.sql'],
-  ['30-trang-thai-dong.sql', '0050_trang_thai_dong.sql'],
-  ['40-view-so-lieu-index.sql', '0051_view_so_lieu_index.sql'],
-  ['50-va-quyen.sql', '0052_va_quyen.sql'],
-];
-const NHAP = 'supabase/nhap-0048';
+// PR-2b đã ghép và commit 0053–0060 (nháp supabase/nhap-0053 đã xoá) ⇒ bảng để trống: --xoa không được chạm file đã commit / đã áp.
+// PR sau: thêm cặp ['NN-ten.sql', 'NNNN_ten.sql'] và đổi NHAP khi bắt đầu nháp mới.
+export const BAN_DO = [];
+const NHAP = 'supabase/nhap-0053';
 const MIG = 'supabase/migrations';
 const goc = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
 process.chdir(goc);

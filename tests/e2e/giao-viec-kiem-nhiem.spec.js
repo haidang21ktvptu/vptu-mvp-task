@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
-import { contextAs, moGiaoViec, NAP } from './lib/app.js';
+import { contextAs, moGiaoViec, NAP, dienHanNop } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'NQ_TW', 'CONG_VAN', 'KHAC'];
@@ -42,6 +42,7 @@ async function giaoThat(page, vai, loai, { owner, nganh, lv }) {
   if (lv) await page.locator('#klThLinhVuc').selectOption(lv);
   await page.locator('#klThSanPham').selectOption('BAO_CAO');
   await page.locator('#klThHan').fill('2026-12-31');
+  await dienHanNop(page);
   await expect(conThieu(page)).toHaveText('');
   await expect(page.locator('#klThLuu')).toBeEnabled();
   await page.locator('#klThLuu').click();

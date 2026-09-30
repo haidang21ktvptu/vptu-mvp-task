@@ -227,3 +227,22 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | G-2 | PCVP kiêm nhiệm theo ngành–lĩnh vực giao việc thế nào (C3)? | **Giao đúng lĩnh vực kiêm nhiệm (28/9/2026).** Quyền giao theo đúng quy tắc phạm vi xem (phòng, ngành, lĩnh vực): PCVP kiêm nhiệm chỉ giao việc thuộc lĩnh vực mình kiêm nhiệm ở phòng đó; lĩnh vực đã có lãnh đạo khác kiêm nhiệm thì PCVP phụ trách cả phòng **không** giao được. Biểu mẫu chỉ liệt kê tổ hợp được giao (`kl_pham_vi_giao`, cùng hàm `giao_viec` dùng để chặn). | RLS `kl-pq-pham-vi-giao` #1–6; e2e `giao-viec-kiem-nhiem` |
 | G-3 | Ai xem được ảnh hồ sơ (Q5)? | **(a) Mọi người đã đăng nhập (28/9/2026); anon bị chặn.** Bucket riêng tư, hiển thị bằng signed URL. | RLS `kl-pq-storage-anh-ho-so`; e2e `ca-nhan-anh` |
 | G-4 | Owner/người theo dõi có tự đổi hạn xử lý được không (Q7)? | **Không (28/9/2026).** Chỉ điền hạn khi đang trống (việc "Cần điền hạn"); mọi lần đổi khác đi qua chỉ đạo `GIA_HAN`; `quan_tri_kl` giữ quyền sửa. | RLS `kl-pq-q7-khoa-han-xu-ly`; e2e `cap-nhat-nhanh-han` |
+
+## Nhóm H — Quyết định khi làm PR-2b (hạn nộp minh chứng, nghiệm thu, migration 0053–0060)
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| H-1 (Q1) | Việc cũ chưa có hạn nộp minh chứng chuyển đổi thế nào? | **Không còn (29/9/2026)** — production đã reset, 0 nhiệm vụ. Không có phần chuyển đổi; việc nhập sau này (`nguon = excel`) để trống hạn nộp, xử lý như việc cũ. | RLS `kl-0058-trang-thai-nghiem-thu` |
+| H-2 (Q2) | Lãnh đạo xác nhận hợp lệ có đóng việc không? | **Có (a)** — nghiệm thu = đóng trong cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng. Việc có hạn nộp chỉ đóng khi có minh chứng hợp lệ, ở mọi đường (nút Đóng, Cập nhật nhanh, trigger). | RLS `kl-0028-minh-chung`; e2e `nghiem-thu` |
+| H-3 (Q3) | Trả lại khi đã qua hạn hoàn thành? | **(b)** hạn nộp lại ∈ [hôm nay, 2 ngày làm việc sau]; chưa qua hạn: ∈ [hôm nay, H]. Hạn hoàn thành giữ nguyên, vẫn tính Quá hạn. | RLS `kl-0028-minh-chung` |
+| H-4 (Q4) | Ai sửa hạn nộp khi không còn người giao? | **Quản trị KL (a)**, bắt buộc lý do, có lịch sử; không suy người giao từ người theo dõi. | RLS `kl-0054-han-nop-minh-chung` |
+| H-5 (Q8) | Ai nghiệm thu việc Thường trực giao Chánh VP? | **Thư ký Thường trực**, lịch sử "thay mặt Thường trực — <tên>"; không có thư ký thì quản trị KL. Quyền đọc thêm đúng các việc này. | RLS `kl-0057-nghiem-thu-thu-ky`; e2e `nghiem-thu` |
+| H-6 (Q9) | "Nộp minh chứng đúng hạn" nghĩa là gì? | Minh chứng **được nghiệm thu** có ngày nộp (giờ VN) ≤ hạn áp dụng cho lượt nộp đó (hạn gốc hoặc hạn nộp lại liền trước); báo cáo kèm số lần trả lại. | RLS `kl-0058-trang-thai-nghiem-thu` |
+| H-7 (Q10) | Danh mục ngày nghỉ khởi tạo? | **Để trống**; quản trị nhập lịch 2026–2027 ở Quản trị › Ngày nghỉ sau phát hành (việc tay trong `TRANG-THAI.md`). | RLS `kl-0053-ngay-lam-viec` |
+| H-8 (Mới 1) | "Chậm nộp minh chứng" hiển thị ra sao? | Nhãn riêng **màu cam** (token `--cam` trong `DESIGN-V8.md`), mức Vàng, **không** leo thang Đỏ. | e2e `han-nop-minh-chung` |
+| H-9 (Mới 2) | Quá hạn ở bước nghiệm thu tính chậm cho ai? | **Lãnh đạo nghiệm thu** (`nguoi_chiu_cham`); người nộp thấy nhãn trung tính "Đã nộp — chờ nghiệm thu", không bị tính chậm. | e2e `nghiem-thu` |
+| H-10 | Việc có hạn hoàn thành đã qua lúc giao? | **Không để trống (30/9)** — hạn nộp bắt buộc trong [hôm nay, 2 ngày làm việc sau], gợi ý mốc cuối; việc vẫn tính Quá hạn. Hạn còn < 1 ngày làm việc: đường "việc gấp có lý do". | RLS `kl-0054-han-nop-minh-chung` |
+| H-11 | Hạn nộp bắt buộc với cả service_role? | **Không (30/9)** — chỉ ép với phiên người dùng (nhập liệu, test dựng dữ liệu bằng service_role không bị ép). | RLS `kl-0054-han-nop-minh-chung` |
+| H-12 | GIAO_LAI của PCVP theo phạm vi nào? | **Theo phạm vi giao (30/9)** — như `giao_viec`, kể cả kiêm nhiệm; các vai khác giữ nguyên như 0045. | RLS `kl-pq-giao-lai-pham-vi` |
+| H-13 | Nhịp nhắc việc? | **Một lần mỗi ngày 07:30 (30/9)** — `canh-bao.yml` giữ lịch; nhắc lặp chỉ vào ngày làm việc. | RLS `kl-0060-nhac-nghiem-thu` |
+

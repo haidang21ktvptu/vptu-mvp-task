@@ -1,9 +1,10 @@
 // GĐ20 (0033) — (1) v_ngoai_le.khau: 4 khâu theo thứ tự ưu tiên CHO_QUYET → CHO_MINH_CHUNG → CHUA_NHAN (chỉ việc theo_1400) → CHUA_SAN_PHAM,
+// PR-2b (0059): việc quá hạn có minh chứng đang chờ nay là "Quá hạn ở bước nghiệm thu" (nhóm NGHIEM_THU) — khâu CHO_NGHIEM_THU thay CHO_MINH_CHUNG.
 // việc cũ (theo_1400 = false) không bao giờ là CHUA_NHAN; việc Xanh không vào view; (2) kl_so_lieu_tai(p_ngay): cùng ngày, cùng phạm vi (A0, A2, A3) phải bằng đếm trên v_nhiem_vu; anon bị chặn; p_ngay = 14/9/2026
 // khớp mốc kl-moc-2026-09-14 (185 dòng Excel = MOC; phần dư ngoài 185 dòng tính bằng tinh_trang_thai). Mã NV-T33x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, anonClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, userClient, anonClient, assertOk, assertDenied, IDS, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 // Giữ đồng bộ với kl-moc-2026-09-14.test.mjs (không import để node:test không đăng ký test đó hai lần).
@@ -44,13 +45,13 @@ describe('0033 — v_ngoai_le.khau và kl_so_lieu_tai', { skip: SKIP }, () => {
   });
   after(don);
 
-  test('khau: 4 khâu đúng thứ tự ưu tiên; việc cũ (theo_1400 = false) chưa xác nhận vẫn là CHUA_SAN_PHAM; việc Xanh không có trong v_ngoai_le', async () => {
+  test('khau: 4 khâu đúng thứ tự ưu tiên; việc cũ (theo_1400 = false) chưa xác nhận vẫn là CHUA_SAN_PHAM; việc Xanh không có trong v_ngoai_le', { skip: CHI_CUC_BO }, async () => {
     const k = await khauCua();
-    assert.deepEqual(k, { 'NV-T331': 'CHO_QUYET', 'NV-T332': 'CHO_MINH_CHUNG', 'NV-T333': 'CHUA_SAN_PHAM', 'NV-T334': 'CHUA_NHAN', 'NV-T335': 'CHUA_SAN_PHAM', 'NV-T337': 'CHUA_SAN_PHAM' });
+    assert.deepEqual(k, { 'NV-T331': 'CHO_QUYET', 'NV-T332': 'CHO_NGHIEM_THU', 'NV-T333': 'CHUA_SAN_PHAM', 'NV-T334': 'CHUA_NHAN', 'NV-T335': 'CHUA_SAN_PHAM', 'NV-T337': 'CHUA_SAN_PHAM' });
     assert.notEqual(k['NV-T337'], 'CHUA_NHAN', 'việc cũ nhập Excel không có bước xác nhận nhận việc');
   });
 
-  test('khau: minh chứng đã thẩm định (hop_le = false) không còn là CHO_MINH_CHUNG', async () => {
+  test('khau: minh chứng đã thẩm định (hop_le = false) không còn là CHO_MINH_CHUNG', { skip: CHI_CUC_BO }, async () => {
     assertOk(await db().from('minh_chung').update({ hop_le: false, ly_do_khong_hop_le: 'test' }).eq('nhiem_vu_id', id['NV-T332']), 'bác minh chứng');
     assert.equal((await khauCua())['NV-T332'], 'CHUA_NHAN');
   });
@@ -76,7 +77,7 @@ describe('0033 — v_ngoai_le.khau và kl_so_lieu_tai', { skip: SKIP }, () => {
     assertDenied(await anonClient().rpc('kl_so_lieu_tai'), 'anon');
   });
 
-  test(`kl_so_lieu_tai(${NGAY_MOC}) khớp mốc kl-moc-2026-09-14`, async (t) => {
+  test(`kl_so_lieu_tai(${NGAY_MOC}) khớp mốc kl-moc-2026-09-14`, { skip: CHI_CUC_BO }, async (t) => {
     const excel = await db().from('nhiem_vu').select('id').eq('nguon', 'excel').not('noi_dung', 'like', 'RLS-TEST%'); assertOk(excel, 'excel');
     if (excel.data.length !== TONG) return t.skip(`Project có ${excel.data.length}/${TONG} dòng nguon = excel.`);
     const trong185 = new Set(excel.data.map((r) => r.id));

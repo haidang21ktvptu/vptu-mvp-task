@@ -4,7 +4,7 @@
 // đóng; quá hạn phản hồi → canh_bao_quet gửi tin người nhận chưa phản hồi, idempotent. Mã NV-T90/T91, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -46,7 +46,7 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
   });
   after(don);
 
-  test('1. ngay_lam_viec_sau bỏ Thứ Bảy/Chủ nhật', async () => {
+  test('1. ngay_lam_viec_sau bỏ Thứ Bảy/Chủ nhật', { skip: CHI_CUC_BO }, async () => {
     const f = async (tu, n) => (await rpc('demo_cvp', 'ngay_lam_viec_sau', { p_tu: tu, p_so: n })).data;
     const CA = [['2026-09-16', 2, '2026-09-18', 'Thứ Tư + 2 = Thứ Sáu'], ['2026-09-17', 2, '2026-09-21', 'Thứ Năm + 2 = Thứ Hai (qua cuối tuần)'],
       ['2026-09-18', 2, '2026-09-22', 'Thứ Sáu + 2 = Thứ Ba'], ['2026-09-19', 1, '2026-09-21', 'Thứ Bảy + 1 = Thứ Hai'], ['2026-09-16', 0, '2026-09-16', '0 ngày = chính ngày đó']];
@@ -122,7 +122,7 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
     assertOk(await rpc('demo_cvp', 'chi_dao_dong', { p_id: conId }), 'Chánh VP đóng chỉ đạo con của mình');
   });
 
-  test('7. Quá hạn phản hồi: canh_bao_quet gửi tin người nhận chưa phản hồi (muc CHI_DAO_TT), idempotent; không gửi khi chưa quá hạn hay đã phản hồi; v_chi_dao_tt cờ quá hạn theo ngày Việt Nam', async () => {
+  test('7. Quá hạn phản hồi: canh_bao_quet gửi tin người nhận chưa phản hồi (muc CHI_DAO_TT), idempotent; không gửi khi chưa quá hạn hay đã phản hồi; v_chi_dao_tt cờ quá hạn theo ngày Việt Nam', { skip: CHI_CUC_BO }, async () => {
     const r = await rpc('demo_a0', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T90'], loai: 'CHI_DAO_TT', noi_dung: 'KL-0032 TT chờ quá hạn' } });
     assertOk(r, 'A0 gửi TT3'); tt3 = r.data;
     assertOk(await db().from('chi_dao').update({ han_phan_hoi: '2026-08-18' }).eq('id', tt3), 'đặt hạn về quá khứ (service_role)');

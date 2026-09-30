@@ -17,8 +17,11 @@ let rowsHienTai = []; let hangMo = null; let hangMoLoc = '{}'; let viecMo = null
 
 const locAttr = (loc) => `data-loc='${escapeHtml(JSON.stringify(loc))}'`;
 const nut = (n, loc, lop = '') => (n > 0 ? `<button type="button" class="nut nho ${lop}" data-action="bcMoRong" ${locAttr(loc)}>${n}</button>` : '<span class="chu-phu">·</span>');
-const cot = (nhom, loc) => `<td class="so">${nut(nhom.QUA_HAN + nhom.DANG_DINH_CHINH, { ...loc, nhomTrong: ['QUA_HAN', 'DANG_DINH_CHINH'] }, 'chinh')}</td>
-  <td class="so">${nut(nhom.SAP_DEN_HAN, { ...loc, nhom: 'SAP_DEN_HAN' })}</td><td class="so">${nut(nhom.DANG_THUC_HIEN, { ...loc, nhom: 'DANG_THUC_HIEN' })}</td>
+// PR-2b: cột gồm cả trạng thái mới để Tổng = tổng các cột (quá hạn ở bước nghiệm thu → Quá hạn; chậm nộp MC → Sắp đến hạn; chờ nghiệm thu → Đang thực hiện).
+const CT = { qua: ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'], sap: ['SAP_DEN_HAN', 'CHAM_NOP_MINH_CHUNG'], dang: ['DANG_THUC_HIEN', 'CHO_NGHIEM_THU'] };
+const tongCot = (nhom, ds) => ds.reduce((a, k) => a + (nhom[k] || 0), 0);
+const cot = (nhom, loc) => `<td class="so">${nut(tongCot(nhom, CT.qua), { ...loc, nhomTrong: CT.qua }, 'chinh')}</td>
+  <td class="so">${nut(tongCot(nhom, CT.sap), { ...loc, nhomTrong: CT.sap })}</td><td class="so">${nut(tongCot(nhom, CT.dang), { ...loc, nhomTrong: CT.dang })}</td>
   <td class="so">${nut(nhom.HOAN_THANH, { ...loc, nhom: 'HOAN_THANH' }, 'lam')}</td>`;
 const DAU_BANG = '<thead><tr><th>Đơn vị / văn bản</th><th class="so">Tổng</th><th class="so">Quá hạn</th><th class="so">Sắp đến hạn</th><th class="so">Đang thực hiện</th><th class="so">Hoàn thành</th></tr></thead>';
 const khoaCua = (loc) => JSON.stringify(loc);
@@ -47,6 +50,13 @@ function bangTheoVanBan(rows) {
   return `<table>${DAU_BANG}<tbody>${ds.map((d) => dong(d.ten, `ban hành ${formatNgay(d.ngay)}`, { ketLuan: d.ten }, d.rows)).join('')}</tbody></table>`;
 }
 
+// Hai tỉ lệ đúng hạn (Q9) kèm mẫu số: việc đã đóng CÓ đánh giá (DB: nop_dung_han / nghiem_thu_dung_han) trên tổng việc đã đóng.
+function tyLe(rows, cot, nhan) {
+  const dong = rows.filter((r) => r.tien_do_ma === 'HOAN_THANH'); const dg = dong.filter((r) => ['DUNG_HAN', 'TRE'].includes(r[cot]));
+  const dung = dg.filter((r) => r[cot] === 'DUNG_HAN').length;
+  return `<span class="o-so s-luc" title="mẫu số: ${dg.length} việc được đánh giá / ${dong.length} việc đã đóng"><b>${dg.length ? Math.round((dung / dg.length) * 100) : 0}%</b> ${nhan} (${dung}/${dg.length}, ${dong.length} việc đã đóng)</span>`;
+}
+
 function ve() {
   const t = tongHop(rowsHienTai);
   const o = (n, nhan, lop) => `<span class="o-so ${lop}"><b>${n}</b> ${nhan}</span>`;
@@ -55,7 +65,9 @@ function ve() {
       <div class="phai-dau"><button type="button" class="nut nho" data-action="openBaoCao">Tải lại</button><button type="button" class="nut nho lam" data-action="inBaoCao">In / PDF</button></div></div>
     <div class="tq" role="group" aria-label="Tổng quan">${o(t.tong, 'việc trong phạm vi', '')}
       ${o(t.nhom.QUA_HAN + t.nhom.DANG_DINH_CHINH, 'quá hạn', 's-do')}${o(t.nhom.SAP_DEN_HAN, 'sắp đến hạn', 's-vang')}
-      ${o(t.nhom.DANG_THUC_HIEN, 'đang thực hiện', 's-lam')}${o(t.nhom.HOAN_THANH, `hoàn thành · ${t.tyLeHoanThanh}%`, 's-luc')}</div>
+      ${o(t.nhom.DANG_THUC_HIEN, 'đang thực hiện', 's-lam')}${o(t.nhom.HOAN_THANH, `hoàn thành · ${t.tyLeHoanThanh}%`, 's-luc')}
+      ${o(t.nhom.CHAM_NOP_MINH_CHUNG, 'chậm nộp minh chứng', 's-cam')}${o(t.nhom.CHO_NGHIEM_THU, 'chờ nghiệm thu', 's-lam')}${o(t.nhom.QUA_HAN_NGHIEM_THU, 'quá hạn ở bước nghiệm thu', 's-do')}
+      ${tyLe(rowsHienTai, 'nop_dung_han', 'nộp minh chứng đúng hạn')}${tyLe(rowsHienTai, 'nghiem_thu_dung_han', 'nghiệm thu đúng hạn')}</div>
     <div class="hai-ngan${viecMo ? ' mo' : ''}"><div>
       <div class="bang"><div class="bang-dau"><h2>Theo phòng, đơn vị chịu trách nhiệm</h2><span class="chu-phu">bấm một số hoặc một dòng để xem việc ngay dưới</span></div><div class="bang-cuon">${bangTheoOwner(rowsHienTai)}</div></div>
       <div class="bang"><div class="bang-dau"><h2>Theo kết luận, văn bản giao việc</h2></div><div class="bang-cuon">${bangTheoVanBan(rowsHienTai)}</div></div></div>

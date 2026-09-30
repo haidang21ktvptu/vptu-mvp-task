@@ -2,9 +2,22 @@
 // hàm SECURITY DEFINER nop_minh_chung / xac_nhan_minh_chung / dong_nhiem_vu — frontend không ghi thẳng bảng, quyền thật trong hàm.
 import { supabase } from '../supabase.js';
 import { COT_MINH_CHUNG, taiTheoTrang } from './cot.js';
+import { state, findAccount } from '../state.js';
+import { homNayVN } from './ngay.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
+
+// Q8 (0057, 0061): việc Thường trực (A0) giao cho Chánh VP chủ trì — chỉ thư ký Thường trực nghiệm thu; không ai giữ cờ thư ký thì quan_tri_kl còn
+// hạn; KHÔNG BAO GIỜ chính Chánh VP. Cùng tập với nguoi_nghiem_thu_chinh (DB là chốt) — để ẩn/hiện nút nghiệm thu.
+export const laViecTtGiaoCvp = (r) => findAccount(r.tao_boi)?.role_group === 'A0'
+  && ((o) => o?.role_group === 'A1' && Boolean(o.is_chief))(findAccount(r.owner_tai_khoan));
+export function nghiemThuViecTt(r, nopBoi, me = state.user) {
+  const duoc = (a) => a && !a.is_system && !a.bi_khoa && a.role_group !== 'A0' && a.id !== nopBoi && a.id !== r.owner_tai_khoan;
+  const thuKy = state.accounts.filter((a) => a.thu_ky_thuong_truc && duoc(a));
+  const ds = thuKy.length ? thuKy : state.accounts.filter((a) => a.quan_tri_kl && (!a.quan_tri_kl_het_han || a.quan_tri_kl_het_han >= homNayVN()) && duoc(a));
+  return ds.some((a) => a.id === me?.id);
+}
 
 // Mọi minh chứng của một nhiệm vụ, mới nhất trước.
 export async function loadMinhChung(nhiemVuId) {
@@ -19,16 +32,20 @@ export function loadMinhChungTatCa() {
 }
 
 // p: { nhiem_vu_id, so_hieu, ngay_van_ban, cap_nhan, trich_yeu, mo_ta_ket_qua } — năm trường bắt buộc (MC-3, 0046) → id minh chứng.
-export const nopMinhChung = (p) => rpc('nop_minh_chung', { p });
+// PR-2b: trích yếu / mô tả chuẩn hoá NFC trước khi đếm và gửi — tiếng Việt dạng tổ hợp (NFD, dán từ Word/Mac) đếm đúng như char_length của DB.
+export const nfc = (s) => (typeof s === 'string' ? s.normalize('NFC') : s);
+export const nopMinhChung = (p) => rpc('nop_minh_chung', { p: { ...p, trich_yeu: nfc(p.trich_yeu), mo_ta_ket_qua: nfc(p.mo_ta_ket_qua) } });
 // Kiểm phía form dùng chung cho hộp Nộp minh chứng và ô nộp tại chỗ (A3): trả chuỗi lỗi hoặc null — hàm nop_minh_chung là chốt.
 export function loiMinhChung(p) {
   if (!p.so_hieu || !p.ngay_van_ban || !p.cap_nhan) return 'Minh chứng phải đủ ba trường: số hiệu, ngày văn bản và cấp nhận.';
   if (!p.trich_yeu || !p.mo_ta_ket_qua) return 'Minh chứng phải có trích yếu văn bản và mô tả kết quả (đã làm gì, kết quả, gửi ai).';
-  if (p.mo_ta_ket_qua.length > 600) return 'Mô tả kết quả tối đa 600 ký tự.';
+  if (nfc(p.mo_ta_ket_qua).length > 600) return 'Mô tả kết quả tối đa 600 ký tự.';
   return null;
 }
-// Xác nhận hợp lệ (true) hoặc không hợp lệ (false, bắt buộc lý do) — hành động ghi vết, không xoá dòng (MC-6).
-export const xacNhanMinhChung = (id, hopLe, lyDo = null) => rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null });
+// Nghiệm thu (true — PR-2b Q2: đóng việc cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng) hoặc trả lại (false: lý do + hạn nộp lại
+// khi việc đang mở — Q3). Ghi vết, không xoá dòng (MC-6).
+export const xacNhanMinhChung = (id, hopLe, lyDo = null, hanNopLai = null) =>
+  rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null, p_han_nop_lai: hanNopLai || null });
 // Đóng nhiệm vụ (MC-4): DB kiểm lại minh chứng hợp lệ; ngay = null → lấy ngày văn bản của minh chứng hợp lệ mới nhất.
 export const dongNhiemVu = (id, ngay = null) => rpc('dong_nhiem_vu', { p_id: id, p_ngay_hoan_thanh: ngay || null });
 

@@ -37,7 +37,7 @@ function hanhDongViecHtml(r, tienTo) {
 
 // Một dòng việc trong ngăn / trong hàng mở rộng của Báo cáo (nút Xem chi tiết mở ngăn việc).
 export function dongViecHtml(r, homNay, nutXem = true) {
-  return `<div class="nv-dong ${lopMep(r)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<small>${escapeHtml(ownerText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
+  return `<div class="nv-dong ${lopMep(r, state.user?.id)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<small>${escapeHtml(ownerText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
       ${nutXem ? `<button type="button" class="nut nho" data-action="moNganViec" data-id="${r.id}">Xem chi tiết</button>` : ''}</div>`;
 }
 
@@ -63,7 +63,7 @@ export function nganNguoiHtml(a, rows, dongAction = 'dongNganCanBo') {
 export function nganViecHtml(r, dongAction = 'dongNganBaoCao') {
   const dd = (t, v) => `<dt>${t}</dt><dd>${v}</dd>`;
   return `<div class="ngan-noi" id="nganViec-${r.id}" data-nhom="${r.nhom_dem}">
-      <div class="ngan-dau"><div><b>${escapeHtml(r.ma)}</b><small>${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}${escapeHtml(nhanTrangThai(r))} ${nhanPhu(r)}</small></div>
+      <div class="ngan-dau"><div><b>${escapeHtml(r.ma)}</b><small>${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}${escapeHtml(nhanTrangThai(r, state.user?.id))} ${nhanPhu(r)}</small></div>
         <button type="button" class="nut nho" data-action="${dongAction}">Đóng</button></div>
       <h3>${escapeHtml(r.noi_dung)}</h3>
       <dl>${dd('Chủ trì', escapeHtml(ownerText(r)))}${dd('Theo dõi', escapeHtml(r.nguoi_theo_doi_ten || '(trống)'))}
