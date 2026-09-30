@@ -12,7 +12,7 @@ const sel = (id) => `<select id="${id}" class="o-nhap"></select>`;
 const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" class="o-nhap"${them}>`;
 
 export const giaoViecTemplate = `
-  <div class="dau"><h1>Giao việc</h1><span>một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nội dung, người chịu trách nhiệm, sản phẩm và hạn</span></div>
+  <div class="dau"><h1>Giao việc</h1><span>một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành và hạn nộp minh chứng</span></div>
   <div class="hai-cot" style="--rong-phu:340px">
   <form id="giaoViecForm" class="gv-the tam" data-submit="luuKlThem" novalidate>
     <fieldset class="gv-noi" id="gvKhoa" disabled aria-busy="true">
@@ -59,6 +59,10 @@ export const giaoViecTemplate = `
           ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
           ${truong('klThHan', 'Hạn hoàn thành<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
         </div>
+        <div class="cot-2" id="gvHanNopWrap">
+          ${truong('klThHanNop', `Hạn nộp minh chứng${BB}`, inp('klThHanNop', 'date'), '', '<span id="klThHanNopGoiY" aria-live="polite">chọn hạn hoàn thành trước</span> <button type="button" class="nut nho hidden" id="klThHanNopDung" data-action="gvDungHanNop">Dùng ngày gợi ý</button>')}
+          ${truong('klThLyDoSat', `Lý do việc gấp${BB}`, inp('klThLyDoSat', 'text', ' maxlength="500" placeholder="Vì sao hạn nộp sát hạn hoàn thành"'), '', 'bắt buộc khi hạn nộp sau ngày gợi ý')}
+        </div>
         <div class="cot-3" id="gvNganhWrap">
           ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
           ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
@@ -88,7 +92,7 @@ export const giaoViecTemplate = `
       <ol class="gv-buoc-sau">
         <li><i>1</i><span>Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày nhận văn bản; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
-        <li><i>3</i><span>Việc chỉ đóng khi có minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận) và cấp nhận xác nhận.</span></li>
+        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) trước hạn nộp; lãnh đạo nghiệm thu thì việc hoàn thành, trả lại thì kèm hạn nộp lại.</span></li>
       </ol></section>
   </aside>
   </div>

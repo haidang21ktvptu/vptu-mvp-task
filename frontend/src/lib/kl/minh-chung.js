@@ -27,8 +27,10 @@ export function loiMinhChung(p) {
   if (p.mo_ta_ket_qua.length > 600) return 'Mô tả kết quả tối đa 600 ký tự.';
   return null;
 }
-// Xác nhận hợp lệ (true) hoặc không hợp lệ (false, bắt buộc lý do) — hành động ghi vết, không xoá dòng (MC-6).
-export const xacNhanMinhChung = (id, hopLe, lyDo = null) => rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null });
+// Nghiệm thu (true — PR-2b Q2: đóng việc cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng) hoặc trả lại (false: lý do + hạn nộp lại
+// khi việc đang mở — Q3). Ghi vết, không xoá dòng (MC-6).
+export const xacNhanMinhChung = (id, hopLe, lyDo = null, hanNopLai = null) =>
+  rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null, p_han_nop_lai: hanNopLai || null });
 // Đóng nhiệm vụ (MC-4): DB kiểm lại minh chứng hợp lệ; ngay = null → lấy ngày văn bản của minh chứng hợp lệ mới nhất.
 export const dongNhiemVu = (id, ngay = null) => rpc('dong_nhiem_vu', { p_id: id, p_ngay_hoan_thanh: ngay || null });
 

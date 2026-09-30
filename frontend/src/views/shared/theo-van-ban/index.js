@@ -4,6 +4,7 @@
 // từng nhánh (nhớ theo khoá trong phiên), lọc trạng thái (giữ nhánh có con khớp), bấm nhánh → moNhiemVu() mở #klChiTiet sẵn có ở màn Nhiệm vụ.
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
+import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadKlRows, loadVanBan } from '../../../lib/kl/du-lieu.js';
 import { loadMinhChungTatCa } from '../../../lib/kl/minh-chung.js';
@@ -51,8 +52,8 @@ function nhanhHtml(r, con, kw, cap) {
   return `<div class="tvb-nhanh" id="tvbNv-${r.id}" data-id="${r.id}" data-cap="${cap}" data-nhom="${escapeHtml(r.nhom_dem || '')}" data-mo="${mo ? '1' : '0'}">
     <div class="tvb-hang">
       ${coCon ? `<button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} ${escapeHtml(r.ma)}"></button>` : '<i class="tvb-gap trong"></i>'}
-      <button type="button" class="tvb-nut" data-action="tvbMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" title="${escapeHtml(nhanTrangThai(r))}">
-        <i class="tvb-cham ${lopMep(r) || 'xam'}"></i><span class="ma">${escapeHtml(r.ma)}</span><span class="nd">${escapeHtml(r.noi_dung)}</span>
+      <button type="button" class="tvb-nut" data-action="tvbMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" title="${escapeHtml(nhanTrangThai(r, state.user?.id))}">
+        <i class="tvb-cham ${lopMep(r, state.user?.id) || 'xam'}"></i><span class="ma">${escapeHtml(r.ma)}</span><span class="nd">${escapeHtml(r.noi_dung)}</span>
         <span class="chu-tri">${escapeHtml(ownerText(r))}</span><span class="han">${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có hạn'}</span></button>
     </div>
     <div class="tvb-con">${cacCon.join('')}${la}</div></div>`;

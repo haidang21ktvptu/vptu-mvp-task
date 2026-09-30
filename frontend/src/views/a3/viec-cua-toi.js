@@ -74,7 +74,10 @@ const oMc = (id, ten, nhan, mo, dong = '') => `<label for="mc-${id}-${ten}" clas
 function dongMinhChung(r, homNay) {
   const cap = danhMucKl().cap.map((c) => `<option value="${c.ma}"${c.ma === r.cap_nhan_san_pham ? ' selected' : ''}>${escapeHtml(c.ten)}</option>`).join('');
   const han = r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : 'chưa có hạn';
-  return `<div class="the-con ${r.muc_canh_bao === 'VANG' ? '' : 'do'}" id="vct-${r.id}" data-muc="${escapeHtml(r.muc_canh_bao)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, ${han}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>
+  // PR-2b: hạn nộp minh chứng hiệu lực (hạn nộp lại khi bị trả lại) đứng trước hạn hoàn thành; chậm nộp minh chứng = nhãn CAM (không Đỏ).
+  const nopMc = r.han_nop_hieu_luc ? `nộp minh chứng trước ${formatNgay(r.han_nop_hieu_luc)}${r.minh_chung_buoc === 'BI_TRA_LAI' ? ' (bị trả lại, nộp lại)' : ''}, ` : '';
+  const cam = r.nhom_dem === 'CHAM_NOP_MINH_CHUNG';
+  return `<div class="the-con ${cam ? 'cam' : r.muc_canh_bao === 'VANG' ? '' : 'do'}" id="vct-${r.id}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-nhom="${escapeHtml(r.nhom_dem)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}${cam ? ' <span class="trang-thai tt-cam">Chậm nộp minh chứng</span>' : ''}, ${nopMc}${han}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>
     <form class="mc-inline" id="oMcNop-${r.id}" data-submit="nopMinhChungThe" data-id="${r.id}">${oMc(r.id, 'so-hieu', 'Số hiệu văn bản', `<input name="so_hieu" placeholder="Số hiệu văn bản" autocomplete="off"`)}${oMc(r.id, 'ngay-van-ban', 'Ngày văn bản', `<input type="date" name="ngay_van_ban" max="${homNay}"`)}
       ${oMc(r.id, 'cap-nhan', 'Cấp nhận', '<select name="cap_nhan"', `<option value="">Cấp nhận</option>${cap}</select>`)}
       ${oMc(r.id, 'trich-yeu', 'Trích yếu văn bản', '<input name="trich_yeu" placeholder="Trích yếu văn bản" autocomplete="off" maxlength="300" class="mc-rong"')}
@@ -82,8 +85,11 @@ function dongMinhChung(r, homNay) {
       <button type="submit" class="nut chinh">Nộp minh chứng</button></form>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }
+// Việc đang làm; đã nộp minh chứng, chờ nghiệm thu → nhãn TRUNG TÍNH kể cả khi quá hạn ở bước nghiệm thu (Mới 2 — chậm tính cho lãnh đạo).
 function dongDangLam(r) {
-  return `<div class="the-con" id="vct-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} ${nhanPhuHtml(r)}</p>
+  const cho = ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem) ? ' <span class="nhan-trung-tinh">Đã nộp — chờ nghiệm thu</span>' : '';
+  const nop = r.han_nop_hieu_luc && !cho ? `, nộp minh chứng trước ${formatNgay(r.han_nop_hieu_luc)}` : '';
+  return `<div class="the-con" id="vct-${r.id}" data-nhom="${escapeHtml(r.nhom_dem)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}${cho}${nop}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} ${nhanPhuHtml(r)}</p>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }
 

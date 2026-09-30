@@ -14,7 +14,7 @@
 --    request.jwt.claim.sub = p_nguoi trong giao dịch, kiểm auth.uid() = p_nguoi rồi tính theo QUY TẮC GỐC (thêm nhánh thư ký ở (1)).
 
 CREATE FUNCTION "public"."kl_viec_a0_giao_cvp"("p_nv" "public"."nhiem_vu") RETURNS boolean
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT EXISTS (SELECT 1 FROM "public"."accounts" g WHERE g."id" = ("p_nv")."tao_boi" AND g."role_group" = 'A0')
      AND EXISTS (SELECT 1 FROM "public"."accounts" o WHERE o."id" = ("p_nv")."owner_tai_khoan" AND o."role_group" = 'A1' AND o."is_chief");
 $$;
@@ -29,28 +29,28 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
 $$;
 
 CREATE FUNCTION "public"."nguoi_nghiem_thu_chinh"("p_nv" "public"."nhiem_vu", "p_nguoi_nop" uuid DEFAULT NULL) RETURNS uuid[]
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  WITH hl AS (
-    SELECT a."id", a."username", a."role_group", a."department", a."is_chief", coalesce(a."thu_ky_thuong_truc", false) AS thu_ky,
-           coalesce(a."quan_tri_kl" AND (a."quan_tri_kl_het_han" IS NULL OR a."quan_tri_kl_het_han" >= "public"."kl_hom_nay"()), false) AS qtkl
-    FROM "public"."accounts" a
-    WHERE NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop"
-  ), ow AS (SELECT a."role_group", a."department" FROM "public"."accounts" a WHERE a."id" = ("p_nv")."owner_tai_khoan"
-  ), ph AS (
-    SELECT coalesce((SELECT ow."department" FROM ow), (SELECT d."phong" FROM "public"."dm_don_vi" d WHERE d."ma" = ("p_nv")."owner_don_vi_ma" AND d."trong_van_phong")) AS p,
-           coalesce((SELECT NOT d."trong_van_phong" FROM "public"."dm_don_vi" d WHERE d."ma" = ("p_nv")."owner_don_vi_ma" AND ("p_nv")."owner_tai_khoan" IS NULL), false) AS ngoai
-  ), q8 AS (SELECT "public"."kl_viec_a0_giao_cvp"("p_nv") AS la
-  ), ung_vien AS (
-    SELECT 1 AS uu, h."id", h."username" FROM hl h WHERE h."id" = coalesce(("p_nv")."giao_thay_mat_cho", ("p_nv")."tao_boi") AND h."role_group" IN ('A1', 'A2')
-    UNION ALL SELECT 2, h."id", h."username" FROM hl h, ow WHERE ow."role_group" = 'A3' AND h."role_group" = 'A2' AND h."department" = ow."department"
-    UNION ALL SELECT 3, h."id", h."username" FROM ph CROSS JOIN LATERAL "public"."pcvp_phu_trach"(ph.p, ("p_nv")."nganh_ma", ("p_nv")."linh_vuc_ma") x(id)
-              JOIN hl h ON h."id" = x.id WHERE NOT EXISTS (SELECT 1 FROM ow WHERE ow."role_group" = 'A1')
-    UNION ALL SELECT 4, h."id", h."username" FROM ph, hl h WHERE ph.ngoai AND h."id" = "public"."lanh_dao_truc_tiep"(("p_nv")."nguoi_theo_doi")
-    UNION ALL SELECT 5, h."id", h."username" FROM hl h WHERE h."role_group" = 'A1' AND h."is_chief"
-  ), tat_ca_qtkl AS (SELECT array_agg(h."id" ORDER BY h."username") AS ds FROM hl h WHERE h.qtkl)
-  SELECT CASE WHEN (SELECT la FROM q8)
-    THEN coalesce((SELECT array_agg(h."id" ORDER BY h."username") FROM hl h WHERE h.thu_ky), (SELECT ds FROM tat_ca_qtkl), '{}'::uuid[])
-    ELSE coalesce((SELECT ARRAY[u."id"] FROM ung_vien u ORDER BY u.uu, u."username" LIMIT 1), (SELECT ds FROM tat_ca_qtkl), '{}'::uuid[]) END;
+LANGUAGE sql STABLE SECURITY DEFINER AS $$   -- mọi tên đã có schema ⇒ không SET search_path (bớt chi phí mỗi lời gọi)
+  -- COALESCE dừng ở đối số đầu tiên khác NULL ⇒ mỗi lời gọi chỉ tra tới người nhận đầu tiên tìm được (đo 30/9: bản CTE tính mọi nhánh, v_nhiem_vu CVP
+  -- 1 400 việc chậm gấp 2,4 lần). Thứ tự ưu tiên như bảng A6; cùng mức lấy theo username.
+  SELECT CASE WHEN "public"."kl_viec_a0_giao_cvp"("p_nv") THEN coalesce(
+      (SELECT array_agg(a."id" ORDER BY a."username") FROM "public"."accounts" a WHERE coalesce(a."thu_ky_thuong_truc", false) AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop"),
+      (SELECT array_agg(a."id" ORDER BY a."username") FROM "public"."accounts" a WHERE coalesce(a."quan_tri_kl" AND (a."quan_tri_kl_het_han" IS NULL OR a."quan_tri_kl_het_han" >= "public"."kl_hom_nay"()), false) AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop"), '{}'::uuid[])
+    ELSE coalesce(
+      (SELECT ARRAY[a."id"] FROM "public"."accounts" a
+       WHERE a."id" = coalesce(("p_nv")."giao_thay_mat_cho", ("p_nv")."tao_boi") AND a."role_group" IN ('A1', 'A2') AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop"),
+      (SELECT ARRAY[a."id"] FROM "public"."accounts" o JOIN "public"."accounts" a ON a."role_group" = 'A2' AND a."department" = o."department"
+       WHERE o."id" = ("p_nv")."owner_tai_khoan" AND o."role_group" = 'A3' AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop" ORDER BY a."username" LIMIT 1),
+      (SELECT ARRAY[a."id"] FROM "public"."pcvp_phu_trach"(
+         coalesce((SELECT o."department" FROM "public"."accounts" o WHERE o."id" = ("p_nv")."owner_tai_khoan"),
+                  (SELECT d."phong" FROM "public"."dm_don_vi" d WHERE d."ma" = ("p_nv")."owner_don_vi_ma" AND d."trong_van_phong")),
+         ("p_nv")."nganh_ma", ("p_nv")."linh_vuc_ma") x(id) JOIN "public"."accounts" a ON a."id" = x.id
+       WHERE NOT EXISTS (SELECT 1 FROM "public"."accounts" o WHERE o."id" = ("p_nv")."owner_tai_khoan" AND o."role_group" = 'A1') AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop"
+       ORDER BY a."username" LIMIT 1),
+      (SELECT ARRAY[a."id"] FROM "public"."accounts" a
+       WHERE ("p_nv")."owner_tai_khoan" IS NULL AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop" AND a."id" = "public"."lanh_dao_truc_tiep"(("p_nv")."nguoi_theo_doi")
+         AND EXISTS (SELECT 1 FROM "public"."dm_don_vi" d WHERE d."ma" = ("p_nv")."owner_don_vi_ma" AND NOT d."trong_van_phong")),
+      (SELECT ARRAY[a."id"] FROM "public"."accounts" a WHERE a."role_group" = 'A1' AND a."is_chief" AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop" ORDER BY a."username" LIMIT 1),
+      (SELECT array_agg(a."id" ORDER BY a."username") FROM "public"."accounts" a WHERE coalesce(a."quan_tri_kl" AND (a."quan_tri_kl_het_han" IS NULL OR a."quan_tri_kl_het_han" >= "public"."kl_hom_nay"()), false) AND NOT a."is_system" AND NOT coalesce(a."bi_khoa", false) AND a."role_group" <> 'A0' AND a."id" IS DISTINCT FROM "p_nguoi_nop"), '{}'::uuid[]) END;
 $$;
 
 DROP FUNCTION "public"."xac_nhan_minh_chung"(uuid, boolean, text);

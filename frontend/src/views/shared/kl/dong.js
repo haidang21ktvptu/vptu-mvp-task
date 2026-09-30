@@ -40,8 +40,8 @@ function phuText(r) {
 }
 
 export function dongHtml(r, homNay, dangChon) {
-  return `<button type="button" class="hang-nv ${lopMep(r)}${dangChon ? ' dang' : ''}" id="klRow-${r.id}" data-action="chonKlRow" data-id="${r.id}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}" aria-pressed="${String(Boolean(dangChon))}">
-      <span class="stt ${lopMep(r)}"></span><span class="ma">${escapeHtml(r.ma)}</span>
+  return `<button type="button" class="hang-nv ${lopMep(r, state.user?.id)}${dangChon ? ' dang' : ''}" id="klRow-${r.id}" data-action="chonKlRow" data-id="${r.id}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}" aria-pressed="${String(Boolean(dangChon))}">
+      <span class="stt ${lopMep(r, state.user?.id)}"></span><span class="ma">${escapeHtml(r.ma)}</span>
       <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanPhuHtml(r)}</b><span title="${escapeHtml(phuText(r))}">${escapeHtml(phuText(r))}</span></span>
       <span class="han">${hanHtml(r, homNay)}</span>
     </button>`;

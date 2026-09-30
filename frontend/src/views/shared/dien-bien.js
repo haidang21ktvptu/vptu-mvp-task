@@ -13,6 +13,7 @@ const TT_MC = { CHO_XAC_NHAN: 'chờ xác nhận', HOP_LE: 'hợp lệ', KHONG_H
 function noiDung(d) {
   if (d.nguon === 'lich_su') {
     if (d.loai === '*') return `Tạo dòng ${escapeHtml(d.noi_dung || '')}`;
+    if (d.loai === 'han_nop_minh_chung_ly_do') return escapeHtml(d.noi_dung || '');   // PR-2b: tin đã đủ "Đổi hạn nộp minh chứng · mã: cũ → mới — lý do"
     if (d.gia_tri_cu === null || d.gia_tri_cu === undefined) return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(d.noi_dung || '')}`;
     return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(d.gia_tri_cu || '(trống)')} → ${escapeHtml(d.noi_dung || '(trống)')}`;
   }

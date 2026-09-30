@@ -82,12 +82,13 @@ export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
 // · số ngày trễ · nút; vòng khép kín và các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau, .vong, .dk, #the-<id>, data-*).
 export function theHtml(r) {
   const quyet = canToiQuyet(r);
-  const lop = r.bi_tu_choi && r.nhom !== 'DO' ? 'tu-choi' : r.muc_canh_bao === 'DO_DAC_BIET' ? 'dac-biet' : 'do';
+  const lop = r.bi_tu_choi && !['DO', 'NGHIEM_THU'].includes(r.nhom) ? 'tu-choi' : r.muc_canh_bao === 'DO_DAC_BIET' ? 'dac-biet' : 'do';
   const cham = lop === 'tu-choi' ? 'cam' : lop;
-  const tre = r.nhom === 'DO' ? `<div class="tre">${r.so_ngay_qua}<small>ngày trễ</small></div>` : '<div class="tre cam">!<small>chờ giao lại</small></div>';
+  const tre = ['DO', 'NGHIEM_THU'].includes(r.nhom) ? `<div class="tre">${r.so_ngay_qua}<small>ngày trễ</small></div>` : '<div class="tre cam">!<small>chờ giao lại</small></div>';
   const nhanTC = nhanPhuHtml(r); // độ khẩn · Thường trực giao · Thay mặt … giao · Bị từ chối (GĐ22)
   const nutGiaoLai = r.bi_tu_choi && !laA0() ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : '';
-  const owner = r.owner_tai_khoan_ten ? `${escapeHtml(r.owner_tai_khoan_ten)} · ${escapeHtml(boSoThuTu(r.owner_don_vi_ten))}`
+  // PR-2b: quá hạn ở bước nghiệm thu — "cá nhân đang chậm" là lãnh đạo nghiệm thu (nguoi_chiu_cham_ten, DB tính), không phải chủ trì.
+  const owner = r.nhom === 'NGHIEM_THU' ? `chờ nghiệm thu: ${escapeHtml(r.nguoi_chiu_cham_ten || 'lãnh đạo')} · chủ trì ${escapeHtml(r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '')}` : r.owner_tai_khoan_ten ? `${escapeHtml(r.owner_tai_khoan_ten)} · ${escapeHtml(boSoThuTu(r.owner_don_vi_ten))}`
     : `${escapeHtml(boSoThuTu(r.owner_don_vi_ten) || '(chưa xác định)')} · ${r.owner_trong_van_phong ? 'theo dõi: ' + escapeHtml(r.nguoi_theo_doi_ten || '—') : 'đơn vị ngoài Văn phòng'}`;
   const theoDoi = r.nguoi_theo_doi_ten && r.owner_tai_khoan_ten ? ` · theo dõi: ${escapeHtml(r.nguoi_theo_doi_ten)} (${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || '')})` : '';
   const daCo = ttCuaViec(r.id).length > 0;

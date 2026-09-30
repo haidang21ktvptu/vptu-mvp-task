@@ -1,6 +1,7 @@
 -- 0058: Trạng thái theo hạn nộp minh chứng (PR-2b, thiết kế A5, A9 sửa Q-2, Q9). Vẫn MỘT hàm tính (trang_thai_dong; trang_thai là lớp bọc).
--- Giữ điều kiện inline của 0050: SQL, STABLE, không SET / SECURITY DEFINER / STRICT, một câu SELECT, không CTE. Minh chứng của việc gom MỘT lần
--- mỗi dòng (LATERAL, index minh_chung_nhiem_vu_idx) — không đọc ngày nghỉ, không gọi hàm plpgsql (bổ sung A 30/9).
+-- Giữ điều kiện inline của 0050: SQL, STABLE, không SET / SECURITY DEFINER / STRICT, một câu SELECT, không CTE. Minh chứng của việc: MỘT lần quét
+-- (một tham chiếu bảng ⇒ một lần kiểm RLS dạng tập hợp), gom hai dòng mốc bằng kiểu kl_mc_moc; hạn áp dụng cho lượt nộp (hạn nộp lại của lần trả lại
+-- gần nhất) cũng lấy trong lần gom đó — không truy vấn con thêm (bớt thời gian lập kế hoạch). Không đọc ngày nghỉ, không gọi hàm plpgsql (bổ sung A 30/9).
 -- Minh chứng tính tại ngày `ngay`: chỉ dòng có ngày nộp (giờ VN) ≤ ngay; "mới nhất" theo nop_luc.
 --   đang chờ = mới nhất loại so_hieu/tep (chu_cu chỉ khi việc có hạn nộp) và (hop_le NULL hoặc xác nhận sau ngay);
 --   bị trả lại = mới nhất hop_le = false, xác nhận ≤ ngay ⇒ N* = han_nop_lai của dòng đó (không có thì hạn nộp gốc); còn lại N* = hạn nộp gốc.
@@ -10,7 +11,8 @@
 --   · 10 không có N*: như 0050, Vàng thêm điều kiện không có minh chứng hợp lệ trong bảng (Q-2) · 11 có N*, H − ngay ≤ ngưỡng → SAP_DEN_HAN Xanh
 --   · 12 còn lại DANG_THUC_HIEN Xanh. ket_qua, lead_time, do_tre_nhap_lieu giữ công thức. so_ngay_qua tính cả dòng 5.
 -- Trường mới (cuối kiểu): han_nop_hieu_luc (N*), minh_chung_buoc, nop_dung_han (Q9: minh chứng được nghiệm thu nộp ≤ hạn áp dụng cho lượt đó
---   = hạn nộp lại của lần trả lại liền trước, không có thì hạn gốc), nghiem_thu_dung_han (xác nhận ≤ H), so_lan_tra_lai.
+--   = hạn nộp lại của lần trả lại liền trước, không có thì hạn gốc), nghiem_thu_dung_han (xác nhận ≤ H), so_lan_tra_lai. Hai chỉ số đúng hạn chỉ đánh giá
+--   việc CÓ hạn nộp (F2: mẫu số từ việc đóng sau phát hành); việc đã đóng không hạn nộp: minh_chung_buoc NULL, không quét minh chứng (hiệu năng).
 
 ALTER TYPE "public"."trang_thai_kq"
   ADD ATTRIBUTE "han_nop_hieu_luc" date,
@@ -18,6 +20,9 @@ ALTER TYPE "public"."trang_thai_kq"
   ADD ATTRIBUTE "nop_dung_han" text,
   ADD ATTRIBUTE "nghiem_thu_dung_han" text,
   ADD ATTRIBUTE "so_lan_tra_lai" integer;
+
+-- Hai dòng mốc của một lần quét minh chứng (mới nhất; nghiệm thu mới nhất) — kiểu nhỏ để lấy nhiều trường từ một array_agg.
+CREATE TYPE "public"."kl_mc_moc" AS ("loai" text, "hop_le" boolean, "nop_luc" timestamptz, "nd" date, "xd" date, "han_nop_lai" date);
 
 CREATE OR REPLACE FUNCTION "public"."trang_thai_dong"("nv" "public"."nhiem_vu", "ngay" date DEFAULT "public"."kl_hom_nay"())
 RETURNS SETOF "public"."trang_thai_kq" LANGUAGE sql STABLE ROWS 1 AS $$
@@ -36,22 +41,24 @@ RETURNS SETOF "public"."trang_thai_kq" LANGUAGE sql STABLE ROWS 1 AS $$
       WHEN 'CHAM_NOP_MINH_CHUNG' THEN 'VANG'
       WHEN 'CHO_NGHIEM_THU' THEN 'XANH'
       WHEN 'SAP_DEN_HAN' THEN CASE WHEN b.vang_moi THEN 'VANG'
-                                   WHEN b.n_sao IS NULL AND ("nv"."han_xu_ly" - "trang_thai_dong"."ngay") <= b.vang AND NOT b.co_hop_le
-                                    AND nullif(btrim(coalesce("nv"."minh_chung", '')), '') IS NULL THEN 'VANG' ELSE 'XANH' END
+                                   WHEN b.n_sao IS NULL AND ("nv"."han_xu_ly" - "trang_thai_dong"."ngay") <= b.vang
+                                    AND nullif(btrim(coalesce("nv"."minh_chung", '')), '') IS NULL
+                                    AND NOT b.co_hop_le
+                                   THEN 'VANG' ELSE 'XANH' END
       WHEN 'DANG_THUC_HIEN' THEN CASE WHEN b.vang_moi THEN 'VANG' ELSE 'XANH' END
       ELSE 'KHONG_AP_DUNG' END,
     CASE WHEN "nv"."tien_do_ma" = 'HOAN_THANH' AND "nv"."ngay_hoan_thanh" IS NOT NULL AND NOT "nv"."ngay_nhan_uoc_tinh"
          THEN ("nv"."ngay_hoan_thanh" - "nv"."ngay_nhan_van_ban")::integer END,
     b.n_sao,
-    CASE WHEN b.cho THEN 'CHO_NGHIEM_THU' WHEN b.tra_lai THEN 'BI_TRA_LAI' WHEN b.nt_nd IS NOT NULL THEN 'DA_NGHIEM_THU'
+    CASE WHEN b.bo_qua_mc THEN NULL WHEN b.cho THEN 'CHO_NGHIEM_THU' WHEN b.tra_lai THEN 'BI_TRA_LAI' WHEN b.nt_nd IS NOT NULL THEN 'DA_NGHIEM_THU'
          WHEN b.moi_loai = 'chu_cu' THEN 'CHU_CU' ELSE 'CHUA_NOP' END,
     CASE WHEN "nv"."han_nop_minh_chung" IS NULL THEN 'KHONG_DANH_GIA'
          WHEN b.nt_nd IS NOT NULL THEN CASE WHEN b.nt_loai = 'chu_cu' THEN 'KHONG_DANH_GIA'
-                                            WHEN b.nt_nd <= coalesce(b.nt_han_ap, "nv"."han_nop_minh_chung") THEN 'DUNG_HAN' ELSE 'TRE' END
+           WHEN b.nt_nd <= coalesce(b.han_lai_truoc, "nv"."han_nop_minh_chung") THEN 'DUNG_HAN' ELSE 'TRE' END
          WHEN "nv"."tien_do_ma" = 'HOAN_THANH' THEN 'KHONG_DANH_GIA'
-         WHEN b.cho THEN CASE WHEN b.moi_nd <= coalesce(b.moi_han_ap, "nv"."han_nop_minh_chung") THEN 'DUNG_HAN' ELSE 'TRE' END
+         WHEN b.cho THEN CASE WHEN b.moi_nd <= coalesce(b.han_lai_truoc, "nv"."han_nop_minh_chung") THEN 'DUNG_HAN' ELSE 'TRE' END
          ELSE 'CHUA_NOP' END,
-    CASE WHEN "nv"."han_xu_ly" IS NULL THEN 'KHONG_DANH_GIA'
+    CASE WHEN "nv"."han_xu_ly" IS NULL OR "nv"."han_nop_minh_chung" IS NULL THEN 'KHONG_DANH_GIA'
          WHEN b.nt_xd IS NOT NULL THEN CASE WHEN b.nt_xd <= "nv"."han_xu_ly" THEN 'DUNG_HAN' ELSE 'TRE' END
          WHEN "nv"."tien_do_ma" = 'HOAN_THANH' THEN 'KHONG_DANH_GIA'
          ELSE 'CHUA' END,
@@ -90,36 +97,29 @@ RETURNS SETOF "public"."trang_thai_kq" LANGUAGE sql STABLE ROWS 1 AS $$
         coalesce((SELECT k."gia_tri"::integer FROM "public"."kl_cau_hinh" k WHERE k."khoa" = 'nguong_do_dac_biet_ngay'), 3) AS ddb
       OFFSET 0
     ) c
-    CROSS JOIN LATERAL (
-      SELECT a.*,
-        coalesce(a.moi_loai IN ('so_hieu', 'tep') OR (a.moi_loai = 'chu_cu' AND "nv"."han_nop_minh_chung" IS NOT NULL), false)
-          AND (a.moi_hop_le IS NULL OR a.moi_xd > "trang_thai_dong"."ngay") AS cho,
-        coalesce(a.moi_hop_le = false AND a.moi_xd <= "trang_thai_dong"."ngay", false) AS tra_lai,
-        CASE WHEN a.moi_hop_le = false AND a.moi_xd <= "trang_thai_dong"."ngay" THEN coalesce(a.moi_han_lai, "nv"."han_nop_minh_chung")
+    CROSS JOIN LATERAL (   -- MỘT lần quét minh chứng của việc (một tham chiếu ⇒ một lần kiểm RLS dạng tập hợp), input đã sắp theo index
+      SELECT a.so_tra_lai, a.co_hop_le, a.han_lai_truoc, "nv"."tien_do_ma" = 'HOAN_THANH' AND "nv"."han_nop_minh_chung" IS NULL AS bo_qua_mc,
+        (a.m1).loai AS moi_loai, (a.m1).hop_le AS moi_hop_le, (a.m1).xd AS moi_xd, (a.m1).nd AS moi_nd, (a.m1).han_nop_lai AS moi_han_lai, (a.m1).nop_luc AS moi_luc,
+        (a.m2).loai AS nt_loai, (a.m2).xd AS nt_xd, (a.m2).nd AS nt_nd, (a.m2).nop_luc AS nt_luc,
+        coalesce((a.m1).loai IN ('so_hieu', 'tep') OR ((a.m1).loai = 'chu_cu' AND "nv"."han_nop_minh_chung" IS NOT NULL), false)
+          AND ((a.m1).hop_le IS NULL OR (a.m1).xd > "trang_thai_dong"."ngay") AS cho,
+        coalesce((a.m1).hop_le = false AND (a.m1).xd <= "trang_thai_dong"."ngay", false) AS tra_lai,
+        CASE WHEN (a.m1).hop_le = false AND (a.m1).xd <= "trang_thai_dong"."ngay" THEN coalesce((a.m1).han_nop_lai, "nv"."han_nop_minh_chung")
              ELSE "nv"."han_nop_minh_chung" END AS n_sao
       FROM (
-        SELECT
-          (array_agg(x."loai" ORDER BY x."nop_luc" DESC))[1] AS moi_loai,
-          (array_agg(x."hop_le" ORDER BY x."nop_luc" DESC))[1] AS moi_hop_le,
-          (array_agg(x.xd ORDER BY x."nop_luc" DESC))[1] AS moi_xd,
-          (array_agg(x.nd ORDER BY x."nop_luc" DESC))[1] AS moi_nd,
-          (array_agg(x."han_nop_lai" ORDER BY x."nop_luc" DESC))[1] AS moi_han_lai,
-          (array_agg(x.han_ap ORDER BY x."nop_luc" DESC))[1] AS moi_han_ap,
-          count(*) FILTER (WHERE x."hop_le" = false AND x.xd <= "trang_thai_dong"."ngay")::integer AS so_tra_lai,
-          coalesce(bool_or(x."loai" IN ('so_hieu', 'chu_cu') AND NOT coalesce(x."hop_le" = false AND x.xd <= "trang_thai_dong"."ngay", false)), false) AS co_hop_le,
-          (array_agg(x.nd ORDER BY x."nop_luc" DESC) FILTER (WHERE x."hop_le" AND x.xd <= "trang_thai_dong"."ngay"))[1] AS nt_nd,
-          (array_agg(x.xd ORDER BY x."nop_luc" DESC) FILTER (WHERE x."hop_le" AND x.xd <= "trang_thai_dong"."ngay"))[1] AS nt_xd,
-          (array_agg(x."loai" ORDER BY x."nop_luc" DESC) FILTER (WHERE x."hop_le" AND x.xd <= "trang_thai_dong"."ngay"))[1] AS nt_loai,
-          (array_agg(x.han_ap ORDER BY x."nop_luc" DESC) FILTER (WHERE x."hop_le" AND x.xd <= "trang_thai_dong"."ngay"))[1] AS nt_han_ap
-        FROM (
-          SELECT mc."loai", mc."hop_le", mc."nop_luc", mc."han_nop_lai",
-                 (mc."nop_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date AS nd,
-                 (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date AS xd,
-                 CASE WHEN lag(mc."hop_le") OVER w = false THEN lag(mc."han_nop_lai") OVER w END AS han_ap
-          FROM "public"."minh_chung" mc
-          WHERE mc."nhiem_vu_id" = "nv"."id" AND (mc."nop_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date <= "trang_thai_dong"."ngay"
-          WINDOW w AS (ORDER BY mc."nop_luc")
-        ) x
+        SELECT (array_agg(ROW(mc."loai", mc."hop_le", mc."nop_luc", (mc."nop_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, mc."han_nop_lai")::"public"."kl_mc_moc" ORDER BY mc."nop_luc" DESC))[1] AS m1,
+               (array_agg(ROW(mc."loai", mc."hop_le", mc."nop_luc", (mc."nop_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date, mc."han_nop_lai")::"public"."kl_mc_moc" ORDER BY mc."nop_luc" DESC)
+                  FILTER (WHERE mc."hop_le" AND (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date <= "trang_thai_dong"."ngay"))[1] AS m2,
+               count(*) FILTER (WHERE mc."hop_le" = false AND (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date <= "trang_thai_dong"."ngay")::integer AS so_tra_lai,
+               -- hạn nộp lại của lần trả lại gần nhất (= "lần trả lại liền trước" của lượt đang chờ / lượt được nghiệm thu — việc đóng khi nghiệm thu)
+               (array_agg(mc."han_nop_lai" ORDER BY mc."nop_luc" DESC)
+                  FILTER (WHERE mc."hop_le" = false AND (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date <= "trang_thai_dong"."ngay"))[1] AS han_lai_truoc,
+               coalesce(bool_or(mc."loai" IN ('so_hieu', 'chu_cu')
+                 AND NOT coalesce(mc."hop_le" = false AND (mc."xac_nhan_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date <= "trang_thai_dong"."ngay", false)), false) AS co_hop_le
+        FROM "public"."minh_chung" mc
+        WHERE mc."nhiem_vu_id" = "nv"."id" AND (mc."nop_luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date <= "trang_thai_dong"."ngay"
+          -- việc đã đóng không có hạn nộp (việc cũ): không trường nào cần minh chứng ⇒ bỏ quét (điều kiện chỉ theo tham số: một lần lọc, không đọc index)
+          AND NOT ("nv"."tien_do_ma" = 'HOAN_THANH' AND "nv"."han_nop_minh_chung" IS NULL)
       ) a
     ) m
     OFFSET 0

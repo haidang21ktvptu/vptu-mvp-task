@@ -29,6 +29,7 @@ export async function lamMoiHuyHieu() {
     try { so = await loadSoChuaXuLy(); } catch { return so; } finally { dangNap = null; }
     setNavBadge('dhBadge', tongDieuHanh(so));
     setNavBadge('dmBubbleBadge', Number(so.nhan_tin || 0));
+    setNavBadge('ntBadge', Number(so.can_nghiem_thu || 0));   // PR-2b: Cần nghiệm thu (của tôi)
     nghe.forEach((fn) => fn(so));
     return so;
   })();

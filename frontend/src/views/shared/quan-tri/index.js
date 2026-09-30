@@ -20,6 +20,7 @@ import { renderCauHinh, luuCauHinh } from './cau-hinh.js';
 import { renderUyQuyen, guiUyQuyen, thuUyQuyen } from './uy-quyen.js';
 import { renderDonDuLieu, mountDonDuLieu } from './don-du-lieu.js';
 import { renderNhatKyHeThong } from './nhat-ky-he-thong.js';
+import { renderNgayNghi, themNgayNghi, boNgayNghi } from './ngay-nghi.js';
 
 // Khu nào mở cho ai (thứ tự = thứ tự tab). Hàm quyền đọc state.user (cờ mới nhất sau loadQuanTri).
 const KHU = {
@@ -27,6 +28,7 @@ const KHU = {
   qtKhuTaiKhoan: { tab: 'qtTabTaiKhoan', cho: (u) => u.quan_tri_he_thong, ve: renderTaiKhoan },
   qtKhuDanhMuc: { tab: 'qtTabDanhMuc', cho: (u) => u.quan_tri_kl, ve: renderDanhMucLinhVuc },
   qtKhuCauHinh: { tab: 'qtTabCauHinh', cho: (u) => u.quan_tri_he_thong || u.role_group === 'A1', ve: renderCauHinh },
+  qtKhuNgayNghi: { tab: 'qtTabNgayNghi', cho: (u) => u.quan_tri_he_thong || (u.role_group === 'A1' && isChief()), ve: renderNgayNghi },   // PR-2b
   qtKhuUyQuyen: { tab: 'qtTabUyQuyen', cho: (u) => u.role_group === 'A2', ve: renderUyQuyen },
   qtKhuNhatKy: { tab: 'qtTabNhatKy', cho: (u) => u.quan_tri_he_thong || u.quan_tri_kl, ve: renderNhatKy },
   qtKhuDonDuLieu: { tab: 'qtTabDonDuLieu', cho: (u) => u.quan_tri_he_thong, ve: renderDonDuLieu },
@@ -83,5 +85,6 @@ export function registerQuanTriView() {
     ketThucKiemNhiem: (ds) => ketThucKiemNhiem(ds, loadQuanTri),
     luuCauHinh: (ds) => luuCauHinh(ds, loadQuanTri),
     thuUyQuyen: (ds) => thuUyQuyen(ds, loadQuanTri),
+    qtThemNgayNghi: (ds, form) => themNgayNghi(form), qtBoNgayNghi: boNgayNghi,
   });
 }
