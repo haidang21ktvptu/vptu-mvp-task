@@ -81,7 +81,7 @@ function dongMinhChung(r, homNay) {
     <form class="mc-inline" id="oMcNop-${r.id}" data-submit="nopMinhChungThe" data-id="${r.id}">${oMc(r.id, 'so-hieu', 'Số hiệu văn bản', `<input name="so_hieu" placeholder="Số hiệu văn bản" autocomplete="off"`)}${oMc(r.id, 'ngay-van-ban', 'Ngày văn bản', `<input type="date" name="ngay_van_ban" max="${homNay}"`)}
       ${oMc(r.id, 'cap-nhan', 'Cấp nhận', '<select name="cap_nhan"', `<option value="">Cấp nhận</option>${cap}</select>`)}
       ${oMc(r.id, 'trich-yeu', 'Trích yếu văn bản', '<input name="trich_yeu" placeholder="Trích yếu văn bản" autocomplete="off" maxlength="300" class="mc-rong"')}
-      ${oMc(r.id, 'mo-ta', 'Mô tả kết quả', '<textarea name="mo_ta_ket_qua" rows="2" maxlength="600" placeholder="Mô tả kết quả (khoảng 100 chữ: đã làm gì, kết quả, gửi ai)" class="mc-rong"', '</textarea>')}
+      ${oMc(r.id, 'mo-ta', 'Mô tả kết quả', '<textarea name="mo_ta_ket_qua" rows="2" placeholder="Mô tả kết quả (khoảng 100 chữ: đã làm gì, kết quả, gửi ai)" class="mc-rong"', '</textarea>')}
       <button type="submit" class="nut chinh">Nộp minh chứng</button></form>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }

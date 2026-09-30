@@ -44,6 +44,7 @@ export const OPTIONAL_USERS = {
   A0: tk('demo_a0', 'Demo Thường trực Tỉnh ủy', 'A0', null),
   E2E_CV2: tk('demo_e2e_cv2', 'Demo E2E Chuyên viên GL', 'A3', 'E2E_RT'), // chủ trì mới khi giao lại (0045); seed.sql + seed-demo.mjs (PR-2a D1)
   E2E_TK: tk('demo_e2e_tk', 'Demo E2E Thư ký TT', 'A3', 'TONG_HOP'),       // thư ký Thường trực (0047); spec thu-ky-tt cấp cờ lúc chạy rồi thu lại
-  E2E_ANH: tk('demo_e2e_anh', 'Demo E2E Chuyên viên Ảnh', 'A3', 'TONG_HOP'), // ảnh hồ sơ (PR-2a C2); chỉ spec ca-nhan-anh đăng nhập
+  E2E_ANH: tk('demo_e2e_anh', 'Demo E2E Chuyên viên Ảnh', 'A3', 'TONG_HOP'),
+  E2E_OWNER: tk('demo_e2e_owner', 'Demo E2E Chuyên viên Owner', 'A3', 'TONG_HOP'), // PR-2b b4-b6: A3 giữ quan_tri_kl (cờ tạm) là người theo dõi // ảnh hồ sơ (PR-2a C2); chỉ spec ca-nhan-anh đăng nhập
   PCVP: tk('demo_pcvp', 'Demo Phó Chánh Văn phòng', 'A1', 'LANH_DAO_VAN_PHONG', { position_title: 'Phó Chánh Văn phòng (Phụ trách Tổng hợp)' }), // PR-2a C3: PCVP phụ trách cả Tổng hợp
 };

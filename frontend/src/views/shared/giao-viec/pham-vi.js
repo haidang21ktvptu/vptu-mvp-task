@@ -68,7 +68,7 @@ export function thongBaoPhamVi(phong, nganh, lv, dsLinhVuc) {
 // Người theo dõi (mục 3.4 + bổ sung F, 30/9): PCVP giao trực tiếp, hoặc người quản trị KL (A3) giao thay mặt một lãnh đạo không phải Chánh VP —
 // chỉ chính lãnh đạo đó và người thuộc phòng trong phạm vi (duocGiao theo ngành, lĩnh vực đang chọn: cùng tập kl_pham_vi_giao, DB là chốt).
 // Chánh VP, lãnh đạo giữ quan_tri_kl giao thẳng, A0: không lọc; Trưởng phòng: danh sách đã chỉ gồm phòng mình (them-owner.js).
-function lanhDaoLoc(thayMat) {
+export function lanhDaoLoc(thayMat) {
   const me = state.user;
   if (!me || me.role_group === 'A0') return null;
   if (me.role_group === 'A3') { const tm = state.accounts.find((a) => a.id === thayMat); return tm && !(tm.role_group === 'A1' && tm.is_chief) ? tm.id : null; }

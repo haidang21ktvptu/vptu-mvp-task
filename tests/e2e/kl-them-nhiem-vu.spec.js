@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs, nav, moGiaoViec, mauToken, NAP } from './lib/app.js';
+import { contextAs, nav, moGiaoViec, mauToken, NAP, dienHanNop } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
@@ -82,7 +82,11 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
     await page.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
     await page.locator('#klThHan').fill('2026-12-31');
+    await dienHanNop(page);
     await page.locator('#klThThayMat').selectOption(TRUONG_PHONG_ID);          // thay mặt Trưởng phòng Tổng hợp (cùng phòng Owner)
+    // PR-2b (3.4/F): người theo dõi lọc theo phạm vi Trưởng phòng được thay mặt — người giao (ngoài phòng) rời danh sách, mặc định = Trưởng phòng
+    await expect(page.locator(`#klThNguoiTheoDoi option[value="${QTHT_ID}"]`)).toHaveCount(0);
+    await expect(page.locator('#klThNguoiTheoDoi')).toHaveValue(TRUONG_PHONG_ID);
     await expect(page.locator('#gvCham1')).toHaveClass(/\bxong\b/);
     await expect(page.locator('#gvCham2')).toHaveClass(/\bxong\b/);
     await expect(page.locator('#gvCham3')).not.toHaveClass(/\bxong\b/);        // thiếu sản phẩm
@@ -99,7 +103,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi, do_khan, giao_thay_mat_cho')
       .eq('noi_dung', noiDung).single(); // đúng dòng vừa tạo, không lấy 'mới nhất' (2 worker)
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',
-      cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: QTHT_ID, tao_boi: QTHT_ID, do_khan: 'THUONG', giao_thay_mat_cho: TRUONG_PHONG_ID });
+      cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: TRUONG_PHONG_ID, tao_boi: QTHT_ID, do_khan: 'THUONG', giao_thay_mat_cho: TRUONG_PHONG_ID });
     const row = page.locator(`#klRow-${data.id}`);
     await expect(row).toBeVisible(NAP);
     await expect(page.locator('#klTimKiem')).toHaveValue(data.ma);

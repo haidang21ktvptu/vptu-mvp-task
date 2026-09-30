@@ -99,3 +99,16 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - Từ PR-2a (D2): **bỏ `continue-on-error`** — RLS đỏ hoặc quá giờ thì job **đỏ** (thấy ngay trên trang run), nhưng **không chặn Pages**: job `deploy` chỉ `needs: build`, không `needs` job RLS (đã kiểm workflow). Giới hạn: bước test **12 phút**, job **14 phút**. Bước "Ghi cảnh báo" chạy `if: failure()`, ghi annotation `::warning` và một dòng vào Step Summary ("⚠️ RLS staging lỗi — không chặn deploy, xem log").
 - Thời lượng bộ trên staging ≈ số lượt khứ hồi tuần tự × độ trễ mỗi lời gọi (≈ 0,25 s, suy từ run Deploy staging #74). Đếm lời gọi từng file: `node scripts/dem-goi-rls.mjs` (Supabase cục bộ; `tests/rls/dem-goi.mjs` bọc `fetch` khi đặt `DEM_GOI`). Mục tiêu cả bộ ≤ 6 phút: test mới gộp truy vấn, dùng `Promise.all` giới hạn ở chỗ độc lập.
 - `khong_anh_huong_app` giữ nguyên nghĩa và cách tính (đã kiểm lại với PR #83 → true, #85 → false + cham_rls=true, #88 → false + cham_rls=false).
+
+## RLS: logic thuần chỉ chạy cục bộ — `CHI_CUC_BO` (PR-2b, từ 30/9/2026)
+
+- `tests/rls/lib.mjs` xuất `CHI_CUC_BO`: với `RLS_LOCAL=1` là `false` (chạy), với `RLS_STAGING=1` là lý do bỏ qua. Test chỉ kiểm **logic thuần** (tính ngày làm việc, trạng thái, khâu, mốc, nhắc — không phụ thuộc token thật) gắn `{ skip: CHI_CUC_BO }`; job "Áp migration + lint schema" của `ci.yml` vẫn chạy **toàn bộ** bộ RLS trên Supabase cục bộ, staging chỉ giữ phần kiểm quyền bằng token thật.
+- Cả file: `kl-0022-cha-con-owner`, `kl-0024-trang-thai-bi-danh`, `kl-0027-ma-nhiem-vu`, `kl-trang-thai`, `kl-minh-chung-bat-buoc`, `kl-0058-trang-thai-nghiem-thu`, `kl-0060-nhac-nghiem-thu`. Từng test: `kl-0028` (8–10), `kl-0029` (2–6), `kl-0032` (1, 7), `kl-0033` (2 test khâu + mốc), `kl-0035` (1–2), `kl-pq-pham-vi-giao` (1, 6), `kl-0053-ngay-lam-viec` (phần logic), `kl-0054-han-nop-minh-chung` (1, 6, khối biên).
+- Xem trước tập test staging sẽ chạy ngay trên máy: `RLS_LOCAL=1 RLS_NHU_STAGING=1 node --test tests/rls/`.
+- Test mới gọi `giao_viec` qua client bọc sẵn trong `lib.mjs`: thiếu `han_nop_minh_chung` thì tự điền (= hạn hoàn thành nếu chưa qua, không thì hôm nay) để test cũ không phải sửa.
+
+## e2e PR-2b — project `pr2b` (chỉ máy tính)
+
+- `han-nop-minh-chung` (ma trận 7 vai × 5 loại văn bản, giao thật A2 và A0 từ Kết luận, sửa hạn nộp, nhãn cam), `nghiem-thu` (A3 nộp → A2 trả lại kèm hạn nộp lại → nộp lại → nghiệm thu; thư ký Thường trực), `hanh-trinh-5-loai-van-ban`, `b4-b6-lanh-dao`. Dùng chung `tests/e2e/lib/pr2b.mjs`; dữ liệu theo khoá riêng, cờ tạm (`quan_tri_kl`, `thu_ky_thuong_truc`, phân công kiêm nhiệm) khôi phục ở `beforeAll` lẫn `afterAll`.
+- Chạy sau `pr2a`; `dang-nhap` phụ thuộc `pr2b`. Chạy riêng: `npx playwright test --project=pr2b --no-deps` (kèm biến đích).
+

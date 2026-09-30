@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
-import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
+import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec, clientCuaVai } from './lib/du-lieu.mjs';
 
 const CV1_ID = '00000000-0000-4000-8000-000000000011'; // demo_e2e_mc — tài khoản riêng của spec (GĐ18)
 const SO_HOI_NGHI = 992;
@@ -74,7 +74,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong .mc-trich-yeu`)).toHaveText('Báo cáo kết quả rà soát (e2e MC)');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong .mc-mo-ta`)).toContainText('gửi Chánh Văn phòng');
     await expect(page.locator(`#klDienBien-${nvId}`)).toContainText('Nộp minh chứng 15/BC-VPTU · Báo cáo kết quả rà soát (e2e MC)');
-    await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('Chưa xác nhận');
+    await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('Chờ nghiệm thu');   // PR-2b: nhãn mới
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`).getByRole('button', { name: 'Xác nhận hợp lệ' })).toHaveCount(0); // người nộp không tự xác nhận
     await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toBeEnabled();
   });
@@ -104,6 +104,28 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(dong).toHaveAttribute('data-loai', 'chu_cu');
     await expect(dong.locator('.mc-loai')).toHaveText('Minh chứng cũ');
     await expect(dong).toContainText('Công văn 12/CV-VPTU ngày 10/08/2026');
+  });
+
+  test('PR-2b: mô tả đúng 600 ký tự (kể cả tiếng Việt dạng tổ hợp NFD) được nhận — client chuẩn hoá NFC khớp char_length của DB; 601 bị chặn cả hai phía', async () => {
+    const nfd = (n) => 'ễ'.normalize('NFD').repeat(n);   // mỗi "ễ" = 3 đơn vị mã NFD, 1 ký tự NFC
+    await page.locator(`#klRow-${cuId}`).click();
+    await page.locator(`#klChiTiet-${cuId}`).getByRole('button', { name: 'Nộp minh chứng' }).click();
+    await page.locator('#klMcSoHieu').fill('16/BC-VPTU'); await page.locator('#klMcNgay').fill('2026-08-20');
+    await page.locator('#klMcCap').selectOption('CHANH_VAN_PHONG');
+    await page.locator('#klMcTrichYeu').fill('Báo cáo 600 ký tự (e2e MC)');
+    await page.locator('#klMcMoTaKq').fill(nfd(601));
+    await expect(page.locator('#klMcDem')).toHaveText('601');
+    await page.locator('#klMcLuu').click();
+    await expect(page.locator('#toastContainer')).toContainText('tối đa 600 ký tự');
+    await page.locator('#klMcMoTaKq').fill(nfd(600));
+    await expect(page.locator('#klMcDem')).toHaveText('600');
+    await page.locator('#klMcLuu').click();
+    await expect(page.locator('#klMcModal')).toBeHidden(NAP);
+    const { data } = await db.from('minh_chung').select('mo_ta_ket_qua').eq('nhiem_vu_id', cuId).eq('so_hieu', '16/BC-VPTU').single();
+    expect([...data.mo_ta_ket_qua].length).toBe(600); expect(data.mo_ta_ket_qua).toBe(data.mo_ta_ket_qua.normalize('NFC'));
+    const r = await clientCuaVai('E2E_MC').rpc('nop_minh_chung', { p: { nhiem_vu_id: cuId, so_hieu: '17/BC-VPTU', ngay_van_ban: '2026-08-20',
+      cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'Kiểm 601', mo_ta_ket_qua: 'ễ'.repeat(601) } });
+    expect(r.error?.message).toMatch(/tối đa 600/);
   });
 });
 

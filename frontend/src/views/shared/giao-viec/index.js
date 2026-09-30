@@ -12,7 +12,7 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, giaoViec, datTrichYeuVanBan } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { MOI, vb, timTrongDs, napVanBan, datLaiVanBan, themVanBanMoi, timKhiGo } from './van-ban.js';
-import { napPhamVi, phongCuaOwner, locOwner, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi, theoDoiHopLe, locTheoDoi } from './pham-vi.js';
+import { napPhamVi, phongCuaOwner, locOwner, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi, theoDoiHopLe, locTheoDoi, lanhDaoLoc } from './pham-vi.js';
 import { datLaiHanNop, napKhungHanNop, capNhatLyDo, dungNgayGoiY, thieuHanNop, loiHanNop, docHanNop, tomTatHanNop } from './han.js';
 import { homNayVN, formatNgay, ghiChuHan, congNgay } from '../../../lib/kl/ngay.js';
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
@@ -65,7 +65,7 @@ function dienTheoDoi() {
   s.innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user);
   locTheoDoi(s, $('klThThayMat').value, $('klThNganh').value, $('klThLinhVuc').value);
   const goiY = goiYTheoDoi($('klThOwner').value, danhMucKl(), state.accounts, state.user);
-  s.value = [cu, goiY].find((v) => v && s.querySelector(`option[value="${v}"]`)) || s.options[0]?.value || '';
+  s.value = [cu, goiY, lanhDaoLoc($('klThThayMat').value)].find((v) => v && s.querySelector(`option[value="${v}"]`)) || s.options[0]?.value || '';
 }
 
 function capNhatHienThi() {

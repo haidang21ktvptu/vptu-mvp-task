@@ -19,12 +19,14 @@ export function loadMinhChungTatCa() {
 }
 
 // p: { nhiem_vu_id, so_hieu, ngay_van_ban, cap_nhan, trich_yeu, mo_ta_ket_qua } — năm trường bắt buộc (MC-3, 0046) → id minh chứng.
-export const nopMinhChung = (p) => rpc('nop_minh_chung', { p });
+// PR-2b: trích yếu / mô tả chuẩn hoá NFC trước khi đếm và gửi — tiếng Việt dạng tổ hợp (NFD, dán từ Word/Mac) đếm đúng như char_length của DB.
+export const nfc = (s) => (typeof s === 'string' ? s.normalize('NFC') : s);
+export const nopMinhChung = (p) => rpc('nop_minh_chung', { p: { ...p, trich_yeu: nfc(p.trich_yeu), mo_ta_ket_qua: nfc(p.mo_ta_ket_qua) } });
 // Kiểm phía form dùng chung cho hộp Nộp minh chứng và ô nộp tại chỗ (A3): trả chuỗi lỗi hoặc null — hàm nop_minh_chung là chốt.
 export function loiMinhChung(p) {
   if (!p.so_hieu || !p.ngay_van_ban || !p.cap_nhan) return 'Minh chứng phải đủ ba trường: số hiệu, ngày văn bản và cấp nhận.';
   if (!p.trich_yeu || !p.mo_ta_ket_qua) return 'Minh chứng phải có trích yếu văn bản và mô tả kết quả (đã làm gì, kết quả, gửi ai).';
-  if (p.mo_ta_ket_qua.length > 600) return 'Mô tả kết quả tối đa 600 ký tự.';
+  if (nfc(p.mo_ta_ket_qua).length > 600) return 'Mô tả kết quả tối đa 600 ký tự.';
   return null;
 }
 // Nghiệm thu (true — PR-2b Q2: đóng việc cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng) hoặc trả lại (false: lý do + hạn nộp lại
