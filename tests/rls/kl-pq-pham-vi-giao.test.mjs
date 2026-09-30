@@ -2,7 +2,8 @@
 // PCVP kiêm nhiệm, Trưởng phòng, người quản trị KL giao thay mặt), MỌI tổ hợp (phòng, ngành, lĩnh vực) hàm trả về thì giao_viec qua được bước
 // kiểm quyền; tổ hợp ngoài danh sách bị chặn 42501 (thay mặt: 22023). Phòng NULL = Owner không thuộc phòng nào (thử bằng Văn phòng Tỉnh ủy). Không ghi gì: mọi lời gọi giao_viec cố ý thiếu sản phẩm đầu ra ⇒ qua bước quyền thì dừng ở 22023 "sản phẩm"
 // (kiểm SAU quyền) và giao dịch hủy. Khoá dữ liệu: phân công kiêm nhiệm ly_do "KL-PVG"; demo_qtht được bật quan_tri_kl tạm, khôi phục
-// về giá trị gốc (false) ở before lẫn after; tự dọn trước lẫn sau.
+// về giá trị gốc (false) ở before lẫn after; tự dọn trước lẫn sau. Test 8: demo_truongphong / demo_qtht được bật quan_tri_kl kèm hạn ủy quyền tạm,
+// khôi phục (quan_tri_kl false, quan_tri_kl_het_han NULL — giá trị seed) ở before lẫn after.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, IDS, songSong } from './lib.mjs';
@@ -16,7 +17,7 @@ let fx; let donViCuaPhong; let ungVien;
 const khoa = (r) => `${r.phong}|${r.nganh_ma ?? ''}|${r.linh_vuc_ma ?? ''}`;
 
 const don = async () => {
-  await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.qtht);   // giá trị gốc trong seed
+  await db().from('accounts').update({ quan_tri_kl: false, quan_tri_kl_het_han: null }).in('id', [IDS.qtht, IDS.truongphong]);   // giá trị gốc trong seed
   await db().from('phu_trach_phong').delete().like('ly_do', `${LY_DO}%`);
   await db().from('quyen_lich_su').delete().eq('tai_khoan', IDS.pcvp2).like('ly_do', `${LY_DO}%`);
 };
@@ -112,5 +113,23 @@ describe('C3 — kl_pham_vi_giao ≡ quyền của giao_viec (một nguồn kl_d
       biChan(r, `pcvp đặt người theo dõi = ${ten}`);
     }
     quaQuyen(await thuGiao('demo_cvp', th, IDS.pcvp), 'Chánh VP giao Owner = PCVP');
+  });
+
+  test('8. Hạn ủy quyền quan_tri_kl (như me_quan_tri_kl, 0041): hết hạn hôm qua mà cờ chưa thu hồi ⇒ giao_viec chặn, không có trong kl_pham_vi_giao; còn hạn ⇒ được', async () => {
+    const ngay = (d) => new Date(Date.now() + 7 * 3600e3 + d * 86400e3).toISOString().slice(0, 10);   // ngày giờ Việt Nam ± d
+    const qp = { phong: 'QUAN_TRI', nganh_ma: null, linh_vuc_ma: null };   // phòng khác của Trưởng phòng Tổng hợp: chỉ quyền quan_tri_kl mới giao được
+    const dat = async (hetHan) => assertOk(await db().from('accounts').update({ quan_tri_kl: true, quan_tri_kl_het_han: hetHan }).in('id', [IDS.truongphong, IDS.qtht]), `đặt hạn ${hetHan}`);
+    try {
+      await dat(ngay(-1));
+      assert.ok(!(await phamVi('demo_truongphong')).some((t) => t.phong === 'QUAN_TRI'), 'A2 hết hạn: không có phòng Quản trị');
+      biChan(await thuGiao('demo_truongphong', qp), 'A2 hết hạn giao cho phòng Quản trị');
+      assert.equal((await phamVi('demo_qtht', IDS.pcvp)).length, 0, 'A3 hết hạn: không còn tổ hợp giao thay mặt');
+      biChan(await thuGiao('demo_qtht', { phong: KN.phong, nganh_ma: null, linh_vuc_ma: null }, undefined, IDS.pcvp), 'A3 hết hạn giao thay mặt PCVP');
+      await dat(ngay(0));   // hạn = hôm nay: còn hiệu lực
+      assert.ok((await phamVi('demo_truongphong')).some((t) => t.phong === 'QUAN_TRI'), 'A2 còn hạn: có phòng Quản trị');
+      quaQuyen(await thuGiao('demo_truongphong', qp), 'A2 còn hạn giao cho phòng Quản trị');
+      assert.ok((await phamVi('demo_qtht', IDS.pcvp)).length > 0, 'A3 còn hạn: có tổ hợp giao thay mặt');
+      quaQuyen(await thuGiao('demo_qtht', { phong: KN.phong, nganh_ma: null, linh_vuc_ma: null }, undefined, IDS.pcvp), 'A3 còn hạn giao thay mặt PCVP');
+    } finally { await don(); }
   });
 });

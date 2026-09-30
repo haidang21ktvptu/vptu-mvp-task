@@ -12,7 +12,8 @@
 --     giao_viec — Chánh VP / lãnh đạo giữ quan_tri_kl: mọi Owner; PCVP: phòng có trong kl_pham_vi_pcvp_cua, Owner không thuộc phòng nào (Văn phòng,
 --     đơn vị ngoài) thì không; A2: phòng mình; quan_tri_kl giao thay mặt: theo người được thay mặt (A2: phòng người đó; PCVP: như trên nhưng Owner
 --     không thuộc phòng được phép — giữ nguyên hành vi 0045). giao_viec (nhánh A2, PCVP, thay mặt) và kl_pham_vi_giao cùng gọi, nên biểu mẫu
---     Giao việc chỉ đưa ra đúng tổ hợp DB cho giao (test kl-pq-pham-vi-giao đối chiếu từng tổ hợp).
+--     Giao việc chỉ đưa ra đúng tổ hợp DB cho giao (test kl-pq-pham-vi-giao đối chiếu từng tổ hợp). Quyền quan_tri_kl xét hạn ủy quyền
+--     quan_tri_kl_het_han đúng như me_quan_tri_kl() (0041): hết hạn mà cờ chưa bị thu hồi thì không còn quyền (giao_viec, hàm này, kl_pham_vi_giao).
 -- Q7. Owner / người theo dõi (không phải quan_tri_kl) không tự đổi han_xu_ly của việc ĐANG CÓ hạn qua API (UPDATE trực tiếp); điền hạn khi
 --     đang NULL vẫn được. Chặn ở trigger a_nhiem_vu_guard_a3 (chạy trước b_nhiem_vu_truoc_ghi, thấy đúng giá trị người gọi gửi) khi
 --     current_user = 'authenticated' — các hàm SECURITY DEFINER (GIA_HAN, duyệt đính chính, đổi ngày văn bản…) chạy dưới chủ hàm nên không bị chặn.
@@ -35,18 +36,19 @@ CREATE OR REPLACE FUNCTION "public"."kl_duoc_giao_cho_phong"("p_nguoi" uuid, "p_
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT coalesce((
     SELECT CASE
-      WHEN "p_thay_mat" IS NOT NULL THEN a."role_group" = 'A3' AND a."quan_tri_kl" AND CASE
+      WHEN "p_thay_mat" IS NOT NULL THEN a."role_group" = 'A3' AND q."qtkl" AND CASE
           WHEN tm."id" IS NULL OR tm."is_system" THEN false
           WHEN tm."role_group" = 'A2' THEN tm."department" = "p_phong"
           WHEN tm."role_group" = 'A1' AND tm."is_chief" THEN true
           WHEN tm."role_group" = 'A1' THEN "p_phong" IS NULL OR "public"."kl_pham_vi_pcvp_cua"(tm."id", "p_phong", "p_nganh_ma", "p_linh_vuc_ma")
           ELSE false END
-      WHEN a."quan_tri_kl" AND a."role_group" IN ('A1', 'A2') THEN true
+      WHEN q."qtkl" AND a."role_group" IN ('A1', 'A2') THEN true
       WHEN a."role_group" = 'A1' AND a."is_chief" THEN true
       WHEN a."role_group" = 'A1' THEN "p_phong" IS NOT NULL AND "public"."kl_pham_vi_pcvp_cua"(a."id", "p_phong", "p_nganh_ma", "p_linh_vuc_ma")
       WHEN a."role_group" = 'A2' THEN a."department" = "p_phong"
       ELSE false END
     FROM "public"."accounts" a LEFT JOIN "public"."accounts" tm ON tm."id" = "p_thay_mat"
+    CROSS JOIN LATERAL (SELECT a."quan_tri_kl" AND (a."quan_tri_kl_het_han" IS NULL OR a."quan_tri_kl_het_han" >= "public"."kl_hom_nay"()) AS "qtkl") q   -- = me_quan_tri_kl()
     WHERE a."id" = "p_nguoi" AND NOT a."is_system"), false);
 $$;
 REVOKE ALL ON FUNCTION "public"."kl_duoc_giao_cho_phong"(uuid, text, text, text, uuid) FROM public, "anon", "authenticated";
@@ -61,10 +63,11 @@ DECLARE v_me "public"."accounts"; v_vb "public"."van_ban_giao_viec"; v_dv "publi
         v_theo_doi "public"."accounts"; v_1400 boolean := coalesce(("p" ->> 'theo_1400')::boolean, true); v_a0 boolean; v_do_khan text;
         v_phong_owner text; v_loai_han text := coalesce("p" ->> 'loai_thoi_han_ma', 'CO_HAN_CU_THE'); v_cap text; v_id uuid; v_ma text;
         v_nhan uuid; v_nguoi uuid[] := ARRAY[]::uuid[]; v_tin text; v_han date := nullif("p" ->> 'han_xu_ly', '')::date;
+        v_qtkl boolean := "public"."me_quan_tri_kl"();   -- quyền quan_tri_kl CÓ xét hạn ủy quyền (0041), không đọc cờ thô
 BEGIN
   SELECT * INTO v_me FROM "public"."accounts" WHERE "id" = "auth"."uid"();
   v_a0 := v_me."role_group" = 'A0';
-  IF v_me."id" IS NULL OR (v_me."role_group" NOT IN ('A0', 'A1', 'A2') AND NOT v_me."quan_tri_kl") THEN
+  IF v_me."id" IS NULL OR (v_me."role_group" NOT IN ('A0', 'A1', 'A2') AND NOT v_qtkl) THEN
     RAISE EXCEPTION 'Chỉ Thường trực, lãnh đạo Văn phòng, trưởng phòng hoặc người quản trị KL mới được giao việc.' USING ERRCODE = '42501';
   END IF;
   v_do_khan := coalesce(nullif("p" ->> 'do_khan', ''), CASE WHEN v_a0 THEN 'KHAN' ELSE 'THUONG' END);
@@ -117,7 +120,7 @@ BEGIN
   ELSIF nullif("p" ->> 'thay_mat_cho', '') IS NOT NULL THEN
     RAISE EXCEPTION 'Lãnh đạo giao việc trực tiếp, không ghi thay mặt.' USING ERRCODE = '22023';
   END IF;
-  IF NOT v_me."quan_tri_kl" AND NOT v_a0 THEN   -- GV-3 (0025)
+  IF NOT v_qtkl AND NOT v_a0 THEN   -- GV-3 (0025)
     IF v_dv."ma" IS NOT NULL AND NOT v_dv."trong_van_phong" THEN
       RAISE EXCEPTION 'Việc có Owner là đơn vị ngoài Văn phòng chỉ người quản trị KL nhập theo kết luận.' USING ERRCODE = '42501';
     ELSIF v_me."role_group" = 'A2' THEN
