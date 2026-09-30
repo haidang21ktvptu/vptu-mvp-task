@@ -4,7 +4,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { adminClient, assertOk, IDS, STAGING_REF, DICH } from './lib.mjs';
+import { adminClient, assertOk, IDS, STAGING_REF, DICH, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -28,7 +28,7 @@ const chen = async (noiDung) => {
   assertOk(r, noiDung); ids.push(r.data.id); return r.data.ma;
 };
 
-describe('0027 — mã nhiệm vụ không cắt số khi sequence vượt 999', { skip: SKIP }, () => {
+describe('0027 — mã nhiệm vụ không cắt số khi sequence vượt 999', { skip: SKIP || CHI_CUC_BO }, () => {
   before(async () => { fx = await setupKlFixtures(); });
   after(async () => {
     if (ids.length) await db().from('nhiem_vu').delete().in('id', ids);

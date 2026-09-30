@@ -4,7 +4,7 @@
 // không mang tiền tố RLS-TEST để rls-10 đếm phạm vi không đổi; dọn theo hội nghị 999 ở teardown.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, assertOk, IDS, songSong } from './lib.mjs';
+import { adminClient, assertOk, IDS, songSong, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration 0014–0016 trên project này (chạy lại sau khi merge).';
@@ -17,7 +17,7 @@ async function tt(id, ngay) {
   return r.data;
 }
 
-describe('trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip: SKIP }, () => {
+describe('trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip: SKIP || CHI_CUC_BO }, () => {
   test('1. Hoàn thành thắng mọi quy tắc: hoàn thành sau hạn vẫn HOAN_THANH, ket_qua TRE đúng số ngày', async () => {
     const r = await tt(fx.n2, '2026-09-14');
     assert.equal(r.trang_thai, 'HOAN_THANH'); assert.equal(r.nhom_dem, 'HOAN_THANH');
@@ -80,7 +80,7 @@ describe('trang_thai — quy tắc dẫn xuất theo thứ tự 2.2', { skip: SK
   });
 });
 
-describe('nhiem_vu — ràng buộc và trigger (Phần 2.3, 6.2)', { skip: SKIP }, () => {
+describe('nhiem_vu — ràng buộc và trigger (Phần 2.3, 6.2)', { skip: SKIP || CHI_CUC_BO }, () => {
   const db = () => adminClient();
   test('bị chặn: Có hạn cụ thể không hạn không lý do; chủ trì trống; hạn trước ngày ban hành; ngày ban hành tương lai', async () => {
     const base = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST lỗi', loai_thoi_han_ma: 'CO_HAN_CU_THE' };

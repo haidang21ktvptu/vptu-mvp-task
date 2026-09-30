@@ -4,7 +4,7 @@
 // Mã NV-T10x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -61,7 +61,7 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
     assert.ok(kq.theo_nguoi_nhan.some((x) => x.tai_khoan === 'demo_cv1'), 'cv1 có trong theo_nguoi_nhan');
   });
 
-  test('2. mức đúng theo trang_thai; việc Xanh / thường xuyên / có minh chứng không gửi', async () => {
+  test('2. mức đúng theo trang_thai; việc Xanh / thường xuyên / có minh chứng không gửi', { skip: CHI_CUC_BO }, async () => {
     assert.deepEqual((await soCanhBao('NV-T100')).map((c) => c.muc), ['VANG']);
     assert.deepEqual((await soCanhBao('NV-T101')).map((c) => c.muc), ['DO']);
     assert.deepEqual((await soCanhBao('NV-T102')).map((c) => c.muc), ['DO_DAC_BIET']);
@@ -69,14 +69,14 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
     for (const ma of ['NV-T104', 'NV-T105', 'NV-T106']) assert.equal((await soCanhBao(ma)).length, 0, `${ma} không có cảnh báo`);
   });
 
-  test('3. người nhận leo thang: Vàng = Owner + theo dõi; Đỏ + A2 hai phòng (+ lãnh đạo VP phụ trách đơn vị ngoài); Đỏ đặc biệt + PCVP hai phòng + Chánh VP', async () => {
+  test('3. người nhận leo thang: Vàng = Owner + theo dõi; Đỏ + A2 hai phòng (+ lãnh đạo VP phụ trách đơn vị ngoài); Đỏ đặc biệt + PCVP hai phòng + Chánh VP', { skip: CHI_CUC_BO }, async () => {
     assert.deepEqual(await nguoiNhan('NV-T100'), [IDS.cv1, IDS.cv2].sort(), 'Vàng');
     assert.deepEqual(await nguoiNhan('NV-T101'), [IDS.cv1, IDS.cv2, IDS.truongphong].sort(), 'Đỏ: + trưởng phòng TH (QUAN_TRI không có A2)');
     assert.deepEqual(await nguoiNhan('NV-T102'), [IDS.cv1, IDS.cv2, IDS.truongphong, IDS.pcvp, IDS.pcvp2, IDS.cvp].sort(), 'Đỏ đặc biệt: + PCVP TH, PCVP QT, Chánh VP');
     assert.deepEqual(await nguoiNhan('NV-T103'), [IDS.cv1, IDS.truongphong, IDS.pcvp2].sort(), 'Đỏ đơn vị ngoài: + lãnh đạo VP phụ trách');
   });
 
-  test('4. mỗi người nhận một tin he_thong, sender_id NULL; người nhận đọc được qua RLS; ghi lich_su không người sửa', async () => {
+  test('4. mỗi người nhận một tin he_thong, sender_id NULL; người nhận đọc được qua RLS; ghi lich_su không người sửa', { skip: CHI_CUC_BO }, async () => {
     const tin = await tinCua('NV-T102');
     assert.equal(tin.length, 6);
     assert.ok(tin.every((t) => t.sender_id === null && /Đỏ đặc biệt · NV-T102: quá hạn 5 ngày/.test(t.content)), 'nội dung tin');
@@ -88,7 +88,7 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
     assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, null); assert.match(ls[0].nguoi_sua_ghi_chu, /Hệ thống/); assert.match(ls[0].gia_tri_moi, /còn 2 ngày tới hạn 22\/08\/2026/);
   });
 
-  test('5. chạy lại cùng ngày và ngày +1: không gửi trùng; ngày +N (3): nhắc lại cùng mức', async () => {
+  test('5. chạy lại cùng ngày và ngày +1: không gửi trùng; ngày +N (3): nhắc lại cùng mức', { skip: CHI_CUC_BO }, async () => {
     const kq2 = await quet(NGAY);
     assert.equal((await tinCua('NV-T102')).length, 6, 'chạy lần 2 không thêm tin');
     assert.equal((await soCanhBao('NV-T102')).length, 1);
@@ -103,7 +103,7 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
     assert.deepEqual((await soCanhBao('NV-T101')).map((c) => c.muc), ['DO', 'DO_DAC_BIET']);
   });
 
-  test('6. không truyền ngày: ngày tính = hôm nay theo giờ Việt Nam (kl_hom_nay)', async () => {
+  test('6. không truyền ngày: ngày tính = hôm nay theo giờ Việt Nam (kl_hom_nay)', { skip: CHI_CUC_BO }, async () => {
     const kq = await quet();
     const homNay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     assert.equal(kq.ngay, homNay);

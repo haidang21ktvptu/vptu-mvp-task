@@ -3,7 +3,7 @@
 // Mã NV-T7x, nội dung 'KL-1400 …', tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, songSong, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -15,7 +15,7 @@ const tt = async (ma, ngay) => { const r = await db().rpc('tinh_trang_thai', { p
 const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
-describe('0024 — trang_thai 4 mức, lead time, v_nhiem_vu', { skip: SKIP }, () => {
+describe('0024 — trang_thai 4 mức, lead time, v_nhiem_vu', { skip: SKIP || CHI_CUC_BO }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await db().from('nhiem_vu').delete().like('ma', 'NV-T7%');

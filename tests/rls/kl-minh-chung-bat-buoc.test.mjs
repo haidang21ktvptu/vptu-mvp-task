@@ -4,7 +4,7 @@
 // fixture) và tự xoá ở cuối để kl-moc (đếm nguon = excel) và rls-10 (đếm RLS-TEST) không đổi.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { userClient, adminClient, assertOk, IDS } from './lib.mjs';
+import { userClient, adminClient, assertOk, IDS, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const MA = ['NV-T21', 'NV-T22', 'NV-T23', 'NV-T24'];
@@ -28,7 +28,7 @@ const SKIP = (await coMigration0021()) ? false : 'Chưa có migration 0021 (ho�
 
 const capNhat = async (username, ma, patch) => (await userClient(username)).from('nhiem_vu').update(patch).eq('id', id[ma]).select('tien_do_ma, thieu_minh_chung, dong_luc');
 
-describe('0021 — Hoàn thành bắt buộc minh chứng và ngày hoàn thành', { skip: SKIP }, () => {
+describe('0021 — Hoàn thành bắt buộc minh chứng và ngày hoàn thành', { skip: SKIP || CHI_CUC_BO }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     const db = adminClient();

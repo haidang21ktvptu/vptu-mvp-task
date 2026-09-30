@@ -6,7 +6,7 @@
 // khôi phục (quan_tri_kl false, quan_tri_kl_het_han NULL — giá trị seed) ở before lẫn after.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, IDS, songSong } from './lib.mjs';
+import { adminClient, userClient, assertOk, IDS, songSong, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady, linhVucReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) && (await linhVucReady()) ? false : 'Chưa có migration KL / dm_linh_vuc trên project này.';
@@ -55,7 +55,7 @@ describe('C3 — kl_pham_vi_giao ≡ quyền của giao_viec (một nguồn kl_d
   });
   after(don);
 
-  test('1. Chánh VP: mọi phòng của Văn phòng × mọi (ngành, lĩnh vực), việc không có lĩnh vực, Owner không thuộc phòng — mỗi tổ hợp qua được bước quyền', async () => {
+  test('1. Chánh VP: mọi phòng của Văn phòng × mọi (ngành, lĩnh vực), việc không có lĩnh vực, Owner không thuộc phòng — mỗi tổ hợp qua được bước quyền', { skip: CHI_CUC_BO }, async () => {
     const co = await doiChieu('demo_cvp');
     assert.equal(co.size, ungVien.length, 'Chánh VP: đủ mọi ứng viên');
   });
@@ -90,7 +90,7 @@ describe('C3 — kl_pham_vi_giao ≡ quyền của giao_viec (một nguồn kl_d
     assert.equal((await phamVi('demo_cv1', IDS.pcvp)).length, 0, 'A3 xem thay mặt PCVP: rỗng');
   });
 
-  test('6. Người quản trị KL giao thay mặt PCVP (cả Tổng hợp) / Trưởng phòng: mọi tổ hợp trả về qua quyền; Owner không thuộc phòng được khi thay mặt PCVP; ngoài danh sách bị chặn', async () => {
+  test('6. Người quản trị KL giao thay mặt PCVP (cả Tổng hợp) / Trưởng phòng: mọi tổ hợp trả về qua quyền; Owner không thuộc phòng được khi thay mặt PCVP; ngoài danh sách bị chặn', { skip: CHI_CUC_BO }, async () => {
     assertOk(await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.qtht), 'bật quan_tri_kl tạm cho demo_qtht');
     const coPcvp = await doiChieu('demo_qtht', () => undefined, IDS.pcvp);
     assert.ok(coPcvp.has('null||') && !coPcvp.has(`${KN.phong}|${KN.nganh}|${KN.lv}`), 'thay mặt PCVP: có Owner không phòng, không có lĩnh vực người khác kiêm nhiệm');
