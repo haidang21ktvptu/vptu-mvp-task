@@ -11,7 +11,7 @@ import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
@@ -31,8 +31,18 @@ export function openKl(loc) {
   const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
   const nap = loadKl();
-  batKlRealtime(() => { if (sectionDangHien('viewKl')) loadKl(); }, (m) => hienKetNoi('klKetNoi', m));
+  batKlRealtime(klTheoSuKien, (m) => hienKetNoi('klKetNoi', m));
   return nap;
+}
+
+// Realtime (B6): sự kiện của việc đã có trong danh sách → nạp lại riêng việc đó (dòng + ngăn chi tiết đang mở); còn lại nạp cả danh sách.
+async function klTheoSuKien(su) {
+  if (!sectionDangHien('viewKl')) return;
+  const ids = [...new Set(su.map((e) => e.id))];
+  if (su.length && ids.length <= 5 && ids.every((id) => id && timKlRow(id))) {
+    try { await Promise.all(ids.map((id) => napLaiViec(id, { nemLoi: true, veLai: false }))); render(true); return; } catch { /* nạp cả danh sách */ }
+  }
+  loadKl();
 }
 
 // Mở đúng một việc từ màn hình khác (thẻ điều hành, chuông, chỉ đạo đã gửi): lọc theo mã rồi mở ngăn chi tiết.

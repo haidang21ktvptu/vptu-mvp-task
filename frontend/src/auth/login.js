@@ -1,4 +1,5 @@
 // Đăng nhập bằng Supabase Auth (SPEC AUTH-1): email quy ước <username>@vptu.caobang.local.
+import { COT_TAI_KHOAN } from '../lib/kl/cot.js';
 import { supabase } from '../lib/supabase.js';
 import { AUTH_EMAIL_DOMAIN } from '../lib/constants.js';
 import { $, showInlineError } from '../lib/dom.js';
@@ -46,7 +47,7 @@ async function handleLogin(e) {
 // Nạp hồ sơ từ accounts_public theo auth.uid(), rồi vào app hoặc bắt đổi mật khẩu (AUTH-2).
 export async function startSession(session) {
   const { data: profile, error } = await supabase
-    .from('accounts_public').select('*').eq('id', session.user.id).single();
+    .from('accounts_public').select(COT_TAI_KHOAN).eq('id', session.user.id).single();
   if (error?.code === 'PGRST116' || (!error && !profile)) {
     // Có tài khoản Auth nhưng không có dòng accounts tương ứng: không cho vào.
     await supabase.auth.signOut();

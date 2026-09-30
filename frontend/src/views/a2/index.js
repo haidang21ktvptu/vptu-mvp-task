@@ -2,7 +2,7 @@
 // giao / đề nghị từ chối cần duyệt (viền vàng, lý do kín) / việc mình giao bị từ chối, rồi hai cột: chính = chỉ đạo từ Văn phòng chờ phòng, việc Đỏ +
 // sắp đến hạn (hàng có Đôn đốc / Nhắc tại chỗ), minh chứng chuyên viên vừa nộp; cột phụ 360px = tải việc từng cán bộ (đếm từ dòng RLS đã tải,
 // không truy vấn thêm) + việc do chính Trưởng phòng chủ trì. Menu: Giao việc trong phòng, Nhiệm vụ của phòng, Cán bộ, Nhắn tin. Quyền thật ở hàm DB.
-import { $, show, setText, escapeHtml, formatDateTime } from '../../lib/dom.js';
+import { $, show, setText, escapeHtml, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -12,6 +12,7 @@ import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { dh, napDieuHanh, viecDo } from '../shared/dieu-hanh/du-lieu.js';
+import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
@@ -53,6 +54,7 @@ function ve() {
   const rows = dh.rows; const moN = rows.filter(mo).length;
   const doN = viecDo().length; const vangN = rows.filter((r) => r.muc_canh_bao === 'VANG').length;
   setText('ptTom', `${moN} việc mở · ${doN} Đỏ · ${vangN} Vàng`);
+  const traNhap = giuONhap($('viewDieuHanh')); // ô đang mở / đang gõ giữ qua lần vẽ lại (nạp lại nền, realtime — PR-2a lỗi đua)
   $('dhCanXuLy').innerHTML = canXuLyHtml();
   const tc = khoiThuongTrucHtml() + tuChoiChoHtml() + khoiBiTuChoiHtml(); // việc Thường trực giao, đề nghị cần duyệt, việc mình giao bị từ chối
   $('dhTC').innerHTML = tc; show('dhTC', Boolean(tc));
@@ -64,6 +66,7 @@ function ve() {
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
   if (dh.luc) setText('dhTinhDen', `Trưởng phòng · ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
+  traNhap();
 }
 
 async function loadPhongToi() {
@@ -75,7 +78,7 @@ function openDieuHanh() {
   setActiveNav('navDieuHanh');
   datNapLai(loadPhongToi);
   loadPhongToi();
-  batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadPhongToi(); }, (m) => hienKetNoi('dhKetNoi', m));
+  batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadPhongToi, ve); }, (m) => hienKetNoi('dhKetNoi', m));
 }
 
 export function registerA2View() {

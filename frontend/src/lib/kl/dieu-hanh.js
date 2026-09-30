@@ -2,20 +2,18 @@
 // MỌI thao tác ghi đi qua hàm SECURITY DEFINER của 0026/0032 (chi_dao_gui / chi_dao_phan_hoi / chi_dao_dong / dat_cap_quyet_dinh /
 // đánh dấu đã đọc) — frontend không INSERT/UPDATE thẳng bảng chi_dao hay direct_messages loại hệ thống; quyền thật nằm trong hàm.
 import { supabase } from '../supabase.js';
+import { COT_CHI_DAO, COT_CHI_DAO_TT, COT_DIEN_BIEN } from './cot.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
 
-// Việc Đỏ / Đỏ đặc biệt trong phạm vi (RLS), đã sắp số ngày trễ giảm dần; nhom = DO | DANG_TRA_SOAT; khau (0033).
-export async function loadNgoaiLe() {
-  return loi(await supabase.from('v_ngoai_le').select('*'), 'đọc việc ngoại lệ') || [];
-}
-
-// Số liệu trong phạm vi tại một ngày (kl_so_lieu_tai 0033, SECURITY INVOKER): {ngay, tong, nhom_dem, muc_canh_bao, ket_qua}.
-// Gọi hai lần (hôm nay, hôm nay − 7) để hiện "tăng/giảm N so với tuần trước" — không tính xu hướng ở client (không có lịch sử).
-export async function loadSoLieuTai(ngay = null) {
-  const r = await supabase.rpc('kl_so_lieu_tai', ngay ? { p_ngay: ngay } : {});
-  return loi(r, 'đọc số liệu tại ngày') || { tong: 0, nhom_dem: {}, muc_canh_bao: {}, ket_qua: {} };
+// Số liệu trong phạm vi tại nhiều ngày trong MỘT lời gọi (kl_so_lieu_cac_moc 0051, SECURITY INVOKER — một lần RLS): mỗi phần tử
+// {ngay, tong, nhom_dem, muc_canh_bao, ket_qua} y hệt kl_so_lieu_tai. Điều hành gọi [hôm nay, hôm nay − 7] cho "so với tuần trước" —
+// không tính xu hướng ở client (không có lịch sử).
+const SO_LIEU_RONG = { tong: 0, nhom_dem: {}, muc_canh_bao: {}, ket_qua: {} };
+export async function loadSoLieuCacMoc(ngay) {
+  const ds = loi(await supabase.rpc('kl_so_lieu_cac_moc', { p_ngay: ngay }), 'đọc số liệu tại ngày') || [];
+  return ngay.map((_, i) => ds[i] || SO_LIEU_RONG);
 }
 
 // Minh chứng chưa thẩm định (hop_le NULL) trong phạm vi (RLS minh_chung theo phạm vi nhiệm vụ) — khối "chờ xác nhận" A1/A2.
@@ -32,7 +30,7 @@ export async function loadChiDaoCho() {
 
 // Luồng chỉ đạo của một nhiệm vụ: mọi dòng chi_dao (gốc + phản hồi, theo thời gian) và tập id tôi đã đọc.
 export async function loadChiDao(nhiemVuId) {
-  const rows = loi(await supabase.from('chi_dao').select('*').eq('nhiem_vu_id', nhiemVuId).order('created_at').order('id'), 'đọc chỉ đạo') || [];
+  const rows = loi(await supabase.from('chi_dao').select(COT_CHI_DAO).eq('nhiem_vu_id', nhiemVuId).order('created_at').order('id'), 'đọc chỉ đạo') || [];
   if (rows.length === 0) return { rows, daDoc: new Set() };
   const dd = loi(await supabase.from('chi_dao_da_doc').select('chi_dao_id').in('chi_dao_id', rows.map((c) => c.id)), 'đọc trạng thái đã đọc') || [];
   return { rows, daDoc: new Set(dd.map((x) => x.chi_dao_id)) };
@@ -62,7 +60,7 @@ export const duyetTuChoi = (id, dongY, yKien) => rpc('duyet_tu_choi', { p_id: id
 export const xacNhanDaNhanChiDao = (id) => rpc('xac_nhan_da_nhan_chi_dao', { p_id: id });
 export const loadSoChuaXuLy = () => rpc('kl_so_chua_xu_ly', {});
 export async function loadDienBien(nhiemVuId) {
-  return loi(await supabase.from('v_dien_bien').select('*').eq('nhiem_vu_id', nhiemVuId), 'đọc diễn biến') || [];
+  return loi(await supabase.from('v_dien_bien').select(COT_DIEN_BIEN).eq('nhiem_vu_id', nhiemVuId), 'đọc diễn biến') || [];
 }
 
 // Nhãn loại chỉ đạo (cùng bảng với chi_dao_ten_loai trong 0026).
@@ -73,5 +71,5 @@ export const TEN_LOAI_CHI_DAO = {
 export const TEN_TRANG_THAI_CHI_DAO = { CHO_PHAN_HOI: 'Chờ phản hồi', DA_PHAN_HOI: 'Đã phản hồi', DA_DONG: 'Đã đóng' };
 // Chỉ đạo Thường trực (GĐ19, 0032 v_chi_dao_tt, RLS lọc phạm vi): A1 lọc dòng mình là người nhận, A0 dòng mình gửi.
 export async function loadChiDaoTT() {
-  return loi(await supabase.from('v_chi_dao_tt').select('*'), 'đọc chỉ đạo Thường trực') || [];
+  return loi(await supabase.from('v_chi_dao_tt').select(COT_CHI_DAO_TT), 'đọc chỉ đạo Thường trực') || [];
 }

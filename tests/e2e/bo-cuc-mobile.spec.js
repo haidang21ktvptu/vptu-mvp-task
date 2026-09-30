@@ -5,6 +5,10 @@ import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { pageAs, contextAs, nav, NAP, loginAs } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
+import { ganTre } from './lib/tre.mjs';
+
+// E2E_TRE_MS (mặc định tắt): context của fixture `page` cũng chịu độ trễ giả lập (lib/tre.mjs).
+test.beforeEach(async ({ context }) => { await ganTre(context); });
 
 test.skip(({ isMobile }) => !isMobile, 'Chỉ chạy ở project điện thoại.');
 

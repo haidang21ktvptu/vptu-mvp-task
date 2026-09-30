@@ -4,7 +4,7 @@
 // Mã NV-T10x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -49,10 +49,10 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
   after(don);
 
   test('1. authenticated (A3/A2/A1) và anon gọi canh_bao_quet bị chặn; service_role chạy được', async () => {
-    for (const u of ['demo_cv1', 'demo_truongphong', 'demo_cvp']) {
-      assertDenied(await (await userClient(u)).rpc('canh_bao_quet', { p_ngay: NGAY }), `${u} gọi canh_bao_quet`);
-    }
-    assertDenied(await anonClient().rpc('canh_bao_quet', { p_ngay: NGAY }), 'anon gọi canh_bao_quet');
+    const U = ['demo_cv1', 'demo_truongphong', 'demo_cvp'];
+    const chan = await songSong([...U.map((u) => async () => (await userClient(u)).rpc('canh_bao_quet', { p_ngay: NGAY })),
+      () => anonClient().rpc('canh_bao_quet', { p_ngay: NGAY })]);
+    chan.forEach((r, i) => assertDenied(r, `${U[i] || 'anon'} gọi canh_bao_quet`));
     const kq = await quet(NGAY);
     assert.equal(kq.ngay, NGAY);
     assert.ok(kq.quet >= 4 && kq.bo_qua >= 0 && kq.tin >= 1, `thống kê: ${JSON.stringify(kq)}`);

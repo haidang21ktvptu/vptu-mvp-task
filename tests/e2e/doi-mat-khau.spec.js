@@ -5,6 +5,10 @@ import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys, EMAIL_DOMAIN } from './lib/keys.mjs';
 import { mauToken } from './lib/app.js';
+import { ganTre } from './lib/tre.mjs';
+
+// E2E_TRE_MS (mặc định tắt): context của fixture `page` cũng chịu độ trễ giả lập (lib/tre.mjs).
+test.beforeEach(async ({ context }) => { await ganTre(context); });
 
 const USERNAME = 'e2e_doi_mk';
 const MK_TAM = 'Tam123456';

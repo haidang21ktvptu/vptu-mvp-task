@@ -4,7 +4,7 @@
 // cần xác nhận, chỉ có nút xác nhận tuỳ chọn ở ngăn chi tiết.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, moViec, NAP } from './lib/app.js';
+import { pageAs, moViec, moGiaoViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
@@ -49,8 +49,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
 
   test('Kịch bản 4: A2 giao việc trên trang ba bước cho chuyên viên phòng mình', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A2', testInfo);
-    await nav(page, 'navGiaoViec');
-    await expect(page.locator('#viewGiaoViec')).toBeVisible();
+    await moGiaoViec(page);
     await page.locator('#klThVanBan').selectOption('__moi__');
     await page.locator('#klThLoaiVB').selectOption('CONG_VAN');
     await expect(page.locator('#klThSoHNWrap')).toBeHidden();   // công văn không có số hội nghị

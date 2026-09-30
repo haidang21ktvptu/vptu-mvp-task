@@ -1,6 +1,6 @@
 // Phần chung của màn hình điều hành A0/A1: đầu trang (ngày, "số liệu tính đến", kết nối realtime, Tải lại), 4 số-lọc, thanh trái + danh sách
 // thẻ (hoặc Toàn cảnh N nhiệm vụ khi bấm số hoàn thành). Mỗi vai truyền cấu hình KPI và phần đầu/cuối trang riêng.
-import { $, setText, formatDateTime } from '../../../lib/dom.js';
+import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
 import { tongHop } from '../../../lib/kl/tong-hop.js';
@@ -14,6 +14,7 @@ import { theHtml } from './the-viec.js';
 import { giuDienBien } from '../dien-bien.js';
 import { kpiHtml, NHAN_KPI } from './kpi.js';
 import { datNapLai, mountHanhDongDieuHanh } from './hanh-dong.js';
+import { dieuHanhTheoSuKien } from './su-kien.js';
 
 // "Thứ Tư 16 tháng 9" theo giờ Việt Nam.
 export function ngayDaiVN(d = new Date()) {
@@ -47,6 +48,7 @@ function toanCanhHtml() {
 
 export function veDieuHanh() {
   if (!$('dhKpi')) { cauHinh.veThem(); return; } // màn hình không có dải KPI (A3 "Việc của tôi") vẽ bằng hàm vai đăng ký — napLaiViec vẫn vẽ lại thẻ ngay
+  const traNhap = giuONhap($('viewDieuHanh')); // ô đang mở / đang gõ giữ qua lần vẽ lại (nạp lại nền, realtime — PR-2a lỗi đua)
   const kpi = cauHinh.kpi();
   $('dhKpi').innerHTML = kpiHtml(kpi);
   $('dhKpi').classList.toggle('nam', kpi.length === 5);
@@ -66,6 +68,7 @@ export function veDieuHanh() {
   }
   cauHinh.veThem();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}, so sánh với tuần trước`);
+  traNhap();
 }
 
 // Lỗi tạm (mạng, staging bận → statement timeout của v_nhiem_vu / v_ngoai_le khi nhiều trang nạp cùng lúc): thử lại MỘT lần sau 800 ms rồi mới báo,
@@ -92,7 +95,7 @@ export function openDieuHanh() {
   setActiveNav('navDieuHanh');
   datNapLai(loadDieuHanh); // Cán bộ / Báo cáo đặt hàm nạp lại riêng khi mở — quay về đây đặt lại
   loadDieuHanh();
-  batKlRealtime(() => { if (sectionDangHien('viewDieuHanh')) loadDieuHanh(); }, (m) => hienKetNoi('dhKetNoi', m));
+  batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadDieuHanh, veDieuHanh); }, (m) => hienKetNoi('dhKetNoi', m));
 }
 
 const locKhau = ({ khau }) => { dh.loc.khau = dh.loc.khau === khau ? null : khau; if (dh.loc.kpi === 'tat') dh.loc.kpi = null; veDieuHanh(); };

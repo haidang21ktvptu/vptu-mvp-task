@@ -12,6 +12,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys, SEED_PASSWORD } from './keys.mjs';
 import { USERS, sessionPath } from './roles.mjs';
+import { ganTre } from './tre.mjs';
 
 export { USERS };
 // Thời gian chờ DỮ LIỆU NẠP XONG trên staging (data-nap, #klRow-*, #vct*, #the-*, #tt-viec-*, ngăn chi tiết…): staging nhỏ, 2 worker → có thể
@@ -46,10 +47,12 @@ export async function phienMoi(role) {
 export async function contextAs(browser, role, testInfo) {
   const session = await phienMoi(role);
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
-  return browser.newContext({
+  const context = await browser.newContext({
     viewport, isMobile, hasTouch, baseURL, locale,
     storageState: { cookies: [], origins: [{ origin: new URL(baseURL).origin, localStorage: [{ name: storageKey(), value: JSON.stringify(session) }] }] },
   });
+  await ganTre(context);   // E2E_TRE_MS (mặc định tắt): độ trễ giả lập để bắt lỗi đua
+  return context;
 }
 
 export async function pageAs(browser, role, testInfo) {
@@ -83,6 +86,14 @@ export async function expectLoggedIn(page, role) {
 // Bấm một mục menu theo id (navKl, navDieuHanh, dmBubbleLauncher, navQuanTri…): pill trên máy tính, nút thanh dưới hoặc "Khác" trên điện thoại.
 // Chuyên viên (A3) không có mục Nhiệm vụ trên menu (mockup: Việc của tôi · Việc tôi theo dõi · Nhắn tin) — mở toàn bộ việc bằng nút
 // "Xem toàn bộ việc của tôi" trên màn hình Việc của tôi.
+// Mở biểu mẫu Giao việc rồi CHỜ khởi tạo xong ([data-san-sang="1"]) trước thao tác đầu tiên — quy tắc 17/9: "phần tử đã hiện" không phải
+// tín hiệu nạp xong (lỗi đua CI #96: chọn "Văn bản mới" trong lúc biểu mẫu còn nạp rồi bị bước khởi tạo ghi đè). mo: cách mở (mặc định menu).
+export async function moGiaoViec(page, mo = () => nav(page, 'navGiaoViec')) {
+  await mo();
+  await expect(page.locator('#viewGiaoViec')).toBeVisible();
+  await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
+}
+
 export async function nav(page, id) {
   const pill = page.locator(`#${id}`);
   if (await pill.count() === 0) {

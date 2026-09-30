@@ -2,10 +2,10 @@
 // — features/messages/chat.js) và ghi thẳng các bảng chỉ-đọc-qua-hàm (tu_choi, canh_bao, chi_dao_da_doc, nhat_ky_he_thong, dm_cap, dm_san_pham):
 // vai không được phép không ghi được. N10: A1/A2 không phải Owner/theo dõi, A0, thư ký TT, QTHT → UPDATE nhiem_vu 0 dòng (RLS lọc);
 // Owner ghi được 1 dòng, quan_tri_kl ghi được (đối chứng). N8: INSERT/UPDATE/DELETE thẳng 6 bảng bị chặn với MỌI vai kể cả quan_tri_kl và A0.
-// Khoá dữ liệu: "KL-PQ2" trong noi_dung / content; tự dọn.
+// Khoá dữ liệu: "KL-PQ2" trong noi_dung / content; tự dọn. Ca độc lập (bị chặn / 0 dòng) chạy songSong giới hạn 4 (D3, PR-2a).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, assertNoRows, IDS } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, assertNoRows, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -39,10 +39,11 @@ describe('PQ-2 — ghi trực tiếp bảng: UPDATE nhiem_vu, INSERT direct_mess
   after(don);
 
   test('1. UPDATE nhiem_vu (Cập nhật nhanh) bởi CVP, PCVP, Trưởng phòng không phải Owner/theo dõi, A0, thư ký TT, QTHT → 0 dòng; anon bị chặn', async () => {
-    for (const u of ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_a0', TK.username, 'demo_qtht']) {
-      assertNoRows(await capNhat(u, { ghi_chu: `${KHOA} ${u}` }), `${u} UPDATE nhiem_vu`);
-    }
-    assertDenied(await anonClient().from('nhiem_vu').update({ ghi_chu: 'x' }).eq('id', nvId).select('id'), 'anon UPDATE nhiem_vu');
+    const VAI_0 = ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_a0', TK.username, 'demo_qtht'];
+    const kq = await songSong([...VAI_0.map((u) => () => capNhat(u, { ghi_chu: `${KHOA} ${u}` })),
+      () => anonClient().from('nhiem_vu').update({ ghi_chu: 'x' }).eq('id', nvId).select('id')]);
+    VAI_0.forEach((u, i) => assertNoRows(kq[i], `${u} UPDATE nhiem_vu`));
+    assertDenied(kq[VAI_0.length], 'anon UPDATE nhiem_vu');
     assert.equal((await db().from('nhiem_vu').select('ghi_chu').eq('id', nvId).single()).data.ghi_chu, null, 'ghi_chu không đổi');
   });
 
@@ -88,11 +89,11 @@ describe('PQ-2 — ghi trực tiếp bảng: UPDATE nhiem_vu, INSERT direct_mess
 
   test('4. INSERT thẳng tu_choi, canh_bao, chi_dao_da_doc, nhat_ky_he_thong, dm_cap, dm_san_pham bị chặn với A3, A2, CVP, PCVP, A0, QTHT, quan_tri_kl, anon', async () => {
     assertOk(await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cấp quan_tri_kl cho cv2');
-    for (const [bang, dong] of BANG) {
-      for (const [u, me] of VAI) assertDenied(await (await userClient(u)).from(bang).insert(dong(me)).select(), `${u} INSERT ${bang}`);
-      assertDenied(await anonClient().from(bang).insert(dong(IDS.cv1)).select(), `anon INSERT ${bang}`);
-    }
-    for (const bang of ['dm_cap', 'dm_san_pham']) assert.equal((await db().from(bang).select('ma').like('ma', 'KL_PQ2%')).data.length, 0, `${bang} không có dòng rác`);
+    const ca = BANG.flatMap(([bang, dong]) => [...VAI.map(([u, me]) => [`${u} INSERT ${bang}`, async () => (await userClient(u)).from(bang).insert(dong(me)).select()]),
+      [`anon INSERT ${bang}`, () => anonClient().from(bang).insert(dong(IDS.cv1)).select()]]);
+    (await songSong(ca.map(([, f]) => f))).forEach((r, i) => assertDenied(r, ca[i][0]));
+    const rac = await songSong(['dm_cap', 'dm_san_pham'].map((bang) => () => db().from(bang).select('ma').like('ma', 'KL_PQ2%')));
+    rac.forEach((r, i) => assert.equal(r.data.length, 0, `${['dm_cap', 'dm_san_pham'][i]} không có dòng rác`));
   });
 
   test('5. UPDATE / DELETE thẳng 6 bảng đó bị chặn với mọi vai (kể cả quan_tri_kl, QTHT)', async () => {
@@ -103,13 +104,10 @@ describe('PQ-2 — ghi trực tiếp bảng: UPDATE nhiem_vu, INSERT direct_mess
       ['tu_choi', { ly_do: 'x' }, 'id', KHONG_CO], ['canh_bao', { muc: 'DO' }, 'nhiem_vu_id', nvId], ['chi_dao_da_doc', { luc: '2026-01-01T00:00:00Z' }, 'chi_dao_id', fx.d1],
       ['nhat_ky_he_thong', { hanh_dong: 'x' }, 'hanh_dong', KHOA], ['dm_cap', { ten: `${KHOA} đổi` }, 'ma', 'THUONG_TRUC'], ['dm_san_pham', { ten: `${KHOA} đổi` }, 'ma', 'TO_TRINH'],
     ];
-    for (const [bang, patch, cot, gt] of CA) {
-      for (const [u] of VAI) {
-        const c = await userClient(u);
-        assertDenied(await c.from(bang).update(patch).eq(cot, gt).select(), `${u} UPDATE ${bang}`);
-        assertDenied(await c.from(bang).delete().eq(cot, gt).select(), `${u} DELETE ${bang}`);
-      }
-    }
+    const ca = CA.flatMap(([bang, patch, cot, gt]) => VAI.flatMap(([u]) => [
+      [`${u} UPDATE ${bang}`, async () => (await userClient(u)).from(bang).update(patch).eq(cot, gt).select()],
+      [`${u} DELETE ${bang}`, async () => (await userClient(u)).from(bang).delete().eq(cot, gt).select()]]));
+    (await songSong(ca.map(([, f]) => f))).forEach((r, i) => assertDenied(r, ca[i][0]));
     assert.equal((await db().from('dm_cap').select('ten').eq('ma', 'THUONG_TRUC').single()).data.ten, 'Thường trực Tỉnh ủy', 'danh mục không đổi');
   });
 });

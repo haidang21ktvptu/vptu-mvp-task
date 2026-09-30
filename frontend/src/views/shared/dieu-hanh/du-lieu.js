@@ -1,25 +1,42 @@
-// Dữ liệu và bộ lọc của Trung tâm điều hành (A0) / Điều hành hôm nay (A1) / Phòng tôi (A2): một lần nạp gồm v_nhiem_vu (tình hình
-// chung), v_ngoai_le (việc Đỏ + khâu), v_chi_dao_tt, kl_so_lieu_tai(hôm nay) và (hôm nay − 7) cho xu hướng, minh chứng chờ, chỉ đạo chờ.
+// Dữ liệu và bộ lọc của Trung tâm điều hành (A0) / Điều hành hôm nay (A1) / Phòng tôi (A2) / Việc của tôi (A3). PR-2a B6 — một lần nạp:
+// danh mục (1 RPC, nhớ trong phiên) + v_nhiem_vu (cột tường minh; nhom_ngoai_le / khau / da_xac_nhan_nhan của 0051 thay cho v_ngoai_le và
+// lich_su) + tu_choi + v_chi_dao_tt + minh chứng chờ + chỉ đạo chờ + kl_so_lieu_cac_moc([hôm nay, −7]).
 // Thuần tổng hợp trên dòng RLS trả về (DB-5): đếm theo khâu / đơn vị làm ở đây, không thêm hàm DB.
 import { state } from '../../../lib/state.js';
-import { loadDanhMucKl, loadCauHinhKl, loadKlRows } from '../../../lib/kl/du-lieu.js';
-import { loadNgoaiLe, loadChiDaoTT, loadSoLieuTai, loadMinhChungCho, loadChiDaoCho } from '../../../lib/kl/dieu-hanh.js';
+import { loadDanhMucKl, loadKlRows } from '../../../lib/kl/du-lieu.js';
+import { loadChiDaoTT, loadSoLieuCacMoc, loadMinhChungCho, loadChiDaoCho } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN, congNgay } from '../../../lib/kl/ngay.js';
 import { THU_TU_KHAU, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { soSanhDoKhan } from '../../../lib/kl/do-khan.js';
+import { ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
 
 export const dh = { rows: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
 
-export async function napDieuHanh() {
-  await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
-  const homNay = homNayVN();
-  // Hai đợt: dòng + ngoại lệ (nặng, tính trạng thái từng dòng) trước; số liệu hai mốc (mỗi mốc lại tính trạng thái toàn phạm vi) sau — bớt số
-  // truy vấn nặng chạy chồng trên một kết nối (staging nhỏ: 7 truy vấn cùng lúc mỗi trang làm nghẽn cả truy vấn danh mục).
-  const [r, nl, tt, mc, cd] = await Promise.all([loadKlRows(), loadNgoaiLe(), loadChiDaoTT(), loadMinhChungCho(), loadChiDaoCho()]);
-  const [sl, sl7] = await Promise.all([loadSoLieuTai(homNay), loadSoLieuTai(congNgay(homNay, -7))]);
-  Object.assign(dh, { rows: r.rows, ngoaiLe: nl, chiDaoTT: tt, soLieu: sl, soLieuTuanTruoc: sl7, mcCho: mc, chiDaoCho: cd, tuChoiCho: r.tuChoiCho, luc: r.luc });
+// Lượt nạp đang chạy (nap-lai-viec chờ nó xong trước khi thay một dòng); lượt cũ về sau lượt mới thì bỏ (không ghi đè dữ liệu mới hơn).
+let luotDh = 0;
+export const dangNapDh = () => dh.dangNap;
+export function napDieuHanh() {
+  const p = napDieuHanhMot(++luotDh);
+  dh.dangNap = p.finally(() => { if (dh.dangNap === p) dh.dangNap = null; });
+  return p;
+}
+async function napDieuHanhMot(lan) {
+  await loadDanhMucKl();
+  // Hai đợt: dòng (nặng, tính trạng thái từng dòng) trước; số liệu hai mốc (một RPC, tính trạng thái toàn phạm vi) sau — bớt truy vấn nặng
+  // chạy chồng trên một kết nối (staging nhỏ).
+  const [r, tt, mc, cd] = await Promise.all([loadKlRows(), loadChiDaoTT(), loadMinhChungCho(), loadChiDaoCho()]);
+  if (lan !== luotDh) return dh;
+  Object.assign(dh, { rows: r.rows, ngoaiLe: ngoaiLeTu(r.rows), chiDaoTT: tt, mcCho: mc, chiDaoCho: cd, tuChoiCho: r.tuChoiCho, luc: r.luc });
+  await napSoLieu();
   return dh;
 }
+// Ô số và xu hướng tuần (một RPC) — cũng gọi riêng sau khi realtime nạp lại một việc (trạng thái một dòng đổi thì số đổi).
+export async function napSoLieu() {
+  const homNay = homNayVN();
+  [dh.soLieu, dh.soLieuTuanTruoc] = await loadSoLieuCacMoc([homNay, congNgay(homNay, -7)]);
+}
+
+export { dongNgoaiLe, soSanhNgoaiLe, ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
 // Đề nghị từ chối đang chờ tôi duyệt (0034: RLS chỉ trả dòng mình đọc được; cấp duyệt là mình) / đề nghị của tôi trên một việc.
 export const tuChoiChoToiDuyet = () => dh.tuChoiCho.filter((t) => t.cap_duyet === me() && timRow(t.nhiem_vu_id));
 export const deNghiCuaToi = (nhiemVuId) => dh.tuChoiCho.find((t) => t.nhiem_vu_id === nhiemVuId && t.nguoi_de_nghi === me());

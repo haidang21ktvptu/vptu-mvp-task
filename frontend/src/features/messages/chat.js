@@ -5,12 +5,15 @@ import { $, show, setText, escapeHtml, formatTime, formatDateTime } from '../../
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state, findAccount } from '../../lib/state.js';
 import { loadTinHeThong } from '../../lib/kl/dieu-hanh.js';
+import { COT_TIN_NHAN } from '../../lib/kl/cot.js';
 import { moNhiemVu } from '../../views/shared/kl/index.js';
 import { sectionDangHien } from '../../views/shell/index.js';
 import { loadDMUnreadMap, veDanhBa } from './index.js';
 
 const TOAST_MS = 8000;
 let viecDangMo = null; // { nv, ma }
+const TIN_MOI_LAN = 50;   // B6: hội thoại 1-1 đọc 50 tin mới nhất, "Xem tin cũ hơn" thêm 50 mỗi lần
+let soTinHien = TIN_MOI_LAN;
 
 function bongHtml(m) {
   const toi = m.sender_id === state.user.id;
@@ -24,11 +27,16 @@ function bongViecHtml(t) {
 export async function loadDirectMessages(peerId, markAsRead = false) {
   const me = state.user.id;
   const chatBox = $('dmChatBox');
-  const { data } = await supabase.from('direct_messages').select('*').eq('loai', 'nguoi')
+  const { data } = await supabase.from('direct_messages').select(COT_TIN_NHAN).eq('loai', 'nguoi')
     .or(`and(sender_id.eq.${me},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${me})`)
-    .order('created_at', { ascending: true });
-  chatBox.innerHTML = !data || data.length === 0 ? '<p class="trong-nho">Chưa có tin nhắn nào giữa hai đồng chí.</p>' : data.map(bongHtml).join('');
-  chatBox.scrollTop = chatBox.scrollHeight;
+    .order('created_at', { ascending: false }).order('id', { ascending: false }).range(0, soTinHien);   // thêm 1 dòng để biết còn tin cũ hơn
+  const conNua = (data || []).length > soTinHien;
+  const tin = (data || []).slice(0, soTinHien).reverse();
+  const xemThem = conNua ? '<p class="xem-them"><button type="button" class="nut nho" id="dmXemTinCu" data-action="xemTinCu">Xem tin cũ hơn</button></p>' : '';
+  const giuTu = xemTinCuDangBam ? chatBox.scrollHeight - chatBox.scrollTop : 0;
+  chatBox.innerHTML = tin.length === 0 ? '<p class="trong-nho">Chưa có tin nhắn nào giữa hai đồng chí.</p>' : xemThem + tin.map(bongHtml).join('');
+  chatBox.scrollTop = xemTinCuDangBam ? chatBox.scrollHeight - giuTu : chatBox.scrollHeight;
+  xemTinCuDangBam = false;
   if (markAsRead) {
     await supabase.rpc('mark_messages_read', { p_peer_id: peerId });
     state.dmUnread[peerId] = 0;
@@ -36,8 +44,15 @@ export async function loadDirectMessages(peerId, markAsRead = false) {
   }
 }
 
+let xemTinCuDangBam = false;
+export async function xemTinCu() {
+  if (!state.currentDMPeerId) return;
+  soTinHien += TIN_MOI_LAN; xemTinCuDangBam = true;   // giữ vị trí đọc: tin cũ chèn phía trên
+  await loadDirectMessages(state.currentDMPeerId, false);
+}
+
 export async function openChatWith(peerId) {
-  state.currentDMPeerId = peerId; viecDangMo = null;
+  state.currentDMPeerId = peerId; viecDangMo = null; soTinHien = TIN_MOI_LAN;
   const peer = findAccount(peerId);
   setText('dmChatHeaderName', peer ? peer.full_name : 'Đồng chí');
   setText('dmChatHeaderRole', peer ? `${peer.position_title} · ${DEPT_NAMES[peer.department] || peer.department || ''}` : '');

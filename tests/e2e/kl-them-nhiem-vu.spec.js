@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs, nav, mauToken, NAP } from './lib/app.js';
+import { contextAs, nav, moGiaoViec, mauToken, NAP } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
@@ -63,8 +63,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(page.locator('#klNutThem')).toBeVisible();
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
     await expect(page.locator(`#klRow-${mocId}`)).toBeVisible(NAP);           // việc mốc của tài khoản này có mặt
-    await page.locator('#klNutThem').click();
-    await expect(page.locator('#viewGiaoViec')).toBeVisible();
+    await moGiaoViec(page, () => page.locator('#klNutThem').click());
     await expect(page.locator('#viewKl')).toBeHidden();
     await expect(page.locator('#viewGiaoViec .gv-the')).toHaveCount(1);          // GĐ22: một thẻ, ba phần nối tiếp
     await expect(page.locator('#viewGiaoViec .gv-phan')).toHaveCount(3);
@@ -114,10 +113,10 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
   });
 
   test('Ký ban hành: hạn tự tính = ngày BH + 10, ô hạn khoá; văn bản vừa tạo có trong danh sách chọn; Huỷ về Nhiệm vụ', async () => {
-    await nav(page, 'navGiaoViec');
-    await expect(page.locator('#viewGiaoViec')).toBeVisible();
+    await moGiaoViec(page);
     const vb = await db.from('van_ban_giao_viec').select('id').eq('so_ket_luan', vbKhoa).single();
-    await page.locator('#klThVanBan').selectOption(vb.data.id);
+    await page.locator('#klThVanBanTim').fill(vbKhoa);   // PR-2a B6: ô văn bản chỉ tải 50 dòng đầu — tìm theo số hiệu ở DB, tự chọn kết quả đầu
+    await expect(page.locator('#klThVanBan')).toHaveValue(vb.data.id, NAP);
     await page.locator('#klThLoai').selectOption('KY_BAN_HANH');
     await expect(page.locator('#klThHan')).toBeDisabled();
     await expect(page.locator('#klThHan')).toHaveValue('2026-09-11');

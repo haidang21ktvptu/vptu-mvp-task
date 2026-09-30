@@ -7,12 +7,24 @@
 import { test, expect } from '@playwright/test';
 import { loginAs, expectLoggedIn, logout } from './lib/app.js';
 import { MOBILE } from './lib/devices.mjs';
+import { ganTre } from './lib/tre.mjs';
+
+// E2E_TRE_MS (mặc định tắt): context của fixture `page` cũng chịu độ trễ giả lập (lib/tre.mjs).
+test.beforeEach(async ({ context }) => { await ganTre(context); });
 
 test.describe.serial('Đăng nhập theo vai trò', () => {
   test('Kịch bản 1: A1 (Chánh Văn phòng) đăng nhập → view Lãnh đạo; sai mật khẩu bị từ chối', async ({ page }) => {
     await page.goto('./');
     await expect(page.locator('#loginSection')).toBeVisible();
     await expect(page.locator('#mainHeader')).toBeHidden();
+    // PR-2a lỗi (2): máy tính 1280x800 — thẻ co theo nội dung: nút Đăng nhập → dòng cuối đúng bằng khoảng cách giữa các ô, dòng cuối → đáy thẻ
+    // đúng bằng padding (không còn khoảng trống do chiều cao cố định).
+    const the = await page.locator('#loginForm').evaluate((f) => {
+      const cs = globalThis.getComputedStyle(f); const b = f.querySelector('#loginSubmitBtn').getBoundingClientRect(); const c = f.querySelector('.cuoi').getBoundingClientRect(); const r = f.getBoundingClientRect();
+      return { nutDenCuoi: c.top - b.bottom, cuoiDenDay: r.bottom - c.bottom, gap: parseFloat(cs.rowGap), pad: parseFloat(cs.paddingBottom) };
+    });
+    expect(the.nutDenCuoi).toBeLessThanOrEqual(the.gap + 1);
+    expect(the.cuoiDenDay).toBeLessThanOrEqual(the.pad + 1);
 
     await page.locator('#loginUsername').fill('demo_cvp');
     await page.locator('#loginPassword').fill('sai-mat-khau');

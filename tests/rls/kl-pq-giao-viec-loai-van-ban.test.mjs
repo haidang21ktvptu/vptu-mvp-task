@@ -6,7 +6,7 @@
 // Ma trận: docs kiểm thử giai đoạn 1 — B1/B2/B3 (hàng A0, A1-CVP, A1-PCVP, A2, A3, PTP, TK, QT × 5 cột loại văn bản).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -33,7 +33,6 @@ const OWNER = {
 const giao = async (username, loai, p = {}) => (await userClient(username)).rpc('giao_viec', { p: {
   van_ban_id: null, van_ban: vanBan(loai, username), noi_dung: `${KHOA} ${loai} ${username}`, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31',
   nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH', ...OWNER[username], ...p } });
-const vb = async (id) => (await db().from('van_ban_giao_viec').select('loai, so_hoi_nghi, tao_boi').eq('id', id).single()).data;
 // Khôi phục tài khoản dùng chung về giá trị gốc ghi cứng (chạy ở cả đầu before lẫn after để không kẹt trạng thái sai).
 const khoiPhucTaiKhoan = async () => {
   await db().from('accounts').update({ position_title: PTP.chuc_danh_goc }).eq('id', PTP.id);
@@ -56,82 +55,80 @@ describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt bu
   });
   after(don);
 
-  for (const vai of ['demo_a0', 'demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv2']) {
+  const VAI_GIAO = ['demo_a0', 'demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv2'];
+  // Các lần giao độc lập (văn bản inline riêng, so_ket_luan duy nhất) chạy songSong giới hạn 4; đọc lại văn bản/việc bằng MỘT truy vấn in(id) (D3).
+  const theoId = async (bang, cot, ids) => new Map((await db().from(bang).select(`id, ${cot}`).in('id', ids)).data.map((x) => [x.id, x]));
+
+  for (const vai of VAI_GIAO) {
     test(`1. ${vai} giao được với đủ 5 loại văn bản inline; văn bản tạo bởi chính người giao, loại đúng, KL_BTV giữ số hội nghị`, async () => {
-      for (const loai of LOAI) {
-        const r = await giao(vai, loai);
-        assertOk(r, `${vai} giao ${loai}`);
-        const v = await vb(r.data.van_ban_id);
+      const rs = await songSong(LOAI.map((loai) => () => giao(vai, loai)));
+      rs.forEach((r, i) => assertOk(r, `${vai} giao ${LOAI[i]}`));
+      const vbs = await theoId('van_ban_giao_viec', 'loai, so_hoi_nghi, tao_boi', rs.map((r) => r.data.van_ban_id));
+      LOAI.forEach((loai, i) => {
+        const v = vbs.get(rs[i].data.van_ban_id);
         assert.equal(v.loai, loai, `${vai} ${loai}: loại văn bản`);
         assert.equal(v.tao_boi, IDS[vai.replace('demo_', '')], `${vai} ${loai}: tao_boi = người giao`);
         assert.equal(v.so_hoi_nghi, loai === 'KL_BTV' ? 998 : null, `${vai} ${loai}: số hội nghị`);
-      }
+      });
     });
   }
 
   test('2. KL_BTV: thiếu số hội nghị / thiếu ngành / thiếu lĩnh vực bị chặn với mọi vai được giao; văn bản không bị tạo rác', async () => {
     const soVanBan = async () => (await db().from('van_ban_giao_viec').select('id', { count: 'exact', head: true }).like('so_ket_luan', `${KHOA}%`)).count;
     const truoc = await soVanBan();
-    for (const vai of ['demo_a0', 'demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv2']) {
-      const thieuSo = await (await userClient(vai)).rpc('giao_viec', { p: { van_ban_id: null, van_ban: { ...vanBan('KL_BTV', vai), so_hoi_nghi: null },
-        noi_dung: `${KHOA} thiếu số HN`, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH', ...OWNER[vai] } });
-      assert.match(loi(thieuSo), /so_hoi_nghi/, `${vai}: KL_BTV thiếu số hội nghị`);
-      assert.match(loi(await giao(vai, 'KL_BTV', { nganh_ma: null })), /ngành và lĩnh vực/, `${vai}: KL_BTV thiếu ngành`);
-      assert.match(loi(await giao(vai, 'KL_BTV', { linh_vuc_ma: null })), /ngành và lĩnh vực/, `${vai}: KL_BTV thiếu lĩnh vực`);
-    }
+    const ca = VAI_GIAO.flatMap((vai) => [
+      [/so_hoi_nghi/, `${vai}: KL_BTV thiếu số hội nghị`, async () => (await userClient(vai)).rpc('giao_viec', { p: { van_ban_id: null, van_ban: { ...vanBan('KL_BTV', vai), so_hoi_nghi: null },
+        noi_dung: `${KHOA} thiếu số HN`, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH', ...OWNER[vai] } })],
+      [/ngành và lĩnh vực/, `${vai}: KL_BTV thiếu ngành`, () => giao(vai, 'KL_BTV', { nganh_ma: null })],
+      [/ngành và lĩnh vực/, `${vai}: KL_BTV thiếu lĩnh vực`, () => giao(vai, 'KL_BTV', { linh_vuc_ma: null })]]);
+    (await songSong(ca.map((c) => c[2]))).forEach((r, i) => assert.match(loi(r), ca[i][0], ca[i][1]));
     assert.equal(await soVanBan(), truoc, 'lần giao bị chặn không để lại văn bản (cùng transaction)');
   });
 
   test('3. TB_THUONG_TRUC: bắt buộc ngành + lĩnh vực (không cần số hội nghị) với mọi vai được giao', async () => {
-    for (const vai of ['demo_a0', 'demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv2']) {
-      assert.match(loi(await giao(vai, 'TB_THUONG_TRUC', { nganh_ma: null })), /ngành và lĩnh vực/, `${vai}: TB thiếu ngành`);
-      assert.match(loi(await giao(vai, 'TB_THUONG_TRUC', { linh_vuc_ma: null })), /ngành và lĩnh vực/, `${vai}: TB thiếu lĩnh vực`);
-      assert.match(loi(await giao(vai, 'TB_THUONG_TRUC', { nganh_ma: null, linh_vuc_ma: null })), /ngành và lĩnh vực/, `${vai}: TB thiếu cả hai`);
-    }
+    const ca = VAI_GIAO.flatMap((vai) => [[`${vai}: TB thiếu ngành`, { nganh_ma: null }], [`${vai}: TB thiếu lĩnh vực`, { linh_vuc_ma: null }],
+      [`${vai}: TB thiếu cả hai`, { nganh_ma: null, linh_vuc_ma: null }]].map(([nhan, p]) => [nhan, () => giao(vai, 'TB_THUONG_TRUC', p)]));
+    (await songSong(ca.map((c) => c[1]))).forEach((r, i) => assert.match(loi(r), /ngành và lĩnh vực/, ca[i][0]));
   });
 
   test('4. NQ_TW / CONG_VAN / KHAC: không đòi ngành, lĩnh vực, số hội nghị — mọi vai được giao giao được khi bỏ trống cả ba', async () => {
-    for (const vai of ['demo_a0', 'demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv2']) {
-      for (const loai of ['NQ_TW', 'CONG_VAN', 'KHAC']) {
-        const r = await giao(vai, loai, { nganh_ma: null, linh_vuc_ma: null });
-        assertOk(r, `${vai} giao ${loai} không ngành/lĩnh vực`);
-        const n = (await db().from('nhiem_vu').select('nganh_ma, linh_vuc_ma').eq('id', r.data.id).single()).data;
-        assert.deepEqual(n, { nganh_ma: null, linh_vuc_ma: null }, `${vai} ${loai}: ngành/lĩnh vực để trống`);
-      }
-    }
+    const ca = VAI_GIAO.flatMap((vai) => ['NQ_TW', 'CONG_VAN', 'KHAC'].map((loai) => [`${vai} ${loai}`, () => giao(vai, loai, { nganh_ma: null, linh_vuc_ma: null })]));
+    const rs = await songSong(ca.map((c) => c[1]));
+    rs.forEach((r, i) => assertOk(r, `${ca[i][0]} giao không ngành/lĩnh vực`));
+    const nv = await theoId('nhiem_vu', 'nganh_ma, linh_vuc_ma', rs.map((r) => r.data.id));
+    rs.forEach((r, i) => {
+      const n = nv.get(r.data.id);
+      assert.deepEqual([n.nganh_ma, n.linh_vuc_ma], [null, null], `${ca[i][0]}: ngành/lĩnh vực để trống`);
+    });
   });
 
   test('5. Vai không được giao: A3 thường, Phó trưởng phòng (A3), thư ký Thường trực (cờ), QTHT không quan_tri_kl — bị chặn 42501 với cả 5 loại', async () => {
-    for (const vai of ['demo_cv1', PTP.username, TK.username, 'demo_qtht']) {
-      for (const loai of LOAI) {
-        assertDenied(await giao(vai, loai, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), `${vai} giao ${loai}`);
-      }
-    }
+    const ca = ['demo_cv1', PTP.username, TK.username, 'demo_qtht'].flatMap((vai) => LOAI.map((loai) => [`${vai} giao ${loai}`,
+      () => giao(vai, loai, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 })]));
+    (await songSong(ca.map((c) => c[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
     // Không có văn bản nào do các vai này tạo (chặn trước khi ghi).
     const rac = await db().from('van_ban_giao_viec').select('id').in('tao_boi', [IDS.cv1, PTP.id, TK.id, IDS.qtht]).like('so_ket_luan', `${KHOA}%`);
     assert.equal(rac.data.length, 0, 'vai bị chặn không tạo văn bản');
   });
 
   test('6. anon gọi giao_viec bị chặn với cả 5 loại', async () => {
-    for (const loai of LOAI) {
-      assertDenied(await anonClient().rpc('giao_viec', { p: { van_ban_id: null, van_ban: vanBan(loai, 'anon'), noi_dung: `${KHOA} anon`, san_pham_loai: 'TO_TRINH',
-        han_xu_ly: '2026-12-31', owner_don_vi_ma: 'TONG_HOP' } }), `anon giao ${loai}`);
-    }
+    const rs = await songSong(LOAI.map((loai) => () => anonClient().rpc('giao_viec', { p: { van_ban_id: null, van_ban: vanBan(loai, 'anon'), noi_dung: `${KHOA} anon`,
+      san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31', owner_don_vi_ma: 'TONG_HOP' } })));
+    rs.forEach((r, i) => assertDenied(r, `anon giao ${LOAI[i]}`));
   });
 
   test('7. A0 giao cho A3 / cho đơn vị ngoài bị chặn với cả 5 loại; A2 giao Owner khác phòng bị chặn với cả 5 loại', async () => {
-    for (const loai of LOAI) {
-      assertDenied(await giao('demo_a0', loai, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), `A0 giao ${loai} cho A3`);
-      assertDenied(await giao('demo_a0', loai, { owner_don_vi_ma: 'DANG_UY_UBND', owner_tai_khoan: null }), `A0 giao ${loai} cho đơn vị ngoài`);
-      assertDenied(await giao('demo_truongphong', loai, { owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 }), `A2 giao ${loai} khác phòng`);
-    }
+    const ca = LOAI.flatMap((loai) => [
+      [`A0 giao ${loai} cho A3`, () => giao('demo_a0', loai, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 })],
+      [`A0 giao ${loai} cho đơn vị ngoài`, () => giao('demo_a0', loai, { owner_don_vi_ma: 'DANG_UY_UBND', owner_tai_khoan: null })],
+      [`A2 giao ${loai} khác phòng`, () => giao('demo_truongphong', loai, { owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 })]]);
+    (await songSong(ca.map((c) => c[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
   });
 
   test('8. Phó trưởng phòng (A3) không có thêm phạm vi đọc: chỉ thấy việc mình là Owner/theo dõi, không thấy việc của phòng', async () => {
     const me = await userClient(PTP.username);
-    const r = await me.from('nhiem_vu').select('id').like('noi_dung', `${KHOA}%`);
+    const [r, fxr] = await Promise.all([me.from('nhiem_vu').select('id').like('noi_dung', `${KHOA}%`), me.from('nhiem_vu').select('id').eq('van_ban_id', fx.hn)]);
     assertOk(r, 'PTP đọc'); assert.equal(r.data.length, 0, 'không là Owner/theo dõi việc nào của test → 0 dòng');
-    const fxr = await me.from('nhiem_vu').select('id').eq('van_ban_id', fx.hn);
     assertOk(fxr, 'PTP đọc fixture'); assert.equal(fxr.data.length, 0, 'không thấy việc fixture của phòng Tổng hợp');
   });
 });

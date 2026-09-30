@@ -15,12 +15,13 @@ export const giaoViecTemplate = `
   <div class="dau"><h1>Giao việc</h1><span>một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nội dung, người chịu trách nhiệm, sản phẩm và hạn</span></div>
   <div class="hai-cot" style="--rong-phu:340px">
   <form id="giaoViecForm" class="gv-the tam" data-submit="luuKlThem" novalidate>
-    <div class="gv-noi">
+    <fieldset class="gv-noi" id="gvKhoa" disabled aria-busy="true">
       <section class="gv-phan" id="gvPhan1"><h2><i id="gvCham1" class="gv-so">1</i>Văn bản giao việc</h2>
         <p class="chu-phu hidden gv-cha" id="gvCha"></p>
         <div class="gv-truong" id="klThVanBanWrap"><label for="klThVanBanTim" class="nhan">Chọn văn bản có sẵn</label>
-          <div class="cot-2 gv-vb"><input type="search" id="klThVanBanTim" class="o-nhap" placeholder="Gõ số hiệu, số hội nghị hoặc loại để lọc" autocomplete="off" aria-controls="klThVanBan">
-          <select id="klThVanBan" class="o-nhap" aria-label="Chọn văn bản giao việc"></select></div></div>
+          <div class="cot-2 gv-vb"><input type="search" id="klThVanBanTim" class="o-nhap" placeholder="Gõ số hiệu hoặc trích yếu để tìm" autocomplete="off" aria-controls="klThVanBan">
+          <select id="klThVanBan" class="o-nhap" aria-label="Chọn văn bản giao việc"></select></div>
+          <small class="gv-chu-thich"><span id="gvVbDem" aria-live="polite"></span> <button type="button" class="nut nho hidden" id="gvVbXemThem" data-action="gvVbXemThem">Xem thêm văn bản</button></small></div>
         <div id="klThVanBanMoi" class="hidden">
           <div class="cot-2">
             ${truong('klThLoaiVB', 'Loại văn bản', sel('klThLoaiVB'))}
@@ -61,14 +62,14 @@ export const giaoViecTemplate = `
         <div class="cot-3" id="gvNganhWrap">
           ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
           ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
-          ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', 'theo ngành đã chọn')}
+          ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
         </div>
         <div class="cot-2" id="gvPhuWrap">
           ${truong('klThVanBanTK', 'Văn bản triển khai', inp('klThVanBanTK'))}
           ${truong('klThGhiChu', 'Ghi chú / lĩnh vực chi tiết', inp('klThGhiChu'))}
         </div>
       </section>
-    </div>
+    </fieldset>
 
     <div class="gv-tom-tat" id="gvTomTat">
       <p><span id="gvConThieu" class="gv-thieu" aria-live="polite"></span><span id="gvTomTatChu" class="chu-phu">Giao … cho …, hạn …, sản phẩm …, độ khẩn Thường</span></p>

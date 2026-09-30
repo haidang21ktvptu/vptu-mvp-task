@@ -1,9 +1,9 @@
 // RLS-9 (GĐ8, migration 0013): quản trị đặc quyền — hai cờ trên accounts, hàm admin_dat_co,
 // nhật ký quyen_lich_su, bảng phu_trach_phong + admin_phan_cong_phong (hiệu lực theo ngày).
 // Mọi thay đổi cờ/phân công tạo trong test đều được thu lại ở cuối file (không phụ thuộc teardown).
-import { test, describe, after } from 'node:test';
+import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { userClient, anonClient, adminClient, assertDenied, assertOk, IDS } from './lib.mjs';
+import { userClient, anonClient, adminClient, assertDenied, assertOk, IDS, datPcvp2E2ERT } from './lib.mjs';
 
 const LY_DO = 'RLS-TEST quản trị';
 
@@ -15,8 +15,12 @@ const SKIP = probe.error || !qthtRow
   ? 'Chưa có migration 0013 hoặc seed demo_qtht trên project này (chạy lại sau khi merge + nạp seed)'
   : false;
 
+// Ca "bật PCVP2 ↔ TONG_HOP" tạm kết thúc phân công seed pcvp2 ↔ E2E_RT (giới hạn 2 phòng) — trả giá trị gốc ở before, finally, after (lib.mjs).
+const datE2ERT = (d) => datPcvp2E2ERT(d);
+
 after(async () => {
   if (SKIP) return;
+  await datE2ERT();
   // Thu về trạng thái seed bằng service_role (dọn cả khi test giữa chừng lỗi).
   const db = adminClient();
   await db.from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2);
@@ -87,11 +91,16 @@ describe('RLS-9 cờ đặc quyền và admin_dat_co', { skip: SKIP }, () => {
 });
 
 describe('RLS-9 phu_trach_phong và admin_phan_cong_phong', { skip: SKIP }, () => {
-  test('được phép: ai đã đăng nhập cũng đọc bảng phân công; seed 2 dòng đang hiệu lực', async () => {
+  before(() => datE2ERT());
+
+  test('được phép: ai đã đăng nhập cũng đọc bảng phân công (trùng bảng đọc bằng service_role); có 2 dòng seed gốc đang hiệu lực', async () => {
     const cv1 = await userClient('demo_cv1');
-    const r = await cv1.from('phu_trach_phong').select('lanh_dao_id, phong, den_ngay').is('den_ngay', null).order('phong');
-    assertOk(r, 'đọc phân công');
-    assert.deepEqual(r.data.map((p) => [p.lanh_dao_id, p.phong]), [[IDS.pcvp2, 'QUAN_TRI'], [IDS.pcvp, 'TONG_HOP']]);
+    const doc = (c) => c.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, den_ngay').is('den_ngay', null).order('phong').order('lanh_dao_id');
+    const [r, tat] = await Promise.all([doc(cv1), doc(adminClient())]);
+    assertOk(r, 'đọc phân công'); assertOk(tat, 'service_role đọc phân công');
+    assert.deepEqual(r.data, tat.data, 'A3 thấy đủ bảng phân công đang hiệu lực');
+    const cap = r.data.filter((p) => !p.nganh_ma).map((p) => `${p.lanh_dao_id}|${p.phong}`);
+    for (const x of [`${IDS.pcvp2}|QUAN_TRI`, `${IDS.pcvp}|TONG_HOP`]) assert.ok(cap.includes(x), `thiếu phân công seed ${x}`);
   });
 
   test('bị chặn: ghi trực tiếp phu_trach_phong; PCVP tự phân công; A3 gọi hàm', async () => {
@@ -105,6 +114,11 @@ describe('RLS-9 phu_trach_phong và admin_phan_cong_phong', { skip: SKIP }, () =
   });
 
   test('được phép: QTHT bật PCVP2 ↔ TONG_HOP rồi tắt; dòng cũ đóng den_ngay, không xoá', async () => {
+    await datE2ERT('2026-08-31');   // tạm kết thúc pcvp2 ↔ E2E_RT trước kỳ bật (giới hạn 2 phòng); finally trả giá trị gốc
+    try { await batTatPcvp2(); } finally { await datE2ERT(); }
+  });
+
+  async function batTatPcvp2() {
     const qtht = await userClient('demo_qtht');
     assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: true, p_ly_do: LY_DO, p_tu_ngay: '2026-09-01' }), 'bật');
     const on = await qtht.rpc('phu_trach', { p_lanh_dao: IDS.pcvp2, p_phong: 'TONG_HOP' });
@@ -119,7 +133,7 @@ describe('RLS-9 phu_trach_phong và admin_phan_cong_phong', { skip: SKIP }, () =
     assert.equal(sau.data, false, 'hết hiệu lực từ ngày tắt');
     const log = await qtht.from('quyen_lich_su').select('co, bat').eq('tai_khoan', IDS.pcvp2).order('id');
     assert.deepEqual(log.data.map((l) => [l.co, l.bat]).slice(-2), [['phu_trach:TONG_HOP', true], ['phu_trach:TONG_HOP', false]]);
-  });
+  }
 
   test('bị chặn: chồng kỳ cho cùng lãnh đạo/phòng; tắt khi không có phân công; phân công cho A2/Chánh VP', async () => {
     const qtht = await userClient('demo_qtht');

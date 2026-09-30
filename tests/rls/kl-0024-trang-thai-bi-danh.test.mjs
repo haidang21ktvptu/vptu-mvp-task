@@ -3,7 +3,7 @@
 // Mã NV-T7x, nội dung 'KL-1400 …', tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -44,10 +44,10 @@ describe('0024 — trang_thai 4 mức, lead time, v_nhiem_vu', { skip: SKIP }, (
   });
 
   test('2. KHONG_AP_DUNG cho đã đóng / thường xuyên / chờ điều kiện / cần điền hạn', async () => {
-    for (const [ma, tt0] of [['NV-T72', 'HOAN_THANH'], [fx.n6, 'THUONG_XUYEN'], [fx.n5, 'CHO_DIEU_KIEN'], [fx.n4, 'CAN_DIEN_HAN']]) {
-      const r = await tt(ma, '2026-09-14');
-      assert.equal(r.trang_thai, tt0); assert.equal(r.muc_canh_bao, 'KHONG_AP_DUNG');
-    }
+    const CA = [['NV-T72', 'HOAN_THANH'], [fx.n6, 'THUONG_XUYEN'], [fx.n5, 'CHO_DIEU_KIEN'], [fx.n4, 'CAN_DIEN_HAN']];
+    (await songSong(CA.map(([ma]) => () => tt(ma, '2026-09-14')))).forEach((r, i) => {   // hàm thuần, độc lập (D3)
+      assert.equal(r.trang_thai, CA[i][1]); assert.equal(r.muc_canh_bao, 'KHONG_AP_DUNG');
+    });
   });
 
   test('3. lead time = ngày hoàn thành − ngày nhận thật; ngày nhận ước tính → NULL; việc chưa đóng → NULL', async () => {

@@ -23,7 +23,7 @@ Chỉ khi cần kiểm thử trên dữ liệu thật trước go-live (ví dụ
 
 ## Điều gì được ghi lên project khi test
 
-- `scripts/seed-demo.mjs`: **thêm** auth user + dòng `accounts` còn thiếu cho 17 tài khoản `demo_*`, `demo_e2e_*` (có `demo_e2e_cv2` — chủ trì mới khi giao lại, 0045), `smoke_test` (cùng id với `supabase/seed.sql`, mật khẩu `123456`); tài khoản đã có, hoặc username đã tồn tại với id khác (tài khoản thật), thì bỏ qua. Phân công `phu_trach_phong` giả chỉ chèn khi phòng chưa có lãnh đạo thật phụ trách. Chạy tay: `KIEM_THU_MOI_TRUONG=production node scripts/seed-demo.mjs --project-ref frwyxcmbonjaimziiuqr` (CLI đã `supabase login`).
+- `scripts/seed-demo.mjs`: **thêm** auth user + dòng `accounts` còn thiếu cho 19 tài khoản `demo_*`, `demo_e2e_*` (có `demo_e2e_cv2` — chủ trì mới khi giao lại, 0045; `demo_e2e_anh` — ảnh hồ sơ, PR-2a), `smoke_test` (cùng id với `supabase/seed.sql`, mật khẩu `123456`); tài khoản đã có, hoặc username đã tồn tại với id khác (tài khoản thật), thì bỏ qua. Phân công `phu_trach_phong` giả chỉ chèn khi phòng chưa có lãnh đạo thật phụ trách. Chạy tay: `KIEM_THU_MOI_TRUONG=production node scripts/seed-demo.mjs --project-ref frwyxcmbonjaimziiuqr` (CLI đã `supabase login`).
 - Bộ dữ liệu mẫu `E2E-SEED` (`scripts/seed-demo-du-lieu.mjs`, chạy cuối `seed-demo.mjs`): văn bản `so_ket_luan = E2E-SEED` + 6 nhiệm vụ `noi_dung` bắt đầu `E2E-SEED` (đang thực hiện, quá hạn Đỏ, sắp đến hạn, hoàn thành có minh chứng, việc cũ `theo_1400=false`, việc mới chưa xác nhận) ở phòng `TONG_HOP` (hoặc phòng đầu tiên có PCVP phụ trách), owner/người giao là tài khoản `demo_*` tra theo username. Idempotent: chỉ chèn dòng thiếu, tính lại hạn theo hôm nay; thiếu tài khoản demo nào thì dừng và báo tên. Sau khi nạp, script đọc `v_nhiem_vu` bằng token `demo_cvp` và `demo_a0`, đỏ nếu không thấy đủ 6 dòng. Cần có vì `a0.spec`, `bo-cuc-mobile`, `kl-dashboard` giả định phạm vi A0/A1 có sẵn dòng. Trước đó script tạo đơn vị `E2E_RT` (phòng của `demo_e2e_tp/cv/cv2`, để việc có Owner tài khoản ở đó và giao lại đổi chủ trì) và **phòng thử** `E2E_PT` trong `dm_don_vi` (giữ phân công đang có của `demo_pcvp2`) và phân công `demo_pcvp2` phụ trách (`ly_do = seed kiểm thử`) — spec cần "PCVP phụ trách phòng X" (`chi-dao-tt`) đọc phòng lúc chạy qua `phongPhuTrach()`, không gõ cứng phòng thật.
 - Test RLS/e2e tự tạo và tự dọn: văn bản `RLS-TEST`, hội nghị 991–999, nhiệm vụ `NV-T*`, nhiệm vụ có nội dung bắt đầu bằng `E2E-TEST`, đề nghị từ chối, minh chứng, chỉ đạo trên các việc đó.
 - Trên production, các file RLS gọi `canh_bao_quet` **tự bỏ qua** (`kl-0029`, `kl-0030`, `kl-0032`, `kl-0034`, `kl-0035`): hàm quét gửi cảnh báo tới mọi việc thật và phần dọn của chúng xoá tin hệ thống sau mốc t0. Vài test phạm vi PCVP (`rls-9/10/11`, `kl-pham-vi-tong-hop`) có thể đỏ nếu phòng thật đã có lãnh đạo phụ trách (seed không chèn phân công giả) — đọc log để phân biệt với lỗi mã.
@@ -65,9 +65,37 @@ Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một c
 
 **Phát hành trước go-live — không cần backup tay**: `deploy-prod.yml` đã `pg_dump` (mã hoá, artifact 90 ngày) ngay trước `db push` production và ghi mốc backup; *Backup định kỳ production* vẫn giữ lịch 3 ngày/lần; bản local (`scripts/backup-db.sh`) chỉ chạy khi muốn có bản ngoài GitHub, không phải bước bắt buộc của quy trình tag.
 
+## e2e PR-2a — project `pr2a` (chỉ máy tính)
+
+- `ca-nhan-anh` (tài khoản riêng `demo_e2e_anh`), `id-duy-nhat` (`demo_e2e_mc`), `cap-nhat-nhanh-han` (`demo_e2e_nv`), `giao-viec-kiem-nhiem` (PCVP2, PCVP, Chánh VP, Trưởng phòng — mỗi vai một phiên, đổi 5 loại văn bản trên biểu mẫu, chỉ bấm Giao ở ô đại diện). Chạy sau `gd22` vì đổi phân công PCVP/PCVP2 lúc chạy; `dang-nhap` phụ thuộc `pr2a`. Logic nên không chạy điện thoại. Chạy riêng: `npx playwright test --project=pr2a --no-deps` (kèm biến đích).
+- Đếm lời gọi DB mỗi màn (đo tay, không chạy trong CI): spec `tests/e2e/_dem-goi/` nằm ngoài repo (`.git/info/exclude`); kết quả trước/sau ở thư mục bàn giao PR-2a.
+
+## Chạy e2e cục bộ có độ trễ để bắt lỗi đua (PR-2a, từ 30/9/2026)
+
+Supabase cục bộ trả lời gần như tức thì nên che mất lỗi "giao diện cho thao tác trước khi nạp xong" (CI #96: chọn "Văn bản mới" trong lúc biểu mẫu Giao việc còn nạp rồi bị bước khởi tạo ghi đè). Công tắc `E2E_TRE_MS=<ms>` (`tests/e2e/lib/tre.mjs`) làm mọi context Playwright trì hoãn mỗi lời gọi REST/RPC (`/rest/v1/`) và Storage (`/storage/v1/`) đúng số ms đó. **Mặc định tắt** — không đặt biến thì không đăng ký route nào; CI không đặt.
+
+```
+E2E_LOCAL=1 E2E_TRE_MS=300 npx playwright test          # toàn bộ, ~3 phút (không trễ ~2 phút)
+E2E_LOCAL=1 E2E_TRE_MS=500 npx playwright test nhiem-vu.spec.js --project=desktop --no-deps
+```
+
+Nên chạy một vòng có độ trễ trước khi mở PR khi đổi cách nạp dữ liệu (song song, theo trang, realtime). Quy ước để không đua: màn hình khoá ô nhập (`fieldset disabled` + `aria-busy`) cho tới khi nạp xong rồi mới đặt `data-san-sang="1"`; spec chờ cờ đó (`moGiaoViec` trong `lib/app.js`), không dùng "phần tử đã hiện" làm tín hiệu nạp xong; vẽ lại danh sách giữ ô đang mở / đang gõ (`giuONhap` trong `frontend/src/lib/dom.js`).
+
+## Đích kiểm thử phải chọn tường minh (PR-2a, từ 29/9/2026)
+
+`tests/rls/lib.mjs` và `tests/e2e/lib/keys.mjs` **không còn đích mặc định** (trước đây thiếu biến cục bộ là trỏ staging qua Supabase CLI — sự cố 29/9: một file RLS chạy nhầm lên staging). Phải đặt **đúng một**:
+
+| Bộ | Cục bộ | Staging | Production (công tắc) |
+|---|---|---|---|
+| `tests/rls` | `RLS_LOCAL=1` | `RLS_STAGING=1` | **không chạy** (`KIEM_THU_MOI_TRUONG=production` ⇒ dừng) |
+| `tests/e2e` | `E2E_LOCAL=1` | `E2E_STAGING=1` | `KIEM_THU_MOI_TRUONG=production` |
+
+Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi lời gọi mạng (kể cả Supabase CLI); `tests/rls/dich-tuong-minh.test.mjs` chứng minh (đếm kết nối TCP, `fetch`, tiến trình con = 0). Với staging/production, `SUPABASE_URL` (nếu đặt) phải đúng project của đích. CI: job "Áp migration + lint schema" đặt `RLS_LOCAL=1`; `deploy-staging.yml` job RLS đặt `RLS_STAGING=1`; `ci.yml` job e2e đặt `E2E_STAGING=1` khi `KIEM_THU_MOI_TRUONG` ≠ production. Bỏ `RLS_PROJECT_REF` / `E2E_PROJECT_REF`.
+
 ## RLS token thật trên staging (deploy-staging.yml) — từ v8 đợt 3
 
 - Job "Test RLS trên staging (token thật)" **chỉ chạy** khi push lên `main` chạm `supabase/**` hoặc `tests/rls/**` (output `cham_rls` của `.github/scripts/phan-loai.sh`, dùng chung với `ci.yml`; `workflow_dispatch` luôn chạy). PR chỉ frontend/tests e2e/docs không chạy job này.
 - Lý do: RLS của mọi PR đã chạy **đủ** trên Supabase cục bộ ở job "Áp migration + lint schema" của `ci.yml`; staging là instance nhỏ, quá tải làm job token thật đỏ ở mọi lần merge gần đây (lần cuối 17 phút 16 giây mới hỏng) — vừa tốn máy chạy vừa che lỗi thật.
-- `timeout-minutes: 8`; bước test `continue-on-error: true` nên job và cả lượt deploy staging **không đỏ** vì RLS; khi lỗi/quá giờ, một dòng cảnh báo được ghi vào Step Summary của job ("⚠️ RLS staging lỗi — không chặn deploy, xem log") và annotation `::warning` — vẫn nhìn thấy trên trang run.
+- Từ PR-2a (D2): **bỏ `continue-on-error`** — RLS đỏ hoặc quá giờ thì job **đỏ** (thấy ngay trên trang run), nhưng **không chặn Pages**: job `deploy` chỉ `needs: build`, không `needs` job RLS (đã kiểm workflow). Giới hạn: bước test **12 phút**, job **14 phút**. Bước "Ghi cảnh báo" chạy `if: failure()`, ghi annotation `::warning` và một dòng vào Step Summary ("⚠️ RLS staging lỗi — không chặn deploy, xem log").
+- Thời lượng bộ trên staging ≈ số lượt khứ hồi tuần tự × độ trễ mỗi lời gọi (≈ 0,25 s, suy từ run Deploy staging #74). Đếm lời gọi từng file: `node scripts/dem-goi-rls.mjs` (Supabase cục bộ; `tests/rls/dem-goi.mjs` bọc `fetch` khi đặt `DEM_GOI`). Mục tiêu cả bộ ≤ 6 phút: test mới gộp truy vấn, dùng `Promise.all` giới hạn ở chỗ độc lập.
 - `khong_anh_huong_app` giữ nguyên nghĩa và cách tính (đã kiểm lại với PR #83 → true, #85 → false + cham_rls=true, #88 → false + cham_rls=false).

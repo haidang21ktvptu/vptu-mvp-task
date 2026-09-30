@@ -46,6 +46,8 @@
 
   /* ---- Giao việc v8 (mockup 07): tấm ba khối đánh số, chấm số sáng khi đủ, chân tấm "Còn thiếu" + nút; cột phụ xem trước + ba bước ---- */
   .gv-the { padding: 8px 24px 0; }
+  .gv-noi { border: 0; padding: 0; margin: 0; min-width: 0; }   /* fieldset: khoá mọi ô khi đang nạp (PR-2a, lỗi đua CI #96) */
+  .gv-noi[aria-busy="true"] { cursor: progress; }
   .gv-phan { padding: 20px 0; border-top: 1px solid var(--vien-nhat); }
   .gv-phan:first-child { border-top: 0; }
   .gv-phan h2 { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--navy); margin-bottom: 2px; }

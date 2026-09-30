@@ -11,7 +11,7 @@ function dongHtml(t) {
   return `<div class="the-con" id="tc-${t.id}" data-nhiem-vu="${r.id}">
       <p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} · <b>${escapeHtml(a?.full_name || 'cán bộ')}</b>${a?.department ? ` (${escapeHtml(DEPT_NAMES[a.department] || a.department)})` : ''} đề nghị ${formatDateTime(t.tao_luc)}</p>
       <p class="ly-do">Lý do: ${escapeHtml(t.ly_do)}</p>
-      <form class="o mo" data-submit="duyetTuChoiThe" data-id="${t.id}" data-ma="${escapeHtml(r.ma)}">
+      <form class="o mo" id="oTc-${t.id}" data-submit="duyetTuChoiThe" data-id="${t.id}" data-ma="${escapeHtml(r.ma)}">
         <input name="noi_dung" placeholder="Ý kiến duyệt (không bắt buộc)" aria-label="Ý kiến duyệt">
         <button type="button" class="nut chinh" data-action="duyetTuChoiThe" data-dong-y="1" data-id="${t.id}" data-ma="${escapeHtml(r.ma)}">Đồng ý từ chối</button>
         <button type="button" class="nut" data-action="duyetTuChoiThe" data-dong-y="0" data-id="${t.id}" data-ma="${escapeHtml(r.ma)}">Không đồng ý</button>

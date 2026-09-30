@@ -4,7 +4,7 @@
 // đóng; quá hạn phản hồi → canh_bao_quet gửi tin người nhận chưa phản hồi, idempotent. Mã NV-T90/T91, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -28,9 +28,8 @@ const don = async () => {
   // Chỉ dọn dấu vết trên nhiệm vụ của test này (không xoá theo mốc thời gian — không chạm dữ liệu của test/người khác).
   const cua = Object.values(id);
   if (cua.length) {
-    await db().from('canh_bao').delete().in('nhiem_vu_id', cua);
-    await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
-    await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
+    await Promise.all([db().from('canh_bao').delete().in('nhiem_vu_id', cua), db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua),
+      db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua)]);   // dấu vết độc lập — một lượt (D3)
   }
   await db().from('nhiem_vu').delete().in('ma', ['NV-T90', 'NV-T91']);
   await db().from('dm_don_vi').update({ lanh_dao_phu_trach: null }).eq('ma', 'DANG_UY_UBND');
@@ -40,25 +39,23 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    await them({ ma: 'NV-T90', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2 });   // phòng Quản trị → PCVP2
-    await them({ ma: 'NV-T91', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 });                        // đơn vị ngoài + theo dõi Tổng hợp → PCVP
-    await db().from('dm_don_vi').update({ lanh_dao_phu_trach: IDS.pcvp }).eq('ma', 'DANG_UY_UBND');                // trùng PCVP → phải khử trùng
+    await Promise.all([   // độc lập — một lượt (D3)
+      them({ ma: 'NV-T90', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2 }),   // phòng Quản trị → PCVP2
+      them({ ma: 'NV-T91', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 }),                        // đơn vị ngoài + theo dõi Tổng hợp → PCVP
+      db().from('dm_don_vi').update({ lanh_dao_phu_trach: IDS.pcvp }).eq('ma', 'DANG_UY_UBND')]);             // trùng PCVP → phải khử trùng
   });
   after(don);
 
   test('1. ngay_lam_viec_sau bỏ Thứ Bảy/Chủ nhật', async () => {
     const f = async (tu, n) => (await rpc('demo_cvp', 'ngay_lam_viec_sau', { p_tu: tu, p_so: n })).data;
-    assert.equal(await f('2026-09-16', 2), '2026-09-18', 'Thứ Tư + 2 = Thứ Sáu');
-    assert.equal(await f('2026-09-17', 2), '2026-09-21', 'Thứ Năm + 2 = Thứ Hai (qua cuối tuần)');
-    assert.equal(await f('2026-09-18', 2), '2026-09-22', 'Thứ Sáu + 2 = Thứ Ba');
-    assert.equal(await f('2026-09-19', 1), '2026-09-21', 'Thứ Bảy + 1 = Thứ Hai');
-    assert.equal(await f('2026-09-16', 0), '2026-09-16', '0 ngày = chính ngày đó');
+    const CA = [['2026-09-16', 2, '2026-09-18', 'Thứ Tư + 2 = Thứ Sáu'], ['2026-09-17', 2, '2026-09-21', 'Thứ Năm + 2 = Thứ Hai (qua cuối tuần)'],
+      ['2026-09-18', 2, '2026-09-22', 'Thứ Sáu + 2 = Thứ Ba'], ['2026-09-19', 1, '2026-09-21', 'Thứ Bảy + 1 = Thứ Hai'], ['2026-09-16', 0, '2026-09-16', '0 ngày = chính ngày đó']];
+    (await songSong(CA.map(([tu, n]) => () => f(tu, n)))).forEach((kq, i) => assert.equal(kq, CA[i][2], CA[i][3]));   // hàm thuần (D3)
   });
 
   test('2. Chỉ A0 gửi CHI_DAO_TT; người nhận = Chánh VP + PCVP phụ trách phòng; hạn mặc định 2 ngày làm việc theo ngày Việt Nam; tin chỉ tới người nhận', async () => {
-    for (const u of ['demo_cvp', 'demo_pcvp2', 'demo_truongphong', 'demo_cv2']) {
-      assertDenied(await rpc(u, 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T90'], loai: 'CHI_DAO_TT', noi_dung: 'x' } }), `${u} gửi CHI_DAO_TT`);
-    }
+    const U = ['demo_cvp', 'demo_pcvp2', 'demo_truongphong', 'demo_cv2'];
+    (await songSong(U.map((u) => () => rpc(u, 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T90'], loai: 'CHI_DAO_TT', noi_dung: 'x' } })))).forEach((r, i) => assertDenied(r, `${U[i]} gửi CHI_DAO_TT`));
     assertLoi(await rpc('demo_a0', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T90'], loai: 'CHI_DAO_TT', noi_dung: 'x', han_phan_hoi: congNgay(homNayVN(), -1) } }), 'hạn phản hồi trong quá khứ');
     const r = await rpc('demo_a0', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T90'], loai: 'CHI_DAO_TT', noi_dung: 'KL-0032 Thường trực yêu cầu báo cáo' } });
     assertOk(r, 'A0 gửi CHI_DAO_TT'); tt1 = r.data;
@@ -67,9 +64,8 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
     assert.deepEqual([...c.nguoi_nhan].sort(), [IDS.cvp, IDS.pcvp2].sort(), 'người nhận: Chánh VP + PCVP phụ trách Quản trị');
     assert.equal(c.han_phan_hoi, ngayLamViecSau(homNayVN(), 1), 'hạn = 1 ngày làm việc sau hôm nay (GĐ22: A0 mặc định Khẩn; Thường 2 ngày)');
     const mau = /^Chỉ đạo Thường trực · NV-T90/;
-    assert.equal((await tin(IDS.cvp, 'NV-T90', mau)).length, 1, 'Chánh VP nhận tin');
-    assert.equal((await tin(IDS.pcvp2, 'NV-T90', mau)).length, 1, 'PCVP2 nhận tin');
-    for (const u of [IDS.cv2, IDS.truongphong, IDS.pcvp, IDS.a0]) assert.equal((await tin(u, 'NV-T90', mau)).length, 0, `${u} không nhận tin`);
+    const NHAN = [[IDS.cvp, 1, 'Chánh VP nhận tin'], [IDS.pcvp2, 1, 'PCVP2 nhận tin'], ...[IDS.cv2, IDS.truongphong, IDS.pcvp, IDS.a0].map((u) => [u, 0, `${u} không nhận tin`])];
+    (await songSong(NHAN.map(([u]) => () => tin(u, 'NV-T90', mau)))).forEach((t, i) => assert.equal(t.length, NHAN[i][1], NHAN[i][2]));   // chỉ đọc (D3)
     const ls = await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', id['NV-T90']).eq('cot', 'chi_dao');
     assert.ok(ls.data.some((l) => mau.test(l.gia_tri_moi)), 'lịch sử ghi vết');
   });
@@ -81,17 +77,15 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
   });
 
   test('4. Phản hồi: chỉ người nhận; A3 (Owner/theo dõi), A2, A1 ngoài danh sách, A0 bị chặn; tin tới A0 + người nhận khác', async () => {
-    for (const u of ['demo_cv2', 'demo_truongphong', 'demo_pcvp', 'demo_a0']) {
-      assertDenied(await rpc(u, 'chi_dao_phan_hoi', { p: { chi_dao_id: tt1, noi_dung: 'x' } }), `${u} phản hồi luồng TT`);
-    }
+    const U = ['demo_cv2', 'demo_truongphong', 'demo_pcvp', 'demo_a0'];
+    (await songSong(U.map((u) => () => rpc(u, 'chi_dao_phan_hoi', { p: { chi_dao_id: tt1, noi_dung: 'x' } })))).forEach((r, i) => assertDenied(r, `${U[i]} phản hồi luồng TT`));
     assertOk(await rpc('demo_pcvp2', 'chi_dao_phan_hoi', { p: { chi_dao_id: tt1, noi_dung: 'KL-0032 PCVP2 đã chỉ đạo phòng' } }), 'PCVP2 phản hồi');
     const c = await row(tt1);
     assert.equal(c.trang_thai, 'DA_PHAN_HOI'); assert.equal(c.phan_hoi_boi, IDS.pcvp2);
     const mau = /^Phản hồi chỉ đạo Thường trực · NV-T90/;
-    assert.equal((await tin(IDS.a0, 'NV-T90', mau)).length, 1, 'A0 nhận tin phản hồi');
-    assert.equal((await tin(IDS.cvp, 'NV-T90', mau)).length, 1, 'người nhận khác (Chánh VP) nhận tin');
-    assert.equal((await tin(IDS.pcvp2, 'NV-T90', mau)).length, 0, 'người phản hồi không tự nhận');
-    assert.equal((await tin(IDS.cv2, 'NV-T90', mau)).length, 0, 'Owner/theo dõi không nhận tin luồng TT');
+    const PH = [[IDS.a0, 1, 'A0 nhận tin phản hồi'], [IDS.cvp, 1, 'người nhận khác (Chánh VP) nhận tin'], [IDS.pcvp2, 0, 'người phản hồi không tự nhận'],
+      [IDS.cv2, 0, 'Owner/theo dõi không nhận tin luồng TT']];
+    (await songSong(PH.map(([u]) => () => tin(u, 'NV-T90', mau)))).forEach((t, i) => assert.equal(t.length, PH[i][1], PH[i][2]));   // chỉ đọc (D3)
     assertOk(await rpc('demo_cvp', 'chi_dao_phan_hoi', { p: { chi_dao_id: tt1, noi_dung: 'KL-0032 Chánh VP bổ sung' } }), 'người nhận khác vẫn phản hồi được');
     assert.equal((await db().from('chi_dao').select('id').eq('tra_loi_cho', tt1).eq('loai', 'PHAN_HOI')).data.length, 2);
   });
@@ -114,7 +108,8 @@ describe('0032 — chỉ đạo Thường trực: người gửi, người nhậ
   });
 
   test('6. Đóng: người nhận và quản trị không đóng luồng TT; A0 đóng đúng luồng mình mở, không đóng Y_KIEN hay chỉ đạo con; sau đóng không phản hồi', async () => {
-    for (const u of ['demo_pcvp2', 'demo_cvp', 'demo_qtht']) assertDenied(await rpc(u, 'chi_dao_dong', { p_id: tt1 }), `${u} đóng luồng TT`);
+    const DONG = ['demo_pcvp2', 'demo_cvp', 'demo_qtht'];
+    (await songSong(DONG.map((u) => () => rpc(u, 'chi_dao_dong', { p_id: tt1 })))).forEach((r, i) => assertDenied(r, `${DONG[i]} đóng luồng TT`));
     const y = await rpc('demo_a0', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T90'], loai: 'Y_KIEN', noi_dung: 'KL-0032 ý kiến' } });
     assertOk(y, 'A0 ghi Y_KIEN');
     assertDenied(await rpc('demo_a0', 'chi_dao_dong', { p_id: y.data }), 'A0 đóng Y_KIEN');

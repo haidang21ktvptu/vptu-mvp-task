@@ -5,7 +5,7 @@
 // có ly_do bắt đầu bằng "RLS-TEST LV" và được xoá bằng service_role ở cuối từng describe (rls-9 chạy sau cần seed sạch).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { userClient, anonClient, adminClient, assertDenied, assertOk, IDS } from './lib.mjs';
+import { userClient, anonClient, adminClient, assertDenied, assertOk, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, linhVucReady } from './fixtures-kl.mjs';
 
 const SKIP = (await linhVucReady()) ? false : 'Chưa có migration 0018–0019 trên project này (chạy lại sau khi merge).';
@@ -121,11 +121,11 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
     const qtht = await userClient('demo_qtht');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY }), 'cấp');
     const row = { ma: 'LV08_RLS_TEST', nganh_ma: NGANH, ten: 'RLS-TEST lĩnh vực', thu_tu: 99 };
-    for (const [u, c] of [['cv1', cv1], ['qtht', qtht], ['cv2 (quan_tri_kl)', await userClient('demo_cv2')]]) {
-      assertDenied(await c.from('dm_linh_vuc').insert(row).select('ma'), `${u} insert thẳng`);
-      assertDenied(await c.from('dm_linh_vuc').update({ ten: 'x' }).eq('ma', 'LV08_TAI_CHINH').select('ma'), `${u} update thẳng`);
-      assertDenied(await c.from('dm_linh_vuc').delete().eq('ma', 'LV08_TAI_CHINH').select('ma'), `${u} delete`);
-    }
+    const ca = [['cv1', cv1], ['qtht', qtht], ['cv2 (quan_tri_kl)', await userClient('demo_cv2')]].flatMap(([u, c]) => [
+      [`${u} insert thẳng`, () => c.from('dm_linh_vuc').insert(row).select('ma')],
+      [`${u} update thẳng`, () => c.from('dm_linh_vuc').update({ ten: 'x' }).eq('ma', 'LV08_TAI_CHINH').select('ma')],
+      [`${u} delete`, () => c.from('dm_linh_vuc').delete().eq('ma', 'LV08_TAI_CHINH').select('ma')]]);
+    (await songSong(ca.map((x) => x[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));   // ghi thẳng bị chặn, độc lập (D3)
   });
   test('admin_them_linh_vuc: A3/QTHT bị chặn; quan_tri_kl thêm → mã LV08_… sinh ở server, thu_tu cuối ngành, dm_lich_su ghi "them"', async () => {
     const cv1 = await userClient('demo_cv1'); const qtht = await userClient('demo_qtht'); const cv2 = await userClient('demo_cv2');

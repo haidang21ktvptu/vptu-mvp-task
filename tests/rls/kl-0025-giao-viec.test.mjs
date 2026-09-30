@@ -28,10 +28,11 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    await them({ ma: 'NV-T80', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 });     // Owner = cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
-    await them({ ma: 'NV-T81', owner_don_vi_ma: 'QUAN_TRI' });                              // Owner = phòng Quản trị, không tài khoản
-    await them({ ma: 'NV-T82', owner_don_vi_ma: 'DANG_UY_UBND' });                          // Owner đơn vị ngoài
-    await them({ ma: 'NV-T83', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', minh_chung: 'CV 9' });
+    await Promise.all([   // bốn việc độc lập (mã cố định) — một lượt (D3)
+      them({ ma: 'NV-T80', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 }),     // Owner = cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
+      them({ ma: 'NV-T81', owner_don_vi_ma: 'QUAN_TRI' }),                              // Owner = phòng Quản trị, không tài khoản
+      them({ ma: 'NV-T82', owner_don_vi_ma: 'DANG_UY_UBND' }),                          // Owner đơn vị ngoài
+      them({ ma: 'NV-T83', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', minh_chung: 'CV 9' })]);
   });
   after(don);
 

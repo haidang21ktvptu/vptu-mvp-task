@@ -5,7 +5,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { contextAs, pageAs, nav, NAP } from './lib/app.js';
+import { contextAs, pageAs, moGiaoViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -35,9 +35,8 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     const page = await context.newPage();
     await page.goto('./');
     await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
-    await nav(page, 'navGiaoViec');
+    await moGiaoViec(page);   // biểu mẫu đã khởi tạo theo vai (mặc định Khẩn đặt sau khi phiên + danh mục sẵn sàng)
     await expect(page.locator('#viewGiaoViec .gv-the')).toBeVisible();
-    await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', { timeout: 20_000 }); // biểu mẫu đã khởi tạo theo vai (mặc định Khẩn đặt sau khi phiên + danh mục sẵn sàng)
     await expect(page.locator('#klThVanBanWrap')).toBeVisible();         // v8 đợt 4: A0 nhập được văn bản; để trống số hiệu + ngày → DB ghi mốc "Thường trực giao …"
     await expect(page.locator('#klThVanBan')).toHaveValue('__moi__');
     await expect(page.locator('#gvVbA0')).toBeVisible();
@@ -68,8 +67,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     const soKL = `E2E-TEST-TTKL-${duAn}`; const nd = `${E2E_TAG} TT giao ${duAn} từ KL ${Date.now()}`;
     await page.goto('./');
     await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
-    await nav(page, 'navGiaoViec');
-    await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', { timeout: 20_000 });
+    await moGiaoViec(page);
     await expect(page.locator('#gvNganhWrap')).toBeHidden(); // chưa nhập văn bản → giao trực tiếp (văn bản KHAC), không đòi ngành
     await page.locator('#klThLoaiVB').selectOption('KL_BTV');
     await page.locator('#klThSoKL').fill(soKL); await page.locator('#klThNgayBH').fill(congNgay(homNayVN(), -3));

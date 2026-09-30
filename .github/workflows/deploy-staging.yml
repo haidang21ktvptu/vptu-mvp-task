@@ -115,7 +115,8 @@ jobs:
     needs: [migration, phan-loai]
     if: ${{ !cancelled() && needs.migration.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.phan-loai.outputs.cham_rls == 'true') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # bước test giới hạn 8 phút (quá giờ → outcome failure → bước cảnh báo vẫn chạy)
+    # PR-2a (D2): RLS đỏ / quá giờ ⇒ job ĐỎ (hiện trên trang run) nhưng KHÔNG chặn Pages — job deploy chỉ `needs: build`.
+    timeout-minutes: 14 # bước test giới hạn 12 phút (quá giờ → bước đỏ → bước cảnh báo if: failure() vẫn chạy)
     concurrency:
       group: kiem-thu-staging
       cancel-in-progress: false
@@ -129,10 +130,10 @@ jobs:
       # env ở cấp bước để dùng được STAGING_URL của workflow (cấp job không đọc được context `env`).
       - name: Test RLS (token thật, 7 tài khoản seed)
         id: rls
-        continue-on-error: true
-        timeout-minutes: 8
+        timeout-minutes: 12
         working-directory: tests/rls
         env:
+          RLS_STAGING: '1'   # đích tường minh (tests/rls/lib.mjs không có mặc định)
           SUPABASE_URL: ${{ env.STAGING_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
@@ -143,9 +144,9 @@ jobs:
           fi
           npm ci && npm test
       - name: Ghi cảnh báo khi RLS staging lỗi (không chặn deploy)
-        if: steps.rls.outcome != 'success'
+        if: failure()
         run: |
-          echo "::warning::RLS staging lỗi hoặc quá 8 phút — không chặn deploy, xem log job 'Test RLS trên staging (token thật)'."
+          echo "::warning::RLS staging lỗi hoặc quá 12 phút — không chặn deploy Pages, xem log job 'Test RLS trên staging (token thật)'."
           echo "### ⚠️ RLS staging lỗi — không chặn deploy, xem log job này (outcome: ${{ steps.rls.outcome }})" >> "$GITHUB_STEP_SUMMARY"
 
   build:

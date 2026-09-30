@@ -4,7 +4,7 @@
 // bằng chữ; chữ cũ (chu_cu) hợp lệ; cờ thieu_minh_chung tính lại; tách số hiệu/ngày; kiểm ngày với cận dưới NULL; múi giờ. Mã NV-T6x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -32,30 +32,36 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
   before(async () => {
     fx = await setupKlFixtures();   // văn bản mẫu ban hành 01/08/2026, chưa có ngày nhận
     await don();
-    await them({ ma: 'NV-T60', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 });         // Owner cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
-    await them({ ma: 'NV-T61', owner_don_vi_ma: 'TONG_HOP' });                                   // theo dõi cv1, không minh chứng
-    await them({ ma: 'NV-T62', owner_don_vi_ma: 'TONG_HOP', theo_1400: false, ngay_nhan_van_ban: '2026-08-03' }); // việc cũ, chữ cũ
-    await them({ ma: 'NV-T63', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv2 });      // theo dõi cv2 (QUAN_TRI) — ngoài phạm vi khối TH
+    await Promise.all([   // bốn việc độc lập (mã cố định) — một lượt (D3)
+      them({ ma: 'NV-T60', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 }),         // Owner cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
+      them({ ma: 'NV-T61', owner_don_vi_ma: 'TONG_HOP' }),                                   // theo dõi cv1, không minh chứng
+      them({ ma: 'NV-T62', owner_don_vi_ma: 'TONG_HOP', theo_1400: false, ngay_nhan_van_ban: '2026-08-03' }), // việc cũ, chữ cũ
+      them({ ma: 'NV-T63', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv2 })]);    // theo dõi cv2 (QUAN_TRI) — ngoài phạm vi khối TH
   });
   after(don);
 
   test('1. ghi trực tiếp bảng minh_chung bị chặn với người dùng đăng nhập (INSERT/UPDATE/DELETE)', async () => {
     const cv1 = await userClient('demo_cv1');
-    assertDenied(await cv1.from('minh_chung').insert({ nhiem_vu_id: id['NV-T60'], loai: 'so_hieu', so_hieu: '1/CV', ngay_van_ban: '2026-08-10', cap_nhan: 'CHANH_VAN_PHONG' }), 'INSERT');
-    assertDenied(await cv1.from('minh_chung').update({ hop_le: true }).eq('nhiem_vu_id', id['NV-T60']), 'UPDATE');
-    assertDenied(await cv1.from('minh_chung').delete().eq('nhiem_vu_id', id['NV-T60']), 'DELETE');
+    const [ins, upd, del] = await Promise.all([   // ba ca bị chặn độc lập — một lượt (D3)
+      cv1.from('minh_chung').insert({ nhiem_vu_id: id['NV-T60'], loai: 'so_hieu', so_hieu: '1/CV', ngay_van_ban: '2026-08-10', cap_nhan: 'CHANH_VAN_PHONG' }),
+      cv1.from('minh_chung').update({ hop_le: true }).eq('nhiem_vu_id', id['NV-T60']), cv1.from('minh_chung').delete().eq('nhiem_vu_id', id['NV-T60'])]);
+    assertDenied(ins, 'INSERT'); assertDenied(upd, 'UPDATE'); assertDenied(del, 'DELETE');
   });
 
   test('2. nop_minh_chung: người ngoài chặn; thiếu một trong ba trường, cấp sai, ngày ngoài khoảng bị chặn; Owner nộp được → dòng + lịch sử + tin', async () => {
-    assertDenied(await nop('demo_cv2', 'NV-T61'), 'A3 không phải Owner/theo dõi');
-    assertDenied(await nop('demo_truongphong', 'NV-T61'), 'A2 không phải Owner/theo dõi');
-    assertDenied(await nop('demo_cvp', 'NV-T61'), 'Chánh VP không phải Owner/theo dõi');
-    for (const thieu of [{ so_hieu: '' }, { ngay_van_ban: null }, { cap_nhan: '  ' }]) assertLoi(await nop('demo_cv2', 'NV-T60', thieu), /đủ ba trường/, `thiếu ${Object.keys(thieu)}`);
-    for (const thieu of [{ trich_yeu: '' }, { mo_ta_ket_qua: '  ' }]) assertLoi(await nop('demo_cv2', 'NV-T60', thieu), /trích yếu văn bản và mô tả kết quả/, `thiếu ${Object.keys(thieu)} (0046)`);
-    assertLoi(await nop('demo_cv2', 'NV-T60', { mo_ta_ket_qua: 'x'.repeat(601) }), /tối đa 600/, 'mô tả quá 600 ký tự (0046)');
-    assertLoi(await nop('demo_cv2', 'NV-T60', { cap_nhan: 'KHONG_CO' }), /không có trong danh mục/, 'cấp sai');
-    assertLoi(await nop('demo_cv2', 'NV-T60', { ngay_van_ban: '2026-07-31' }), /từ ngày ban hành\/ngày nhận \(01\/08\/2026\)/, 'trước ngày ban hành');
-    assertLoi(await nop('demo_cv2', 'NV-T60', { ngay_van_ban: '2030-01-01' }), /sau hôm nay/, 'sau hôm nay');
+    // Mười hai ca bị chặn độc lập (không ghi gì) — songSong giới hạn 4 (D3). [người, việc, tham số, null = 42501 | regex lỗi, nhãn]
+    const CA = [['demo_cv2', 'NV-T61', {}, null, 'A3 không phải Owner/theo dõi'], ['demo_truongphong', 'NV-T61', {}, null, 'A2 không phải Owner/theo dõi'],
+      ['demo_cvp', 'NV-T61', {}, null, 'Chánh VP không phải Owner/theo dõi'],
+      ...[{ so_hieu: '' }, { ngay_van_ban: null }, { cap_nhan: '  ' }].map((thieu) => ['demo_cv2', 'NV-T60', thieu, /đủ ba trường/, `thiếu ${Object.keys(thieu)}`]),
+      ...[{ trich_yeu: '' }, { mo_ta_ket_qua: '  ' }].map((thieu) => ['demo_cv2', 'NV-T60', thieu, /trích yếu văn bản và mô tả kết quả/, `thiếu ${Object.keys(thieu)} (0046)`]),
+      ['demo_cv2', 'NV-T60', { mo_ta_ket_qua: 'x'.repeat(601) }, /tối đa 600/, 'mô tả quá 600 ký tự (0046)'],
+      ['demo_cv2', 'NV-T60', { cap_nhan: 'KHONG_CO' }, /không có trong danh mục/, 'cấp sai'],
+      ['demo_cv2', 'NV-T60', { ngay_van_ban: '2026-07-31' }, /từ ngày ban hành\/ngày nhận \(01\/08\/2026\)/, 'trước ngày ban hành'],
+      ['demo_cv2', 'NV-T60', { ngay_van_ban: '2030-01-01' }, /sau hôm nay/, 'sau hôm nay']];
+    (await songSong(CA.map(([u, ma, p]) => () => nop(u, ma, p)))).forEach((r, i) => {
+      const [, , , re, nhan] = CA[i];
+      if (re) assertLoi(r, re, nhan); else assertDenied(r, nhan);
+    });
     const r = await nop('demo_cv2', 'NV-T60');
     assertOk(r, 'Owner nộp'); mc.a = r.data;
     const row = (await db().from('minh_chung').select('*').eq('id', mc.a).single()).data;
@@ -68,13 +74,12 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
 
   test('3. phạm vi đọc minh_chung = kl_pham_vi: theo dõi/Owner/trưởng phòng/PCVP phụ trách thấy; A3 khác, A2 và PCVP ngoài phạm vi không thấy', async () => {
     const r63 = await nop('demo_cv2', 'NV-T63', { so_hieu: '7/BC-QT' }); assertOk(r63, 'cv2 nộp cho NV-T63'); mc.c = r63.data;
-    for (const u of ['demo_cv1', 'demo_cv2', 'demo_truongphong', 'demo_pcvp', 'demo_pcvp2', 'demo_cvp']) {
-      const r = await docMc(u, 'NV-T60'); assertOk(r, u); assert.equal(r.data.length, 1, `${u} thấy minh chứng NV-T60`);
-    }
-    for (const u of ['demo_cv1', 'demo_truongphong', 'demo_pcvp']) {
-      const r = await docMc(u, 'NV-T63'); assertOk(r, u); assert.equal(r.data.length, 0, `${u} không thấy minh chứng NV-T63`);
-    }
-    for (const u of ['demo_pcvp2', 'demo_cvp']) { const r = await docMc(u, 'NV-T63'); assertOk(r, u); assert.equal(r.data.length, 1, `${u} thấy NV-T63`); }
+    // [vai, việc, số dòng kỳ vọng] — đọc độc lập, songSong giới hạn 4 (D3, PR-2a).
+    const ca = [...['demo_cv1', 'demo_cv2', 'demo_truongphong', 'demo_pcvp', 'demo_pcvp2', 'demo_cvp'].map((u) => [u, 'NV-T60', 1]),
+      ...['demo_cv1', 'demo_truongphong', 'demo_pcvp'].map((u) => [u, 'NV-T63', 0]), ...['demo_pcvp2', 'demo_cvp'].map((u) => [u, 'NV-T63', 1])];
+    (await songSong(ca.map(([u, ma]) => () => docMc(u, ma)))).forEach((r, i) => {
+      const [u, ma, n] = ca[i]; assertOk(r, u); assert.equal(r.data.length, n, `${u} ${n ? 'thấy' : 'không thấy'} minh chứng ${ma}`);
+    });
     assert.equal((await (await userClient('demo_cv1')).from('v_nhiem_vu').select('so_minh_chung_hop_le').eq('id', id['NV-T63'])).data.length, 0, 'view lọc theo RLS');
   });
 
@@ -98,9 +103,8 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertDenied(await xacNhan('demo_cv2', mc.a, true), 'Owner tài khoản (A3) không có quyền xác nhận');
     const r3 = await nop('demo_cv1', 'NV-T60', { so_hieu: '14/CV-VPTU', ngay_van_ban: '2026-08-18' }); assertOk(r3, 'người theo dõi nộp'); mc.d = r3.data;
     assertLoi(await xacNhan('demo_cv1', mc.d, true), /chính mình nộp/, 'người theo dõi tự xác nhận minh chứng mình nộp');
-    assertDenied(await xacNhan('demo_cv1', mc.c, true), 'A3 ngoài nhiệm vụ');
-    assertDenied(await xacNhan('demo_truongphong', mc.c, true), 'A2 ngoài phòng');
-    assertDenied(await xacNhan('demo_pcvp', mc.c, true), 'PCVP ngoài khối');
+    const [x1, x2, x3] = await Promise.all([xacNhan('demo_cv1', mc.c, true), xacNhan('demo_truongphong', mc.c, true), xacNhan('demo_pcvp', mc.c, true)]);   // bị chặn (D3)
+    assertDenied(x1, 'A3 ngoài nhiệm vụ'); assertDenied(x2, 'A2 ngoài phòng'); assertDenied(x3, 'PCVP ngoài khối');
     assertOk(await xacNhan('demo_cv1', mc.a, true), 'người theo dõi xác nhận hợp lệ');
     assertLoi(await xacNhan('demo_pcvp2', mc.b, false), /ghi lý do/, 'bác thiếu lý do');
     assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), 'PCVP phụ trách Owner bác');

@@ -66,16 +66,19 @@ function dongTuChoi(r) {
 function dongChiDao(c) {
   const r = timRow(c.nhiem_vu_id);
   return `<div class="the-con" id="vctCd-${c.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(findAccount(c.nguoi_gui)?.full_name || 'Lãnh đạo')} ${TEN_LOAI_CHI_DAO[c.loai]?.toLowerCase() || ''} ${formatDateTime(c.created_at)}: "${escapeHtml(c.noi_dung)}"${c.han_phan_hoi ? ` · hạn trả lời ${formatNgay(c.han_phan_hoi)}` : ''}. Chưa phản hồi.</p>
-    <form class="o mo" data-submit="phanHoiThe" data-chi-dao="${c.id}"><input name="noi_dung" required placeholder="Trả lời một dòng" aria-label="Nội dung phản hồi"><button type="submit" class="nut chinh">Gửi phản hồi</button>${xem(r)}</form></div>`;
+    <form class="o mo" id="oPh-${c.id}" data-submit="phanHoiThe" data-chi-dao="${c.id}"><input name="noi_dung" required placeholder="Trả lời một dòng" aria-label="Nội dung phản hồi"><button type="submit" class="nut chinh">Gửi phản hồi</button>${xem(r)}</form></div>`;
 }
+// Ô nộp tại chỗ (PR-2a lỗi (3)): mỗi thẻ một bộ id riêng theo việc (mc-<id>-so-hieu…) kèm nhãn ẩn <label for> — nhiều thẻ trên cùng trang
+// không trùng id, trình đọc màn hình và tự điền của trình duyệt nhận đúng ô.
+const oMc = (id, ten, nhan, mo, dong = '') => `<label for="mc-${id}-${ten}" class="sr-only">${nhan}</label>${mo} id="mc-${id}-${ten}">${dong}`;
 function dongMinhChung(r, homNay) {
   const cap = danhMucKl().cap.map((c) => `<option value="${c.ma}"${c.ma === r.cap_nhan_san_pham ? ' selected' : ''}>${escapeHtml(c.ten)}</option>`).join('');
   const han = r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : 'chưa có hạn';
   return `<div class="the-con ${r.muc_canh_bao === 'VANG' ? '' : 'do'}" id="vct-${r.id}" data-muc="${escapeHtml(r.muc_canh_bao)}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, ${han}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>
-    <form class="mc-inline" data-submit="nopMinhChungThe" data-id="${r.id}"><input name="so_hieu" placeholder="Số hiệu văn bản" aria-label="Số hiệu" autocomplete="off"><input type="date" name="ngay_van_ban" aria-label="Ngày văn bản" max="${homNay}">
-      <select name="cap_nhan" aria-label="Cấp nhận"><option value="">Cấp nhận</option>${cap}</select>
-      <input name="trich_yeu" placeholder="Trích yếu văn bản" aria-label="Trích yếu văn bản" autocomplete="off" maxlength="300" class="mc-rong">
-      <textarea name="mo_ta_ket_qua" rows="2" maxlength="600" placeholder="Mô tả kết quả (khoảng 100 chữ: đã làm gì, kết quả, gửi ai)" aria-label="Mô tả kết quả" class="mc-rong"></textarea>
+    <form class="mc-inline" id="oMcNop-${r.id}" data-submit="nopMinhChungThe" data-id="${r.id}">${oMc(r.id, 'so-hieu', 'Số hiệu văn bản', `<input name="so_hieu" placeholder="Số hiệu văn bản" autocomplete="off"`)}${oMc(r.id, 'ngay-van-ban', 'Ngày văn bản', `<input type="date" name="ngay_van_ban" max="${homNay}"`)}
+      ${oMc(r.id, 'cap-nhan', 'Cấp nhận', '<select name="cap_nhan"', `<option value="">Cấp nhận</option>${cap}</select>`)}
+      ${oMc(r.id, 'trich-yeu', 'Trích yếu văn bản', '<input name="trich_yeu" placeholder="Trích yếu văn bản" autocomplete="off" maxlength="300" class="mc-rong"')}
+      ${oMc(r.id, 'mo-ta', 'Mô tả kết quả', '<textarea name="mo_ta_ket_qua" rows="2" maxlength="600" placeholder="Mô tả kết quả (khoảng 100 chữ: đã làm gì, kết quả, gửi ai)" class="mc-rong"', '</textarea>')}
       <button type="submit" class="nut chinh">Nộp minh chứng</button></form>
     <div class="hanh-dong"><button type="button" class="nut" data-action="capNhatThe" data-id="${r.id}">Cập nhật tiến độ</button>${xem(r)}</div></div>`;
 }

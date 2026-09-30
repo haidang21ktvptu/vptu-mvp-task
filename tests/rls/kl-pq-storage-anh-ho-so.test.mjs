@@ -24,7 +24,7 @@ const tonTai = async (path) => {
   return ((await kho(db()).list(uid, { search: ten })).data || []).some((f) => f.name === ten);
 };
 
-describe('PQ-3 — Storage anh-ho-so: chỉ ghi/sửa/xoá trong thư mục của mình; người khác và anon không đọc qua API, không ghi, không xoá', { skip: SKIP }, () => {
+describe('PQ-3 — Storage anh-ho-so: chỉ ghi/sửa/xoá trong thư mục của mình; mọi người đã đăng nhập đọc được, anon không', { skip: SKIP }, () => {
   before(don);
   after(don);
 
@@ -57,30 +57,33 @@ describe('PQ-3 — Storage anh-ho-so: chỉ ghi/sửa/xoá trong thư mục củ
     assert.ok(await tonTai(cua(IDS.cv1, 'goc')), 'ảnh của cv1 vẫn còn sau anon');
   });
 
-  // LƯU Ý: hiện CHÍNH CHỦ (cv1) list thư mục mình cũng rỗng do storage.objects thiếu policy SELECT (xem test 4) — nên "người khác list rỗng"
-  // ở đây CHƯA chứng minh phân quyền; chỉ có giá trị khi PR RLS thêm policy SELECT cho chủ thư mục (lúc đó cv1 thấy, người khác vẫn rỗng).
-  test('3. List thư mục của cv1 qua API: cv2, Chánh VP, QTHT, anon → rỗng (chưa chứng minh phân quyền — xem ghi chú)', async () => {
-    for (const u of ['demo_cv2', 'demo_cvp', 'demo_qtht']) {
-      const ls = await kho(await userClient(u)).list(IDS.cv1, { search: 'kl-pq3' });
-      assert.equal(ls.error, null, `${u} list: ${ls.error?.message}`); assert.equal(ls.data.length, 0, `${u} list thư mục cv1 phải rỗng`);
+  test('3. List thư mục của cv1 qua API: cv1 (chủ), cv2, Chánh VP, QTHT (đã đăng nhập) thấy đúng tệp; anon → rỗng', async () => {
+    for (const u of ['demo_cv1', 'demo_cv2', 'demo_cvp', 'demo_qtht']) {
+      const ls = await kho(await userClient(u)).list(IDS.cv1, { search: 'kl-pq3-goc' });
+      assert.equal(ls.error, null, `${u} list: ${ls.error?.message}`);
+      assert.deepEqual(ls.data.map((f) => f.name), ['kl-pq3-goc.png'], `${u} list thư mục cv1 thấy đúng tệp`);
     }
     assert.equal(((await kho(anonClient()).list(IDS.cv1, { search: 'kl-pq3' })).data || []).length, 0, 'anon list rỗng');
-    const cv1 = await userClient('demo_cv1');
-    assert.equal(((await kho(cv1).list(IDS.cv1, { search: 'kl-pq3' })).data || []).length, 0, 'cv1 list thư mục mình cũng rỗng [hanh-vi-hien-tai]');
   });
 
-  // Đỏ do bucket anh-ho-so public = true (0041): download qua API (kể cả không đăng nhập) trả được ảnh của người khác.
-  // PR RLS chuyển bucket riêng tư sẽ làm test này xanh.
-  test('3b. [hanh-vi-hien-tai] cv2, Chánh VP, QTHT, anon download ảnh của cv1 qua API phải bị chặn — hiện KHÔNG chặn (bucket public)', { todo: 'đỏ do bucket public=true; PR RLS chuyển bucket riêng tư sẽ làm test này xanh' }, async () => {
+  test('3b. Bucket riêng tư (Q5 a): cv2, Chánh VP, QTHT download ảnh của cv1 được; anon download bị chặn; URL công khai không mở được', async () => {
     for (const u of ['demo_cv2', 'demo_cvp', 'demo_qtht']) {
-      assert.ok((await kho(await userClient(u)).download(cua(IDS.cv1, 'goc'))).error, `${u} download ảnh của cv1 qua API phải bị chặn`);
+      const r = await kho(await userClient(u)).download(cua(IDS.cv1, 'goc'));
+      assert.equal(r.error, null, `${u} download ảnh của cv1: ${r.error?.message}`);
     }
     assert.ok((await kho(anonClient()).download(cua(IDS.cv1, 'goc'))).error, 'anon download qua API phải bị chặn');
+    const cong = kho(anonClient()).getPublicUrl(cua(IDS.cv1, 'goc')).data.publicUrl;
+    assert.ok((await fetch(cong)).status >= 400, 'URL công khai phải trả lỗi (bucket riêng tư)');
   });
 
-  // LỖI HIỆN TẠI (phát hiện 2026-09-22, chờ PR RLS): storage.objects không có policy SELECT cho chủ thư mục → upload upsert:true
-  // (đúng cách màn Cá nhân gọi, kể cả tệp MỚI), update và remove của CHÍNH CHỦ đều bị chặn/0 tệp. Test này ghi hành vi mong muốn.
-  test('4. [hanh-vi-hien-tai] cv1 ghi đè (upsert) và xoá ảnh của chính mình phải được — hiện bị chặn vì thiếu policy SELECT', { todo: 'chờ PR RLS thêm policy SELECT anh-ho-so cho chủ thư mục' }, async () => {
+  test('3c. Signed URL: cv2 (đã đăng nhập) tạo signed URL ảnh của cv1 và mở được; anon không tạo được', async () => {
+    const s = await kho(await userClient('demo_cv2')).createSignedUrl(cua(IDS.cv1, 'goc'), 60);
+    assert.equal(s.error, null, `cv2 tạo signed URL: ${s.error?.message}`);
+    assert.equal((await fetch(s.data.signedUrl)).status, 200, 'signed URL mở được');
+    assert.ok((await kho(anonClient()).createSignedUrl(cua(IDS.cv1, 'goc'), 60)).error, 'anon tạo signed URL phải bị chặn');
+  });
+
+  test('4. cv1 ghi đè (upsert) và xoá ảnh của chính mình được (policy SELECT cho chủ thư mục — 0052)', async () => {
     const cv1 = await userClient('demo_cv1');
     const de = await kho(cv1).upload(cua(IDS.cv1, 'goc'), blob(), { contentType: 'image/png', upsert: true });
     assert.equal(de.error, null, `cv1 upsert ảnh mình: ${de.error?.message}`);

@@ -88,10 +88,13 @@ function render() {
   o.dataset.nap = String(Date.now());
 }
 
+let luotTvb = 0;
 export async function loadTheoVanBan() {
   const o = $('tvbCay'); if (o) delete o.dataset.nap;
+  const lan = ++luotTvb;
   try {
     const [r, m, vb] = await Promise.all([loadKlRows(), loadMinhChungTatCa(), loadVanBan()]);
+    if (lan !== luotTvb) return;   // đã có lượt nạp mới hơn
     rows = r.rows; mc = m; vanBan = new Map(vb.map((h) => [h.id, h]));
     render();
   } catch (e) { notifyError('Không nạp được cây văn bản: ' + e.message); }

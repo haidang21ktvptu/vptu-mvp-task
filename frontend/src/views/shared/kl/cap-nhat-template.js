@@ -11,11 +11,12 @@ export const klCapNhatTemplate = `
         <label for="klCnTienDo" class="nhan">Tiến độ</label>
         <select id="klCnTienDo" class="o-nhap"></select>
       </div>
-      <div>
+      <div id="klCnHanWrap">
         <label for="klCnHan" class="nhan">Hạn xử lý <span id="klCnHanLoai" class="chu-phu"></span></label>
         <input type="date" id="klCnHan" class="o-nhap">
         <small id="klCnHanGhiChu" class="chu-phu" aria-live="polite"></small>
       </div>
+      <p id="klCnHanKhoa" class="chu-phu hidden"></p>
     </div>
 
     <div id="klCnChuaCoHanWrap" class="mt-3">

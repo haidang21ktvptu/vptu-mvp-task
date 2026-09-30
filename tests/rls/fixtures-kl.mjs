@@ -21,14 +21,17 @@ export function setupKlFixtures() {
 }
 
 // Trên staging trước khi merge 0014–0016 chưa có bảng → trả về null để test tự bỏ qua.
-export async function klSchemaReady() {
-  const r = await adminClient().from('nhiem_vu').select('id').limit(1);
-  return !r.error;
+// Nhớ kết quả trong tiến trình (--test-isolation=none: mọi file gọi lúc nạp) — mỗi phép dò một lời gọi cho cả bộ (D3, PR-2a).
+let klSan;
+export function klSchemaReady() {
+  klSan ??= adminClient().from('nhiem_vu').select('id').limit(1).then((r) => !r.error);
+  return klSan;
 }
 // Trên staging trước khi merge 0018 chưa có dm_linh_vuc → fixture bỏ cột linh_vuc_ma, rls-11 tự bỏ qua.
-export async function linhVucReady() {
-  const r = await adminClient().from('dm_linh_vuc').select('ma').limit(1);
-  return !r.error;
+let lvSan;
+export function linhVucReady() {
+  lvSan ??= adminClient().from('dm_linh_vuc').select('ma').limit(1).then((r) => !r.error);
+  return lvSan;
 }
 
 async function createKlFixtures() {

@@ -5,7 +5,7 @@
 // B5/B6 (minh chứng, đóng) KHÔNG kiểm ở đây (logic sẽ đổi ở PR sau). Khoá dữ liệu: "KL-PQ4"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS } from './lib.mjs';
+import { adminClient, anonClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -48,10 +48,9 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
   after(don);
 
   test('1. E1: Owner đơn vị ngoài, theo dõi A3 — mọi vai không phải người theo dõi bị chặn 42501 (kể cả CVP, PCVP phụ trách phòng, A0, quan_tri_kl, QTHT, thư ký TT, anon)', async () => {
-    for (const u of ['demo_cv2', 'demo_truongphong', 'demo_cvp', 'demo_pcvp', 'demo_pcvp2', 'demo_a0', 'demo_qtht', TK.username]) {
-      assertDenied(await nhan(u, 'DV-A3'), `${u} xác nhận nhận việc DV-A3`);
-    }
-    assertDenied(await anonClient().rpc('xac_nhan_nhan_viec', { p_id: id['DV-A3'] }), 'anon');
+    const U = ['demo_cv2', 'demo_truongphong', 'demo_cvp', 'demo_pcvp', 'demo_pcvp2', 'demo_a0', 'demo_qtht', TK.username];
+    const kq = await songSong([...U.map((u) => () => nhan(u, 'DV-A3')), () => anonClient().rpc('xac_nhan_nhan_viec', { p_id: id['DV-A3'] })]);   // bị chặn, độc lập (D3)
+    kq.forEach((r, i) => assertDenied(r, U[i] ? `${U[i]} xác nhận nhận việc DV-A3` : 'anon'));
     assert.equal((await db().from('lich_su').select('id').eq('nhiem_vu_id', id['DV-A3']).eq('cot', 'xac_nhan_nhan_viec')).data.length, 0, 'chưa ai nhận');
   });
 
@@ -64,7 +63,8 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
   });
 
   test('3. E1: Owner đơn vị ngoài, theo dõi A2 — Trưởng phòng nhận được; A3 cùng phòng (cv1), CVP, PCVP phụ trách, A0, QTHT bị chặn', async () => {
-    for (const u of ['demo_cv1', 'demo_cvp', 'demo_pcvp', 'demo_a0', 'demo_qtht']) assertDenied(await nhan(u, 'DV-A2'), `${u} nhận DV-A2`);
+    const U2 = ['demo_cv1', 'demo_cvp', 'demo_pcvp', 'demo_a0', 'demo_qtht'];
+    (await songSong(U2.map((u) => () => nhan(u, 'DV-A2')))).forEach((r, i) => assertDenied(r, `${U2[i]} nhận DV-A2`));
     const r = await nhan('demo_truongphong', 'DV-A2');
     assertOk(r, 'Trưởng phòng (theo dõi) nhận'); assert.equal(r.data, true);
   });
@@ -88,11 +88,13 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
     assert.equal((await db().from('chi_dao').select('id').eq('nhiem_vu_id', id['DV-A3'])).data.length, 0, 'không có chỉ đạo nào được ghi');
   });
 
-  // LỖI HIỆN TẠI (phát hiện 2026-09-22, chờ PR RLS): văn bản có tao_boi NULL (nhập bằng script/service_role) → biểu thức
-  // "tao_boi = auth.uid() OR A1 OR quan_tri_kl" cho NULL, IF NOT NULL không chặn → MỌI người đăng nhập sửa được trích yếu.
-  test('5b. [hanh-vi-hien-tai] văn bản tao_boi NULL: QTHT / A3 đặt trích yếu phải bị chặn — hiện KHÔNG chặn (lỗi NULL trong allowlist)', { todo: 'chờ PR RLS sửa van_ban_dat_trich_yeu (tao_boi NULL)' }, async () => {
-    assertDenied(await rpc('demo_qtht', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu` }), 'QTHT đặt trích yếu văn bản tao_boi NULL');
-    assertDenied(await rpc('demo_cv1', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu` }), 'A3 đặt trích yếu văn bản tao_boi NULL');
+  // 0052 (C1): văn bản tao_boi NULL (nhập bằng script) — allowlist viết IS NOT TRUE nên NULL không còn lọt; chỉ A1 và quan_tri_kl sửa được.
+  test('5b. văn bản tao_boi NULL: A3, QTHT, A2, A0 bị chặn (42501); A1, quan_tri_kl được', async () => {
+    for (const u of ['demo_cv1', 'demo_qtht', 'demo_truongphong', 'demo_a0']) {
+      assertDenied(await rpc(u, 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu ${u}` }), `${u} đặt trích yếu văn bản tao_boi NULL`);
+    }
+    assertOk(await rpc('demo_pcvp', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu A1` }), 'A1 đặt trích yếu');
+    assertOk(await rpc('demo_cv2', 'van_ban_dat_trich_yeu', { p_id: vbNull, p_trich_yeu: `${KHOA} trích yếu qtkl` }), 'quan_tri_kl (cv2) đặt trích yếu');
   });
 
   test('6. quan_tri_kl là A3 (cv2): xac_nhan_nhan_viec / chi_dao_gui / dat_cap_quyet_dinh trên việc người khác → 42501 (cờ nhập liệu không thêm quyền điều hành); thư ký TT cũng vậy', async () => {

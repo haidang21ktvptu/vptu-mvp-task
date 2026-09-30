@@ -1,5 +1,5 @@
-// PQ-5 — ca biên E3 (PCVP kiêm nhiệm ngành–lĩnh vực: thấy việc của phòng khác nhưng KHÔNG giao việc cho phòng đó — phu_trach() chỉ xét
-// phân công phòng; test [hanh-vi-hien-tai], chờ xác nhận nghiệp vụ), E4 (thư ký Thường trực là A2 / A1 giữ cờ: đóng CHI_DAO_TT thay mặt
+// PQ-5 — ca biên E3 (PCVP kiêm nhiệm ngành–lĩnh vực — 0052, C3: giao việc theo đúng quy tắc phạm vi xem kl_pham_vi_pcvp: kiêm nhiệm
+// hiệu lực hôm nay của mình ⇒ được; (ngành, lĩnh vực) có người khác kiêm nhiệm ⇒ không, kể cả PCVP phụ trách cả phòng), E4 (thư ký Thường trực là A2 / A1 giữ cờ: đóng CHI_DAO_TT thay mặt
 // được, không cờ bị chặn, thu cờ mất ngay; cờ không bớt quyền vai gốc), và A1/A2 giữ quan_tri_kl giao thẳng Owner đơn vị ngoài,
 // không ghi thay_mat_cho (ghi → 22023). Khoá dữ liệu: "KL-PQ5"; phân công kiêm nhiệm ly_do "KL-PQ5 LV"; tự dọn, cờ khôi phục ở before lẫn after.
 import { test, describe, before, after } from 'node:test';
@@ -44,18 +44,28 @@ describe('PQ-5 — PCVP kiêm nhiệm ngành–lĩnh vực không giao việc; t
   });
   after(don);
 
-  test('1. E3 [hanh-vi-hien-tai]: PCVP2 kiêm nhiệm (TONG_HOP, KINH_TE_TONG_HOP, LV08_TAI_CHINH) thấy việc của phòng Tổng hợp nhưng giao_viec cho phòng/cán bộ Tổng hợp bị chặn 42501; PCVP phụ trách phòng vẫn giao được', async () => {
-    // Chờ xác nhận nghiệp vụ: PCVP kiêm nhiệm theo ngành–lĩnh vực có được GIAO việc cho phòng đó không? Mã hiện tại: phu_trach() chỉ xét dòng nganh_ma IS NULL → KHÔNG.
+  test('1. E3 (C3): PCVP2 kiêm nhiệm (TONG_HOP, KINH_TE_TONG_HOP, LV08_TAI_CHINH) thấy và GIAO được việc lĩnh vực đó cho phòng/cán bộ Tổng hợp; lĩnh vực khác → 42501; PCVP phụ trách cả phòng giao đúng lĩnh vực đang có kiêm nhiệm → 42501, lĩnh vực khác được', async () => {
     const qtht = await userClient('demo_qtht');
     assertOk(await qtht.rpc('admin_kiem_nhiem_linh_vuc', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_nganh_ma: 'KINH_TE_TONG_HOP', p_linh_vuc_ma: ['LV08_TAI_CHINH'], p_bat: true, p_ly_do: LY_DO, p_tu_ngay: '2026-09-01' }), 'bật kiêm nhiệm');
     const thay = await (await userClient('demo_pcvp2')).from('nhiem_vu').select('ma').eq('ma', 'NV-T01');
     assertOk(thay, 'pcvp2 đọc'); assert.equal(thay.data.length, 1, 'pcvp2 thấy NV-T01 (Tổng hợp, Tài chính) nhờ kiêm nhiệm');
-    assertDenied(await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP' }), 'pcvp2 kiêm nhiệm giao cho phòng Tổng hợp');
-    assertDenied(await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'pcvp2 kiêm nhiệm giao cho cv1 (Tổng hợp)');
-    assert.match(loi(await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP' })), /được phân công phụ trách/);
-    const ok = await giao('demo_pcvp', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
-    assertOk(ok, 'PCVP phụ trách phòng Tổng hợp giao được');
+    assertOk(await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP' }), 'pcvp2 kiêm nhiệm giao cho phòng Tổng hợp (đúng lĩnh vực)');
+    assertOk(await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'pcvp2 kiêm nhiệm giao cho cv1 (Tổng hợp, đúng lĩnh vực)');
+    const khac = await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP', linh_vuc_ma: 'LV08_NGAN_SACH' });
+    assertDenied(khac, 'pcvp2 giao lĩnh vực không kiêm nhiệm'); assert.match(loi(khac), /được phân công phụ trách/);
+    assertDenied(await giao('demo_pcvp', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'PCVP cả phòng giao đúng lĩnh vực đang có người kiêm nhiệm');
+    assertOk(await giao('demo_pcvp', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, linh_vuc_ma: 'LV08_NGAN_SACH' }), 'PCVP cả phòng giao lĩnh vực không ai kiêm nhiệm');
     assertOk(await qtht.rpc('admin_kiem_nhiem_linh_vuc', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_nganh_ma: 'KINH_TE_TONG_HOP', p_linh_vuc_ma: ['LV08_TAI_CHINH'], p_bat: false, p_ly_do: LY_DO }), 'tắt kiêm nhiệm');
+    await db().from('phu_trach_phong').delete().like('ly_do', `${LY_DO}%`);
+  });
+
+  test('1b. E3 (C3): kiêm nhiệm hết hạn hôm qua (giờ Việt Nam) ⇒ quay về quy tắc cả phòng: PCVP2 giao → 42501, PCVP phụ trách cả phòng giao được', async () => {
+    const homNay = (await db().rpc('kl_hom_nay')).data;
+    const cong = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+    assertOk(await db().from('phu_trach_phong').insert({ lanh_dao_id: IDS.pcvp2, phong: 'TONG_HOP', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH',
+      tu_ngay: cong(homNay, -30), den_ngay: cong(homNay, -1), ly_do: `${LY_DO} hết hạn`, phan_cong_boi: IDS.qtht }), 'kiêm nhiệm hết hạn hôm qua');
+    assertDenied(await giao('demo_pcvp2', { owner_don_vi_ma: 'TONG_HOP' }), 'pcvp2 (kiêm nhiệm đã hết hạn) giao cho Tổng hợp');
+    assertOk(await giao('demo_pcvp', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'PCVP cả phòng giao được khi kiêm nhiệm đã hết hạn');
     await db().from('phu_trach_phong').delete().like('ly_do', `${LY_DO}%`);
   });
 

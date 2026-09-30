@@ -3,7 +3,7 @@
 // thống là phản hồi vào luồng Y_KIEN do chính mình mở; cảnh báo Đỏ đặc biệt không gửi A0. Mã NV-T88/T89, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, assertNoRows, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, assertNoRows, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -64,11 +64,12 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
   test('2. Mọi hàm ghi từ chối A0 (42501): giao_viec, chỉ đạo điều hành, cấp quyết định, nhận việc, minh chứng, đóng; ghi bảng trực tiếp 0 dòng', async () => {
     const me = await a0();
     assertDenied(await me.rpc('giao_viec', { p: { noi_dung: 'KL-0030 A0 giao', van_ban_id: fx.hn, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31' } }), 'giao_viec cho chuyên viên (GĐ22: A0 chỉ giao lãnh đạo VP hoặc phòng)');
-    for (const loai of ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU']) {
-      assertDenied(await me.rpc('chi_dao_gui', { p: { nhiem_vu_id: id['NV-T88'], loai, noi_dung: 'x', han_moi: '2026-12-31', nguoi_theo_doi_moi: IDS.cv2 } }), `chi_dao_gui ${loai}`);
-    }
-    assertDenied(await me.rpc('dat_cap_quyet_dinh', { p_id: id['NV-T88'], p_cap: 'CHANH_VAN_PHONG' }), 'dat_cap_quyet_dinh');
-    assertDenied(await me.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T88'] }), 'xac_nhan_nhan_viec');
+    // Các ca bị chặn độc lập — songSong giới hạn 4 (D3, PR-2a).
+    const ca = [...['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU'].map((loai) => [`chi_dao_gui ${loai}`,
+      () => me.rpc('chi_dao_gui', { p: { nhiem_vu_id: id['NV-T88'], loai, noi_dung: 'x', han_moi: '2026-12-31', nguoi_theo_doi_moi: IDS.cv2 } })]),
+      ['dat_cap_quyet_dinh', () => me.rpc('dat_cap_quyet_dinh', { p_id: id['NV-T88'], p_cap: 'CHANH_VAN_PHONG' })],
+      ['xac_nhan_nhan_viec', () => me.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T88'] })]];
+    (await songSong(ca.map((x) => x[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
     assertDenied(await me.rpc('nop_minh_chung', { p: { nhiem_vu_id: id['NV-T88'], so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nop_minh_chung');
     assertDenied(await me.rpc('xac_nhan_minh_chung', { p_id: mcId, p_hop_le: true, p_ly_do: null }), 'xac_nhan_minh_chung');
     assertDenied(await me.rpc('dong_nhiem_vu', { p_id: id['NV-T88'], p_ngay_hoan_thanh: null }), 'dong_nhiem_vu');

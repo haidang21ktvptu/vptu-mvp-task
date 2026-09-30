@@ -2,45 +2,54 @@
 // (security_invoker → RLS kl_pham_vi 0025 quyết định ai thấy gì; frontend không lọc theo vai trò/phòng). Danh mục nạp một lần.
 import { supabase } from '../supabase.js';
 import { state } from '../state.js';
+import { COT_VIEC, COT_TU_CHOI, taiTheoTrang } from './cot.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data || []; };
 
-// Danh mục / cấu hình: một lượt đọc đang bay dùng chung (Điều hành và Nhiệm vụ mở gần nhau từng gọi 7 + 1 truy vấn hai lần).
-let dangDocDanhMuc = null; let dangDocCauHinh = null;
+// Danh mục + cấu hình (B6): MỘT RPC kl_danh_muc() (SECURITY INVOKER — đúng dữ liệu RLS cho người gọi đọc), nhớ sessionStorage 30 phút
+// (chỉ danh mục, không phải tài khoản); màn Quản trị ghi danh mục / ngưỡng thì gọi xoaDanhMucDaNho(). Lượt đọc đang bay dùng chung.
+const KHOA_NHO = 'vptu.kl_danh_muc';
+const HAN_NHO_MS = 30 * 60_000;
+let dangDocDanhMuc = null;
+function docNho() {
+  try {
+    const x = JSON.parse(sessionStorage.getItem(KHOA_NHO) || 'null');
+    return x && x.uid === state.user?.id && Date.now() - x.luc < HAN_NHO_MS ? x.dm : null;
+  } catch { return null; }
+}
+export function xoaDanhMucDaNho() {
+  danhMuc = null; cauHinh = null;
+  try { sessionStorage.removeItem(KHOA_NHO); } catch { /* trình duyệt chặn lưu trữ: bỏ qua */ }
+}
+function dat(dm) {
+  const { cauHinh: ch, ...con } = dm;
+  danhMuc = con;
+  cauHinh = Object.fromEntries(Object.entries(ch || {}).map(([k, v]) => [k, Number(v)]));
+}
 export function loadDanhMucKl(lai = false) {
   if (danhMuc && !lai) return Promise.resolve(danhMuc);
+  const nho = lai ? null : docNho();
+  if (nho) { dat(nho); return Promise.resolve(danhMuc); }
   if (!dangDocDanhMuc) dangDocDanhMuc = docDanhMuc().finally(() => { dangDocDanhMuc = null; });
   return dangDocDanhMuc;
 }
 async function docDanhMuc() {
-  const [n, l, d, s, c, h, t] = await Promise.all([
-    supabase.from('dm_nganh').select('ma, ten, thu_tu').order('thu_tu'),
-    supabase.from('dm_linh_vuc').select('ma, nganh_ma, ten, thu_tu').order('thu_tu'),
-    supabase.from('dm_don_vi').select('ma, ten, thu_tu, trong_van_phong, phong').order('thu_tu'),
-    supabase.from('dm_san_pham').select('ma, ten, thu_tu').order('thu_tu'),
-    supabase.from('dm_cap').select('ma, ten, thu_tu').order('thu_tu'),
-    supabase.from('dm_loai_thoi_han').select('ma, ten, thu_tu, cho_phep_tao_moi').order('thu_tu'),
-    supabase.from('dm_tien_do').select('ma, ten, thu_tu').order('thu_tu'),
-  ]);
-  danhMuc = { nganh: loi(n, 'ngành'), linhVuc: loi(l, 'lĩnh vực'), donVi: loi(d, 'đơn vị'), sanPham: loi(s, 'sản phẩm'), cap: loi(c, 'cấp'),
-    loaiThoiHan: loi(h, 'loại thời hạn'), tienDo: loi(t, 'tiến độ') };
+  const dm = loi(await supabase.rpc('kl_danh_muc'), 'danh mục');
+  dat(dm);
+  try { sessionStorage.setItem(KHOA_NHO, JSON.stringify({ uid: state.user?.id, luc: Date.now(), dm })); } catch { /* không lưu được: vẫn dùng bản trong bộ nhớ */ }
   return danhMuc;
 }
 export const danhMucKl = () => danhMuc || { nganh: [], linhVuc: [], donVi: [], sanPham: [], cap: [], loaiThoiHan: [], tienDo: [] };
 export const tenTrongDanhMuc = (bang, ma) => danhMucKl()[bang]?.find((x) => x.ma === ma)?.ten || ma || '';
 export const linhVucCuaNganh = (nganhMa) => danhMucKl().linhVuc.filter((l) => l.nganh_ma === nganhMa);
 
-export function loadCauHinhKl(lai = false) {
-  if (cauHinh && !lai) return Promise.resolve(cauHinh);
-  if (!dangDocCauHinh) dangDocCauHinh = docCauHinh().finally(() => { dangDocCauHinh = null; });
-  return dangDocCauHinh;
-}
-async function docCauHinh() {
-  const rows = loi(await supabase.from('kl_cau_hinh').select('khoa, gia_tri'), 'cấu hình');
-  cauHinh = Object.fromEntries(rows.map((r) => [r.khoa, Number(r.gia_tri)]));
+// Cấu hình đi cùng lời gọi danh mục (một RPC).
+export async function loadCauHinhKl(lai = false) {
+  if (cauHinh && !lai) return cauHinh;
+  await loadDanhMucKl(lai);
   return cauHinh;
 }
 export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
@@ -54,21 +63,25 @@ export function loadKlRows() {
   return dangDocRows.then((r) => ({ ...r, rows: [...r.rows] }));
 }
 async function docKlRows() {
-  const [rows, xn, tcAll] = await Promise.all([
-    loi(await supabase.from('v_nhiem_vu').select('*').order('ma'), 'đọc nhiệm vụ'),
-    loi(await supabase.from('lich_su').select('nhiem_vu_id, nguoi_sua').eq('cot', 'xac_nhan_nhan_viec'), 'đọc xác nhận nhận việc'),
-    // Đề nghị từ chối (0034): RLS chỉ trả dòng người đề nghị / cấp duyệt / cấp trên đọc được; mọi trạng thái, mới nhất trước — dòng đầu mỗi việc
-    // là đề nghị mới nhất (GĐ22: người đề nghị thấy "đã đồng ý" / "không đồng ý" ngay trên thẻ).
-    loi(await supabase.from('tu_choi').select('id, nhiem_vu_id, nguoi_de_nghi, cap_duyet, ly_do, tao_luc, trang_thai, y_kien_duyet, duyet_luc').order('tao_luc', { ascending: false }), 'đọc đề nghị từ chối'),
+  // B6: da_xac_nhan_nhan / nguoi_da_nhan lấy từ v_nhiem_vu (0051, cùng giá trị với lich_su 'xac_nhan_nhan_viec') — bỏ truy vấn lich_su toàn phạm vi.
+  // Đề nghị từ chối (0034): RLS chỉ trả dòng người đề nghị / cấp duyệt / cấp trên đọc được; mọi trạng thái, mới nhất trước — dòng đầu mỗi việc
+  // là đề nghị mới nhất (GĐ22: người đề nghị thấy "đã đồng ý" / "không đồng ý" ngay trên thẻ).
+  const [rows, tcAll] = await Promise.all([
+    taiTheoTrang(() => supabase.from('v_nhiem_vu').select(COT_VIEC).order('ma').order('id'), 'đọc nhiệm vụ'),
+    taiTheoTrang(() => supabase.from('tu_choi').select(COT_TU_CHOI).order('tao_luc', { ascending: false }).order('id'), 'đọc đề nghị từ chối'),
   ]);
-  const me = state.user?.id; const daNhan = new Set(xn.map((x) => x.nhiem_vu_id)); const toiNhan = new Set(xn.filter((x) => x.nguoi_sua === me).map((x) => x.nhiem_vu_id));
   const tcCho = tcAll.filter((t) => t.trang_thai === 'CHO_DUYET');
-  rows.forEach((r) => {
-    r.da_xac_nhan_nhan = daNhan.has(r.id); // có bất kỳ ai (owner / người theo dõi) xác nhận — khâu CHUA_NHAN, chú thích dòng; bi_tu_choi đã có trong v_nhiem_vu (0037)
-    r.toi_da_xac_nhan = toiNhan.has(r.id); // CHÍNH TÔI đã xác nhận — quy tắc: owner và người theo dõi mỗi người tự nhận (cùng kl_so_chua_xu_ly.viec_moi)
-    r.tu_choi_cho = tcCho.find((t) => t.nhiem_vu_id === r.id) || null; r.tu_choi_moi_nhat = tcAll.find((t) => t.nhiem_vu_id === r.id) || null;
-  });
+  const tcTheoViec = new Map(); tcAll.forEach((t) => { if (!tcTheoViec.has(t.nhiem_vu_id)) tcTheoViec.set(t.nhiem_vu_id, t); });
+  const choTheoViec = new Map(); tcCho.forEach((t) => { if (!choTheoViec.has(t.nhiem_vu_id)) choTheoViec.set(t.nhiem_vu_id, t); });
+  rows.forEach((r) => ganCo(r, choTheoViec.get(r.id), tcTheoViec.get(r.id)));
   return { rows, luc: new Date(), tuChoiCho: tcCho, tuChoi: tcAll };
+}
+// Cờ ghép vào một dòng (dùng chung với nap-lai-viec): tôi đã xác nhận nhận (owner và người theo dõi mỗi người tự nhận — cùng
+// kl_so_chua_xu_ly.viec_moi), đề nghị từ chối đang chờ / mới nhất.
+export function ganCo(r, tcCho, tcMoiNhat) {
+  r.toi_da_xac_nhan = (r.nguoi_da_nhan || []).includes(state.user?.id);
+  r.tu_choi_cho = tcCho || null; r.tu_choi_moi_nhat = tcMoiNhat || null;
+  return r;
 }
 
 // "Hôm nay" theo DB (kl_hom_nay, giờ Việt Nam) để giới hạn ô ngày trên form cùng nguồn với trigger.
@@ -101,9 +114,20 @@ export async function capNhatNhiemVu(id, thayDoi) {
 }
 
 // Văn bản giao việc (GV-1): danh sách để chọn trên form; văn bản mới tạo trong hàm giao_viec.
-export async function loadVanBan() {
-  return loi(await supabase.from('van_ban_giao_viec').select('id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu')
-    .order('ngay_ban_hanh', { ascending: false }).order('so_ket_luan'), 'đọc văn bản');
+const COT_VAN_BAN = 'id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu';
+const vanBanTheoThuTu = () => supabase.from('van_ban_giao_viec').select(COT_VAN_BAN).order('ngay_ban_hanh', { ascending: false }).order('so_ket_luan').order('id');
+// Đủ mọi văn bản trong phạm vi (cây Theo văn bản ghép theo id) — theo trang.
+export const loadVanBan = () => taiTheoTrang(vanBanTheoThuTu, 'đọc văn bản');
+// Ô chọn văn bản ở Giao việc (B6): tìm theo số hiệu / trích yếu, 50 dòng mỗi lần ("Xem thêm" lấy trang kế). Trả { ds, conNua }.
+export async function timVanBan(tuKhoa = '', trang = 0, co = 50) {
+  let q = vanBanTheoThuTu();
+  const kw = tuKhoa.trim().replace(/[%_,()*"\\:]/g, ' ').trim();
+  if (kw) q = q.or(`so_ket_luan.ilike.*${kw}*,trich_yeu.ilike.*${kw}*`);
+  const ds = loi(await q.range(trang * co, trang * co + co), 'đọc văn bản');   // lấy co + 1 dòng để biết còn nữa không
+  return { ds: ds.slice(0, co), conNua: ds.length > co };
+}
+export async function vanBanTheoId(id) {
+  return loi(await supabase.from('van_ban_giao_viec').select(COT_VAN_BAN).eq('id', id).maybeSingle(), 'đọc văn bản');
 }
 // Trích yếu văn bản (0046): đặt sau giao_viec qua hàm có allowlist (người tạo, A1, quan_tri_kl) và ghi vết — không ghi thẳng bảng.
 export async function datTrichYeuVanBan(id, trichYeu) {

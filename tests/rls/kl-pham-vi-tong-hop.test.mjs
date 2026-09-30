@@ -25,9 +25,11 @@ before(async () => {
 async function kyVong(username) {
   const me = [...taiKhoan.values()].find((a) => a.username === username);
   const db = adminClient();
-  const { data: rows } = await db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma');
-  const { data: pc } = await db.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, tu_ngay, den_ngay');
-  const { data: dv } = await db.from('dm_don_vi').select('ma, phong');
+  // Ba lần đọc độc lập — một lượt khứ hồi (D3, PR-2a).
+  const [{ data: rows }, { data: pc }, { data: dv }] = await Promise.all([
+    db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma'),
+    db.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, tu_ngay, den_ngay'),
+    db.from('dm_don_vi').select('ma, phong')]);
   const hieuLuc = (p) => p.tu_ngay <= homNay() && (!p.den_ngay || p.den_ngay >= homNay());
   const phongCua = (id) => taiKhoan.get(id)?.department;
   // 0025: phòng của Owner = phòng của tài khoản Owner, hoặc dòng phòng trong dm_don_vi; PCVP xét cả hai phòng như nhau.
@@ -50,10 +52,9 @@ async function kyVong(username) {
 
 async function kiemMotVai(username, nhan) {
   const c = await userClient(username);
-  const r = await c.from('v_nhiem_vu').select('id, nhom_dem, linh_vuc_ma, nganh_ma, nguoi_theo_doi');
+  const [r, mong] = await Promise.all([c.from('v_nhiem_vu').select('id, nhom_dem, linh_vuc_ma, nganh_ma, nguoi_theo_doi'), kyVong(username)]);
   assertOk(r, `${username} đọc v_nhiem_vu`);
   const thay = new Set(r.data.map((x) => x.id));
-  const mong = await kyVong(username);
   assert.deepEqual([...thay].sort(), [...mong].sort(), `${nhan}: ${username} thấy ${thay.size} dòng, kỳ vọng ${mong.size}`);
   const demNhom = {};
   const demLV = {};

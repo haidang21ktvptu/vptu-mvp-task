@@ -6,14 +6,14 @@ import globals from 'globals';
 export default [
   js.configs.recommended,
   {
-    ignores: ['**/node_modules/**', 'frontend/dist/**', 'tests/e2e/playwright-report/**', 'tests/e2e/test-results/**', 'tests/e2e/playwright-report-smoke/**'],
+    ignores: ['**/node_modules/**', 'frontend/dist/**', 'tests/e2e/playwright-report/**', 'tests/e2e/test-results/**', 'tests/e2e/playwright-report-smoke/**', 'scripts/out/**'], // scripts/out: tệp cục bộ (gitignore)
   },
   {
     files: ['frontend/src/**/*.js'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.browser } },
   },
   {
-    files: ['frontend/*.js', 'frontend/tests/**/*.mjs', 'tests/e2e/**/*.{js,mjs}', 'scripts/**/*.mjs', 'eslint.config.js'],
+    files: ['frontend/*.js', 'frontend/tests/**/*.mjs', 'tests/e2e/**/*.{js,mjs}', 'scripts/**/*.mjs', 'tests/perf/**/*.mjs', 'eslint.config.js'],
     languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.node } },
   },
 ];
