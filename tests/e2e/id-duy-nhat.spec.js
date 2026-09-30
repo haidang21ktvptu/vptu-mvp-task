@@ -4,7 +4,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
-import { pageAs, nav, moViec, NAP } from './lib/app.js';
+import { pageAs, moViec, moGiaoViec, NAP } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec, clientCuaVai } from './lib/du-lieu.mjs';
 
 // id trùng + ô (so_hieu / ngay_van_ban / cap_nhan) không có nhãn trỏ đúng — đọc trên toàn tài liệu (section ẩn vẫn nằm trong DOM).
@@ -56,8 +56,7 @@ test.describe.serial('Id duy nhất và nhãn ô minh chứng (PR-2a lỗi 3)', 
 
   test('Giao việc (Chánh VP): không id trùng', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A1', testInfo);
-    await nav(page, 'navGiaoViec');
-    await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
+    await moGiaoViec(page);
     const kq = await kiemId(page);
     expect(kq.trung, 'id trùng trên Giao việc').toEqual([]);
     await page.context().close();

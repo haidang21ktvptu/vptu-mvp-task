@@ -1,7 +1,7 @@
 // View A3 — Chuyên viên (v8 đợt 2, mockup 05 "Việc của tôi": hai cột, hàng việc, cột phụ 340px hạn 7 ngày + hướng dẫn nhanh): thẻ theo mức khẩn, hành động tại chỗ — việc mới giao cần xác nhận đã nhận (thay modal
 // bắt buộc), chỉ đạo cần trả lời (ô một dòng), sắp đến hạn / quá hạn chưa có minh chứng (nộp minh chứng 3 ô ngay trên thẻ), đang thực
 // hiện (Cập nhật tiến độ). "Việc tôi theo dõi" = màn hình Nhiệm vụ lọc việc mình theo dõi. Quyền thật ở hàm DB / policy 0025, 0028.
-import { $, setText, escapeHtml, formatDateTime } from '../../lib/dom.js';
+import { $, setText, escapeHtml, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
@@ -27,6 +27,7 @@ function ve() {
   const n = nhomViecCuaToi();
   const canLam = n.moi.length + n.chiDao.length + n.canMinhChung.length;
   setText('vctTom', `${canLam} việc cần làm, ${n.dangLam.length} đang thực hiện, ${n.theoDoi.length} đang theo dõi`);
+  const traNhap = giuONhap($('viewDieuHanh')); // ô đang mở / đang gõ giữ qua lần vẽ lại (nạp lại nền, realtime — PR-2a lỗi đua)
   $('dhCanXuLy').innerHTML = canXuLyHtml();
   const traDienBien = giuDienBien($('vctMuc')); // khối Xem diễn biến đang mở giữ qua lần vẽ lại
   $('vctMuc').innerHTML = [
@@ -41,6 +42,7 @@ function ve() {
   traDienBien();
   $('vctTuan').innerHTML = hanTuanHtml();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
+  traNhap();
 }
 
 // Cột phụ "Hạn trong 7 ngày tới" (thay "lịch tuần" của mockup 05 — hệ thống chưa có nguồn lịch): việc tôi chủ trì hoặc theo dõi đang mở, hạn từ

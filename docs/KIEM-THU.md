@@ -70,6 +70,17 @@ Một script dùng chung `.github/scripts/phan-loai.sh` (mẫu khai báo một c
 - `ca-nhan-anh` (tài khoản riêng `demo_e2e_anh`), `id-duy-nhat` (`demo_e2e_mc`), `cap-nhat-nhanh-han` (`demo_e2e_nv`), `giao-viec-kiem-nhiem` (PCVP2, PCVP, Chánh VP, Trưởng phòng — mỗi vai một phiên, đổi 5 loại văn bản trên biểu mẫu, chỉ bấm Giao ở ô đại diện). Chạy sau `gd22` vì đổi phân công PCVP/PCVP2 lúc chạy; `dang-nhap` phụ thuộc `pr2a`. Logic nên không chạy điện thoại. Chạy riêng: `npx playwright test --project=pr2a --no-deps` (kèm biến đích).
 - Đếm lời gọi DB mỗi màn (đo tay, không chạy trong CI): spec `tests/e2e/_dem-goi/` nằm ngoài repo (`.git/info/exclude`); kết quả trước/sau ở thư mục bàn giao PR-2a.
 
+## Chạy e2e cục bộ có độ trễ để bắt lỗi đua (PR-2a, từ 30/9/2026)
+
+Supabase cục bộ trả lời gần như tức thì nên che mất lỗi "giao diện cho thao tác trước khi nạp xong" (CI #96: chọn "Văn bản mới" trong lúc biểu mẫu Giao việc còn nạp rồi bị bước khởi tạo ghi đè). Công tắc `E2E_TRE_MS=<ms>` (`tests/e2e/lib/tre.mjs`) làm mọi context Playwright trì hoãn mỗi lời gọi REST/RPC (`/rest/v1/`) và Storage (`/storage/v1/`) đúng số ms đó. **Mặc định tắt** — không đặt biến thì không đăng ký route nào; CI không đặt.
+
+```
+E2E_LOCAL=1 E2E_TRE_MS=300 npx playwright test          # toàn bộ, ~3 phút (không trễ ~2 phút)
+E2E_LOCAL=1 E2E_TRE_MS=500 npx playwright test nhiem-vu.spec.js --project=desktop --no-deps
+```
+
+Nên chạy một vòng có độ trễ trước khi mở PR khi đổi cách nạp dữ liệu (song song, theo trang, realtime). Quy ước để không đua: màn hình khoá ô nhập (`fieldset disabled` + `aria-busy`) cho tới khi nạp xong rồi mới đặt `data-san-sang="1"`; spec chờ cờ đó (`moGiaoViec` trong `lib/app.js`), không dùng "phần tử đã hiện" làm tín hiệu nạp xong; vẽ lại danh sách giữ ô đang mở / đang gõ (`giuONhap` trong `frontend/src/lib/dom.js`).
+
 ## Đích kiểm thử phải chọn tường minh (PR-2a, từ 29/9/2026)
 
 `tests/rls/lib.mjs` và `tests/e2e/lib/keys.mjs` **không còn đích mặc định** (trước đây thiếu biến cục bộ là trỏ staging qua Supabase CLI — sự cố 29/9: một file RLS chạy nhầm lên staging). Phải đặt **đúng một**:

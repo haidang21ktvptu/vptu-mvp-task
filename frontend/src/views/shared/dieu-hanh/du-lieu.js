@@ -12,11 +12,20 @@ import { ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
 
 export const dh = { rows: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
 
-export async function napDieuHanh() {
+// Lượt nạp đang chạy (nap-lai-viec chờ nó xong trước khi thay một dòng); lượt cũ về sau lượt mới thì bỏ (không ghi đè dữ liệu mới hơn).
+let luotDh = 0;
+export const dangNapDh = () => dh.dangNap;
+export function napDieuHanh() {
+  const p = napDieuHanhMot(++luotDh);
+  dh.dangNap = p.finally(() => { if (dh.dangNap === p) dh.dangNap = null; });
+  return p;
+}
+async function napDieuHanhMot(lan) {
   await loadDanhMucKl();
   // Hai đợt: dòng (nặng, tính trạng thái từng dòng) trước; số liệu hai mốc (một RPC, tính trạng thái toàn phạm vi) sau — bớt truy vấn nặng
   // chạy chồng trên một kết nối (staging nhỏ).
   const [r, tt, mc, cd] = await Promise.all([loadKlRows(), loadChiDaoTT(), loadMinhChungCho(), loadChiDaoCho()]);
+  if (lan !== luotDh) return dh;
   Object.assign(dh, { rows: r.rows, ngoaiLe: ngoaiLeTu(r.rows), chiDaoTT: tt, mcCho: mc, chiDaoCho: cd, tuChoiCho: r.tuChoiCho, luc: r.luc });
   await napSoLieu();
   return dh;

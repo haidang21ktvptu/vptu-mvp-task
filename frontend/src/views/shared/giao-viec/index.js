@@ -24,6 +24,14 @@ import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHt
 
 let homNay = homNayVN();
 let cha = null; // việc cha khi giao tiếp xuống (nhiem_vu_cha)
+// Lỗi đua (CI #96): trong lúc nạp (mở biểu mẫu, đổi người được thay mặt) mọi ô bị khoá — fieldset#gvKhoa disabled + aria-busy, nút "Giao,
+// nhập tiếp" mờ — nên người dùng không chọn được gì để rồi bị bước khởi tạo ghi đè; mở lại biểu mẫu khi lượt trước chưa xong: lượt cũ dừng.
+let luotMo = 0;
+function khoaBieuMau(khoa) {
+  $('gvKhoa').disabled = khoa; $('gvKhoa').setAttribute('aria-busy', String(khoa));
+  $('klThLuuTiep').disabled = khoa;
+  if (khoa) $('klThLuu').disabled = true;
+}
 const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 const laA0 = () => state.user?.role_group === 'A0';
 const canThayMat = () => state.user?.role_group === 'A3'; // người giao không phải lãnh đạo (giữ quan_tri_kl) → giao thay mặt
@@ -96,8 +104,12 @@ function dienLinhVuc() {
 }
 function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || homNay; capNhatHienThi(); }
 // Người quản trị KL đổi lãnh đạo được thay mặt → phạm vi của người đó; lọc lại Owner / ngành / lĩnh vực.
+// Khoá biểu mẫu trong lúc đọc phạm vi; đọc lỗi → trả ô Thay mặt về người cũ (phạm vi đang áp là của người cũ).
+let thayMatCu = '';
 async function thayMatDoi() {
-  try { await napPhamVi($('klThThayMat').value || null); } catch (e) { notifyError(e.message); }
+  khoaBieuMau(true);
+  try { await napPhamVi($('klThThayMat').value || null); thayMatCu = $('klThThayMat').value; } catch (e) { notifyError(e.message); $('klThThayMat').value = thayMatCu; }
+  khoaBieuMau(false);
   dienOwner(); dienNganh(); capNhatTomTat();
 }
 function dienOwner() {
@@ -153,15 +165,17 @@ export async function openGiaoViec(opts = {}) {
   showSection('viewGiaoViec');
   $('giaoViecForm').removeAttribute('data-san-sang'); // đang khởi tạo theo vai/dữ liệu — spec chờ cờ này trước khi đọc ô
   setActiveNav('navGiaoViec');
+  const lan = ++luotMo;
+  khoaBieuMau(true);
   $('klThVanBan').innerHTML = opt('', 'Đang tải văn bản…'); $('klThLoai').innerHTML = opt('', 'Đang tải…');
-  $('klThLuu').disabled = true;
-  datLaiVanBan();
+  datLaiVanBan(); thayMatCu = '';
   try {
     await loadDanhMucKl();
-    // Văn bản: trang đầu 50 (B6) + văn bản của việc cha; phạm vi giao theo DB (C3) — hai lời gọi song song.
+    // Văn bản: trang đầu 50 (B6) + văn bản của việc cha; phạm vi giao theo DB (C3) — hai lời gọi song song (biểu mẫu đang khoá).
     await Promise.all([napVanBan({ nhanMoi: nhanMoi(), giu: '', kem: cha?.van_ban_id }), napPhamVi()]);
-  } catch (e) { notifyError(e.message); $('giaoViecForm').dataset.sanSang = 'loi'; return; }
-  homNay = (await homNayTheoDb()) || homNayVN();
+    homNay = (await homNayTheoDb()) || homNayVN();
+  } catch (e) { if (lan === luotMo) { notifyError(e.message); $('giaoViecForm').dataset.sanSang = 'loi'; } return; }   // lỗi: giữ khoá
+  if (lan !== luotMo) return;   // đã mở lại biểu mẫu: lượt mới khởi tạo
   const dm = danhMucKl(); const a0 = laA0();
   AN_A0.forEach((id) => show(id, !a0));
   show('klThThayMatWrap', canThayMat());
@@ -183,6 +197,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThDoKhan').value = a0 ? 'KHAN' : 'THUONG';
   $('giaoViecForm').querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === $('klThDoKhan').value)));
   dienNganh();
+  khoaBieuMau(false);
   capNhatHienThi();
   $('klThNoiDung').focus();
   $('giaoViecForm').dataset.sanSang = '1'; // mặc định theo vai (A0 = Khẩn) đã đặt sau khi phiên và danh mục sẵn sàng

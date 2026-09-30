@@ -5,8 +5,8 @@
 import { supabase } from '../../../lib/supabase.js';
 import { COT_VIEC, COT_TU_CHOI } from '../../../lib/kl/cot.js';
 import { ganCo } from '../../../lib/kl/du-lieu.js';
-import { getKlRows, render } from './danh-sach.js';
-import { dh, dongNgoaiLe, soSanhNgoaiLe } from '../dieu-hanh/du-lieu.js';
+import { getKlRows, render, dangNapKl } from './danh-sach.js';
+import { dh, dongNgoaiLe, soSanhNgoaiLe, dangNapDh } from '../dieu-hanh/du-lieu.js';
 import { veDieuHanh } from '../dieu-hanh/man-hinh.js';
 import { sectionDangHien } from '../../shell/index.js';
 
@@ -35,6 +35,8 @@ function thay(rows, id, moi) {
 export async function napLaiViec(id, { nemLoi = false, veLai = true } = {}) {
   if (!id) return;
   try {
+    // Lượt nạp cả màn đang chạy đọc dữ liệu TRƯỚC thay đổi này: chờ nó xong rồi mới đọc/thay dòng, để nó không ghi đè dòng mới hơn.
+    await Promise.all([dangNapKl(), dangNapDh()].map((p) => p?.catch(() => {})));
     const { row, ngoaiLe, tuChoi } = await docMotViec(id);
     thay(getKlRows(), id, row);
     thay(dh.rows, id, row);

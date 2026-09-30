@@ -7,6 +7,10 @@
 import { test, expect } from '@playwright/test';
 import { loginAs, expectLoggedIn, logout } from './lib/app.js';
 import { MOBILE } from './lib/devices.mjs';
+import { ganTre } from './lib/tre.mjs';
+
+// E2E_TRE_MS (mặc định tắt): context của fixture `page` cũng chịu độ trễ giả lập (lib/tre.mjs).
+test.beforeEach(async ({ context }) => { await ganTre(context); });
 
 test.describe.serial('Đăng nhập theo vai trò', () => {
   test('Kịch bản 1: A1 (Chánh Văn phòng) đăng nhập → view Lãnh đạo; sai mật khẩu bị từ chối', async ({ page }) => {

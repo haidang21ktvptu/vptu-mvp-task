@@ -50,7 +50,7 @@ function dongDeNghi() {
     const r = dh.rows.find((x) => x.id === t.nhiem_vu_id); const a = findAccount(t.nguoi_de_nghi);
     return dong('denghi', r, `${escapeHtml(a?.full_name || 'cán bộ')}${a?.department ? ` (${escapeHtml(DEPT_NAMES[a.department] || a.department)})` : ''} đề nghị ${formatDateTime(t.tao_luc)}`, '',
       `<p class="ly-do">Lý do: ${escapeHtml(t.ly_do)}</p>
-      <form class="o mo" data-submit="duyetTuChoiThe" data-id="${t.id}" data-ma="${escapeHtml(r.ma)}">
+      <form class="o mo" id="oTcCx-${t.id}" data-submit="duyetTuChoiThe" data-id="${t.id}" data-ma="${escapeHtml(r.ma)}">
         <input name="noi_dung" placeholder="Ý kiến duyệt (không bắt buộc)" aria-label="Ý kiến duyệt">
         ${nut('Đồng ý từ chối', 'duyetTuChoiThe', { 'dong-y': 1, id: t.id, ma: r.ma }, 'chinh')}${nut('Không đồng ý', 'duyetTuChoiThe', { 'dong-y': 0, id: t.id, ma: r.ma })}
       </form>`);

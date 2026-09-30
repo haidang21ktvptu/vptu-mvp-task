@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
-import { contextAs, nav, NAP } from './lib/app.js';
+import { contextAs, moGiaoViec, NAP } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'NQ_TW', 'CONG_VAN', 'KHAC'];
@@ -19,8 +19,7 @@ async function moTrang(browser, role, testInfo) {
   const page = await (await contextAs(browser, role, testInfo)).newPage();
   await page.goto('./');
   await expect(page.locator('#mainHeader')).toBeVisible(NAP);
-  await nav(page, 'navGiaoViec');
-  await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
+  await moGiaoViec(page);
   return page;
 }
 const giaTri = (page, sel) => page.locator(`${sel} option`).evaluateAll((os) => os.map((o) => o.value).filter(Boolean));

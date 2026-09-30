@@ -47,6 +47,7 @@ export function datKlChuaNap() { kl.luc = null; }
 // Gộp lượt nạp trùng (mở màn hình + realtime + sau hành động cùng lúc): một lượt tại một thời điểm; lượt tới trong lúc đang nạp chỉ ghi nhớ
 // "cần nạp lại" và chạy MỘT lần sau khi xong — mỗi lượt là 3 truy vấn (v_nhiem_vu tính trạng thái từng dòng) nên chạy chồng làm staging quá tải.
 let dangNap = null; let canNapLai = false;
+export const dangNapKl = () => dangNap;   // nap-lai-viec chờ lượt này xong rồi mới thay một dòng
 export function loadKl() {
   if (dangNap) { canNapLai = true; return dangNap; }
   dangNap = (async () => {
