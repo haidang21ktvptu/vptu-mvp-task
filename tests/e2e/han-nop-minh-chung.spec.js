@@ -17,6 +17,8 @@ const VAI = [
 const H = cong(homNay(), 20);
 let db; let khoa; let khung; const trang = {};
 const conThieu = (p) => p.locator('#gvConThieu');
+// Đóng phiên ngay khi hết dùng: mỗi trang mở giữ realtime, mỗi lần ghi làm MỌI trang nạp lại — 7 trang cùng lúc làm staging chậm tới 5–13 s/lời gọi.
+const dongTrang = (roles) => Promise.all(roles.filter((r) => trang[r]).map(async (r) => { const p = trang[r]; delete trang[r]; await p.context().close(); }));
 const khoiPhuc = () => Promise.all([datCo(db, ID.e2eNv, { quan_tri_kl: false }), datCo(db, '00000000-0000-4000-8000-000000000008', { quan_tri_kl: false }),
   db.from('phu_trach_phong').delete().like('ly_do', `${khoa}%`)]);
 
@@ -59,12 +61,13 @@ test.describe.serial('PR-2b — hạn nộp minh chứng trên biểu mẫu và 
     VAI.forEach((v, i) => { trang[v.role] = ds[i]; });
   });
   test.afterAll(async () => {
-    await Promise.all(Object.values(trang).map((p) => p.context().close()));
+    await dongTrang(Object.keys(trang));
     if (db) { await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, khoa); await donVanBan(db, `${khoa}-GV`); await donVanBan(db, `${khoa}-KL`); await khoiPhuc(); }
   });
 
   test('1. Ma trận 7 vai × 5 loại văn bản: ô hiện, bắt buộc, gợi ý từ DB, sát hạn thì bắt lý do', async () => {
     await Promise.all(VAI.map(kiemVai));
+    await dongTrang(['A1', 'PCVP2', 'E2E_NV', 'QTHT']);   // test 2–3 chỉ cần A0, Trưởng phòng, PCVP
   });
 
   test('2. Giao thật: Trưởng phòng (văn bản mới) và A0 từ Kết luận có sẵn — nút Giao mờ khi thiếu hạn nộp, DB lưu đúng ngày gợi ý', async () => {
@@ -104,6 +107,7 @@ test.describe.serial('PR-2b — hạn nộp minh chứng trên biểu mẫu và 
   });
 
   test('4. A3 thường không có màn Giao việc; việc qua hạn nộp hiện nhãn cam "Chậm nộp minh chứng"', async ({ browser }, testInfo) => {
+    await dongTrang(Object.keys(trang));
     const a3 = await moApp(browser, 'E2E_CV', testInfo);
     try {
       await expect(a3.locator('#navGiaoViec')).toHaveCount(0);
