@@ -54,15 +54,16 @@ function hanhDongHtml(r) {
   const tuChoi = laBenTrong(r) && mo && !r.toi_da_xac_nhan && !r.tu_choi_cho; // chính tôi chưa nhận
   // Giao tiếp xuống (v8 đợt 4): chủ trì hoặc người theo dõi của việc chưa hoàn thành, và vai được giao việc (A1/A2/quan_tri_kl — giao_viec là chốt).
   const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
-  // PR-2b: sửa hạn nộp — người giao (A0/A1/A2); không còn người giao (trống / bị khoá) thì quan_tri_kl (Q4). Hàm dat_han_nop_minh_chung là chốt.
+  // PR-2b: đặt / sửa hạn nộp — người giao còn hoạt động và còn vai A0/A1/A2; không thì quan_tri_kl (Q4, mở rộng 0061). dat_han_nop_minh_chung là chốt.
   const giao = findAccount(r.giao_thay_mat_cho || r.tao_boi);
-  const suaHan = mo && r.han_xu_ly && ((giao && !giao.bi_khoa && !giao.is_system) ? giao.id === state.user?.id && ['A0', 'A1', 'A2'].includes(state.user?.role_group) : Boolean(state.user?.quan_tri_kl));
+  const conNguoiGiao = Boolean(giao) && !giao.bi_khoa && !giao.is_system && ['A0', 'A1', 'A2'].includes(giao.role_group);
+  const suaHan = mo && r.han_xu_ly && (conNguoiGiao ? giao.id === state.user?.id : Boolean(state.user?.quan_tri_kl));
   return `<div class="hanh-dong">
     ${laBenTrong(r) && mo && !r.toi_da_xac_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc', 'lam') : ''}
     ${tuChoi ? nut('moO', 'Từ chối', '', `data-o="oTcNgan-${r.id}"`) : ''}
     ${duocCapNhat(r) && mo ? nut('openKlCapNhat', 'Cập nhật') : ''}
     ${duocDong(r) && mo && !r.han_nop_minh_chung ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
-    ${suaHan ? nut('moO', 'Sửa hạn nộp minh chứng', '', `data-o="oHnNgan-${r.id}"`) : ''}
+    ${suaHan ? nut('moO', r.han_nop_minh_chung ? 'Sửa hạn nộp minh chứng' : 'Đặt hạn nộp minh chứng', '', `data-o="oHnNgan-${r.id}"`) : ''}
     ${giaoTiep ? nut('giaoTiepXuong', 'Giao tiếp xuống', '', `id="klGiaoTiep-${r.id}"`) : ''}
     <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">

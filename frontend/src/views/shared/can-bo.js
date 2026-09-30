@@ -42,7 +42,7 @@ function phongHtml(ma, rows) {
   const cuaPhong = rows.filter((r) => laOwnerPhong(r, ma) || canBo.some((a) => a.id === r.owner_tai_khoan));
   const k = calculateGroupKPI(canBo.map((a) => a.id), rows, ma);
   const phongOwner = rows.filter((r) => laOwnerPhong(r, ma) && mo(r)).length;
-  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span>${canBo.length} cán bộ, ${k.dangMo} việc mở, ${k.quaHan} Đỏ${phongOwner ? `, ${phongOwner} việc phòng là Owner` : ''}</span></div>
+  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì: việc cán bộ trong phòng hoặc chính phòng chủ trì. Đỏ: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì đang mở · ${k.quaHan} Đỏ (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là Owner` : ''}</span></div>
     ${canBo.map((a) => nguoiHtml(a, cuaPhong, rows)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
 }
 

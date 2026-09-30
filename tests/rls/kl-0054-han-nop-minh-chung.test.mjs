@@ -1,6 +1,7 @@
 // PR-2b (0054–0056) — Hạn nộp minh chứng: bắt buộc khi giao, khung ngày + lý do việc gấp, ai sửa (dat_han_nop_minh_chung, Q4), gia hạn kèm hạn
 // nộp mới, đổi hạn hoàn thành đường khác, Q2 (không đóng khi chưa nghiệm thu). Khối "biên ngày" là logic thuần ⇒ chỉ cục bộ; còn lại cả staging.
 // Khoá "KL-0054" trong nội dung việc và số văn bản; tự dọn; cờ tạm (quan_tri_kl cv2, bi_khoa demo_e2e_tp) khôi phục ở before lẫn after.
+// 0061: Q4 mở rộng (người giao không còn vai A0/A1/A2); nhắc đặt hạn nộp khi việc vừa có hạn hoàn thành (logic — chỉ cục bộ).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, IDS, CHI_CUC_BO, homNayVN } from './lib.mjs';
@@ -117,6 +118,32 @@ describe('0054 — hạn nộp minh chứng: giao, sửa, gia hạn, Q2, Q4', { 
     loi(await (await userClient('demo_cv1')).rpc('dong_nhiem_vu', { p_id: nv, p_ngay_hoan_thanh: null }), /nghiệm thu/, 'dong_nhiem_vu');
     loi(await (await userClient('demo_cv1')).from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNayVN() }).eq('id', nv), /nghiệm thu/, 'Cập nhật nhanh');
     assert.equal((await doc(nv)).tien_do_ma !== 'HOAN_THANH', true);
+  });
+
+  test('7. Q4 mở rộng (0061): người giao còn hoạt động nhưng không còn vai A0/A1/A2 ⇒ quan_tri_kl sửa; chính người đó ⇒ 42501', async () => {
+    const vbr = await db().from('van_ban_giao_viec').insert({ loai: 'CONG_VAN', so_ket_luan: `${KHOA} Q4B`, ngay_ban_hanh: '2026-09-01' }).select('id').single();
+    const ins = await db().from('nhiem_vu').insert({ van_ban_id: vbr.data.id, noi_dung: `${KHOA} Q4 A3`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: H,
+      han_nop_minh_chung: k0.khong_ly_do_den, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.cv1 }).select('id').single();
+    assertOk(ins, 'việc có người giao là A3');
+    chan(await datHan('demo_cv1', ins.data.id, cong(k0.khong_ly_do_den, -3)), 'người giao không còn vai lãnh đạo');
+    assertOk(await datHan('demo_cv2', ins.data.id, cong(k0.khong_ly_do_den, -3)), 'quan_tri_kl sửa thay');
+    const ls = await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', ins.data.id).eq('cot', 'han_nop_minh_chung_ly_do');
+    assert.match(ls.data[0]?.gia_tri_moi || '', /quản trị sửa thay — không có người giao/);
+  });
+
+  test('8. (0061) Việc giao khi chưa có hạn, về sau có hạn mà chưa có hạn nộp ⇒ tin hệ thống tới người giao; không còn người giao ⇒ quan_tri_kl', { skip: CHI_CUC_BO }, async () => {
+    const vbr = await db().from('van_ban_giao_viec').insert({ loai: 'CONG_VAN', so_ket_luan: `${KHOA} NH`, ngay_ban_hanh: '2026-09-01' }).select('id').single();
+    const ins = await db().from('nhiem_vu').insert(['TP', 'KG'].map((k) => ({ van_ban_id: vbr.data.id, noi_dung: `${KHOA} NH ${k}`, nguon: 'app',
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: null, ly_do_chua_co_han: 'Chờ kế hoạch', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1,
+      tao_boi: k === 'TP' ? IDS.truongphong : null }))).select('id, ma, noi_dung');
+    assertOk(ins, 'việc chưa có hạn'); const v = Object.fromEntries(ins.data.map((x) => [x.noi_dung.slice(-2), x]));
+    assertOk(await db().from('nhiem_vu').update({ han_xu_ly: H }).in('id', ins.data.map((x) => x.id)), 'điền hạn');
+    const tin = async (x) => (await db().from('direct_messages').select('receiver_id, sender_id, content').eq('nhiem_vu_id', x.id).like('content', '%đặt hạn nộp minh chứng')).data;
+    const tp = await tin(v.TP);
+    assert.deepEqual(tp.map((t) => [t.receiver_id, t.sender_id, t.content]), [[IDS.truongphong, null, `Việc ${v.TP.ma} đã có hạn hoàn thành 31/12/2026 — đặt hạn nộp minh chứng`]]);
+    assert.ok((await tin(v.KG)).some((t) => t.receiver_id === IDS.cv2), 'không còn người giao ⇒ quan_tri_kl (cv2) nhận');
+    assertOk(await db().from('nhiem_vu').update({ ghi_chu: 'Sửa cột khác' }).eq('id', v.TP.id), 'sửa cột khác');
+    assert.equal((await tin(v.TP)).length, 1, 'không gửi lại khi hạn không đổi từ trống');
   });
 });
 

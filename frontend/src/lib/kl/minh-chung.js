@@ -2,9 +2,22 @@
 // hàm SECURITY DEFINER nop_minh_chung / xac_nhan_minh_chung / dong_nhiem_vu — frontend không ghi thẳng bảng, quyền thật trong hàm.
 import { supabase } from '../supabase.js';
 import { COT_MINH_CHUNG, taiTheoTrang } from './cot.js';
+import { state, findAccount } from '../state.js';
+import { homNayVN } from './ngay.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
+
+// Q8 (0057, 0061): việc Thường trực (A0) giao cho Chánh VP chủ trì — chỉ thư ký Thường trực nghiệm thu; không ai giữ cờ thư ký thì quan_tri_kl còn
+// hạn; KHÔNG BAO GIỜ chính Chánh VP. Cùng tập với nguoi_nghiem_thu_chinh (DB là chốt) — để ẩn/hiện nút nghiệm thu.
+export const laViecTtGiaoCvp = (r) => findAccount(r.tao_boi)?.role_group === 'A0'
+  && ((o) => o?.role_group === 'A1' && Boolean(o.is_chief))(findAccount(r.owner_tai_khoan));
+export function nghiemThuViecTt(r, nopBoi, me = state.user) {
+  const duoc = (a) => a && !a.is_system && !a.bi_khoa && a.role_group !== 'A0' && a.id !== nopBoi && a.id !== r.owner_tai_khoan;
+  const thuKy = state.accounts.filter((a) => a.thu_ky_thuong_truc && duoc(a));
+  const ds = thuKy.length ? thuKy : state.accounts.filter((a) => a.quan_tri_kl && (!a.quan_tri_kl_het_han || a.quan_tri_kl_het_han >= homNayVN()) && duoc(a));
+  return ds.some((a) => a.id === me?.id);
+}
 
 // Mọi minh chứng của một nhiệm vụ, mới nhất trước.
 export async function loadMinhChung(nhiemVuId) {

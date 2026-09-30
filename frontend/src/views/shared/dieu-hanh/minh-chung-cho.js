@@ -6,6 +6,7 @@ import { state, findAccount } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { formatNgay, homNayVN } from '../../../lib/kl/ngay.js';
 import { tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
+import { laViecTtGiaoCvp, nghiemThuViecTt } from '../../../lib/kl/minh-chung.js';
 import { dh, timRow } from './du-lieu.js';
 
 export function minhChungChoHtml() {
@@ -15,7 +16,8 @@ export function minhChungChoHtml() {
   return `<div class="da-gui" id="dhMcCho">${ds.map((m) => {
     const r = timRow(m.nhiem_vu_id);
     const nguoi = findAccount(m.nop_boi);
-    const nut = m.nop_boi === state.user?.id ? '<span class="chu-phu">minh chứng do đồng chí nộp — người khác xác nhận</span>' : `
+    const nut = m.nop_boi === state.user?.id ? '<span class="chu-phu">minh chứng do đồng chí nộp — người khác xác nhận</span>'
+      : laViecTtGiaoCvp(r) && !nghiemThuViecTt(r, m.nop_boi) ? '<span class="chu-phu">việc Thường trực giao — thư ký Thường trực nghiệm thu thay mặt Thường trực</span>' : `
       <button type="button" class="nut lam" data-action="mcHopLeThe" data-id="${m.id}">Nghiệm thu</button>
       <button type="button" class="nut" data-action="moO" data-o="oMc-${m.id}">Trả lại</button>`;
     const toiDa = r.han_xu_ly && r.han_xu_ly >= hom ? r.han_xu_ly : '';

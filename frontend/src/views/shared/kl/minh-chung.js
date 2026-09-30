@@ -6,7 +6,7 @@ import { state, findAccount } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { danhMucKl, homNayTheoDb, tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
 import { homNayVN, formatNgay } from '../../../lib/kl/ngay.js';
-import { loadMinhChung, nopMinhChung, loiMinhChung, xacNhanMinhChung, dongNhiemVu, mcHopLe, TEN_LOAI_MC } from '../../../lib/kl/minh-chung.js';
+import { loadMinhChung, nopMinhChung, loiMinhChung, xacNhanMinhChung, dongNhiemVu, mcHopLe, TEN_LOAI_MC, laViecTtGiaoCvp, nghiemThuViecTt } from '../../../lib/kl/minh-chung.js';
 import { ngayLamViecSau, datHanNopMinhChung } from '../../../lib/kl/han-nop.js';
 import { klMinhChungTemplate } from './minh-chung-template.js';
 import { timKlRow } from './danh-sach.js';
@@ -19,10 +19,10 @@ const LOP_TRANG_THAI = { null: 'trang-thai tt-cho', true: 'trang-thai tt-xong', 
 const TEN_TRANG_THAI = { null: 'Chờ nghiệm thu', true: 'Đã nghiệm thu', false: 'Bị trả lại' };
 
 const tenNguoi = (id) => findAccount(id)?.full_name || 'không xác định';
-// Ai được bấm nghiệm thu: người theo dõi, A1/A2 (phạm vi do hàm chốt), quan_tri_kl, thư ký Thường trực (việc Thường trực giao cho Chánh VP — Q8,
-// hàm kl_duoc_nghiem_thu chốt) — trừ minh chứng do chính mình nộp (MC-6).
-const duocXacNhan = (r, m) => (r.nguoi_theo_doi === state.user?.id || duocChiDao() || Boolean(state.user?.quan_tri_kl) || Boolean(state.user?.thu_ky_thuong_truc))
-  && state.user?.role_group !== 'A0' && m.nop_boi !== state.user?.id;
+// Ai được bấm nghiệm thu (hàm kl_duoc_nghiem_thu chốt): việc Thường trực giao cho Chánh VP — thư ký Thường trực (không có: quan_tri_kl), không phải
+// chính Chánh VP (Q8, 0061); việc khác — người theo dõi, A1/A2 trong phạm vi, quan_tri_kl. Trừ A0 và minh chứng do chính mình nộp (MC-6).
+const duocXacNhan = (r, m) => state.user?.role_group !== 'A0' && m.nop_boi !== state.user?.id
+  && (laViecTtGiaoCvp(r) ? nghiemThuViecTt(r, m.nop_boi) : r.nguoi_theo_doi === state.user?.id || duocChiDao() || Boolean(state.user?.quan_tri_kl));
 const dangMo = (r) => r.tien_do_ma !== 'HOAN_THANH' && !r.dong_luc;
 
 function mcHtml(m, r) {

@@ -1,7 +1,7 @@
 // PR-2b (0057, Q8) — Việc Thường trực (A0) giao cho Chánh VP: thư ký Thường trực thấy việc và nghiệm thu thay mặt (lịch sử "thay mặt Thường
 // trực — <tên>"); thư ký không nghiệm thu việc khác (42501); thu cờ ⇒ mất quyền ngay; không ai giữ cờ ⇒ quan_tri_kl nghiệm thu (và đóng việc, Q2);
 // A0 và Chánh VP (người nộp) bị chặn. Tài khoản: demo_e2e_tk (A3, cấp cờ thư ký lúc chạy), demo_cv2 (quan_tri_kl tạm). Khoá "KL-0057"; tự dọn,
-// cờ khôi phục ở before lẫn after.
+// cờ khôi phục ở before lẫn after. 0061: Chánh VP (chủ trì, người theo dõi) không bao giờ nghiệm thu việc này, kể cả khi giữ quan_tri_kl.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, IDS, homNayVN } from './lib.mjs';
@@ -32,6 +32,7 @@ const don = async () => {
   await db().from('nhiem_vu').delete().like('noi_dung', `${KHOA}%`);
   if (vbIds.length) await db().from('van_ban_giao_viec').delete().in('id', vbIds);
   await co(false, false);
+  await db().from('accounts').update({ quan_tri_kl: false, quan_tri_kl_het_han: null }).eq('id', IDS.cvp);
 };
 
 describe('0057 — nghiệm thu thay mặt Thường trực (Q8)', { skip: SKIP }, () => {
@@ -65,5 +66,25 @@ describe('0057 — nghiệm thu thay mặt Thường trực (Q8)', { skip: SKIP 
     assert.deepEqual([v.tien_do_ma, v.ngay_hoan_thanh], ['HOAN_THANH', homNayVN()]);
     const ls = await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', nv.CVP).eq('cot', 'dong_nhiem_vu');
     assert.match(ls.data[0].gia_tri_moi, /Nghiệm thu và đóng nhiệm vụ .* — thay mặt Thường trực — Demo Chuyên viên Hai/);
+  });
+
+  test('3. (0061) Chánh VP không nghiệm thu việc Thường trực giao cho mình — kể cả là người theo dõi, hay giữ quan_tri_kl khi không ai giữ cờ thư ký; danh sách khớp', async () => {
+    await giaoA0('CVP3', IDS.cvp);
+    const mc = await db().from('minh_chung').insert({ nhiem_vu_id: nv.CVP3, loai: 'so_hieu', so_hieu: `${KHOA}/3`, ngay_van_ban: homNayVN(), cap_nhan: 'THUONG_TRUC',
+      trich_yeu: 'Báo cáo kết quả', mo_ta_ket_qua: 'Đã báo cáo Thường trực.', nop_boi: IDS.pcvp }).select('id').single();
+    assertOk(mc, 'minh chứng do PCVP nộp (service_role)');
+    const ds = async (u) => ((await (await userClient(u)).rpc('kl_can_nghiem_thu')).data || []).filter((x) => x.nhiem_vu_id === nv.CVP3).map((x) => x.cua_toi);
+    await co(true, false);
+    chan(await xac('demo_cvp', mc.data.id, true), 'Chánh VP (người theo dõi) khi có thư ký');
+    assert.deepEqual(await ds('demo_cvp'), [], 'Chánh VP không có trong Cần nghiệm thu');
+    assert.deepEqual(await ds('demo_e2e_tk'), [true], 'thư ký: Của tôi');
+    await co(false, true);
+    assertOk(await db().from('accounts').update({ quan_tri_kl: true, quan_tri_kl_het_han: null }).eq('id', IDS.cvp), 'Chánh VP giữ quan_tri_kl tạm');
+    try {
+      chan(await xac('demo_cvp', mc.data.id, true), 'Chánh VP giữ quan_tri_kl, không ai giữ cờ thư ký');
+      assert.deepEqual(await ds('demo_cvp'), []);
+      assert.deepEqual(await ds('demo_cv2'), [true], 'quan_tri_kl khác: Của tôi');
+    } finally { await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cvp); }
+    assertOk(await xac('demo_cv2', mc.data.id, true), 'quan_tri_kl nghiệm thu thay mặt');
   });
 });
