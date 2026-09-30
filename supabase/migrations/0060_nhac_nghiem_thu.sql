@@ -2,7 +2,8 @@
 -- 1. canh_bao.muc thêm CHAM_NOP_MC, NGHIEM_THU, NGHIEM_THU_QUA_HAN (viết lại đúng danh sách 0037, thêm vào cuối). canh_bao_ten_muc thêm 3 tên.
 -- 2. canh_bao_quet: vòng 1 chọn việc theo trang_thai (trang_thai_dong ở FROM — một lần mỗi dòng, bản 0037 gọi trang_thai vô hướng nhiều lần):
 --    QUA_HAN → DO / DO_DAC_BIET như CB-3 (0036) · QUA_HAN_NGHIEM_THU → NGHIEM_THU_QUA_HAN: người nhận nhắc chính + lãnh đạo trực tiếp của họ, Đỏ đặc
---    biệt thêm Chánh VP, KHÔNG gửi chủ trì / người theo dõi / người nộp; mỗi NGÀY LÀM VIỆC một lần (lần quét ngày nghỉ bỏ qua) ·
+--    biệt thêm Chánh VP; người nhận THÊM không gồm chủ trì / người theo dõi / người nộp (người nhận nhắc chính luôn nhận, kể cả khi chính họ là
+--    người theo dõi — Trưởng phòng giao và tự theo dõi); mỗi NGÀY LÀM VIỆC một lần (lần quét ngày nghỉ bỏ qua) ·
 --    CHAM_NOP_MINH_CHUNG → CHAM_NOP_MC: người nộp (chủ trì tài khoản + người theo dõi, trừ người giao) + người nhận nhắc chính; không thủ trưởng /
 --    Chánh VP · minh chứng đang chờ (dòng 6 và việc không hạn) → NGHIEM_THU: chỉ người nhận nhắc chính, khi đã chờ ≥ 1 ngày làm việc ·
 --    Vàng: việc có hạn nộp → người nộp trừ người giao, tin theo hạn nộp; việc cũ → như 0036. Nhắc lại theo độ khẩn như VANG (Thường 3, Khẩn 2,
@@ -69,8 +70,8 @@ BEGIN
     ELSIF r.muc = 'VANG' THEN v_nguoi := v_nop;
     ELSIF r.muc = 'CHAM_NOP_MC' THEN v_nguoi := v_nop || v_ntc;
     ELSIF r.muc = 'NGHIEM_THU' OR "public"."kl_viec_a0_giao_cvp"(r.nv) THEN v_nguoi := v_ntc;
-    ELSE   -- NGHIEM_THU_QUA_HAN: người nhận nhắc chính + lãnh đạo trực tiếp; Đỏ đặc biệt thêm Chánh VP; không chủ trì / theo dõi / người nộp
-      v_nguoi := ARRAY(SELECT DISTINCT u FROM unnest(v_ntc || ARRAY(SELECT "public"."lanh_dao_truc_tiep"(x) FROM unnest(v_ntc) x)
+    ELSE   -- NGHIEM_THU_QUA_HAN: người nhận nhắc chính (luôn nhận) + lãnh đạo trực tiếp; Đỏ đặc biệt thêm Chánh VP; người nhận thêm không gồm chủ trì / theo dõi / người nộp
+      v_nguoi := v_ntc || ARRAY(SELECT DISTINCT u FROM unnest(ARRAY(SELECT "public"."lanh_dao_truc_tiep"(x) FROM unnest(v_ntc) x)
                                                   || CASE WHEN r."muc_canh_bao" = 'DO_DAC_BIET' THEN ARRAY[v_cvp] ELSE '{}'::uuid[] END) u
                        WHERE u IS NOT NULL AND u IS DISTINCT FROM r."owner_tai_khoan" AND u IS DISTINCT FROM r."nguoi_theo_doi" AND u IS DISTINCT FROM r."nop_boi");
     END IF;

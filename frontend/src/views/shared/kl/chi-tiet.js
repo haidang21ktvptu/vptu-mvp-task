@@ -56,7 +56,7 @@ function hanhDongHtml(r) {
   const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
   // PR-2b: sửa hạn nộp — người giao (A0/A1/A2); không còn người giao (trống / bị khoá) thì quan_tri_kl (Q4). Hàm dat_han_nop_minh_chung là chốt.
   const giao = findAccount(r.giao_thay_mat_cho || r.tao_boi);
-  const suaHan = mo && r.han_xu_ly && ((giao && !giao.bi_khoa) ? giao.id === state.user?.id && ['A0', 'A1', 'A2'].includes(state.user?.role_group) : Boolean(state.user?.quan_tri_kl));
+  const suaHan = mo && r.han_xu_ly && ((giao && !giao.bi_khoa && !giao.is_system) ? giao.id === state.user?.id && ['A0', 'A1', 'A2'].includes(state.user?.role_group) : Boolean(state.user?.quan_tri_kl));
   return `<div class="hanh-dong">
     ${laBenTrong(r) && mo && !r.toi_da_xac_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc', 'lam') : ''}
     ${tuChoi ? nut('moO', 'Từ chối', '', `data-o="oTcNgan-${r.id}"`) : ''}

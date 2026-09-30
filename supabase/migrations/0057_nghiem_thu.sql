@@ -77,7 +77,7 @@ BEGIN
       END IF;
     END IF;
   END IF;
-  IF "public"."kl_viec_a0_giao_cvp"(v_nv) THEN
+  IF "public"."kl_viec_a0_giao_cvp"(v_nv) AND ("public"."me_thu_ky_tt"() OR "public"."me_quan_tri_kl"()) THEN   -- Q8: thư ký / quản trị thay mặt
     v_thay := ' — thay mặt Thường trực — ' || coalesce((SELECT "full_name" FROM "public"."accounts" WHERE "id" = "auth"."uid"()), '');
   END IF;
   UPDATE "public"."minh_chung" SET "hop_le" = "p_hop_le", "xac_nhan_boi" = "auth"."uid"(), "xac_nhan_luc" = now(),

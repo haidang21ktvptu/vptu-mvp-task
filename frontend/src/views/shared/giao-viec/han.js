@@ -7,10 +7,10 @@ import { $, show, setText } from '../../../lib/dom.js';
 import { khungHanNop } from '../../../lib/kl/han-nop.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 
-let khung = null; let luot = 0; let hen = null; let khoaCu = '';
+let khung = null; let luot = 0; let hen = null; let khoaCu = ''; let dangHoi = false;   // dangHoi: đang chờ khung từ DB
 
 export function datLaiHanNop() {
-  khung = null; khoaCu = ''; luot++;
+  khung = null; khoaCu = ''; luot++; dangHoi = false;
   $('klThHanNop').value = ''; $('klThLyDoSat').value = '';
   $('klThHanNop').removeAttribute('min'); $('klThHanNop').removeAttribute('max');
   setText('klThHanNopGoiY', 'chọn hạn hoàn thành trước'); show('klThHanNopDung', false); show('klThLyDoSatWrap', false);
@@ -22,13 +22,14 @@ export function napKhungHanNop({ han, ngayBH, loai }, sau) {
   if (khoa === khoaCu) return;
   khoaCu = khoa; clearTimeout(hen);
   const lan = ++luot;
-  if (!han && loai !== 'KY_BAN_HANH') { khung = null; capNhatGoiY(); sau(); return; }
+  if (!han && loai !== 'KY_BAN_HANH') { khung = null; dangHoi = false; capNhatGoiY(); sau(); return; }
+  dangHoi = true;
   hen = setTimeout(async () => {
     try {
       const k = await khungHanNop(han, ngayBH, loai);
       if (lan !== luot) return;
-      khung = k; capNhatGoiY(); sau();
-    } catch (e) { if (lan === luot) { khung = null; setText('klThHanNopGoiY', e.message); sau(); } }
+      khung = k; dangHoi = false; capNhatGoiY(); sau();
+    } catch (e) { if (lan === luot) { khung = null; dangHoi = false; setText('klThHanNopGoiY', e.message); sau(); } }
   }, 250);
 }
 
@@ -54,7 +55,7 @@ export function capNhatLyDo() {
 
 // Mục "Còn thiếu" (theo thứ tự) và thông báo lỗi khi bấm Giao — cùng quy tắc với trigger; DB vẫn là chốt.
 export function thieuHanNop() {
-  if (!khung) return [];
+  if (!khung) return dangHoi ? ['hạn nộp minh chứng'] : [];
   return [[!$('klThHanNop').value, 'hạn nộp minh chứng'],
     [ngoaiKhung(), `hạn nộp minh chứng trong ${formatNgay(khung.tu)}–${formatNgay(khung.den)}`],
     [canLyDo() && !$('klThLyDoSat').value.trim(), 'lý do việc gấp']].filter(([t]) => t).map(([, n]) => n);

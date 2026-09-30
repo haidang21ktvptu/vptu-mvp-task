@@ -50,6 +50,7 @@ describe('0060 — nhắc theo hạn nộp minh chứng và nghiệm thu', { ski
       them('CV', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.cvp, nguoi_theo_doi: IDS.cvp, tao_boi: IDS.a0 }, IDS.cvp),      // CVP → thư ký
       them('NG', { owner_don_vi_ma: 'DANG_UY_UBND', owner_tai_khoan: null, tao_boi: null }),        // đơn vị ngoài, không thay mặt → lãnh đạo trực tiếp theo dõi
       them('P1', { tao_boi: IDS.pcvp }),                                                              // PCVP giao cho cán bộ → PCVP
+      them('TD', { nguoi_theo_doi: IDS.truongphong }),                                                // A2 giao, tự theo dõi → A2 (vẫn nhận khi quá hạn nghiệm thu)
       them('CN', { han_xu_ly: '2026-08-31' }, null),                                                  // chậm nộp từ 19/08
       them('VG', { han_xu_ly: '2026-08-31', han_nop_minh_chung: '2026-08-21', nguoi_theo_doi: IDS.truongphong }, null)]);   // Vàng; theo dõi = người giao
   });
@@ -73,6 +74,7 @@ describe('0060 — nhắc theo hạn nộp minh chứng và nghiệm thu', { ski
     await quet('2026-08-21'); await quet('2026-08-21');
     assert.deepEqual(await nhan('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [IDS.pcvp, IDS.truongphong].sort());
     assert.equal((await cb('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-21')).length, 1, 'idempotent');
+    assert.deepEqual(await nhan('TD', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [IDS.pcvp, IDS.truongphong].sort(), 'người nhận nhắc chính là người theo dõi vẫn nhận');
     assert.deepEqual(await nhan('CV', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [TK], 'việc Chánh VP: chỉ thư ký, không Chánh VP, không A0');
     assert.equal((await cb('A3', 'DO')).length, 0, 'dòng 5 không đi nhánh Đỏ nhắc chủ trì');
     await quet('2026-08-22');

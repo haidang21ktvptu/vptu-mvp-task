@@ -17,8 +17,11 @@ let rowsHienTai = []; let hangMo = null; let hangMoLoc = '{}'; let viecMo = null
 
 const locAttr = (loc) => `data-loc='${escapeHtml(JSON.stringify(loc))}'`;
 const nut = (n, loc, lop = '') => (n > 0 ? `<button type="button" class="nut nho ${lop}" data-action="bcMoRong" ${locAttr(loc)}>${n}</button>` : '<span class="chu-phu">·</span>');
-const cot = (nhom, loc) => `<td class="so">${nut(nhom.QUA_HAN + nhom.DANG_DINH_CHINH, { ...loc, nhomTrong: ['QUA_HAN', 'DANG_DINH_CHINH'] }, 'chinh')}</td>
-  <td class="so">${nut(nhom.SAP_DEN_HAN, { ...loc, nhom: 'SAP_DEN_HAN' })}</td><td class="so">${nut(nhom.DANG_THUC_HIEN, { ...loc, nhom: 'DANG_THUC_HIEN' })}</td>
+// PR-2b: cột gồm cả trạng thái mới để Tổng = tổng các cột (quá hạn ở bước nghiệm thu → Quá hạn; chậm nộp MC → Sắp đến hạn; chờ nghiệm thu → Đang thực hiện).
+const CT = { qua: ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'], sap: ['SAP_DEN_HAN', 'CHAM_NOP_MINH_CHUNG'], dang: ['DANG_THUC_HIEN', 'CHO_NGHIEM_THU'] };
+const tongCot = (nhom, ds) => ds.reduce((a, k) => a + (nhom[k] || 0), 0);
+const cot = (nhom, loc) => `<td class="so">${nut(tongCot(nhom, CT.qua), { ...loc, nhomTrong: CT.qua }, 'chinh')}</td>
+  <td class="so">${nut(tongCot(nhom, CT.sap), { ...loc, nhomTrong: CT.sap })}</td><td class="so">${nut(tongCot(nhom, CT.dang), { ...loc, nhomTrong: CT.dang })}</td>
   <td class="so">${nut(nhom.HOAN_THANH, { ...loc, nhom: 'HOAN_THANH' }, 'lam')}</td>`;
 const DAU_BANG = '<thead><tr><th>Đơn vị / văn bản</th><th class="so">Tổng</th><th class="so">Quá hạn</th><th class="so">Sắp đến hạn</th><th class="so">Đang thực hiện</th><th class="so">Hoàn thành</th></tr></thead>';
 const khoaCua = (loc) => JSON.stringify(loc);

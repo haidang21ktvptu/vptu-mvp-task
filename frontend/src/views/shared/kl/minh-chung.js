@@ -33,7 +33,7 @@ function mcHtml(m, r) {
   const nopLai = m.han_nop_lai ? ` — nộp lại trước ${formatNgay(m.han_nop_lai)}` : '';
   const xacNhan = m.hop_le === null ? '' : `<p class="chu-phu mc-phu">${m.hop_le ? 'Đã nghiệm thu' : `Bị trả lại: ${escapeHtml(m.ly_do_khong_hop_le || '')}${nopLai}`} — ${escapeHtml(tenNguoi(m.xac_nhan_boi))}, ${formatDateTime(m.xac_nhan_luc)}</p>`;
   const nut = duocXacNhan(r, m) ? `
-        <button type="button" class="nut nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === true ? ' disabled' : ''}>${dangMo(r) ? 'Nghiệm thu, hoàn thành' : 'Xác nhận hợp lệ'}</button>
+        <button type="button" class="nut nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === true || (m.hop_le === false && dangMo(r)) ? ' disabled' : ''}>${dangMo(r) ? 'Nghiệm thu, hoàn thành' : 'Xác nhận hợp lệ'}</button>
         <button type="button" class="nut nho" data-action="moBacMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === false ? ' disabled' : ''}>Trả lại</button>` : '';
   const hanLai = dangMo(r) ? `<label class="nhan nho" for="mcBacHan-${m.id}">Hạn nộp lại</label><input type="date" id="mcBacHan-${m.id}" name="han_nop_lai" required class="o-nhap nho">
         <small class="chu-phu" id="mcBacGoiY-${m.id}"></small>` : '';
