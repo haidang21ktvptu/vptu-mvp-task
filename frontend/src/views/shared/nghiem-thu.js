@@ -16,6 +16,7 @@ import { nhanTrangThai, lopMep } from '../../lib/kl/nhan.js';
 import { lamMoiHuyHieu } from '../../features/huy-hieu.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { moNhiemVu } from './kl/index.js';
+import { nghiemThuDongViec, oNghiemThuHtml, chatLuongCuaForm } from './chat-luong.js';
 
 let ds = []; let viec = new Map(); let mcs = new Map(); let tab = 'cua-toi';
 
@@ -36,8 +37,10 @@ function dongHtml(x) {
         · ${escapeHtml(nguoi?.full_name || 'không xác định')} nộp ${formatDateTime(m.nop_luc)} · hạn hoàn thành ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</small>
       ${m.trich_yeu ? `<span class="mc-trich-yeu">${escapeHtml(m.trich_yeu)}</span>` : ''}${m.mo_ta_ket_qua ? `<span class="mc-mo-ta">${escapeHtml(m.mo_ta_ket_qua)}</span>` : ''}</p>
     <span class="hanh-dong" style="margin:0"><button type="button" class="nut nho" data-action="ntMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Mở việc</button>
-      <button type="button" class="nut nho lam" data-action="ntNghiemThu" data-id="${m.id}" data-ma="${escapeHtml(r.ma)}">Nghiệm thu</button>
+      ${nghiemThuDongViec(r, m) ? `<button type="button" class="nut nho lam" data-action="moO" data-o="oNtCl-${m.id}">Nghiệm thu</button>`   // PR-3: chọn chất lượng
+    : `<button type="button" class="nut nho lam" data-action="ntNghiemThu" data-id="${m.id}" data-ma="${escapeHtml(r.ma)}">Nghiệm thu</button>`}
       <button type="button" class="nut nho" data-action="moO" data-o="oNt-${m.id}">Trả lại</button></span>
+    ${nghiemThuDongViec(r, m) ? oNghiemThuHtml(`oNtCl-${m.id}`, 'ntNghiemThuCl', { id: m.id, ma: r.ma }) : ''}
     <form class="o" id="oNt-${m.id}" data-submit="ntTraLai" data-id="${m.id}"><input name="ly_do" required placeholder="Lý do trả lại (bắt buộc)" aria-label="Lý do trả lại">
       <input type="date" name="han_nop_lai" required min="${hom}"${toiDa ? ` max="${toiDa}"` : ''} aria-label="Hạn nộp lại" title="${toiDa ? `muộn nhất ${formatNgay(toiDa)}` : 'đã qua hạn hoàn thành: tối đa 2 ngày làm việc'}">
       <button type="submit" class="nut chinh">Trả lại minh chứng</button><button type="button" class="nut" data-action="dongO" data-o="oNt-${m.id}">Huỷ</button></form></div>`;
@@ -69,6 +72,11 @@ async function sauHanhDong(thongBao) { notifySuccess(thongBao); await lamMoiHuyH
 async function ntNghiemThu({ id, ma }) {
   try { await xacNhanMinhChung(id, true); await sauHanhDong(`Đã nghiệm thu minh chứng — nhiệm vụ ${ma} hoàn thành.`); } catch (e) { notifyError(e.message); }
 }
+async function ntNghiemThuCl({ id, ma }, form) {
+  const cl = chatLuongCuaForm(form);
+  if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
+  try { await xacNhanMinhChung(id, true, null, null, cl); await sauHanhDong(`Đã nghiệm thu minh chứng — nhiệm vụ ${ma} hoàn thành.`); } catch (e) { notifyError(e.message); }
+}
 async function ntTraLai({ id }, form) {
   const f = new FormData(form); const lyDo = (f.get('ly_do') || '').trim(); const han = f.get('han_nop_lai') || null;
   if (!lyDo || !han) { notifyError('Trả lại minh chứng phải ghi lý do và chọn hạn nộp lại.'); return; }
@@ -76,5 +84,5 @@ async function ntTraLai({ id }, form) {
 }
 
 export function registerNghiemThu() {
-  registerActions({ openNghiemThu, ntNghiemThu, ntTraLai, ntTab: ({ tab: t }) => { tab = t; ve(); }, ntMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
+  registerActions({ openNghiemThu, ntNghiemThu, ntNghiemThuCl, ntTraLai, ntTab: ({ tab: t }) => { tab = t; ve(); }, ntMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
 }

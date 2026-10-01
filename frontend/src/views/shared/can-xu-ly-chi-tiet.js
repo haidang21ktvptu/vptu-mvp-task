@@ -29,6 +29,7 @@ const nut = (nhan, action, data, lop = '') => `<button type="button" class="nut 
 export const cuaToiChoNhan = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && r.theo_1400 && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
 const canQuyet = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && canToiQuyet(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && !r.dang_dinh_chinh);
 const biTuChoi = () => dh.rows.filter((r) => mo(r) && r.bi_tu_choi && (['A0', 'A1', 'A2'].includes(vai()) || r.tao_boi === me() || r.giao_thay_mat_cho === me()));
+const coVuongMac = () => dh.rows.filter((r) => mo(r) && r.vuong_mac);   // cùng quy tắc co_vuong_mac (0067): việc mở có vướng mắc, phạm vi RLS
 const deNghiChoDuyet = () => (vai() === 'A0'
   ? dh.tuChoiCho.filter((t) => findAccount(t.cap_duyet)?.role_group === 'A0' && dh.rows.some((r) => r.id === t.nhiem_vu_id))
   : tuChoiChoToiDuyet());
@@ -74,12 +75,15 @@ const dongHoaToc = (so) => (so?.hoa_toc || []).map((x) => `<div class="cx-dong t
       ${x.loai === 'chi_dao' ? 'chỉ đạo hỏa tốc: ' : ''}${escapeHtml(trich(x.noi_dung))}<span class="chu-phu"> · Hỏa tốc, cần bấm Đã nhận trong 2 giờ làm việc</span></p>
     <div class="hanh-dong">${nut('Đã nhận', 'daNhanHoaToc', { loai: x.loai, id: x.id }, 'lam')}</div></div>`);
 
-export const TIEU_DE_MUC = { tin: 'Tin chưa đọc', quyet: 'Việc cần đồng chí quyết', denghi: 'Đề nghị từ chối chờ đồng chí duyệt', tuchoi: 'Việc bị từ chối, cần giao lại',
+const dongVuongMac = () => coVuongMac().map((r) => dong('vuongmac', r, `<b>Vướng mắc:</b> ${escapeHtml(trich(r.vuong_mac, 160))} · ${lienQuan(r)}`,
+  nut('Chỉ đạo / ý kiến', 'moChiDaoViec', { id: r.id, ma: r.ma }, 'lam')));
+
+export const TIEU_DE_MUC = { vuongmac: 'Việc có vướng mắc, đề nghị lãnh đạo quyết định', tin: 'Tin chưa đọc', quyet: 'Việc cần đồng chí quyết', denghi: 'Đề nghị từ chối chờ đồng chí duyệt', tuchoi: 'Việc bị từ chối, cần giao lại',
   moi: 'Việc mới chờ đồng chí xác nhận đã nhận', hoatoc: 'Hỏa tốc chưa bấm Đã nhận' };
 
 // Nội dung hộp dưới dải cho một mục; rỗng → câu "không còn việc nào" (dải và danh sách có thể lệch vài giây khi realtime).
 export function chiTietHtml(muc, so) {
-  const ds = { tin: dongTin, quyet: dongCanQuyet, denghi: dongDeNghi, tuchoi: dongBiTuChoi, moi: dongViecMoi, hoatoc: dongHoaToc }[muc]?.(so) || [];
+  const ds = { tin: dongTin, quyet: dongCanQuyet, vuongmac: dongVuongMac, denghi: dongDeNghi, tuchoi: dongBiTuChoi, moi: dongViecMoi, hoatoc: dongHoaToc }[muc]?.(so) || [];
   return `<div class="cx-dau"><b>${TIEU_DE_MUC[muc] || ''}</b><button type="button" class="nut nho" data-action="moCanXuLy" data-muc="${muc}" aria-label="Đóng danh sách">Đóng</button></div>
     ${ds.length ? ds.join('') : '<p class="chu-phu">Không còn việc nào ở mục này.</p>'}`;
 }

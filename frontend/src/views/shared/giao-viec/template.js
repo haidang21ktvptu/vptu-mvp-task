@@ -12,7 +12,7 @@ const sel = (id) => `<select id="${id}" class="o-nhap"></select>`;
 const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" class="o-nhap"${them}>`;
 
 export const giaoViecTemplate = `
-  <div class="dau"><h1>Giao việc</h1><span>một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành và hạn nộp minh chứng</span></div>
+  <div class="dau"><h1>Giao việc</h1><span>một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành và hạn nộp minh chứng</span></div>
   <div class="hai-cot" style="--rong-phu:340px">
   <form id="giaoViecForm" class="gv-the tam" data-submit="luuKlThem" novalidate>
     <fieldset class="gv-noi" id="gvKhoa" disabled aria-busy="true">
@@ -33,8 +33,13 @@ export const giaoViecTemplate = `
             ${truong('klThNgayNhanVB', 'Ngày nhận', inp('klThNgayNhanVB', 'date'), '', 'nếu biết')}
           </div>
           ${truong('klThTrichYeu', 'Trích yếu văn bản', inp('klThTrichYeu', 'text', ' placeholder="Về việc…" maxlength="300" autocomplete="off"'), '', 'không bắt buộc')}
+          <div class="cot-2">
+            ${truong('gvVbDuKien', 'Số nhiệm vụ dự kiến', inp('gvVbDuKien', 'number', ' min="0" step="1"'), '', 'không bắt buộc — số nhiệm vụ văn bản giao, để đối chiếu đã nhập đủ chưa')}
+            <div class="gv-truong" id="gvVbRaSoatWrap"><span class="nhan">Rà soát văn bản</span><label class="gv-chon"><input type="checkbox" id="gvVbRaSoat"> Đã rà soát toàn văn</label></div>
+          </div>
           <p class="chu-phu hidden" id="gvVbA0">Thường trực giao trực tiếp không kèm văn bản: để trống số hiệu và ngày ban hành, hệ thống ghi mốc "Thường trực giao &lt;thời điểm&gt;". Đã điền thì dùng đúng số hiệu, ngày và trích yếu vừa nhập.</p>
         </div>
+        ${truong('klThNguon', `Nguồn nhiệm vụ${BB}`, sel('klThNguon'), '', 'mặc định theo loại văn bản, đổi được')}
       </section>
 
       <section class="gv-phan" id="gvPhan2"><h2><i id="gvCham2" class="gv-so">2</i>Nội dung và người chịu trách nhiệm</h2>
@@ -44,6 +49,7 @@ export const giaoViecTemplate = `
           ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, sel('klThNguoiTheoDoi'), '', 'gợi ý theo người chịu trách nhiệm')}
           ${truong('klThThayMat', `Thay mặt${BB}`, sel('klThThayMat'), ' class="gv-truong hidden"', 'lãnh đạo mà đồng chí giao thay mặt')}
         </div>
+        ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
         <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
         <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
       </section>

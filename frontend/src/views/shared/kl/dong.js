@@ -4,7 +4,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { formatNgay, soNgay } from '../../../lib/kl/ngay.js';
-import { lopMep, boSoThuTu } from '../../../lib/kl/nhan.js';
+import { lopMep, boSoThuTu, tenTienDoHoanThanh, nhanChatLuongHtml } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { duocChiDao } from './chi-dao.js';
 
@@ -16,11 +16,10 @@ export const duocDong = (r) => laBenTrong(r) || duocChiDao() || Boolean(state.us
 export const sanPhamText = (r) => (r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : '');
 export const ownerText = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định';
 
-// Cột hạn: "trễ 12 ngày / hạn 4/9", "còn 2 ngày / hạn 18/9", "xong / sớm 3 ngày", "chưa có hạn / lý do".
+// Cột hạn: "trễ 12 ngày / hạn 4/9", "còn 2 ngày / hạn 18/9", "xong / Trước hạn 3 ngày | Đúng hạn | Trễ 2 ngày" (PR-3, tien_do_hoan_thanh), "chưa có hạn / lý do".
 function hanHtml(r, homNay) {
   if (r.nhom_dem === 'HOAN_THANH') {
-    const phu = r.ket_qua === 'DUNG_HAN' && r.han_xu_ly && r.ngay_hoan_thanh ? `sớm ${soNgay(r.ngay_hoan_thanh, r.han_xu_ly)} ngày`
-      : r.ket_qua === 'TRE' ? `trễ ${r.so_ngay_tre} ngày` : r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}` : 'không có ngày gốc';
+    const phu = tenTienDoHoanThanh(r) || (r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}` : 'không có ngày gốc');
     return `<b>xong</b>${phu}`;
   }
   if (!r.han_xu_ly) return `<b>chưa có hạn</b>${r.nhom_dem === 'CAN_DIEN_HAN' ? 'cần điền hạn' : escapeHtml(boSoThuTu(r.loai_thoi_han_ten))}`;
@@ -42,7 +41,7 @@ function phuText(r) {
 export function dongHtml(r, homNay, dangChon) {
   return `<button type="button" class="hang-nv ${lopMep(r, state.user?.id)}${dangChon ? ' dang' : ''}" id="klRow-${r.id}" data-action="chonKlRow" data-id="${r.id}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}" aria-pressed="${String(Boolean(dangChon))}">
       <span class="stt ${lopMep(r, state.user?.id)}"></span><span class="ma">${escapeHtml(r.ma)}</span>
-      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanPhuHtml(r)}</b><span title="${escapeHtml(phuText(r))}">${escapeHtml(phuText(r))}</span></span>
+      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanPhuHtml(r)}${nhanChatLuongHtml(r.chat_luong)}</b><span title="${escapeHtml(phuText(r))}">${escapeHtml(phuText(r))}</span></span>
       <span class="han">${hanHtml(r, homNay)}</span>
     </button>`;
 }

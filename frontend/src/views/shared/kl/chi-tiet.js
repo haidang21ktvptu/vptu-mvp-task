@@ -6,7 +6,7 @@ import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc, homNayVN } from '../../../lib/kl/ngay.js';
-import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop } from '../../../lib/kl/nhan.js';
+import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, tenChatLuong } from '../../../lib/kl/nhan.js';
 import { soNgayLamViec } from '../../../lib/kl/han-nop.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { napDienBien } from '../dien-bien.js';
@@ -14,15 +14,17 @@ import { timKlRow } from './danh-sach.js';
 import { sanPhamText, laBenTrong, duocCapNhat, duocDong, ownerText } from './dong.js';
 import { napChiDao, focusChiDao, duocChiDao } from './chi-dao.js';
 import { napMinhChung } from './minh-chung.js';
+import { oLuoiPr3Html, khoiPr3Html } from './thong-tin-giao.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
-  san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap' };
+  san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu' };
 const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban', 'han_nop_minh_chung'];
 const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan'];
 
 export function hienGiaTri(cot, v) {
   if (v === null || v === undefined || v === '') return '(trống)';
   if (DANH_MUC_COT[cot]) return tenTrongDanhMuc(DANH_MUC_COT[cot], v);
+  if (cot === 'chat_luong') return tenChatLuong(v) || v;
   if (COT_NGAY.includes(cot)) return formatNgay(v);
   if (COT_TAI_KHOAN.includes(cot)) return findAccount(v)?.full_name || v;
   if (cot === 'ngay_nhan_uoc_tinh' || cot === 'theo_1400' || cot === 'bi_tu_choi') return v === 'true' || v === true ? 'có' : 'không';
@@ -100,8 +102,10 @@ export function chiTietHtml(r, ls, dc) {
         ${nSao ? o('Hạn nộp MC', hanNop) : ''}
         ${o('Hạn hoàn thành', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
-        ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'))}</dl>
+        ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'))}
+        ${oLuoiPr3Html(r, o)}</dl>
       ${hanhDongHtml(r)}
+      ${khoiPr3Html(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <div class="khoi-nho khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>
       <div class="khoi-nho db-khoi" id="klDienBien-${r.id}"><h4>Diễn biến <span class="chu-phu">mới nhất trên đầu</span></h4><div><p class="chu-phu">Đang tải diễn biến…</p></div></div>

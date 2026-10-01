@@ -51,6 +51,14 @@ export const klCapNhatTemplate = `
         <input type="text" id="klCnGhiChu" class="o-nhap">
       </div>
     </div>
+    <div class="mt-3">
+      <label for="klCnVuongMac" class="nhan">Vướng mắc / đề nghị lãnh đạo quyết định <span class="chu-phu">không bắt buộc, tối đa 500 ký tự — để trống = đã giải quyết</span></label>
+      <textarea id="klCnVuongMac" class="o-nhap" rows="2" maxlength="500" placeholder="Nêu vướng mắc, đề nghị cấp nào quyết định việc gì"></textarea>
+    </div>
+    <div class="cot-2 mt-3 hidden" id="klCnGiaoWrap">
+      <div><label for="klCnNguon" class="nhan">Nguồn nhiệm vụ</label><select id="klCnNguon" class="o-nhap"></select></div>
+      <div><label for="klCnPhoiHop" class="nhan">Đơn vị phối hợp <span class="chu-phu">cách nhau bằng dấu ;</span></label><input type="text" id="klCnPhoiHop" class="o-nhap" maxlength="300"></div>
+    </div>
 
     <div class="modal-chan">
       <button type="button" data-action="closeKlCapNhat" class="nut">Huỷ</button>

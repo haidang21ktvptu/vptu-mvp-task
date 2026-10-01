@@ -9,6 +9,8 @@ export const klTemplate = `
   <div class="dau"><h1 id="klTieuDe">Nhiệm vụ</h1><span id="klPhuDe">trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải</span>
     <div class="phai-dau"><span id="klTinhDen" class="chu-phu" aria-live="polite"></span><span id="klKetNoi" class="ket-noi" role="status"></span>
       <button type="button" class="nut nho" data-action="loadKl">Tải lại</button>
+      <button type="button" id="klXuatExcel" class="nut nho" data-action="klXuatExcel" title="Xuất đúng danh sách đang hiện (sau bộ lọc) ra tệp .xlsx">Xuất Excel</button>
+      <button type="button" id="klIn" class="nut nho" data-action="klIn">In / lưu PDF</button>
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 
   <div class="kl-loc">
@@ -24,6 +26,7 @@ export const klTemplate = `
       <select id="klLocHoiNghi" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
       <select id="klLocNganh" aria-label="Lọc theo ngành"><option value="">Mọi ngành</option></select>
       <select id="klLocLinhVuc" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>
+      <select id="klLocNguon" aria-label="Lọc theo nguồn nhiệm vụ"><option value="">Mọi nguồn</option></select>
     </div></details>
   </div>
   <div id="klChipLoc" class="chip-loc hidden" role="status"></div>

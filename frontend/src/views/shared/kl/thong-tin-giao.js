@@ -1,0 +1,74 @@
+// Ngăn chi tiết — PR-3 (0062–0067): nguồn nhiệm vụ, đơn vị phối hợp, kết quả hoàn thành (chất lượng + Trước hạn / Đúng hạn / Trễ) và khối
+// "Vướng mắc / đề nghị lãnh đạo quyết định" sửa tại chỗ. Ai sửa (chỉ ẩn/hiện — hàm DB là chốt):
+//   - vướng mắc (dat_vuong_mac): Owner / người theo dõi, lãnh đạo A1/A2 thấy việc, quan_tri_kl; không A0. Để trống rồi Lưu = đã giải quyết.
+//   - nguồn + đơn vị phối hợp (dat_thong_tin_giao): người giao (coalesce(giao_thay_mat_cho, tao_boi), vai A0/A1/A2) hoặc quan_tri_kl (không A0).
+import { escapeHtml } from '../../../lib/dom.js';
+import { state, findAccount } from '../../../lib/state.js';
+import { notifySuccess, notifyError } from '../../../components/toast.js';
+import { danhMucKl, datThongTinGiao, datVuongMac } from '../../../lib/kl/du-lieu.js';
+import { nhanChatLuongHtml, tenTienDoHoanThanh, nhomCua } from '../../../lib/kl/nhan.js';
+import { loiDeHieu } from '../../../lib/kl/loi.js';
+import { laBenTrong } from './dong.js';
+import { duocChiDao } from './chi-dao.js';
+
+let sauHanhDong = async () => {};
+const laA0 = () => state.user?.role_group === 'A0';
+const qtkl = () => Boolean(state.user?.quan_tri_kl) && !laA0();
+export const duocSuaVuongMac = (r) => !laA0() && (laBenTrong(r) || duocChiDao() || qtkl());
+export function duocSuaThongTinGiao(r) {
+  const giao = findAccount(r.giao_thay_mat_cho || r.tao_boi);
+  return (Boolean(giao) && giao.id === state.user?.id && ['A0', 'A1', 'A2'].includes(state.user?.role_group) && !giao.bi_khoa) || qtkl();
+}
+
+// Ô lưới (dt/dd) của ngăn: Nguồn, Phối hợp (khi có), Kết quả (việc đã hoàn thành).
+export function oLuoiPr3Html(r, o) {
+  const ketQua = r.tien_do_ma === 'HOAN_THANH' ? `${escapeHtml(tenTienDoHoanThanh(r) || 'không đánh giá tiến độ')} ${nhanChatLuongHtml(r.chat_luong) || '<span class="chu-phu">chưa đánh giá chất lượng</span>'}` : '';
+  return `${o('Nguồn', `<span data-truong="nguon">${escapeHtml(r.nguon_nhiem_vu_ten || 'chưa xác định')}</span>`)}
+    ${r.don_vi_phoi_hop ? o('Phối hợp', `<span data-truong="phoi-hop">${escapeHtml(r.don_vi_phoi_hop)}</span>`) : ''}
+    ${ketQua ? o('Kết quả', ketQua) : ''}`;
+}
+
+const optNguon = (chon) => danhMucKl().nguonNhiemVu?.filter((d) => d.dang_dung || d.ma === chon)
+  .map((d) => `<option value="${escapeHtml(d.ma)}"${d.ma === chon ? ' selected' : ''}>${escapeHtml(d.ten)}</option>`).join('') || '';
+
+// Khối dưới hàng nút: vướng mắc (việc đang mở hoặc còn nội dung) + sửa nguồn / đơn vị phối hợp.
+export function khoiPr3Html(r) {
+  const mo = nhomCua(r.nhom_dem).mo; const suaVm = duocSuaVuongMac(r); const suaGiao = duocSuaThongTinGiao(r);
+  if (!mo && !r.vuong_mac && !suaGiao) return '';
+  const nut = (o, nhan) => `<button type="button" class="nut nho" data-action="moO" data-o="${o}-${r.id}">${nhan}</button>`;
+  const vm = mo || r.vuong_mac ? `<div class="ct-vuong-mac" id="klVm-${r.id}"><h4>Vướng mắc / đề nghị lãnh đạo quyết định</h4>
+      <p data-truong="vuong-mac">${r.vuong_mac ? escapeHtml(r.vuong_mac) : '<span class="chu-phu">không có</span>'}</p>
+      ${suaVm ? `${nut('oVm', r.vuong_mac ? 'Sửa vướng mắc' : 'Ghi vướng mắc')}
+      <form class="o" id="oVm-${r.id}" data-submit="luuVuongMac" data-id="${r.id}">
+        <textarea name="vuong_mac" class="o-nhap" rows="3" maxlength="500" style="flex-basis:100%" aria-label="Vướng mắc / đề nghị lãnh đạo quyết định" placeholder="Nêu vướng mắc, đề nghị cấp nào quyết định việc gì">${escapeHtml(r.vuong_mac || '')}</textarea>
+        <small>Tối đa 500 ký tự. Lần đầu ghi: người giao và lãnh đạo phụ trách nhận thông báo. Để trống rồi Lưu = đã giải quyết.</small>
+        <button type="submit" class="nut chinh">Lưu</button><button type="button" class="nut" data-action="dongO" data-o="oVm-${r.id}">Huỷ</button></form>` : ''}</div>` : '';
+  const giao = suaGiao ? `<div class="hanh-dong">${nut('oTtg', 'Sửa nguồn, đơn vị phối hợp')}</div>
+      <form class="o" id="oTtg-${r.id}" data-submit="luuThongTinGiao" data-id="${r.id}">
+        <select name="nguon" aria-label="Nguồn nhiệm vụ">${r.nguon_nhiem_vu_ma ? '' : '<option value="">Chưa xác định</option>'}${optNguon(r.nguon_nhiem_vu_ma)}</select>
+        <input name="phoi_hop" maxlength="300" value="${escapeHtml(r.don_vi_phoi_hop || '')}" placeholder="Đơn vị phối hợp (cách nhau bằng dấu ;)" aria-label="Đơn vị phối hợp">
+        <button type="submit" class="nut chinh">Lưu</button><button type="button" class="nut" data-action="dongO" data-o="oTtg-${r.id}">Huỷ</button></form>` : '';
+  return `<div class="khoi-nho ct-pr3">${vm}${giao}</div>`;
+}
+
+async function luuVuongMac({ id }, form) {
+  const nd = String(new FormData(form).get('vuong_mac') || '').trim();
+  try {
+    await datVuongMac(id, nd);
+    notifySuccess(nd ? 'Đã ghi vướng mắc.' : 'Đã xoá vướng mắc — coi như đã giải quyết.');
+    await sauHanhDong(id);
+  } catch (e) { notifyError('Không lưu được vướng mắc: ' + loiDeHieu(e)); }
+}
+async function luuThongTinGiao({ id }, form) {
+  const fd = new FormData(form);
+  try {
+    await datThongTinGiao(id, String(fd.get('nguon') || ''), String(fd.get('phoi_hop') || '').trim());
+    notifySuccess('Đã lưu nguồn nhiệm vụ và đơn vị phối hợp.');
+    await sauHanhDong(id);
+  } catch (e) { notifyError('Không lưu được: ' + loiDeHieu(e)); }
+}
+
+export function mountThongTinGiao(registerActions, napLai) {
+  sauHanhDong = napLai;
+  registerActions({ luuVuongMac, luuThongTinGiao });
+}

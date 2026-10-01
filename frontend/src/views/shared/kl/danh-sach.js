@@ -5,7 +5,7 @@ import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.j
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, linhVucCuaNganh, tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
-import { tongHop, sapXep, locRows, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH } from '../../../lib/kl/tong-hop.js';
+import { tongHop, sapXep, locRows, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
 import { THU_TU_NHOM, tenNhom, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { dongHtml } from './dong.js';
@@ -32,7 +32,10 @@ const NHAN_CHIP = {
   chuaCapQuyetDinh: () => 'Đang mở, chưa xác định cấp cần quyết định',
   nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
-const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klTimKiem: 'tuKhoa' };
+const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klLocNguon: 'nguon', klTimKiem: 'tuKhoa' };
+// PR-3: danh sách ĐANG HIỆN (lọc ngữ cảnh + nhóm, đã sắp xếp) — nút Xuất Excel xuất đúng các dòng này.
+let dangHien = [];
+export const dsDangHien = () => dangHien;
 
 export function setKlLoc(loc, thayThe = false) {
   kl.loc = thayThe ? { ...loc } : { ...kl.loc, ...loc };
@@ -83,6 +86,8 @@ function dienBoLoc() {
   $('klLocNganh').innerHTML = opt('', 'Mọi ngành') + danhMucKl().nganh.map((n) => opt(n.ma, n.ten, kl.loc.nganh === n.ma)).join('')
     + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa có ngành', kl.loc.nganh === CHUA_CO_NGANH) : '');
   dienLinhVuc();
+  $('klLocNguon').innerHTML = opt('', 'Mọi nguồn') + (danhMucKl().nguonNhiemVu || []).map((d) => opt(d.ma, d.ten, kl.loc.nguon === d.ma)).join('')
+    + (kl.rows.some((r) => !r.nguon_nhiem_vu_ma) ? opt(CHUA_CO_NGUON, 'Chưa xác định nguồn', kl.loc.nguon === CHUA_CO_NGUON) : '');
   // Ô chọn Đơn vị chịu trách nhiệm (có đếm), nhiều việc trước; A2/A3 thường chỉ một đơn vị → ẩn ô.
   const dv = new Map(); kl.rows.forEach((r) => { if (!r.owner_don_vi_ma) return; const c = dv.get(r.owner_don_vi_ma) || { ten: boSoThuTu(r.owner_don_vi_ten), n: 0 }; c.n++; dv.set(r.owner_don_vi_ma, c); });
   const ds = [...dv].sort((a, b) => b[1].n - a[1].n || a[1].ten.localeCompare(b[1].ten, 'vi'));
@@ -105,6 +110,7 @@ export function render(veLaiNgan = false) {
   THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
   document.querySelectorAll('#klStats .o-so').forEach((el) => el.setAttribute('aria-pressed', String((el.dataset.nhom || '') === (nhom || ''))));
   const list = sapXep(locRows(trongNguCanh, { nhom }));
+  dangHien = list;
   const homNay = homNayVN();
   const dangMo = idDangMo();
   $('klBody').innerHTML = list.length === 0

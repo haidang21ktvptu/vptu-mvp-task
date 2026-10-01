@@ -58,6 +58,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
     vai() !== 'A3' ? nut('quyet', n('can_quyet'), 'việc cần quyết') : '',
     vai() !== 'A3' ? nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị chờ duyệt') : '',
     nut('tuchoi', n('bi_tu_choi'), 'việc bị từ chối'),
+    ['A1', 'A2'].includes(vai()) ? nut('vuongmac', n('co_vuong_mac'), 'việc có vướng mắc') : '',   // PR-3: kl_so_chua_xu_ly.co_vuong_mac (phạm vi do RLS)
     nut('moi', n('viec_moi'), `việc mới chờ xác nhận${n('tt_cho_nhan') ? ` (${n('tt_cho_nhan')} Thường trực giao)` : ''}`),
     nut('hoatoc', n('hoa_toc_viec') + n('hoa_toc_chi_dao'), 'Hỏa tốc chưa Đã nhận', 'do'),
   ].filter(Boolean);
