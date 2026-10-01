@@ -5,7 +5,7 @@ import { findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 
 const TEN_HANH_DONG = { tao_tai_khoan: 'Tạo tài khoản', reset_mat_khau: 'Đặt lại mật khẩu tạm', khoa_tai_khoan: 'Khoá tài khoản', mo_tai_khoan: 'Mở khoá',
-  cap_co: 'Cấp cờ', thu_co: 'Thu cờ', cau_hinh: 'Đổi ngưỡng cảnh báo', don_du_lieu: 'Dọn dữ liệu', backup: 'Backup production' };
+  sua_tai_khoan: 'Sửa tài khoản', cap_co: 'Cấp cờ', thu_co: 'Thu cờ', cau_hinh: 'Đổi ngưỡng cảnh báo', don_du_lieu: 'Dọn dữ liệu', backup: 'Backup production' };
 
 // Chi tiết jsonb → chuỗi ngắn "khoá: giá trị", bỏ phạm vi dài của dọn dữ liệu (chỉ số dòng).
 function chiTietNgan(ct) {
