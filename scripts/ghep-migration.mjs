@@ -1,4 +1,4 @@
-// Ghép nháp supabase/nhap-0053/*.sql thành các migration PR-2b (mỗi file ≤ 300 dòng, tên gạch dưới, theo thứ tự phụ thuộc — cách của PR-2a,
+// Ghép nháp supabase/nhap-0062/*.sql thành các migration PR-3 (trước đó: PR-2b nhap-0053) (mỗi file ≤ 300 dòng, tên gạch dưới, theo thứ tự phụ thuộc — cách của PR-2a,
 // thiết kế §0.4 A). Bảng ánh xạ 0048–0052 của PR-2a đã bỏ: các file đó đã commit và áp lên staging/production (--xoa không được chạm tới).
 // Trong lúc còn nháp (lượt 6–7), file sinh ra KHÔNG được commit: mỗi đường dẫn được ghi ngay vào .git/info/exclude.
 // Lượt ghép cuối (lượt 8): chạy với --commit để bỏ các dòng exclude rồi commit một lần, xoá nháp.
@@ -10,8 +10,12 @@ import { execSync } from 'node:child_process';
 
 // PR-2b đã ghép và commit 0053–0060 (nháp supabase/nhap-0053 đã xoá) ⇒ bảng để trống: --xoa không được chạm file đã commit / đã áp.
 // PR sau: thêm cặp ['NN-ten.sql', 'NNNN_ten.sql'] và đổi NHAP khi bắt đầu nháp mới.
-export const BAN_DO = [];
-const NHAP = 'supabase/nhap-0053';
+export const BAN_DO = [
+  ['10-cot-danh-muc.sql', '0062_cot_danh_muc_pr3.sql'], ['20-nghiem-thu-chat-luong.sql', '0063_nghiem_thu_chat_luong.sql'],
+  ['30-giao-viec.sql', '0064_giao_viec_nguon.sql'], ['40-ham-ghi.sql', '0065_ham_ghi_pr3.sql'],
+  ['50-trang-thai.sql', '0066_trang_thai_truoc_han.sql'], ['60-view.sql', '0067_view_pr3.sql'],
+];
+const NHAP = 'supabase/nhap-0062';
 const MIG = 'supabase/migrations';
 const goc = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
 process.chdir(goc);

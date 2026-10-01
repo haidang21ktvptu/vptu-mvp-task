@@ -20,7 +20,8 @@ const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, a
 // 0046: minh chứng nộp mới bắt buộc thêm trích yếu + mô tả kết quả (≤ 600 ký tự); bản ghi cũ (chèn thẳng bằng service_role) giữ NULL vẫn hợp lệ.
 const nop = (username, ma, p) => rpc(username, 'nop_minh_chung', { p: { nhiem_vu_id: id[ma], so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG',
   trich_yeu: 'Báo cáo kết quả (RLS 0028)', mo_ta_ket_qua: 'Đã tổng hợp, gửi Chánh Văn phòng.', ...p } });
-const xacNhan = (username, mcId, hopLe, lyDo, hanNopLai) => rpc(username, 'xac_nhan_minh_chung', { p_id: mcId, p_hop_le: hopLe, p_ly_do: lyDo ?? null, p_han_nop_lai: hanNopLai ?? null });
+// PR-3 (0063): nghiệm thu đóng việc bắt buộc chất lượng ⇒ truyền tường minh ở lời gọi đóng việc.
+const xacNhan = (username, mcId, hopLe, lyDo, hanNopLai, chatLuong) => rpc(username, 'xac_nhan_minh_chung', { p_id: mcId, p_hop_le: hopLe, p_ly_do: lyDo ?? null, p_han_nop_lai: hanNopLai ?? null, p_chat_luong: chatLuong ?? null });
 const dong = (username, ma, ngay) => rpc(username, 'dong_nhiem_vu', { p_id: id[ma], p_ngay_hoan_thanh: ngay ?? null });
 const view = async (ma) => (await db().from('v_nhiem_vu').select('*').eq('id', id[ma]).single()).data;
 const docMc = async (username, ma) => (await userClient(username)).from('minh_chung').select('id, loai, so_hieu, hop_le, nop_boi').eq('nhiem_vu_id', id[ma]);
@@ -110,7 +111,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertLoi(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), /hạn nộp lại/, 'trả lại việc đang mở thiếu hạn nộp lại (Q3)');
     assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu', homNayVN()), 'PCVP phụ trách Owner trả lại');
     assertOk(await xacNhan('demo_pcvp2', mc.d, false, 'Nộp trùng', homNayVN()), 'trả lại minh chứng thứ ba');
-    assertOk(await xacNhan('demo_cv1', mc.a, true), 'người theo dõi nghiệm thu (đóng việc — Q2)');
+    assertOk(await xacNhan('demo_cv1', mc.a, true, null, null, 'DAT'), 'người theo dõi nghiệm thu (đóng việc — Q2)');
     const rows = (await db().from('minh_chung').select('id, hop_le, xac_nhan_boi, ly_do_khong_hop_le').eq('nhiem_vu_id', id['NV-T60']).order('nop_luc')).data;
     assert.deepEqual(rows.map((x) => [x.hop_le, x.xac_nhan_boi, x.ly_do_khong_hop_le]), [[true, IDS.cv1, null], [false, IDS.pcvp2, 'Sai số hiệu'], [false, IDS.pcvp2, 'Nộp trùng']]);
     const v = await view('NV-T60'); assert.equal(v.so_minh_chung_hop_le, 1); assert.equal(v.minh_chung_moi_nhat.hop_le, false);

@@ -71,8 +71,8 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
       ['xac_nhan_nhan_viec', () => me.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T88'] })]];
     (await songSong(ca.map((x) => x[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
     assertDenied(await me.rpc('nop_minh_chung', { p: { nhiem_vu_id: id['NV-T88'], so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nop_minh_chung');
-    assertDenied(await me.rpc('xac_nhan_minh_chung', { p_id: mcId, p_hop_le: true, p_ly_do: null }), 'xac_nhan_minh_chung');
-    assertDenied(await me.rpc('dong_nhiem_vu', { p_id: id['NV-T88'], p_ngay_hoan_thanh: null }), 'dong_nhiem_vu');
+    assertDenied(await me.rpc('xac_nhan_minh_chung', { p_id: mcId, p_hop_le: true, p_ly_do: null, p_chat_luong: 'DAT' }), 'xac_nhan_minh_chung');
+    assertDenied(await me.rpc('dong_nhiem_vu', { p_id: id['NV-T88'], p_ngay_hoan_thanh: null, p_chat_luong: null }), 'dong_nhiem_vu');
     assertDenied(await me.rpc('chi_dao_dong', { p_id: donDocId }), 'chi_dao_dong chỉ đạo của Chánh VP');
     assertDenied(await me.rpc('chi_dao_phan_hoi', { p: { chi_dao_id: donDocId, noi_dung: 'x' } }), 'chi_dao_phan_hoi');
     assertNoRows(await me.from('nhiem_vu').update({ ghi_chu: 'A0 sửa' }).eq('id', id['NV-T88']).select('id'), 'update nhiem_vu');

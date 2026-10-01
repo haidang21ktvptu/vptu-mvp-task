@@ -97,7 +97,8 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     assertDenied(a, 'đổi nội dung'); assertDenied(b, 'đổi chủ trì'); assertNoRows(c, 'việc người khác'); assertDenied(d, 'xoá');
   });
   test('bị chặn: A3/A2/Chánh VP không có quan_tri_kl thêm nhiệm vụ, hội nghị; sửa cấu hình', async () => {
-    const row = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST mới', loai_thoi_han_ma: 'CHO_QUYET_DINH' };
+    // PR-3: dòng hợp lệ về nghiệp vụ (có nguồn — trigger BEFORE chạy trước WITH CHECK) ⇒ chỉ còn RLS chặn.
+    const row = { van_ban_id: fx.hn, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST mới', loai_thoi_han_ma: 'CHO_QUYET_DINH', nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' };
     const U = ['demo_cv1', 'demo_truongphong', 'demo_cvp'];
     const kq = await songSong(U.flatMap((u) => [async () => (await userClient(u)).from('nhiem_vu').insert(row).select('id'),
       async () => (await userClient(u)).from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: '2026-08-01' }).select('id'),
@@ -114,7 +115,7 @@ describe('RLS-10 ghi: chủ trì, quan_tri_kl, chỉ đạo, lịch sử, đính
     assert.equal(await soThay('demo_cv2'), 7);
     const hn = await cv2.from('van_ban_giao_viec').insert({ so_hoi_nghi: 998, so_ket_luan: 'RLS-TEST', ngay_ban_hanh: '2026-08-01' }).select('id').single();
     assertOk(hn, 'quan_tri_kl thêm hội nghị');
-    const nv = await cv2.from('nhiem_vu').insert({ van_ban_id: hn.data.id, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N8 mới', loai_thoi_han_ma: 'CHO_QUYET_DINH' }).select('id, ma, tao_boi').single();
+    const nv = await cv2.from('nhiem_vu').insert({ van_ban_id: hn.data.id, nguoi_theo_doi: IDS.cv1, noi_dung: 'RLS-TEST N8 mới', loai_thoi_han_ma: 'CHO_QUYET_DINH', nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' }).select('id, ma, tao_boi').single();
     assertOk(nv, 'quan_tri_kl thêm nhiệm vụ'); assert.match(nv.data.ma, /^NV-\d{3,}$/); assert.equal(nv.data.tao_boi, IDS.cv2); // 0027: sequence > 999 không cắt số (staging đã qua NV-1000)
     assertOk(await cv2.from('nhiem_vu').update({ noi_dung: 'RLS-TEST N8 đã sửa', nganh_ma: 'NOI_CHINH' }).eq('id', nv.data.id).select('id'), 'sửa mọi cột');
     } finally {

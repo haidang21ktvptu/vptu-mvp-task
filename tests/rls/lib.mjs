@@ -124,9 +124,12 @@ export function hanNopMacDinh(p) {
   const hom = homNayVN();
   return { ...p, han_nop_minh_chung: p.han_xu_ly && p.han_xu_ly >= hom ? p.han_xu_ly : hom, ly_do_han_nop_sat: p.ly_do_han_nop_sat ?? 'Kiểm thử — hạn nộp mặc định' };
 }
+// PR-3 (0062): phiên người dùng tạo việc phải có nguồn nhiệm vụ. Test viết trước PR-3 không truyền ⇒ điền NHIEM_VU_PHAT_SINH (chỉ khi p KHÔNG
+// có khoá nguon_nhiem_vu_ma; test PR-3 truyền tường minh, kể cả null để kiểm bị chặn).
+export const nguonMacDinh = (p) => (!p || typeof p !== 'object' || 'nguon_nhiem_vu_ma' in p ? p : { ...p, nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' });
 function boc(c) {
   const goc = c.rpc.bind(c);
-  c.rpc = (fn, args, o) => goc(fn, fn === 'giao_viec' && args?.p ? { ...args, p: hanNopMacDinh(args.p) } : args, o);
+  c.rpc = (fn, args, o) => goc(fn, fn === 'giao_viec' && args?.p ? { ...args, p: nguonMacDinh(hanNopMacDinh(args.p)) } : args, o);
   return c;
 }
 
