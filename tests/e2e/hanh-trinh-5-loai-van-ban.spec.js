@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { NAP, moGiaoViec, moViec, nav, dienHanNop } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
-import { ID, dbAdmin, homNay, cong, moApp, moNghiemThu } from './lib/pr2b.mjs';
+import { ID, dbAdmin, homNay, cong, moApp, moNghiemThu, nghiemThuMc } from './lib/pr2b.mjs';
 
 const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'NQ_TW', 'CONG_VAN', 'KHAC'];
 const CAN_NGANH = new Set(['KL_BTV', 'TB_THUONG_TRUC']);
@@ -64,7 +64,7 @@ test.describe.serial('PR-2b — hành trình 5 loại văn bản: giao → nhậ
     await moNghiemThu(tp);
     for (const loai of LOAI) {
       const mc = (await db.from('minh_chung').select('id').eq('nhiem_vu_id', viec[loai].id).single()).data.id;
-      await tp.locator(`#nt-${mc}`).getByRole('button', { name: 'Nghiệm thu' }).click();
+      await nghiemThuMc(tp, mc, 'DAT_TOT');
       await expect(tp.locator('#toastContainer'), loai).toContainText(`${viec[loai].ma} hoàn thành`, NAP);
     }
     const { data } = await db.from('v_nhiem_vu').select('trang_thai, ngay_hoan_thanh, nghiem_thu_dung_han, nop_dung_han').in('id', LOAI.map((l) => viec[l].id));

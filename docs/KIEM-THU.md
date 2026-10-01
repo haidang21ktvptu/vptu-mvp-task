@@ -118,3 +118,10 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - `han-nop-minh-chung` (ma trận 7 vai × 5 loại văn bản, giao thật A2 và A0 từ Kết luận, sửa hạn nộp, nhãn cam), `nghiem-thu` (A3 nộp → A2 trả lại kèm hạn nộp lại → nộp lại → nghiệm thu; thư ký Thường trực), `hanh-trinh-5-loai-van-ban`, `b4-b6-lanh-dao`. Dùng chung `tests/e2e/lib/pr2b.mjs`; dữ liệu theo khoá riêng, cờ tạm (`quan_tri_kl`, `thu_ky_thuong_truc`, phân công kiêm nhiệm) khôi phục ở `beforeAll` lẫn `afterAll`.
 - Bốn project nối tiếp `pr2b-han-nop` → `pr2b-nghiem-thu` → `pr2b-hanh-trinh` → `pr2b-b4-b6` (mỗi lúc một spec), sau `pr2a`; `dang-nhap` phụ thuộc `pr2b-b4-b6`. Chạy riêng cả chuỗi: `npx playwright test --project='pr2b-*' --no-deps --workers=1` (kèm biến đích).
 
+
+## e2e PR-3 — chuỗi project `pr3-*` (chỉ máy tính, từ 1/10/2026)
+
+- `pr3-giao-that` (giao thật một việc mỗi vai — 7 vai tuần tự, cờ `quan_tri_kl` / kiêm nhiệm tạm khôi phục ở `beforeAll` lẫn `afterAll`; nguồn mặc định ở văn bản mới và có sẵn, DB lưu đúng cột), `pr3-vuong-mac` (A3 điền ở Cập nhật nhanh → thẻ Đỏ của Chánh VP trường 5, dải Cần xử lý ngay, Báo cáo → xoá trống tại ngăn), `pr3-hien-thi` (nghiệm thu bắt buộc chất lượng, "Trước hạn n ngày", Xuất Excel đọc lại bằng `tests/e2e/lib/doc-xlsx.mjs`, Báo cáo cột mới, Theo văn bản "đã nhập x / dự kiến y" → rà soát).
+- Ma trận ô **Nguồn nhiệm vụ** 7 vai × 5 loại (mặc định, văn bản có sẵn, "Còn thiếu" khi bỏ chọn) **nằm trong** `pr2b-han-nop` (cùng phiên với ô hạn nộp — quyết định 1/10/2026 để e2e staging ≤ 9 phút).
+- Nối tiếp `pr2b-b4-b6` → `pr3-giao-that` → `pr3-vuong-mac` → `pr3-hien-thi`; `dang-nhap` phụ thuộc `pr3-hien-thi`. Nghiệm thu trong spec dùng `nghiemThuMc` (`lib/pr2b.mjs`: bấm Nghiệm thu → nút xác nhận mờ → chọn chất lượng → xác nhận). Chạy riêng: `npx playwright test --project='pr3-*' --no-deps --workers=1` (kèm biến đích).
+- RLS: `kl-pr3-chat-luong-nguon` (A, B, E; D gắn `CHI_CUC_BO`), `kl-pr3-vuong-mac-ra-soat` (C, F). `lib.mjs` bọc `giao_viec` điền nguồn `NHIEM_VU_PHAT_SINH` khi test cũ không truyền khoá (test PR-3 truyền tường minh, kể cả null).

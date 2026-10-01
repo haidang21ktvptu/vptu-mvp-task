@@ -50,6 +50,14 @@ export async function voiPhien(browser, role, testInfo, fn) {
   const page = await moApp(browser, role, testInfo);
   try { return await fn(page); } finally { await page.context().close(); }
 }
+// PR-3: nghiệm thu ở màn "Cần nghiệm thu" = bấm Nghiệm thu → chọn chất lượng (BẮT BUỘC: nút xác nhận mờ tới khi chọn) → Xác nhận nghiệm thu.
+export async function nghiemThuMc(page, mc, chatLuong = 'DAT') {
+  await page.locator(`#nt-${mc}`).getByRole('button', { name: 'Nghiệm thu' }).click();
+  const f = page.locator(`#oNtCl-${mc}`); const nut = f.getByRole('button', { name: 'Xác nhận nghiệm thu' });
+  await expect(nut).toBeDisabled();
+  await f.locator('select[name="chat_luong"]').selectOption(chatLuong);
+  await nut.click();
+}
 // Mở màn "Cần nghiệm thu" và chờ danh sách nạp xong.
 export async function moNghiemThu(page) {
   await page.locator('#navNghiemThu').click();

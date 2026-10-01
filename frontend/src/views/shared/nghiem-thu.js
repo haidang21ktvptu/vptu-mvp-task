@@ -2,7 +2,7 @@
 // chờ ở việc đang mở mà đồng chí được nghiệm thu (kl_can_nghiem_thu — CÙNG hàm chặn kl_duoc_nghiem_thu với xac_nhan_minh_chung, không suy quyền ở
 // client). Hai tab: "Của tôi" (đồng chí là người nhận nhắc chính — bằng số trên menu) và "Trong phạm vi". Mỗi dòng #nt-<id minh chứng>: Mở việc,
 // Nghiệm thu (đóng việc cùng giao dịch — Q2), Trả lại (lý do + hạn nộp lại — Q3; khung ngày DB chốt, việc đã qua hạn: tối đa 2 ngày làm việc).
-import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
+import { $, escapeHtml, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
@@ -16,7 +16,7 @@ import { nhanTrangThai, lopMep } from '../../lib/kl/nhan.js';
 import { lamMoiHuyHieu } from '../../features/huy-hieu.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { moNhiemVu } from './kl/index.js';
-import { nghiemThuDongViec, oNghiemThuHtml, chatLuongCuaForm } from './chat-luong.js';
+import { nghiemThuDongViec, oNghiemThuHtml, chatLuongCuaForm, dongBoNutNghiemThu } from './chat-luong.js';
 
 let ds = []; let viec = new Map(); let mcs = new Map(); let tab = 'cua-toi';
 
@@ -49,11 +49,13 @@ function dongHtml(x) {
 function ve() {
   const cuaToi = ds.filter((x) => x.cua_toi); const hien = tab === 'cua-toi' ? cuaToi : ds;
   const nutTab = (ma, nhan, n) => `<button type="button" role="tab" class="nut nho${tab === ma ? ' lam' : ''}" aria-selected="${tab === ma}" data-action="ntTab" data-tab="${ma}">${nhan} (${n})</button>`;
+  const traNhap = giuONhap($('viewNghiemThu'));   // PR-3: hộp chất lượng đang mở / đã chọn giữ qua lần vẽ lại (sau hành động, tải lại)
   $('viewNghiemThu').innerHTML = `
     <div class="dau"><h1>Cần nghiệm thu</h1><span>minh chứng đã nộp, chờ đồng chí nghiệm thu · nghiệm thu = hoàn thành việc; trả lại phải có lý do và hạn nộp lại</span>
       <div class="phai-dau"><button type="button" class="nut nho" data-action="openNghiemThu">Tải lại</button></div></div>
     <div role="tablist" class="hanh-dong">${nutTab('cua-toi', 'Của tôi', cuaToi.length)}${nutTab('pham-vi', 'Trong phạm vi', ds.length)}</div>
     <div class="da-gui" id="ntDanhSach" data-tab="${tab}" data-nap="${Date.now()}">${hien.map(dongHtml).join('') || '<p class="trong">Không có minh chứng nào chờ nghiệm thu.</p>'}</div>`;
+  traNhap(); dongBoNutNghiemThu($('viewNghiemThu'));
 }
 
 async function openNghiemThu() {

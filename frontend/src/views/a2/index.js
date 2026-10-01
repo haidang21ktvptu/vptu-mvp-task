@@ -3,6 +3,7 @@
 // sắp đến hạn (hàng có Đôn đốc / Nhắc tại chỗ), minh chứng chuyên viên vừa nộp; cột phụ 360px = tải việc từng cán bộ (đếm từ dòng RLS đã tải,
 // không truy vấn thêm) + việc do chính Trưởng phòng chủ trì. Menu: Giao việc trong phòng, Nhiệm vụ của phòng, Cán bộ, Nhắn tin. Quyền thật ở hàm DB.
 import { $, show, setText, escapeHtml, formatDateTime, giuONhap } from '../../lib/dom.js';
+import { dongBoNutNghiemThu } from '../shared/chat-luong.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -66,7 +67,7 @@ function ve() {
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
   if (dh.luc) setText('dhTinhDen', `Trưởng phòng · ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
-  traNhap();
+  traNhap(); dongBoNutNghiemThu($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 
 async function loadPhongToi() {

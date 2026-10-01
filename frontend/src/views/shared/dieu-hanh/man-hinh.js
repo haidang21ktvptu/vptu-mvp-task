@@ -1,6 +1,7 @@
 // Phần chung của màn hình điều hành A0/A1: đầu trang (ngày, "số liệu tính đến", kết nối realtime, Tải lại), 4 số-lọc, thanh trái + danh sách
 // thẻ (hoặc Toàn cảnh N nhiệm vụ khi bấm số hoàn thành). Mỗi vai truyền cấu hình KPI và phần đầu/cuối trang riêng.
 import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
+import { dongBoNutNghiemThu } from '../chat-luong.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
 import { tongHop } from '../../../lib/kl/tong-hop.js';
@@ -68,7 +69,7 @@ export function veDieuHanh() {
   }
   cauHinh.veThem();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}, so sánh với tuần trước`);
-  traNhap();
+  traNhap(); dongBoNutNghiemThu($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 
 // Lỗi tạm (mạng, staging bận → statement timeout của v_nhiem_vu / v_ngoai_le khi nhiều trang nạp cùng lúc): thử lại MỘT lần sau 800 ms rồi mới báo,

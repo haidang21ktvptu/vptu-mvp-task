@@ -106,6 +106,18 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 - **QT-4 [Giữ]** 146 việc đóng không ngày hoàn thành: giữ NULL, không đánh giá **`[CH-13]`**; nhập bổ sung tuỳ chọn.
 - **QT-5 [Giữ]** Chạy song song/đối chiếu với Google Sheet: một kỳ đối chiếu số tổng sau hợp nhất **`[CH-15]`**, rồi sheet chỉ đọc.
 
+### 3.8 PR-3 — tiếp thu tính năng phần mềm điều hành của lãnh đạo (1/10/2026, migration 0062–0067, CAU-HOI nhóm I)
+
+Chỉ tiếp thu **tính năng**, không nhập dữ liệu của phần mềm đó (dữ liệu thử nghiệm).
+- **Chất lượng hoàn thành** `nhiem_vu.chat_luong` ∈ {Không đạt, Đạt, Đạt tốt, Đạt xuất sắc}: **bắt buộc** khi nghiệm thu đóng việc (`xac_nhan_minh_chung` 5 tham số); trả lại không kèm chất lượng; `dong_nhiem_vu` nhận chất lượng tuỳ chọn — chỉ lãnh đạo trong phạm vi / quản trị KL, **Owner tự đóng không được chấm**. Mở lại việc thì xoá chất lượng. Hiển thị: ngăn chi tiết, hàng việc, Báo cáo (cột theo mức), Cán bộ (KPI mỗi người).
+- **Nguồn nhiệm vụ** (`dm_nguon_nhiem_vu`, 6 mục cố định; cột `nguon` app/excel giữ nguyên nghĩa): **bắt buộc** khi phiên người dùng tạo việc (service_role/nhập không ép). Biểu mẫu Giao việc mặc định theo **loại văn bản đang áp dụng** — văn bản mới hoặc văn bản có sẵn: Kết luận BTV / Thông báo TT / Nghị quyết TW → Văn bản cần theo dõi; Công văn / Khác → Nhiệm vụ phát sinh (A0 để trống số hiệu = giao trực tiếp, DB tạo văn bản loại Khác ⇒ Nhiệm vụ phát sinh); người dùng đã tự chọn thì đổi loại không ghi đè. Người giao (A0/A1/A2) hoặc quản trị KL đổi được (`dat_thong_tin_giao`); Owner / người theo dõi không. Lọc ở Nhiệm vụ, bảng ở Báo cáo.
+- **Vướng mắc / đề nghị lãnh đạo quyết định** `vuong_mac` (≤ 500): Owner / người theo dõi (Cập nhật nhanh), lãnh đạo A1/A2 trong phạm vi, quản trị KL (`dat_vuong_mac`); A0 không. Xoá trống = đã giải quyết. Lần đầu ghi (NULL → có) trên việc mở: tin hệ thống tới người giao vai A1/A2 + PCVP phụ trách phòng chủ trì (không có ⇒ `nguoi_nghiem_thu_chinh`); **không gửi A0**. Thẻ Đỏ có trường thứ 5 "Vướng mắc"; Báo cáo "Việc cần lãnh đạo quyết định" (việc mở có vướng mắc hoặc cấp cần quyết); dải "Cần xử lý ngay" của A1/A2 đếm `co_vuong_mac`.
+- **Tiến độ hoàn thành** `trang_thai_kq.tien_do_hoan_thanh` = Trước hạn / Đúng hạn / Trễ; `ket_qua` **không đổi** (Đúng hạn gồm cả trước hạn) nên mọi số liệu cũ giữ nguyên. Hàng việc: "Trước hạn n ngày".
+- **Đơn vị phối hợp** `don_vi_phoi_hop` (≤ 300, tự do, cách nhau bằng ;): Giao việc (tuỳ chọn), ngăn chi tiết, Cập nhật nhanh của người giao / quản trị KL.
+- **Rà soát văn bản**: `van_ban_giao_viec.so_nhiem_vu_du_kien`, `da_ra_soat_toan_van` (+ người, lúc) — nhập khi tạo văn bản mới hoặc sửa tại màn Theo văn bản (`van_ban_dat_ra_soat`, quyền như trích yếu). Theo văn bản hiện "đã nhập x / dự kiến y" (x = tổng thật việc gốc của văn bản, `kl_van_ban_so_viec`, chỉ trả cho văn bản người xem được), nhãn vàng khi x < y hoặc chưa rà soát.
+- **Xuất Excel / In**: màn Nhiệm vụ xuất đúng danh sách đang lọc (15 cột tường minh), Báo cáo xuất 3 sheet (theo phòng, theo nguồn, danh sách Đỏ); tệp .xlsx thật do `lib/xlsx.js` tự ghi (không thư viện ngoài), nạp động khi bấm. In / lưu PDF ở màn Nhiệm vụ và Báo cáo.
+- **Không làm**: chu kỳ lặp (sau go-live), nhập Excel qua giao diện (dùng script), xuất lịch .ics; **chuyên viên không tự ghi nhận việc** (giữ nguyên tắc chỉ lãnh đạo giao).
+
 ---
 
 ## 4. Trạng thái, màu và quy tắc dẫn xuất

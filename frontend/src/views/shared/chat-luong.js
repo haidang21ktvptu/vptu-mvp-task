@@ -19,6 +19,12 @@ export function oNghiemThuHtml(formId, action, data) {
 }
 export const chatLuongCuaForm = (form) => String(new FormData(form).get('chat_luong') || '');
 
+// Sau khi vẽ lại vùng có form (giuONhap trả lại ô đang mở / giá trị đã chọn): đặt lại trạng thái nút xác nhận theo ô chất lượng.
+export function dongBoNutNghiemThu(vung) {
+  vung?.querySelectorAll('.o-nghiem-thu').forEach((f) => {
+    const nut = f.querySelector('button[type="submit"]'); if (nut) nut.disabled = !f.querySelector('select[name="chat_luong"]')?.value;
+  });
+}
 // Nút xác nhận chỉ sáng khi đã chọn mức — một bộ nghe chung cho mọi form .o-nghiem-thu (kể cả form vẽ lại sau realtime).
 document.addEventListener('change', (e) => {
   const s = e.target;
