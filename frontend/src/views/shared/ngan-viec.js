@@ -5,7 +5,7 @@ import { $, escapeHtml, show } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
-import { nhanTrangThai, lopMep, boSoThuTu } from '../../lib/kl/nhan.js';
+import { nhanTrangThai, lopMep, boSoThuTu, nhanChatLuongHtml } from '../../lib/kl/nhan.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 
@@ -69,7 +69,8 @@ export function nganViecHtml(r, dongAction = 'dongNganBaoCao') {
       <dl>${dd('Chủ trì', escapeHtml(ownerText(r)))}${dd('Theo dõi', escapeHtml(r.nguoi_theo_doi_ten || '(trống)'))}
         ${dd('Sản phẩm', escapeHtml(r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : 'chưa định nghĩa'))}
         ${dd('Hạn', `<b>${hanNgan(r)}</b>`)}${dd('Cấp quyết', escapeHtml(r.cap_quyet_dinh_ten || 'chưa xác định'))}
-        ${dd('Minh chứng', `${r.so_minh_chung_hop_le || 0} hợp lệ`)}</dl>
+        ${dd('Minh chứng', `${r.so_minh_chung_hop_le || 0} hợp lệ`)}${dd('Nguồn', escapeHtml(r.nguon_nhiem_vu_ten || 'chưa xác định'))}
+        ${r.chat_luong ? dd('Chất lượng', nhanChatLuongHtml(r.chat_luong)) : ''}${r.vuong_mac ? dd('Vướng mắc', `<span data-truong="vuong-mac">${escapeHtml(r.vuong_mac)}</span>`) : ''}</dl>
       ${hanhDongViecHtml(r, 'oNv')}
     </div>`;
 }

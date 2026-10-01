@@ -7,6 +7,7 @@ import { ngayTruoc } from './ngay.js';
 
 export const CHUA_PHAN_LOAI = 'CHUA_PHAN_LOAI'; // lĩnh vực NULL (134 dòng production 15/9) — nhóm hiển thị, không bị lọc mất
 export const CHUA_CO_NGANH = 'CHUA_CO_NGANH';
+export const CHUA_CO_NGUON = 'CHUA_CO_NGUON';   // PR-3: việc cũ / nhập chưa có nguồn nhiệm vụ
 
 const demTrong = () => Object.fromEntries(THU_TU_NHOM.map((k) => [k, 0]));
 const THU_TU_DK = { HOA_TOC: 1, THUONG_KHAN: 2, KHAN: 3 }; // cùng bảng với lib/kl/do-khan.js (giữ file này thuần, không import)
@@ -62,6 +63,8 @@ export function locRows(rows, f = {}) {
     && (!f.hoiNghi || String(r.so_hoi_nghi) === String(f.hoiNghi))
     && (!f.nganh || (f.nganh === CHUA_CO_NGANH ? !r.nganh_ma : r.nganh_ma === f.nganh))
     && (!f.linhVuc || (f.linhVuc === CHUA_PHAN_LOAI ? !r.linh_vuc_ma : r.linh_vuc_ma === f.linhVuc))
+    && (!f.nguon || (f.nguon === CHUA_CO_NGUON ? !r.nguon_nhiem_vu_ma : r.nguon_nhiem_vu_ma === f.nguon))
+    && (!f.chatLuong || r.chat_luong === f.chatLuong) && (!f.tienDoHT || r.tien_do_hoan_thanh === f.tienDoHT)
     && (!f.nguoiTheoDoi || r.nguoi_theo_doi === f.nguoiTheoDoi)
     && (!f.donVi || r.owner_don_vi_ma === f.donVi)
     && (!f.cuaToi || r.nguoi_theo_doi === f.cuaToi || r.owner_tai_khoan === f.cuaToi)

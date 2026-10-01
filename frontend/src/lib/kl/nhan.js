@@ -1,6 +1,8 @@
 // Nhãn, màu và thứ tự của các nhóm trạng thái (nhom_dem, muc_canh_bao từ hàm trang_thai — DB tính, frontend chỉ đặt tên) và
 // bốn khâu nghẽn (v_ngoai_le.khau, 0033). Màu là thông tin (mockup): đỏ = phải can thiệp, vàng = sắp/chưa rõ, lục = xong, lam = cấu trúc.
 // Tên lớp khai báo NGUYÊN VĂN (Tailwind cắt lớp ghép chuỗi khỏi bản build).
+import { soNgay } from './ngay.js';
+
 export const NHOM = {
   QUA_HAN:        { ten: 'Quá hạn',                     lop: 'do',   stat: 's-do',   thuTu: 2, mo: true },
   // PR-2b (0058): dòng 5 — đã nộp minh chứng, quá hạn ở bước NGHIỆM THU (chậm tính cho lãnh đạo nghiệm thu, không cho người nộp — Mới 2)
@@ -84,8 +86,23 @@ export const TEN_COT = {
   minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận minh chứng', dong_nhiem_vu: 'Đóng nhiệm vụ',
   giao_thay_mat: 'Giao thay mặt', giao_viec: 'Giao việc', canh_bao: 'Cảnh báo', do_khan: 'Độ khẩn', uu_tien: 'Ưu tiên', giao_thay_mat_cho: 'Giao thay mặt cho',
   han_nop_minh_chung: 'Hạn nộp minh chứng', ly_do_han_nop_sat: 'Lý do việc gấp (hạn nộp sát)', han_nop_minh_chung_ly_do: 'Đổi hạn nộp minh chứng',
+  chat_luong: 'Chất lượng hoàn thành', nguon_nhiem_vu_ma: 'Nguồn nhiệm vụ', vuong_mac: 'Vướng mắc / đề nghị lãnh đạo quyết định',
+  don_vi_phoi_hop: 'Đơn vị phối hợp', van_ban_ra_soat: 'Rà soát văn bản (số nhiệm vụ dự kiến)',
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
+
+// PR-3: chất lượng hoàn thành (0063) và tiến độ hoàn thành (0066). Màu dùng bộ trạng thái sẵn có: đỏ = Không đạt, trung tính = Đạt, lục = Đạt tốt / xuất sắc.
+export const CHAT_LUONG = [['KHONG_DAT', 'Không đạt'], ['DAT', 'Đạt'], ['DAT_TOT', 'Đạt tốt'], ['DAT_XUAT_SAC', 'Đạt xuất sắc']];
+export const tenChatLuong = (ma) => CHAT_LUONG.find(([m]) => m === ma)?.[1] || '';
+const LOP_CHAT_LUONG = { KHONG_DAT: 'tt-qua', DAT: 'tt-xam', DAT_TOT: 'tt-xong', DAT_XUAT_SAC: 'tt-xong' };
+export const nhanChatLuongHtml = (ma) => (ma ? `<span class="trang-thai ${LOP_CHAT_LUONG[ma] || 'tt-xam'}" data-truong="chat-luong">${tenChatLuong(ma)}</span>` : '');
+// "Trước hạn 3 ngày" / "Đúng hạn" / "Trễ 2 ngày" theo tien_do_hoan_thanh (DB); số ngày lấy từ hai cột ngày của chính dòng (soNgay, UTC).
+export function tenTienDoHoanThanh(r) {
+  if (r.tien_do_hoan_thanh === 'TRUOC_HAN') return `Trước hạn ${soNgay(r.ngay_hoan_thanh, r.han_xu_ly)} ngày`;
+  if (r.tien_do_hoan_thanh === 'DUNG_HAN') return 'Đúng hạn';
+  if (r.tien_do_hoan_thanh === 'TRE') return `Trễ ${soNgay(r.han_xu_ly, r.ngay_hoan_thanh)} ngày`;
+  return '';
+}
 
 // "6. Đảng ủy Ủy ban nhân dân tỉnh" → "Đảng ủy Ủy ban nhân dân tỉnh" (bỏ số thứ tự khi hiện trong ô).
 export const boSoThuTu = (ten) => (ten || '').replace(/^\d+\.\s*/, '');

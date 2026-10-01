@@ -1,4 +1,5 @@
-// Thẻ việc Đỏ (v8 đợt 2: một HÀNG): mã (+ "cần X quyết"), nội dung, số ngày trễ; dòng phụ 4 điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết);
+// Thẻ việc Đỏ (v8 đợt 2: một HÀNG): mã (+ "cần X quyết"), nội dung, số ngày trễ; dòng phụ 4 điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết)
+// + điều thứ 5 "Vướng mắc" khi có (PR-3, v_ngoai_le.vuong_mac);
 // vòng khép kín của chỉ đạo Thường trực (Đã gửi → Văn phòng trả lời (hạn) → Đóng); hành động: Chỉ đạo (A0: một ô + gợi ý, chi_dao_gui
 // CHI_DAO_TT) / Đôn đốc (A1/A2: DON_DOC) và Xem diễn biến (mở ngăn chi tiết ở màn hình Nhiệm vụ). Nút chỉ ẩn/hiện; quyền thật ở hàm DB.
 import { escapeHtml } from '../../../lib/dom.js';
@@ -96,7 +97,7 @@ export function theHtml(r) {
   return `<article class="the hang ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
       <div class="the-dau"><span class="stt ${cham}"></span><span class="ma">${escapeHtml(r.ma)}</span>
         <div class="ten"><b><span class="nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}</span> <span class="nhan-cum">${nhanTC}${vongHtml(r)}</span></b>
-          <span title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}${theoDoi}</span></div>
+          <span title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}${theoDoi}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
         ${tre}
         <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
           <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div></div>

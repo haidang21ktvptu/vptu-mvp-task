@@ -105,7 +105,7 @@ export async function loadDinhChinhCho(nhiemVuId) {
 // Cập nhật nhanh của người theo dõi / Owner / quan_tri_kl: UPDATE trực tiếp theo policy 0025; cột do guard giới hạn;
 // lịch sử do trigger ghi. Chỉ gửi đúng các cột được phép. Việc cũ không bị đòi sản phẩm (CH-5).
 const COT_CAP_NHAT = ['tien_do_ma', 'han_xu_ly', 'ly_do_chua_co_han', 'ngay_hoan_thanh', 'minh_chung', 'van_ban_trien_khai', 'ghi_chu',
-  'san_pham_loai', 'san_pham_mo_ta', 'cap_nhan_san_pham', 'cap_quyet_dinh', 'ngay_nhan_van_ban'];
+  'san_pham_loai', 'san_pham_mo_ta', 'cap_nhan_san_pham', 'cap_quyet_dinh', 'ngay_nhan_van_ban', 'vuong_mac'];   // vuong_mac: guard a3 0062
 export async function capNhatNhiemVu(id, thayDoi) {
   const patch = Object.fromEntries(Object.entries(thayDoi).filter(([k]) => COT_CAP_NHAT.includes(k)));
   const r = await supabase.from('nhiem_vu').update(patch).eq('id', id).select('id');
@@ -114,7 +114,7 @@ export async function capNhatNhiemVu(id, thayDoi) {
 }
 
 // Văn bản giao việc (GV-1): danh sách để chọn trên form; văn bản mới tạo trong hàm giao_viec.
-const COT_VAN_BAN = 'id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu';
+const COT_VAN_BAN = 'id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu, tao_boi, so_nhiem_vu_du_kien, da_ra_soat_toan_van, ra_soat_boi, ra_soat_luc';
 const vanBanTheoThuTu = () => supabase.from('van_ban_giao_viec').select(COT_VAN_BAN).order('ngay_ban_hanh', { ascending: false }).order('so_ket_luan').order('id');
 // Đủ mọi văn bản trong phạm vi (cây Theo văn bản ghép theo id) — theo trang.
 export const loadVanBan = () => taiTheoTrang(vanBanTheoThuTu, 'đọc văn bản');
@@ -134,6 +134,13 @@ export async function datTrichYeuVanBan(id, trichYeu) {
   const r = await supabase.rpc('van_ban_dat_trich_yeu', { p_id: id, p_trich_yeu: trichYeu });
   if (r.error) throw new Error(r.error.message);
 }
+// PR-3 (0065): hàm ghi có allowlist — nguồn / đơn vị phối hợp (người giao, quan_tri_kl), vướng mắc (Owner, theo dõi, lãnh đạo trong phạm vi,
+// quan_tri_kl), số nhiệm vụ dự kiến + rà soát toàn văn (như trích yếu). kl_van_ban_so_viec: số việc gốc đã nhập — tổng thật, chỉ văn bản xem được.
+const goi = async (fn, args) => { const r = await supabase.rpc(fn, args); if (r.error) throw new Error(r.error.message); return r.data; };
+export const datThongTinGiao = (id, nguon, phoiHop) => goi('dat_thong_tin_giao', { p_id: id, p_nguon_nhiem_vu_ma: nguon || null, p_don_vi_phoi_hop: phoiHop || null });
+export const datVuongMac = (id, noiDung) => goi('dat_vuong_mac', { p_id: id, p_noi_dung: noiDung || null });
+export const datRaSoatVanBan = (id, so, daRaSoat) => goi('van_ban_dat_ra_soat', { p_id: id, p_so: so ?? null, p_da_ra_soat: daRaSoat });
+export const soViecTheoVanBan = async () => new Map(((await goi('kl_van_ban_so_viec', {})) || []).map((x) => [x.van_ban_id, x.so_viec]));
 // Giao việc (GV-2, GV-3): một RPC kiểm quyền và 1-1-1 phía DB (0025). Trả { id, ma, van_ban_id }.
 export async function giaoViec(p) {
   const r = await supabase.rpc('giao_viec', { p });

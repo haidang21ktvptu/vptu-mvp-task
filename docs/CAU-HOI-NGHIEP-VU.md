@@ -246,3 +246,17 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | H-12 | GIAO_LAI của PCVP theo phạm vi nào? | **Theo phạm vi giao (30/9)** — như `giao_viec`, kể cả kiêm nhiệm; các vai khác giữ nguyên như 0045. | RLS `kl-pq-giao-lai-pham-vi` |
 | H-13 | Nhịp nhắc việc? | **Một lần mỗi ngày 07:30 (30/9)** — `canh-bao.yml` giữ lịch; nhắc lặp chỉ vào ngày làm việc. | RLS `kl-0060-nhac-nghiem-thu` |
 
+
+## Nhóm I — Quyết định 1/10/2026: tiếp thu tính năng phần mềm điều hành của lãnh đạo (PR-3, migration 0062–0067)
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| I-1 | Nhập dữ liệu của phần mềm điều hành? | **Không** — chỉ tiếp thu tính năng; dữ liệu đó là thử nghiệm. | — |
+| I-2 | Chất lượng hoàn thành? | 4 mức, **bắt buộc khi nghiệm thu đóng việc**; trả lại không kèm; đường đóng cũ tuỳ chọn, **Owner tự đóng không được chấm** (lãnh đạo / quản trị KL thì được). | RLS `kl-pr3-chat-luong-nguon`; e2e `pr3-hien-thi`, `nghiem-thu` |
+| I-3 | Nguồn nhiệm vụ? | 6 mục cố định, **bắt buộc khi giao** (phiên người dùng); mặc định theo loại văn bản ở cả văn bản mới và có sẵn; người giao / quản trị KL đổi được. | RLS `kl-pr3-chat-luong-nguon`; e2e `han-nop-minh-chung` (ma trận), `pr3-giao-that` |
+| I-4 | Vướng mắc / đề nghị lãnh đạo quyết định? | Owner, người theo dõi, lãnh đạo A1/A2 trong phạm vi, quản trị KL sửa; xoá trống = đã giải quyết; tin lần đầu tới người giao vai A1/A2 + PCVP phụ trách (không có ⇒ `nguoi_nghiem_thu_chinh`); **không gửi A0** (A0 chỉ đọc và chỉ đạo; việc Thường trực giao ⇒ thư ký theo nhánh dự phòng). Đếm "Cần xử lý ngay" cho A1 và A2. | RLS `kl-pr3-vuong-mac-ra-soat`; e2e `pr3-vuong-mac` |
+| I-5 | "Trước hạn"? | Trường mới `tien_do_hoan_thanh`; `ket_qua` giữ nguyên ⇒ số liệu, bộ mốc 14/9 không đổi; chỉ tách ở hiển thị. | RLS `kl-pr3-chat-luong-nguon` (D), `kl-moc-2026-09-14` |
+| I-6 | Đơn vị phối hợp? | Chữ tự do ≤ 300, tuỳ chọn; người giao / quản trị KL sửa. | RLS `kl-pr3-chat-luong-nguon` |
+| I-7 | Rà soát văn bản? | Số nhiệm vụ dự kiến + cờ đã rà soát toàn văn; "đã nhập" = **tổng thật** (hàm DB, chỉ trả cho văn bản người xem được); quyền sửa như trích yếu. | RLS `kl-pr3-vuong-mac-ra-soat`; e2e `pr3-hien-thi` |
+| I-8 | Xuất Excel / In? | .xlsx thật (tự ghi, không thư viện ngoài, nạp động); Nhiệm vụ: danh sách đang lọc; Báo cáo: theo phòng + theo nguồn + Đỏ; tên `vptu-nhiem-vu-<yyyymmdd>.xlsx`, `vptu-bao-cao-<yyyymmdd>.xlsx`; A3 cũng xuất được (RLS giới hạn). | unit `frontend/tests/xlsx.test.mjs`; e2e `pr3-hien-thi` |
+| I-9 | Chuyên viên tự ghi nhận việc? | **Không làm** — giữ nguyên tắc chỉ lãnh đạo giao. Hoãn: chu kỳ lặp (sau go-live), nhập Excel qua giao diện (dùng script), xuất lịch .ics. | — |

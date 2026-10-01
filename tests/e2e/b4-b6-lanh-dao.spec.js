@@ -8,7 +8,7 @@
 import { test, expect } from '@playwright/test';
 import { NAP, moViec } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
-import { ID, dbAdmin, homNay, taoViec, datCo, moNghiemThu, voiPhien } from './lib/pr2b.mjs';
+import { ID, dbAdmin, homNay, taoViec, datCo, moNghiemThu, nghiemThuMc, voiPhien } from './lib/pr2b.mjs';
 
 test.describe.serial('PR-2b — B4–B6: lãnh đạo, quản trị là người theo dõi', () => {
   test.describe.configure({ timeout: 180_000 });   // hành trình nhiều bước (staging chậm)
@@ -28,7 +28,7 @@ test.describe.serial('PR-2b — B4–B6: lãnh đạo, quản trị là người
   async function nghiemThu(page, v) {
     await moNghiemThu(page);
     const mc = (await db.from('minh_chung').select('id').eq('nhiem_vu_id', v.id).single()).data.id;
-    await page.locator(`#nt-${mc}`).getByRole('button', { name: 'Nghiệm thu' }).click();
+    await nghiemThuMc(page, mc);
     await expect(page.locator('#toastContainer')).toContainText(`${v.ma} hoàn thành`, NAP);
     expect((await db.from('nhiem_vu').select('tien_do_ma').eq('id', v.id).single()).data.tien_do_ma).toBe('HOAN_THANH');
   }

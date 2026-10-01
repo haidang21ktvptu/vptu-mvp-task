@@ -12,6 +12,8 @@ import { klMinhChungTemplate } from './minh-chung-template.js';
 import { timKlRow } from './danh-sach.js';
 import { duocChiDao } from './chi-dao.js';
 import { laBenTrong } from './dong.js';
+import { nghiemThuDongViec, oNghiemThuHtml, chatLuongCuaForm } from '../chat-luong.js';
+import { laQtklConHan } from './thong-tin-giao.js';
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 const LOP_LOAI = { so_hieu: 'mc-loai', chu_cu: 'mc-loai mc-loai-cu', tep: 'mc-loai' };
@@ -32,8 +34,11 @@ function mcHtml(m, r) {
   const bonYeuTo = m.trich_yeu || m.mo_ta_ket_qua ? `<p class="mc-trich-yeu">${escapeHtml(m.trich_yeu || '')}</p><p class="mc-mo-ta">${escapeHtml(m.mo_ta_ket_qua || '')}</p>` : '';
   const nopLai = m.han_nop_lai ? ` — nộp lại trước ${formatNgay(m.han_nop_lai)}` : '';
   const xacNhan = m.hop_le === null ? '' : `<p class="chu-phu mc-phu">${m.hop_le ? 'Đã nghiệm thu' : `Bị trả lại: ${escapeHtml(m.ly_do_khong_hop_le || '')}${nopLai}`} — ${escapeHtml(tenNguoi(m.xac_nhan_boi))}, ${formatDateTime(m.xac_nhan_luc)}</p>`;
+  // PR-3: nghiệm thu đóng việc ⇒ mở hộp chọn chất lượng (bắt buộc); không đóng việc (việc đã đóng / minh chứng không có ngày) ⇒ một bấm như cũ.
+  const dong = nghiemThuDongViec(r, m); const tat = m.hop_le === true || (m.hop_le === false && dangMo(r)) ? ' disabled' : '';
   const nut = duocXacNhan(r, m) ? `
-        <button type="button" class="nut nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === true || (m.hop_le === false && dangMo(r)) ? ' disabled' : ''}>${dangMo(r) ? 'Nghiệm thu, hoàn thành' : 'Xác nhận hợp lệ'}</button>
+        ${dong ? `<button type="button" class="nut nho" data-action="moO" data-o="mcNt-${m.id}"${tat}>Nghiệm thu, hoàn thành</button>`
+    : `<button type="button" class="nut nho" data-action="xacNhanMinhChung" data-id="${m.id}" data-nv="${r.id}"${tat}>${dangMo(r) ? 'Nghiệm thu, hoàn thành' : 'Xác nhận hợp lệ'}</button>`}
         <button type="button" class="nut nho" data-action="moBacMinhChung" data-id="${m.id}" data-nv="${r.id}"${m.hop_le === false ? ' disabled' : ''}>Trả lại</button>` : '';
   const hanLai = dangMo(r) ? `<label class="nhan nho" for="mcBacHan-${m.id}">Hạn nộp lại</label><input type="date" id="mcBacHan-${m.id}" name="han_nop_lai" required class="o-nhap nho">
         <small class="chu-phu" id="mcBacGoiY-${m.id}"></small>` : '';
@@ -49,6 +54,7 @@ function mcHtml(m, r) {
       ${m.loai === 'chu_cu' ? `<p class="mc-chu">${escapeHtml(m.noi_dung_chu || '')}</p>` : ''}
       ${bonYeuTo}
       ${xacNhan}
+      ${duocXacNhan(r, m) && dong && m.hop_le === null ? oNghiemThuHtml(`mcNt-${m.id}`, 'nghiemThuMinhChung', { id: m.id, nv: r.id }) : ''}
       <form class="mc-form-ly-do hidden" id="mcBac-${m.id}" data-submit="bacMinhChung" data-id="${m.id}" data-nv="${r.id}">
         <input type="text" name="ly_do" required class="o-nhap nho" placeholder="Lý do trả lại (bắt buộc)" aria-label="Lý do trả lại">
         ${hanLai}
@@ -127,6 +133,11 @@ async function xacNhanMinhChungAction(ds) {
     notifyError(e.message);
   }
 }
+async function nghiemThuMinhChung(ds, form) {
+  const cl = chatLuongCuaForm(form);
+  if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
+  try { await xacNhanMinhChung(ds.id, true, null, null, cl); notifySuccess('Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.'); sauHanhDong(); } catch (e) { notifyError(e.message); }
+}
 // Hộp trả lại: hạn nộp lại trong [hôm nay, H] (chưa qua H) hoặc [hôm nay, ngày làm việc thứ 2] (đã qua H — Q3); ngày làm việc tính ở DB.
 async function moBacMinhChung(ds) {
   const f = $(`mcBac-${ds.id}`); if (!f) return;
@@ -158,6 +169,7 @@ async function suaHanNop(ds, form) {
   if (!han || !lyDo) { notifyError('Chọn hạn nộp mới và ghi lý do sửa.'); return; }
   try {
     await datHanNopMinhChung(ds.id, han, lyDo);
+    form.classList.remove('mo');   // ngăn vẽ lại giữ form đang mở (giuONhap) — lưu xong thì đóng
     notifySuccess(`Đã sửa hạn nộp minh chứng thành ${formatNgay(han)}. Chủ trì và người theo dõi nhận thông báo.`);
     sauHanhDong();
   } catch (e) { notifyError(e.message); }
@@ -174,6 +186,9 @@ export async function openDongNhiemVu({ id }) {
   setText('klDongMoTa', `${r.ma} — ${r.noi_dung}`);
   $('klDongNgay').value = goiY; $('klDongNgay').min = r.ngay_ban_hanh; $('klDongNgay').max = homNay;
   setText('klDongGhiChu', r.ngay_nhan_uoc_tinh ? 'Ngày nhận văn bản là ước tính nên lead time không được tính.' : `Lead time = ngày hoàn thành − ngày nhận văn bản (${formatNgay(r.ngay_nhan_van_ban)}).`);
+  // PR-3 (0063): lãnh đạo trong phạm vi / quan_tri_kl (không phải Owner của việc) đánh giá chất lượng khi đóng — tuỳ chọn; Owner tự đóng thì không.
+  $('klDongChatLuong').value = '';
+  show('klDongClWrap', r.owner_tai_khoan !== state.user?.id && (duocChiDao() || laQtklConHan()));
   $('klDongLuu').disabled = false;
   show('klDongModal', true);
   $('klDongNgay').focus();
@@ -185,7 +200,7 @@ async function luuDongNhiemVu() {
   if (ngay && ngay > homNay) { notifyError('Ngày hoàn thành phải từ ngày ban hành tới hôm nay.'); return; }
   $('klDongLuu').disabled = true;
   try {
-    await dongNhiemVu(id, ngay || null);
+    await dongNhiemVu(id, ngay || null, $('klDongClWrap').classList.contains('hidden') ? null : $('klDongChatLuong').value || null);
     notifySuccess('Đã đóng nhiệm vụ. Lead time đã chốt theo ngày hoàn thành.');
     closeDongNhiemVu();
     sauHanhDong();
@@ -199,6 +214,6 @@ export function mountMinhChung(registerActions, napLaiDanhSach) {
   sauHanhDong = napLaiDanhSach;
   $('modalRoot').insertAdjacentHTML('beforeend', klMinhChungTemplate);
   $('klMcMoTaKq').addEventListener('input', demKyTu);
-  registerActions({ openMinhChung, closeMinhChung, luuMinhChung, xacNhanMinhChung: xacNhanMinhChungAction, moBacMinhChung, bacMinhChung,
+  registerActions({ openMinhChung, closeMinhChung, luuMinhChung, xacNhanMinhChung: xacNhanMinhChungAction, nghiemThuMinhChung, moBacMinhChung, bacMinhChung,
     openDongNhiemVu, closeDongNhiemVu, luuDongNhiemVu, suaHanNop });
 }

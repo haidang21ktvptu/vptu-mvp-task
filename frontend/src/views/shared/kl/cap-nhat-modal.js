@@ -7,7 +7,8 @@ import { state } from '../../../lib/state.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { danhMucKl, capNhatNhiemVu, homNayTheoDb } from '../../../lib/kl/du-lieu.js';
+import { danhMucKl, capNhatNhiemVu, homNayTheoDb, datThongTinGiao } from '../../../lib/kl/du-lieu.js';
+import { duocSuaThongTinGiao, nguonOptionsHtml } from './thong-tin-giao.js';
 import { homNayVN, formatNgay, ghiChuHan, ngayTrongMinhChung } from '../../../lib/kl/ngay.js';
 import { klCapNhatTemplate } from './cap-nhat-template.js';
 import { timKlRow } from './danh-sach.js';
@@ -57,6 +58,11 @@ export async function openKlCapNhat({ id, rows }) {
   $('klCnMinhChung').value = row.minh_chung || '';
   $('klCnVanBan').value = row.van_ban_trien_khai || '';
   $('klCnGhiChu').value = row.ghi_chu || '';
+  // PR-3: vướng mắc (Owner / người theo dõi / quan_tri_kl — guard a3 0062 cho cột này); nguồn + đơn vị phối hợp chỉ người giao / quan_tri_kl (hàm 0065).
+  $('klCnVuongMac').value = row.vuong_mac || '';
+  show('klCnGiaoWrap', duocSuaThongTinGiao(row));
+  $('klCnNguon').innerHTML = nguonOptionsHtml(row.nguon_nhiem_vu_ma, row.nguon_nhiem_vu_ma ? null : 'Chưa xác định');
+  $('klCnPhoiHop').value = row.don_vi_phoi_hop || '';
   $('klCnLuu').disabled = false;
   capNhatHienThi();
   show('klCapNhatModal', true);
@@ -96,6 +102,7 @@ async function luuKlCapNhat() {
     ...(row.theo_1400 ? {} : { minh_chung: $('klCnMinhChung').value.trim() || null }), // việc 1400: minh chứng ở bảng minh_chung, không gửi cột chữ
     van_ban_trien_khai: $('klCnVanBan').value.trim() || null,
     ghi_chu: $('klCnGhiChu').value.trim() || null,
+    vuong_mac: $('klCnVuongMac').value.trim() || null,
   };
   if (row.loai_thoi_han_ma !== 'KY_BAN_HANH' && !khoaHan()) p.han_xu_ly = chuaCoHan ? null : $('klCnHan').value || null;   // Q7: hạn đã chốt thì không gửi
   const loi = kiemTra(p);
@@ -103,6 +110,12 @@ async function luuKlCapNhat() {
   $('klCnLuu').disabled = true;
   try {
     await capNhatNhiemVu(row.id, p);
+    const giao = !$('klCnGiaoWrap').classList.contains('hidden') && { nguon: $('klCnNguon').value, phoiHop: $('klCnPhoiHop').value.trim() };
+    if (giao && (giao.nguon !== (row.nguon_nhiem_vu_ma || '') || giao.phoiHop !== (row.don_vi_phoi_hop || ''))) {
+      try { await datThongTinGiao(row.id, giao.nguon, giao.phoiHop); } catch (e) {   // cập nhật chính đã lưu — báo đúng phần chưa lưu, không để người dùng gửi lại cả hộp
+        notifyError(`Đã cập nhật ${row.ma} nhưng chưa lưu được nguồn / đơn vị phối hợp: ${loiDeHieu(e)}`); closeKlCapNhat(); afterSave(); return;
+      }
+    }
     notifySuccess(`Đã cập nhật ${row.ma}.`);
     closeKlCapNhat();
     afterSave();

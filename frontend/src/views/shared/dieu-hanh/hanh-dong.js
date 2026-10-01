@@ -16,6 +16,7 @@ import { chonDoKhan } from '../../../lib/kl/do-khan.js';
 import { moNhiemVu } from '../kl/index.js';
 import { xemDienBien } from '../dien-bien.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
+import { chatLuongCuaForm } from '../chat-luong.js';
 
 let napLai = async () => {};
 export const datNapLai = (fn) => { napLai = fn; };
@@ -68,6 +69,12 @@ async function phanHoiThe(ds, form) {
 // Minh chứng chờ nghiệm thu: Nghiệm thu (một bấm, đóng việc — Q2) / Trả lại (lý do + hạn nộp lại bắt buộc, Q3; MC-6).
 async function mcHopLeThe(ds) {
   try { await xacNhanMinhChung(ds.id, true); notifySuccess('Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.'); await napLaiViec(ds.nv); await lamMoiHuyHieu(); await napLai(); } catch (e) { notifyError(e.message); }
+}
+// PR-3: nghiệm thu đóng việc kèm chất lượng hoàn thành (bắt buộc, 0063).
+async function mcNghiemThuThe(ds, form) {
+  const cl = chatLuongCuaForm(form);
+  if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
+  try { await xacNhanMinhChung(ds.id, true, null, null, cl); await thanhCong(form, 'Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
 async function mcKhongHopLeThe(ds, form) {
   const lyDo = noiDung(form);
@@ -128,6 +135,6 @@ const cuonToi = ({ toi }) => { const el = $(toi); if (el && !el.classList.contai
 
 export function mountHanhDongDieuHanh() {
   document.addEventListener('change', onDoiChuTri);
-  registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
+  registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcNghiemThuThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
     giaoLaiThe, deNghiTuChoiThe, duyetTuChoiThe, xacNhanNhanTT, chonDoKhan, cuonToi });
 }

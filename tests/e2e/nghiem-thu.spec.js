@@ -6,7 +6,7 @@
 import { test, expect } from '@playwright/test';
 import { NAP, moViec } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
-import { ID, dbAdmin, homNay, cong, dd, taoViec, taoMinhChung, datCo, moApp, moNghiemThu } from './lib/pr2b.mjs';
+import { ID, dbAdmin, homNay, cong, dd, taoViec, taoMinhChung, datCo, moApp, moNghiemThu, nghiemThuMc } from './lib/pr2b.mjs';
 
 test.describe.serial('PR-2b — nghiệm thu minh chứng', () => {
   test.describe.configure({ timeout: 180_000 });   // hành trình nhiều bước, nhiều phiên (staging chậm)
@@ -73,10 +73,10 @@ test.describe.serial('PR-2b — nghiệm thu minh chứng', () => {
     await expect(cv.locator('#klMcModal')).toBeHidden();
     await moNghiemThu(tp);
     const mc = (await mcCua(T.id))[0].id;
-    await tp.locator(`#nt-${mc}`).getByRole('button', { name: 'Nghiệm thu' }).click();
+    await nghiemThuMc(tp, mc, 'DAT_XUAT_SAC');   // PR-3: chất lượng bắt buộc
     await expect(tp.locator('#toastContainer')).toContainText('hoàn thành');
-    const v = (await db.from('nhiem_vu').select('tien_do_ma, ngay_hoan_thanh').eq('id', T.id).single()).data;
-    expect(v).toEqual({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNay() });
+    const v = (await db.from('nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, chat_luong').eq('id', T.id).single()).data;
+    expect(v).toEqual({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNay(), chat_luong: 'DAT_XUAT_SAC' });
     await expect(tp.locator(`#nt-${mc}`)).toHaveCount(0, NAP);
   });
 
@@ -94,7 +94,7 @@ test.describe.serial('PR-2b — nghiệm thu minh chứng', () => {
     try {
       await moNghiemThu(tk);
       const mc = (await mcCua(C.id))[0].id;
-      await tk.locator(`#nt-${mc}`).getByRole('button', { name: 'Nghiệm thu' }).click();
+      await nghiemThuMc(tk, mc);
       await expect(tk.locator('#toastContainer')).toContainText('hoàn thành');
       const ls = (await db.from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', C.id).eq('cot', 'dong_nhiem_vu')).data;
       expect(ls[0]?.gia_tri_moi).toMatch(/thay mặt Thường trực — Demo E2E Thư ký TT/);

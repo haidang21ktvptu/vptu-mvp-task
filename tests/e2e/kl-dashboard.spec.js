@@ -41,7 +41,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
   test('Báo cáo: số Tổng của phòng đầu tiên → hàng mở rộng đúng số việc ngay dưới dòng; Xem chi tiết → ngăn phải; không rời mục (GĐ21)', async () => {
     await nav(page, 'navBaoCao');
     await expect(page.locator('#viewBaoCao .tq .o-so').first()).toContainText('việc trong phạm vi');
-    const nut = page.locator('#viewBaoCao .bang').first().locator('tbody tr.bc-hang').first().locator('td.so').first().locator('button');
+    const nut = page.locator('#viewBaoCao #bcTheoPhong').locator('tbody tr.bc-hang').first().locator('td.so').first().locator('button');
     if (await nut.count() === 0) return;
     const n = await so(nut);
     await nut.click();

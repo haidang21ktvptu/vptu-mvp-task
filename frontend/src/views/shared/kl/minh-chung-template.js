@@ -1,5 +1,7 @@
 // Hai hộp của GĐ16 (MC-3, MC-4): "Nộp minh chứng" có cấu trúc (v8 đợt 4: số hiệu, ngày, cấp nhận + trích yếu + mô tả kết quả ≤ 600 ký tự) và "Đóng nhiệm vụ"
 // (ngày hoàn thành gợi ý = ngày văn bản của minh chứng hợp lệ mới nhất, sửa được). Không có ô tệp (CH-6 = B, chờ kinh phí).
+import { oChonChatLuongHtml } from '../chat-luong.js';
+
 export const klMinhChungTemplate = `
 <div id="klMcModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="klMcTieuDe">
   <form class="modal" data-submit="luuMinhChung" novalidate>
@@ -44,6 +46,7 @@ export const klMinhChungTemplate = `
     <label for="klDongNgay" class="nhan">Ngày hoàn thành <span class="chu-phu">gợi ý = ngày văn bản của minh chứng hợp lệ mới nhất, sửa được</span></label>
     <input type="date" id="klDongNgay" class="o-nhap">
     <p id="klDongGhiChu" class="chu-phu mt-2"></p>
+    <div id="klDongClWrap" class="hidden mt-2">${oChonChatLuongHtml('klDongChatLuong', false)}</div>
     <div class="modal-chan">
       <button type="button" data-action="closeDongNhiemVu" class="nut">Huỷ</button>
       <button type="submit" id="klDongLuu" class="nut chinh">Đóng nhiệm vụ</button>

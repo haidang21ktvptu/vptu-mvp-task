@@ -11,11 +11,12 @@ import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien } from './danh-sach.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
 import { mountChiDao } from './chi-dao.js';
 import { mountMinhChung } from './minh-chung.js';
+import { mountThongTinGiao } from './thong-tin-giao.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 
 export const duocGiaoViec = () => ['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
@@ -104,6 +105,11 @@ export function registerKlView() {
   mountKlCapNhatModal(loadKl);
   mountChiDao(registerActions, napLaiSauHanhDong);
   mountMinhChung(registerActions, napLaiSauHanhDong);
+  mountThongTinGiao(registerActions, napLaiSauHanhDong);
   ganBoLoc();
-  registerActions({ openKl: () => openKl(), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
+  // PR-3 G: Xuất Excel nạp động lib/kl/xuat.js + lib/xlsx.js (không tăng bundle lúc mở app); In / lưu PDF dùng in.css.
+  const klXuatExcel = async () => {
+    try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
+  };
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
 }

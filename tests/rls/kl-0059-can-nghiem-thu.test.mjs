@@ -45,7 +45,7 @@ describe('0059 — Cần nghiệm thu theo vai', { skip: SKIP }, () => {
 
   test('2. Nghiệm thu xong ⇒ số của người giao về như trước, danh sách rỗng', async () => {
     const truoc = (await so()).demo_truongphong;
-    assertOk(await (await userClient('demo_truongphong')).rpc('xac_nhan_minh_chung', { p_id: mc, p_hop_le: true }), 'nghiệm thu');
+    assertOk(await (await userClient('demo_truongphong')).rpc('xac_nhan_minh_chung', { p_id: mc, p_hop_le: true, p_chat_luong: 'DAT_TOT' }), 'nghiệm thu');
     assert.equal((await so()).demo_truongphong, truoc - 1);
     assert.equal((await ds('demo_truongphong')).length, 0);
     assert.ok(vb);

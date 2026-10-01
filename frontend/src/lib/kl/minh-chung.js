@@ -44,10 +44,11 @@ export function loiMinhChung(p) {
 }
 // Nghiệm thu (true — PR-2b Q2: đóng việc cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng) hoặc trả lại (false: lý do + hạn nộp lại
 // khi việc đang mở — Q3). Ghi vết, không xoá dòng (MC-6).
-export const xacNhanMinhChung = (id, hopLe, lyDo = null, hanNopLai = null) =>
-  rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null, p_han_nop_lai: hanNopLai || null });
+// PR-3 (0063): nghiệm thu đóng việc bắt buộc chất lượng (KHONG_DAT / DAT / DAT_TOT / DAT_XUAT_SAC); trả lại không kèm chất lượng.
+export const xacNhanMinhChung = (id, hopLe, lyDo = null, hanNopLai = null, chatLuong = null) =>
+  rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null, p_han_nop_lai: hanNopLai || null, p_chat_luong: chatLuong || null });
 // Đóng nhiệm vụ (MC-4): DB kiểm lại minh chứng hợp lệ; ngay = null → lấy ngày văn bản của minh chứng hợp lệ mới nhất.
-export const dongNhiemVu = (id, ngay = null) => rpc('dong_nhiem_vu', { p_id: id, p_ngay_hoan_thanh: ngay || null });
+export const dongNhiemVu = (id, ngay = null, chatLuong = null) => rpc('dong_nhiem_vu', { p_id: id, p_ngay_hoan_thanh: ngay || null, p_chat_luong: chatLuong || null });
 
 // Cùng vị từ với minh_chung_la_hop_le() trong 0028: chưa bị bác = hợp lệ (nút Đóng sáng ngay khi nộp đủ ba trường).
 export const mcHopLe = (m) => ['so_hieu', 'chu_cu'].includes(m.loai) && m.hop_le !== false;

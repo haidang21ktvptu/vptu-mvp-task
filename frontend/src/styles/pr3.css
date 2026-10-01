@@ -1,0 +1,31 @@
+/* PR-3 — chất lượng hoàn thành, nguồn nhiệm vụ, vướng mắc, rà soát văn bản, in màn Nhiệm vụ. Chỉ dùng token sẵn có (tokens.css): vướng mắc =
+   vàng (--vang-chu-dam trên --vang-nhat, như .tt-cho), chất lượng dùng .trang-thai + .tt-xong / .tt-xam / .tt-qua có sẵn. Tên lớp nguyên văn —
+   the-viec.js, thong-tin-giao.js, giao-viec/template.js, theo-van-ban/index.js dùng đúng các tên này. */
+@layer components {
+  /* Thẻ Đỏ: trường thứ 5 "Vướng mắc" — một dòng như dòng phụ, chữ vàng đậm để tách khỏi 4 trường 1400. */
+  .the.hang .ten > .the-vuong-mac { color: var(--vang-chu-dam); }
+  .the.hang .ten > .the-vuong-mac b { font-weight: 600; }
+  /* Ngăn chi tiết: khối vướng mắc + sửa nguồn / đơn vị phối hợp. */
+  .chi-tiet .ct-pr3 .ct-vuong-mac h4 { font-size: 13px; color: var(--navy); margin-bottom: 4px; }
+  .chi-tiet .ct-pr3 .ct-vuong-mac p[data-truong="vuong-mac"] { white-space: pre-wrap; background: var(--vang-nhat); color: var(--vang-chu-dam); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+  .chi-tiet .ct-pr3 .ct-vuong-mac p[data-truong="vuong-mac"]:has(.chu-phu) { background: none; padding: 0; }
+  .chi-tiet .ct-pr3 .hanh-dong { margin-top: 8px; }
+  .ct-luoi .trang-thai[data-truong="chat-luong"] { margin-left: 6px; }
+  /* Ô chọn có nhãn chữ (Giao việc: "Đã rà soát toàn văn"; Theo văn bản: ô sửa tại chỗ). */
+  .gv-chon { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; font-size: 14px; }
+  .gv-chon input { width: 18px; height: 18px; accent-color: var(--lam); }
+  /* Theo văn bản: dòng "đã nhập x / dự kiến y · rà soát". */
+  .tvb-ra-soat-dong { margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tvb-ra-soat { font-size: 12px; padding: 2px 10px; }
+  /* Hộp nghiệm thu (chọn chất lượng) — dùng chung 3 nơi. */
+  .o-nghiem-thu .nhan { flex-basis: 100%; margin: 0; }
+  .o-nghiem-thu select { flex: 0 1 220px; }
+}
+@layer utilities {
+  @media print {
+    /* Màn Nhiệm vụ: in danh sách đang lọc — bỏ ngăn chi tiết bên phải, dải bộ lọc, nút (in.css đã bỏ .nut, .kl-loc). */
+    #viewKl .md .chi-tiet, #klChipLoc { display: none !important; }
+    #viewKl .md .list { border-color: #999; }
+    #viewKl .hang-nv { break-inside: avoid; }
+  }
+}

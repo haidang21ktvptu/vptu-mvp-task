@@ -2,11 +2,16 @@
 // + v_minh_chung (0046); phạm vi do RLS (A0 toàn bộ, A1 theo kl_pham_vi). Gốc = văn bản + thanh tiến độ "x/n hoàn thành · y quá hạn · z sắp đến
 // hạn"; nhánh cấp 1 = việc giao từ văn bản, cấp 2+ = việc giao tiếp xuống (nhiem_vu_cha), lá = minh chứng + người xác nhận. Thu gọn/mở rộng
 // từng nhánh (nhớ theo khoá trong phiên), lọc trạng thái (giữ nhánh có con khớp), bấm nhánh → moNhiemVu() mở #klChiTiet sẵn có ở màn Nhiệm vụ.
-import { $, escapeHtml } from '../../../lib/dom.js';
+// PR-3 F: gốc hiện "đã nhập x / dự kiến y" (x = kl_van_ban_so_viec — tổng thật việc gốc của văn bản, kể cả ngoài phạm vi xem) + cờ rà soát toàn văn;
+// nhãn vàng khi x < y hoặc chưa rà soát; người tạo văn bản / A1 / quan_tri_kl sửa tại chỗ (van_ban_dat_ra_soat là chốt).
+import { $, escapeHtml, giuONhap } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { state } from '../../../lib/state.js';
-import { notifyError } from '../../../components/toast.js';
-import { loadKlRows, loadVanBan } from '../../../lib/kl/du-lieu.js';
+import { notifyError, notifySuccess } from '../../../components/toast.js';
+import { loadKlRows, loadVanBan, soViecTheoVanBan, datRaSoatVanBan } from '../../../lib/kl/du-lieu.js';
+import { loiDeHieu } from '../../../lib/kl/loi.js';
+import { laQtklConHan } from '../kl/thong-tin-giao.js';
+import { soNguyenKhongAm } from '../giao-viec/nguon.js';
 import { loadMinhChungTatCa } from '../../../lib/kl/minh-chung.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { lopMep, nhanTrangThai } from '../../../lib/kl/nhan.js';
@@ -22,7 +27,7 @@ const DO_SAU_TOI_DA = 10;
 // PR-2b: quá hạn ở bước nghiệm thu (Đỏ) vào Quá hạn; chậm nộp minh chứng (Vàng) vào Sắp đến hạn; chờ nghiệm thu (Xanh) vào Đang thực hiện.
 const NHOM_LOC = { QUA_HAN: ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'], SAP_DEN_HAN: ['SAP_DEN_HAN', 'CHAM_NOP_MINH_CHUNG'], DANG_THUC_HIEN: ['DANG_THUC_HIEN', 'CAN_DIEN_HAN', 'CHO_DIEU_KIEN', 'THUONG_XUYEN', 'CHO_NGHIEM_THU'], HOAN_THANH: ['HOAN_THANH'] };
 const gap = new Set(); // khoá nhánh đang thu gọn ('vb-<id>' | 'nv-<id>'); mặc định mở
-let rows = []; let mc = []; let vanBan = new Map(); // văn bản theo id (loadVanBan: có trích yếu 0046)
+let rows = []; let mc = []; let vanBan = new Map(); let soViec = new Map(); // văn bản theo id (loadVanBan: có trích yếu 0046); số việc đã nhập (PR-3)
 
 const khop = (r) => !$('tvbLoc').value || NHOM_LOC[$('tvbLoc').value].includes(r.nhom_dem);
 const chuaTuKhoa = (s, kw) => (s || '').toLowerCase().includes(kw);
@@ -72,11 +77,31 @@ function gocHtml({ vb, viec }, con, kw, tatCa) {
     <div class="tvb-goc-dau">
       <button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} văn bản ${escapeHtml(vb.so_ket_luan || '')}"></button>
       <div class="tvb-vb"><b>${escapeHtml(tenLoaiVanBan(vb.van_ban_loai))} · ${escapeHtml(vb.so_ket_luan || '(không số)')}</b><span class="chu-phu"> · ban hành ${formatNgay(vb.ngay_ban_hanh)}</span>
-        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}</div>
+        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}${raSoatHtml(vb.van_ban_id, viec.length)}</div>
       <div class="tvb-tien"><div class="tvb-thanh" role="img" aria-label="${x} trên ${n} hoàn thành"><i class="luc" style="width:${pc(x)}%"></i><i class="do" style="width:${pc(y)}%"></i><i class="vang" style="width:${pc(z)}%"></i></div>
         <span class="tvb-tien-chu">${x}/${n} hoàn thành · ${y} quá hạn · ${z} sắp đến hạn</span></div>
     </div>
     <div class="tvb-con">${nhanh.join('')}</div></section>`;
+}
+
+// PR-3 F: nhãn rà soát + ô sửa tại chỗ. Quyền hiện nút như van_ban_dat_ra_soat: người tạo văn bản, A1, quan_tri_kl.
+function raSoatHtml(id, soGocThay) {
+  const h = vanBan.get(id) || {}; const x = soViec.get(id) ?? soGocThay; const y = h.so_nhiem_vu_du_kien;
+  const canhBao = (y !== null && y !== undefined && x < y) || !h.da_ra_soat_toan_van;
+  const sua = Boolean(state.user) && (h.tao_boi === state.user.id || state.user.role_group === 'A1' || laQtklConHan());
+  return `<p class="tvb-ra-soat-dong"><span class="trang-thai ${canhBao ? 'tt-cho' : 'tt-xong'} tvb-ra-soat" data-canh-bao="${canhBao ? '1' : '0'}">đã nhập ${x}${y !== null && y !== undefined ? ` / dự kiến ${y}` : ' · chưa khai số dự kiến'} · ${h.da_ra_soat_toan_van ? 'đã rà soát toàn văn' : 'chưa rà soát toàn văn'}</span>
+    ${sua ? `<button type="button" class="nut nho" data-action="moO" data-o="oRs-${id}">Sửa</button></p>
+    <form class="o" id="oRs-${id}" data-submit="tvbRaSoat" data-id="${id}"><input type="number" name="so" min="0" step="1" value="${y ?? ''}" placeholder="Số nhiệm vụ dự kiến" aria-label="Số nhiệm vụ dự kiến">
+      <label class="gv-chon"><input type="checkbox" name="ra_soat"${h.da_ra_soat_toan_van ? ' checked' : ''}> Đã rà soát toàn văn</label>
+      <button type="submit" class="nut chinh">Lưu</button><button type="button" class="nut" data-action="dongO" data-o="oRs-${id}">Huỷ</button></form>` : '</p>'}`;
+}
+async function tvbRaSoat({ id }, form) {
+  const fd = new FormData(form); const so = String(fd.get('so') ?? '').trim();
+  try {
+    await datRaSoatVanBan(id, soNguyenKhongAm(so), fd.get('ra_soat') === 'on');
+    form.classList.remove('mo');
+    notifySuccess('Đã lưu số nhiệm vụ dự kiến và rà soát văn bản.'); await loadTheoVanBan();
+  } catch (e) { notifyError('Không lưu được: ' + loiDeHieu(e)); }
 }
 
 function render() {
@@ -85,7 +110,9 @@ function render() {
   const { goc, con } = dungCay();
   const tatCaCua = (vbId) => rows.filter((r) => r.van_ban_id === vbId);
   const html = goc.map((g) => gocHtml(g, con, kw, tatCaCua(g.vb.van_ban_id))).filter(Boolean);
+  const traNhap = giuONhap(o);   // PR-3: ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
   o.innerHTML = html.length ? html.join('') : '<p class="trong">Không có văn bản nào khớp bộ lọc.</p>';
+  traNhap();
   $('tvbTomTat').textContent = `${html.length}/${goc.length} văn bản · ${rows.length} nhiệm vụ trong phạm vi`;
   o.dataset.nap = String(Date.now());
 }
@@ -95,9 +122,9 @@ export async function loadTheoVanBan() {
   const o = $('tvbCay'); if (o) delete o.dataset.nap;
   const lan = ++luotTvb;
   try {
-    const [r, m, vb] = await Promise.all([loadKlRows(), loadMinhChungTatCa(), loadVanBan()]);
+    const [r, m, vb, sv] = await Promise.all([loadKlRows(), loadMinhChungTatCa(), loadVanBan(), soViecTheoVanBan()]);
     if (lan !== luotTvb) return;   // đã có lượt nạp mới hơn
-    rows = r.rows; mc = m; vanBan = new Map(vb.map((h) => [h.id, h]));
+    rows = r.rows; mc = m; vanBan = new Map(vb.map((h) => [h.id, h])); soViec = sv;
     render();
   } catch (e) { notifyError('Không nạp được cây văn bản: ' + e.message); }
 }
@@ -122,5 +149,5 @@ export function registerTheoVanBan() {
   $('viewTheoVanBan').innerHTML = theoVanBanTemplate;
   $('tvbTim').addEventListener('input', render);
   $('tvbLoc').addEventListener('change', render);
-  registerActions({ openTheoVanBan: () => openTheoVanBan(), tvbGap, tvbGapTatCa, tvbMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
+  registerActions({ openTheoVanBan: () => openTheoVanBan(), tvbGap, tvbGapTatCa, tvbRaSoat, tvbMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
 }

@@ -3,19 +3,22 @@
 import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { notifyError } from '../../components/toast.js';
 import { loadDienBien, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
-import { tenCot } from '../../lib/kl/nhan.js';
+import { tenCot, tenChatLuong } from '../../lib/kl/nhan.js';
+import { tenTrongDanhMuc } from '../../lib/kl/du-lieu.js';
 import { moNhiemVu } from './kl/index.js';
 
 const NHAN_NGUON = { lich_su: '', canh_bao: 'Cảnh báo', tu_choi: 'Từ chối', tu_choi_ly_do: 'Lý do từ chối', chi_dao: 'Chỉ đạo', phan_hoi: 'Phản hồi', minh_chung: 'Minh chứng' };
 const LOP_NGUON = { lich_su: 'db-lich-su', canh_bao: 'db-canh-bao', tu_choi: 'db-tu-choi', tu_choi_ly_do: 'db-tu-choi', chi_dao: 'db-chi-dao', phan_hoi: 'db-phan-hoi', minh_chung: 'db-minh-chung' };
 const TT_MC = { CHO_XAC_NHAN: 'chờ xác nhận', HOP_LE: 'hợp lệ', KHONG_HOP_LE: 'không hợp lệ' };
 
+// PR-3: mã chất lượng / nguồn nhiệm vụ trong lịch sử hiện bằng tên.
+const gt = (cot, v) => (v == null || v === '' ? v : cot === 'chat_luong' ? tenChatLuong(v) || v : cot === 'nguon_nhiem_vu_ma' ? tenTrongDanhMuc('nguonNhiemVu', v) : v);
 function noiDung(d) {
   if (d.nguon === 'lich_su') {
     if (d.loai === '*') return `Tạo dòng ${escapeHtml(d.noi_dung || '')}`;
     if (d.loai === 'han_nop_minh_chung_ly_do') return escapeHtml(d.noi_dung || '');   // PR-2b: tin đã đủ "Đổi hạn nộp minh chứng · mã: cũ → mới — lý do"
-    if (d.gia_tri_cu === null || d.gia_tri_cu === undefined) return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(d.noi_dung || '')}`;
-    return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(d.gia_tri_cu || '(trống)')} → ${escapeHtml(d.noi_dung || '(trống)')}`;
+    if (d.gia_tri_cu === null || d.gia_tri_cu === undefined) return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(gt(d.loai, d.noi_dung) || '')}`;
+    return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(gt(d.loai, d.gia_tri_cu) || '(trống)')} → ${escapeHtml(gt(d.loai, d.noi_dung) || '(trống)')}`;
   }
   if (d.nguon === 'chi_dao' || d.nguon === 'phan_hoi') {
     const phu = [d.gia_tri_cu ? `<span class="dk dk-${d.gia_tri_cu === 'Hỏa tốc' ? 'hoa-toc' : d.gia_tri_cu === 'Thượng khẩn' ? 'thuong-khan' : 'khan'}">${escapeHtml(d.gia_tri_cu)}</span>` : '',

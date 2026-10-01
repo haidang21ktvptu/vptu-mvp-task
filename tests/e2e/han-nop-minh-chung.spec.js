@@ -4,6 +4,8 @@
 // "muộn nhất …" = kl_khung_han_nop của DB, chọn sát (= hạn hoàn thành) ⇒ hiện ô lý do việc gấp. Giao thật: Trưởng phòng và A0 từ Kết luận (nút Giao
 // mờ khi thiếu hạn nộp, sáng khi đủ; DB lưu đúng ngày). A3 thường không có màn Giao việc. Ngăn chi tiết: chỉ người giao thấy "Sửa hạn nộp minh chứng"
 // (sửa được, lịch sử + DB). Nhãn cam "Chậm nộp minh chứng" khi qua hạn nộp. Dữ liệu theo khoá; cờ khôi phục.
+// PR-3 (B, quyết định 1/10/2026 — gộp vào ma trận này, cùng phiên): ô "Nguồn nhiệm vụ" mỗi vai × 5 loại — mặc định theo loại khi tạo văn bản mới, theo loại
+// của văn bản CÓ SẴN khi chọn Kết luận (bài học v3.8.0), bỏ chọn ⇒ "Còn thiếu: nguồn nhiệm vụ". Giao thật mỗi vai: pr3-giao-that.spec.js.
 // Một phiên mở mỗi lúc (docs/KIEM-THU.md — CI #97: 7 phiên song song + realtime làm staging nghẽn): các vai chạy TUẦN TỰ, mở–kiểm–đóng.
 import { test, expect } from '@playwright/test';
 import { NAP, moGiaoViec, moViec, dienHanNop } from './lib/app.js';
@@ -16,7 +18,8 @@ const VAI = [
   { role: 'A2', ten: 'Trưởng phòng' }, { role: 'E2E_NV', ten: 'A3 giao thay mặt', thayMat: ID.tp }, { role: 'QTHT', ten: 'quan_tri_kl', thayMat: ID.cvp },
 ];
 const H = cong(homNay(), 20);
-let db; let khoa; let khung;
+const NGUON = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
+let db; let khoa; let khung; let vbKL;
 const conThieu = (p) => p.locator('#gvConThieu');
 const khoiPhuc = () => Promise.all([datCo(db, ID.e2eNv, { quan_tri_kl: false }), datCo(db, '00000000-0000-4000-8000-000000000008', { quan_tri_kl: false }),
   db.from('phu_trach_phong').delete().like('ly_do', `${khoa}%`)]);
@@ -25,6 +28,12 @@ async function kiemMotLoai(page, v, loai) {
   await page.locator('#klThVanBan').selectOption('__moi__');
   await page.locator('#klThLoaiVB').selectOption(loai);
   await expect(page.locator('#klThHanNopWrap'), `${v.ten} ${loai}`).toBeVisible();
+  if (v.role === 'A0') {   // A0 để trống số hiệu = giao trực tiếp (DB tạo văn bản KHAC) ⇒ nguồn theo KHAC; gõ số hiệu ⇒ theo loại đã chọn
+    await page.locator('#klThSoKL').fill('');
+    await expect(page.locator('#klThNguon'), `A0 ${loai}: giao trực tiếp`).toHaveValue(NGUON.KHAC);
+    await page.locator('#klThSoKL').fill(`${khoa}-A0`);
+  }
+  await expect(page.locator('#klThNguon'), `${v.ten} ${loai}: nguồn mặc định`).toHaveValue(NGUON[loai]);
   await expect(conThieu(page), `${v.ten} ${loai}`).toContainText('hạn nộp minh chứng');
   await page.locator('#klThHanNop').fill(H);   // sát hạn hoàn thành ⇒ phải ghi lý do việc gấp
   await expect(page.locator('#klThLyDoSatWrap'), `${v.ten} ${loai}`).toBeVisible();
@@ -37,6 +46,12 @@ async function kiemVai(page, v) {
   await page.locator('#klThHan').fill(H);
   await expect(page.locator('#klThHanNopGoiY'), v.ten).toContainText(`muộn nhất ${dd(khung.khong_ly_do_den)}`, NAP);
   for (const loai of LOAI) await kiemMotLoai(page, v, loai);
+  // PR-3: văn bản CÓ SẴN (Kết luận BTV của spec) ⇒ nguồn theo loại của văn bản đó; bỏ chọn ⇒ "Còn thiếu".
+  await page.locator('#klThVanBanTim').fill(`${khoa}-KL`);
+  await expect(page.locator('#klThVanBan')).toHaveValue(vbKL, NAP);
+  await expect(page.locator('#klThNguon'), `${v.ten} văn bản có sẵn`).toHaveValue('VAN_BAN_CAN_THEO_DOI');
+  await page.locator('#klThNguon').selectOption('');
+  await expect(conThieu(page), v.ten).toContainText('nguồn nhiệm vụ');
 }
 
 test.describe.serial('PR-2b — hạn nộp minh chứng trên biểu mẫu và ngăn chi tiết', () => {
@@ -50,7 +65,7 @@ test.describe.serial('PR-2b — hạn nộp minh chứng trên biểu mẫu và 
       tu_ngay: '2026-01-01', den_ngay: null, ly_do: `${khoa} kiêm nhiệm`, phan_cong_boi: '00000000-0000-4000-8000-000000000008' });
     if (r.error) throw new Error(`Phân công kiêm nhiệm tạm: ${r.error.message}`);
     khung = (await db.rpc('kl_khung_han_nop', { p_han_xu_ly: H })).data;
-    const vb = await taoVanBanRieng(db, `${khoa}-KL`, { loai: 'KL_BTV', so_hoi_nghi: 997, ngay_ban_hanh: cong(homNay(), -2), ngay_nhan: cong(homNay(), -1) });
+    const vb = vbKL = await taoVanBanRieng(db, `${khoa}-KL`, { loai: 'KL_BTV', so_hoi_nghi: 997, ngay_ban_hanh: cong(homNay(), -2), ngay_nhan: cong(homNay(), -1) });
     S = await taoViec(db, vb, `${khoa} S sửa hạn`, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: ID.cv1, nguoi_theo_doi: ID.cv1, tao_boi: ID.tp });
     // Chủ trì demo_e2e_cv (mặc định taoViec) — không dùng demo_e2e_kl: bo-cuc đã đăng xuất (huỷ phiên chung) trước project này.
     K = await taoViec(db, vb, `${khoa} K chậm nộp`, { han_nop_minh_chung: cong(homNay(), -1), han_xu_ly: cong(homNay(), 15) });

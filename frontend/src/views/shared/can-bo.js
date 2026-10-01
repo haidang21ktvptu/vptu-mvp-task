@@ -8,6 +8,7 @@ import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows } from '../../lib/kl/du-lieu.js';
 import { calculateGroupKPI, laOwnerPhong } from './kpi.js';
+import { CHAT_LUONG } from '../../lib/kl/nhan.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { datNapLai } from './dieu-hanh/hanh-dong.js';
 import { nganNguoiHtml, moNgan, dongNgan } from './ngan-viec.js';
@@ -28,10 +29,12 @@ function nguoiHtml(a, rows, tatCa = rows) {
   const lam = owner.filter((r) => !doRows.includes(r) && !VANG(r)).length;
   const tong = dem.do + dem.vang + lam;
   const pct = (n) => (tong ? (n / tong) * 100 : 0);
+  const xong = rows.filter((r) => r.owner_tai_khoan === a.id && !mo(r));   // PR-3: việc đã hoàn thành theo chất lượng nghiệm thu
+  const clChu = CHAT_LUONG.map(([m, ten]) => [xong.filter((r) => r.chat_luong === m).length, ten]).filter(([n]) => n).map(([n, ten]) => `${n} ${ten}`).join(', ');
   const soChu = tong === 0 ? (theoDoi ? `${theoDoi} đang theo dõi` : 'rảnh, có thể nhận thêm')
     : [dem.do ? `<b>${dem.do}</b> Đỏ` : '', dem.vang ? `${dem.vang} Vàng` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
   return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}">
-      <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc theo dõi` : ''}</small></div>
+      <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc theo dõi` : ''}${clChu ? ` · <span data-truong="kpi-chat-luong">hoàn thành: ${clChu}</span>` : ''}</small></div>
       <div class="tai"><span class="t-do" style="width:${pct(dem.do)}%"></span><span class="t-vang" style="width:${pct(dem.vang)}%"></span><span class="t-lam" style="width:${pct(lam)}%"></span></div>
       <span class="tai-so">${soChu}</span></button>`;
 }
