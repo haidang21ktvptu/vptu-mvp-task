@@ -39,7 +39,9 @@ function veOPhong(phongDangChon) {
   show('qtSuaTkPhongWrap', vai !== 'A0');
   const ds = vai === 'A1' ? [PHONG_LANH_DAO] : danhSachPhong();
   sel.innerHTML = ds.map((k) => `<option value="${escapeHtml(k)}">${escapeHtml(DEPT_NAMES[k] || k)}</option>`).join('');
-  if (ds.includes(phongDangChon)) sel.value = phongDangChon;
+  // Giữ phòng đang chọn; đi qua A1 (chỉ "Lãnh đạo Văn phòng") rồi quay lại thì về phòng cũ của tài khoản, không lặng lẽ sang phòng đầu danh sách.
+  const chon = [phongDangChon, dangSua?.department].find((p) => ds.includes(p));
+  if (chon) sel.value = chon;
   sel.disabled = vai === 'A1';
 }
 
@@ -92,6 +94,6 @@ async function luuSuaTaiKhoan() {
 export function mountSuaTaiKhoan(reload) {
   onDone = reload;
   $('modalRoot').insertAdjacentHTML('beforeend', template);
-  $('qtSuaTkVai').addEventListener('change', () => veOPhong($('qtSuaTkPhong').value || dangSua?.department));
+  $('qtSuaTkVai').addEventListener('change', () => veOPhong($('qtSuaTkPhong').value));
   registerActions({ moSuaTaiKhoan, luuSuaTaiKhoan, dongSuaTaiKhoan: () => { show('qtSuaTkModal', false); dangSua = null; } });
 }

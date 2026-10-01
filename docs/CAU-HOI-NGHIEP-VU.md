@@ -268,6 +268,6 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | J-1 | Ai sửa vai trò / phòng / chức danh tài khoản đã tạo? | Chỉ quản trị hệ thống, lý do bắt buộc, nhật ký cũ → mới từng cột; không tự đổi vai của mình; không sửa tài khoản hệ thống. | RLS `kl-0068-sua-tai-khoan`, e2e `pr4` |
 | J-2 | Phòng theo vai? | A0 không phòng; A1 = Lãnh đạo Văn phòng; A2/A3 = phòng chuyên môn trong `dm_don_vi`. Một Trưởng phòng (A2) chưa khoá mỗi phòng. | RLS `kl-0068-sua-tai-khoan` |
 | J-3 | Đổi vai Chánh Văn phòng? | **Chặn** — chỉ sửa chức danh (cờ `is_chief` không đổi qua màn hình). | RLS `kl-0068-sua-tai-khoan` |
-| J-4 | Rời A1 khi còn phân công phụ trách / kiêm nhiệm hiệu lực? | **Chặn** — kết thúc ở bảng Phân công trước. | RLS `kl-0068-sua-tai-khoan` |
+| J-4 | Rời A1 khi còn phân công phụ trách / kiêm nhiệm hiệu lực? | **Chặn** — kết thúc ở bảng Phân công trước. Cùng tinh thần (0069, sau review): còn là lãnh đạo phụ trách đơn vị ngoài (`dm_don_vi`) cũng chặn — đổi lãnh đạo phụ trách trước. | RLS `kl-0068-sua-tai-khoan` |
 | J-5 | Sang A0 khi còn cờ quản trị KL / thư ký Thường trực? | **Chặn** — thu cờ trước. | RLS `kl-0068-sua-tai-khoan` |
 | J-6 | **Mở:** việc đang mở có người theo dõi là Trưởng phòng cũ (lưu cố định lúc giao) — khi người đó đổi vai/phòng, có chuyển sang Trưởng phòng mới không? | **Chưa xử lý** (PR-4 giữ nguyên người theo dõi). Đề xuất: lãnh đạo dùng Giao lại cho từng việc, hoặc một hàm quản trị chuyển hàng loạt có lý do — chờ chủ dự án quyết. | — |

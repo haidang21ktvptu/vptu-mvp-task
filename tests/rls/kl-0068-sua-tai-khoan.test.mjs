@@ -1,6 +1,6 @@
 // 0068 — admin_sua_tai_khoan (PR-4): chỉ quan_tri_he_thong sửa vai trò / phòng / chức danh; lý do bắt buộc; mỗi cột đổi một dòng quyen_lich_su
 // (co = sua:<cột>, gia_tri_cu → gia_tri_moi) + nhat_ky_he_thong; A0 ⇒ phòng NULL, A1 ⇒ LANH_DAO_VAN_PHONG; một A2 mỗi phòng; chặn tài khoản hệ thống,
-// tự đổi vai, đổi vai Chánh VP, rời A1 còn phân công, sang A0 còn cờ. Tài khoản bị sửa: demo_e2e_dh, demo_e2e_mc (không file tests/rls nào khác dùng);
+// tự đổi vai, đổi vai Chánh VP, rời A1 còn phân công / còn phụ trách đơn vị ngoài (0069), sang A0 còn cờ. Tài khoản bị sửa: demo_e2e_dh, demo_e2e_mc (không file tests/rls nào khác dùng);
 // khôi phục giá trị gốc ghi cứng ở cả before lẫn after. Khối cuối (chỉ cục bộ): tin_tom_tat_sang mỗi người một bản tin mỗi ngày (giờ Việt Nam).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,6 +16,7 @@ const sua = (u, username, vai, phong, chucDanh, lyDo = 'RLS 0068') =>
 const tk = async (id) => (await db().from('accounts').select('role_group, department, position_title').eq('id', id).single()).data;
 const loi = (r, mau, label) => { assert.ok(r.error, `${label}: phải bị chặn`); assert.match(r.error.message, mau, `${label}: ${r.error.message}`); };
 const khoiPhuc = async () => {
+  assertOk(await db().from('dm_don_vi').update({ lanh_dao_phu_trach: null }).in('lanh_dao_phu_trach', [DH, MC]), 'khôi phục lãnh đạo phụ trách đơn vị');
   assertOk(await db().from('accounts').update(GOC).in('id', [DH, MC]), 'khôi phục tài khoản');
   if (t0) {
     await db().from('quyen_lich_su').delete().like('co', 'sua:%').in('tai_khoan', [DH, MC]).gte('luc', t0);
@@ -81,6 +82,16 @@ describe('0068 — quản trị hệ thống sửa vai trò / phòng / chức da
     assert.equal((await tk(IDS.pcvp)).role_group, 'A1');
   });
 
+  test('0069: rời A1 khi đang là lãnh đạo phụ trách đơn vị ngoài bị chặn; gỡ phụ trách thì được', async () => {
+    const { data: dv } = await db().from('dm_don_vi').select('ma').eq('trong_van_phong', false).is('lanh_dao_phu_trach', null).order('thu_tu').limit(1).single();
+    assertOk(await sua('demo_qtht', 'demo_e2e_mc', 'A1', null, 'Phó Chánh Văn phòng'), 'A3 → A1');
+    assertOk(await db().from('dm_don_vi').update({ lanh_dao_phu_trach: MC }).eq('ma', dv.ma), 'gán phụ trách đơn vị ngoài');
+    loi(await sua('demo_qtht', 'demo_e2e_mc', 'A3', 'TONG_HOP', 'x'), /lãnh đạo phụ trách đơn vị .+ đổi lãnh đạo phụ trách đơn vị trước/, 'A1 → A3 khi còn phụ trách đơn vị');
+    assert.equal((await tk(MC)).role_group, 'A1');
+    assertOk(await db().from('dm_don_vi').update({ lanh_dao_phu_trach: null }).eq('ma', dv.ma), 'gỡ phụ trách');
+    assertOk(await sua('demo_qtht', 'demo_e2e_mc', 'A3', 'TONG_HOP', 'Chuyên viên'), 'A1 → A3 sau khi gỡ');
+  });
+
   test('Sang A0 khi còn cờ quản trị KL hoặc thư ký Thường trực bị chặn', async () => {
     for (const co of ['quan_tri_kl', 'thu_ky_thuong_truc']) {
       assertOk(await db().from('accounts').update({ [co]: true }).eq('id', MC), `bật ${co}`);
@@ -94,7 +105,9 @@ describe('0068 — quản trị hệ thống sửa vai trò / phòng / chức da
 // Chốt idempotent (0068 §3): canh-bao.yml gọi lại tin_tom_tat_sang khi đứt mạng ⇒ người đã nhận bản tin HÔM NAY (giờ Việt Nam) không nhận thêm.
 // Mốc 00:30 giờ Việt Nam = 17:30 UTC hôm trước: so ngày theo UTC sẽ coi bản tin đó là "hôm qua" và gửi trùng.
 describe('0068 — bản tin 7h30 mỗi người mỗi ngày một lần', { skip: CHI_CUC_BO }, () => {
-  const banTin = () => db().from('direct_messages').select('id', { count: 'exact', head: true }).eq('receiver_id', MC).like('content', 'Bản tin 7h30%').gte('created_at', t0);
+  // Bỏ dòng mốc của chính test (chạy 00:00–00:30 giờ Việt Nam thì mốc 00:30 nằm sau t0).
+  const banTin = () => db().from('direct_messages').select('id', { count: 'exact', head: true }).eq('receiver_id', MC).like('content', 'Bản tin 7h30%')
+    .not('content', 'like', '%RLS 0068%').gte('created_at', t0);
   before(async () => {
     await khoiPhuc();
     t0 = new Date(Date.now() - 1000).toISOString();

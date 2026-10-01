@@ -637,8 +637,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - **Xuất Excel / In**: tệp .xlsx thật do `lib/xlsx.js` tự ghi (ZIP STORE + CRC32, escape XML đủ, tên sheet ≤ 31) — **không thêm thư viện** (SheetJS bản npm có lỗ hổng đã công bố, bản mới chỉ phát hành ngoài npm); nạp động khi bấm nên không vào bundle chính (chunk riêng 8 kB). In / lưu PDF thêm ở màn Nhiệm vụ.
 - **Test**: RLS 2 file mới + sửa chữ ký ở 5 file cũ; e2e chuỗi `pr3-*` (3 spec) + ma trận ô Nguồn gộp vào `pr2b-han-nop`; unit `xlsx.test.mjs`.
 
-## 42. PR-4 — Quản trị sửa vai trò / phòng / chức danh tài khoản (**có migration 0068**, phát hành dự kiến v3.13.0)
+## 42. PR-4 — Quản trị sửa vai trò / phòng / chức danh tài khoản (**có migration 0068–0069**, phát hành dự kiến v3.13.0)
 - **DB (0068)**: hàm `admin_sua_tai_khoan` — chỉ quản trị hệ thống, lý do bắt buộc; A0 không phòng, A1 = Lãnh đạo Văn phòng, A2/A3 thuộc phòng chuyên môn (`dm_don_vi`); một Trưởng phòng đang hoạt động mỗi phòng; chặn tài khoản hệ thống, tự đổi vai, đổi vai Chánh VP, rời A1 còn phân công/kiêm nhiệm, sang A0 còn cờ. Nhật ký cấp quyền thêm `gia_tri_cu` / `gia_tri_moi` (mỗi cột đổi một dòng) + một dòng nhật ký hệ thống.
 - **Bản tin 7h30**: `tin_tom_tat_sang` bỏ qua người đã nhận bản tin trong ngày (giờ Việt Nam); `canh-bao.yml` gọi hai RPC với `curl --retry 3 --retry-delay 10 --retry-all-errors` (lỗi curl (56) sáng 1/10 làm hụt đợt nhắc).
 - **Giao diện**: nút **Sửa** ở Quản trị › Tài khoản và cờ (Vai trò / Phòng / Chức danh / Lý do; hiện nguyên văn lỗi của DB); bảng hiện chức danh dưới tên; nhật ký "Sửa phòng: cũ → mới".
-- **Test**: RLS `kl-0068-sua-tai-khoan` (6 test quyền + 1 test bản tin chỉ cục bộ); e2e project `pr4` (một phiên demo_qtht, sửa rồi trả lại trong spec).
+- **Sau /code-review (0069)**: rời A1 bị chặn cả khi còn là lãnh đạo phụ trách đơn vị ngoài (nếu không vẫn nhận chỉ đạo Thường trực / cảnh báo Đỏ của đơn vị đó); `tin_tom_tat_sang` khoá tư vấn để hai lượt gọi chồng nhau không gửi trùng; ô Phòng giữ phòng cũ khi đổi vai qua A1.
+- **Test**: RLS `kl-0068-sua-tai-khoan` (7 test quyền + 1 test bản tin chỉ cục bộ); e2e project `pr4` (một phiên demo_qtht, sửa rồi trả lại trong spec).
