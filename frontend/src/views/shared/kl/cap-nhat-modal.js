@@ -8,7 +8,7 @@ import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { danhMucKl, capNhatNhiemVu, homNayTheoDb, datThongTinGiao } from '../../../lib/kl/du-lieu.js';
-import { duocSuaThongTinGiao } from './thong-tin-giao.js';
+import { duocSuaThongTinGiao, nguonOptionsHtml } from './thong-tin-giao.js';
 import { homNayVN, formatNgay, ghiChuHan, ngayTrongMinhChung } from '../../../lib/kl/ngay.js';
 import { klCapNhatTemplate } from './cap-nhat-template.js';
 import { timKlRow } from './danh-sach.js';
@@ -61,8 +61,7 @@ export async function openKlCapNhat({ id, rows }) {
   // PR-3: vướng mắc (Owner / người theo dõi / quan_tri_kl — guard a3 0062 cho cột này); nguồn + đơn vị phối hợp chỉ người giao / quan_tri_kl (hàm 0065).
   $('klCnVuongMac').value = row.vuong_mac || '';
   show('klCnGiaoWrap', duocSuaThongTinGiao(row));
-  $('klCnNguon').innerHTML = (row.nguon_nhiem_vu_ma ? '' : '<option value="">Chưa xác định</option>') + (danhMucKl().nguonNhiemVu || []).filter((d) => d.dang_dung || d.ma === row.nguon_nhiem_vu_ma)
-    .map((d) => `<option value="${d.ma}"${d.ma === row.nguon_nhiem_vu_ma ? ' selected' : ''}>${d.ten}</option>`).join('');
+  $('klCnNguon').innerHTML = nguonOptionsHtml(row.nguon_nhiem_vu_ma, row.nguon_nhiem_vu_ma ? null : 'Chưa xác định');
   $('klCnPhoiHop').value = row.don_vi_phoi_hop || '';
   $('klCnLuu').disabled = false;
   capNhatHienThi();
@@ -112,7 +111,11 @@ async function luuKlCapNhat() {
   try {
     await capNhatNhiemVu(row.id, p);
     const giao = !$('klCnGiaoWrap').classList.contains('hidden') && { nguon: $('klCnNguon').value, phoiHop: $('klCnPhoiHop').value.trim() };
-    if (giao && (giao.nguon !== (row.nguon_nhiem_vu_ma || '') || giao.phoiHop !== (row.don_vi_phoi_hop || ''))) await datThongTinGiao(row.id, giao.nguon, giao.phoiHop);
+    if (giao && (giao.nguon !== (row.nguon_nhiem_vu_ma || '') || giao.phoiHop !== (row.don_vi_phoi_hop || ''))) {
+      try { await datThongTinGiao(row.id, giao.nguon, giao.phoiHop); } catch (e) {   // cập nhật chính đã lưu — báo đúng phần chưa lưu, không để người dùng gửi lại cả hộp
+        notifyError(`Đã cập nhật ${row.ma} nhưng chưa lưu được nguồn / đơn vị phối hợp: ${loiDeHieu(e)}`); closeKlCapNhat(); afterSave(); return;
+      }
+    }
     notifySuccess(`Đã cập nhật ${row.ma}.`);
     closeKlCapNhat();
     afterSave();

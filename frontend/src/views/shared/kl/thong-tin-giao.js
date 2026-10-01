@@ -8,12 +8,15 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { danhMucKl, datThongTinGiao, datVuongMac } from '../../../lib/kl/du-lieu.js';
 import { nhanChatLuongHtml, tenTienDoHoanThanh, nhomCua } from '../../../lib/kl/nhan.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
+import { homNayVN } from '../../../lib/kl/ngay.js';
 import { laBenTrong } from './dong.js';
 import { duocChiDao } from './chi-dao.js';
 
 let sauHanhDong = async () => {};
 const laA0 = () => state.user?.role_group === 'A0';
-const qtkl = () => Boolean(state.user?.quan_tri_kl) && !laA0();
+// Quản trị KL CÒN HẠN (như me_quan_tri_kl() ở DB: cờ + quan_tri_kl_het_han chưa qua), không phải A0.
+export const laQtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN()) && !laA0();
+const qtkl = laQtklConHan;
 export const duocSuaVuongMac = (r) => !laA0() && (laBenTrong(r) || duocChiDao() || qtkl());
 export function duocSuaThongTinGiao(r) {
   const giao = findAccount(r.giao_thay_mat_cho || r.tao_boi);
@@ -28,8 +31,10 @@ export function oLuoiPr3Html(r, o) {
     ${ketQua ? o('Kết quả', ketQua) : ''}`;
 }
 
-const optNguon = (chon) => danhMucKl().nguonNhiemVu?.filter((d) => d.dang_dung || d.ma === chon)
-  .map((d) => `<option value="${escapeHtml(d.ma)}"${d.ma === chon ? ' selected' : ''}>${escapeHtml(d.ten)}</option>`).join('') || '';
+// Ô chọn nguồn dùng chung (Giao việc, ngăn chi tiết, Cập nhật nhanh): mục đang dùng + mục đang chọn; nhanTrong = dòng trống đầu (nếu có).
+export const nguonOptionsHtml = (chon, nhanTrong = null) => (nhanTrong ? `<option value="">${escapeHtml(nhanTrong)}</option>` : '')
+  + (danhMucKl().nguonNhiemVu || []).filter((d) => d.dang_dung || d.ma === chon)
+    .map((d) => `<option value="${escapeHtml(d.ma)}"${d.ma === chon ? ' selected' : ''}>${escapeHtml(d.ten)}</option>`).join('');
 
 // Khối dưới hàng nút: vướng mắc (việc đang mở hoặc còn nội dung) + sửa nguồn / đơn vị phối hợp.
 export function khoiPr3Html(r) {
@@ -45,7 +50,7 @@ export function khoiPr3Html(r) {
         <button type="submit" class="nut chinh">Lưu</button><button type="button" class="nut" data-action="dongO" data-o="oVm-${r.id}">Huỷ</button></form>` : ''}</div>` : '';
   const giao = suaGiao ? `<div class="hanh-dong">${nut('oTtg', 'Sửa nguồn, đơn vị phối hợp')}</div>
       <form class="o" id="oTtg-${r.id}" data-submit="luuThongTinGiao" data-id="${r.id}">
-        <select name="nguon" aria-label="Nguồn nhiệm vụ">${r.nguon_nhiem_vu_ma ? '' : '<option value="">Chưa xác định</option>'}${optNguon(r.nguon_nhiem_vu_ma)}</select>
+        <select name="nguon" aria-label="Nguồn nhiệm vụ">${nguonOptionsHtml(r.nguon_nhiem_vu_ma, r.nguon_nhiem_vu_ma ? null : 'Chưa xác định')}</select>
         <input name="phoi_hop" maxlength="300" value="${escapeHtml(r.don_vi_phoi_hop || '')}" placeholder="Đơn vị phối hợp (cách nhau bằng dấu ;)" aria-label="Đơn vị phối hợp">
         <button type="submit" class="nut chinh">Lưu</button><button type="button" class="nut" data-action="dongO" data-o="oTtg-${r.id}">Huỷ</button></form>` : '';
   return `<div class="khoi-nho ct-pr3">${vm}${giao}</div>`;
@@ -55,6 +60,7 @@ async function luuVuongMac({ id }, form) {
   const nd = String(new FormData(form).get('vuong_mac') || '').trim();
   try {
     await datVuongMac(id, nd);
+    form.classList.remove('mo');
     notifySuccess(nd ? 'Đã ghi vướng mắc.' : 'Đã xoá vướng mắc — coi như đã giải quyết.');
     await sauHanhDong(id);
   } catch (e) { notifyError('Không lưu được vướng mắc: ' + loiDeHieu(e)); }
@@ -63,6 +69,7 @@ async function luuThongTinGiao({ id }, form) {
   const fd = new FormData(form);
   try {
     await datThongTinGiao(id, String(fd.get('nguon') || ''), String(fd.get('phoi_hop') || '').trim());
+    form.classList.remove('mo');
     notifySuccess('Đã lưu nguồn nhiệm vụ và đơn vị phối hợp.');
     await sauHanhDong(id);
   } catch (e) { notifyError('Không lưu được: ' + loiDeHieu(e)); }

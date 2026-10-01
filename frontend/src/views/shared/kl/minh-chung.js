@@ -13,6 +13,7 @@ import { timKlRow } from './danh-sach.js';
 import { duocChiDao } from './chi-dao.js';
 import { laBenTrong } from './dong.js';
 import { nghiemThuDongViec, oNghiemThuHtml, chatLuongCuaForm } from '../chat-luong.js';
+import { laQtklConHan } from './thong-tin-giao.js';
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 const LOP_LOAI = { so_hieu: 'mc-loai', chu_cu: 'mc-loai mc-loai-cu', tep: 'mc-loai' };
@@ -168,6 +169,7 @@ async function suaHanNop(ds, form) {
   if (!han || !lyDo) { notifyError('Chọn hạn nộp mới và ghi lý do sửa.'); return; }
   try {
     await datHanNopMinhChung(ds.id, han, lyDo);
+    form.classList.remove('mo');   // ngăn vẽ lại giữ form đang mở (giuONhap) — lưu xong thì đóng
     notifySuccess(`Đã sửa hạn nộp minh chứng thành ${formatNgay(han)}. Chủ trì và người theo dõi nhận thông báo.`);
     sauHanhDong();
   } catch (e) { notifyError(e.message); }
@@ -186,7 +188,7 @@ export async function openDongNhiemVu({ id }) {
   setText('klDongGhiChu', r.ngay_nhan_uoc_tinh ? 'Ngày nhận văn bản là ước tính nên lead time không được tính.' : `Lead time = ngày hoàn thành − ngày nhận văn bản (${formatNgay(r.ngay_nhan_van_ban)}).`);
   // PR-3 (0063): lãnh đạo trong phạm vi / quan_tri_kl (không phải Owner của việc) đánh giá chất lượng khi đóng — tuỳ chọn; Owner tự đóng thì không.
   $('klDongChatLuong').value = '';
-  show('klDongClWrap', r.owner_tai_khoan !== state.user?.id && (duocChiDao() || (Boolean(state.user?.quan_tri_kl) && state.user?.role_group !== 'A0')));
+  show('klDongClWrap', r.owner_tai_khoan !== state.user?.id && (duocChiDao() || laQtklConHan()));
   $('klDongLuu').disabled = false;
   show('klDongModal', true);
   $('klDongNgay').focus();

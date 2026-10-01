@@ -29,8 +29,8 @@ function nguoiHtml(a, rows, tatCa = rows) {
   const lam = owner.filter((r) => !doRows.includes(r) && !VANG(r)).length;
   const tong = dem.do + dem.vang + lam;
   const pct = (n) => (tong ? (n / tong) * 100 : 0);
-  const cl = calculateGroupKPI([a.id], rows).chatLuong;   // PR-3: việc đã hoàn thành theo chất lượng nghiệm thu
-  const clChu = CHAT_LUONG.filter(([m]) => cl[m]).map(([m, ten]) => `${cl[m]} ${ten}`).join(', ');
+  const xong = rows.filter((r) => r.owner_tai_khoan === a.id && !mo(r));   // PR-3: việc đã hoàn thành theo chất lượng nghiệm thu
+  const clChu = CHAT_LUONG.map(([m, ten]) => [xong.filter((r) => r.chat_luong === m).length, ten]).filter(([n]) => n).map(([n, ten]) => `${n} ${ten}`).join(', ');
   const soChu = tong === 0 ? (theoDoi ? `${theoDoi} đang theo dõi` : 'rảnh, có thể nhận thêm')
     : [dem.do ? `<b>${dem.do}</b> Đỏ` : '', dem.vang ? `${dem.vang} Vàng` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
   return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}">

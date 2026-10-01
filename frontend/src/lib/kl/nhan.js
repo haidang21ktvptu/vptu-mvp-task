@@ -1,6 +1,8 @@
 // Nhãn, màu và thứ tự của các nhóm trạng thái (nhom_dem, muc_canh_bao từ hàm trang_thai — DB tính, frontend chỉ đặt tên) và
 // bốn khâu nghẽn (v_ngoai_le.khau, 0033). Màu là thông tin (mockup): đỏ = phải can thiệp, vàng = sắp/chưa rõ, lục = xong, lam = cấu trúc.
 // Tên lớp khai báo NGUYÊN VĂN (Tailwind cắt lớp ghép chuỗi khỏi bản build).
+import { soNgay } from './ngay.js';
+
 export const NHOM = {
   QUA_HAN:        { ten: 'Quá hạn',                     lop: 'do',   stat: 's-do',   thuTu: 2, mo: true },
   // PR-2b (0058): dòng 5 — đã nộp minh chứng, quá hạn ở bước NGHIỆM THU (chậm tính cho lãnh đạo nghiệm thu, không cho người nộp — Mới 2)
@@ -94,12 +96,11 @@ export const CHAT_LUONG = [['KHONG_DAT', 'Không đạt'], ['DAT', 'Đạt'], ['
 export const tenChatLuong = (ma) => CHAT_LUONG.find(([m]) => m === ma)?.[1] || '';
 const LOP_CHAT_LUONG = { KHONG_DAT: 'tt-qua', DAT: 'tt-xam', DAT_TOT: 'tt-xong', DAT_XUAT_SAC: 'tt-xong' };
 export const nhanChatLuongHtml = (ma) => (ma ? `<span class="trang-thai ${LOP_CHAT_LUONG[ma] || 'tt-xam'}" data-truong="chat-luong">${tenChatLuong(ma)}</span>` : '');
-// "Trước hạn 3 ngày" / "Đúng hạn" / "Trễ 2 ngày" theo tien_do_hoan_thanh (DB); số ngày lấy từ hai cột ngày của chính dòng (không qua múi giờ).
-const cachNgay = (tu, den) => Math.round((Date.parse(`${den}T00:00:00Z`) - Date.parse(`${tu}T00:00:00Z`)) / 86_400_000);
+// "Trước hạn 3 ngày" / "Đúng hạn" / "Trễ 2 ngày" theo tien_do_hoan_thanh (DB); số ngày lấy từ hai cột ngày của chính dòng (soNgay, UTC).
 export function tenTienDoHoanThanh(r) {
-  if (r.tien_do_hoan_thanh === 'TRUOC_HAN') return `Trước hạn ${cachNgay(r.ngay_hoan_thanh, r.han_xu_ly)} ngày`;
+  if (r.tien_do_hoan_thanh === 'TRUOC_HAN') return `Trước hạn ${soNgay(r.ngay_hoan_thanh, r.han_xu_ly)} ngày`;
   if (r.tien_do_hoan_thanh === 'DUNG_HAN') return 'Đúng hạn';
-  if (r.tien_do_hoan_thanh === 'TRE') return `Trễ ${cachNgay(r.han_xu_ly, r.ngay_hoan_thanh)} ngày`;
+  if (r.tien_do_hoan_thanh === 'TRE') return `Trễ ${soNgay(r.han_xu_ly, r.ngay_hoan_thanh)} ngày`;
   return '';
 }
 

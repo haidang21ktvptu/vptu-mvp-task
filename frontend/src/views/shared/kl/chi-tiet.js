@@ -1,7 +1,7 @@
 // Ngăn chi tiết bên phải (v8 đợt 3: cố định 520px — đầu mã + nhãn + nội dung + văn bản, lưới 2 cột, hàng nút, chỉ đạo, minh chứng, diễn biến nền màu; thứ tự của mọi vai: thông tin then chốt → hành động → khối chỉ đạo → minh chứng → chi tiết và lịch sử
 // gập). Căn cứ từng trường từ lich_su (RLS theo phạm vi thấy nhiệm vụ); đính chính đang chờ; nguồn dòng. Một ngăn cho cả danh sách:
 // #klChiTiet chứa <div id="klChiTiet-<id>"> của việc đang chọn; toggleKlChiTiet({id, cheDo}) mở việc (cheDo 'chi-dao' → con trỏ vào ô nhập).
-import { $, escapeHtml, formatDateTime } from '../../../lib/dom.js';
+import { $, escapeHtml, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl } from '../../../lib/kl/du-lieu.js';
@@ -152,7 +152,9 @@ async function nap(id, cheDo, giuBang) {
   const p = (async () => {
     const [ls, dc] = await docCanCu(id);
     if (dangMo !== id) return;
+    const traNhap = giuONhap(o);   // PR-3: ô vướng mắc / nguồn đang mở, đang gõ giữ qua lần vẽ lại (realtime, sau hành động)
     o.innerHTML = chiTietHtml(r, ls, dc);
+    traNhap();
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
     await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napConNgay(r)]);
     if (cheDo === 'chi-dao') focusChiDao(id);

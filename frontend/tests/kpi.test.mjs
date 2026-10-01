@@ -16,16 +16,15 @@ const rows = [
   { id: 6, owner_tai_khoan: A, owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: A, tien_do_ma: 'DANG_THUC_HIEN', muc_canh_bao: 'DO', trang_thai: 'QUA_HAN_NGHIEM_THU', nguoi_chiu_cham: L, phong_chiu_cham: 'LANH_DAO_VAN_PHONG' },
 ];
 
-const CL0 = { KHONG_DAT: 0, DAT: 0, DAT_TOT: 0, DAT_XUAT_SAC: 0 };   // PR-3: dòng mẫu không có chất lượng
 describe('calculateGroupKPI — Owner tài khoản, Owner là phòng, theo dõi', () => {
   test('nhóm cá nhân [A]: chỉ việc A là Owner tài khoản; việc A theo dõi (kể cả Owner là phòng mình) đếm riêng', () => {
-    assert.deepEqual(calculateGroupKPI([A], rows), { owner: 2, dangMo: 2, quaHan: 2, doDacBiet: 1, hoanThanh: 0, theoDoi: 3, chatLuong: CL0 });
-    assert.deepEqual(calculateGroupKPI([L], rows), { owner: 0, dangMo: 0, quaHan: 1, doDacBiet: 0, hoanThanh: 0, theoDoi: 0, chatLuong: CL0 }, 'lãnh đạo nghiệm thu chịu Đỏ của việc 6');
+    assert.deepEqual(calculateGroupKPI([A], rows), { owner: 2, dangMo: 2, quaHan: 2, doDacBiet: 1, hoanThanh: 0, theoDoi: 3 });
+    assert.deepEqual(calculateGroupKPI([L], rows), { owner: 0, dangMo: 0, quaHan: 1, doDacBiet: 0, hoanThanh: 0, theoDoi: 0 }, 'lãnh đạo nghiệm thu chịu Đỏ của việc 6');
   });
   test('nhóm là phòng TONG_HOP [A, B] + mã phòng: việc Owner = phòng (không gắn cá nhân) cộng vào đánh giá, không vào theo dõi', () => {
-    assert.deepEqual(calculateGroupKPI([A, B], rows, 'TONG_HOP'), { owner: 4, dangMo: 3, quaHan: 2, doDacBiet: 1, hoanThanh: 1, theoDoi: 2, chatLuong: CL0 });
+    assert.deepEqual(calculateGroupKPI([A, B], rows, 'TONG_HOP'), { owner: 4, dangMo: 3, quaHan: 2, doDacBiet: 1, hoanThanh: 1, theoDoi: 2 });
     // Không truyền mã phòng → hai việc Owner = phòng không được tính là Owner; việc 2 rơi về "theo dõi" của A (Đỏ vẫn tính cho A — người chịu chậm).
-    assert.deepEqual(calculateGroupKPI([A, B], rows), { owner: 2, dangMo: 2, quaHan: 2, doDacBiet: 1, hoanThanh: 0, theoDoi: 3, chatLuong: CL0 });
+    assert.deepEqual(calculateGroupKPI([A, B], rows), { owner: 2, dangMo: 2, quaHan: 2, doDacBiet: 1, hoanThanh: 0, theoDoi: 3 });
   });
   test('laOwnerPhong: đúng khi không gắn tài khoản và đơn vị = phòng; sai khi có tài khoản, phòng khác hoặc không có mã phòng', () => {
     assert.equal(laOwnerPhong(rows[1], 'TONG_HOP'), true);

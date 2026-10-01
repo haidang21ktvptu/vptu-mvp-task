@@ -31,7 +31,7 @@ export function mucViecDoHtml() {
   const ds = viecDo();
   if (ds.length === 0) return '<div class="muc luc"><b>Việc Đỏ của phòng</b><p>Hôm nay phòng không có việc quá hạn.</p></div>';
   return `<div class="muc do" id="ptMucDo"><b>Việc Đỏ của phòng (${ds.length})</b>${ds.map((r) => `
-    <div class="the-con" id="ptDo-${r.id}" data-khau="${r.khau}"><p><b>${escapeHtml(r.ma)}</b> ${nhanPhuHtml(r)} ${escapeHtml(r.noi_dung)}, trễ <b>${r.so_ngay_qua}</b> ngày, ${tenKhau(r.khau).toLowerCase()}: ${escapeHtml(sanPhamThieu(r))}${r.so_chi_dao_cho_phan_hoi ? `; ${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi` : ''}${r.cap_quyet_dinh ? `; cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}` : ''}</p>
+    <div class="the-con" id="ptDo-${r.id}" data-khau="${r.khau}"><p><b>${escapeHtml(r.ma)}</b> ${nhanPhuHtml(r)} ${escapeHtml(r.noi_dung)}, trễ <b>${r.so_ngay_qua}</b> ngày, ${tenKhau(r.khau).toLowerCase()}: ${escapeHtml(sanPhamThieu(r))}${r.so_chi_dao_cho_phan_hoi ? `; ${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi` : ''}${r.cap_quyet_dinh ? `; cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}` : ''}${r.vuong_mac ? `; <span data-truong="vuong-mac">vướng mắc: ${escapeHtml(r.vuong_mac)}</span>` : ''}</p>
       <div class="hanh-dong"><button type="button" class="nut chinh" data-action="moO" data-o="oDo-${r.id}">Đôn đốc</button>
         <button type="button" class="nut" data-action="moChiDaoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Giao lại / Gia hạn</button>
         <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>

@@ -76,7 +76,7 @@ CREATE FUNCTION "public"."kl_van_ban_so_viec"() RETURNS TABLE ("van_ban_id" uuid
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT n."van_ban_id", count(*)::integer FROM "public"."nhiem_vu" n
   WHERE n."nhiem_vu_cha" IS NULL AND "auth"."uid"() IS NOT NULL
-    AND ("public"."me_quan_tri_kl"() OR n."van_ban_id" IN (SELECT "public"."kl_van_ban_thay_duoc"()))
+    AND ((SELECT "public"."me_quan_tri_kl"()) OR n."van_ban_id" IN (SELECT "public"."kl_van_ban_thay_duoc"()))   -- (SELECT …): một lần mỗi truy vấn
   GROUP BY n."van_ban_id";
 $$;
 

@@ -4,12 +4,14 @@
 // từng nhánh (nhớ theo khoá trong phiên), lọc trạng thái (giữ nhánh có con khớp), bấm nhánh → moNhiemVu() mở #klChiTiet sẵn có ở màn Nhiệm vụ.
 // PR-3 F: gốc hiện "đã nhập x / dự kiến y" (x = kl_van_ban_so_viec — tổng thật việc gốc của văn bản, kể cả ngoài phạm vi xem) + cờ rà soát toàn văn;
 // nhãn vàng khi x < y hoặc chưa rà soát; người tạo văn bản / A1 / quan_tri_kl sửa tại chỗ (van_ban_dat_ra_soat là chốt).
-import { $, escapeHtml } from '../../../lib/dom.js';
+import { $, escapeHtml, giuONhap } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { state } from '../../../lib/state.js';
 import { notifyError, notifySuccess } from '../../../components/toast.js';
 import { loadKlRows, loadVanBan, soViecTheoVanBan, datRaSoatVanBan } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
+import { laQtklConHan } from '../kl/thong-tin-giao.js';
+import { soNguyenKhongAm } from '../giao-viec/nguon.js';
 import { loadMinhChungTatCa } from '../../../lib/kl/minh-chung.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { lopMep, nhanTrangThai } from '../../../lib/kl/nhan.js';
@@ -86,7 +88,7 @@ function gocHtml({ vb, viec }, con, kw, tatCa) {
 function raSoatHtml(id, soGocThay) {
   const h = vanBan.get(id) || {}; const x = soViec.get(id) ?? soGocThay; const y = h.so_nhiem_vu_du_kien;
   const canhBao = (y !== null && y !== undefined && x < y) || !h.da_ra_soat_toan_van;
-  const sua = Boolean(state.user) && (h.tao_boi === state.user.id || state.user.role_group === 'A1' || Boolean(state.user.quan_tri_kl));
+  const sua = Boolean(state.user) && (h.tao_boi === state.user.id || state.user.role_group === 'A1' || laQtklConHan());
   return `<p class="tvb-ra-soat-dong"><span class="trang-thai ${canhBao ? 'tt-cho' : 'tt-xong'} tvb-ra-soat" data-canh-bao="${canhBao ? '1' : '0'}">đã nhập ${x}${y !== null && y !== undefined ? ` / dự kiến ${y}` : ' · chưa khai số dự kiến'} · ${h.da_ra_soat_toan_van ? 'đã rà soát toàn văn' : 'chưa rà soát toàn văn'}</span>
     ${sua ? `<button type="button" class="nut nho" data-action="moO" data-o="oRs-${id}">Sửa</button></p>
     <form class="o" id="oRs-${id}" data-submit="tvbRaSoat" data-id="${id}"><input type="number" name="so" min="0" step="1" value="${y ?? ''}" placeholder="Số nhiệm vụ dự kiến" aria-label="Số nhiệm vụ dự kiến">
@@ -96,7 +98,8 @@ function raSoatHtml(id, soGocThay) {
 async function tvbRaSoat({ id }, form) {
   const fd = new FormData(form); const so = String(fd.get('so') ?? '').trim();
   try {
-    await datRaSoatVanBan(id, so === '' ? null : Number(so), fd.get('ra_soat') === 'on');
+    await datRaSoatVanBan(id, soNguyenKhongAm(so), fd.get('ra_soat') === 'on');
+    form.classList.remove('mo');
     notifySuccess('Đã lưu số nhiệm vụ dự kiến và rà soát văn bản.'); await loadTheoVanBan();
   } catch (e) { notifyError('Không lưu được: ' + loiDeHieu(e)); }
 }
@@ -107,7 +110,9 @@ function render() {
   const { goc, con } = dungCay();
   const tatCaCua = (vbId) => rows.filter((r) => r.van_ban_id === vbId);
   const html = goc.map((g) => gocHtml(g, con, kw, tatCaCua(g.vb.van_ban_id))).filter(Boolean);
+  const traNhap = giuONhap(o);   // PR-3: ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
   o.innerHTML = html.length ? html.join('') : '<p class="trong">Không có văn bản nào khớp bộ lọc.</p>';
+  traNhap();
   $('tvbTomTat').textContent = `${html.length}/${goc.length} văn bản · ${rows.length} nhiệm vụ trong phạm vi`;
   o.dataset.nap = String(Date.now());
 }

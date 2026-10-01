@@ -10,11 +10,8 @@ import { execSync } from 'node:child_process';
 
 // PR-2b đã ghép và commit 0053–0060 (nháp supabase/nhap-0053 đã xoá) ⇒ bảng để trống: --xoa không được chạm file đã commit / đã áp.
 // PR sau: thêm cặp ['NN-ten.sql', 'NNNN_ten.sql'] và đổi NHAP khi bắt đầu nháp mới.
-export const BAN_DO = [
-  ['10-cot-danh-muc.sql', '0062_cot_danh_muc_pr3.sql'], ['20-nghiem-thu-chat-luong.sql', '0063_nghiem_thu_chat_luong.sql'],
-  ['30-giao-viec.sql', '0064_giao_viec_nguon.sql'], ['40-ham-ghi.sql', '0065_ham_ghi_pr3.sql'],
-  ['50-trang-thai.sql', '0066_trang_thai_truoc_han.sql'], ['60-view.sql', '0067_view_pr3.sql'],
-];
+// PR-3 đã ghép và commit 0062–0067 (nháp supabase/nhap-0062 đã xoá) ⇒ bảng để trống như sau PR-2b.
+export const BAN_DO = [];
 const NHAP = 'supabase/nhap-0062';
 const MIG = 'supabase/migrations';
 const goc = execSync('git rev-parse --show-toplevel', { encoding: 'utf8' }).trim();
