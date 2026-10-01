@@ -103,7 +103,7 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 ## RLS: logic thuần chỉ chạy cục bộ — `CHI_CUC_BO` (PR-2b, từ 30/9/2026)
 
 - `tests/rls/lib.mjs` xuất `CHI_CUC_BO`: với `RLS_LOCAL=1` là `false` (chạy), với `RLS_STAGING=1` là lý do bỏ qua. Test chỉ kiểm **logic thuần** (tính ngày làm việc, trạng thái, khâu, mốc, nhắc — không phụ thuộc token thật) gắn `{ skip: CHI_CUC_BO }`; job "Áp migration + lint schema" của `ci.yml` vẫn chạy **toàn bộ** bộ RLS trên Supabase cục bộ, staging chỉ giữ phần kiểm quyền bằng token thật.
-- Cả file: `kl-0022-cha-con-owner`, `kl-0024-trang-thai-bi-danh`, `kl-0027-ma-nhiem-vu`, `kl-trang-thai`, `kl-minh-chung-bat-buoc`, `kl-0058-trang-thai-nghiem-thu`, `kl-0060-nhac-nghiem-thu`. Từng test: `kl-0028` (8–10), `kl-0029` (2–6), `kl-0032` (1, 7), `kl-0033` (2 test khâu + mốc), `kl-0035` (1–2), `kl-pq-pham-vi-giao` (1, 6), `kl-0053-ngay-lam-viec` (phần logic), `kl-0054-han-nop-minh-chung` (1, 6, khối biên).
+- Cả file: `kl-0022-cha-con-owner`, `kl-0024-trang-thai-bi-danh`, `kl-0027-ma-nhiem-vu`, `kl-trang-thai`, `kl-minh-chung-bat-buoc`, `kl-0058-trang-thai-nghiem-thu`, `kl-0060-nhac-nghiem-thu`. Từng khối: `kl-0068-sua-tai-khoan` (bản tin 7h30 mỗi ngày một lần). Từng test: `kl-0028` (8–10), `kl-0029` (2–6), `kl-0032` (1, 7), `kl-0033` (2 test khâu + mốc), `kl-0035` (1–2), `kl-pq-pham-vi-giao` (1, 6), `kl-0053-ngay-lam-viec` (phần logic), `kl-0054-han-nop-minh-chung` (1, 6, khối biên).
 - Xem trước tập test staging sẽ chạy ngay trên máy: `RLS_LOCAL=1 RLS_NHU_STAGING=1 node --test tests/rls/`.
 - Test mới gọi `giao_viec` qua client bọc sẵn trong `lib.mjs`: thiếu `han_nop_minh_chung` thì tự điền (= hạn hoàn thành nếu chưa qua, không thì hôm nay) để test cũ không phải sửa.
 
@@ -125,3 +125,7 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - Ma trận ô **Nguồn nhiệm vụ** 7 vai × 5 loại (mặc định, văn bản có sẵn, "Còn thiếu" khi bỏ chọn) **nằm trong** `pr2b-han-nop` (cùng phiên với ô hạn nộp — quyết định 1/10/2026 để e2e staging ≤ 9 phút).
 - Nối tiếp `pr2b-b4-b6` → `pr3-giao-that` → `pr3-vuong-mac` → `pr3-hien-thi`; `dang-nhap` phụ thuộc `pr3-hien-thi`. Nghiệm thu trong spec dùng `nghiemThuMc` (`lib/pr2b.mjs`: bấm Nghiệm thu → nút xác nhận mờ → chọn chất lượng → xác nhận). Chạy riêng: `npx playwright test --project='pr3-*' --no-deps --workers=1` (kèm biến đích).
 - RLS: `kl-pr3-chat-luong-nguon` (A, B, E; D gắn `CHI_CUC_BO`), `kl-pr3-vuong-mac-ra-soat` (C, F). `lib.mjs` bọc `giao_viec` điền nguồn `NHIEM_VU_PHAT_SINH` khi test cũ không truyền khoá (test PR-3 truyền tường minh, kể cả null).
+
+## e2e PR-4 — project `pr4` (chỉ máy tính, từ 1/10/2026)
+- `quan-tri-sua-tai-khoan.spec.js`: một phiên demo_qtht; Sửa demo_e2e_dh (phòng + chức danh, lý do bắt buộc, không đổi thì không lưu) → bảng + nhật ký cấp quyền; ô Phòng theo vai; A2 trùng phòng hiện lỗi DB; trả lại như cũ trong spec (khôi phục giá trị gốc cả `beforeAll` lẫn `afterAll`).
+- Nối `pr3-hien-thi` → `pr4`; `dang-nhap` phụ thuộc `pr4`. Chạy riêng: `npx playwright test --project=pr4 --no-deps` (kèm biến đích). RLS: `kl-0068-sua-tai-khoan` (demo_e2e_dh / demo_e2e_mc — không file RLS nào khác dùng).

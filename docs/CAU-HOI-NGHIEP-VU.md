@@ -260,3 +260,14 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | I-7 | Rà soát văn bản? | Số nhiệm vụ dự kiến + cờ đã rà soát toàn văn; "đã nhập" = **tổng thật** (hàm DB, chỉ trả cho văn bản người xem được); quyền sửa như trích yếu. | RLS `kl-pr3-vuong-mac-ra-soat`; e2e `pr3-hien-thi` |
 | I-8 | Xuất Excel / In? | .xlsx thật (tự ghi, không thư viện ngoài, nạp động); Nhiệm vụ: danh sách đang lọc; Báo cáo: theo phòng + theo nguồn + Đỏ; tên `vptu-nhiem-vu-<yyyymmdd>.xlsx`, `vptu-bao-cao-<yyyymmdd>.xlsx`; A3 cũng xuất được (RLS giới hạn). | unit `frontend/tests/xlsx.test.mjs`; e2e `pr3-hien-thi` |
 | I-9 | Chuyên viên tự ghi nhận việc? | **Không làm** — giữ nguyên tắc chỉ lãnh đạo giao. Hoãn: chu kỳ lặp (sau go-live), nhập Excel qua giao diện (dùng script), xuất lịch .ics. | — |
+
+## Nhóm J — Quyết định 1/10/2026: sửa vai trò / phòng / chức danh tài khoản (PR-4, migration 0068)
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| J-1 | Ai sửa vai trò / phòng / chức danh tài khoản đã tạo? | Chỉ quản trị hệ thống, lý do bắt buộc, nhật ký cũ → mới từng cột; không tự đổi vai của mình; không sửa tài khoản hệ thống. | RLS `kl-0068-sua-tai-khoan`, e2e `pr4` |
+| J-2 | Phòng theo vai? | A0 không phòng; A1 = Lãnh đạo Văn phòng; A2/A3 = phòng chuyên môn trong `dm_don_vi`. Một Trưởng phòng (A2) chưa khoá mỗi phòng. | RLS `kl-0068-sua-tai-khoan` |
+| J-3 | Đổi vai Chánh Văn phòng? | **Chặn** — chỉ sửa chức danh (cờ `is_chief` không đổi qua màn hình). | RLS `kl-0068-sua-tai-khoan` |
+| J-4 | Rời A1 khi còn phân công phụ trách / kiêm nhiệm hiệu lực? | **Chặn** — kết thúc ở bảng Phân công trước. | RLS `kl-0068-sua-tai-khoan` |
+| J-5 | Sang A0 khi còn cờ quản trị KL / thư ký Thường trực? | **Chặn** — thu cờ trước. | RLS `kl-0068-sua-tai-khoan` |
+| J-6 | **Mở:** việc đang mở có người theo dõi là Trưởng phòng cũ (lưu cố định lúc giao) — khi người đó đổi vai/phòng, có chuyển sang Trưởng phòng mới không? | **Chưa xử lý** (PR-4 giữ nguyên người theo dõi). Đề xuất: lãnh đạo dùng Giao lại cho từng việc, hoặc một hàm quản trị chuyển hàng loạt có lý do — chờ chủ dự án quyết. | — |
