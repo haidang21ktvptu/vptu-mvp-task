@@ -25,14 +25,15 @@ function taiKhoanRowHtml(a) {
   const btnHt = me ? '' : nut(a.quan_tri_he_thong ? 'Thu QTHT' : 'Cấp QTHT', 'toggleQuanTriHeThong', a, `data-bat="${a.quan_tri_he_thong ? '0' : '1'}"`);
   const btnTk = a.role_group === 'A0' ? '' : nut(a.thu_ky_thuong_truc ? 'Thu thư ký TT' : 'Cấp thư ký TT', 'toggleThuKyTT', a, `data-bat="${a.thu_ky_thuong_truc ? '0' : '1'}"`);
   const btnKhoa = me || a.quan_tri_he_thong ? '' : nut(a.bi_khoa ? 'Mở khoá' : 'Khoá', 'khoaTaiKhoan', a, `data-bat="${a.bi_khoa ? '0' : '1'}"`);
+  const btnSua = state.user.quan_tri_he_thong && !a.is_system ? nut('Sửa', 'moSuaTaiKhoan', a, `aria-label="Sửa vai trò, phòng, chức danh của ${escapeHtml(a.full_name)}"`) : ''; // PR-4, 0068
   return `
     <tr data-search="${escapeHtml(search)}">
-      <td class="tieude">${escapeHtml(a.full_name)}${me ? ' (tôi)' : ''}<small>${escapeHtml(a.username)}${a.dien_thoai ? ` · ${escapeHtml(a.dien_thoai)}` : ''}</small></td>
+      <td class="tieude">${escapeHtml(a.full_name)}${me ? ' (tôi)' : ''}<small>${escapeHtml(a.username)}${a.position_title ? ` · ${escapeHtml(a.position_title)}` : ''}${a.dien_thoai ? ` · ${escapeHtml(a.dien_thoai)}` : ''}</small></td>
       <td data-nhan="Phòng">${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</td>
       <td data-nhan="Vai trò">${escapeHtml(ROLE_LABELS[a.role_group] || a.role_group)}</td>
       <td data-nhan="Quản trị KL BTVTU">${kl}</td>
       <td data-nhan="Hệ thống">${ht}${tk}${khoa}</td>
-      <td><div class="thao-tac">${btnKl}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
+      <td><div class="thao-tac">${btnSua}${btnKl}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
     </tr>`;
 }
 
@@ -66,15 +67,22 @@ function nhanQuyen(co) {
   return { quan_tri_kl: 'Quản trị KL BTVTU', quan_tri_he_thong: 'Quản trị hệ thống' }[co] || co;
 }
 
+// Dòng sửa tài khoản (0068): co = sua:<cột>, gia_tri_cu → gia_tri_moi.
+const TEN_COT_SUA = { role_group: 'vai trò', department: 'phòng', position_title: 'chức danh' };
+const giaTriSua = (cot, v) => (v == null || v === '' ? '(trống)' : cot === 'role_group' ? ROLE_LABELS[v] || v : cot === 'department' ? DEPT_NAMES[v] || v : v);
+
 function nhatKyRowHtml(r) {
+  const cotSua = r.co.startsWith('sua:') ? r.co.slice(4) : null;
+  const quyen = cotSua ? `Sửa ${TEN_COT_SUA[cotSua] || cotSua}: ${giaTriSua(cotSua, r.gia_tri_cu)} → ${giaTriSua(cotSua, r.gia_tri_moi)}` : nhanQuyen(r.co);
+  const batTat = cotSua ? '<span class="trang-thai tt-cho">Sửa</span>' : `<span class="trang-thai ${r.bat ? 'tt-xong' : 'tt-qua'}">${r.bat ? 'Bật' : 'Tắt'}</span>`;
   const nguoi = r.cap_boi ? findAccount(r.cap_boi)?.full_name || r.cap_boi : (r.cap_boi_ghi_chu || 'Hệ thống');
   const tk = findAccount(r.tai_khoan)?.full_name || r.tai_khoan;
   return `<tr><td class="whitespace-nowrap">${formatDateTime(r.luc)}</td><td data-nhan="Người thực hiện">${escapeHtml(nguoi)}</td><td data-nhan="Tài khoản">${escapeHtml(tk)}</td>
-      <td data-nhan="Quyền">${escapeHtml(nhanQuyen(r.co))}</td><td data-nhan="Bật/Tắt"><span class="trang-thai ${r.bat ? 'tt-xong' : 'tt-qua'}">${r.bat ? 'Bật' : 'Tắt'}</span></td><td data-nhan="Lý do">${escapeHtml(r.ly_do)}</td></tr>`;
+      <td data-nhan="Quyền">${escapeHtml(quyen)}</td><td data-nhan="Bật/Tắt">${batTat}</td><td data-nhan="Lý do">${escapeHtml(r.ly_do)}</td></tr>`;
 }
 
 export async function renderNhatKy() {
-  const { data, error } = await supabase.from('quyen_lich_su').select('luc, cap_boi, cap_boi_ghi_chu, tai_khoan, co, bat, ly_do').order('id', { ascending: false }).limit(50);
+  const { data, error } = await supabase.from('quyen_lich_su').select('luc, cap_boi, cap_boi_ghi_chu, tai_khoan, co, bat, ly_do, gia_tri_cu, gia_tri_moi').order('id', { ascending: false }).limit(50);
   if (error) { notifyError('Không đọc được nhật ký: ' + error.message); return; }
   $('qtNhatKyBody').innerHTML = data.length === 0 ? '<tr><td colspan="6" class="trong">Chưa có lần cấp quyền nào.</td></tr>' : data.map(nhatKyRowHtml).join('');
 }

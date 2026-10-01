@@ -13,6 +13,7 @@ import { mountLyDoModal } from './ly-do-modal.js';
 import { loadDanhMuc } from './danh-muc.js';
 import { renderTaiKhoan, renderNhatKy, toggleQuanTriKl, toggleThuKyTT, toggleQuanTriHeThong, khoaTaiKhoan, resetMatKhau } from './tai-khoan.js';
 import { mountTaiKhoanForm } from './tai-khoan-form.js';
+import { mountSuaTaiKhoan } from './sua-tai-khoan.js';
 import { renderPhuTrach, togglePhuTrach, ketThucKiemNhiem } from './phu-trach.js';
 import { mountKiemNhiemModal } from './kiem-nhiem-modal.js';
 import { mountDanhMucLinhVuc, renderDanhMucLinhVuc } from './danh-muc-linh-vuc.js';
@@ -71,6 +72,7 @@ export function registerQuanTriView() {
   mountKiemNhiemModal(loadQuanTri);
   mountDanhMucLinhVuc(loadQuanTri);
   mountTaiKhoanForm(loadQuanTri);
+  mountSuaTaiKhoan(loadQuanTri);
   mountDonDuLieu();
   $('qtTimTaiKhoan').addEventListener('input', (e) => filterRowsByKeyword('qtTaiKhoanBody', e.target.value));
   $('qtUyQuyenForm').addEventListener('submit', (e) => guiUyQuyen(e, loadQuanTri));

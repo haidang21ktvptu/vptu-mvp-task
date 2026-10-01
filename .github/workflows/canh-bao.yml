@@ -52,7 +52,7 @@ jobs:
           { echo "URL=$URL"; echo "KEY=$KEY"; } >> "$GITHUB_ENV"
       - name: Gọi RPC canh_bao_quet
         run: |
-          HTTP=$(curl --silent --show-error --output kq.json --write-out '%{http_code}' \
+          HTTP=$(curl --silent --show-error --retry 3 --retry-delay 10 --retry-all-errors --output kq.json --write-out '%{http_code}' \
             --max-time 120 -X POST "$URL/rest/v1/rpc/canh_bao_quet" \
             -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
           if [ "$HTTP" != 200 ]; then
@@ -61,7 +61,7 @@ jobs:
       # GĐ23: người bật "gom tin" nhận một bản tin 7h30 tóm tắt thông báo chưa đọc; kèm thu ủy quyền giao việc hết hạn (0041).
       - name: Gọi RPC tin_tom_tat_sang
         run: |
-          HTTP=$(curl --silent --show-error --output tomtat.json --write-out '%{http_code}' \
+          HTTP=$(curl --silent --show-error --retry 3 --retry-delay 10 --retry-all-errors --output tomtat.json --write-out '%{http_code}' \
             --max-time 60 -X POST "$URL/rest/v1/rpc/tin_tom_tat_sang" \
             -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
           if [ "$HTTP" != 200 ]; then echo "::warning::tin_tom_tat_sang trả HTTP $HTTP (hàm chưa có trước 0041?)."; else echo "Bản tin 7h30 đã gửi cho $(cat tomtat.json) tài khoản." >> "$GITHUB_STEP_SUMMARY"; fi
