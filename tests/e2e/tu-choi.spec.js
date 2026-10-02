@@ -64,7 +64,8 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
     await expect(the).toContainText('Lý do: E2E: việc thuộc chuyên môn phòng khác');
     await the.locator('input[name=noi_dung]').fill('Đồng ý, sẽ giao người khác');
     await the.locator('button[data-dong-y="1"]').click();
-    await expect(tp.locator('#dhTC #dhTuChoi')).toHaveCount(0);
+    await expect(tp.locator('#toastContainer'), 'kết quả duyệt (lỗi DB hiện ở đây nếu có)').toContainText('Đã đồng ý từ chối', NAP);
+    await expect(tp.locator('#dhTC #dhTuChoi')).toHaveCount(0, NAP);
     const { data } = await db.from('nhiem_vu').select('bi_tu_choi').eq('id', nvId).single();
     expect(data.bi_tu_choi).toBe(true);
   });
