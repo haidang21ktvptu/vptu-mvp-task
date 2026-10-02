@@ -117,7 +117,8 @@ Chỉ tiếp thu **tính năng**, không nhập dữ liệu của phần mềm �
 - **Đơn vị phối hợp** `don_vi_phoi_hop` (≤ 300, tự do, cách nhau bằng ;): Giao việc (tuỳ chọn), ngăn chi tiết, Cập nhật nhanh của người giao / quản trị KL.
 - **Rà soát văn bản**: `van_ban_giao_viec.so_nhiem_vu_du_kien`, `da_ra_soat_toan_van` (+ người, lúc) — nhập khi tạo văn bản mới hoặc sửa tại màn Theo văn bản (`van_ban_dat_ra_soat`, quyền như trích yếu). Theo văn bản hiện "đã nhập x / dự kiến y" (x = tổng thật việc gốc của văn bản, `kl_van_ban_so_viec`, chỉ trả cho văn bản người xem được), nhãn vàng khi x < y hoặc chưa rà soát.
 - **Xuất Excel / In**: màn Nhiệm vụ xuất đúng danh sách đang lọc (15 cột tường minh), Báo cáo xuất 3 sheet (theo phòng, theo nguồn, danh sách Đỏ); tệp .xlsx thật do `lib/xlsx.js` tự ghi (không thư viện ngoài), nạp động khi bấm. In / lưu PDF ở màn Nhiệm vụ và Báo cáo.
-- **Không làm**: chu kỳ lặp (sau go-live), nhập Excel qua giao diện (dùng script), xuất lịch .ics; **chuyên viên không tự ghi nhận việc** (giữ nguyên tắc chỉ lãnh đạo giao).
+- **Nhập Excel qua giao diện** (giao diện v9 đợt 2, 0072–0075): người nhập = quản trị nhiệm vụ còn hạn hoặc quản trị hệ thống. Việc nhập còn mở đi qua `giao_viec` (`nguon = app`, theo 1400); việc "đã xong ngoài hệ thống" ghi `nguon = excel`, không ngày hoàn thành (ngoài tỷ lệ đúng hạn). Dòng có mã đã có → cập nhật thông tin giao theo mã (chủ trì, người theo dõi, hạn chỉ báo — dùng Giao lại / Gia hạn).
+- **Không làm**: chu kỳ lặp (sau go-live), xuất lịch .ics; **chuyên viên không tự ghi nhận việc** (giữ nguyên tắc chỉ lãnh đạo giao).
 
 ---
 

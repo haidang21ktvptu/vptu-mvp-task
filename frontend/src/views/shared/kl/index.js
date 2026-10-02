@@ -17,7 +17,10 @@ import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.
 import { mountChiDao } from './chi-dao.js';
 import { mountMinhChung } from './minh-chung.js';
 import { mountThongTinGiao } from './thong-tin-giao.js';
+import { mountSuaTang } from './sua-tang.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
+import { moNganViec } from '../ngan-chi-tiet.js';
+import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
 
 export const duocGiaoViec = () => ['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
 const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng', A3: 'Việc của tôi' };
@@ -27,7 +30,7 @@ export function openKl(loc) {
   showSection('viewKl');
   setActiveNav('navKl');
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
-  show('klNutThem', duocGiaoViec());
+  show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
   $('klTieuDe').textContent = TIEU_DE[state.user?.role_group] || 'Nhiệm vụ';
   const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
@@ -46,9 +49,11 @@ async function klTheoSuKien(su) {
   loadKl();
 }
 
-// Mở đúng một việc từ màn hình khác (thẻ điều hành, chuông, chỉ đạo đã gửi): lọc theo mã rồi mở ngăn chi tiết.
+// Mở đúng một việc từ màn hình khác (thẻ điều hành, chuông, chỉ đạo đã gửi, Theo văn bản, nghiệm thu, nhắn tin): v9 đợt 2 — mở trong ngăn chi
+// tiết dùng chung NGAY TRÊN màn hình đang xem (không chuyển sang mục Nhiệm vụ); đang ở mục Nhiệm vụ thì lọc theo mã rồi mở ngăn trong trang.
 export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
-  await openKl({ tuTongQuan: true, tuKhoa: ma });
+  if (!sectionDangHien('viewKl')) { await moNganViec(id, { cheDo }); return; }
+  await openKl({ tuKhoa: ma });
   if (!timKlRow(id)) await loadKl(); // đọc lỗi tạm / dòng vừa thêm chưa kịp về → đọc lại một lần
   await toggleKlChiTiet({ id, cheDo });
   $(`klRow-${id}`)?.scrollIntoView({ block: 'nearest' });
@@ -56,8 +61,11 @@ export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
 
 // Sau MỌI hành động ghi thành công (GĐ23): nạp lại đúng việc đó ngay (ngăn chi tiết, dòng, thẻ điều hành — không chờ realtime hay cả danh sách),
 // rồi nạp lại cả danh sách phía sau. Không có id (chỉ đạo / minh chứng gọi không tham số) → việc đang mở ở ngăn chi tiết.
+// v9 đợt 2: phát 'viec-da-ghi' — màn hình đang nằm dưới ngăn chi tiết dùng chung (không có realtime) tự nạp lại (ngan-chi-tiet.js).
 async function napLaiSauHanhDong(id) {
-  await napLaiViec(id || idDangMo());
+  const vid = id || idDangMo();
+  await napLaiViec(vid);
+  document.dispatchEvent(new CustomEvent('viec-da-ghi', { detail: vid }));
   await lamMoiHuyHieu(); // số chưa xử lý (dải Cần xử lý ngay, huy hiệu) đổi ngay sau ghi, không chờ realtime
   loadKl();
 }
@@ -102,10 +110,11 @@ async function onDoiCap(e) {
 export function registerKlView() {
   $('viewKl').innerHTML = klTemplate;
   $('klChiTiet').addEventListener('change', onDoiCap);
-  mountKlCapNhatModal(loadKl);
+  mountKlCapNhatModal(napLaiSauHanhDong);
   mountChiDao(registerActions, napLaiSauHanhDong);
   mountMinhChung(registerActions, napLaiSauHanhDong);
   mountThongTinGiao(registerActions, napLaiSauHanhDong);
+  mountSuaTang(registerActions, napLaiSauHanhDong);   // v9 đợt 2: sửa thông tin giao / đề nghị sửa (0070–0071)
   ganBoLoc();
   // PR-3 G: Xuất Excel nạp động lib/kl/xuat.js + lib/xlsx.js (không tăng bundle lúc mở app); In / lưu PDF dùng in.css.
   const klXuatExcel = async () => {

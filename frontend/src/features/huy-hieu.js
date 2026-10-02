@@ -18,7 +18,7 @@ export function onSoChuaXuLy(fn) { nghe.add(fn); if (so) fn(so); }
 export function tongDieuHanh(s, vai = state.user?.role_group) {
   if (!s) return 0;
   if (vai === 'A3') return Number(s.viec_moi || 0) + Number(s.hoa_toc_chi_dao || 0);
-  const chung = Number(s.can_quyet || 0) + Number(s.de_nghi_cho_duyet || 0) + Number(s.bi_tu_choi || 0);
+  const chung = Number(s.can_quyet || 0) + Number(s.de_nghi_cho_duyet || 0) + Number(s.bi_tu_choi || 0) + Number(s.de_nghi_sua || 0);   // + đề nghị sửa (0071)
   return vai === 'A0' ? chung : chung + Number(s.tt_cho_nhan || 0);
 }
 

@@ -46,7 +46,8 @@ async function giaoThat(page, vai, loai, { owner, nganh, lv }) {
   await expect(conThieu(page)).toHaveText('');
   await expect(page.locator('#klThLuu')).toBeEnabled();
   await page.locator('#klThLuu').click();
-  await expect(page.locator('#viewKl')).toBeVisible(NAP);   // giao xong mở Nhiệm vụ
+  await expect(page.locator('#nganCT .chi-tiet-noi')).toBeVisible(NAP);   // v9 đợt 2: giao xong ở lại Giao việc, việc vừa giao mở trong ngăn chi tiết
+  await expect(page.locator('#viewGiaoViec')).toBeVisible();
   const { data } = await db.from('nhiem_vu').select('id, owner_don_vi_ma, linh_vuc_ma, van_ban_giao_viec!inner(so_ket_luan, loai)').eq('van_ban_giao_viec.so_ket_luan', soKL(vai));
   expect(data).toHaveLength(1);
   expect(data[0].van_ban_giao_viec.loai).toBe(loai);

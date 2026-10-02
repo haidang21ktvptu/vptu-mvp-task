@@ -1,6 +1,7 @@
 // Cán bộ thuộc quyền (A1) / Cán bộ trong phòng (A2) / Cán bộ (A0, toàn Văn phòng: nhóm Lãnh đạo Văn phòng đứng đầu rồi từng phòng) —
 // mockup: bức tranh tải việc theo phòng rồi theo người, mỗi người một thanh Đỏ/Vàng/Đang làm (việc đang mở người đó là Owner tài khoản;
-// việc theo dõi ghi riêng, CH-2). Bấm một người → ngăn bên phải ngay trong trang (tải việc, việc mở, Giao lại / Nhắc), không rời mục.
+// việc theo dõi ghi riêng, CH-2). Bấm một người → ngăn bên phải ngay trong trang (tải việc, việc mở, Giao lại / Nhắc), không rời mục; "Xem chi
+// tiết" một việc → ngăn chi tiết dùng chung (v9 đợt 2) mở chồng lên trang; ghi xong trong ngăn → trang tự nạp lại, giữ người đang mở.
 import { $, escapeHtml } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
@@ -12,6 +13,7 @@ import { CHAT_LUONG } from '../../lib/kl/nhan.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { datNapLai } from './dieu-hanh/hanh-dong.js';
 import { nganNguoiHtml, moNgan, dongNgan } from './ngan-viec.js';
+import { datNguonDong, khiGhiTrongNgan } from './ngan-chi-tiet.js';
 
 const DO = (r) => r.muc_canh_bao === 'DO' || r.muc_canh_bao === 'DO_DAC_BIET';
 const VANG = (r) => r.muc_canh_bao === 'VANG';
@@ -92,4 +94,6 @@ function dongNganCanBo() {
 
 export function registerCanBo() {
   registerActions({ openCanBo, moNganNguoi, dongNganCanBo });
+  datNguonDong((id) => rowsHienTai.find((r) => r.id === id));
+  khiGhiTrongNgan('viewCanBo', napCanBo);
 }

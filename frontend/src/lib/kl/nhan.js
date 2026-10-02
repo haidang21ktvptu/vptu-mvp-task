@@ -87,6 +87,7 @@ export const TEN_COT = {
   giao_thay_mat: 'Giao thay mặt', giao_viec: 'Giao việc', canh_bao: 'Cảnh báo', do_khan: 'Độ khẩn', uu_tien: 'Ưu tiên', giao_thay_mat_cho: 'Giao thay mặt cho',
   han_nop_minh_chung: 'Hạn nộp minh chứng', ly_do_han_nop_sat: 'Lý do việc gấp (hạn nộp sát)', han_nop_minh_chung_ly_do: 'Đổi hạn nộp minh chứng',
   chat_luong: 'Chất lượng hoàn thành', nguon_nhiem_vu_ma: 'Nguồn nhiệm vụ', vuong_mac: 'Vướng mắc / đề nghị lãnh đạo quyết định',
+  sua_thong_tin_giao: 'Sửa thông tin giao', de_nghi_sua: 'Đề nghị sửa', nhap_excel: 'Nhập Excel',
   don_vi_phoi_hop: 'Đơn vị phối hợp', van_ban_ra_soat: 'Rà soát văn bản (số nhiệm vụ dự kiến)',
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;

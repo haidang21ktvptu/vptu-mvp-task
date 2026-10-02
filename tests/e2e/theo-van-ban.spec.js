@@ -1,6 +1,7 @@
 // v8 đợt 4 — màn hình cây "Theo văn bản" (A0/A1): Chánh Văn phòng tạo qua RPC giao_viec (token vai, RLS thật) một văn bản mới + việc cấp 1
 // + việc giao tiếp xuống (nhiem_vu_cha) và đặt trích yếu (van_ban_dat_trich_yeu 0046) → mở menu "Theo văn bản" → thấy gốc (số hiệu, trích yếu,
-// thanh tiến độ 0/2), nhánh cấp 1 chứa nhánh cấp 2, thu gọn/mở rộng, lọc trạng thái → bấm nhánh mở #klChiTiet ở màn Nhiệm vụ. Dữ liệu tự dọn theo khoá riêng.
+// thanh tiến độ 0/2), nhánh cấp 1 chứa nhánh cấp 2, thu gọn/mở rộng, lọc trạng thái → bấm nhánh mở #klChiTiet trong ngăn chi tiết dùng chung ngay
+// trên trang (v9 đợt 2). Dữ liệu tự dọn theo khoá riêng.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, NAP } from './lib/app.js';
@@ -69,10 +70,15 @@ test.describe.serial('Theo văn bản — cây văn bản → nhiệm vụ → v
     await expect(page.locator(`#tvbVb-${vbId}`)).toBeVisible();
   });
 
-  test('bấm nhánh → mở ngăn chi tiết #klChiTiet của đúng việc ở màn Nhiệm vụ', async () => {
+  test('bấm nhánh → ngăn chi tiết của đúng việc mở NGAY TRÊN Theo văn bản (v9 đợt 2: không chuyển sang Nhiệm vụ); Đóng → về cây', async () => {
     await page.locator(`#tvbNv-${con.id} > .tvb-hang .tvb-nut`).click();
-    await expect(page.locator('#viewKl')).toBeVisible();
-    await expect(page.locator(`#klChiTiet-${con.id}`)).toBeVisible(NAP);
+    await expect(page.locator(`#nganCT #klChiTiet-${con.id}`)).toBeVisible(NAP);
     await expect(page.locator(`#klChiTiet-${con.id} h3`)).toContainText('TVB việc giao tiếp xuống');
+    await expect(page.locator('#viewTheoVanBan')).toBeVisible();
+    await expect(page.locator('#viewKl')).toBeHidden();
+    await expect(page.locator('#nganCTLui')).toBeHidden();   // mở thẳng một việc: không có tầng danh sách để quay lại
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#nganCT')).toBeHidden();
+    await expect(page.locator(`#tvbNv-${con.id}`)).toBeVisible();
   });
 });

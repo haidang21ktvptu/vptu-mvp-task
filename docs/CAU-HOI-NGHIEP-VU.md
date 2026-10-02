@@ -232,7 +232,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 | # | Câu hỏi | Quyết định | Kiểm bằng |
 |---|---|---|---|
-| H-1 (Q1) | Việc cũ chưa có hạn nộp minh chứng chuyển đổi thế nào? | **Không còn (29/9/2026)** — production đã reset, 0 nhiệm vụ. Không có phần chuyển đổi; việc nhập sau này (`nguon = excel`) để trống hạn nộp, xử lý như việc cũ. | RLS `kl-0058-trang-thai-nghiem-thu` |
+| H-1 (Q1) | Việc cũ chưa có hạn nộp minh chứng chuyển đổi thế nào? | **Không còn (29/9/2026)** — production đã reset, 0 nhiệm vụ. Không có phần chuyển đổi. Nhập Excel qua giao diện (2/10/2026): việc còn mở đi qua `giao_viec` (`nguon = app`, có hạn nộp gợi ý); chỉ việc "đã xong ngoài hệ thống" ghi `nguon = excel`, để trống hạn nộp như việc cũ. | RLS `kl-0058-trang-thai-nghiem-thu` |
 | H-2 (Q2) | Lãnh đạo xác nhận hợp lệ có đóng việc không? | **Có (a)** — nghiệm thu = đóng trong cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng. Việc có hạn nộp chỉ đóng khi có minh chứng hợp lệ, ở mọi đường (nút Đóng, Cập nhật nhanh, trigger). | RLS `kl-0028-minh-chung`; e2e `nghiem-thu` |
 | H-3 (Q3) | Trả lại khi đã qua hạn hoàn thành? | **(b)** hạn nộp lại ∈ [hôm nay, 2 ngày làm việc sau]; chưa qua hạn: ∈ [hôm nay, H]. Hạn hoàn thành giữ nguyên, vẫn tính Quá hạn. | RLS `kl-0028-minh-chung` |
 | H-4 (Q4) | Ai sửa hạn nộp khi không còn người giao? | **Quản trị KL (a)**, bắt buộc lý do, có lịch sử; không suy người giao từ người theo dõi. | RLS `kl-0054-han-nop-minh-chung` |
@@ -259,7 +259,7 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | I-6 | Đơn vị phối hợp? | Chữ tự do ≤ 300, tuỳ chọn; người giao / quản trị KL sửa. | RLS `kl-pr3-chat-luong-nguon` |
 | I-7 | Rà soát văn bản? | Số nhiệm vụ dự kiến + cờ đã rà soát toàn văn; "đã nhập" = **tổng thật** (hàm DB, chỉ trả cho văn bản người xem được); quyền sửa như trích yếu. | RLS `kl-pr3-vuong-mac-ra-soat`; e2e `pr3-hien-thi` |
 | I-8 | Xuất Excel / In? | .xlsx thật (tự ghi, không thư viện ngoài, nạp động); Nhiệm vụ: danh sách đang lọc; Báo cáo: theo phòng + theo nguồn + Đỏ; tên `vptu-nhiem-vu-<yyyymmdd>.xlsx`, `vptu-bao-cao-<yyyymmdd>.xlsx`; A3 cũng xuất được (RLS giới hạn). | unit `frontend/tests/xlsx.test.mjs`; e2e `pr3-hien-thi` |
-| I-9 | Chuyên viên tự ghi nhận việc? | **Không làm** — giữ nguyên tắc chỉ lãnh đạo giao. Hoãn: chu kỳ lặp (sau go-live), nhập Excel qua giao diện (dùng script), xuất lịch .ics. | — |
+| I-9 | Chuyên viên tự ghi nhận việc? | **Không làm** — giữ nguyên tắc chỉ lãnh đạo giao. Hoãn: chu kỳ lặp (sau go-live), xuất lịch .ics. Nhập Excel qua giao diện **đã làm** (giao diện v9 đợt 2, cho quản trị nhiệm vụ / quản trị hệ thống). | — |
 
 ## Nhóm J — Quyết định 1/10/2026: sửa vai trò / phòng / chức danh tài khoản (PR-4, migration 0068)
 

@@ -4,11 +4,11 @@ import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { dongBoNutNghiemThu } from '../chat-luong.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
-import { tongHop } from '../../../lib/kl/tong-hop.js';
+import { tongHop, locRows } from '../../../lib/kl/tong-hop.js';
 import { THU_TU_NHOM, tenNhom } from '../../../lib/kl/nhan.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { openKl } from '../kl/index.js';
+import { moNganDanhSach } from '../ngan-chi-tiet.js';
 import { dh, napDieuHanh, locThe, viecDo } from './du-lieu.js';
 import { rayHtml, tieuDeDanhSach } from './ray.js';
 import { theHtml } from './the-viec.js';
@@ -39,12 +39,12 @@ export const khungHtml = (tieuDe, phu, dau = '', cuoi = '', giua = '') => `
 let cauHinh = { kpi: () => [], veThem: () => {}, phuDe: () => '' };
 export function datCauHinhDieuHanh(c) { cauHinh = { ...cauHinh, ...c }; }
 
-// Toàn cảnh: đếm theo nhóm trạng thái, mỗi ô mở danh sách Nhiệm vụ lọc đúng nhóm.
+// Toàn cảnh: đếm theo nhóm trạng thái, mỗi ô mở danh sách việc của đúng nhóm trong ngăn chi tiết (v9 đợt 2: không chuyển mục).
 function toanCanhHtml() {
   const t = tongHop(dh.rows);
   return `<div class="toan-canh">${THU_TU_NHOM.filter((k) => t.nhom[k] > 0).map((k) =>
     `<button type="button" data-action="moKlDanhSach" data-loc='${JSON.stringify({ nhom: k })}'><b>${t.nhom[k]}</b> ${tenNhom(k).toLowerCase()}</button>`).join('')}
-    <button type="button" data-action="moKlDanhSach" data-loc="{}"><b>${t.tong}</b> tổng · xem đủ trong Nhiệm vụ</button></div>`;
+    <button type="button" data-action="moKlDanhSach" data-loc="{}"><b>${t.tong}</b> tổng · xem toàn bộ danh sách</button></div>`;
 }
 
 export function veDieuHanh() {
@@ -103,9 +103,10 @@ const locKhau = ({ khau }) => { dh.loc.khau = dh.loc.khau === khau ? null : khau
 const locDonVi = ({ dv }) => { dh.loc.dv = dh.loc.dv === dv ? null : dv; if (dh.loc.kpi === 'tat') dh.loc.kpi = null; veDieuHanh(); };
 const locKpi = ({ loc }) => { dh.loc = { khau: null, dv: null, kpi: dh.loc.kpi === loc ? null : loc }; veDieuHanh(); };
 const boLocDieuHanh = () => { dh.loc = { khau: null, dv: null, kpi: null }; veDieuHanh(); };
+// Ô toàn cảnh / số "sắp đến hạn": danh sách việc của nhóm (cùng mảng dòng của màn hình) mở trong ngăn chi tiết, ngay trên Cần xử lý.
 function moKlDanhSach({ loc }) {
   let bo; try { bo = JSON.parse(loc || '{}'); } catch { bo = {}; }
-  openKl({ ...bo, tuTongQuan: true });
+  moNganDanhSach({ tieuDe: bo.nhom ? tenNhom(bo.nhom) : 'Toàn bộ nhiệm vụ trong phạm vi', rows: locRows(dh.rows, bo) });
 }
 
 // Hành động dùng chung (đăng ký một lần lúc khởi động). openDieuHanh / loadDieuHanh do từng vai đăng ký ở init() vì mỗi vai một màn hình

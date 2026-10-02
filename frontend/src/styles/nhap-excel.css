@@ -1,0 +1,76 @@
+/* Nhập Excel toàn trình (giao diện v9 đợt 2): thẻ "Nhập từ Excel" / "Chờ hoàn thiện" trên màn Giao việc, khối "Dữ liệu gốc" trong ngăn chi tiết.
+   Màu theo token (mức 1 vàng, mức 2 lam, mức 3 lục — cùng nền tiêu đề của Mẫu nhập chuẩn); kết quả dự kiến dùng nhãn trạng thái sẵn có
+   (giao = lam, xong = lục, chờ nghiệm thu / chờ hoàn thiện = vàng, bỏ = xám). Tên lớp ghi nguyên văn trong mã (Tailwind giữ). */
+@layer components {
+  .tab-hang .so-dem { display: inline-block; min-width: 20px; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--do); color: #fff; font-size: 12px; line-height: 18px; text-align: center; }
+  .gv-hoan-thien { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .gv-hoan-thien .nut { margin-left: auto; }
+  .nx-khu { margin-top: 14px; display: flex; flex-direction: column; gap: 14px; }
+  .nx-phan { padding: 0 0 14px; }
+  .nx-phan > .tam-dau { margin-bottom: 4px; }
+  .nx-phan > *:not(.tam-dau):not(.bang-cuon) { margin-left: 16px; margin-right: 16px; }
+  .nx-phan > .bang-cuon { margin: 10px 0 0; border-top: 1px solid var(--vien); }
+  .nx-chon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 6px; }
+  .nx-chon .nx-tep { cursor: pointer; }
+  .nx-chon .nx-tep:focus-within, .nx-chon input:focus-visible + .chu-phu { outline: 2px solid var(--vien-focus); outline-offset: 2px; }
+  .nx-muc { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; font-size: 13px; color: var(--chu); }
+  .nx-muc li { padding: 8px 10px; border-radius: var(--bo-o); line-height: 1.45; }
+  .nx-muc li b { display: block; }
+  .nx-muc .nx-m1 { background: var(--vang-nhat); } .nx-muc .nx-m2 { background: var(--lam-nhat); } .nx-muc .nx-m3 { background: var(--luc-nhat); }
+  .nx-hang { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; margin-top: 10px; }
+  .nx-hang .nhan { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .nx-hang .o-nhap { min-width: 0; width: auto; }
+  .nx-hang input.o-nhap[type="number"] { width: 90px; }
+  .nx-hang #nxTenHoSo { flex: 1 1 260px; }
+  .nx-bang { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .nx-bang th, .nx-bang td { padding: 7px 12px; border-bottom: 1px solid var(--vien-nhat); text-align: left; vertical-align: top; }
+  .nx-bang thead th { position: sticky; top: 0; z-index: 1; background: var(--nen-phu); color: var(--chu-phu); font-weight: 600; white-space: nowrap; }
+  .nx-bang tbody th { font-weight: 600; color: var(--chu); }
+  .nx-bang select.o-nhap { min-width: 220px; padding: 6px 8px; }
+  .nx-bang .trong { padding: 16px 12px; color: var(--chu-phu); }
+  .nx-xem td.nx-nd { min-width: 260px; max-width: 420px; }
+  .nx-phan > .bang-cuon { max-height: 520px; overflow: auto; }
+  .nx-loi { color: var(--do-chu); font-size: 13px; margin-top: 8px; }
+  .nx-loc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+  .nx-kq { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+    border: 1px solid transparent; background: var(--nen-phu); color: var(--chu-phu); }
+  button.nx-kq { cursor: pointer; } button.nx-kq[aria-pressed="true"] { border-color: currentColor; box-shadow: 0 0 0 1px currentColor; }
+  .nx-kq.nx-giao, .nx-kq.nx-cn { background: var(--lam-nhat); color: var(--lam); }
+  .nx-kq.nx-xong { background: var(--luc-nhat); color: var(--luc); }
+  .nx-kq.nx-nt, .nx-kq.nx-cho { background: var(--vang-nhat); color: var(--vang-chu-dam); }
+  .nx-che-do { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--vien-vang); border-radius: var(--bo-o); background: var(--nen-vang-mo); font-size: 13.5px; }
+  .nx-che-do legend { font-weight: 600; padding: 0 4px; }
+  .nx-che-do label { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; line-height: 1.45; }
+  .nx-khop, .nx-hang-loat { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: var(--nen-mo); }
+  .nx-khop h3, .nx-hang-loat h3 { font-size: 13.5px; font-weight: 600; color: var(--chu); }
+  .nx-khop-dong { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 6px 0; border-top: 1px dashed var(--vien); font-size: 13px; }
+  .nx-khop-dong:first-of-type { border-top: 0; }
+  .nx-khop-dong select { max-width: 340px; }
+  .nx-the { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; margin: 8px 8px 0 0; padding: 2px 4px 2px 10px; border-radius: 999px; background: var(--lam-nhat); color: var(--lam); font-size: 12.5px; }
+  .nx-hang-loat .nx-goi-y { margin-top: 6px; font-size: 12.5px; }
+  .nx-mac-dinh { margin-top: 10px; font-size: 13px; color: var(--chu-phu); }
+  .nx-mac-dinh summary { cursor: pointer; line-height: 1.5; }
+  .nx-mac-dinh ul { margin-top: 6px; padding-left: 18px; line-height: 1.6; }
+  .nx-chan { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; padding: 12px 16px; border: 1px solid var(--vien); border-radius: var(--bo-the);
+    background: var(--the); position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -8px 20px -16px rgba(16, 24, 40, .4); }
+  .nx-chan #nxThongBao { flex: 1 1 260px; }
+  .nx-ghi { margin-top: 10px; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+  .nx-xac-nhan.mo { display: block; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--vien-do); border-radius: var(--bo-o); background: var(--nen-do-mo); font-size: 13px; }
+  .nx-xac-nhan p { margin-bottom: 8px; line-height: 1.5; }
+  .nx-lo .muc { margin-top: 10px; }
+  .nx-cho-dong form.o.mo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .nx-trong { padding: 12px 0; }
+  .nx-goc summary { cursor: pointer; font-weight: 600; }
+  .nx-goc-ds { display: grid; grid-template-columns: minmax(120px, 34%) 1fr; gap: 0; margin-top: 6px; font-size: 13px; }
+  .nx-goc-ds > div { display: contents; }
+  .nx-goc-ds dt, .nx-goc-ds dd { padding: 5px 0; border-top: 1px solid var(--vien-nhat); }
+  .nx-goc-ds dt { color: var(--chu-phu); padding-right: 10px; }
+  .nx-goc-ds dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+  @media (max-width: 900px) { .nx-muc { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) {
+    .nx-phan > *:not(.tam-dau):not(.bang-cuon) { margin-left: 12px; margin-right: 12px; }
+    .nx-chan { justify-content: stretch; bottom: 56px; } .nx-chan .nut { flex: 1 1 auto; }   /* trên thanh điều hướng đáy (như .gv-tom-tat) */
+    .nx-bang select.o-nhap { min-width: 180px; }
+  }
+  @media print { .nx-khu, #gvTabs { display: none !important; } }
+}

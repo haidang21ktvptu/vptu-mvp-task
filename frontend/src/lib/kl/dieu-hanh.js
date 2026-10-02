@@ -29,7 +29,7 @@ export async function loadChiDaoCho() {
 }
 
 // Chỉ đạo gốc (không tính phản hồi) gửi từ một ngày trong phạm vi (RLS) — khối "Chỉ đạo và phản hồi" của Tổng quan (v9); đọc theo trang.
-export const loadChiDaoTu = (tu) => taiTheoTrang(() => supabase.from('chi_dao').select('id, loai, trang_thai, nguoi_gui, created_at, han_phan_hoi, phan_hoi_luc, tra_loi_cho')
+export const loadChiDaoTu = (tu) => taiTheoTrang(() => supabase.from('chi_dao').select('id, nhiem_vu_id, loai, trang_thai, nguoi_gui, created_at, han_phan_hoi, phan_hoi_luc, tra_loi_cho')
   .neq('loai', 'PHAN_HOI').is('tra_loi_cho', null).gte('created_at', `${tu}T00:00:00+07:00`).order('created_at').order('id'), 'đọc chỉ đạo');
 
 // Luồng chỉ đạo của một nhiệm vụ: mọi dòng chi_dao (gốc + phản hồi, theo thời gian) và tập id tôi đã đọc.

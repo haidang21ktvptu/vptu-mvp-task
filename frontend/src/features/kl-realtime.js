@@ -18,6 +18,8 @@ const BANG = ['nhiem_vu', 'chi_dao', 'minh_chung', 'tu_choi', 'dinh_chinh'];   /
 
 let channel = null;
 let onChange = null;        // hàm đọc lại do màn hình đang mở cung cấp
+let nghePhu = null;         // v9 đợt 2: ngăn chi tiết dùng chung (nạp lại việc đang mở trong ngăn), chạy song song với màn hình bên dưới
+export const datNghePhu = (fn) => { nghePhu = fn; };
 let onTrangThai = null;     // hàm hiện chỉ báo kết nối
 let henGop = null;
 let henToiDa = null;
@@ -36,7 +38,9 @@ function docLai() {
   clearTimeout(henGop); clearTimeout(henToiDa);
   henGop = null; henToiDa = null;
   const ds = suKien; suKien = [];
-  if (onChange && document.visibilityState !== 'hidden') onChange(ds);
+  if (document.visibilityState === 'hidden') return;
+  if (onChange) onChange(ds);
+  if (nghePhu) nghePhu(ds);
 }
 
 function gopDocLai(p) {
@@ -103,7 +107,7 @@ export function tatKlRealtime() {
   window.removeEventListener('online', onOnline);
   window.removeEventListener('offline', onOffline);
   if (channel) supabase.removeChannel(channel);
-  channel = null; onChange = null; onTrangThai = null; cheDo = 'tat';
+  channel = null; onChange = null; onTrangThai = null; nghePhu = null; cheDo = 'tat';
 }
 
 // Chỉ báo kết nối trên màn hình: chấm xanh "Cập nhật trực tiếp" / chữ vàng "đang làm mới mỗi 60 giây".

@@ -15,6 +15,8 @@ import { sanPhamText, laBenTrong, duocCapNhat, duocDong, ownerText } from './don
 import { napChiDao, focusChiDao, duocChiDao } from './chi-dao.js';
 import { napMinhChung } from './minh-chung.js';
 import { oLuoiPr3Html, khoiPr3Html } from './thong-tin-giao.js';
+import { nutTangHtml, nutHanhDongTang, khoiDeNghiSuaHtml, napDeNghiSua } from './sua-tang.js';
+import { coNhapExcel, khoiDuLieuGocHtml, napDuLieuGoc } from './du-lieu-goc.js';   // v9 đợt 2: dữ liệu gốc của lô nhập Excel
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu' };
@@ -67,6 +69,7 @@ function hanhDongHtml(r) {
     ${duocDong(r) && mo && !r.han_nop_minh_chung ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
     ${suaHan ? nut('moO', r.han_nop_minh_chung ? 'Sửa hạn nộp minh chứng' : 'Đặt hạn nộp minh chứng', '', `data-o="oHnNgan-${r.id}"`) : ''}
     ${giaoTiep ? nut('giaoTiepXuong', 'Giao tiếp xuống', '', `id="klGiaoTiep-${r.id}"`) : ''}
+    ${nutHanhDongTang(r)}
     <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
       <small>Lý do chỉ lãnh đạo trực tiếp và cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
@@ -91,24 +94,27 @@ export function chiTietHtml(r, ls, dc) {
   const nhanTT = `<span class="trang-thai ${lopTT}">${nhanTrangThai(r, me)}</span>`; // nhãn đã kèm số ngày trễ; người nộp: nhãn trung tính (Mới 2)
   const nSao = r.han_nop_hieu_luc || r.han_nop_minh_chung;
   const hanNop = nSao ? `${formatNgay(nSao)}${r.han_nop_hieu_luc && r.han_nop_hieu_luc !== r.han_nop_minh_chung ? ' (hạn nộp lại)' : ''} <span class="chu-phu" id="klHanNopCon-${r.id}"></span>${r.ly_do_han_nop_sat ? ` — việc gấp: ${escapeHtml(r.ly_do_han_nop_sat)}` : ''}` : '';
-  const o = (nhan, gt) => `<div><dt>${nhan}</dt><dd>${gt}</dd></div>`;
+  // v9 đợt 2: ô do cấp giao điền có bút (sửa ngay) / khoá (đề nghị sửa) — sua-tang.js.
+  const o = (nhan, gt, cot = '') => { const nt = cot ? nutTangHtml(r, cot) : ''; return `<div${nt ? ' class="co-tang"' : ''}><dt>${nhan}</dt><dd>${gt}</dd>${nt}</div>`; };
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
       <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${nhanPhuHtml(r)}${nhanTT}</div>
-        <h3>${escapeHtml(r.noi_dung)}</h3>
+        <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
         <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · nhận ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
       <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
         ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
-        ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'))}
+        ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}
         ${nSao ? o('Hạn nộp MC', hanNop) : ''}
         ${o('Hạn hoàn thành', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
-        ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'))}
+        ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'), 'cap_nhan_san_pham')}
         ${oLuoiPr3Html(r, o)}</dl>
       ${hanhDongHtml(r)}
+      ${khoiDeNghiSuaHtml(r)}
       ${khoiPr3Html(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <div class="khoi-nho khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>
       <div class="khoi-nho db-khoi" id="klDienBien-${r.id}"><h4>Diễn biến <span class="chu-phu">mới nhất trên đầu</span></h4><div><p class="chu-phu">Đang tải diễn biến…</p></div></div>
+      ${coNhapExcel(ls) ? khoiDuLieuGocHtml(r) : ''}
       <details class="chi-tiet-them"><summary>Xem chi tiết <span class="chu-phu">căn cứ từng trường</span></summary>
       <table class="can-cu"><thead><tr><th>Trường</th><th>Giá trị</th><th>Căn cứ</th></tr></thead><tbody>
           ${hang('Chịu trách nhiệm', ownerText(r), canCu(r.owner_tai_khoan ? 'owner_tai_khoan' : 'owner_don_vi_ma', ls))}
@@ -156,7 +162,7 @@ async function nap(id, cheDo, giuBang) {
     o.innerHTML = chiTietHtml(r, ls, dc);
     traNhap();
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
-    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napConNgay(r)]);
+    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napConNgay(r), napDeNghiSua(r), napDuLieuGoc(r)]);
     if (cheDo === 'chi-dao') focusChiDao(id);
   })();
   dangNap = p.catch((e) => { notifyError('Không đọc được lịch sử: ' + e.message); if (dangMo === id) o.innerHTML = `<p class="loi-inline">Không đọc được lịch sử: ${escapeHtml(e.message)}. Bấm lại dòng để thử lại.</p>`; });
@@ -173,7 +179,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
   dangMo = id;
   document.querySelectorAll('#klBody .hang-nv').forEach((el) => { const on = el.dataset.id === id; el.classList.toggle('dang', on); el.setAttribute('aria-pressed', String(on)); });
   $('klChiTiet').innerHTML = '<p class="trong-nho">Đang tải căn cứ…</p>';
-  if (window.matchMedia('(max-width: 860px)').matches) $('klChiTiet').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  if (window.matchMedia('(max-width: 860px)').matches && !$('klChiTiet').closest('#nganCT')) $('klChiTiet').scrollIntoView({ block: 'start', behavior: 'smooth' });
   await nap(id, cheDo, false);
 }
 // Vẽ lại ngăn đang mở sau khi danh sách nạp lại (realtime, sau hành động) — giữ bảng chi tiết đang mở/gập.

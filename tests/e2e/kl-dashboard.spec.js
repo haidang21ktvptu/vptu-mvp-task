@@ -38,7 +38,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await expect(o).toHaveAttribute('aria-pressed', 'false');
   });
 
-  test('Báo cáo: số Tổng của phòng đầu tiên → hàng mở rộng đúng số việc ngay dưới dòng; Xem chi tiết → ngăn phải; không rời mục (GĐ21)', async () => {
+  test('Báo cáo: số Tổng của phòng đầu tiên → hàng mở rộng đúng số việc ngay dưới dòng; Xem chi tiết → ngăn chi tiết dùng chung; không rời mục', async () => {
     await nav(page, 'navBaoCao');
     await expect(page.locator('#viewBaoCao .tq .o-so').first()).toContainText('việc trong phạm vi');
     const nut = page.locator('#viewBaoCao #bcTheoPhong').locator('tbody tr.bc-hang').first().locator('td.so').first().locator('button');
@@ -47,11 +47,14 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await nut.click();
     await expect(page.locator('#viewBaoCao #bcMoRong .nv-dong')).toHaveCount(n);
     await expect(page.locator('#viewKl')).toBeHidden();
-    await page.locator('#viewBaoCao #bcMoRong [data-action=moNganViec]').first().click();
-    await expect(page.locator('#bcNgan .ngan-noi')).toBeVisible();
+    const xem = page.locator('#viewBaoCao #bcMoRong [data-action=nganMoViec]').first();
+    const id = await xem.getAttribute('data-id');
+    await xem.click();
+    await expect(page.locator(`#nganCT #klChiTiet-${id}`)).toBeVisible(NAP);   // v9 đợt 2: đủ chỉ đạo, minh chứng, diễn biến
     await expect(page.locator('#viewBaoCao')).toBeVisible();
-    await page.locator('#bcNgan [data-action=dongNganBaoCao]').click();
-    await expect(page.locator('#bcNgan')).toBeHidden();
+    await expect(page.locator('#viewKl')).toBeHidden();
+    await page.locator('#nganCTDong').click();
+    await expect(page.locator('#nganCT')).toBeHidden();
     await nut.click(); // bấm lại cùng ô → gập
     await expect(page.locator('#viewBaoCao #bcMoRong')).toHaveCount(0);
   });
@@ -70,6 +73,14 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await expect(page.locator('#viewCanBo')).toBeVisible();
     await expect(page.locator('#viewKl')).toBeHidden();
     await expect(nguoi).toHaveAttribute('aria-pressed', 'true');
+    const xem = page.locator('#cbNgan [data-action=nganMoViec]').first();   // v9 đợt 2: việc của người → ngăn chi tiết dùng chung, vẫn ở Cán bộ
+    if (await xem.count() === 0) return;
+    const id = await xem.getAttribute('data-id');
+    await xem.click();
+    await expect(page.locator(`#nganCT #klChiTiet-${id}`)).toBeVisible(NAP);
+    await expect(page.locator('#viewCanBo')).toBeVisible();
+    await page.locator('#nganCTDong').click();
+    await expect(page.locator('#cbNgan .ngan-noi')).toBeVisible();   // ngăn của người vẫn mở
   });
 
   test('Nhiệm vụ: thanh trạng thái một hàng, ô chọn Đơn vị có đếm cùng hàng ô tìm; chọn đơn vị → danh sách đúng số dòng (GĐ21)', async () => {

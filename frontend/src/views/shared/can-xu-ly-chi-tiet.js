@@ -9,6 +9,7 @@ import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
 import { dh, canToiQuyet, tuChoiChoToiDuyet } from './dieu-hanh/du-lieu.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
+import { dongDeNghiSuaCx } from './kl/sua-tang.js';
 
 const me = () => state.user?.id;
 const vai = () => state.user?.role_group;
@@ -79,11 +80,12 @@ const dongVuongMac = () => coVuongMac().map((r) => dong('vuongmac', r, `<b>Vư�
   nut('Chỉ đạo / ý kiến', 'moChiDaoViec', { id: r.id, ma: r.ma }, 'lam')));
 
 export const TIEU_DE_MUC = { vuongmac: 'Việc có vướng mắc, đề nghị lãnh đạo quyết định', tin: 'Tin chưa đọc', quyet: 'Việc cần đồng chí quyết', denghi: 'Đề nghị từ chối chờ đồng chí duyệt', tuchoi: 'Việc bị từ chối, cần giao lại',
-  moi: 'Việc mới chờ đồng chí xác nhận đã nhận', hoatoc: 'Hỏa tốc chưa bấm Đã nhận' };
+  moi: 'Việc mới chờ đồng chí xác nhận đã nhận', hoatoc: 'Hỏa tốc chưa bấm Đã nhận', dnsua: 'Đề nghị sửa thông tin giao chờ đồng chí duyệt' };
 
 // Nội dung hộp dưới dải cho một mục; rỗng → câu "không còn việc nào" (dải và danh sách có thể lệch vài giây khi realtime).
 export function chiTietHtml(muc, so) {
-  const ds = { tin: dongTin, quyet: dongCanQuyet, vuongmac: dongVuongMac, denghi: dongDeNghi, tuchoi: dongBiTuChoi, moi: dongViecMoi, hoatoc: dongHoaToc }[muc]?.(so) || [];
+  const ds = { tin: dongTin, quyet: dongCanQuyet, vuongmac: dongVuongMac, denghi: dongDeNghi, tuchoi: dongBiTuChoi, moi: dongViecMoi, hoatoc: dongHoaToc,
+    dnsua: dongDeNghiSuaCx }[muc]?.(so) || [];
   return `<div class="cx-dau"><b>${TIEU_DE_MUC[muc] || ''}</b><button type="button" class="nut nho" data-action="moCanXuLy" data-muc="${muc}" aria-label="Đóng danh sách">Đóng</button></div>
     ${ds.length ? ds.join('') : '<p class="chu-phu">Không còn việc nào ở mục này.</p>'}`;
 }

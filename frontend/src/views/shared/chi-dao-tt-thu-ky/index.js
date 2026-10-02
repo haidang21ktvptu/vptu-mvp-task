@@ -1,6 +1,6 @@
 // Màn hình "Chỉ đạo Thường trực" của THƯ KÝ Thường trực (0047, cờ accounts.thu_ky_thuong_truc; menu nhóm Theo dõi): mọi chỉ đạo Thường trực
 // đang mở trong phạm vi đọc (v_chi_dao_tt, RLS: thư ký thấy việc có ≥ 1 CHI_DAO_TT) — nhiệm vụ, người nhận, gửi lúc, độ khẩn, trạng thái phản hồi;
-// mỗi dòng #cdtk-<id>: "Mở việc" (ngăn #klChiTiet) và "Đóng thay mặt Thường trực" (xác nhận một bước tại dòng → chi_dao_dong, hàm là chốt:
+// mỗi dòng #cdtk-<id>: "Mở việc" (ngăn chi tiết dùng chung, ngay trên trang) và "Đóng thay mặt Thường trực" (xác nhận một bước tại dòng → chi_dao_dong, hàm là chốt:
 // chỉ CHI_DAO_TT, ghi vết "Đóng thay mặt Thường trực — <họ tên>"). Thư ký không gửi chỉ đạo, không có quyền ghi khác.
 import { $, escapeHtml, formatDateTime, show } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
@@ -9,6 +9,7 @@ import { loadChiDaoTT, chiDaoDong, TEN_TRANG_THAI_CHI_DAO } from '../../../lib/k
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { nhanDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { setActiveNav, showSection } from '../../shell/index.js';
+import { khiGhiTrongNgan } from '../ngan-chi-tiet.js';
 
 const LOP_TT = { CHO_PHAN_HOI: 'trang-thai tt-cho', DA_PHAN_HOI: 'trang-thai tt-xong', DA_DONG: 'trang-thai tt-xam' };
 let rows = [];
@@ -35,6 +36,9 @@ function ve() {
 async function openChiDaoTTThuKy() {
   showSection('viewChiDaoTTThuKy');
   setActiveNav('navChiDaoTTThuKy');
+  await napChiDaoTTThuKy();
+}
+async function napChiDaoTTThuKy() {
   try { rows = (await loadChiDaoTT()).filter((c) => c.trang_thai !== 'DA_DONG'); ve(); } catch (e) { notifyError(e.message); }
 }
 const hoiDongThayMatTT = ({ id }) => { show(`tkXn-${id}`, true); show(`tkDong-${id}`, false); };
@@ -45,4 +49,5 @@ async function dongThayMatTT({ id }) {
 
 export function registerChiDaoTTThuKy() {
   registerActions({ openChiDaoTTThuKy, hoiDongThayMatTT, huyDongThayMatTT, dongThayMatTT }); // moChiDaoViec: dieu-hanh/hanh-dong.js (dùng chung)
+  khiGhiTrongNgan('viewChiDaoTTThuKy', napChiDaoTTThuKy);
 }

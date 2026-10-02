@@ -125,18 +125,22 @@ export function chatLuongKy(rows, k) {
 
 // Chỉ đạo gốc (không tính phản hồi) gửi trong kỳ, của người gửi thuộc phạm vi vai: A0 = chỉ đạo Thường trực; A1 = lãnh đạo Văn phòng;
 // A2 = chính Trưởng phòng. Đúng hạn = phản hồi không muộn hơn hạn phản hồi (trên số đã phản hồi có hạn); thời gian trung bình tính theo ngày.
-export function chiDaoKy(cds, k, { vai, me, laLanhDaoVP = () => false }, now = new Date()) {
+// chiDaoPhan: các tập chỉ đạo (banHanh / daPhanHoi / dangCho / quaHan) — Tổng quan bấm số → danh sách việc của đúng tập đó.
+export function chiDaoPhan(cds, k, { vai, me, laLanhDaoVP = () => false }, now = new Date()) {
   const cuaVai = (c) => (vai === 'A0' ? c.loai === 'CHI_DAO_TT' : vai === 'A2' ? c.nguoi_gui === me : c.loai !== 'CHI_DAO_TT' && laLanhDaoVP(c.nguoi_gui));
-  const ds = cds.filter((c) => c.loai !== 'PHAN_HOI' && !c.tra_loi_cho && cuaVai(c) && trong(ngayCua(c.created_at), k));
-  const daPh = ds.filter((c) => c.phan_hoi_luc);
+  const banHanh = cds.filter((c) => c.loai !== 'PHAN_HOI' && !c.tra_loi_cho && cuaVai(c) && trong(ngayCua(c.created_at), k));
+  const dangCho = banHanh.filter((c) => !c.phan_hoi_luc && c.trang_thai === 'CHO_PHAN_HOI');
+  const homNay = homNayVN(now);
+  return { banHanh, daPhanHoi: banHanh.filter((c) => c.phan_hoi_luc), dangCho,
+    quaHan: dangCho.filter((c) => c.han_phan_hoi && soNgay(String(c.han_phan_hoi).slice(0, 10), homNay) > 0) };
+}
+export function chiDaoKy(cds, k, ctx, now = new Date()) {
+  const p = chiDaoPhan(cds, k, ctx, now); const daPh = p.daPhanHoi;
   const coHan = daPh.filter((c) => c.han_phan_hoi);
   const dung = coHan.filter((c) => ngayCua(c.phan_hoi_luc) <= String(c.han_phan_hoi).slice(0, 10)).length;
-  const cho = ds.filter((c) => !c.phan_hoi_luc && c.trang_thai === 'CHO_PHAN_HOI');
-  const homNay = homNayVN(now);
   const tb = daPh.length ? daPh.reduce((s, c) => s + Math.max(0, (Date.parse(c.phan_hoi_luc) - Date.parse(c.created_at)) / 86400000), 0) / daPh.length : null;
   return {
-    banHanh: ds.length, daPhanHoi: daPh.length, dangCho: cho.length,
-    quaHan: cho.filter((c) => c.han_phan_hoi && soNgay(String(c.han_phan_hoi).slice(0, 10), homNay) > 0).length,
+    banHanh: p.banHanh.length, daPhanHoi: daPh.length, dangCho: p.dangCho.length, quaHan: p.quaHan.length,
     tyLeDungHan: tyLe(dung, coHan.length), tbNgay: tb === null ? null : Math.round(tb * 10) / 10,
   };
 }

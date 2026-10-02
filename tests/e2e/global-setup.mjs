@@ -18,6 +18,12 @@ export async function cleanupE2EData() {
   const k = getKeys();
   const db = createClient(k.url, k.service, noSession);
   // Rác của lần chạy trước (spec tự dọn theo hội nghị 992–997; đây là lưới cuối): nhiệm vụ rồi văn bản giao việc.
+  // Nhập Excel (nhap-excel.spec, 0072): lô có tên tệp mang nhãn e2e (dòng nhập theo FK) + tin tổng hợp / hoàn tác của lô (không gắn việc — nếu sót
+  // thì realtime.spec thấy huy hiệu tin của demo_e2e_cv) + từ điển nhãn e2e. Project chưa có bảng → bỏ qua.
+  const lo = (await db.from('lo_nhap').select('id, ma').like('ten_tep', `${E2E_TAG}%`)).data || [];
+  for (const l of lo) await db.from('direct_messages').delete().like('content', `Nhập Excel · lô ${l.ma} %`);
+  if (lo.length) await db.from('lo_nhap').delete().in('id', lo.map((l) => l.id));
+  await db.from('tu_dien_nhap').delete().like('goc', `${E2E_TAG.toLowerCase()}%`);
   const r1 = await db.from('nhiem_vu').delete().like('noi_dung', `${E2E_TAG}%`);
   const r2 = await db.from('van_ban_giao_viec').delete().like('so_ket_luan', `${E2E_TAG}%`);
   const error = r1.error || r2.error;

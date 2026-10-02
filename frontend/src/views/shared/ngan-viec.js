@@ -1,11 +1,12 @@
-// Ngăn bên phải dùng chung cho Cán bộ (thuộc quyền / trong phòng / toàn Văn phòng) và Báo cáo — mở ngay trong trang, KHÔNG chuyển sang mục
-// Nhiệm vụ: một người (thanh tải + việc mở của người đó) hoặc một việc (điều then chốt). Hành động tại chỗ cho A1/A2: Giao lại (GIAO_LAI,
-// chủ trì mới + người theo dõi + lý do, 0045) và Nhắc (DON_DOC) — hàm chi_dao_gui là chốt; A0/A3 chỉ đọc. Mỗi màn hình gọi datNapLai để nạp lại sau hành động.
+// Ngăn bên phải của Cán bộ (thuộc quyền / trong phòng / toàn Văn phòng) — mở ngay trong trang, KHÔNG chuyển sang mục Nhiệm vụ: một người (thanh
+// tải + việc mở của người đó). Hành động tại chỗ cho A1/A2: Giao lại (GIAO_LAI, chủ trì mới + người theo dõi + lý do, 0045) và Nhắc (DON_DOC) — hàm
+// chi_dao_gui là chốt; A0/A3 chỉ đọc. Mỗi màn hình gọi datNapLai để nạp lại sau hành động. Dòng việc (Cán bộ, Báo cáo): "Xem chi tiết" mở ngăn
+// chi tiết dùng chung (ngan-chi-tiet.js, v9 đợt 2) — đủ chỉ đạo, minh chứng, diễn biến — thay cho ngăn "điều then chốt" cũ.
 import { $, escapeHtml, show } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
-import { nhanTrangThai, lopMep, boSoThuTu, nhanChatLuongHtml } from '../../lib/kl/nhan.js';
+import { lopMep, boSoThuTu } from '../../lib/kl/nhan.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 
@@ -35,10 +36,10 @@ function hanhDongViecHtml(r, tienTo) {
       <button type="submit" class="nut chinh">Gửi nhắc</button><button type="button" class="nut" data-action="dongO" data-o="${tienTo}Nhac-${r.id}">Huỷ</button></form>`;
 }
 
-// Một dòng việc trong ngăn / trong hàng mở rộng của Báo cáo (nút Xem chi tiết mở ngăn việc).
+// Một dòng việc trong ngăn của người / trong hàng mở rộng của Báo cáo (nút Xem chi tiết mở ngăn chi tiết dùng chung).
 export function dongViecHtml(r, homNay, nutXem = true) {
   return `<div class="nv-dong ${lopMep(r, state.user?.id)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<small>${escapeHtml(ownerText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
-      ${nutXem ? `<button type="button" class="nut nho" data-action="moNganViec" data-id="${r.id}">Xem chi tiết</button>` : ''}</div>`;
+      ${nutXem ? `<button type="button" class="nut nho" data-action="nganMoViec" data-id="${r.id}">Xem chi tiết</button>` : ''}</div>`;
 }
 
 // Ngăn của một người: thanh tải Đỏ/Vàng/đang làm trên việc mở người đó là Owner tài khoản; việc theo dõi liệt kê riêng.
@@ -54,24 +55,8 @@ export function nganNguoiHtml(a, rows, dongAction = 'dongNganCanBo') {
       <div class="tai"><span class="t-do" style="width:${pct(dem.do)}%"></span><span class="t-vang" style="width:${pct(dem.vang)}%"></span><span class="t-lam" style="width:${pct(lam)}%"></span></div>
       <p class="chu-phu">${owner.length} việc mở là Owner: <b>${dem.do}</b> Đỏ, ${dem.vang} Vàng, ${lam} đang làm${theoDoi.length ? ` · ${theoDoi.length} việc theo dõi` : ''}</p>
       <h4>Việc đang mở (${owner.length})</h4>
-      ${owner.length ? owner.map((r) => `${dongViecHtml(r, homNay, false)}${hanhDongViecHtml(r, 'oNg')}`).join('') : '<p class="trong-nho">Không có việc mở nào cán bộ này là Owner.</p>'}
-      ${theoDoi.length ? `<h4>Việc theo dõi (${theoDoi.length})</h4>${theoDoi.map((r) => dongViecHtml(r, homNay, false)).join('')}` : ''}
-    </div>`;
-}
-
-// Ngăn của một việc (Báo cáo → Xem chi tiết): điều then chốt + Giao lại / Nhắc; không rời mục.
-export function nganViecHtml(r, dongAction = 'dongNganBaoCao') {
-  const dd = (t, v) => `<dt>${t}</dt><dd>${v}</dd>`;
-  return `<div class="ngan-noi" id="nganViec-${r.id}" data-nhom="${r.nhom_dem}">
-      <div class="ngan-dau"><div><b>${escapeHtml(r.ma)}</b><small>${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}${escapeHtml(nhanTrangThai(r, state.user?.id))} ${nhanPhu(r)}</small></div>
-        <button type="button" class="nut nho" data-action="${dongAction}">Đóng</button></div>
-      <h3>${escapeHtml(r.noi_dung)}</h3>
-      <dl>${dd('Chủ trì', escapeHtml(ownerText(r)))}${dd('Theo dõi', escapeHtml(r.nguoi_theo_doi_ten || '(trống)'))}
-        ${dd('Sản phẩm', escapeHtml(r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : 'chưa định nghĩa'))}
-        ${dd('Hạn', `<b>${hanNgan(r)}</b>`)}${dd('Cấp quyết', escapeHtml(r.cap_quyet_dinh_ten || 'chưa xác định'))}
-        ${dd('Minh chứng', `${r.so_minh_chung_hop_le || 0} hợp lệ`)}${dd('Nguồn', escapeHtml(r.nguon_nhiem_vu_ten || 'chưa xác định'))}
-        ${r.chat_luong ? dd('Chất lượng', nhanChatLuongHtml(r.chat_luong)) : ''}${r.vuong_mac ? dd('Vướng mắc', `<span data-truong="vuong-mac">${escapeHtml(r.vuong_mac)}</span>`) : ''}</dl>
-      ${hanhDongViecHtml(r, 'oNv')}
+      ${owner.length ? owner.map((r) => `${dongViecHtml(r, homNay)}${hanhDongViecHtml(r, 'oNg')}`).join('') : '<p class="trong-nho">Không có việc mở nào cán bộ này là Owner.</p>'}
+      ${theoDoi.length ? `<h4>Việc theo dõi (${theoDoi.length})</h4>${theoDoi.map((r) => dongViecHtml(r, homNay)).join('')}` : ''}
     </div>`;
 }
 

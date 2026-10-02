@@ -5,7 +5,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { contextAs, pageAs, moGiaoViec, NAP, dienHanNop } from './lib/app.js';
+import { contextAs, pageAs, moGiaoViec, moViec, NAP, dienHanNop } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -54,10 +54,12 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
-    const { data } = await db.from('nhiem_vu').select('id, uu_tien, do_khan, owner_tai_khoan, nguoi_theo_doi, tao_boi, theo_1400').eq('noi_dung', noiDung).single();
+    const { data } = await db.from('nhiem_vu').select('id, ma, uu_tien, do_khan, owner_tai_khoan, nguoi_theo_doi, tao_boi, theo_1400').eq('noi_dung', noiDung).single();
     expect(data).toMatchObject({ uu_tien: 'THUONG_TRUC', do_khan: 'KHAN', owner_tai_khoan: CVP_ID, nguoi_theo_doi: CVP_ID, tao_boi: A0_ID, theo_1400: true });
     id = data.id;
-    await expect(page.locator(`#klRow-${id}`)).toContainText('Thường trực giao', NAP); // sang Nhiệm vụ: dòng có nhãn
+    await expect(page.locator(`#nganCT #klChiTiet-${id}`)).toBeVisible(NAP); // v9 đợt 2: ở lại Giao việc, việc vừa giao mở trong ngăn chi tiết
+    await page.locator('#nganCTDong').click();
+    await expect(await moViec(page, id, data.ma)).toContainText('Thường trực giao'); // ở Nhiệm vụ: dòng có nhãn
     await context.close();
   });
 

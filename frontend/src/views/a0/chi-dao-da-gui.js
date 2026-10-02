@@ -1,5 +1,6 @@
 // A0 "Chỉ đạo đã gửi": mọi chỉ đạo Thường trực mình đã gửi (v_chi_dao_tt), chờ phản hồi xếp trước; lọc theo trạng thái; mỗi dòng ghi
-// nội dung, gửi lúc, hạn phản hồi, người nhận, phản hồi (ai, lúc nào); "Mở việc" sang ngăn chi tiết; A0 đóng luồng của mình tại đây.
+// nội dung, gửi lúc, hạn phản hồi, người nhận, phản hồi (ai, lúc nào); "Mở việc" → ngăn chi tiết dùng chung ngay trên trang (v9 đợt 2);
+// A0 đóng luồng của mình tại đây.
 import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -7,6 +8,7 @@ import { notifySuccess, notifyError } from '../../components/toast.js';
 import { loadChiDaoTT, chiDaoDong, TEN_TRANG_THAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { setActiveNav, showSection } from '../shell/index.js';
+import { khiGhiTrongNgan } from '../shared/ngan-chi-tiet.js';
 
 const LOP_TT = { CHO_PHAN_HOI: 'trang-thai tt-cho', DA_PHAN_HOI: 'trang-thai tt-xong', DA_DONG: 'trang-thai tt-xam' };
 let rows = []; let loc = '';
@@ -36,6 +38,9 @@ function ve() {
 async function openChiDaoDaGui() {
   showSection('viewChiDaoDaGui');
   setActiveNav('navChiDaoDaGui');
+  await napChiDaoDaGui();
+}
+async function napChiDaoDaGui() {
   try { rows = (await loadChiDaoTT()).filter((c) => c.nguoi_gui === state.user?.id); ve(); } catch (e) { notifyError(e.message); }
 }
 const locChiDaoDaGui = ({ tt }) => { loc = tt; ve(); };
@@ -45,4 +50,5 @@ async function dongChiDaoDaGui({ id }) {
 
 export function registerChiDaoDaGui() {
   registerActions({ openChiDaoDaGui, locChiDaoDaGui, dongChiDaoDaGui });
+  khiGhiTrongNgan('viewChiDaoDaGui', napChiDaoDaGui);
 }

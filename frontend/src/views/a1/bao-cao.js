@@ -2,7 +2,8 @@
 // bảng "Việc cần lãnh đạo quyết định" (PR-3: việc mở có vướng mắc hoặc cấp cần quyết định), nút In/PDF (window.print — in.css giữ dải và bảng, bỏ
 // nút) và Xuất Excel (PR-3 G: theo phòng + theo nguồn + danh sách Đỏ, nạp động lib/kl/xuat.js). Số liệu đếm client trên dòng RLS trả về (DB-5).
 // Cột PR-3: Trước hạn (tách từ Đúng hạn chỉ ở hiển thị — ket_qua DB không đổi) và đếm theo chất lượng hoàn thành. Bấm một số / một dòng → danh
-// sách việc mở rộng ngay dưới dòng; "Xem chi tiết" → ngăn bên phải (Giao lại / Nhắc tại chỗ). KHÔNG chuyển sang mục Nhiệm vụ.
+// sách việc mở rộng ngay dưới dòng; "Xem chi tiết" → ngăn chi tiết dùng chung (v9 đợt 2: đủ chỉ đạo, Giao lại, Nhắc, minh chứng, diễn biến)
+// mở ngay trên trang. KHÔNG chuyển sang mục Nhiệm vụ. Ghi xong trong ngăn → bảng tự nạp lại (giữ hàng đang mở rộng).
 import { $, escapeHtml } from '../../lib/dom.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError, notifySuccess } from '../../components/toast.js';
@@ -13,9 +14,10 @@ import { formatNgay, homNayVN } from '../../lib/kl/ngay.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
-import { dongViecHtml, nganViecHtml, moNgan, dongNgan } from '../shared/ngan-viec.js';
+import { dongViecHtml } from '../shared/ngan-viec.js';
+import { datNguonDong, khiGhiTrongNgan } from '../shared/ngan-chi-tiet.js';
 
-let rowsHienTai = []; let hangMo = null; let hangMoLoc = '{}'; let viecMo = null; // hàng đang mở rộng (khoá + bộ lọc của ô đã bấm), việc đang mở ngăn
+let rowsHienTai = []; let hangMo = null; let hangMoLoc = '{}'; // hàng đang mở rộng (khoá + bộ lọc của ô đã bấm)
 
 const locAttr = (loc) => `data-loc='${escapeHtml(JSON.stringify(loc))}'`;
 const nut = (n, loc, lop = '') => (n > 0 ? `<button type="button" class="nut nho ${lop}" data-action="bcMoRong" ${locAttr(loc)}>${n}</button>` : '<span class="chu-phu">·</span>');
@@ -69,7 +71,7 @@ function bangCanQuyet(rows) {
   return `<table><thead><tr><th>Mã</th><th>Nội dung</th><th>Chủ trì</th><th>Cấp cần quyết</th><th>Vướng mắc / đề nghị</th><th>Hạn</th><th></th></tr></thead><tbody>${ds.map((r) => `<tr data-id="${r.id}">
     <td><b>${escapeHtml(r.ma)}</b></td><td>${escapeHtml(r.noi_dung)}</td><td>${escapeHtml(r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '')}</td>
     <td>${escapeHtml(r.cap_quyet_dinh_ten || '—')}</td><td data-truong="vuong-mac">${escapeHtml(r.vuong_mac || '—')}</td><td>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</td>
-    <td><button type="button" class="nut nho" data-action="moNganViec" data-id="${r.id}">Xem</button></td></tr>`).join('')}</tbody></table>`;
+    <td><button type="button" class="nut nho" data-action="nganMoViec" data-id="${r.id}">Xem</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 // Hai tỉ lệ đúng hạn (Q9) kèm mẫu số: việc đã đóng CÓ đánh giá (DB: nop_dung_han / nghiem_thu_dung_han) trên tổng việc đã đóng.
@@ -91,13 +93,11 @@ function ve() {
       ${o(t.nhom.DANG_THUC_HIEN, 'đang thực hiện', 's-lam')}${o(t.nhom.HOAN_THANH, `hoàn thành · ${t.tyLeHoanThanh}%`, 's-luc')}
       ${o(t.nhom.CHAM_NOP_MINH_CHUNG, 'chậm nộp minh chứng', 's-cam')}${o(t.nhom.CHO_NGHIEM_THU, 'chờ nghiệm thu', 's-lam')}${o(t.nhom.QUA_HAN_NGHIEM_THU, 'quá hạn ở bước nghiệm thu', 's-do')}
       ${tyLe(rowsHienTai, 'nop_dung_han', 'nộp minh chứng đúng hạn')}${tyLe(rowsHienTai, 'nghiem_thu_dung_han', 'nghiệm thu đúng hạn')}</div>
-    <div class="hai-ngan${viecMo ? ' mo' : ''}"><div>
+    <div>
       ${khoi('bcCanQuyet', 'Việc cần lãnh đạo quyết định', 'việc đang mở có vướng mắc hoặc đã xác định cấp cần quyết định', bangCanQuyet(rowsHienTai))}
       ${khoi('bcTheoPhong', 'Theo phòng, đơn vị chịu trách nhiệm', 'bấm một số hoặc một dòng để xem việc ngay dưới', bangNhom('Đơn vị / văn bản', nhomOwner(rowsHienTai), (d) => ({ donVi: d.ma })))}
       ${khoi('bcTheoNguon', 'Theo nguồn nhiệm vụ', '', bangNhom('Nguồn nhiệm vụ', nhomNguon(rowsHienTai), (d) => ({ nguon: d.ma })))}
-      ${khoi('bcTheoVanBan', 'Theo kết luận, văn bản giao việc', '', bangTheoVanBan(rowsHienTai))}</div>
-      <aside class="ngan-ben${viecMo ? '' : ' hidden'}" id="bcNgan" aria-label="Chi tiết việc đang chọn"></aside></div>`;
-  if (viecMo) moNganViec({ id: viecMo });
+      ${khoi('bcTheoVanBan', 'Theo kết luận, văn bản giao việc', '', bangTheoVanBan(rowsHienTai))}</div>`;
 }
 
 async function napBaoCao() {
@@ -107,7 +107,7 @@ async function napBaoCao() {
 async function openBaoCao() {
   showSection('viewBaoCao');
   setActiveNav('navBaoCao');
-  hangMo = null; viecMo = null;
+  hangMo = null;
   datNapLai(napBaoCao);
   await napBaoCao();
 }
@@ -119,12 +119,6 @@ function bcMoRong({ loc }) {
   ve();
   $('bcMoRong')?.scrollIntoView({ block: 'nearest' });
 }
-function moNganViec({ id }) {
-  const r = rowsHienTai.find((x) => x.id === id); if (!r) return;
-  viecMo = id;
-  moNgan('bcNgan', nganViecHtml(r));
-}
-function dongNganBaoCao() { viecMo = null; dongNgan('bcNgan'); }
 // Xuất Excel: bảng theo phòng + theo nguồn (cùng cột số với màn) + danh sách Đỏ (cột tường minh của màn Nhiệm vụ).
 async function bcXuatExcel() {
   try {
@@ -136,5 +130,7 @@ async function bcXuatExcel() {
 }
 
 export function registerBaoCao() {
-  registerActions({ openBaoCao, inBaoCao: () => window.print(), bcMoRong, moNganViec, dongNganBaoCao, bcXuatExcel });
+  registerActions({ openBaoCao, inBaoCao: () => window.print(), bcMoRong, bcXuatExcel });
+  datNguonDong((id) => rowsHienTai.find((r) => r.id === id));
+  khiGhiTrongNgan('viewBaoCao', napBaoCao);
 }

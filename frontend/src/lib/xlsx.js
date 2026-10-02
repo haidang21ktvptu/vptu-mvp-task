@@ -63,27 +63,34 @@ function oXml(v, ref, kieu) {
   if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"><v>${v}</v></c>`;
   return `<c r="${ref}" t="inlineStr" s="3"><is><t xml:space="preserve">${xmlChu(v)}</t></is></c>`;
 }
-function sheetXml({ cot, dong }) {
+// kiemTra (v9 đợt 2, mẫu nhập): [{ cot: chỉ số cột, nguon: "'Danh mục'!$A$2:$A$9", den: dòng cuối }] → danh sách chọn (cảnh báo, không chặn gõ khác).
+const kiemTraXml = (ds) => (ds?.length ? `<dataValidations count="${ds.length}">${ds.map((k) => `<dataValidation type="list" errorStyle="warning" allowBlank="1" showErrorMessage="1"`
+  + ` error="Giá trị ngoài danh mục — hệ thống sẽ thử khớp khi nhập." sqref="${chuCot(k.cot)}2:${chuCot(k.cot)}${k.den || 1001}"><formula1>${xmlChu(k.nguon)}</formula1></dataValidation>`).join('')}</dataValidations>` : '');
+function sheetXml({ cot, dong, kiemTra }) {
   const cuoi = chuCot(Math.max(cot.length - 1, 0));
-  const dau = `<row r="1">${cot.map((c, i) => `<c r="${chuCot(i)}1" t="inlineStr" s="1"><is><t xml:space="preserve">${xmlChu(c.nhan)}</t></is></c>`).join('')}</row>`;
+  const dau = `<row r="1">${cot.map((c, i) => `<c r="${chuCot(i)}1" t="inlineStr" s="${c.sTieuDe || 1}"><is><t xml:space="preserve">${xmlChu(c.nhan)}</t></is></c>`).join('')}</row>`;
   const than = dong.map((d, j) => `<row r="${j + 2}">${cot.map((c, i) => oXml(d[i], `${chuCot(i)}${j + 2}`, c.kieu)).join('')}</row>`).join('');
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
     + '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
-    + `<cols>${cot.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.rong || 14}" customWidth="1"/>`).join('')}</cols>`
-    + `<sheetData>${dau}${than}</sheetData>${dong.length ? `<autoFilter ref="A1:${cuoi}${dong.length + 1}"/>` : ''}</worksheet>`;
+    + `<cols>${cot.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.rong || 14}" customWidth="1"${c.kieu === 'ngay' ? ' style="2"' : ''}/>`).join('')}</cols>`
+    + `<sheetData>${dau}${than}</sheetData>${dong.length ? `<autoFilter ref="A1:${cuoi}${dong.length + 1}"/>` : ''}${kiemTraXml(kiemTra)}</worksheet>`;
 }
 const STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
   + '<numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts>'
   + '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
-  + '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+  + '<fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'
+  + ['FFF6D6', 'E7F0FB', 'E4F3EA', 'EEF0F3'].map((m) => `<fill><patternFill patternType="solid"><fgColor rgb="FF${m}"/><bgColor indexed="64"/></patternFill></fill>`).join('') + '</fills>'
   + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
   + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-  + '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
+  + '<cellXfs count="8"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
   + '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
-  + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>'
+  + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+  // 4–7: tiêu đề đậm có nền theo mức của mẫu nhập (mức 1 vàng, mức 2 lam, mức 3 lục, định danh xám)
+  + [2, 3, 4, 5].map((f) => `<xf numFmtId="0" fontId="1" fillId="${f}" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>`).join('')
+  + '</cellXfs>'
   + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
-// sheets: [{ ten, cot: [{ nhan, rong?, kieu?: 'ngay' }], dong: [[giá trị theo cột]] }] → Uint8Array (.xlsx).
+// sheets: [{ ten, an?, kiemTra?, cot: [{ nhan, rong?, kieu?: 'ngay', sTieuDe? }], dong: [[giá trị theo cột]] }] → Uint8Array (.xlsx).
 export function taoXlsx(sheets) {
   const daCo = new Set(); const ds = sheets.map((s) => ({ ...s, ten: tenSheet(s.ten, daCo) }));
   const ns = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -95,7 +102,7 @@ export function taoXlsx(sheets) {
       + ds.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>'],
     ['_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${ns}/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
     ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${ns}"><sheets>`
-      + ds.map((s, i) => `<sheet name="${xmlChu(s.ten)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>'],
+      + ds.map((s, i) => `<sheet name="${xmlChu(s.ten)}" sheetId="${i + 1}"${s.an ? ' state="hidden"' : ''} r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>'],
     ['xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
       + ds.map((_, i) => `<Relationship Id="rId${i + 1}" Type="${ns}/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')
       + `<Relationship Id="rId${ds.length + 1}" Type="${ns}/styles" Target="styles.xml"/></Relationships>`],
