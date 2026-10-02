@@ -31,8 +31,8 @@ const khongCuonNgang = async (page) => {
 };
 
 const VAI = [
-  { role: 'A1', tieuDe: 'Điều hành hôm nay', duoi: ['Điều hành', 'Giao việc', 'Nhiệm vụ', 'Khác'] },
-  { role: 'A2', tieuDe: 'hôm nay', duoi: ['Phòng tôi', 'Giao việc', 'Nhiệm vụ', 'Khác'] },
+  { role: 'A1', tieuDe: 'Cần xử lý hôm nay', duoi: ['Tổng quan', 'Cần xử lý', 'Nhiệm vụ', 'Khác'] }, // v9: Tổng quan mở đầu, "Điều hành" → "Cần xử lý"
+  { role: 'A2', tieuDe: 'Cần xử lý hôm nay', duoi: ['Tổng quan', 'Cần xử lý', 'Nhiệm vụ', 'Khác'] },
   { role: 'A3', tieuDe: 'Việc của tôi', duoi: ['Việc của tôi', 'Theo dõi', 'Nhắn tin'] },
 ];
 
@@ -78,12 +78,13 @@ for (const v of VAI) {
   });
 }
 
-test('A0: thanh dưới Điều hành · Giao việc · Chỉ đạo; số-lọc xếp 2 cột; thanh trái thành hàng cuộn ngang', async ({ browser }, testInfo) => {
+test('A0: thanh dưới Tổng quan · Cần xử lý · Chỉ đạo; số-lọc xếp 2 cột; thanh trái thành hàng cuộn ngang', async ({ browser }, testInfo) => {
   test.skip(!existsSync(storageStatePath('A0')), 'Chưa có demo_a0 trên project này.');
   const page = await (await contextAs(browser, 'A0', testInfo)).newPage();
   await page.goto('./');
   await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
-  await expect(page.locator('#thanhDuoi button')).toHaveText([/^Điều hành/, 'Giao việc', 'Chỉ đạo', 'Khác']); // GĐ22: A0 giao việc; Tra cứu, Cán bộ, Nhắn tin vào "Khác"; pill đầu có thể kèm huy hiệu số
+  await expect(page.locator('#thanhDuoi button')).toHaveText(['Tổng quan', /^Cần xử lý/, 'Chỉ đạo', 'Khác']); // v9: Giao việc, Tra cứu, Cán bộ, Nhắn tin vào "Khác"; Cần xử lý có thể kèm huy hiệu số
+  await nav(page, 'navDieuHanh');
   await expect(page.locator('#dhKpi button')).toHaveCount(5);
   await expect.poll(() => page.locator('#dhKpi').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(2);
   await expect.poll(() => page.locator('#dhRay').evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('flex');

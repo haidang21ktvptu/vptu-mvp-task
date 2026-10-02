@@ -33,7 +33,7 @@
 
   /* Nghẽn ở đâu: thanh ngang lớn (A1) */
   .nghen { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 18px; }
-  .nghen section { background: #fff; border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 20px 24px; }
+  .nghen section { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 20px 24px; }
   .nghen h3 { font-size: 15px; color: var(--chu-phu); font-weight: 600; }
   .thanh { margin-top: 14px; }
   .thanh > div { display: grid; grid-template-columns: 150px 1fr 36px; gap: 12px; align-items: center; margin-top: 10px; font-size: 14px; }
@@ -43,7 +43,7 @@
   .thanh .nhan-thanh { line-height: 1.2; } .thanh .nhan-thanh small { display: block; color: var(--chu-phu); font-size: 12px; }
 
   /* Ai đang chậm: dòng 4 cột (A1 việc Đỏ) */
-  .cham { margin-top: 18px; background: #fff; border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 6px 24px; }
+  .cham { margin-top: 18px; background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 6px 24px; }
   .cham > div { display: grid; grid-template-columns: 1.4fr 1fr 60px auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--vien); }
   .cham > div:first-child { border-top: 0; }
   .cham b { font-weight: 700; } .cham small { display: block; color: var(--chu-phu); font-size: 13px; }
@@ -56,7 +56,7 @@
   .chu-giai i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
   .mau-QUA_HAN { background: var(--do); } .mau-DANG_DINH_CHINH { background: var(--cam); } .mau-SAP_DEN_HAN { background: var(--vang); }
   .mau-CAN_DIEN_HAN { background: var(--vang-chu); } .mau-DANG_THUC_HIEN { background: var(--lam); } .mau-CHO_DIEU_KIEN { background: var(--chu-phu); }
-  .mau-THUONG_XUYEN { background: #9AA5B4; } .mau-HOAN_THANH { background: var(--luc); }
+  .mau-THUONG_XUYEN { background: var(--f-tre); } .mau-HOAN_THANH { background: var(--luc); }
   .ket-noi { font-size: 12px; color: var(--chu-phu); white-space: nowrap; }
   .ket-noi-truc-tiep::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--luc); margin-right: 5px; vertical-align: 1px; }
   .ket-noi-du-phong { color: var(--vang-chu); } .ket-noi-dang-noi { color: var(--chu-phu); }

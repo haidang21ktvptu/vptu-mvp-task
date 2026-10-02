@@ -2,7 +2,7 @@
 // MỌI thao tác ghi đi qua hàm SECURITY DEFINER của 0026/0032 (chi_dao_gui / chi_dao_phan_hoi / chi_dao_dong / dat_cap_quyet_dinh /
 // đánh dấu đã đọc) — frontend không INSERT/UPDATE thẳng bảng chi_dao hay direct_messages loại hệ thống; quyền thật nằm trong hàm.
 import { supabase } from '../supabase.js';
-import { COT_CHI_DAO, COT_CHI_DAO_TT, COT_DIEN_BIEN } from './cot.js';
+import { COT_CHI_DAO, COT_CHI_DAO_TT, COT_DIEN_BIEN, taiTheoTrang } from './cot.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
@@ -27,6 +27,10 @@ export async function loadChiDaoCho() {
   return loi(await supabase.from('chi_dao').select('id, nhiem_vu_id, loai, noi_dung, nguoi_gui, nguoi_nhan, han_phan_hoi, created_at, tra_loi_cho')
     .eq('trang_thai', 'CHO_PHAN_HOI').neq('loai', 'PHAN_HOI').order('created_at'), 'đọc chỉ đạo chờ phản hồi') || [];
 }
+
+// Chỉ đạo gốc (không tính phản hồi) gửi từ một ngày trong phạm vi (RLS) — khối "Chỉ đạo và phản hồi" của Tổng quan (v9); đọc theo trang.
+export const loadChiDaoTu = (tu) => taiTheoTrang(() => supabase.from('chi_dao').select('id, loai, trang_thai, nguoi_gui, created_at, han_phan_hoi, phan_hoi_luc, tra_loi_cho')
+  .neq('loai', 'PHAN_HOI').is('tra_loi_cho', null).gte('created_at', `${tu}T00:00:00+07:00`).order('created_at').order('id'), 'đọc chỉ đạo');
 
 // Luồng chỉ đạo của một nhiệm vụ: mọi dòng chi_dao (gốc + phản hồi, theo thời gian) và tập id tôi đã đọc.
 export async function loadChiDao(nhiemVuId) {

@@ -10,9 +10,9 @@
   .dk-hoa-toc { background: var(--do-dam); color: #fff; }
   .nhan-tt { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--lam); color: #fff; font-size: 12px; font-weight: 600; vertical-align: 2px; }
   .dk-chon { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-  .dk-chon button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--vien); background: #fff; font-size: 14px; font-weight: 600; color: var(--chu-phu); }
+  .dk-chon button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--vien); background: var(--the); font-size: 14px; font-weight: 600; color: var(--chu-phu); }
   .dk-chon button svg { width: 14px; height: 14px; }
-  .dk-chon button[aria-pressed="true"].dk-thuong { background: var(--chu); border-color: var(--chu); color: #fff; }
+  .dk-chon button[aria-pressed="true"].dk-thuong { background: var(--navy-dac); border-color: var(--navy-dac); color: #fff; }
   .dk-chon button[aria-pressed="true"].dk-khan { background: var(--cam); border-color: var(--cam); color: #fff; }
   .dk-chon button[aria-pressed="true"].dk-thuong-khan { background: var(--do); border-color: var(--do); color: #fff; }
   .dk-chon button[aria-pressed="true"].dk-hoa-toc { background: var(--do-dam); border-color: var(--do-dam); color: #fff; }
@@ -24,12 +24,12 @@
   .thanh-hoa-toc > b { display: block; margin-bottom: 4px; }
   .hoa-toc-dong { display: flex; align-items: center; gap: 10px; padding: 4px 0; border-top: 1px solid rgba(255, 255, 255, .25); }
   .hoa-toc-dong span { flex: 1; min-width: 0; }
-  .hoa-toc-dong .nut { background: #fff; color: var(--do-dam); border-color: #fff; white-space: nowrap; }
+  .hoa-toc-dong .nut { background: #fff; color: #8E1520; border-color: #fff; white-space: nowrap; }
 
   /* ---- Dải "Cần xử lý ngay" ---- */
-  .can-xu-ly { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; padding: 12px 16px; background: var(--nen-vang-mo); border: 1px solid #F1D98A; border-radius: 12px; font-size: 13px; }
-  .can-xu-ly > span { font-weight: 700; color: var(--do-dam); font-size: 14px; margin-right: 4px; }
-  .can-xu-ly button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; background: #fff; border: 1px solid var(--vien); font-size: 13px; font-weight: 600; }
+  .can-xu-ly { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 16px; padding: 12px 16px; background: var(--nen-vang-mo); border: 1px solid var(--vien-vang); border-radius: 12px; font-size: 13px; }
+  .can-xu-ly > span { font-weight: 700; color: var(--do-chu); font-size: 14px; margin-right: 4px; }
+  .can-xu-ly button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 16px; background: var(--the); border: 1px solid var(--vien); font-size: 13px; font-weight: 600; }
   .can-xu-ly button b { font-size: 13px; font-weight: 800; color: var(--do); } .can-xu-ly button.do { border-color: var(--do); }
 
   /* ---- Diễn biến ---- */
@@ -52,7 +52,7 @@
   .gv-phan:first-child { border-top: 0; }
   .gv-phan h2 { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--navy); margin-bottom: 2px; }
   .gv-so { font-style: normal; width: 26px; height: 26px; border-radius: 13px; border: 2px solid var(--vien); color: var(--chu-phu); font-family: var(--font-sans); font-size: 13px; font-weight: 800; display: grid; place-items: center; flex: none; }
-  .gv-so.xong { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .gv-so.xong { background: var(--navy-dac); border-color: var(--navy-dac); color: #fff; }
   .gv-truong { margin-top: 14px; } .cot-2 .gv-truong, .cot-3 .gv-truong { margin-top: 14px; }
   .gv-cha { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid var(--navy); background: var(--navy-nhat); font-size: 13px; } /* v8 đợt 4: giao tiếp xuống */
   /* v8 đợt 4: nhãn một dòng (cắt "…" ở màn rộng, xuống dòng ở màn hẹp), ô nhập cùng hàng thẳng mép; chú thích 12px xám dưới ô; * đỏ khi bắt buộc */
@@ -62,14 +62,14 @@
   .gv-chu-thich { display: block; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--chu-phu); min-height: 16px; }
   .gv-bb { color: var(--do); font-weight: 700; margin-left: 3px; }
   .gv-vb { gap: 0 12px; } .gv-vb .o-nhap { margin: 0; }
-  .gv-the .o-nhap { border: 1px solid #C9C4B9; box-shadow: none; border-radius: 8px; }
+  .gv-the .o-nhap { border: 1px solid var(--vien-o); box-shadow: none; border-radius: 8px; }
   .gv-the .o-nhap:focus { outline: 0; border-color: var(--navy); background: var(--navy-nhat); }
   .gv-the .cot-2, .gv-the .cot-3 { gap: 0 12px; }
   .gv-dk { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .gv-dk .nhan { margin: 0 6px 0 0; }
   .gv-dk .dk-chon { margin: 0; } .gv-dk .dk-chon button { height: 32px; padding: 0 12px; border-radius: 16px; font-size: 13px; }
-  .gv-tom-tat { position: sticky; bottom: 0; margin: 8px -24px 0; padding: 14px 24px; background: rgba(255, 255, 255, .97); border-top: 1px solid var(--vien-nhat); border-radius: 0 0 var(--bo-the) var(--bo-the); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .gv-tom-tat { position: sticky; bottom: 0; margin: 8px -24px 0; padding: 14px 24px; background: var(--the); border-top: 1px solid var(--vien-nhat); border-radius: 0 0 var(--bo-the) var(--bo-the); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
   .gv-tom-tat p { flex: 1 1 320px; font-size: 12px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .gv-thieu { color: var(--do-dam); font-weight: 600; } .gv-thieu:empty { display: none; }
+  .gv-thieu { color: var(--do-chu); font-weight: 600; } .gv-thieu:empty { display: none; }
   .gv-tom-tat > div { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
   .gv-tom-tat .nut.chinh:disabled { opacity: .5; cursor: not-allowed; }
   .gv-xem-truoc { margin: 0 16px 16px; padding: 12px; border: 1px solid var(--vien); border-radius: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }

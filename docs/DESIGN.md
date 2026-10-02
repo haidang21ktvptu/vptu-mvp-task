@@ -2,7 +2,7 @@
 
 Mục tiêu: giao diện **trang trọng như một văn bản của Đảng**, **mang dấu ấn Cao Bằng**, và **dùng được cả ngày** cho 49 cán bộ trên máy tính văn phòng lẫn điện thoại. Không phải giao diện "startup". Không màu mè. Một điểm nhấn duy nhất, còn lại kỷ luật.
 
-**Đặc tả UI/UX hiện hành: `docs/ui-ux/mockup-v8/`** (`DESIGN-V8.md` + 7 màn hình HTML tĩnh, chốt 21/9/2026) — khi khác với file này, `DESIGN-V8.md` thắng (ví dụ chữ tiêu đề Lora, menu dọc trái). Bản cũ `docs/ui-ux/mockup-v7.html` và `mockup/index.html` giữ làm lịch sử, đã thay bằng v8. Khi phân vân, chọn phương án **trầm và ít hơn**.
+**Đặc tả UI/UX hiện hành: giao diện v9 — mục 10 dưới đây và bản mẫu `docs/ui-ux/mockup-v9.html`** (bản 6, chốt 02/10/2026; từ v3.14.0). Khi khác với các mục 1–9 hay với `docs/ui-ux/mockup-v8/` (`DESIGN-V8.md`, chốt 21/9/2026), **v9 thắng** (ví dụ hai kiểu giao diện, chữ Lexend / Source Sans 3 / Noto Serif, trang Tổng quan). Phần v9 không nói tới thì v8 rồi các mục 1–9 vẫn áp dụng. Bản cũ `docs/ui-ux/mockup-v7.html` và `mockup/index.html` giữ làm lịch sử. Khi phân vân, chọn phương án **trầm và ít hơn**.
 
 ---
 
@@ -177,4 +177,30 @@ Dải cao 6px lặp ngang, hình thoi lồng nhau, màu vàng sao 60% trên nề
 - [ ] 360px không vỡ bố cục
 - [ ] Không chữ hoa toàn bộ ở nhãn, không tiếng Anh
 - [ ] Hoa văn thổ cẩm đúng 3 chỗ
-- [ ] So với `docs/ui-ux/mockup-v8/` (màn hình tương ứng), đúng bố cục, màu, chữ
+- [ ] So với `docs/ui-ux/mockup-v9.html` (màn hình tương ứng), đúng bố cục, màu, chữ — xem ở cả hai kiểu và nền tối
+
+---
+
+## 10. Giao diện v9 (từ v3.14.0 — đợt 1)
+
+**Hai kiểu giao diện và nền tối.** Token ở `frontend/src/styles/tokens.css`; mặc định là Thanh lịch, `<html data-kieu="trang-nghiem">` là Trang nghiêm, `<html data-theme="dark">` là nền tối (đi được với cả hai kiểu). Người dùng chọn ở menu bánh răng, nhóm "Kiểu giao diện" (hai mục chọn một và mục bật/tắt "Nền tối"); lựa chọn nhớ **theo máy** (`localStorage` `vptu.kieu`, `vptu.nen-toi`), được gắn bằng đoạn script đầu `index.html` trước khi vẽ để không nháy màu.
+
+| | Thanh lịch (xanh lam) | Trang nghiêm (đỏ son) | Nền tối |
+|---|---|---|---|
+| Nền trang / thẻ | sương `#E9EEF5` / trắng | ấm `#F3EEED` / trắng | xanh đêm `#0E1B2D` / `#152740`; Trang nghiêm: đêm ấm `#1A1315` / `#261C1F` |
+| Thanh bên, khối trái đầu trang | `#15395F` → `#0E2A49`, chữ trắng | đỏ son `#A82029` → `#84181F` | sẫm hơn cùng sắc |
+| Nhấn | vạch son 3px trên cùng; nút chính son `#C0262D`; mục chọn sáng hơn + biểu tượng vàng sao `#E9C46A`; số đếm nền son | nút chính `#A61E27`; số đếm và vạch dải đầu vàng sao | khối đặc màu sáng dùng chữ tối `#0B1626` (`v9.css`) |
+
+Màu mức cảnh báo (Vàng, Đỏ, Đỏ đặc biệt) và trạng thái giữ **cùng nghĩa ở mọi kiểu**; biểu đồ dùng bộ `--f-*` (đúng hạn, trễ, nghiệm thu, vàng, đỏ, đỏ đặc biệt). Không thêm màu ngoài token. Nền tối chỉ áp trên màn hình — bản in / PDF luôn dùng token sáng. **Tương thích:** không dùng `color-mix()` hay tính năng CSS cần trình duyệt mới hơn Chrome 109 (máy Windows 7/8.1 của cơ quan); chữ / nền phải đạt 4.5:1 ở cả bốn chế độ (viền tiêu điểm trên nền đặc của thanh bên màu trắng).
+
+**Chữ** (thay mục 3; tự host woff2 biến thiên 400–700, subset Vietnamese + Latin, `src/styles/fonts.css`; bỏ Be Vietnam Pro và Lora): **Lexend** cho tiêu đề trang, tiêu đề khối, con số lớn; **Source Sans 3** cho thân chữ, bảng, nút, ô nhập; **Noto Serif** cho tên cơ quan ở đầu trang, dòng ngày theo thể thức ("Cao Bằng, ngày 02 tháng 10 năm 2026", in nghiêng) và nội dung ý kiến chỉ đạo.
+
+**Khung.** Đầu trang: khối trái cùng màu thanh bên mang biểu trưng và tên cơ quan theo thể thức văn bản của Đảng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG / dấu sao vàng), cạnh đó dòng ngày; bỏ ảnh Bản Giốc ở đầu trang. 601–900px: khối trái thu còn 56px, tên cơ quan nằm cạnh. Điện thoại (≤600px): cả dải đầu màu thanh bên, thanh dưới 4 mục, mục đang chọn có gạch son phía trên.
+
+**Tổng quan** (trang mở đầu của Thường trực, lãnh đạo Văn phòng, Trưởng phòng — "Tổng quan phòng"; Chuyên viên không có): dải đầu với bốn số (giao trong kỳ, hoàn thành, đang mở, cảnh báo), vòng tỷ lệ đúng hạn và đường xu hướng các tháng từ đầu năm; chọn kỳ Tháng / Quý / Năm đổi tại chỗ; dải cảnh báo Đỏ, Đỏ đặc biệt; bảy khối: theo tháng, cơ cấu việc đang mở, theo phòng / đơn vị chủ trì / cán bộ (tuỳ vai), theo văn bản, theo lĩnh vực, chất lượng nghiệm thu, ý kiến chỉ đạo. Mỗi tên, số bấm được → danh sách Nhiệm vụ đã lọc (chip "← Về Tổng quan") hoặc màn hình chi tiết. Phạm vi số liệu do RLS quyết định; frontend chỉ đếm (`lib/kl/tong-quan.js`).
+
+**Cần xử lý** (đổi tên từ "Điều hành", tiêu đề "Cần xử lý hôm nay"): đầu trang là ba câu hỏi — *Ai đang chậm? Nghẽn ở đâu? Cần đồng chí quyết?* — trả lời bằng tên và số; bấm một ô lọc danh sách như bấm thanh trái / ô số. Trưởng phòng xem câu trả lời theo cán bộ, không lọc. Phần còn lại giữ như v8: dòng việc đủ bốn thông tin theo Công văn 1400, nghiệm thu ngay trên dòng, chỉ đạo chờ trả lời.
+
+**Giao việc.** Trên biểu mẫu là dải quy tắc **1-1-1-1-3** (một chủ trì, một sản phẩm, một hạn hoàn thành, một minh chứng, ba mức cảnh báo) sáng dần theo ô đã điền. Dưới các ô Chịu trách nhiệm / Sản phẩm / Hạn hoàn thành có hàng "Chọn nhanh" (chọn nhanh = chọn trong ô, cùng kiểm tra; hạn 7 / 14 / 30 ngày, cuối tháng tính từ ngày nhận văn bản, nhãn ghi rõ ngày). Giao tiếp xuống: khối "Kế thừa từ cấp trên" (nội dung, văn bản, hạn, sản phẩm của việc cha — chỉ xem) và hạn gợi ý "Sớm 3 / 5 / 7 ngày" trước hạn của cấp trên. Cột phải "Văn bản đang nhập": đã nhập / dự kiến và các việc vừa nhập, dùng cùng nút "Giao, nhập tiếp" để nhập liền một văn bản.
+
+**Đợt 2 (chưa làm, cần migration):** quyền sửa theo cấp ở máy chủ (cấp dưới chỉ xem ô cấp trên điền) và "Đề nghị sửa" có người duyệt; ngăn chi tiết hiện chuỗi giao với biểu tượng khoá / bút; "Việc của tôi" của Chuyên viên thao tác trên một thẻ. Bản mẫu v9 đã vẽ các phần này.

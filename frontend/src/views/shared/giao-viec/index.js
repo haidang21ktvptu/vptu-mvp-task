@@ -190,7 +190,7 @@ export async function openGiaoViec(opts = {}) {
   show('klThThayMatWrap', canThayMat());
   if (vb.ds.length && !a0) $('klThVanBan').value = vb.ds[0].id;
   if (cha && timTrongDs(cha.van_ban_id)) $('klThVanBan').value = cha.van_ban_id; // giao tiếp xuống: cùng văn bản với việc cha
-  setText('gvCha', cha ? `Giao tiếp xuống từ ${cha.ma}: ${cha.noi_dung}` : ''); show('gvCha', Boolean(cha));
+  setText('gvCha', cha ? `Giao tiếp xuống từ ${cha.ma}: ${cha.noi_dung}` : ''); show('gvCha', Boolean(cha)); $('gvCha').dataset.id = cha?.id || '';
   $('klThLoaiVB').innerHTML = LOAI_VAN_BAN.map(([ma, ten]) => opt(ma, ten, ma === 'KL_BTV')).join('');
   $('klThNgayBH').max = homNay; $('klThNgayNhanVB').max = homNay;
   $('klThOwner').innerHTML = ''; dienOwner();
@@ -275,7 +275,7 @@ async function luu(nhapTiep) {
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
     ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSanPhamMoTa', 'klThPhoiHop'].forEach((id) => { $(id).value = ''; });
     $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; datLaiHanNop(); dienNganh();
-    capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus();
+    capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus(); $('giaoViecForm').dispatchEvent(new Event('gv-da-giao'));   // v9.js: số đã nhập
   } catch (e) {
     notifyError('Không giao được việc: ' + loiDeHieu(e));
     capNhatTomTat();
@@ -286,7 +286,7 @@ export function registerGiaoViec() {
   $('viewGiaoViec').innerHTML = giaoViecTemplate;
   ['klThLoaiVB', 'klThLoai', 'klThNgayBH'].forEach((id) => $(id).addEventListener('change', capNhatHienThi));
   $('klThVanBan').addEventListener('change', vanBanDoi);
-  $('klThVanBanTim').addEventListener('input', () => timKhiGo(nhanMoi(), vanBanDoi));
+  $('klThVanBanTim').addEventListener('input', () => timKhiGo(nhanMoi()));   // tự chọn kết quả đầu → phát change của ô văn bản (vanBanDoi, v9)
   $('klThThayMat').addEventListener('change', thayMatDoi);
   $('klThHan').addEventListener('input', capNhatHienThi);
   $('klThNganh').addEventListener('change', dienLinhVuc);

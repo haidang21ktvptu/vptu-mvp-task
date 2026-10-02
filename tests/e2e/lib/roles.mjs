@@ -2,7 +2,8 @@
 // GĐ18 (2 worker): mỗi spec ghi dữ liệu có tài khoản riêng (E2E_*) để không đè nhau; A1/A2/A3 chuẩn cho dang-nhap, quan-tri,
 // nhiem-vu (A2 giao việc), dieu-hanh/kl-realtime (A1 xem); PCVP2 cho kl-dashboard (khối Quản trị không spec nào ghi).
 // GĐ20 (giao diện v7): mọi vai vào thẳng màn hình điều hành của mình (#viewDieuHanh: Trung tâm điều hành / Điều hành hôm nay /
-// Phòng tôi hôm nay / Việc của tôi); các màn khác là section dùng chung.
+// Phòng tôi hôm nay / Việc của tôi); các màn khác là section dùng chung. v9: A0/A1/A2 vào thẳng Tổng quan (#viewTongQuan), màn hình điều
+// hành đổi tên "Cần xử lý" (id giữ nguyên) — pageAs() mở tiếp "Cần xử lý" để các kịch bản cũ chạy nguyên; tong-quan.spec kiểm trang mở đầu.
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -12,8 +13,9 @@ import { dirname, join } from 'node:path';
 import { nhanChucDanh } from '../../../frontend/src/lib/constants.js';
 
 const DH = '#viewDieuHanh';
+export const TQ = '#viewTongQuan';
 const tk = (username, fullName, role_group, department, extra = {}) => ({
-  username, fullName, section: DH, roleLabel: nhanChucDanh({ role_group, department, is_chief: extra.is_chief === true, position_title: extra.position_title || 'Chuyên viên' }), ...extra,
+  username, fullName, section: ['A0', 'A1', 'A2'].includes(role_group) ? TQ : DH, roleLabel: nhanChucDanh({ role_group, department, is_chief: extra.is_chief === true, position_title: extra.position_title || 'Chuyên viên' }), ...extra,
 });
 
 export const USERS = {

@@ -1,0 +1,88 @@
+/* Tinh chỉnh chung giao diện v9 (docs/DESIGN.md): ba câu hỏi đầu "Cần xử lý", số-lọc gọn hơn, dải 1-1-1-1-3 / chọn nhanh / kế thừa / văn bản
+   đang nhập của Giao việc, và chỉnh nền tối cho các khối đặc có chữ trắng. Chỉ trình bày — id, data-*, tên lớp cũ giữ nguyên.
+   Tên lớp viết nguyên văn trong JS (Tailwind cắt lớp ghép chuỗi). */
+@layer components {
+  /* Thẻ, tấm: bóng nhẹ trên nền trang có màu */
+  .tam, .bang, .khung, .buoc, .cb section, .nt, .md .chi-tiet, .ngan-ben { box-shadow: var(--bong-the); }
+  .tam-dau h2, .tam-dau > b { font-weight: 600; font-size: 16px; }
+  .bang th { background: var(--nen-mo); }
+  .menu :focus-visible { outline-color: #fff; }   /* nền đặc thanh bên: viền tiêu điểm trắng đủ tương phản */
+
+  /* Ba câu hỏi đầu "Cần xử lý" */
+  .ba-cau { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; overflow: hidden; }
+  .bc-o { display: flex; flex-direction: column; gap: 4px; padding: 16px 20px 18px; text-align: left; min-width: 0; border-left: 1px solid var(--vien); }
+  .bc-o:first-child { border-left: 0; }
+  button.bc-o:hover { background: var(--nen-mo); }
+  button.bc-o[aria-pressed="true"] { background: var(--navy-nhat); box-shadow: inset 0 -3px 0 var(--navy-dac); }
+  .bc-hoi { display: flex; align-items: center; gap: 10px; font-size: 14.5px; font-weight: 600; color: var(--chu-phu); }
+  .bc-bieu { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+  .bc-bieu svg { width: 18px; height: 18px; }
+  .bc-cham { background: var(--do-nhat); color: var(--do); } .bc-nghen { background: var(--vang-nhat); color: var(--vang-chu); } .bc-quyet { background: var(--navy-nhat); color: var(--navy); }
+  .bc-chinh { font-family: var(--font-tieu-de); font-weight: 600; font-size: 20px; color: var(--chu); margin-top: 4px; line-height: 1.25; }
+  .bc-chinh b { font-size: 30px; font-weight: 600; letter-spacing: -.02em; margin-right: 4px; }
+  .bc-chinh em { font-style: normal; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; vertical-align: 6px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; }
+  .bc-chinh em.ddb { background: var(--f-ddb); color: #fff; }
+  .bc-phu { font-size: 14px; color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Số-lọc: chữ số Lexend vừa phải, nhãn mực thường */
+  .kpi button { box-shadow: var(--bong-the); }
+  .kpi b { font-weight: 600; font-size: 30px; letter-spacing: -.02em; }
+  .kpi span { color: var(--chu); font-weight: 600; }
+  .kpi button:hover { border-color: var(--vien-o); }
+
+  /* Giao việc: dải 1-1-1-1-3 */
+  .gv-quy-tac { list-style: none; margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--vien); border-radius: 12px; overflow: hidden; }
+  .gv-quy-tac li { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: baseline; padding: 10px 12px; border-left: 1px solid var(--vien); background: var(--nen-mo); }
+  .gv-quy-tac li:first-child { border-left: 0; }
+  .gv-quy-tac b { font-family: var(--font-tieu-de); font-weight: 600; font-size: 20px; color: var(--chu-mo); grid-row: span 2; line-height: 1.1; }
+  .gv-quy-tac span { font-size: 13px; font-weight: 600; color: var(--chu-phu); }
+  .gv-quy-tac small { font-size: 12.5px; color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gv-quy-tac li.xong { background: var(--luc-nhat); }
+  .gv-quy-tac li.xong b { color: var(--luc); } .gv-quy-tac li.xong small { color: var(--chu); font-weight: 600; }
+  /* Chọn nhanh dưới ô */
+  .gv-nhanh { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: -4px 0 14px; }
+  .gv-nhanh:empty { display: none; }
+  .gv-nhanh::before { content: 'Chọn nhanh'; font-size: 12.5px; color: var(--chu-mo); margin-right: 2px; }
+  .gv-nhanh button { height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--vien-o); background: var(--the); font-size: 13px; font-weight: 600; color: var(--chu); }
+  .gv-nhanh button:hover:not(:disabled) { border-color: var(--navy); color: var(--navy); }
+  .gv-nhanh small { font-size: 12.5px; color: var(--chu-phu); }
+  /* Kế thừa từ cấp trên (giao tiếp xuống) */
+  .gv-ke-thua { margin: 10px 0 4px; padding: 10px 14px 12px; border: 1px dashed var(--vien-o); border-radius: 12px; background: var(--nen-mo); }
+  .kt-dau { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--chu-phu); margin-bottom: 6px; }
+  .gv-ke-thua dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; }
+  .gv-ke-thua dl div:first-child { grid-column: 1 / -1; }
+  .gv-ke-thua dt { font-size: 12.5px; color: var(--chu-mo); } .gv-ke-thua dd { margin: 0; font-size: 14px; color: var(--chu); }
+  /* Văn bản đang nhập (cột phải) */
+  .vbn { padding: 0 16px 16px; display: grid; gap: 6px; }
+  .vbn-so { font-family: var(--font-tieu-de); font-weight: 600; font-size: 18px; color: var(--chu); }
+  .vbn-tien { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-size: 14px; color: var(--chu-phu); }
+  .vbn-tien b { font-family: var(--font-tieu-de); font-weight: 600; font-size: 16px; color: var(--chu); }
+  .vbn-ds { list-style: none; margin: 8px 0 0; padding: 0; }
+  .vbn-ds li { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--vien-nhat); font-size: 13.5px; }
+  .vbn-ds small { display: block; color: var(--chu-phu); font-size: 12.5px; }
+
+  @media (max-width: 860px) {
+    .ba-cau { grid-template-columns: minmax(0, 1fr); }
+    .bc-o { border-left: 0; border-top: 1px solid var(--vien); } .bc-o:first-child { border-top: 0; }
+    .gv-quy-tac { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gv-quy-tac li { border-left: 0; border-top: 1px solid var(--vien); } .gv-quy-tac li:nth-child(-n+2) { border-top: 0; }
+    .gv-quy-tac li:nth-child(2n) { border-left: 1px solid var(--vien); } .gv-quy-tac li:last-child { grid-column: 1 / -1; border-left: 0; }
+    .gv-ke-thua dl { grid-template-columns: minmax(0, 1fr); }
+  }
+}
+
+/* Nền tối: khối đặc màu sáng (lam / lục / đỏ / cam nhạt hơn ở nền tối) dùng chữ tối để giữ tương phản. */
+@layer utilities {
+  :root[data-theme="dark"] .cd-loai,
+  :root[data-theme="dark"] .mc-loai,
+  :root[data-theme="dark"] .nhan-tt,
+  :root[data-theme="dark"] .buoc h2 i,
+  :root[data-theme="dark"] .ht .dem,
+  :root[data-theme="dark"] .nut.lam,
+  :root[data-theme="dark"] .nut.do,
+  :root[data-theme="dark"] .nut.nguy-hiem,
+  :root[data-theme="dark"] .tab-hang button[aria-selected="true"],
+  :root[data-theme="dark"] .dk-chon button[aria-pressed="true"].dk-khan,
+  :root[data-theme="dark"] .dk-chon button[aria-pressed="true"].dk-thuong-khan { color: #0B1626; }
+  :root[data-theme="dark"] .dn-the input, :root[data-theme="dark"] .o-nhap, :root[data-theme="dark"] select.o-nhap { color-scheme: dark; }
+}

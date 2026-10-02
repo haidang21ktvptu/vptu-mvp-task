@@ -131,3 +131,12 @@ describe('PR-2b — nhóm trạng thái hạn nộp / nghiệm thu', () => {
     assert.equal(lopMep({ nhom_dem: 'CHAM_NOP_MINH_CHUNG', muc_canh_bao: 'VANG' }), 'cam');
   });
 });
+
+describe('locRows theo kết luận (v9)', () => {
+  test('lọc đúng số hiệu; "(không có số hiệu)" lấy việc không có số hiệu', () => {
+    const rows = [{ so_ket_luan: '102-KL/TU' }, { so_ket_luan: '98-TB/TU' }, { so_ket_luan: null }];
+    assert.equal(locRows(rows, { ketLuan: '102-KL/TU' }).length, 1);
+    assert.equal(locRows(rows, { ketLuan: '(không có số hiệu)' }).length, 1);
+    assert.equal(locRows(rows, { ketLuan: '' }).length, 3);
+  });
+});

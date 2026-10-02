@@ -52,3 +52,9 @@ export function ngayTrongMinhChung(text) {
   if (Number(mo) < 1 || Number(mo) > 12 || Number(d) < 1 || Number(d) > 31) return null;
   return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
+
+// Dòng ngày theo thể thức văn bản: "Cao Bằng, ngày 02 tháng 10 năm 2026" — ngày dưới 10 và tháng 1, 2 ghi thêm số 0 (giờ Việt Nam).
+export function ngayVanBanVN(now = new Date(), diaDanh = 'Cao Bằng') {
+  const [y, m, d] = homNayVN(now).split('-').map(Number);
+  return `${diaDanh}, ngày ${String(d).padStart(2, '0')} tháng ${m <= 2 ? String(m).padStart(2, '0') : m} năm ${y}`;
+}

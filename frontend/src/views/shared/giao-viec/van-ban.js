@@ -35,15 +35,15 @@ export async function napVanBan({ them = false, nhanMoi, giu, kem } = {}) {
 export function datLaiVanBan() { tuKhoa = ''; vb.moi = []; $('klThVanBanTim').value = ''; }
 export const themVanBanMoi = (h, nhanMoi) => { vb.moi.unshift(h); ve(nhanMoi, h.id); };
 
-// Gõ tìm: chờ 300 ms rồi tìm ở DB, tự chọn kết quả đầu (giữ hành vi cũ của ô lọc).
-export function timKhiGo(nhanMoi, sauKhiChon) {
+// Gõ tìm: chờ 300 ms rồi tìm ở DB, tự chọn kết quả đầu (giữ hành vi cũ của ô lọc) rồi phát change của ô văn bản như người dùng chọn.
+export function timKhiGo(nhanMoi) {
   clearTimeout(henTim);
   henTim = setTimeout(async () => {
     tuKhoa = $('klThVanBanTim').value.trim();
     try {
       await napVanBan({ nhanMoi, giu: '' });
       if (tuKhoa && vb.ds.length) $('klThVanBan').value = vb.ds[0].id;
-      sauKhiChon();
+      $('klThVanBan').dispatchEvent(new Event('change', { bubbles: true }));
     } catch { /* lỗi mạng: giữ danh sách cũ */ }
   }, 300);
 }

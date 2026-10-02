@@ -67,6 +67,7 @@ export function locRows(rows, f = {}) {
     && (!f.chatLuong || r.chat_luong === f.chatLuong) && (!f.tienDoHT || r.tien_do_hoan_thanh === f.tienDoHT)
     && (!f.nguoiTheoDoi || r.nguoi_theo_doi === f.nguoiTheoDoi)
     && (!f.donVi || r.owner_don_vi_ma === f.donVi)
+    && (!f.ketLuan || (r.so_ket_luan || '(không có số hiệu)') === f.ketLuan)   // v9: trước đây ô "Mọi kết luận" đặt khoá nhưng không lọc
     && (!f.cuaToi || r.nguoi_theo_doi === f.cuaToi || r.owner_tai_khoan === f.cuaToi)
     && (!f.chiMo || laMo(r))
     && (!f.thieuMinhChung || (r.nhom_dem === 'HOAN_THANH' && r.thieu_minh_chung))

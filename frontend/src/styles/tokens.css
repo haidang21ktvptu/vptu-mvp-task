@@ -1,26 +1,89 @@
-/* Token thiết kế theo docs/ui-ux/mockup-v8/DESIGN-V8.md (đợt 1 giao diện v8). Chỉ khai báo biến; không có quy tắc trình bày.
-   Giữ TÊN biến của v7 để CSS các màn hình chưa đổi vẫn chạy, chỉ đổi GIÁ TRỊ theo bảng v8. Đối chiếu tên: "--nen" của v8 (nền trang F6F4EF)
-   là --nen-phu ở đây; "--the" (nền thẻ) = --the/--nen; --lam (màu cấu trúc cũ) nay = navy v8. --cam (từ chối nhận việc) không có trong
-   bảng v8, giữ nguyên. Chữ: tiêu đề Lora 700, nội dung Be Vietnam Pro (fonts.css). */
+/* Token thiết kế giao diện v9 (docs/DESIGN.md mục 10): hai kiểu Thanh lịch (mặc định) / Trang nghiêm + nền tối, chọn ở menu bánh răng
+   (shell/kieu-giao-dien.js ghi <html data-kieu="trang-nghiem"> và <html data-theme="dark">, nhớ theo máy). Chỉ khai báo biến.
+   Giữ TÊN biến v7/v8 để CSS cũ chạy nguyên, chỉ đổi GIÁ TRỊ: --nen-phu = nền trang (sương lam / ấm), --the = mặt thẻ, --navy = mực tiêu đề và
+   màu cấu trúc, --navy-dac = nền khối đặc có chữ trắng (tách riêng để nền tối giữ tương phản). --do = trạng thái Đỏ (không dùng cho nút);
+   nút chính dùng --nut (đỏ son). Màu biểu đồ --f-* theo dataviz: trạng thái luôn đi kèm nhãn chữ. */
 :root {
-  --do: #B3121B; --do-dam: #7A0C12; --do-nhat: #FBE9EA;
-  --navy: #1F3A5F; --navy-nhat: #EEF1F6;
-  --vang: #E8B923; --vang-nhat: #FFF3D6; --vang-chu: #8A5A00; --vang-chu-dam: #8A5A00;
-  --lam: #1F3A5F; --lam-nhat: #EEF1F6;
-  --luc: #1B7A43; --luc-nhat: #E6F4EA;
-  --cam: #D9711C; --cam-nhat: #FBEBDC; --cam-chu: #7A3E0E;
-  --nen: #FFFFFF; --the: #FFFFFF; --nen-phu: #F6F4EF; --nen-do-mo: #FFF7F6; --nen-do-the: #FFF9F8; --nen-vang-mo: #FFF8E6; --nen-do-muc: #FFF8F8;
-  --vien: #E3DED4; --vien-nhat: #EEEAE2; --chu: #1B1B1B; --chu-phu: #5B6270;
+  --do: #B42318; --do-dam: #8E1520; --do-nhat: #FDECEA; --do-chu: #8E1520;
+  --nut: #C0262D; --nut-dam: #A01F25;
+  --navy: #17365D; --navy-nhat: #E6EDF6; --navy-dac: #17365D;
+  --vang: #E0A526; --vang-nhat: #FFF1D6; --vang-chu: #8A5300; --vang-chu-dam: #7A4A00;
+  --lam: #2563B8; --lam-nhat: #E3EEFB;
+  --luc: #18794E; --luc-nhat: #E2F3EA;
+  --cam: #C2610F; --cam-nhat: #FDEBD8; --cam-chu: #7A3E0E;
+  --nen: #FFFFFF; --the: #FFFFFF; --nen-phu: #E9EEF5; --nen-mo: #F4F7FB;
+  --nen-do-mo: #FFF5F4; --nen-do-the: #FFF8F7; --nen-vang-mo: #FFF8E6; --nen-do-muc: #FFF6F6;
+  --vien: #D8E1EC; --vien-nhat: #E6ECF3; --chu: #14243B; --chu-phu: #4F607A;
+  --vien-focus: #2A78D6; --vien-o: #C1CDDB; --vien-vang: #F1D98A; --chu-mo: #5A6A81; --nen-toi: #14243B;
+  --vien-luc: #A9D8BC; --vien-do: #F2B8B2; --vang-tren-dac: #E0A526;   /* viền khối xanh / đỏ nhạt; số vàng trên nền --navy-dac */
+  --bong-the: 0 1px 2px rgba(20, 36, 59, .05), 0 2px 10px -6px rgba(20, 36, 59, .08);
+  --bong-noi: 0 16px 40px -20px rgba(16, 24, 40, .45);
 
-  --font-sans: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-tieu-de: "Lora", Georgia, "Times New Roman", serif;
+  /* Khung: menu trái (đặc, chữ trắng), dải đầu trang Tổng quan, số đếm trên menu */
+  --ben-nen: linear-gradient(180deg, #15395F 0%, #0E2A49 100%); --ben-mau: #15395F; --ben-cuoi: #0E2A49;
+  --ben-chu: #FFFFFF; --ben-chu-2: rgba(255, 255, 255, .86); --ben-chu-3: rgba(255, 255, 255, .7);
+  --ben-hover: rgba(255, 255, 255, .08); --ben-chon: rgba(255, 255, 255, .14); --ben-chon-icon: #E9C46A; --ben-dem: #C8323A; --ben-dem-chu: #FFFFFF;
+  --vach-tren: #C0262D;
+  --hero-1: #0F2F55; --hero-2: #1A4C82; --hero-3: #2667AA; --hero-vong: #E9C46A; --hero-vach: #C0262D;
+
+  /* Biểu đồ */
+  --du-lieu: #2A78D6; --du-lieu-2: #1BAF7A; --du-lieu-nhat: #D6E6F8;
+  --f-tot: #2E9E6A; --f-tre: #A7B4C4; --f-nt: #8DBDF0; --f-vang: #E59E2E; --f-do: #DE4A35; --f-ddb: #8E1520;
+  --f-xs: #0E6B58; --f-dt: #2A9C80; --f-d: #8ED0BD;
+
+  --font-sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-tieu-de: "Lexend", "Source Sans 3", system-ui, sans-serif;
+  --font-van-ban: "Noto Serif", Georgia, "Times New Roman", serif;
   --max-w: 1040px;
   --cao-dau-trang: 72px; --rong-menu: 236px;
-  --bo-the: 12px; --bo-nut: 8px; --bo-o: 8px;
+  --bo-the: 16px; --bo-nut: 8px; --bo-o: 8px;
   --nui-dao: 160ms;
+  color-scheme: light;
+}
+/* Trang nghiêm: menu trái và dải đầu trang đỏ son, nền ấm, mực tiêu đề nâu đỏ đậm. */
+:root[data-kieu="trang-nghiem"] {
+  --nen-phu: #F3EEED; --nen-mo: #FBF7F6; --vien: #E8DEDC; --vien-nhat: #F0E8E6; --chu: #2B1B1D; --chu-phu: #6A5557;
+  --vien-o: #D7C9C6; --chu-mo: #7A6568; --nen-toi: #2B1B1D; --ben-chu-3: rgba(255, 255, 255, .8);
+  --navy: #5C1A20; --navy-nhat: #F6E9E8; --navy-dac: #7E1D24;
+  --nut: #A61E27; --nut-dam: #86181F;
+  --ben-nen: linear-gradient(180deg, #A82029 0%, #84181F 100%); --ben-mau: #A82029; --ben-cuoi: #84181F; --ben-dem: #E9C46A; --ben-dem-chu: #3B0910;
+  --hero-1: #84161F; --hero-2: #A21D26; --hero-3: #AE262E; --hero-vach: #E9C46A;
+  --bong-the: 0 1px 2px rgba(43, 27, 29, .05), 0 2px 10px -6px rgba(43, 27, 29, .1);
+}
+/* Nền tối chỉ áp trên màn hình: bản in / PDF luôn dùng token sáng (in.css). */
+@media screen {
+  /* Nền tối: xanh đêm (Thanh lịch) — không dùng đen. */
+  :root[data-theme="dark"] {
+    --do: #F48A7E; --do-dam: #D0333F; --do-nhat: #3E2129; --do-chu: #F6A2A9;
+    --nut: #D23A44; --nut-dam: #B92F39;
+    --navy: #C3D7F2; --navy-nhat: #1E3556; --navy-dac: #2C5A93;
+    --vang: #E0A23A; --vang-nhat: #3A2E16; --vang-chu: #F5B85A; --vang-chu-dam: #F5C26F;
+    --lam: #7FB0EE; --lam-nhat: #1E3556;
+    --luc: #63CC98; --luc-nhat: #17382B;
+    --cam: #F0A060; --cam-nhat: #3A2A1A; --cam-chu: #F5B985;
+    --nen: #152740; --the: #152740; --nen-phu: #0E1B2D; --nen-mo: #1A2E4A;
+    --nen-do-mo: #2A1C22; --nen-do-the: #2A1C24; --nen-vang-mo: #2C2617; --nen-do-muc: #2A1C22;
+    --vien: #28405F; --vien-nhat: #22385A; --chu: #E7EEF8; --chu-phu: #A9B8CE;
+    --vien-focus: #5AA0F0; --vien-o: #3A5478; --vien-vang: #6B5422; --chu-mo: #8496B1; --nen-toi: #050E1C;
+    --vien-luc: #2E6B4C; --vien-do: #7A2E36; --vang-tren-dac: #FFD27A;
+    --bong-the: 0 1px 2px rgba(0, 0, 0, .25); --bong-noi: 0 16px 40px -18px rgba(0, 0, 0, .7);
+    --ben-nen: linear-gradient(180deg, #0C1E36 0%, #081628 100%); --ben-mau: #0C1E36; --ben-cuoi: #081628; --vach-tren: #D23A44;
+    --hero-1: #0B2342; --hero-2: #123761; --hero-3: #18487D;
+    --du-lieu: #4A93EA; --du-lieu-2: #2CC28E; --du-lieu-nhat: #21406A;
+    --f-tot: #3FB57E; --f-tre: #5C6E88; --f-nt: #5E8FCC; --f-vang: #E0A23A; --f-do: #EF6B55; --f-ddb: #B3202E;
+    --f-xs: #6FD3B8; --f-dt: #3AA88D; --f-d: #24705F;
+    color-scheme: dark;
+  }
+  /* Trang nghiêm + nền tối: đêm ấm, menu và dải đầu trang đỏ trầm. */
+  :root[data-kieu="trang-nghiem"][data-theme="dark"] {
+    --nen: #261C1F; --the: #261C1F; --nen-phu: #1A1315; --nen-mo: #2E2226;
+    --vien: #43323A; --vien-nhat: #382A30; --chu: #F3E9EA; --chu-phu: #CDB9BC; --vien-o: #5A434B; --chu-mo: #A48D91; --nen-toi: #120B0D;
+    --navy: #F3C9CC; --navy-nhat: #3A2328; --navy-dac: #8E2A31;
+    --lam-nhat: #2C2632;
+    --nut: #C2303A; --nut-dam: #A62731;
+    --ben-nen: linear-gradient(180deg, #7E1820 0%, #5F1219 100%); --ben-mau: #7E1820; --ben-cuoi: #5F1219;
+    --hero-1: #5F1219; --hero-2: #7E1820; --hero-3: #982129;
+  }
 }
 /* Điện thoại (≤ 600px): thanh đầu trang 56px — dau-trang.css, menu-doc.css (ngăn kéo mở dưới thanh) đều đọc biến này. */
 @media (max-width: 600px) { :root { --cao-dau-trang: 56px; } }
-/* Ứng dụng nội bộ chỉ có nền sáng (mockup bỏ chế độ tối); khai báo để trình duyệt không tự đảo màu. */
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --nen: #FFFFFF; } }
-:root[data-theme="dark"] { --nen: #FFFFFF; }

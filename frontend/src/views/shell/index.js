@@ -9,10 +9,11 @@ import { registerActions } from '../../lib/actions.js';
 import { getView } from '../registry.js';
 import { renderNav, toggleNavKhac, toggleMenuDoc } from './nav.js';
 import { renderBanhRang } from './banh-rang.js';
+import { ngayVanBanVN } from '../../lib/kl/ngay.js';
 
 export { setActiveNav, setNavBadge } from './nav.js';
 
-const SECTIONS = ['viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', 'viewTheoVanBan', 'viewChiDaoTTThuKy', 'viewNghiemThu', 'viewGiaoViec', 'viewCanBo', 'viewBaoCao', 'viewNhanTin', 'viewQuanTri', 'viewCaNhan', 'viewTroGiup'];
+const SECTIONS = ['viewTongQuan', 'viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', 'viewTheoVanBan', 'viewChiDaoTTThuKy', 'viewNghiemThu', 'viewGiaoViec', 'viewCanBo', 'viewBaoCao', 'viewNhanTin', 'viewQuanTri', 'viewCaNhan', 'viewTroGiup'];
 
 // Hiện đúng một section trong vùng nội dung.
 export function showSection(id) {
@@ -44,6 +45,7 @@ export function initUserInterface() {
   show('loginSection', false);
   show('appShell', true);
   setText('currentUserDisplay', user.full_name);
+  setText('ngayVanBan', ngayVanBanVN());
   setText('currentRoleDisplay', nhanChucDanh(user));
   renderAvatar(user);
   renderChucDanh(user);
