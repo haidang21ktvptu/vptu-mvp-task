@@ -30,7 +30,9 @@ export default defineConfig({
   retries: 0,
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // Trên GitHub Actions thêm reporter `github`: mỗi test đỏ thành một annotation (tệp, dòng, thông báo lỗi) ngay trên PR và đọc được qua API
+  // check-runs — không phải tải artifact playwright-report mới biết test nào đỏ.
+  reporter: process.env.GITHUB_ACTIONS ? [['github'], ['list'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
   globalSetup: './global-setup.mjs',
   use: {
     baseURL: BASE_URL,
