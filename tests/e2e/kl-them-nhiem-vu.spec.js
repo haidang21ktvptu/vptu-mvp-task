@@ -107,7 +107,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
       cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: TRUONG_PHONG_ID, tao_boi: QTHT_ID, do_khan: 'THUONG', giao_thay_mat_cho: TRUONG_PHONG_ID });
     await expect(page.locator(`#nganCT #klChiTiet-${data.id}`)).toContainText('Tờ trình', NAP); // việc vừa giao mở trong ngăn chi tiết
     await page.locator('#nganCTDong').click();
-    const row = await moViec(page, data.id, data.ma);
+    const row = await moViec(page, data.id, data.ma, { boCuaToi: true });   // demo_qtht là A3: Nhiệm vụ mặc định "Việc của tôi", việc này của Owner khác
     await expect(page.locator('#klTimKiem')).toHaveValue(data.ma);
     await expect(row).toHaveAttribute('data-muc', 'XANH');
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
