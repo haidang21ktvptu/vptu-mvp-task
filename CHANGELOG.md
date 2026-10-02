@@ -656,6 +656,7 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Kiểm tay 2/10 trên `/staging/` (bản `bc833f2`, CSDL đã áp 0070–0075): nhập tệp Phụ lục 2 hư cấu (8 dòng: giao, đã xong, chờ hoàn thiện, đơn vị lạ, ngày dạng chữ, "Ký ban hành", ô gộp) → lô LO-0006…0009, đối chiếu từng cột trong CSDL; hoàn thiện dòng chờ bằng biểu mẫu điền sẵn; khối Dữ liệu gốc; Xuất theo mẫu nhập (16 việc, 25 cột — giá trị xuất nhập lại khớp 100%); bỏ dòng; hoàn tác lô (giữ việc đã hoàn thiện và văn bản còn dùng). Đề nghị sửa A3 → A2: theo e2e `nhap-theo-tang` chạy thật trên staging (xanh).
 - **Chuyên viên giữ quyền quản trị nhiệm vụ** mở "Toàn bộ nhiệm vụ" / tìm nhanh: không còn mặc định lọc "Việc của tôi" (`chiViecCuaToi`, kl/index.js + tim-nhanh.js); tiêu đề màn là "Toàn bộ nhiệm vụ". e2e `moViec({ boCuaToi })` chỉ bỏ chip khi có.
 - Thẻ lô ở "Chờ hoàn thiện": đếm "Chờ hoàn thiện" theo dòng thật đang chờ, phần đã hoàn thiện / đã bỏ sau khi nhập hiện thành nhãn riêng (so_lieu của lô chỉ chốt lúc nhập và sau hoàn tác).
+- Cần nghiệm thu: sau nghiệm thu / trả lại chỉ nạp lại danh sách, không ép hiện lại màn (người dùng đã chuyển mục bị kéo về — e2e `pr3-hien-thi` đỏ chập chờn vì cuộc đua này ở CI PR #102).
 - Phát hành từ nhánh `release/v3.14.0` (merge PR #101 trước để kiểm trên `/staging/`; tag gắn lên đầu nhánh này, như v3.4.0 / v3.5.0).
 
 ## 44. Giao diện v9 đợt 2 — ngăn chi tiết dùng chung, nhập theo tầng + Đề nghị sửa, nhập Excel toàn trình (**có migration 0070–0075**; phát hành gộp với đợt 1 thành v3.14.0)

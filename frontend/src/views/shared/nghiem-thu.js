@@ -74,7 +74,9 @@ async function napNghiemThu() {
     ve();
   } catch (e) { notifyError(e.message); }
 }
-async function sauHanhDong(thongBao) { notifySuccess(thongBao); await lamMoiHuyHieu(); await openNghiemThu(); }
+// Sau nghiệm thu / trả lại: báo, làm mới huy hiệu, nạp lại danh sách — KHÔNG gọi openNghiemThu (showSection) vì người dùng có thể đã chuyển
+// mục trong lúc chờ mạng; ép hiện lại màn này sẽ kéo họ về (e2e pr3-hien-thi chập chờn vì đúng cuộc đua đó).
+async function sauHanhDong(thongBao) { notifySuccess(thongBao); await lamMoiHuyHieu(); await napNghiemThu(); }
 async function ntNghiemThu({ id, ma }) {
   try { await xacNhanMinhChung(id, true); await sauHanhDong(`Đã nghiệm thu minh chứng — nhiệm vụ ${ma} hoàn thành.`); } catch (e) { notifyError(e.message); }
 }
