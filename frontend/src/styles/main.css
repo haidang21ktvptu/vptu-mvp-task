@@ -1,4 +1,4 @@
-/* Điểm vào CSS (v8 đợt 3; v9: tong-quan.css, v9.css — tinh chỉnh chung theo hai kiểu giao diện): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
+/* Điểm vào CSS (v8 đợt 3; v9: tong-quan.css, v9.css — tinh chỉnh chung theo hai kiểu giao diện; v9 đợt 2: ngan-chi-tiet.css — ngăn chi tiết dùng chung): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
@@ -20,6 +20,8 @@
 @import './pr3.css';
 @import './tong-quan.css';
 @import './v9.css';
+@import './ngan-chi-tiet.css';
+@import './nhap-excel.css';
 @import './in.css';
 
 @tailwind base;

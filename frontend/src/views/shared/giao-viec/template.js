@@ -12,8 +12,16 @@ const sel = (id) => `<select id="${id}" class="o-nhap"></select>`;
 const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" class="o-nhap"${them}>`;
 
 export const giaoViecTemplate = `
-  <div class="dau"><h1>Giao việc</h1><span>một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành và hạn nộp minh chứng</span></div>
-  <div class="hai-cot" style="--rong-phu:340px">
+  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành và hạn nộp minh chứng</span></div>
+  <div class="tab-hang hidden" id="gvTabs" role="tablist" aria-label="Cách giao việc">
+    <button type="button" id="gvTabGiao" role="tab" data-action="gvChonTab" data-tab="giao" aria-selected="true">Giao từng việc</button>
+    <button type="button" id="gvTabNhap" role="tab" data-action="gvChonTab" data-tab="nhap" aria-selected="false">Nhập từ Excel</button>
+    <button type="button" id="gvTabCho" role="tab" data-action="gvChonTab" data-tab="cho" aria-selected="false">Chờ hoàn thiện <b id="gvSoCho" class="so-dem hidden">0</b></button>
+  </div>
+  <div id="gvHoanThien" class="luong-canh-bao gv-hoan-thien hidden" role="status"></div>
+  <div id="gvKhuNhap" class="nx-khu hidden"></div>
+  <div id="gvKhuCho" class="nx-khu hidden"></div>
+  <div class="hai-cot" id="gvKhuGiao" style="--rong-phu:340px">
   <form id="giaoViecForm" class="gv-the tam" data-submit="luuKlThem" novalidate>
     <ol class="gv-quy-tac" id="gvQuyTac" aria-label="Quy tắc một chủ trì, một sản phẩm, một hạn, một minh chứng, ba mức cảnh báo"></ol>
     <fieldset class="gv-noi" id="gvKhoa" disabled aria-busy="true">

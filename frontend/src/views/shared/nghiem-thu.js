@@ -16,6 +16,7 @@ import { nhanTrangThai, lopMep } from '../../lib/kl/nhan.js';
 import { lamMoiHuyHieu } from '../../features/huy-hieu.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { moNhiemVu } from './kl/index.js';
+import { khiGhiTrongNgan } from './ngan-chi-tiet.js';
 import { nghiemThuDongViec, oNghiemThuHtml, chatLuongCuaForm, dongBoNutNghiemThu } from './chat-luong.js';
 
 let ds = []; let viec = new Map(); let mcs = new Map(); let tab = 'cua-toi';
@@ -61,6 +62,9 @@ function ve() {
 async function openNghiemThu() {
   showSection('viewNghiemThu');
   setActiveNav('navNghiemThu');
+  await napNghiemThu();
+}
+async function napNghiemThu() {
   try {
     await loadDanhMucKl();
     ds = await canNghiemThu();
@@ -87,4 +91,5 @@ async function ntTraLai({ id }, form) {
 
 export function registerNghiemThu() {
   registerActions({ openNghiemThu, ntNghiemThu, ntNghiemThuCl, ntTraLai, ntTab: ({ tab: t }) => { tab = t; ve(); }, ntMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
+  khiGhiTrongNgan('viewNghiemThu', napNghiemThu);   // "Mở việc" → ngăn chi tiết; nghiệm thu / trả lại trong ngăn → danh sách tự cập nhật
 }

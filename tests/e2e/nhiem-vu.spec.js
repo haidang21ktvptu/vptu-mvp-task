@@ -64,12 +64,13 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     await dienHanNop(page);
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
-    await expect(page.locator('#viewKl')).toBeVisible();
     const { data } = await db.from('nhiem_vu').select('id, ma, theo_1400, owner_tai_khoan, nguoi_theo_doi').eq('noi_dung', title).single();
     expect(data).toMatchObject({ theo_1400: true, owner_tai_khoan: CV1_ID, nguoi_theo_doi: '00000000-0000-4000-8000-000000000003' });
     moiId = data.id; moiMa = data.ma;
-    const row = page.locator(`#klRow-${moiId}`);
-    await expect(row).toBeVisible(NAP);
+    await expect(page.locator(`#nganCT #klChiTiet-${moiId}`)).toBeVisible(NAP);   // v9 đợt 2: ở lại Giao việc, việc vừa giao mở trong ngăn chi tiết
+    await expect(page.locator('#viewGiaoViec')).toBeVisible();
+    await page.locator('#nganCTDong').click();
+    const row = await moViec(page, moiId, moiMa);
     await expect(row).toContainText('Demo E2E Chuyên viên NV');
     await expect(row).toHaveAttribute('data-muc', 'VANG'); // còn 3 ngày, chưa có minh chứng → VÀNG (CN-4.1)
     await expect(row).toHaveClass(/\bvang\b/);

@@ -113,12 +113,12 @@ async function luuKlCapNhat() {
     const giao = !$('klCnGiaoWrap').classList.contains('hidden') && { nguon: $('klCnNguon').value, phoiHop: $('klCnPhoiHop').value.trim() };
     if (giao && (giao.nguon !== (row.nguon_nhiem_vu_ma || '') || giao.phoiHop !== (row.don_vi_phoi_hop || ''))) {
       try { await datThongTinGiao(row.id, giao.nguon, giao.phoiHop); } catch (e) {   // cập nhật chính đã lưu — báo đúng phần chưa lưu, không để người dùng gửi lại cả hộp
-        notifyError(`Đã cập nhật ${row.ma} nhưng chưa lưu được nguồn / đơn vị phối hợp: ${loiDeHieu(e)}`); closeKlCapNhat(); afterSave(); return;
+        notifyError(`Đã cập nhật ${row.ma} nhưng chưa lưu được nguồn / đơn vị phối hợp: ${loiDeHieu(e)}`); closeKlCapNhat(); afterSave(row.id); return;
       }
     }
     notifySuccess(`Đã cập nhật ${row.ma}.`);
     closeKlCapNhat();
-    afterSave();
+    afterSave(row.id);
   } catch (e) {
     notifyError('Không lưu được: ' + loiDeHieu(e));
     $('klCnLuu').disabled = false;

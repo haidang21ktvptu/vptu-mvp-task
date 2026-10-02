@@ -1,6 +1,6 @@
-// View A3 — Chuyên viên (v8 đợt 2, mockup 05 "Việc của tôi": hai cột, hàng việc, cột phụ 340px hạn 7 ngày + hướng dẫn nhanh): thẻ theo mức khẩn, hành động tại chỗ — việc mới giao cần xác nhận đã nhận (thay modal
-// bắt buộc), chỉ đạo cần trả lời (ô một dòng), sắp đến hạn / quá hạn chưa có minh chứng (nộp minh chứng 3 ô ngay trên thẻ), đang thực
-// hiện (Cập nhật tiến độ). "Việc tôi theo dõi" = màn hình Nhiệm vụ lọc việc mình theo dõi. Quyền thật ở hàm DB / policy 0025, 0028.
+// View A3 — Chuyên viên (v8 đợt 2, mockup 05 "Việc của tôi": hai cột, hàng việc, cột phụ 340px hạn 7 ngày + hướng dẫn nhanh). v9 đợt 2: một thẻ
+// mỗi việc, mọi thao tác trên thẻ (viec-cua-toi.js) — xác nhận đã nhận / từ chối, trả lời chỉ đạo ngay dưới lời chỉ đạo, nộp minh chứng, cập nhật
+// tiến độ, ghi vướng mắc, đề nghị sửa ô do cấp giao điền. "Việc tôi theo dõi" = màn hình Nhiệm vụ lọc việc mình theo dõi. Quyền thật ở DB.
 import { $, setText, escapeHtml, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -16,10 +16,10 @@ import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN, datCauHinhDieuHanh } from '../shared/dieu-hanh/man-hinh.js';
 import { napLaiViec } from '../shared/kl/nap-lai-viec.js';
-import { lamMoiHuyHieu } from '../../features/huy-hieu.js';
+import { lamMoiHuyHieu, onSoChuaXuLy } from '../../features/huy-hieu.js';
 import { openKl } from '../shared/kl/index.js';
 import { openKlCapNhat } from '../shared/kl/cap-nhat-modal.js';
-import { nhomViecCuaToi, mucHtml, thanhTuChoiHtml } from './viec-cua-toi.js';
+import { nhomViecCuaToi, mucHtml, thanhTuChoiHtml, napDnsCuaToi } from './viec-cua-toi.js';
 import { canXuLyHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
 import { giuDienBien } from '../shared/dien-bien.js';
 
@@ -35,7 +35,7 @@ function ve() {
     khoiBiTuChoiHtml(),       // GĐ22: việc tôi giao thay mặt bị từ chối (chuyên viên giữ quan_tri_kl)
     mucHtml('do', 'Bị từ chối, chờ lãnh đạo giao lại', n.tuChoi, 'tu-choi'),
     mucHtml('lam', 'Việc mới giao — cần xác nhận đã nhận', n.moi, 'moi'),
-    mucHtml('do', 'Chỉ đạo cần trả lời', n.chiDao, 'chi-dao'),
+    mucHtml('do', 'Có chỉ đạo chờ đồng chí trả lời', n.chiDao, 'chi-dao'),
     mucHtml('vang', 'Sắp đến hạn hoặc quá hạn, chưa có minh chứng', n.canMinhChung, 'minh-chung'),
     mucHtml('luc', 'Đang thực hiện, còn thời gian', n.dangLam, 'dang-lam'),
   ].join('') || '<div class="muc"><b>Hôm nay đồng chí không có việc nào cần làm.</b></div>';
@@ -59,7 +59,11 @@ function hanTuanHtml() {
 }
 
 async function loadViecCuaToi() {
-  try { await napDieuHanh(); ve(); } catch (e) { notifyError('Không đọc được việc của đồng chí: ' + e.message); }
+  try { await Promise.all([napDieuHanh(), napDnsCuaToi()]); ve(); } catch (e) { notifyError('Không đọc được việc của đồng chí: ' + e.message); }
+}
+// Đề nghị sửa của tôi (thẻ "chờ … duyệt"): đọc lại mỗi lần số chưa xử lý làm mới — sau mỗi lần ghi và theo tín hiệu realtime (tin báo kết quả duyệt).
+async function lamMoiDnsThe() {
+  if (state.user?.role_group === 'A3' && dh.luc && sectionDangHien('viewDieuHanh') && await napDnsCuaToi()) ve();
 }
 function openDieuHanh() {
   showSection('viewDieuHanh');
@@ -112,6 +116,7 @@ export function registerA3View() {
         </div>`;
       datNapLai(loadViecCuaToi);
       datCauHinhDieuHanh({ kpi: () => [], phuDe: () => '', veThem: ve }); // napLaiViec → veDieuHanh → vẽ lại thẻ A3 ngay sau mỗi hành động ghi
+      onSoChuaXuLy(lamMoiDnsThe);   // hàm cấp module: đăng nhập lại không đăng ký trùng (Set)
       openDieuHanh();
     },
     reload() { openDieuHanh(); },

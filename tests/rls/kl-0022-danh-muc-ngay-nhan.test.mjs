@@ -89,11 +89,14 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     assertOk(ok, 'ngày nhận = hôm nay VN'); assert.equal(ok.data.ngay_nhan_uoc_tinh, false);
   });
 
-  test('7. sửa tay ngày nhận → cờ ước tính tự tắt; người theo dõi A3 sửa được ngày nhận/sản phẩm (guard 0025) nhưng không đổi Owner', async () => {
-    const r = await db().from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-03' }).eq('ma', 'NV-T51').select('ngay_nhan_uoc_tinh').single();
-    assertOk(r, 'admin sửa ngày nhận'); assert.equal(r.data.ngay_nhan_uoc_tinh, false);
+  test('7. người theo dõi A3 sửa ngày nhận ƯỚC TÍNH + điền sản phẩm còn trống (guard 0025); ngày nhận đã chốt và Owner thì không (nhập theo tầng 0070)', async () => {
     const cv1 = await userClient('demo_cv1');
-    assertOk(await cv1.from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-04', san_pham_mo_ta: 'x' }).eq('ma', 'NV-T51').select('id'), 'A3 người theo dõi sửa ngày nhận, sản phẩm');
+    assertOk(await cv1.from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-04', san_pham_mo_ta: 'x' }).eq('ma', 'NV-T51').select('id'), 'A3 sửa ngày nhận ước tính, điền mô tả sản phẩm');
+    const r = await db().from('nhiem_vu').select('ngay_nhan_uoc_tinh').eq('ma', 'NV-T51').single();
+    assert.equal(r.data.ngay_nhan_uoc_tinh, false, 'sửa tay ngày nhận → cờ ước tính tự tắt');
+    const chot = await cv1.from('nhiem_vu').update({ ngay_nhan_van_ban: '2026-08-03' }).eq('ma', 'NV-T51').select('id');
+    assertDenied(chot, 'A3 đổi ngày nhận đã chốt'); assert.match(chot.error.message, /báo người giao việc/);
+    assertDenied(await cv1.from('nhiem_vu').update({ san_pham_mo_ta: 'y' }).eq('ma', 'NV-T51').select('id'), 'A3 đổi mô tả sản phẩm đã điền');
     assertDenied(await cv1.from('nhiem_vu').update({ owner_don_vi_ma: 'TONG_HOP' }).eq('ma', 'NV-T51').select('id'), 'A3 đổi Owner');
   });
 

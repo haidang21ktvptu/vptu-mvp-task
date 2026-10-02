@@ -129,6 +129,12 @@ export async function timVanBan(tuKhoa = '', trang = 0, co = 50) {
 export async function vanBanTheoId(id) {
   return loi(await supabase.from('van_ban_giao_viec').select(COT_VAN_BAN).eq('id', id).maybeSingle(), 'đọc văn bản');
 }
+// Văn bản đúng khoá duy nhất (như kl_nhap_van_ban, 0074): số hội nghị + số hiệu; không có số hội nghị: loại + số hiệu + ngày ban hành.
+export async function vanBanTheoKhoa({ so, soHn, loai, ngay }) {
+  let q = supabase.from('van_ban_giao_viec').select(COT_VAN_BAN).eq('so_ket_luan', String(so).trim());
+  q = soHn ? q.eq('so_hoi_nghi', soHn) : q.is('so_hoi_nghi', null).eq('loai', loai).eq('ngay_ban_hanh', ngay);
+  return (loi(await q.limit(1), 'đọc văn bản'))[0] || null;
+}
 // Trích yếu văn bản (0046): đặt sau giao_viec qua hàm có allowlist (người tạo, A1, quan_tri_kl) và ghi vết — không ghi thẳng bảng.
 export async function datTrichYeuVanBan(id, trichYeu) {
   const r = await supabase.rpc('van_ban_dat_trich_yeu', { p_id: id, p_trich_yeu: trichYeu });

@@ -78,4 +78,17 @@
   .tb-chua-doc button { background: var(--vang-nhat); border-left: 3px solid var(--vang); }
   .tb-trong { padding: 16px 14px; font-size: 13px; }
   @media (max-width: 860px) { .tb-panel { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
+
+  /* v9 đợt 2 — nhập theo tầng (0070–0071): bút = cấp giao sửa ngay, khoá = cấp nhận đề nghị sửa; khối đề nghị sửa đang chờ; hộp thoại. */
+  .ct-luoi > div.co-tang { position: relative; padding-right: 34px; }
+  .nut-tang { position: absolute; top: -4px; right: 0; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: var(--chu-phu); }
+  .nut-tang:hover { background: var(--nen-mo); color: var(--chu); }
+  .nut-tang svg { display: block; }
+  .ct-dau h3 .nut-tang { position: static; display: inline-grid; vertical-align: -6px; margin-left: 4px; }
+  .hanh-dong .nut svg { display: inline-block; vertical-align: -3px; margin-right: 2px; }
+  .khoi-dns { background: var(--vang-nhat); }
+  .chi-tiet .khoi-dns h4 { color: var(--vang-chu); }
+  .dns-ds { margin: 4px 0 6px; padding-left: 18px; font-size: 13.5px; }
+  .dns-ds li + li { margin-top: 2px; }
+  .st-cu { font-weight: 600; font-size: 14.5px; padding: 8px 0; color: var(--chu); overflow-wrap: anywhere; }
 }

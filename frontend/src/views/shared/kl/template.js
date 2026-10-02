@@ -10,6 +10,7 @@ export const klTemplate = `
     <div class="phai-dau"><span id="klTinhDen" class="chu-phu" aria-live="polite"></span><span id="klKetNoi" class="ket-noi" role="status"></span>
       <button type="button" class="nut nho" data-action="loadKl">Tải lại</button>
       <button type="button" id="klXuatExcel" class="nut nho" data-action="klXuatExcel" title="Xuất đúng danh sách đang hiện (sau bộ lọc) ra tệp .xlsx">Xuất Excel</button>
+      <button type="button" id="klXuatMau" class="nut nho hidden" data-action="klXuatMau" title="Xuất danh sách đang hiện theo Mẫu nhập chuẩn — sửa trong Excel rồi nhập lại để cập nhật theo mã">Xuất theo mẫu nhập</button>
       <button type="button" id="klIn" class="nut nho" data-action="klIn">In / lưu PDF</button>
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 

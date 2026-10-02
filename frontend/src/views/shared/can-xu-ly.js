@@ -14,12 +14,16 @@ import { loadDMUnreadMap } from '../../features/messages/index.js';
 import { napLaiViec } from './kl/nap-lai-viec.js';
 import { reloadCurrentView } from '../shell/index.js';
 import { chiTietHtml } from './can-xu-ly-chi-tiet.js';
+import { napDnsChoToi } from './kl/sua-tang.js';
 
 let mucDangMo = null; // mục đang mở danh sách dưới dải (giữ qua các lần vẽ lại theo realtime / sau hành động)
 
 // Mọi trang chủ đặt <div id="dhCanXuLy"> — vẽ lại dải khi số chưa xử lý đổi (realtime), không chờ trang nạp lại.
 export function mountCanXuLy() {
-  onSoChuaXuLy((so) => { const el = $('dhCanXuLy'); if (el) el.innerHTML = canXuLyHtml(so); });
+  onSoChuaXuLy(async (so) => {
+    if (mucDangMo === 'dnsua') await napDnsChoToi();   // danh sách đề nghị sửa đang mở: đọc lại cùng nhịp số chưa xử lý (đề nghị mới / đã rút)
+    const el = $('dhCanXuLy'); if (el) el.innerHTML = canXuLyHtml(so);
+  });
   registerActions({ moCanXuLy, cxXacNhanNhan, cxMoChuong });
 }
 
@@ -27,6 +31,7 @@ export function mountCanXuLy() {
 async function moCanXuLy({ muc }) {
   mucDangMo = mucDangMo === muc ? null : muc;
   if (mucDangMo === 'tin') { try { await loadDMUnreadMap(); } catch { /* vẽ theo số đang có */ } }
+  if (mucDangMo === 'dnsua') await napDnsChoToi();   // v9 đợt 2: đề nghị sửa chờ tôi duyệt (0071) — đọc khi mở mục
   const el = $('dhCanXuLy'); if (el) el.innerHTML = canXuLyHtml();
   $('cxChiTiet')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
@@ -57,6 +62,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
     nut('tin', n('nhan_tin'), 'tin chưa đọc'),
     vai() !== 'A3' ? nut('quyet', n('can_quyet'), 'việc cần quyết') : '',
     vai() !== 'A3' ? nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị chờ duyệt') : '',
+    nut('dnsua', n('de_nghi_sua'), 'đề nghị sửa chờ duyệt'),
     nut('tuchoi', n('bi_tu_choi'), 'việc bị từ chối'),
     ['A1', 'A2'].includes(vai()) ? nut('vuongmac', n('co_vuong_mac'), 'việc có vướng mắc') : '',   // PR-3: kl_so_chua_xu_ly.co_vuong_mac (phạm vi do RLS)
     nut('moi', n('viec_moi'), `việc mới chờ xác nhận${n('tt_cho_nhan') ? ` (${n('tt_cho_nhan')} Thường trực giao)` : ''}`),

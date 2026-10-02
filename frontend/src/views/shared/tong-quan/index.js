@@ -1,7 +1,8 @@
 // Màn hình Tổng quan (giao diện v9) — trang mở đầu của Thường trực (A0), lãnh đạo Văn phòng (A1), Trưởng phòng (A2): nhìn tổng thể việc theo dõi
 // thực hiện nhiệm vụ trong phạm vi của mình. Phạm vi do RLS quyết định (v_nhiem_vu, chi_dao); frontend chỉ đếm (lib/kl/tong-quan.js). Kỳ Tháng /
-// Quý / Năm đổi tại chỗ (không đọc lại); việc đang mở và cảnh báo luôn tính đến hôm nay. Bấm một dòng / khối → màn hình chi tiết (Nhiệm vụ đã
-// lọc, Báo cáo, Cán bộ, Theo văn bản, Cần xử lý). Realtime: đang xem thì nạp lại nền, gộp sự kiện 2 giây. e2e chờ #viewTongQuan[data-nap].
+// Quý / Năm đổi tại chỗ (không đọc lại); việc đang mở và cảnh báo luôn tính đến hôm nay. v9 đợt 2: bấm bất kỳ số, cột, đoạn, dòng nào →
+// danh sách đúng các việc làm nên con số đó (lib/kl/tong-quan-loc.js) mở NGAY TẠI CHỖ trong ngăn chi tiết dùng chung → bấm một việc xem chi
+// tiết, có nút quay lại; không chuyển sang mục khác. Realtime: đang xem thì nạp lại nền, gộp sự kiện 2 giây. e2e chờ #viewTongQuan[data-nap].
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -11,15 +12,18 @@ import { loadDanhMucKl, loadKlRows } from '../../../lib/kl/du-lieu.js';
 import { loadChiDaoTu } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo } from '../../../lib/kl/tong-quan.js';
+import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { openKl } from '../kl/index.js';
+import { moNganDanhSach } from '../ngan-chi-tiet.js';
 import { dauTrangHtml, canhBaoHtml, theThangHtml, coCauHtml, bangNhomHtml, vanBanHtml, linhVucHtml, chatLuongHtml, chiDaoHtml } from './template.js';
 
 const tq = { rows: [], cds: [], luc: null, ky: 'nam', loi: null };
 export const dongTongQuan = () => tq.rows;   // dòng đã nạp (Giao việc v9 liệt kê việc vừa nhập theo văn bản)
 const vai = () => state.user?.role_group;
 const KY = ['thang', 'quy', 'nam'];
+const laLanhDaoVP = (id) => state.accounts.find((a) => a.id === id)?.role_group === 'A1';
+const ctxCd = () => ({ vai: vai(), me: state.user?.id, laLanhDaoVP });
 
 function tieuDe() {
   const u = state.user || {};
@@ -41,12 +45,11 @@ function ve() {
   const v = vai(); const homNay = homNayVN(); const k = khoangKy(tq.ky, homNay); const rows = tq.rows;
   const [td, pv] = tieuDe(); const s = soLieuChinh(rows, k); const thang = theoThang(rows, homNay);
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
-  const laLanhDaoVP = (id) => state.accounts.find((a) => a.id === id)?.role_group === 'A1';
   $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec() })
     + canhBaoHtml(canhBaoDo(rows), v)
     + `<div class="luoi-tq">${theThangHtml(thang, homNay.slice(0, 4))}${coCauHtml(s, k)}${bangNhomHtml(theoNhom(rows, k, khoaNhom(v, DEPT_NAMES, state.user?.department)), v, k)}`
-    + `${vanBanHtml(theoVanBan(rows), v !== 'A2')}${linhVucHtml(theoLinhVuc(rows), s.dangMo)}${chatLuongHtml(chatLuongKy(rows, k), k)}`
-    + `${chiDaoHtml(chiDaoKy(tq.cds, k, { vai: v, me: state.user?.id, laLanhDaoVP }), v, k)}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
+    + `${vanBanHtml(theoVanBan(rows))}${linhVucHtml(theoLinhVuc(rows), s.dangMo)}${chatLuongHtml(chatLuongKy(rows, k), k)}`
+    + `${chiDaoHtml(chiDaoKy(tq.cds, k, ctxCd()), v, k)}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
 }
 
@@ -99,13 +102,17 @@ function hienGoi(e) {
   goi.style.top = `${Math.max(8, r.top - goi.offsetHeight - 8)}px`;
 }
 
-function tqMoDanhSach({ loc }) {
-  let bo; try { bo = JSON.parse(loc || '{}'); } catch { bo = {}; }
-  openKl({ ...bo, tuManTongQuan: true });
+// Bấm một chỉ tiêu: lọc đúng tập việc trên CÙNG dữ liệu và kỳ đang hiện (tổng danh sách = con số đã bấm), mở trong ngăn chi tiết.
+function tqMo({ ct }) {
+  let c; try { c = JSON.parse(ct || '{}'); } catch { return; }
+  const homNay = homNayVN(); const k = khoangKy(tq.ky, homNay);
+  const kq = locChiTieu(tq.rows, c, k, { khoa: khoaNhom(vai(), DEPT_NAMES, state.user?.department), cds: tq.cds, ctxCd: ctxCd(), homNay });
+  const goi = document.getElementById('tqGoi'); if (goi) goi.hidden = true;
+  moNganDanhSach(kq);
 }
 
 export function registerTongQuan() {
-  registerActions({ openTongQuan, tqKy: ({ ky }) => { if (KY.includes(ky)) { tq.ky = ky; if (tq.luc) ve(); } }, tqMoDanhSach });
+  registerActions({ openTongQuan, tqKy: ({ ky }) => { if (KY.includes(ky)) { tq.ky = ky; if (tq.luc) ve(); } }, tqMo });
   document.addEventListener('mouseover', hienGoi);
   document.addEventListener('focusin', hienGoi);
   window.addEventListener('scroll', () => { const g = $('tqGoi'); if (g) g.hidden = true; }, { passive: true });

@@ -127,7 +127,6 @@ export function render(veLaiNgan = false) {
 function veChip() {
   const chips = Object.entries(kl.loc).filter(([k, v]) => NHAN_CHIP[k] && v).map(([k, v]) =>
     `<span class="chip">${escapeHtml(NHAN_CHIP[k](v))}<button type="button" data-action="boKlLoc" data-khoa="${k}" aria-label="Bỏ lọc">✕</button></span>`);
-  if (kl.loc.tuTongQuan || kl.loc.tuManTongQuan) chips.unshift(`<button type="button" class="nut nho" data-action="${kl.loc.tuManTongQuan ? 'openTongQuan">← Về Tổng quan' : 'openDieuHanh">← Về Cần xử lý'}</button>`);
   $('klChipLoc').innerHTML = chips.join('');
   $('klChipLoc').classList.toggle('hidden', chips.length === 0);
 }

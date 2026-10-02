@@ -1,8 +1,9 @@
 // Unit test số liệu màn hình Tổng quan (giao diện v9): kỳ, dải đầu, cơ cấu cộng đủ tổng, gom theo vai, văn bản, lĩnh vực, chất lượng,
-// chỉ đạo, dải cảnh báo. Chạy `npm test` trong frontend/ (node:test, không cần trình duyệt hay Supabase).
+// chỉ đạo, dải cảnh báo; v9 đợt 2: danh sách bấm-xem của từng chỉ tiêu (locChiTieu) bằng đúng con số. Chạy `npm test` trong frontend/ (node:test, không cần trình duyệt hay Supabase).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo, mucMo, ngayGiao } from '../src/lib/kl/tong-quan.js';
+import { locChiTieu } from '../src/lib/kl/tong-quan-loc.js';
 
 const HOM_NAY = '2026-10-02';
 const viec = (o) => ({ nhom_dem: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH', ngay_nhan_van_ban: '2026-09-10', owner_trong_van_phong: true, owner_phong: 'TONG_HOP',
@@ -121,5 +122,58 @@ describe('chiDaoKy', () => {
   test('A0: chỉ đạo Thường trực; A2: của chính mình', () => {
     assert.equal(chiDaoKy(ds, nam, { vai: 'A0' }).banHanh, 1);
     assert.equal(chiDaoKy(ds, nam, { vai: 'A2', me: 'chuyen-vien' }).banHanh, 1);
+  });
+});
+
+// v9 đợt 2: bấm một số / cột / đoạn / dòng → danh sách trong ngăn chi tiết. Bất biến: số việc trong danh sách = con số đã bấm (cùng dữ liệu, cùng kỳ).
+describe('locChiTieu — danh sách của từng chỉ tiêu bằng đúng con số', () => {
+  const nam = khoangKy('nam', HOM_NAY); const ids = (kq) => kq.rows.map((r) => r.id).sort((a, b) => a - b);
+  const tong = (kq) => new Set(kq.nhom.flatMap((n) => n.rows.map((r) => r.id))).size;
+  test('dải đầu: giao, xong, đang mở, cảnh báo, Đỏ', () => {
+    const s = soLieuChinh(MAU, nam);
+    assert.equal(locChiTieu(MAU, { t: 'giao' }, nam).rows.length, s.giao);
+    assert.equal(locChiTieu(MAU, { t: 'xong' }, nam).rows.length, s.xong);
+    assert.equal(locChiTieu(MAU, { t: 'mo' }, nam).rows.length, s.dangMo);
+    assert.deepEqual(ids(locChiTieu(MAU, { t: 'canh' }, nam)), [2, 3, 4]);
+    assert.deepEqual(ids(locChiTieu(MAU, { t: 'do' }, nam)), [3, 4]);
+  });
+  test('cơ cấu: từng mức và đánh giá cộng đủ tổng', () => {
+    const s = soLieuChinh(MAU, nam);
+    Object.keys(s.mo).forEach((m) => assert.equal(locChiTieu(MAU, { t: 'muc', m }, nam).rows.length, s.mo[m], m));
+    assert.equal(locChiTieu(MAU, { t: 'dg', kq: 'DUNG_HAN' }, nam).rows.length, s.dungHan);
+    assert.equal(locChiTieu(MAU, { t: 'dg', kq: 'TRE' }, nam).rows.length, s.tre);
+    assert.equal(locChiTieu(MAU, { t: 'dg', kq: 'chua' }, nam).rows.length, s.chuaDanhGia);
+    assert.equal(tong(locChiTieu(MAU, { t: 'dg' }, nam)), s.dungHan + s.tre);
+  });
+  test('tháng: giao mới / hoàn thành đúng cột của biểu đồ', () => {
+    const t = theoThang(MAU, HOM_NAY)[8]; const kq = locChiTieu(MAU, { t: 'thang', th: 9 }, nam, { homNay: HOM_NAY });
+    assert.equal(kq.tieuDe, 'Tháng 9/2026');
+    assert.deepEqual(kq.nhom.map((n) => n.rows.length), [t.giao, t.xong]);
+  });
+  test('bảng theo phòng: đang làm / hoàn thành / mức cảnh báo của đúng dòng', () => {
+    const khoa = khoaNhom('A1', { TONG_HOP: 'Phòng Tổng hợp' }); const d = theoNhom(MAU, nam, khoa)[0];
+    const kq = locChiTieu(MAU, { t: 'nhom', ma: d.ma, ten: d.ten }, nam, { khoa });
+    assert.deepEqual(kq.nhom.map((n) => n.rows.length), [d.dangMo, d.xong]);
+    assert.equal(locChiTieu(MAU, { t: 'nhom', ma: d.ma, ten: d.ten, m: 'ddb' }, nam, { khoa }).rows.length, d.ddb);
+  });
+  test('văn bản, lĩnh vực (kể cả Chưa phân loại), chất lượng, trả lại', () => {
+    const vb = theoVanBan(MAU)[0]; const kq = locChiTieu(MAU, { t: 'vb', id: 'vb1', ten: vb.soHieu }, nam);
+    assert.equal(kq.nhom[1].rows.length, vb.xong);
+    theoLinhVuc(MAU).forEach((d) => assert.equal(locChiTieu(MAU, { t: 'lv', ma: d.ma, ten: d.ten }, nam).rows.length, d.so, d.ten));
+    const c = chatLuongKy(MAU, nam);
+    assert.equal(locChiTieu(MAU, { t: 'cl', cl: 'DAT_TOT' }, nam).rows.length, c.tot);
+    assert.deepEqual(ids(locChiTieu(MAU, { t: 'traLai' }, nam)), [6]);
+  });
+  test('chỉ đạo: danh sách là các VIỆC có chỉ đạo; chờ phản hồi tách quá hạn / trong hạn', () => {
+    const cd = (o) => ({ loai: 'Y_KIEN', nguoi_gui: 'ld', created_at: '2026-09-01T01:00:00Z', trang_thai: 'CHO_PHAN_HOI', phan_hoi_luc: null, han_phan_hoi: '2026-09-03', ...o });
+    const cds = [cd({ id: 'a', nhiem_vu_id: 1 }), cd({ id: 'b', nhiem_vu_id: 1, han_phan_hoi: '2026-12-01' }), cd({ id: 'c', nhiem_vu_id: 2, trang_thai: 'DA_PHAN_HOI', phan_hoi_luc: '2026-09-02T01:00:00Z' })];
+    const ctx = { cds, ctxCd: { vai: 'A1', laLanhDaoVP: () => true }, homNay: HOM_NAY };
+    const cho = locChiTieu(MAU, { t: 'cd', loai: 'dangCho' }, nam, ctx);
+    assert.deepEqual(cho.nhom.map((n) => n.rows.map((r) => r.id)), [[1], [1]]);
+    const bh = locChiTieu(MAU, { t: 'cd', loai: 'banHanh' }, nam, ctx);
+    assert.deepEqual(bh.nhom.map((n) => n.rows.map((r) => r.id)), [[1], [2]]);
+  });
+  test('chỉ tiêu lạ → danh sách rỗng, không lỗi', () => {
+    assert.deepEqual(locChiTieu(MAU, { t: 'khong-co' }, nam).rows, []);
   });
 });

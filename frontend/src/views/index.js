@@ -9,13 +9,17 @@ import { mountBanhRang } from './shell/banh-rang.js';
 import { mountKieuGiaoDien } from './shell/kieu-giao-dien.js';
 import { mountTimNhanh } from './shell/tim-nhanh.js';
 import { registerKlView } from './shared/kl/index.js';
-import { registerGiaoViec } from './shared/giao-viec/index.js';
+import { registerGiaoViec, openGiaoViec } from './shared/giao-viec/index.js';
+import { mountTabGiaoViec } from './shared/nhap-excel/tab.js';
+import { mountNhapExcel } from './shared/nhap-excel/index.js';
+import { mountChoHoanThien } from './shared/nhap-excel/cho.js';
 import { mountGiaoViecV9 } from './shared/giao-viec/v9.js';
 import { registerTheoVanBan } from './shared/theo-van-ban/index.js';
 import { registerChiDaoTTThuKy } from './shared/chi-dao-tt-thu-ky/index.js';
 import { registerNghiemThu } from './shared/nghiem-thu.js';
 import { mountDieuHanh } from './shared/dieu-hanh/man-hinh.js';
 import { registerTongQuan } from './shared/tong-quan/index.js';
+import { mountNganChiTiet } from './shared/ngan-chi-tiet.js';
 import { mountMessages, loadDMUnreadMap } from '../features/messages/index.js';
 import { mountThongBao, loadThongBao } from '../features/thong-bao/index.js';
 import { initRealtime } from '../features/realtime.js';
@@ -29,11 +33,13 @@ export function registerViews() {
   registerKlView();      // Nhiệm vụ (tổng quan → danh sách → ngăn chi tiết), mọi vai trò
   registerGiaoViec();    // Giao việc ba bước một trang (A1/A2/quan_tri_kl)
   mountGiaoViecV9();     // v9: dải 1-1-1-1-3, chọn nhanh, kế thừa, văn bản đang nhập
+  mountTabGiaoViec(openGiaoViec); mountNhapExcel(); mountChoHoanThien();   // v9 đợt 2: Nhập từ Excel, Chờ hoàn thiện (người nhập)
   registerTheoVanBan();  // Cây "Theo văn bản" (A0/A1, v8 đợt 4)
   registerChiDaoTTThuKy(); // "Chỉ đạo Thường trực" của thư ký Thường trực (0047)
   registerNghiemThu();   // "Cần nghiệm thu" (PR-2b): A1, A2, quan_tri_kl, thư ký
   mountDieuHanh();       // hành động dùng chung của các màn hình điều hành (A0/A1)
   registerTongQuan();    // v9: Tổng quan — trang mở đầu của A0/A1/A2
+  mountNganChiTiet();    // v9 đợt 2: ngăn chi tiết dùng chung — mọi "bấm để xem" mở tại chỗ, không đổi mục
   registerA0View();      // Trung tâm điều hành Thường trực, Chỉ đạo đã gửi
   registerA1View();      // Điều hành hôm nay, Cán bộ thuộc quyền, Báo cáo
   registerA2View();      // Phòng tôi hôm nay, Cán bộ trong phòng

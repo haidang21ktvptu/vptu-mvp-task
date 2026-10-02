@@ -42,6 +42,8 @@ export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Qu
 // PR-2b: "Cần nghiệm thu (n)" — A1, A2, quan_tri_kl, thư ký Thường trực (việc Thường trực giao cho Chánh VP); số = minh chứng chờ tôi là người nhận nhắc chính.
 export const NGHIEM_THU_NAV = { id: 'navNghiemThu', label: 'Cần nghiệm thu', ngan: 'Nghiệm thu', action: 'openNghiemThu', section: 'viewNghiemThu', badgeId: 'ntBadge', nhom: 'Điều hành' };
 export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thường trực', ngan: 'Chỉ đạo TT', action: 'openChiDaoTTThuKy', section: 'viewChiDaoTTThuKy', nhom: 'Theo dõi' };
+// v9 đợt 2: quản trị hệ thống không giữ quyền giao việc vẫn nhập Excel (thẻ trong màn Giao việc); vai đã có Giao việc dùng thẻ ở đó.
+export const NHAP_EXCEL_NAV = { id: 'navNhapExcel', label: 'Nhập từ Excel', ngan: 'Nhập Excel', action: 'openNhapExcel', section: 'viewGiaoViec', nhom: 'Điều hành' };
 
 // Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Giao việc và Nhiệm vụ toàn phạm vi; Giao việc giữ trên thanh dưới (như trước v9).
 const QTKL_A3 = [{ ...MENU.A1[2], duoi: true }, { ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
@@ -51,6 +53,7 @@ export function menuCuaVai(user) {
   const nhanTin = [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
+  if (user?.quan_tri_he_thong && user.role_group !== 'A0' && !goc.some((it) => it.id === 'navGiaoViec')) goc.push(NHAP_EXCEL_NAV);
   const nghiemThu = user && user.role_group !== 'A0' && (['A1', 'A2'].includes(user.role_group) || user.quan_tri_kl || user.thu_ky_thuong_truc) ? [NGHIEM_THU_NAV] : [];
   const sau = goc.findIndex((it) => it.id === 'navDieuHanh') + 1; // "Cần nghiệm thu" đứng ngay sau màn hình điều hành (sau Tổng quan nếu có)
   return [...goc.slice(0, sau), ...nghiemThu, ...goc.slice(sau), ...thuKy, ...nhanTin, ...quanTri];

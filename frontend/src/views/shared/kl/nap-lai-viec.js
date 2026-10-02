@@ -32,19 +32,21 @@ function thay(rows, id, moi) {
 
 // Cập nhật bộ nhớ hai màn hình và vẽ lại màn hình đang hiện. Lỗi đọc (mạng, staging bận) không chặn luồng: lần nạp cả danh sách phía sau xử lý.
 // Realtime (su-kien.js, kl/index.js) gọi { nemLoi: true, veLai: false }: lỗi ném ra để nạp cả màn thay thế; tự vẽ một lần sau cả lượt.
-export async function napLaiViec(id, { nemLoi = false, veLai = true } = {}) {
+// chiKhiDoi (ngăn chi tiết dùng chung, v9 đợt 2): dòng đọc lại giống hệt dòng đang có → không vẽ lại (khỏi đọc lại căn cứ của ngăn lần hai).
+export async function napLaiViec(id, { nemLoi = false, veLai = true, chiKhiDoi = false } = {}) {
   if (!id) return;
   try {
     // Lượt nạp cả màn đang chạy đọc dữ liệu TRƯỚC thay đổi này: chờ nó xong rồi mới đọc/thay dòng, để nó không ghi đè dòng mới hơn.
     await Promise.all([dangNapKl(), dangNapDh()].map((p) => p?.catch(() => {})));
     const { row, ngoaiLe, tuChoi } = await docMotViec(id);
+    const doi = JSON.stringify(getKlRows().find((x) => x.id === id) || null) !== JSON.stringify(row);
     thay(getKlRows(), id, row);
     thay(dh.rows, id, row);
     thay(dh.ngoaiLe, id, ngoaiLe);
     dh.ngoaiLe.sort(soSanhNgoaiLe);
     dh.tuChoiCho = [...(dh.tuChoiCho || []).filter((t) => t.nhiem_vu_id !== id), ...tuChoi.filter((t) => t.trang_thai === 'CHO_DUYET')];
-    if (!veLai) return;
-    if (sectionDangHien('viewKl')) render(true);
+    if (!veLai || (chiKhiDoi && !doi)) return;
+    if (sectionDangHien('viewKl') || document.querySelector('#nganCT:not(.hidden) #klChiTiet')) render(true);   // v9 đợt 2: ngăn chi tiết dùng chung
     if (sectionDangHien('viewDieuHanh')) veDieuHanh();
   } catch (e) { if (nemLoi) throw e; /* nạp lại toàn danh sách phía sau vẫn chạy */ }
 }

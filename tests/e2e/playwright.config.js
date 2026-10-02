@@ -39,7 +39,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/han-nop-minh-chung.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/han-nop-minh-chung.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
     // GĐ19: chi-dao-tt ghi nhiệm vụ vào phạm vi PCVP2 (Quản trị) — chạy SAU desktop để không đua với bộ số kl-dashboard (PCVP2).
     { name: 'chi-dao-tt', use: DESKTOP, testMatch: /chi-dao-tt\.spec\.js/, dependencies: ['desktop'] },
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở project riêng bên dưới).
@@ -67,8 +67,14 @@ export default defineConfig({
     { name: 'pr3-hien-thi', use: DESKTOP, testMatch: /pr3-hien-thi\.spec\.js/, dependencies: ['pr3-vuong-mac'] },
     // PR-4 (chỉ máy tính, một phiên demo_qtht): sửa phòng + chức danh demo_e2e_dh rồi trả lại — nối sau pr3-hien-thi, trước dang-nhap.
     { name: 'pr4', use: DESKTOP, testMatch: /quan-tri-sua-tai-khoan\.spec\.js/, dependencies: ['pr3-hien-thi'] },
+    // v9 đợt 2 (chỉ máy tính): nhập theo tầng + Đề nghị sửa — hàm DB gửi tin hệ thống cho demo_e2e_cv (realtime.spec đếm huy hiệu tin của tài khoản
+    // này) nên chạy nối sau pr4, không song song với desktop. Project chưa áp 0071 → spec tự skip.
+    { name: 'v9-dot2', use: DESKTOP, testMatch: /nhap-theo-tang\.spec\.js/, dependencies: ['pr4'] },
+    // v9 đợt 2 (chỉ máy tính): nhập Excel toàn trình — demo_e2e_tk cấp tạm quan_tri_kl; tin tổng hợp của lô tới demo_e2e_cv / demo_e2e_tp nên
+    // nối sau v9-dot2. Project chưa áp 0072 → spec tự skip.
+    { name: 'v9-nhap-excel', use: DESKTOP, testMatch: /nhap-excel\.spec\.js/, dependencies: ['v9-dot2'] },
     // GĐ23: doi-mat-khau tạo tài khoản tạm bằng service_role và đăng nhập qua form — chạy cùng lượt cuối với dang-nhap.
-    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4'] },
+    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4', 'v9-dot2', 'v9-nhap-excel'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',

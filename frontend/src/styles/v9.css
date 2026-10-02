@@ -85,4 +85,16 @@
   :root[data-theme="dark"] .dk-chon button[aria-pressed="true"].dk-khan,
   :root[data-theme="dark"] .dk-chon button[aria-pressed="true"].dk-thuong-khan { color: #0B1626; }
   :root[data-theme="dark"] .dn-the input, :root[data-theme="dark"] .o-nhap, :root[data-theme="dark"] select.o-nhap { color-scheme: dark; }
+
+  /* v9 đợt 2 — "Việc của tôi" một thẻ mỗi việc: chỉ đạo chờ trả lời trích ngay trên thẻ; ô nộp minh chứng mở bằng nút (ngoài nhóm cần minh chứng) */
+  .muc .the-con .trich-phe { flex-basis: 100%; margin: 2px 0 0 22px; padding: 8px 12px; border-left: 3px solid var(--vach-tren); border-radius: 0 8px 8px 0;
+    background: var(--nen-mo); font-family: var(--font-van-ban); font-size: 14px; color: var(--chu); }
+  .trich-phe small { display: block; margin-top: 3px; font-family: var(--font-sans); font-size: 12.5px; color: var(--chu-phu); }
+  .mc-inline.o:not(.mo) { display: none; }
+  /* Hàng nút của thẻ xuống dòng riêng, thẳng lề chữ (sau chấm); điện thoại: chữ cùng dòng với chấm, nút tự xuống dòng, không tràn ngang */
+  .muc .the-con.vct-the .hanh-dong { flex: 1 1 100%; margin-left: 22px; }
+  @media (max-width: 600px) {
+    .muc .the-con.vct-the > p { flex-basis: calc(100% - 22px); }
+    .muc .the-con.vct-the .hanh-dong, .muc .the-con.vct-the .trich-phe { margin-left: 0; }
+  }
 }

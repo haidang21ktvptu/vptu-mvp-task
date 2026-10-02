@@ -1,12 +1,13 @@
 // Kịch bản 12 (GĐ10 PR 10F, viết lại GĐ14; giao diện v7 GĐ20): người có quan_tri_kl giao việc trên trang ba bước — văn bản mới (loại, số
 // hội nghị, số hiệu, ngày BH), chịu trách nhiệm (Owner) là cán bộ → cấp nhận tự điền, thiếu sản phẩm bị chặn ngay ở form, đủ Owner + Product
-// + Deadline → sang Nhiệm vụ với dòng XANH (mép trái lam), theo_1400. Cấp cờ quan_tri_kl tạm cho demo_qtht bằng service_role, thu lại sau.
+// + Deadline → ở lại Giao việc, việc vừa giao hiện trong ngăn chi tiết dùng chung (v9 đợt 2); ở Nhiệm vụ là dòng XANH (mép trái lam), theo_1400.
+// Cấp cờ quan_tri_kl tạm cho demo_qtht bằng service_role, thu lại sau.
 import { test, expect } from '@playwright/test';
 import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs, nav, moGiaoViec, mauToken, NAP, dienHanNop } from './lib/app.js';
+import { contextAs, nav, moGiaoViec, moViec, mauToken, NAP, dienHanNop } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
@@ -99,21 +100,21 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
-    await expect(page.locator('#viewKl')).toBeVisible(); // sau khi giao: sang Nhiệm vụ, lọc theo mã vừa giao
+    await expect(page.locator('#viewGiaoViec')).toBeVisible(); // v9 đợt 2: sau khi giao vẫn ở Giao việc, không chuyển mục
     const { data } = await db.from('nhiem_vu').select('id, ma, nguon, theo_1400, owner_tai_khoan, owner_don_vi_ma, san_pham_loai, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi, do_khan, giao_thay_mat_cho')
       .eq('noi_dung', noiDung).single(); // đúng dòng vừa tạo, không lấy 'mới nhất' (2 worker)
     expect(data).toMatchObject({ nguon: 'app', theo_1400: true, owner_tai_khoan: CV1_ID, owner_don_vi_ma: 'TONG_HOP', san_pham_loai: 'TO_TRINH',
       cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: TRUONG_PHONG_ID, tao_boi: QTHT_ID, do_khan: 'THUONG', giao_thay_mat_cho: TRUONG_PHONG_ID });
-    const row = page.locator(`#klRow-${data.id}`);
-    await expect(row).toBeVisible(NAP);
+    await expect(page.locator(`#nganCT #klChiTiet-${data.id}`)).toContainText('Tờ trình', NAP); // việc vừa giao mở trong ngăn chi tiết
+    await page.locator('#nganCTDong').click();
+    const row = await moViec(page, data.id, data.ma);
     await expect(page.locator('#klTimKiem')).toHaveValue(data.ma);
     await expect(row).toHaveAttribute('data-muc', 'XANH');
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
     await expect(row).toHaveClass(/\blam\b/);
     // Màu tính toán trên bản build (Tailwind cắt lớp không thấy nguyên văn) — v8 đợt 3: chấm trạng thái .stt màu lam của việc Xanh.
     await expect.poll(() => row.locator('.stt').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)).toBe(await mauToken(page, '--lam'));
-    await row.click();
-    await expect(page.locator(`#klChiTiet-${data.id}`)).toContainText('Tờ trình', NAP); // sản phẩm ở ngăn chi tiết
+    await expect(page.locator(`#viewKl #klChiTiet-${data.id}`)).toContainText('Tờ trình', NAP); // sản phẩm ở ngăn chi tiết của màn Nhiệm vụ
   });
 
   test('Ký ban hành: hạn tự tính = ngày BH + 10, ô hạn khoá; văn bản vừa tạo có trong danh sách chọn; Huỷ về Nhiệm vụ', async () => {
