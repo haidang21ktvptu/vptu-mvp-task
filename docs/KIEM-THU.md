@@ -133,6 +133,6 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 ## e2e giao diện v9 đợt 2 — project `v9-dot2`, `v9-nhap-excel` (chỉ máy tính, từ 2/10/2026)
 - `nhap-theo-tang.spec.js` (project `v9-dot2`, sau `pr4`): thẻ "Việc của tôi" A3 → Đề nghị sửa → A2 duyệt ở Cần xử lý; khoá / bút trong ngăn chi tiết; Sửa thông tin giao. Hàm DB gửi tin hệ thống cho demo_e2e_cv nên không chạy song song với `desktop` (realtime.spec đếm huy hiệu).
 - `nhap-excel.spec.js` (project `v9-nhap-excel`, sau `v9-dot2`): demo_e2e_tk cấp tạm `quan_tri_kl`; tệp "Phụ lục 2" HƯ CẤU tạo lúc chạy (`lib/xlsx-gia.mjs`, không lưu vào kho) → xem trước → nhập lô → hoàn thiện dòng chờ → dữ liệu gốc (demo_e2e_cv) → hoàn tác. `global-setup` dọn lô / tin / từ điển nhãn `E2E-TEST` còn sót.
-- `dang-nhap` phụ thuộc thêm `v9-dot2`, `v9-nhap-excel`. Project chưa áp 0071 / 0072 → spec tự skip (PR chạy e2e trên staging chưa có migration của PR; chạy thật sau khi merge).
+- `dang-nhap` phụ thuộc thêm `v9-dot2`, `v9-nhap-excel`. Project chưa áp 0071 / 0072 → spec tự skip (PR chạy e2e trên staging chưa có migration của PR; chạy thật sau khi merge). PR #101: staging được áp tay 0070–0075 ngày 2/10 (trước merge) nên hai spec chạy thật ngay trong PR.
 - RLS: `kl-0070-nhap-theo-tang` (lỗi giá trị của sua_thong_tin_giao chỉ chạy cục bộ), `kl-0072-nhap-excel` (test 7 từ điển / hồ sơ gắn `CHI_CUC_BO`); cả hai cấp tạm `quan_tri_kl` cho demo_cv2 và trả lại trong `finally` / `after`.
 
