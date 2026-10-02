@@ -26,11 +26,23 @@ function dongHtml(d) {
     <form class="o" id="oBo-${d.id}" data-submit="nxBoDong" data-id="${d.id}"><span>Bỏ dòng ${d.so_dong} (không tạo việc)?</span>
       <button type="submit" class="nut chinh nho">Bỏ</button><button type="button" class="nut nho" data-action="dongO" data-o="oBo-${d.id}">Huỷ</button></form></div>`;
 }
+// Số dòng theo kết quả: so_lieu chốt lúc nhập (và sau hoàn tác); dòng chờ đã hoàn thiện / đã bỏ sau đó không ghi lại so_lieu → đếm "Chờ hoàn
+// thiện" theo dòng thật đang chờ, phần chênh hiện thành "Đã hoàn thiện / đã bỏ".
+function soDongHtml(lo, dangCho) {
+  const so = { ...(lo.so_lieu || {}) };
+  if (!lo.hoan_tac_luc && so.CHO_HOAN_THIEN !== undefined) {
+    const daXuLy = Math.max(0, so.CHO_HOAN_THIEN - dangCho);
+    so.CHO_HOAN_THIEN = dangCho;
+    if (daXuLy) so.DA_HOAN_THIEN = (so.DA_HOAN_THIEN || 0) + daXuLy;
+  }
+  const nhan = (k) => (k === 'DA_HOAN_THIEN' ? 'Đã hoàn thiện / đã bỏ' : KQ[k][0]);
+  return Object.keys(KQ).filter((k) => so[k]).map((k) => `<span class="${KQ[k][1]}">${nhan(k)} <b>${so[k]}</b></span>`).join('');
+}
 function loHtml(lo) {
-  const dong = du.cho.filter((d) => d.lo_id === lo.id); const so = lo.so_lieu || {};
+  const dong = du.cho.filter((d) => d.lo_id === lo.id);
   return `<section class="tam nx-phan nx-lo" id="nxLo-${lo.id}"><div class="tam-dau"><h2>Lô ${escapeHtml(lo.ma)}</h2>
       <span class="chu-phu">${escapeHtml(lo.ten_tep)} · ${formatDateTime(lo.tao_luc)}${lo.hoan_tac_luc ? ` · đã hoàn tác ${formatDateTime(lo.hoan_tac_luc)}` : lo.xong_luc ? '' : ' · nhập dở'}</span></div>
-    <div class="nx-loc">${Object.keys(KQ).filter((k) => so[k]).map((k) => `<span class="${KQ[k][1]}">${KQ[k][0]} <b>${so[k]}</b></span>`).join('')}
+    <div class="nx-loc">${soDongHtml(lo, dong.length)}
       ${conHan(lo) ? `<button type="button" class="nut nho" data-action="moO" data-o="oHtCho-${lo.id}">Hoàn tác lô</button>` : ''}</div>
     ${conHan(lo) ? xacNhanHoanTacHtml(lo, 'oHtCho') : ''}
     ${!lo.xong_luc && !lo.hoan_tac_luc ? '<p class="chu-phu nx-trong">Lô nhập dở: chọn lại đúng tệp ở thẻ "Nhập từ Excel" để gửi tiếp (dòng đã nhập không bị tạo lại), hoặc hoàn tác lô.</p>' : ''}

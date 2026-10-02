@@ -8,7 +8,7 @@ import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { loadKlRows } from '../../lib/kl/du-lieu.js';
 import { locRows } from '../../lib/kl/tong-hop.js';
-import { openKl } from '../shared/kl/index.js';
+import { openKl, chiViecCuaToi } from '../shared/kl/index.js';
 import { moNganDanhSach, moNganViec } from '../shared/ngan-chi-tiet.js';
 import { sectionDangHien } from './index.js';
 
@@ -32,7 +32,7 @@ async function onTim(e) {
   e.preventDefault();
   const tuKhoa = $('timNhanhO').value.trim();
   if (!tuKhoa) return;
-  const loc = state.user?.role_group === 'A3' ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };
+  const loc = chiViecCuaToi() ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };
   dongTimNhanh();
   if (sectionDangHien('viewKl')) { openKl(loc); return; }
   try {
