@@ -51,4 +51,4 @@ export function kpiMinhChung() {
 export const kpiHtml = (ds) => ds.map(o).join('');
 
 // Nhãn đuôi cho tiêu đề danh sách theo số-lọc đang chọn.
-export const NHAN_KPI = { quyet: ' cần Thường trực quyết', nghen: ' đang nghẽn', cho: ' có chỉ đạo Thường trực chờ phản hồi', tt: ' có chỉ đạo Thường trực chờ phản hồi', mc: ' chờ xác nhận minh chứng', tuchoi: ' bị từ chối, chờ giao lại', null: ' đang nghẽn' };
+export const NHAN_KPI = { quyet: ' cần đồng chí quyết', nghen: ' đang nghẽn', cho: ' có chỉ đạo Thường trực chờ phản hồi', tt: ' có chỉ đạo Thường trực chờ phản hồi', mc: ' chờ xác nhận minh chứng', tuchoi: ' bị từ chối, chờ giao lại', null: ' đang nghẽn' };

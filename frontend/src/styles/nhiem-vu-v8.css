@@ -8,8 +8,8 @@
   .tq { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; background: none; border: 0; border-radius: 0; overflow: visible; }
   .tq .o-so { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--vien); border-left: 1px solid var(--vien); border-radius: 16px; background: var(--the); font-size: 13px; font-weight: 600; color: var(--chu); white-space: nowrap; }
   .tq .o-so b { font-size: 13px; font-weight: 800; color: var(--do); }
-  .tq .o-so[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
-  .tq .o-so[aria-pressed="true"] b { color: var(--vang); }
+  .tq .o-so[aria-pressed="true"] { background: var(--navy-dac); border-color: var(--navy-dac); color: #fff; }
+  .tq .o-so[aria-pressed="true"] b { color: var(--vang-tren-dac); }
   .tq .s-vang b { color: var(--vang-chu); } .tq .s-lam b { color: var(--navy); } .tq .s-luc b { color: var(--luc); }
   .kl-tim { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: var(--the); border: 1px solid var(--vien); border-radius: 8px; width: 300px; max-width: 100%; margin-left: auto; color: var(--chu-phu); }
   .kl-tim svg { width: 16px; height: 16px; flex: none; }

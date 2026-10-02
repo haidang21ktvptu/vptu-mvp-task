@@ -1,6 +1,6 @@
 /* Ngăn chi tiết (mọi vai, thứ tự: chỉ đạo → minh chứng → lịch sử), luồng chỉ đạo (.cd-*), khối minh chứng (.mc-*), lịch sử. */
 @layer components {
-  .md .chi-tiet { background: #fff; border: 1px solid var(--vien); border-radius: 12px; padding: 16px 18px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
+  .md .chi-tiet { background: var(--the); border: 1px solid var(--vien); border-radius: 12px; padding: 16px 18px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
   .chi-tiet h3 { font-size: 16px; } .chi-tiet .ma { font-size: 13px; color: var(--chu-phu); }
   .chi-tiet dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 12px 0 0; font-size: 13px; }
   .chi-tiet dt { color: var(--chu-phu); } .chi-tiet dd { margin: 0; }
@@ -68,8 +68,8 @@
   .mc-hop { margin-top: 8px; }
 
   /* ---- Chuông: bảng thả xuống gom theo việc ---- */
-  .tb-panel { position: absolute; right: 0; top: calc(100% + 8px); width: 380px; max-width: calc(100vw - 24px); max-height: 70vh; overflow-y: auto; background: #fff;
-    border: 1px solid var(--vien); border-radius: 12px; box-shadow: 0 20px 50px -30px rgba(27, 36, 48, .5); z-index: 60; color: var(--chu); text-align: left; }
+  .tb-panel { position: absolute; right: 0; top: calc(100% + 8px); width: 380px; max-width: calc(100vw - 24px); max-height: 70vh; overflow-y: auto; background: var(--the);
+    border: 1px solid var(--vien); border-radius: 12px; box-shadow: var(--bong-noi); z-index: 60; color: var(--chu); text-align: left; }
   .tb-dau { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--vien); font-size: 14px; }
   .tb-danh-sach { list-style: none; margin: 0; padding: 0; }
   .tb-dong button { display: block; width: 100%; text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--vien); font-size: 13px; line-height: 1.4; }

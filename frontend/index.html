@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1F3A5F">
+  <meta name="theme-color" content="#15395F">
   <title>Hệ thống quản trị nhiệm vụ — Tỉnh ủy Cao Bằng</title>
+  <!-- Kiểu giao diện nhớ theo máy (shell/kieu-giao-dien.js): đặt trước khi vẽ để không chớp kiểu mặc định. -->
+  <script>try { if (localStorage.getItem('vptu.kieu') === 'trang-nghiem') document.documentElement.setAttribute('data-kieu', 'trang-nghiem'); if (localStorage.getItem('vptu.nen-toi') === '1') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { /* trình duyệt chặn lưu trữ: dùng mặc định */ }</script>
   <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png">
   <script type="module" src="/src/main.js"></script>
@@ -56,21 +58,14 @@
   <!-- ================= KHUNG ỨNG DỤNG (v8 đợt 1): thanh đầu trang, menu dọc bên trái, vùng nội dung ================= -->
   <div id="appShell" class="hidden">
     <header id="mainHeader" class="dai">
-      <!-- Nền: ảnh Bản Giốc (bản 1200px, public/brand/README.md: ảnh tạm), lớp phủ navy→đỏ, dải núi đá vôi + vệt vàng vẽ SVG -->
-      <div class="dai-nen" aria-hidden="true">
-        <img class="dai-anh" src="/brand/ban-gioc-thanh-dau.jpg" width="1200" height="800" alt="" decoding="async">
-        <div class="dai-phu"></div>
-        <svg class="dai-nui" viewBox="0 0 760 72" preserveAspectRatio="none">
-          <path d="M0 62 L70 34 L120 52 L190 22 L250 48 L320 18 L380 44 L450 26 L520 50 L590 24 L660 46 L720 30 L760 44 L760 72 L0 72 Z" fill="rgba(255,255,255,.08)"/>
-          <path d="M0 68 L100 56 L200 64 L300 52 L400 62 L500 50 L600 60 L700 52 L760 58 L760 72 L0 72 Z" fill="rgba(232,185,35,.35)"/>
-        </svg>
-      </div>
       <div class="dai-trong">
         <button type="button" id="menuMoBtn" class="nut-dai menu-mo-nut" data-action="toggleMenuDoc" aria-label="Mở menu" aria-expanded="false" aria-controls="mainNav">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <img class="logo" src="/brand/bieu-trung.png" width="52" height="40" alt="Biểu trưng tỉnh Cao Bằng">
-        <div class="ten"><span>Văn phòng Tỉnh ủy Cao Bằng</span><b>Hệ thống quản trị nhiệm vụ theo kết quả</b></div>
+        <!-- Tên cơ quan theo thể thức văn bản Đảng; dòng ngày ghi ở shell/index.js -->
+        <div class="ten"><span>Tỉnh ủy Cao Bằng</span><b>Văn phòng</b><i aria-hidden="true">*</i></div>
+        <span class="ngay-vb" id="ngayVanBan"></span>
         <!-- Cụm phải: Tìm → Chuông (features/thong-bao chèn trước .nguoi) → avatar + tên hai dòng → Bánh răng (shell/banh-rang.js) -->
         <div class="phai">
           <div class="tim-nhanh">
@@ -99,6 +94,7 @@
       <nav id="mainNav" class="menu" role="tablist" aria-label="Điều hướng chính"></nav>
       <div id="menuNen" class="menu-nen" data-action="toggleMenuDoc"></div>
     <main class="trang">
+      <section id="viewTongQuan" class="hidden"></section>
       <section id="viewDieuHanh" class="hidden"></section>
       <section id="viewChiDaoDaGui" class="hidden"></section>
       <section id="viewKl" class="hidden"></section>

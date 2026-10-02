@@ -11,7 +11,7 @@ import { expect } from '@playwright/test';
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys, SEED_PASSWORD } from './keys.mjs';
-import { USERS, sessionPath } from './roles.mjs';
+import { USERS, TQ, sessionPath } from './roles.mjs';
 import { ganTre } from './tre.mjs';
 
 export { USERS };
@@ -55,11 +55,14 @@ export async function contextAs(browser, role, testInfo) {
   return context;
 }
 
-export async function pageAs(browser, role, testInfo) {
+// v9: lãnh đạo (A0/A1/A2) vào Tổng quan — mở tiếp "Cần xử lý" (#viewDieuHanh) như trang mở đầu cũ để các kịch bản dựa vào nó chạy nguyên;
+// kịch bản cần đứng ở Tổng quan truyền { oTongQuan: true }.
+export async function pageAs(browser, role, testInfo, { oTongQuan = false } = {}) {
   const context = await contextAs(browser, role, testInfo);
   const page = await context.newPage();
   await page.goto('./');
   await expectLoggedIn(page, role);
+  if (USERS[role].section === TQ && !oTongQuan) { await nav(page, 'navDieuHanh'); await expect(page.locator('#viewDieuHanh')).toBeVisible(); }
   return page;
 }
 

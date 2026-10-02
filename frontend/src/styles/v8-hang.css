@@ -11,7 +11,7 @@
   .tam-dau h2 em.luc { color: var(--luc); } .tam-dau h2 em.lam { color: var(--navy); }
   .tam-dau span, .tam-dau p { font-size: 12px; color: var(--chu-phu); font-weight: 400; }
   .tam-dau .phai-dau { margin-left: auto; }
-  .tam.vien-vang { border-color: #F1D98A; }
+  .tam.vien-vang { border-color: var(--vien-vang); }
   .tam.mong .tam-dau { padding: 10px 16px; } .tam.mong .dan, .tam.mong > div:not(.tam-dau) { display: none; } /* khối rỗng thu thành một dòng */
   .tam .trong, .tam .dan { border: 0; padding: 4px 16px 16px; text-align: left; font-size: 13px; }
   .tam > .muc:first-child, .tam-dau + .muc { border-top: 0; }
@@ -47,7 +47,7 @@
 
   /* .muc = khối trong tấm (tiêu đề Lora navy), .the-con = hàng có chấm trạng thái theo mức của khối */
   .muc, .muc.do, .muc.vang, .muc.lam, .muc.luc, .muc.dac-biet { border-left: 0; background: var(--the); padding: 0 0 6px; border-top: 1px solid var(--vien); }
-  .muc.vien-vang { border: 1px solid #F1D98A; border-radius: var(--bo-the); margin: 8px; }
+  .muc.vien-vang { border: 1px solid var(--vien-vang); border-radius: var(--bo-the); margin: 8px; }
   .muc > b { display: block; padding: 14px 16px 6px; font-family: var(--font-tieu-de); font-size: 15px; color: var(--navy); }
   .muc > p { padding: 0 16px 6px; }
   .muc .the-con, .muc .the-con:first-of-type { margin: 0; padding: 10px 16px; border-top: 1px solid var(--vien-nhat); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }

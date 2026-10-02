@@ -2,26 +2,30 @@
 // dòng; menu còn lại để tra cứu và cấu hình. Trên điện thoại mỗi vai có thanh dưới 3 mục (duoi: true), mục còn lại vào "Khác".
 // nhom: nhóm trên menu dọc v8 (Điều hành / Theo dõi / Trao đổi / Hệ thống). id giữ tên cũ ở những mục e2e đã dùng (navKl, navQuanTri, dmBubbleLauncher); action là tên hành động đã đăng ký (lib/actions.js).
 // GĐ22: mục đầu của mọi vai có huy hiệu số chưa xử lý (dhBadge, features/huy-hieu.js); A0 có "Giao việc" (biểu mẫu chung, bản rút gọn).
+// v9: A0/A1/A2 mở đầu bằng "Tổng quan" (shared/tong-quan); màn hình điều hành đổi tên "Cần xử lý" (id navDieuHanh giữ nguyên cho e2e).
 export const MENU = {
   A0: [
-    { id: 'navDieuHanh', label: 'Trung tâm điều hành', ngan: 'Điều hành', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
-    { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
+    { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
+    { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
+    { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
     { id: 'navChiDaoDaGui', label: 'Chỉ đạo đã gửi', ngan: 'Chỉ đạo', action: 'openChiDaoDaGui', section: 'viewChiDaoDaGui', duoi: true, nhom: 'Điều hành' },
     { id: 'navKl', label: 'Toàn bộ nhiệm vụ', ngan: 'Tra cứu', action: 'openKl', section: 'viewKl', nhom: 'Theo dõi' },
     { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },
     { id: 'navCanBo', label: 'Cán bộ', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
   ],
   A1: [
-    { id: 'navDieuHanh', label: 'Điều hành hôm nay', ngan: 'Điều hành', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
-    { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
+    { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
+    { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
+    { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
     { id: 'navKl', label: 'Nhiệm vụ', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
     { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },
     { id: 'navCanBo', label: 'Cán bộ thuộc quyền', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
     { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao', nhom: 'Theo dõi' },
   ],
   A2: [
-    { id: 'navDieuHanh', label: 'Phòng tôi hôm nay', ngan: 'Phòng tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
-    { id: 'navGiaoViec', label: 'Giao việc trong phòng', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
+    { id: 'navTongQuan', label: 'Tổng quan phòng', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
+    { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
+    { id: 'navGiaoViec', label: 'Giao việc trong phòng', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
     { id: 'navKl', label: 'Nhiệm vụ của phòng', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
     { id: 'navCanBo', label: 'Cán bộ trong phòng', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
   ],
@@ -39,8 +43,8 @@ export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Qu
 export const NGHIEM_THU_NAV = { id: 'navNghiemThu', label: 'Cần nghiệm thu', ngan: 'Nghiệm thu', action: 'openNghiemThu', section: 'viewNghiemThu', badgeId: 'ntBadge', nhom: 'Điều hành' };
 export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thường trực', ngan: 'Chỉ đạo TT', action: 'openChiDaoTTThuKy', section: 'viewChiDaoTTThuKy', nhom: 'Theo dõi' };
 
-// Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Giao việc và Nhiệm vụ toàn phạm vi.
-const QTKL_A3 = [MENU.A1[1], { ...MENU.A1[2], label: 'Toàn bộ nhiệm vụ' }];
+// Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Giao việc và Nhiệm vụ toàn phạm vi; Giao việc giữ trên thanh dưới (như trước v9).
+const QTKL_A3 = [{ ...MENU.A1[2], duoi: true }, { ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
 
 export function menuCuaVai(user) {
   const goc = [...(MENU[user?.role_group] || []), ...(user?.role_group === 'A3' && user?.quan_tri_kl ? QTKL_A3 : [])];
@@ -48,5 +52,6 @@ export function menuCuaVai(user) {
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
   const nghiemThu = user && user.role_group !== 'A0' && (['A1', 'A2'].includes(user.role_group) || user.quan_tri_kl || user.thu_ky_thuong_truc) ? [NGHIEM_THU_NAV] : [];
-  return [...goc.slice(0, 1), ...nghiemThu, ...goc.slice(1), ...thuKy, ...nhanTin, ...quanTri];
+  const sau = goc.findIndex((it) => it.id === 'navDieuHanh') + 1; // "Cần nghiệm thu" đứng ngay sau màn hình điều hành (sau Tổng quan nếu có)
+  return [...goc.slice(0, sau), ...nghiemThu, ...goc.slice(sau), ...thuKy, ...nhanTin, ...quanTri];
 }

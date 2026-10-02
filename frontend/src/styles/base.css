@@ -1,17 +1,18 @@
-/* Nền tảng (v8): chữ 16px Be Vietnam Pro, nền trang F6F4EF, tiêu đề Lora 700, liên kết đỏ, tiêu điểm bàn phím vàng. */
+/* Nền tảng (v9): chữ 16px Source Sans 3 trên nền trang --nen-phu (sương lam / ấm / xanh đêm), tiêu đề Lexend 600, liên kết lam,
+   viền tiêu điểm bàn phím lam 3px (--vien-focus). */
 @layer base {
   * { box-sizing: border-box; }
   html { font-size: 16px; }
   body {
     margin: 0; font-family: var(--font-sans); font-size: 16px; line-height: 1.55; color: var(--chu); background: var(--nen-phu);
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
   }
-  h1, h2, h3, h4 { margin: 0; font-family: var(--font-tieu-de); font-weight: 700; line-height: 1.25; }
+  h1, h2, h3, h4 { margin: 0; font-family: var(--font-tieu-de); font-weight: 600; line-height: 1.25; letter-spacing: -.01em; }
   p { margin: 0; }
   button { font: inherit; cursor: pointer; color: inherit; background: none; border: 0; padding: 0; }
   input, select, textarea { font: inherit; color: inherit; }
-  a { color: var(--do); text-decoration: underline; text-underline-offset: 2px; }
-  :focus-visible { outline: 3px solid var(--vang); outline-offset: 2px; }
+  a { color: var(--lam); text-decoration: underline; text-underline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--vien-focus); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 }
 
@@ -24,7 +25,7 @@
   .dan { color: var(--chu-phu); margin-top: 4px; max-width: 70ch; }
 
   /* Ô lỗi inline dưới form (đăng nhập, đổi mật khẩu). */
-  .loi-inline { font-size: 14px; color: var(--do-dam); background: var(--do-nhat); border-left: 4px solid var(--do); padding: 8px 12px;
+  .loi-inline { font-size: 14px; color: var(--do-chu); background: var(--do-nhat); border-left: 4px solid var(--do); padding: 8px 12px;
     border-radius: var(--bo-o); margin-top: 14px; text-align: left; }
   .trong { color: var(--chu-phu); padding: 30px; text-align: center; border: 1px dashed var(--vien); border-radius: 12px; }
 }

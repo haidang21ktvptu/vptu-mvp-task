@@ -1,4 +1,5 @@
-// GĐ20 — vai trò A0 Thường trực Tỉnh ủy (mockup bản 5 "Trung tâm điều hành Thường trực"): đăng nhập → vào thẳng trung tâm điều hành
+// GĐ20 — vai trò A0 Thường trực Tỉnh ủy (mockup bản 5 "Trung tâm điều hành Thường trực"; v9: vào Tổng quan, màn hình điều hành đổi tên
+// "Cần xử lý hôm nay"): đăng nhập → Tổng quan → mở Cần xử lý
 // (4 số-lọc, thanh trái 4 khâu, thẻ việc Đỏ có nút Chỉ đạo + Xem diễn biến) → menu chỉ 3 mục (không Nhắn tin, không Quản trị) → Toàn bộ
 // nhiệm vụ: chỉ đọc + Ý kiến/Chỉ đạo (quyền thật: hàm 0030 từ chối A0 tường minh — test RLS kl-0030). Không tạo dữ liệu; bỏ qua khi thiếu demo_a0.
 import { existsSync } from 'node:fs';
@@ -18,14 +19,18 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
   });
   test.afterAll(async () => { await page?.context().close(); });
 
-  test('vào thẳng Trung tâm điều hành: 4 số-lọc, 4 khâu ở thanh trái, menu 3 mục, nhãn vai trò đúng', async () => {
+  test('vào Tổng quan rồi Cần xử lý: 5 số-lọc, khâu ở thanh trái, menu, nhãn vai trò đúng', async () => {
     await expect(page.locator('#currentRoleDisplay')).toContainText(OPTIONAL_USERS.A0.roleLabel);
+    await expect(page.locator('#viewTongQuan')).not.toHaveClass(/\bhidden\b/); // v9: trang mở đầu của Thường trực
+    await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
+    await nav(page, 'navDieuHanh');
     await expect(page.locator('#viewDieuHanh')).not.toHaveClass(/\bhidden\b/);
-    await expect(page.locator('#dhTieuDeTrang')).toHaveText('Trung tâm điều hành Thường trực');
+    await expect(page.locator('#dhTieuDeTrang')).toHaveText('Cần xử lý hôm nay');
     await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước', NAP);
     await expect(page.locator('#dhKpi button')).toHaveCount(5); // GĐ21: thêm ô "bị từ chối" riêng
     await expect(page.locator('#dhKpi [data-loc="tuchoi"]')).toContainText('bị từ chối');
     await expect(page.locator('#dhRay [data-khau]')).toHaveCount(6); // PR-2b: thêm khâu "Chờ nghiệm thu"
+    await expect(page.locator('#navTongQuan')).toBeVisible();
     await expect(page.locator('#navDieuHanh')).toBeVisible();
     await expect(page.locator('#navChiDaoDaGui')).toBeVisible();
     await expect(page.locator('#navKl')).toBeVisible();

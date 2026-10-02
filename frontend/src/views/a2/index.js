@@ -1,4 +1,4 @@
-// View A2 — Trưởng phòng (v8 đợt 2, mockup 04 "Phòng tôi hôm nay"): ba tầng — (1) tiêu đề + ngày; (2) dải "Cần xử lý ngay"; (3) tấm việc Thường trực
+// View A2 — Trưởng phòng (v8 đợt 2, mockup 04; v9: mở đầu bằng Tổng quan phòng, màn hình này đổi tên "Cần xử lý" — trước là "Phòng tôi hôm nay"): ba tầng — (1) tiêu đề + ngày; (2) dải "Cần xử lý ngay"; (3) tấm việc Thường trực
 // giao / đề nghị từ chối cần duyệt (viền vàng, lý do kín) / việc mình giao bị từ chối, rồi hai cột: chính = chỉ đạo từ Văn phòng chờ phòng, việc Đỏ +
 // sắp đến hạn (hàng có Đôn đốc / Nhắc tại chỗ), minh chứng chuyên viên vừa nộp; cột phụ 360px = tải việc từng cán bộ (đếm từ dòng RLS đã tải,
 // không truy vấn thêm) + việc do chính Trưởng phòng chủ trì. Menu: Giao việc trong phòng, Nhiệm vụ của phòng, Cán bộ, Nhắn tin. Quyền thật ở hàm DB.
@@ -11,6 +11,7 @@ import { notifyError } from '../../components/toast.js';
 import { registerView } from '../registry.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
+import { openTongQuan } from '../shared/tong-quan/index.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { dh, napDieuHanh, viecDo } from '../shared/dieu-hanh/du-lieu.js';
 import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
@@ -20,6 +21,7 @@ import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
 import { mucChiDaoChoHtml, mucViecDoHtml, mucSapHanHtml } from './phong-toi.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
 import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
+import { baCauHtml } from '../shared/dieu-hanh/ba-cau.js';
 import { registerCanBo } from '../shared/can-bo.js';
 
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
@@ -56,6 +58,7 @@ function ve() {
   const doN = viecDo().length; const vangN = rows.filter((r) => r.muc_canh_bao === 'VANG').length;
   setText('ptTom', `${moN} việc mở · ${doN} Đỏ · ${vangN} Vàng`);
   const traNhap = giuONhap($('viewDieuHanh')); // ô đang mở / đang gõ giữ qua lần vẽ lại (nạp lại nền, realtime — PR-2a lỗi đua)
+  $('dhBaCau').innerHTML = baCauHtml(false);
   $('dhCanXuLy').innerHTML = canXuLyHtml();
   const tc = khoiThuongTrucHtml() + tuChoiChoHtml() + khoiBiTuChoiHtml(); // việc Thường trực giao, đề nghị cần duyệt, việc mình giao bị từ chối
   $('dhTC').innerHTML = tc; show('dhTC', Boolean(tc));
@@ -66,7 +69,7 @@ function ve() {
   show('ptMc', dh.mcCho.length > 0);
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
-  if (dh.luc) setText('dhTinhDen', `Trưởng phòng · ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
+  if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutNghiemThu($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 
@@ -89,9 +92,9 @@ export function registerA2View() {
       registerActions({ openDieuHanh, loadDieuHanh: loadPhongToi }); // đăng ký lúc vào vai, không đè vai khác
       const phong = DEPT_NAMES[state.user.department] || state.user.department || 'Phòng';
       $('viewDieuHanh').innerHTML = `
-        <div class="dau"><h1>${phong} hôm nay</h1><span id="dhTinhDen">${ngayDaiVN()}, đang nạp số liệu…</span>
+        <div class="dau"><h1>Cần xử lý hôm nay</h1><span id="dhTinhDen">${phong}, ${ngayDaiVN()}, đang nạp số liệu…</span>
           <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
-        <div id="dhCanXuLy"></div>
+        <div id="dhBaCau"></div><div id="dhCanXuLy"></div>
         <section class="tam hidden" id="dhTC"></section>
         <div class="hai-cot" style="--rong-phu:360px">
           <div class="cot-chinh">
@@ -106,8 +109,8 @@ export function registerA2View() {
           </aside>
         </div>`;
       datNapLai(loadPhongToi);
-      openDieuHanh();
+      openTongQuan();
     },
-    reload() { openDieuHanh(); },
+    reload() { if (sectionDangHien('viewTongQuan')) openTongQuan(); else openDieuHanh(); },
   });
 }

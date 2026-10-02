@@ -1,12 +1,12 @@
-/* Thành phần dùng chung (v8 đợt 1: nút hành động 32px bo 8px, ô nhập 42px, thẻ trắng viền E3DED4 bo 12px): nút, ô nhập một dòng, nhãn trạng thái, thẻ việc, mép trái theo mức, vòng khép kín,
+/* Thành phần dùng chung (v8 đợt 1, màu v9: nút hành động 32px bo 8px, nút chính đỏ son --nut, ô nhập 42px, thẻ --the viền --vien bo 16px có bóng nhẹ): nút, ô nhập một dòng, nhãn trạng thái, thẻ việc, mép trái theo mức, vòng khép kín,
    khâu, huy hiệu, dòng "đã gửi", toast, modal. Tên lớp khai báo NGUYÊN VĂN trong JS (Tailwind cắt lớp ghép chuỗi). */
 @layer components {
   /* ---- Nút ---- */
-  .nut { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--vien); background: #fff; color: var(--chu);
+  .nut { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--vien-o); background: var(--the); color: var(--chu);
     min-height: 32px; padding: 5px 12px; border-radius: var(--bo-nut); font-weight: 600; font-size: 13px; line-height: 1.2; white-space: nowrap; }
   .nut:hover:not(:disabled) { background: var(--nen-phu); }
-  .nut.chinh { background: var(--do); border-color: var(--do); color: #fff; }
-  .nut.chinh:hover:not(:disabled) { background: var(--do-dam); }
+  .nut.chinh { background: var(--nut); border-color: var(--nut); color: #fff; }
+  .nut.chinh:hover:not(:disabled) { background: var(--nut-dam); border-color: var(--nut-dam); }
   .nut.lam { background: var(--lam); border-color: var(--lam); color: #fff; }
   .nut.lam:hover:not(:disabled) { filter: brightness(.94); }
   .nut.nho { min-height: 28px; padding: 3px 10px; font-size: 13px; }
@@ -14,13 +14,13 @@
   .hanh-dong { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
 
   /* ---- Ô nhập ---- */
-  .o-nhap { display: block; width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--vien); border-radius: var(--bo-nut); background: #fff; }
+  .o-nhap { display: block; width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--vien-o); border-radius: var(--bo-nut); background: var(--the); }
   .o-nhap.nho { min-height: 40px; padding: 7px 12px; font-size: 14px; border-radius: var(--bo-o); }
-  .o-nhap:focus { outline: 3px solid var(--vang); outline-offset: 1px; }
+  .o-nhap:focus { outline: 2px solid var(--vien-focus); outline-offset: 1px; border-color: var(--vien-focus); }
   textarea.o-nhap { min-height: 80px; resize: vertical; line-height: 1.5; }
   select.o-nhap { appearance: none; -webkit-appearance: none; padding-right: 32px;
-    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23606B7A' stroke-width='1.5'/></svg>") no-repeat right 12px center; }
-  .o-nhap::placeholder { color: #8A909C; }
+    background: var(--the) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23606B7A' stroke-width='1.5'/></svg>") no-repeat right 12px center; }
+  .o-nhap::placeholder { color: var(--chu-mo); }
 
   /* Ô một dòng mở ngay dưới nút (form.o): input nền vàng nhạt + Gửi + Huỷ; .mo = đang mở. */
   .o { display: none; margin-top: 14px; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -29,19 +29,19 @@
   .o input[type="date"], .o select { flex: 0 1 200px; }
   .o small { flex-basis: 100%; color: var(--chu-phu); font-size: 13px; }
   .goi-y { display: flex; gap: 8px; flex-wrap: wrap; flex-basis: 100%; }
-  .goi-y button { border: 1px dashed var(--vien); background: #fff; border-radius: 999px; padding: 5px 10px; font-size: 12px; color: var(--chu); }
+  .goi-y button { border: 1px dashed var(--vien); background: var(--the); border-radius: 999px; padding: 5px 10px; font-size: 12px; color: var(--chu); }
   .goi-y button:hover { border-color: var(--chu); }
 
   /* ---- Nhãn trạng thái ---- */
   .trang-thai { display: inline-block; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
   .tt-cho { background: var(--vang-nhat); color: var(--vang-chu-dam); } .tt-xong { background: var(--luc-nhat); color: var(--luc); }
-  .tt-qua { background: var(--do-nhat); color: var(--do-dam); } .tt-xam { background: var(--nen-phu); color: var(--chu-phu); }
-  .huy-hieu { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--do); color: #fff;
+  .tt-qua { background: var(--do-nhat); color: var(--do-chu); } .tt-xam { background: var(--nen-phu); color: var(--chu-phu); }
+  .huy-hieu { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--ben-dem); color: var(--ben-dem-chu);
     font-size: 11px; font-weight: 700; line-height: 1; }
   .khau { display: inline-block; background: var(--cam-nhat); color: var(--cam-chu); border-radius: 6px; padding: 2px 8px; font-weight: 600; font-size: 13px; }
 
   /* ---- Thẻ việc (A0/A1): mép trái theo mức ---- */
-  .the { background: var(--the); border: 1px solid var(--vien); border-left: 6px solid var(--vien); border-radius: var(--bo-the); padding: 14px 16px; margin-bottom: 12px; }
+  .the { background: var(--the); border: 1px solid var(--vien); border-left: 6px solid var(--vien); border-radius: var(--bo-the); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--bong-the); }
   .the.dac-biet { border-left-color: var(--do-dam); background: var(--nen-do-the); } .the.do { border-left-color: var(--do); }
   .the.vang { border-left-color: var(--vang); } .the.luc { border-left-color: var(--luc); } .the.lam { border-left-color: var(--lam); }
   .the-dau { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
@@ -57,23 +57,23 @@
   .the .tre.cam { color: var(--cam); }
   .nhan-tu-choi { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--cam-nhat); color: var(--cam-chu); font-size: 12px; font-weight: 600; vertical-align: 2px; }
   .nhan-xam { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--nen-phu); color: var(--chu-phu); font-size: 12px; }
-  .muc .ly-do { color: var(--chu); font-size: 14px; margin-top: 4px; padding: 6px 10px; background: #fff; border: 1px dashed var(--vien); border-radius: var(--bo-o); }
+  .muc .ly-do { color: var(--chu); font-size: 14px; margin-top: 4px; padding: 6px 10px; background: var(--the); border: 1px dashed var(--vien); border-radius: var(--bo-o); }
   /* Vòng khép kín: Đã gửi → Văn phòng trả lời (hạn) → Đóng. */
   .vong { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; color: var(--chu-phu); flex-wrap: wrap; }
   .vong em { font-style: normal; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--nen-phu); border: 1px solid var(--vien); }
   .vong em.xong { background: var(--luc-nhat); border-color: transparent; color: var(--luc); }
   .vong em.dang { background: var(--vang-nhat); border-color: transparent; color: var(--vang-chu-dam); }
-  .vong em.qua { background: var(--do-nhat); border-color: transparent; color: var(--do-dam); }
+  .vong em.qua { background: var(--do-nhat); border-color: transparent; color: var(--do-chu); }
   .vong i { font-style: normal; color: var(--vien); }
 
   /* ---- Việc cần quyết (A1 khối chỉ đạo TT): thẻ rộng ---- */
-  .viec { margin-top: 18px; background: #fff; border-radius: var(--bo-the); padding: 22px 24px; border: 1px solid var(--vien); border-left: 6px solid var(--do); }
+  .viec { margin-top: 18px; background: var(--the); border-radius: var(--bo-the); padding: 22px 24px; border: 1px solid var(--vien); border-left: 6px solid var(--do); box-shadow: var(--bong-the); }
   .viec + .viec { margin-top: 14px; }
   .viec .ma { font-weight: 700; font-size: 15px; color: var(--chu-phu); }
   .viec h3 { font-size: 19px; margin-top: 2px; max-width: 60ch; }
 
   /* ---- Dòng "đã gửi" / minh chứng chờ ---- */
-  .da-gui { margin-top: 14px; background: #fff; border-radius: var(--bo-the); border: 1px solid var(--vien); padding: 6px 24px; }
+  .da-gui { margin-top: 14px; background: var(--the); border-radius: var(--bo-the); border: 1px solid var(--vien); padding: 6px 24px; box-shadow: var(--bong-the); }
   .da-gui > div { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--vien); }
   .da-gui > div:first-child { border-top: 0; }
   .da-gui p b { font-weight: 700; } .da-gui p small { display: block; color: var(--chu-phu); font-size: 13px; }
@@ -81,7 +81,7 @@
 
   /* ---- Toast (thông báo thao tác): giữa dưới, nền tối ---- */
   .toast-hop { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; max-width: 90vw; width: max-content; pointer-events: none; }
-  .toast { pointer-events: auto; background: var(--chu); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 14px; display: flex; align-items: flex-start; gap: 12px; border-left: 4px solid var(--vang); }
+  .toast { pointer-events: auto; background: var(--nen-toi); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: 14px; display: flex; align-items: flex-start; gap: 12px; border-left: 4px solid var(--vang); }
   .toast-thanh-cong { border-left-color: var(--luc); } .toast-loi { border-left-color: var(--do); }
   .toast-dong { color: rgba(255, 255, 255, .7); font-size: 14px; line-height: 1; }
   .toast-tin { position: fixed; right: 20px; bottom: 96px; z-index: 100; width: 360px; max-width: calc(100% - 40px); }
@@ -90,7 +90,7 @@
 
   /* ---- Modal (còn dùng cho cập nhật nhanh, đóng nhiệm vụ, lý do quản trị, đổi mật khẩu) ---- */
   .modal-nen { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(27, 36, 48, .55); }
-  .modal { width: 100%; max-width: 480px; background: #fff; border-radius: var(--bo-the); box-shadow: 0 20px 50px -30px rgba(27, 36, 48, .5); padding: 24px 28px;
+  .modal { width: 100%; max-width: 480px; background: var(--the); border-radius: var(--bo-the); box-shadow: var(--bong-noi); padding: 24px 28px;
     max-height: calc(100vh - 32px); overflow-y: auto; }
   .modal-rong { max-width: 640px; }
   .modal-bat-buoc { border-top: 4px solid var(--do); }
