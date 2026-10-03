@@ -23,16 +23,19 @@ import { moNganViec } from '../ngan-chi-tiet.js';
 import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
 
 export const duocGiaoViec = () => ['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
+// Chuyên viên thường: màn này là "Việc của tôi" (mặc định lọc việc mình chủ trì / theo dõi). Chuyên viên giữ quyền quản trị nhiệm vụ vào
+// từ mục "Toàn bộ nhiệm vụ" (menu.js) nên không lọc — việc của riêng họ đã có màn hình điều hành; tìm nhanh (tim-nhanh.js) cùng quy tắc.
+export const chiViecCuaToi = () => state.user?.role_group === 'A3' && !state.user?.quan_tri_kl;
 const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng', A3: 'Việc của tôi' };
 
-// Mở màn hình; loc (tuỳ chọn) = bộ lọc do màn hình khác truyền sang (thay thế toàn bộ bộ lọc hiện có). A3 mặc định = việc của tôi.
+// Mở màn hình; loc (tuỳ chọn) = bộ lọc do màn hình khác truyền sang (thay thế toàn bộ bộ lọc hiện có). A3 thường mặc định = việc của tôi.
 export function openKl(loc) {
   showSection('viewKl');
   setActiveNav('navKl');
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
-  $('klTieuDe').textContent = TIEU_DE[state.user?.role_group] || 'Nhiệm vụ';
-  const bo = loc || (state.user?.role_group === 'A3' ? { cuaToi: state.user.id } : {});
+  $('klTieuDe').textContent = (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
+  const bo = loc || (chiViecCuaToi() ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
   const nap = loadKl();
   batKlRealtime(klTheoSuKien, (m) => hienKetNoi('klKetNoi', m));

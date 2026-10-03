@@ -121,11 +121,12 @@ export async function nav(page, id) {
   await duoi.click();
 }
 
-// Mở màn hình Nhiệm vụ, lọc theo mã và mở ngăn chi tiết của một việc (id) — dùng ở nhiều kịch bản. boCuaToi: chuyên viên (A3, kể cả quản trị
-// nhiệm vụ) mở Nhiệm vụ mặc định lọc "Việc của tôi" — xem việc của người khác (việc vừa giao thay lãnh đạo) thì bỏ chip lọc đó trước khi tìm.
+// Mở màn hình Nhiệm vụ, lọc theo mã và mở ngăn chi tiết của một việc (id) — dùng ở nhiều kịch bản. boCuaToi: chuyên viên thường mở Nhiệm vụ
+// mặc định lọc "Việc của tôi" — xem việc của người khác thì bỏ chip lọc đó (nếu có) trước khi tìm; chuyên viên giữ quyền quản trị nhiệm vụ
+// vào "Toàn bộ nhiệm vụ" không có chip (chiViecCuaToi, kl/index.js).
 export async function moViec(page, id, ma, { boCuaToi = false } = {}) {
   await nav(page, 'navKl');
-  if (boCuaToi) await page.locator('#klChipLoc [data-action="boKlLoc"][data-khoa="cuaToi"]').click();
+  if (boCuaToi) { const chip = page.locator('#klChipLoc [data-action="boKlLoc"][data-khoa="cuaToi"]'); if (await chip.count()) await chip.click(); }
   await page.locator('#klTimKiem').fill(ma);
   await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong rồi mới tìm dòng (không tìm khi đang nạp lại)
   const row = page.locator(`#klRow-${id}`);
