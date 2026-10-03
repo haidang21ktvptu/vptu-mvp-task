@@ -668,8 +668,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Phát hành từ nhánh `release/v3.14.0` (merge PR #101 trước để kiểm trên `/staging/`; tag gắn lên đầu nhánh này, như v3.4.0 / v3.5.0).
 - **Phát hành 3/10/2026 18:51–18:56**: e2e PR #102 xanh 118/118 sau khi staging nghỉ qua đêm (3 lượt đỏ tối 2/10 là staging nghẽn IO, mỗi lượt một test khác); tag `v3.14.0` → backup artifact 90 ngày + mốc backup → `db push` 0070–0075 → Edge Function → Pages → smoke → tag `production` = `c94a7a1`; PR #102 merge `c967ee1`. Sau merge: RLS token thật trên staging đỏ đúng một test cũ RLS-9 (nhật ký cấp quyền PCVP2 có thêm dòng kiêm nhiệm do e2e để lại — dữ liệu staging, không phải mã).
 
-## 46. Hoàn thiện sau v3.14.0 — mỗi phòng một Trưởng phòng ở tầng bảng, nhật ký hệ thống tiếng Việt, test RLS-9 (**có migration 0076**, phát hành dự kiến v3.14.1)
+## 46. Hoàn thiện sau v3.14.0 — mỗi phòng một Trưởng phòng ở tầng bảng, nhật ký hệ thống tiếng Việt, test RLS-9 (**có migration 0076**) — **đã phát hành v3.14.1** (3/10/2026, tag trên `4f94066` đầu nhánh `fix/hoan-thien-sau-v3.14.0`, PR #104 merge `0f4124f`; 0076 trên production)
 - **0076**: trigger `accounts_mot_truong_phong` — INSERT / UPDATE vai, phòng, khoá trên `accounts` bị chặn khi phòng đã có Trưởng phòng (A2) đang hoạt động khác (cùng câu báo với `admin_sua_tai_khoan` 0069); bịt đường "Tạo tài khoản" (Edge Function ghi bằng service_role). Chỉ chặn thay đổi mới, không kiểm dữ liệu cũ. Test RLS `kl-0068` thêm ca UPDATE thẳng bằng service_role.
 - Quản trị › Nhật ký hệ thống: mọi mã hành động (kể cả nhập Excel, ngày nghỉ, cấp / thu quyền) và khoá trong cột chi tiết hiện tiếng Việt.
 - Test RLS-9 (`rls-9-quan-tri`) chỉ xét dòng nhật ký cấp quyền của chính lượt chạy (lý do + mốc thời gian) — hết đỏ trên staging vì dòng kiêm nhiệm do e2e để lại.
+- Phát hành: CI PR #104 xanh (118 e2e + RLS) → tag `v3.14.1` → `deploy-prod` xanh (backup → 0076 → Pages → smoke, tag `production` = `4f94066`) → merge `0f4124f`; staging sau merge xanh. Ghi chú vận hành: test RLS `kl-pq-pham-vi-giao` bật/tắt `quan_tri_kl` của demo_qtht trên staging — cờ cấp tay cho tài khoản này sẽ bị trả về false sau mỗi lượt CI staging.
 
