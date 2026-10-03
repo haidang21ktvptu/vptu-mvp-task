@@ -120,6 +120,7 @@ describe('RLS-9 phu_trach_phong và admin_phan_cong_phong', { skip: SKIP }, () =
 
   async function batTatPcvp2() {
     const qtht = await userClient('demo_qtht');
+    const t0 = new Date(Date.now() - 60_000).toISOString();   // chỉ xét dòng nhật ký của chính lượt này (staging còn dòng kiêm nhiệm do e2e để lại)
     assertOk(await qtht.rpc('admin_phan_cong_phong', { p_username: 'demo_pcvp2', p_phong: 'TONG_HOP', p_bat: true, p_ly_do: LY_DO, p_tu_ngay: '2026-09-01' }), 'bật');
     const on = await qtht.rpc('phu_trach', { p_lanh_dao: IDS.pcvp2, p_phong: 'TONG_HOP' });
     assertOk(on, 'phu_trach sau bật'); assert.equal(on.data, true);
@@ -131,8 +132,8 @@ describe('RLS-9 phu_trach_phong và admin_phan_cong_phong', { skip: SKIP }, () =
     assert.equal(giua.data, true, 'hiệu lực trong kỳ cũ vẫn đúng');
     const sau = await qtht.rpc('phu_trach', { p_lanh_dao: IDS.pcvp2, p_phong: 'TONG_HOP', p_ngay: '2026-09-10' });
     assert.equal(sau.data, false, 'hết hiệu lực từ ngày tắt');
-    const log = await qtht.from('quyen_lich_su').select('co, bat').eq('tai_khoan', IDS.pcvp2).order('id');
-    assert.deepEqual(log.data.map((l) => [l.co, l.bat]).slice(-2), [['phu_trach:TONG_HOP', true], ['phu_trach:TONG_HOP', false]]);
+    const log = await qtht.from('quyen_lich_su').select('co, bat').eq('tai_khoan', IDS.pcvp2).eq('co', 'phu_trach:TONG_HOP').like('ly_do', `${LY_DO}%`).gte('luc', t0).order('id');
+    assertOk(log, 'đọc nhật ký'); assert.deepEqual(log.data.map((l) => [l.co, l.bat]), [['phu_trach:TONG_HOP', true], ['phu_trach:TONG_HOP', false]]);
   }
 
   test('bị chặn: chồng kỳ cho cùng lãnh đạo/phòng; tắt khi không có phân công; phân công cho A2/Chánh VP', async () => {

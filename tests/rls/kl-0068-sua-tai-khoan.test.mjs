@@ -50,6 +50,9 @@ describe('0068 — quản trị hệ thống sửa vai trò / phòng / chức da
     loi(await sua('demo_qtht', 'demo_e2e_mc', 'A2', 'QUAN_TRI', 'x'), /Phòng Quản trị đã có Trưởng phòng \(A2\) đang hoạt động: Demo E2E Chuyên viên DH/, 'A2 thứ hai phòng Quản trị');
     loi(await sua('demo_qtht', 'demo_e2e_mc', 'A2', 'TONG_HOP', 'x'), /đã có Trưởng phòng \(A2\)/, 'A2 thứ hai phòng Tổng hợp');
     assert.equal((await tk(MC)).role_group, 'A3');
+    // 0076: chốt ở tầng bảng — ghi thẳng bằng service_role (đường Tạo tài khoản của Edge Function) cũng bị trigger chặn, cùng câu báo.
+    loi(await db().from('accounts').update({ role_group: 'A2', department: 'QUAN_TRI' }).eq('id', MC), /Phòng Quản trị đã có Trưởng phòng \(A2\) đang hoạt động: Demo E2E Chuyên viên DH/, 'trigger 0076: UPDATE thẳng');
+    assert.equal((await tk(MC)).role_group, 'A3');
   });
 
   test('A0 ⇒ phòng NULL; A1 ⇒ LANH_DAO_VAN_PHONG; trả về A3 được', async () => {
