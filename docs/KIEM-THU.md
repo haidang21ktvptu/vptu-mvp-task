@@ -136,3 +136,21 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - `dang-nhap` phụ thuộc thêm `v9-dot2`, `v9-nhap-excel`. Project chưa áp 0071 / 0072 → spec tự skip (PR chạy e2e trên staging chưa có migration của PR; chạy thật sau khi merge). PR #101: staging được áp tay 0070–0075 ngày 2/10 (trước merge) nên hai spec chạy thật ngay trong PR.
 - RLS: `kl-0070-nhap-theo-tang` (lỗi giá trị của sua_thong_tin_giao chỉ chạy cục bộ), `kl-0072-nhap-excel` (test 7 từ điển / hồ sơ gắn `CHI_CUC_BO`); cả hai cấp tạm `quan_tri_kl` cho demo_cv2 và trả lại trong `finally` / `after`.
 
+
+## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
+
+Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAUDE.md`: **mặc định không bật**. Nơi kiểm tra migration và RLS là CI — job "Áp migration + lint schema" của `ci.yml` khởi động Supabase cục bộ trên runner, áp toàn bộ migration của PR, lint schema và chạy đủ bộ `tests/rls`; e2e chạy trên staging. Trên laptop chỉ cần Node + Supabase CLI đã `supabase login` và `supabase link` (staging).
+
+| Việc | Không cần Docker | Cần Docker (chỉ khi chủ dự án yêu cầu) |
+|---|---|---|
+| Viết migration | tạo tay `supabase/migrations/NNNN_*.sql`; xem trước `supabase db push --dry-run` | `supabase db diff` (shadow DB) |
+| Áp migration | `supabase db push` (staging); production qua `deploy-prod.yml` | `supabase db reset` (cục bộ) |
+| Kiểm tra schema / hàm | `supabase db lint --linked`; `supabase db query --linked "select …"` (chỉ SELECT) | `supabase db lint --local` |
+| Test RLS | để CI chạy: mọi PR trên runner (`RLS_LOCAL=1`), sau merge thêm token thật trên staging (`deploy-staging.yml`) | `RLS_LOCAL=1 npm test` sau `supabase start` |
+| Test e2e | `E2E_STAGING=1 npx playwright test <spec>` (một spec, không chạy cả bộ liên tục — staging nhỏ) | `E2E_LOCAL=1` (+ `E2E_TRE_MS`) |
+| Chạy frontend | `cd frontend && npm run dev` với `.env` trỏ **staging** (anon key) | `.env` trỏ Supabase cục bộ |
+| Backup | tải artifact của `deploy-prod` / `backup-dinh-ky` (GitHub Actions) | `scripts/backup-db.sh` (`db dump` chạy pg_dump trong Docker) |
+| Edge Function | `supabase functions deploy quan-tri-tai-khoan --use-api --project-ref <staging>` | `supabase functions serve` |
+| Danh sách / sửa mốc migration | `supabase migration list`, `supabase migration repair` | — |
+
+Khi vẫn phải dùng Docker: `supabase/config.toml` đã tắt Studio, analytics (Logflare + Vector) và Mailpit — `supabase start` chỉ còn db, kong, auth, rest, realtime, storage, edge-runtime (nhẹ hơn khoảng 1 GB, khởi động nhanh hơn); xong việc chạy `supabase stop` rồi thoát Docker Desktop. Giới hạn RAM của WSL2 đặt ngoài repo, trong `%UserProfile%\.wslconfig` (`[wsl2]` → `memory=3GB`, `swap=0`) rồi `wsl --shutdown`.

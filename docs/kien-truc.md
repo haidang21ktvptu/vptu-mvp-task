@@ -6,7 +6,7 @@ Tài liệu này mô tả cách mã đi từ PR tới production. Đặc tả ng
 
 | Môi trường | Supabase project | Frontend | Dữ liệu | Ai được ghi |
 |---|---|---|---|---|
-| Local | `supabase start` (Docker) | `npm run dev` | `supabase/seed.sql` | Dev |
+| Local | `npm run dev` trỏ staging (mặc định, không Docker); `supabase start` chỉ khi được yêu cầu (`docs/KIEM-THU.md`) | `npm run dev` | `supabase/seed.sql` | Dev |
 | Staging | `vojmrjezspdftovzinek` (vptu-task-staging) | `https://haidang21ktvptu.github.io/vptu-mvp-task/staging/` | 8 tài khoản giả từ `seed.sql` (7 demo + `smoke_test`); test RLS/e2e tự tạo và tự dọn | `deploy-staging.yml` (push main); test trong CI |
 | Production | `frwyxcmbonjaimziiuqr` (vptu-mvp-task) | `https://haidang21ktvptu.github.io/vptu-mvp-task/` | 48 tài khoản thật + `smoke_test` (is_system) | Chỉ `deploy-prod.yml` sau khi haidang21ktvptu duyệt |
 

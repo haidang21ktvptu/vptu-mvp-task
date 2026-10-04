@@ -26,14 +26,15 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 10. Cuối mỗi phiên hoặc trước khi context gần đầy, cập nhật `docs/TRANG-THAI.md`.
 11. Dữ liệu tài khoản trên project **staging** chỉ được nạp từ `supabase/seed.sql` (dữ liệu giả). Không sao chép dữ liệu thật (họ tên, chức danh, phòng ban) từ production sang staging.
 12. Áp migration lên production luôn cần một câu xác nhận của chủ dự án **trong phiên đó**, kể cả khi `docs/TRANG-THAI.md` ghi "phát hành ngay".
+13. **Trên laptop không cần Docker Desktop.** Không chạy `supabase start`, `db reset`, `db diff`, `db dump`, test RLS/e2e cục bộ (`RLS_LOCAL=1`, `E2E_LOCAL=1`) trừ khi chủ dự án yêu cầu rõ trong phiên. Migration viết tay; CI (job "Áp migration + lint schema") khởi động Supabase cục bộ trên runner, áp toàn bộ migration và chạy đủ bộ RLS — đó là nơi kiểm tra. Cần thử nhanh thì dùng lệnh không cần Docker: `supabase db push --dry-run` (staging), `supabase db query --linked` (chỉ SELECT), `supabase db lint --linked`, `supabase migration list`. Chi tiết: `docs/KIEM-THU.md` mục "Làm việc không cần Docker Desktop".
 
 ## Lệnh thường dùng
 - `cd frontend && npm run dev` — chạy local
 - `npm run build` — build
 - `npm run lint` (ở gốc repo) — ESLint cho `frontend/src`, `tests/e2e`, `scripts`; `npm run check:lines` — kiểm tra 300 dòng
 - `npx playwright test` — e2e
-- `supabase db diff -f ten-migration` — sinh migration từ thay đổi local
-- `supabase db push` — đẩy migration lên project (chỉ staging; production qua `deploy-prod.yml` khi đẩy tag `v*`, có người duyệt)
+- Migration: tạo tay file `supabase/migrations/NNNN_mo-ta-ngan.sql` (số kế tiếp = số lớn nhất + 1); không dùng `supabase db diff` (cần Docker, shadow DB)
+- `supabase db push` — đẩy migration lên project (chỉ staging; production qua `deploy-prod.yml` khi đẩy tag `v*`, có người duyệt). Không cần Docker; `--dry-run` để xem trước
 - `git tag v2.x.y && git push origin v2.x.y` — phát hành production (xem `docs/kien-truc.md` mục 7)
 
 ## Quy ước code
