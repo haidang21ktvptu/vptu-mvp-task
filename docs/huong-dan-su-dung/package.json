@@ -1,0 +1,13 @@
+{
+  "name": "vptu-task-huong-dan-su-dung",
+  "private": true,
+  "description": "Dựng Hướng dẫn sử dụng (.docx) từ nội dung tiếng Việt + ảnh chụp staging",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:trang": "node build.mjs --trang trang.json"
+  },
+  "devDependencies": {
+    "docx": "^9.6.1"
+  }
+}

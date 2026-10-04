@@ -673,3 +673,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Quản trị › Nhật ký hệ thống: mọi mã hành động (kể cả nhập Excel, ngày nghỉ, cấp / thu quyền) và khoá trong cột chi tiết hiện tiếng Việt.
 - Test RLS-9 (`rls-9-quan-tri`) chỉ xét dòng nhật ký cấp quyền của chính lượt chạy (lý do + mốc thời gian) — hết đỏ trên staging vì dòng kiêm nhiệm do e2e để lại.
 
+## 47. Hướng dẫn sử dụng cho người dùng + sửa lọc "Việc tôi theo dõi" (**không migration**, phát hành dự kiến v3.14.2)
+- `docs/huong-dan-su-dung/`: nguồn dựng tài liệu *Hướng dẫn sử dụng* (.docx, 46 trang, 67 hình) — chữ tiếng Việt phổ thông theo vai (Chuyên viên, Trưởng phòng, Lãnh đạo Văn phòng, Thường trực, nhập Excel, Quản trị) + bảng "trước đây / nay"; ảnh chụp staging bằng tài khoản demo, dữ liệu hư cấu; dựng bằng `docx` npm hai lượt (mục lục tĩnh có số trang). Bản .docx/.pdf bàn giao ngoài kho (`D:\TU 2026\kiem-thu\huong-dan-su-dung\`).
+- Sửa: `locRows` có nhãn `theoDoiCuaToi` từ v3 nhưng chưa lọc → mục "Việc tôi theo dõi" của chuyên viên hiện cả việc mình là Owner (phát hiện khi chụp ảnh). Thêm điều kiện + unit test `frontend/tests/tong-hop.test.mjs`.
+- Ghi nhận khi chụp ảnh (chưa sửa, xem TRANG-THAI 6.-6): khối "Minh chứng chuyên viên vừa nộp" liệt kê cả minh chứng chữ cũ của việc đã đóng (dòng "Đã xong ngoài hệ thống" nhập Excel); hội thoại của việc trong Nhắn tin hiện trùng một tin hệ thống cho mỗi người nhận.
+
