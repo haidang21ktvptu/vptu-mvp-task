@@ -92,8 +92,11 @@ enabled = true
 # The maximum length in bytes of HTTP request headers. (default: 4096)
 # max_header_length = 4096
 
+# Supabase cục bộ CHỈ dùng để áp migration + test RLS/e2e (CI, hoặc laptop khi thật cần). Tắt các dịch vụ không dùng tới
+# (Studio, Logflare/Vector analytics, Mailpit) để `supabase start` nhẹ hơn ~1 GB RAM và nhanh hơn. Các mục này chỉ có hiệu lực
+# cục bộ, không đi theo `supabase config push`. Cần Studio thì bật tạm rồi tắt lại — không commit.
 [studio]
-enabled = true
+enabled = false
 # Port to use for Supabase Studio.
 port = 54323
 # External URL of the API server that frontend connects to.
@@ -104,7 +107,7 @@ openai_api_key = "env(OPENAI_API_KEY)"
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
 [local_smtp]
-enabled = true
+enabled = false
 # Port to use for the email testing server web interface.
 port = 54324
 # Uncomment to expose additional ports for testing user applications that send emails.
@@ -402,7 +405,7 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+enabled = false
 port = 54327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"

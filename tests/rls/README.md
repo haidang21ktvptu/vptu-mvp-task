@@ -4,7 +4,7 @@ Mỗi dòng RLS-2…7 có ít nhất một test "được phép" và một test 
 
 ```
 cd tests/rls && npm install
-RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset`; seed.sql đã tạo sẵn auth user)
+RLS_LOCAL=1 npm test     # Supabase local (sau `supabase db reset`; seed.sql đã tạo sẵn auth user) — CI làm việc này; trên laptop chỉ khi được yêu cầu (CLAUDE.md quy tắc 13)
 RLS_STAGING=1 npm test   # staging vojmrjezspdftovzinek — không có đích mặc định: thiếu biến ⇒ dừng trước mọi lời gọi mạng
 # kl-moc chạy thật khi đã nạp bộ vàng: node ../../scripts/nhap-kl-btvtu.mjs --file du-lieu-vang/kl-btvtu.json --local --ghi
 ```

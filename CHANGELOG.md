@@ -674,8 +674,13 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Test RLS-9 (`rls-9-quan-tri`) chỉ xét dòng nhật ký cấp quyền của chính lượt chạy (lý do + mốc thời gian) — hết đỏ trên staging vì dòng kiêm nhiệm do e2e để lại.
 - Phát hành: CI PR #104 xanh (118 e2e + RLS) → tag `v3.14.1` → `deploy-prod` xanh (backup → 0076 → Pages → smoke, tag `production` = `4f94066`) → merge `0f4124f`; staging sau merge xanh. Ghi chú vận hành: test RLS `kl-pq-pham-vi-giao` bật/tắt `quan_tri_kl` của demo_qtht trên staging — cờ cấp tay cho tài khoản này sẽ bị trả về false sau mỗi lượt CI staging.
 
-## 47. Hướng dẫn sử dụng cho người dùng + sửa lọc "Việc tôi theo dõi" (**không migration**, phát hành dự kiến v3.14.2)
+## 47. Hướng dẫn sử dụng cho người dùng + sửa lọc "Việc tôi theo dõi" (**không migration**) — **đã phát hành v3.14.2**
 - `docs/huong-dan-su-dung/`: nguồn dựng tài liệu *Hướng dẫn sử dụng* (.docx, 49 trang, 73 hình; mục 7.3 nhập từ bảng theo dõi tự do chưa theo mẫu, ví dụ có ảnh) — chữ tiếng Việt phổ thông theo vai (Chuyên viên, Trưởng phòng, Lãnh đạo Văn phòng, Thường trực, nhập Excel, Quản trị) + bảng "trước đây / nay"; ảnh chụp staging bằng tài khoản demo, dữ liệu hư cấu; dựng bằng `docx` npm hai lượt (mục lục tĩnh có số trang). Bản .docx/.pdf bàn giao ngoài kho (`D:\TU 2026\kiem-thu\huong-dan-su-dung\`).
 - Sửa: `locRows` có nhãn `theoDoiCuaToi` từ v3 nhưng chưa lọc → mục "Việc tôi theo dõi" của chuyên viên hiện cả việc mình là Owner (phát hiện khi chụp ảnh). Thêm điều kiện + unit test `frontend/tests/tong-hop.test.mjs`.
 - Ghi nhận khi chụp ảnh (chưa sửa, xem TRANG-THAI 6.-6): khối "Minh chứng chuyên viên vừa nộp" liệt kê cả minh chứng chữ cũ của việc đã đóng (dòng "Đã xong ngoài hệ thống" nhập Excel); hội thoại của việc trong Nhắn tin hiện trùng một tin hệ thống cho mỗi người nhận.
+- Phát hành: CI PR #106 xanh → tag `v3.14.2` trên `edfb741` → `deploy-prod` xanh (backup → build → Pages → smoke, tag `production` = `edfb741`) → merge `01a2369` (PR #105 tự ghi nhận đã merge theo cùng commit).
 
+## 48. Làm việc không cần Docker Desktop trên laptop (**không migration**, chưa phát hành)
+- `supabase/config.toml`: tắt Studio, analytics (Logflare + Vector) và Mailpit — chỉ có hiệu lực cục bộ (không đi theo `config push`); `supabase start` (CI và laptop khi thật cần) còn db, kong, auth, rest, realtime, storage, edge-runtime: nhẹ hơn ~1 GB, khởi động nhanh hơn.
+- `CLAUDE.md` quy tắc 13: trên laptop không chạy `supabase start` / `db reset` / `db diff` / `db dump` / test cục bộ trừ khi được yêu cầu; CI là nơi kiểm tra migration + RLS; "Lệnh thường dùng" bỏ `db diff` (migration viết tay).
+- `docs/KIEM-THU.md` mục "Làm việc không cần Docker Desktop": bảng việc nào cần / không cần Docker (push, query, lint `--linked`, e2e một spec trên staging, backup lấy artifact GitHub, `functions deploy --use-api`), gợi ý `.wslconfig` giới hạn RAM WSL2.
