@@ -1,5 +1,4 @@
-# Cắt vùng cần thiết của ảnh chụp màn hình (1536px) để chữ trong tài liệu to, dễ đọc → tệp cùng tên với hậu tố -cat.
-# Chạy: python3 cat.py [ten-anh ...] (không tham số = cắt mọi ảnh có trong bảng CAT và có tệp gốc trong anh/).
+# Cắt vùng cần thiết của ảnh chụp màn hình để chữ trong tài liệu to, dễ đọc. Ghi đè tệp cắt sẵn với hậu tố -cat.
 import sys, json
 from PIL import Image
 CAT = {
@@ -38,11 +37,15 @@ CAT = {
   'a0-02b-chi-dao-the': (584, 20, 1500, 320),
   'a0-04-chi-dao-da-gui': (268, 90, 1536, 300),
   'a0-03b-giao-viec-khoi-2': (268, 250, 1135, 620),
+  'td-01-ghep-cot-chua-nhan': (268, 100, 1536, 620),
+  'td-02-ghep-cot-da-nhan': (268, 100, 1536, 620),
+  'td-03-xem-truoc': (268, 80, 1536, 620),
+  'td-04-bang-xem-truoc': (268, 235, 1536, 540),
+  'td-05-ho-so-da-luu': (268, 400, 1536, 630),
+  'td-06-sau-khi-them-cot': (268, 290, 1536, 545),
 }
 if len(sys.argv) > 1: CAT = {k: v for k, v in CAT.items() if k in sys.argv[1:]}
-import os
 for ten, box in CAT.items():
-    if not os.path.exists(f'anh/{ten}.jpg'): continue
     im = Image.open(f'anh/{ten}.jpg')
     w, h = im.size
     x0, y0, x1, y1 = box

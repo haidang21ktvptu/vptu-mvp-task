@@ -8,7 +8,7 @@ Thư mục này chứa **nguồn** của tài liệu *Hướng dẫn sử dụng
 - `build.mjs` — dựng `HDSD-VPTU-TASK.docx`; `--trang trang.json` điền số trang vào mục lục.
 - `trang.py` — đọc PDF (pdftotext) → số trang từng tiêu đề → `trang.json`.
 - `cat.py` — bảng vùng cắt của ảnh chụp (tệp `-cat.jpg`), để chữ trong hình to hơn.
-- `anh/` — 67 ảnh đang dùng, chụp trên **staging** bằng tài khoản demo (`demo_cv1`, `demo_truongphong`, `demo_cvp`, `demo_a0`, `demo_qtht`), 1536 px; dữ liệu trong ảnh là hư cấu (`phu-luc-2-hu-cau.xlsx`, việc NV-4710…). Không chụp production, không ảnh có tên thật.
+- `anh/` — 73 ảnh đang dùng, chụp trên **staging** bằng tài khoản demo (`demo_cv1`, `demo_truongphong`, `demo_cvp`, `demo_a0`, `demo_qtht`), 1536 px; dữ liệu trong ảnh là hư cấu (`phu-luc-2-hu-cau.xlsx`, `bang-theo-doi-tu-do-hu-cau.xlsx`, việc NV-4710…). Không chụp production, không ảnh có tên thật.
 
 ## Dựng lại
 Cần Node ≥ 22, LibreOffice (`soffice`) và poppler (`pdftotext`, `pdfinfo`) để tính số trang.
