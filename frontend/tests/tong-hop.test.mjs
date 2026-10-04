@@ -55,6 +55,18 @@ describe('tổng hợp — bất biến và bộ số chuẩn', () => {
     assert.equal(locRows(rows, { tuKhoa: 'nv-001' }).length, 1);
     assert.equal(locRows(rows, { nhom: 'HOAN_THANH', thieuMinhChung: true }).length, 78);
   });
+  test('"Việc tôi theo dõi": chỉ việc tôi là người theo dõi mà KHÔNG phải Owner (v3.14.2 — trước chỉ có nhãn, không lọc)', () => {
+    const ds = [
+      { ...rows[0], id: 'a', nguoi_theo_doi: 'toi', owner_tai_khoan: null },        // theo dõi, Owner là đơn vị → hiện
+      { ...rows[0], id: 'b', nguoi_theo_doi: 'toi', owner_tai_khoan: 'nguoi-khac' }, // theo dõi, Owner người khác → hiện
+      { ...rows[0], id: 'c', nguoi_theo_doi: 'toi', owner_tai_khoan: 'toi' },        // tôi là Owner → ẩn
+      { ...rows[0], id: 'd', nguoi_theo_doi: 'tp', owner_tai_khoan: 'toi' },         // tôi là Owner, người khác theo dõi → ẩn
+      { ...rows[0], id: 'e', nguoi_theo_doi: 'tp', owner_tai_khoan: 'nguoi-khac' },  // không liên quan → ẩn
+    ];
+    assert.deepEqual(locRows(ds, { theoDoiCuaToi: 'toi' }).map((r) => r.id), ['a', 'b']);
+    assert.deepEqual(locRows(ds, { cuaToi: 'toi' }).map((r) => r.id), ['a', 'b', 'c', 'd']);
+    assert.equal(locRows(ds, {}).length, 5);
+  });
   test('theoNganhLinhVuc: tổng mọi ô = 185, ngành không tên xếp cuối, "Chưa phân loại" xếp cuối mỗi ngành', () => {
     const n = theoNganhLinhVuc(rows);
     assert.equal(n.reduce((s, x) => s + x.so, 0), 185);
