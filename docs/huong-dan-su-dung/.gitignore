@@ -1,0 +1,6 @@
+node_modules/
+*.docx
+*.pdf
+tieu-de.json
+trang.json
+trang-*.jpg
