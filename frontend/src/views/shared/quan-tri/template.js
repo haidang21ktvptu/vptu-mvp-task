@@ -31,6 +31,7 @@ export const quanTriTemplate = `
     <div class="bang">
       <div class="bang-dau"><h2>Tài khoản và cờ đặc quyền<span class="chu-phu" id="qtSoNguoiKl"></span></h2>
         <div class="bo-loc"><input type="search" id="qtTimTaiKhoan" class="o-nhap nho" placeholder="Tìm theo họ tên, tài khoản" aria-label="Tìm tài khoản">
+          <button type="button" class="nut nho" data-action="moBanGiao" title="Đặt lại mật khẩu tạm hàng loạt và xuất tệp / phiếu bàn giao">Bàn giao tài khoản…</button>
           <button type="button" class="nut nho chinh" data-action="moTaoTaiKhoan">Tạo tài khoản</button></div></div>
       <div class="bang-cuon"><table>
         <thead><tr><th>Cán bộ</th><th>Phòng</th><th>Vai trò</th><th>Quản trị KL BTVTU</th><th>Hệ thống</th><th class="phai">Thao tác</th></tr></thead>

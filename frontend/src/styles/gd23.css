@@ -19,6 +19,10 @@
   .nut.nguy-hiem { background: var(--do); color: #fff; border-color: var(--do); } .nut.nguy-hiem:disabled { opacity: .45; }
   .mk-tam { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
   .mk-tam code { font-size: 22px; letter-spacing: .08em; padding: 8px 14px; background: var(--nen-phu); border: 1px dashed var(--vien); border-radius: 8px; user-select: all; }
+  /* v3.15 bàn giao tài khoản: danh sách kết quả cuộn được; danh sách bỏ qua trong <details> */
+  .bg-danh-sach { max-height: 220px; overflow: auto; margin: 10px 0 0; padding: 8px 12px; border: 1px solid var(--vien); border-radius: 8px; font-size: 14px; list-style: none; }
+  .bg-danh-sach li { padding: 3px 0; border-bottom: 1px dashed var(--vien); } .bg-danh-sach li:last-child { border-bottom: 0; } .bg-danh-sach small { color: var(--chu-phu); margin-left: 6px; }
+  #qtBgBoQua { margin-top: 6px; } #qtBgBoQua summary { cursor: pointer; } #qtBgBoQua ul { margin: 4px 0 0 18px; max-height: 160px; overflow: auto; }
   /* Danh sách dưới dải "Cần xử lý ngay" */
   .can-xu-ly button[aria-expanded="true"] { background: var(--navy-dac); color: #fff; border-color: var(--navy-dac); }
   .can-xu-ly button[aria-expanded="true"] b { color: var(--vang-tren-dac); }

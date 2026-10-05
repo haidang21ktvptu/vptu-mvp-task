@@ -89,6 +89,7 @@ export const quanTriTaiKhoanModalTemplate = `
     <p id="qtMkMoTa" class="chu-phu" style="margin-top:6px"></p>
     <p class="mk-tam"><code id="qtMkGiaTri"></code><button type="button" class="nut nho" data-action="saoChepMatKhauTam">Sao chép</button></p>
     <p class="chu-phu">Chỉ hiện một lần. Gửi cho cán bộ qua kênh an toàn; hệ thống bắt đổi mật khẩu khi đăng nhập lần đầu.</p>
+    <p class="mk-tam"><button type="button" class="nut nho" data-action="taiPhieuMotNguoi">Tải phiếu Excel</button><button type="button" class="nut nho" data-action="inPhieuMotNguoi">In phiếu</button></p>
     <div class="modal-chan"><button type="button" class="nut chinh" data-action="dongMatKhauTam">Đã ghi lại, đóng</button></div>
   </div>
 </div>

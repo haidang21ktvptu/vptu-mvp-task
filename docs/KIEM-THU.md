@@ -44,6 +44,8 @@ Mã ở `supabase/functions/quan-tri-tai-khoan/index.ts` (Deno). Việc cần `s
 - Deploy tự động: `deploy-staging.yml` (push `main`) và `deploy-prod.yml` (tag `v*`) chạy `supabase functions deploy quan-tri-tai-khoan --project-ref <ref> --use-api` ngay sau `db push`.
 - Deploy tay (khi cần thử trên staging trước khi merge): `supabase functions deploy quan-tri-tai-khoan --project-ref vojmrjezspdftovzinek --use-api` (CLI đã `supabase login`). Không cần đặt secret gì thêm.
 - Kiểm thử: màn hình Quản trị → Tài khoản (tài khoản `demo_qtht`): tạo tài khoản thử, đặt lại mật khẩu, khoá/mở; xem dòng tương ứng ở tab Nhật ký hệ thống. Cấp/thu `quan_tri_kl` vẫn qua hàm SQL `admin_dat_co` (e2e `quan-tri.spec.js` không phụ thuộc function).
+- **Từ v3.15 — PR đổi `supabase/functions/**`**: job "Kiểm thử RLS + e2e trên staging" của `ci.yml` deploy function **của chính PR** lên staging (output `cham_function` của `phan-loai.sh`, `--use-api`, ~20 giây) trước khi chạy e2e, nên kiểm tay trên `/staging/` trong PR là đúng bản sắp merge; không cần deploy tay nữa. Chỉ staging; production vẫn chỉ qua `deploy-prod.yml`.
+- Hành động `reset_hang_loat` (bàn giao tài khoản, QT-7): kiểm tay trên staging bằng `demo_qtht` với **tài khoản thử tạo riêng** (phạm vi *Theo phòng* của tài khoản đó): tài khoản seed đã đổi mật khẩu (`must_change_password = false`) nên bị bỏ qua, không làm hỏng mật khẩu `123456` của e2e; **không** tick "kể cả tài khoản đang dùng" trên staging. Logic chọn phạm vi và dựng tệp có unit test (`frontend/tests/ban-giao.test.mjs`).
 - Lỗi thường gặp: HTTP 401/403 = phiên hết hạn hoặc không có cờ; 409 = trùng tên đăng nhập; xem log ở Dashboard → Edge Functions → Logs.
 
 ## Cờ đổi mật khẩu lần đầu và dọn dữ liệu (GĐ23)
