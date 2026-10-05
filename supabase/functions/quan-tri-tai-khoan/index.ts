@@ -2,6 +2,9 @@
 // của function (SUPABASE_SERVICE_ROLE_KEY do Supabase cấp sẵn). Người gọi phải đăng nhập và có accounts.quan_tri_he_thong (kiểm bằng RPC
 // me_quan_tri_he_thong với JWT của chính họ). Mọi hành động ghi nhat_ky_he_thong (0041). Mật khẩu tạm chỉ trả về MỘT lần trong response.
 //   POST { hanh_dong: 'tao' | 'reset_mat_khau' | 'khoa' | 'mo' | 'cap_co', ... }  →  { ok, mat_khau_tam?, id? }
+//   POST { hanh_dong: 'reset_hang_loat', ids: string[] (≤ 100), ly_do, ke_ca_dang_dung? }  →  { ok, dat_lai: [{ id, username, full_name, mat_khau_tam }], bo_qua: [{ username, ly_do }] }
+//     (v3.15 bàn giao tài khoản: bỏ qua chính người gọi, tài khoản hệ thống, đang bị khoá, và tài khoản đã đổi mật khẩu lần đầu trừ khi ke_ca_dang_dung;
+//      mỗi tài khoản một dòng nhật ký reset_mat_khau + một dòng tổng reset_hang_loat; mật khẩu chỉ nằm trong response).
 // Deploy: supabase functions deploy quan-tri-tai-khoan --project-ref <ref> (docs/KIEM-THU.md).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -22,6 +25,53 @@ function matKhauTam(): string {
 
 const VAI = ['A0', 'A1', 'A2', 'A3'];
 const USERNAME = /^[a-z0-9_.]{3,40}$/;
+const TOI_DA_HANG_LOAT = 100;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+type TaiKhoanNgan = { id: string; username: string; full_name: string; is_system: boolean; bi_khoa: boolean; must_change_password: boolean };
+
+// Lý do bỏ qua một tài khoản khi đặt lại hàng loạt (cùng quy tắc với frontend/src/lib/ban-giao-xuat.js — ở đây là chốt thật).
+function lyDoBoQua(tk: TaiKhoanNgan | undefined, meId: string, keCaDangDung: boolean): string | null {
+  if (!tk) return 'không tìm thấy tài khoản';
+  if (tk.id === meId) return 'chính tài khoản đang thao tác';
+  if (tk.is_system) return 'tài khoản hệ thống';
+  if (tk.bi_khoa) return 'đang bị khoá';
+  if (!tk.must_change_password && !keCaDangDung) return 'đã đổi mật khẩu lần đầu (đang dùng)';
+  return null;
+}
+
+// Đặt lại mật khẩu tạm hàng loạt (bàn giao): lọc theo lyDoBoQua, từng nhóm 5 song song; lỗi của một tài khoản không chặn các tài khoản khác.
+async function resetHangLoat(body: Record<string, unknown>, meId: string, admin: ReturnType<typeof createClient>,
+  ghiNhatKy: (hanh_dong: string, doi_tuong: string, chi_tiet?: Record<string, unknown>) => PromiseLike<unknown>) {
+  const ids = Array.isArray(body.ids) ? [...new Set(body.ids.filter((x) => typeof x === 'string' && UUID.test(x)))] as string[] : [];
+  const lyDo = String(body.ly_do || '').trim();
+  const keCaDangDung = body.ke_ca_dang_dung === true;
+  if (!ids.length) return loi('Chưa chọn tài khoản nào.');
+  if (ids.length > TOI_DA_HANG_LOAT) return loi(`Mỗi lượt tối đa ${TOI_DA_HANG_LOAT} tài khoản (đang chọn ${ids.length}).`);
+  if (!lyDo) return loi('Phải ghi lý do bàn giao / đặt lại hàng loạt.');
+  const { data: ds, error: eDs } = await admin.from('accounts').select('id, username, full_name, is_system, bi_khoa, must_change_password').in('id', ids);
+  if (eDs) return loi(`Không đọc được danh sách tài khoản: ${eDs.message}`, 500);
+  const theoId = new Map((ds as TaiKhoanNgan[]).map((t) => [t.id, t]));
+  const datLai: { id: string; username: string; full_name: string; mat_khau_tam: string }[] = [];
+  const boQua: { username: string; ly_do: string }[] = [];
+  const can: TaiKhoanNgan[] = [];
+  for (const id of ids) {
+    const tk = theoId.get(id); const ly = lyDoBoQua(tk, meId, keCaDangDung);
+    if (ly) boQua.push({ username: tk?.username || id, ly_do: ly }); else can.push(tk!);
+  }
+  for (let i = 0; i < can.length; i += 5) {
+    await Promise.all(can.slice(i, i + 5).map(async (tk) => {
+      const mk = matKhauTam();
+      const { error } = await admin.auth.admin.updateUserById(tk.id, { password: mk });
+      if (error) { boQua.push({ username: tk.username, ly_do: `không đặt được mật khẩu: ${error.message}` }); return; }
+      await admin.from('accounts').update({ must_change_password: true }).eq('id', tk.id);
+      await ghiNhatKy('reset_mat_khau', tk.username, { hang_loat: true });
+      datLai.push({ id: tk.id, username: tk.username, full_name: tk.full_name, mat_khau_tam: mk });
+    }));
+  }
+  datLai.sort((a, b) => a.full_name.localeCompare(b.full_name, 'vi'));
+  await ghiNhatKy('reset_hang_loat', `${datLai.length} tài khoản`, { so_dat_lai: datLai.length, so_bo_qua: boQua.length, ke_ca_dang_dung: keCaDangDung, ly_do: lyDo });
+  return json({ ok: true, dat_lai: datLai, bo_qua: boQua });
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -44,7 +94,8 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return loi('Nội dung yêu cầu không phải JSON.'); }
   const hanhDong = String(body.hanh_dong || '');
-  if (!['tao', 'reset_mat_khau', 'khoa', 'mo', 'cap_co'].includes(hanhDong)) return loi(`Hành động không hợp lệ: "${hanhDong}".`);
+  if (!['tao', 'reset_mat_khau', 'khoa', 'mo', 'cap_co', 'reset_hang_loat'].includes(hanhDong)) return loi(`Hành động không hợp lệ: "${hanhDong}".`);
+  if (hanhDong === 'reset_hang_loat') return resetHangLoat(body, me.user.id, admin, ghiNhatKy);
   const id = typeof body.id === 'string' ? body.id : '';
   const taiKhoan = id ? (await admin.from('accounts').select('id, username, full_name, is_system, quan_tri_he_thong').eq('id', id).maybeSingle()).data : null;
   if (hanhDong !== 'tao' && !taiKhoan) return loi('Không tìm thấy tài khoản.', 404);

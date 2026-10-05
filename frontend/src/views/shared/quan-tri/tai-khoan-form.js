@@ -6,14 +6,17 @@ import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { goiQuanTriTaiKhoan } from '../../../lib/quan-tri-api.js';
 import { quanTriTaiKhoanModalTemplate } from './template-he-thong.js';
+import { datMotNguoi } from './ban-giao.js';
 
 let onDone = async () => {};
 
 export function hienMatKhauTam(username, matKhau) {
   setText('qtMkMoTa', `Tài khoản ${username}`);
   setText('qtMkGiaTri', matKhau);
+  datMotNguoi(username, matKhau);   // v3.15: nút Tải phiếu Excel / In phiếu cho đúng người này
   show('qtMkModal', true);
 }
+function dongMatKhauTam() { datMotNguoi(null); setText('qtMkGiaTri', ''); show('qtMkModal', false); }
 
 async function saoChepMatKhauTam() {
   try { await navigator.clipboard.writeText($('qtMkGiaTri').innerText); notifySuccess('Đã sao chép mật khẩu tạm.'); } catch { notifyError('Không sao chép được — đồng chí ghi lại bằng tay.'); }
@@ -49,5 +52,5 @@ async function taoTaiKhoan() {
 export function mountTaiKhoanForm(reload) {
   onDone = reload;
   $('modalRoot').insertAdjacentHTML('beforeend', quanTriTaiKhoanModalTemplate);
-  registerActions({ moTaoTaiKhoan, taoTaiKhoan, dongTaoTaiKhoan: () => show('qtTkModal', false), dongMatKhauTam: () => show('qtMkModal', false), saoChepMatKhauTam });
+  registerActions({ moTaoTaiKhoan, taoTaiKhoan, dongTaoTaiKhoan: () => show('qtTkModal', false), dongMatKhauTam, saoChepMatKhauTam });
 }
