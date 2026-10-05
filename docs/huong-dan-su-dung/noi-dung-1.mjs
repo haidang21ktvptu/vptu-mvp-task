@@ -38,6 +38,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
       'Lần đầu đăng nhập, hệ thống yêu cầu **đặt mật khẩu mới** (xem 2.2). Đặt xong là vào màn hình chính.',
     ]),
     ...hinh('chung-01-dang-nhap.jpg', 'Màn hình đăng nhập'),
+    p('Để **30 phút không thao tác** (không bấm, không gõ), hệ thống tự đăng xuất trên thiết bị đó và màn đăng nhập ghi rõ lý do; trước đó 2 phút có dòng nhắc — bấm hoặc gõ bất kỳ là phiên tiếp tục. Đây là bảo vệ khi rời máy mà quên đăng xuất; máy dùng chung vẫn nên bấm **Đăng xuất** ở menu bánh răng.'),
     luuY('Quên mật khẩu: liên hệ Quản trị hệ thống (Phòng Chuyển đổi số – Cơ yếu) để được cấp mật khẩu tạm mới, sau đó đăng nhập và đặt lại mật khẩu của mình. Không chia sẻ mật khẩu cho người khác.'),
     P2('2.2 Đổi mật khẩu'),
     ...steps([

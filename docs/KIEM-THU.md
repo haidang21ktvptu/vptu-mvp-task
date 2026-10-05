@@ -156,3 +156,7 @@ Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAU
 | Danh sách / sửa mốc migration | `supabase migration list`, `supabase migration repair` | — |
 
 Khi vẫn phải dùng Docker: `supabase/config.toml` đã tắt Studio, analytics (Logflare + Vector) và Mailpit — `supabase start` chỉ còn db, kong, auth, rest, realtime, storage, edge-runtime (nhẹ hơn khoảng 1 GB, khởi động nhanh hơn); xong việc chạy `supabase stop` rồi thoát Docker Desktop. Giới hạn RAM của WSL2 đặt ngoài repo, trong `%UserProfile%\.wslconfig` (`[wsl2]` → `memory=3GB`, `swap=0`) rồi `wsl --shutdown`.
+
+## Hết phiên do không thao tác (v3.15.1, NF-14)
+
+Bộ đếm ở `frontend/src/auth/het-phien.js` (logic thuần `lib/het-phien.js`): mặc định 30 phút, nhắc trước 2 phút, kiểm mỗi 15 giây. Khoá kiểm thử `localStorage.vptu-phut-het-phien` = số phút (0,1 = 6 giây) ghi đè mặc định — chỉ dùng trong e2e `het-phien.spec.js` và khi thử tay (gõ `localStorage.setItem('vptu-phut-het-phien','0.1')` ở Console rồi tải lại); xoá khoá để về mặc định. Đăng xuất do hết phiên dùng `signOut({ scope: 'local' })` — GoTrue huỷ **đúng phiên hiện tại** trên máy chủ (không phải chỉ xoá cục bộ), nên e2e phải đăng nhập thật qua form để có phiên riêng; dùng `contextAs` (chuỗi phiên dùng chung của vai) sẽ làm hỏng refresh token của các context sau trong cùng lần chạy.

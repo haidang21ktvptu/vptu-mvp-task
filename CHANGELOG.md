@@ -691,3 +691,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - CI: `phan-loai.sh` thêm output `cham_function`; job e2e của PR deploy Edge Function của chính PR lên staging khi `supabase/functions/**` đổi (trước đây chỉ sau merge).
 - Nhật ký hệ thống: nhãn tiếng Việt cho `reset_hang_loat` và các khoá mới.
 - Kiểm tay trên staging (PR #108 merge trước để có function + giao diện trên `/staging/`): tạo tài khoản thử hư cấu → hộp Mật khẩu tạm có Tải phiếu / In phiếu; Bàn giao theo phòng → 1 đặt lại, seed bị bỏ qua đúng; tải Excel; khoá lại tài khoản thử. Hướng dẫn sử dụng v3.15: mục 8.2 mới (50 trang, 75 hình). Phát hành: PR `release/v3.15.0` → tag `v3.15.0` trên đầu nhánh → deploy-prod (function + Pages) → merge.
+
+## 50. Tự đăng xuất khi không thao tác 30 phút (**không migration**, phát hành v3.15.1, SPEC NF-14)
+- Phát hiện 5/10 sau v3.15.0: đăng nhập treo cả ngày không tự thoát (Supabase Auth gói Free không có inactivity timeout phía máy chủ; refresh token nối phiên vô hạn).
+- `frontend/src/auth/het-phien.js` + `lib/het-phien.js`: mọi thao tác ghi mốc vào localStorage (các tab dùng chung); quá 30 phút → `signOut` scope local + tải lại, màn đăng nhập ghi "đã tự đăng xuất vì không có thao tác…"; nhắc trước 2 phút; tải lại trang sau khi quá hạn (treo qua đêm) cũng không vào app. Khoá kiểm thử `vptu-phut-het-phien` ghi đè số phút.
+- Test: unit `het-phien.test.mjs` (4) + e2e `het-phien.spec.js` (A3 đăng nhập thật qua form — 1 lượt — vì đăng xuất hết phiên huỷ đúng phiên đó trên máy chủ; 0,1 phút → về màn đăng nhập có lý do, tải lại không lặp câu; lần CI đầu dùng chuỗi phiên chung làm hỏng refresh token A3 của 3 test sau → sửa). HDSD 2.1 + Hỏi đáp; KIEM-THU.
