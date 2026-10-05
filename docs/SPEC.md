@@ -240,6 +240,7 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 | NF-11 | Job cảnh báo idempotent, không gửi trùng | Test chạy 2 lần cùng ngày = 1 lần gửi |
 | NF-12 | **Khi có tệp** (chờ kinh phí): tệp minh chứng chỉ người trong phạm vi tải được | Test Storage policy 3 vai — chưa áp ở v3 |
 | NF-13 | Job cảnh báo chạy được từ bên ngoài chỉ với service_role; `authenticated`/`anon` gọi `canh_bao_quet()` bị chặn | Test RLS 3 vai + service_role |
+| NF-14 | **[v3.15.1]** Phiên tự kết thúc khi **không thao tác quá 30 phút** (nhắc trước 2 phút; mốc thao tác lưu localStorage dùng chung các tab; tải lại trang sau khi quá hạn cũng không vào app) — đăng xuất thiết bị đó (`signOut` scope local), màn đăng nhập ghi rõ lý do. Gói Supabase Free không có inactivity timeout phía máy chủ; khi lên Pro bật thêm `auth.sessions.inactivity_timeout` làm lớp thứ hai | e2e `het-phien.spec.js` (ghi đè 0,1 phút qua khoá kiểm thử `vptu-phut-het-phien`) + unit `het-phien.test.mjs` |
 
 ---
 

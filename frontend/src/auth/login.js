@@ -6,6 +6,7 @@ import { $, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
 import { loadAccountsCache, enterApp } from './session.js';
 import { datMatKhauTam, moTrangDoiMatKhau } from './change-password.js';
+import { cauLyDoThoat } from './het-phien.js';
 
 function loginErrorMessage(error) {
   // Giới hạn theo IP của Supabase (30 lượt/5 phút): cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm.
@@ -70,4 +71,6 @@ export async function startSession(session) {
 
 export function initLogin() {
   $('loginForm').addEventListener('submit', handleLogin);
+  const ly = cauLyDoThoat();   // v3.15.1: lần tải trước thoát vì hết phiên → giải thích trên màn đăng nhập
+  if (ly) showInlineError('loginError', ly);
 }

@@ -153,6 +153,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
       ['Đã nộp minh chứng mà việc vẫn chưa "Đã đóng".', 'Việc chỉ đóng khi lãnh đạo bấm **Nghiệm thu**. Nhắc người nghiệm thu (tên hiện trên thẻ); quá 1 ngày làm việc hệ thống tự nhắc.'],
       ['Nhập Excel xong thấy sai.', 'Trong 24 giờ: thẻ Chờ hoàn thiện → **Hoàn tác lô**. Sau 24 giờ: sửa từng việc bằng Cập nhật nhanh / Sửa thông tin giao, hoặc Xuất theo mẫu → sửa → nhập lại.'],
       ['Bảng Excel của phòng không theo mẫu, có nhập được không?', 'Được. Chọn tệp, ghép cột "Công việc" (hay tên tương tự) vào **Nội dung nhiệm vụ**, xem trước rồi nhập; **Lưu cách ghép** để lần sau hệ thống tự nhận (mục 7.3). Bảng thường thiếu số/ngày văn bản và sản phẩm — thêm hai cột vào Excel hoặc hoàn thiện từng dòng.'],
+      ['Đang làm thì bị đưa về màn đăng nhập.', 'Hệ thống tự đăng xuất sau **30 phút không thao tác** (câu giải thích hiện ngay trên màn đăng nhập). Đăng nhập lại; dữ liệu đã bấm Lưu / Giao / Nộp trước đó không mất.'],
       ['Không nhận được thông báo.', 'Kiểm tra chuông; kiểm tra Bánh răng → Thông báo (nếu bật "Gom tin 7h30" thì tin lẻ không hiện). Tải lại trang (F5).'],
       ['Quên mật khẩu / tài khoản bị khoá.', 'Liên hệ Quản trị hệ thống (Phòng Chuyển đổi số – Cơ yếu) để đặt lại mật khẩu tạm — nhận phiếu in hoặc tệp, đổi mật khẩu ngay khi đăng nhập (mục 8.2).'],
       ['Muốn báo cáo nhanh cho giao ban.', 'Lãnh đạo Văn phòng: **Báo cáo → Xuất Excel** hoặc **In / lưu PDF**. Trưởng phòng: **Nhiệm vụ của phòng → Xuất Excel** (đúng danh sách đang lọc).'],
