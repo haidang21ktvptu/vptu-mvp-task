@@ -34,7 +34,8 @@ function xemTruocBanGiao() {
   $('qtBgBoQua').innerHTML = boQua.length ? `<summary>Bỏ qua ${boQua.length} tài khoản</summary><ul>${boQua.map((b) => `<li>${escapeHtml(b.tk.full_name)} (${escapeHtml(b.tk.username)}) — ${escapeHtml(b.lyDo)}</li>`).join('')}</ul>` : '';
   show('qtBgBoQua', boQua.length > 0);
   show('qtBgCanhBaoKeCa', tc.keCaDangDung);
-  $('qtBgThucHien').disabled = !chon.length || quaNhieu || $('qtBgXacNhan').value.trim() !== XAC_NHAN || !$('qtBgLyDo').value.trim();
+  const daGo = $('qtBgXacNhan').value.trim().normalize('NFC').toUpperCase() === XAC_NHAN;   // bộ gõ có thể cho dấu tổ hợp (NFD)
+  $('qtBgThucHien').disabled = !chon.length || quaNhieu || !daGo || !$('qtBgLyDo').value.trim();
   return chon;
 }
 
