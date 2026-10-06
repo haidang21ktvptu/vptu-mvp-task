@@ -44,6 +44,7 @@ CAT = {
   'td-05-ho-so-da-luu': (268, 400, 1536, 630),
   'td-06-sau-khi-them-cot': (268, 290, 1536, 545),
   'qt-08-ban-giao': (540, 20, 1020, 700),        # v3.15: hộp Bàn giao tài khoản (ảnh gốc 1568×703)
+  'a1-04b-xuat-theo-ky': (560, 140, 1000, 620),   # v3.16: hộp Xuất Excel theo kỳ (ảnh gốc 1568×752)
 }
 if len(sys.argv) > 1: CAT = {k: v for k, v in CAT.items() if k in sys.argv[1:]}
 for ten, box in CAT.items():
