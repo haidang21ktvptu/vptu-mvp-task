@@ -94,10 +94,13 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
         run: |
-          supabase db push --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" --dry-run
-          supabase db push --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" --yes
+          # 6/10/2026: runner GitHub không có IPv6; CLI khi chưa link dùng kết nối trực tiếp (IPv6) → "IPv6 is not supported on your current network".
+          # supabase link lấy cấu hình pooler (IPv4) rồi các lệnh db dùng --linked. Không cần Docker.
+          supabase link --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD"
+          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --dry-run
+          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --yes
           echo "### Migration staging" >> "$GITHUB_STEP_SUMMARY"
-          supabase migration list --project-ref "$STAGING_REF" -p "$SUPABASE_DB_PASSWORD" >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          supabase migration list --linked -p "$SUPABASE_DB_PASSWORD" >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
       # Edge Function quan-tri-tai-khoan (GĐ23): service_role chỉ nằm trong secrets của function (Supabase cấp sẵn), deploy cùng lượt với migration.
       - name: supabase functions deploy (staging)
         env:

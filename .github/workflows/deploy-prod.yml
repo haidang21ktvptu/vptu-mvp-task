@@ -137,8 +137,11 @@ jobs:
       - name: supabase db push (production)
         run: |
           echo "### Migration production (${{ github.ref_name }})" >> "$GITHUB_STEP_SUMMARY"
-          supabase db push --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD" --dry-run 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-          supabase db push --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD" --yes
+          # 6/10/2026: runner GitHub không có IPv6; CLI khi chưa link dùng kết nối trực tiếp (IPv6) → "IPv6 is not supported on your current network".
+          # supabase link lấy cấu hình pooler (IPv4) rồi các lệnh db dùng --linked. Không cần Docker.
+          supabase link --project-ref "$PROD_REF" -p "$SUPABASE_DB_PASSWORD"
+          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --dry-run 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --yes
       - name: supabase functions deploy (production)
         run: supabase functions deploy quan-tri-tai-khoan --project-ref "$PROD_REF" --use-api
 

@@ -701,3 +701,7 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Nút **Xuất theo kỳ…** cạnh Xuất Excel (mọi vai, phạm vi RLS): hộp chọn tuần ISO (theo một ngày, T2–CN) / tháng / quý / năm, mặc định kỳ hiện tại; xem trước bốn số đếm; tuỳ chọn chỉ danh sách đang lọc.
 - Tệp `vptu-nhiem-vu-<kỳ>.xlsx` 6 sheet: Kỳ (thông tin + quy ước), Tổng hợp theo phòng / đơn vị (giao, hoàn thành đúng hạn / trễ, đến hạn, còn mở cuối kỳ, quá hạn, Tổng cộng), Giao trong kỳ, Hoàn thành trong kỳ, Đến hạn trong kỳ, Còn mở cuối kỳ (15 cột + Ngày giao, Ngày hoàn thành). Quy ước kỳ dùng chung với Tổng quan.
 - Mã: `lib/kl/ky.js` thuần (4 unit test `ky.test.mjs`), `lib/kl/xuat.js` xuatTheoKy, `views/shared/kl/xuat-ky.js`; e2e `xuat-theo-ky.spec.js` (A1: đổi kỳ đổi nhãn, bắt sự kiện tải tệp đúng tên). SPEC 3.8, HDSD 5.4 + Hỏi đáp.
+
+## 52. CI: `supabase link` trước `db push` — runner GitHub không có IPv6 (**không migration**, chưa phát hành)
+- 6/10/2026 sau khi merge #112, job "Áp migration lên staging" đỏ hai lần + một lần chạy tay: `supabase db push --project-ref …` báo "IPv6 is not supported on your current network. Run supabase link … to setup IPv4 connection" (hôm trước vẫn xanh; backup định kỳ 4/10 vẫn xanh). CLI chưa link dùng kết nối trực tiếp (chỉ IPv6) thay vì pooler.
+- Sửa `deploy-staging.yml`, `deploy-prod.yml`, `ci.yml` (công tắc production): `supabase link --project-ref … -p …` rồi `db push --linked` / `migration list --linked`. Không cần Docker. `backup-db.sh` (`db dump --project-ref`) giữ nguyên vì vẫn chạy được — theo dõi lần backup kế tiếp.
