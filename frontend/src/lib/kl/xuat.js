@@ -5,6 +5,8 @@ import { taoXlsx, taiXuong } from '../xlsx.js';
 import { DEPT_NAMES } from '../constants.js';
 import { homNayVN } from './ngay.js';
 import { tenNhom, tenChatLuong, tenTienDoHoanThanh, boSoThuTu } from './nhan.js';
+import { ngayGiao } from './tong-quan.js';
+import { phanLoaiTheoKy, tongHopTheoKy } from './ky.js';
 
 const ngayTep = () => homNayVN().replace(/-/g, '');
 const chuTri = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '';
@@ -45,4 +47,20 @@ export function xuatBaoCao({ theoPhong, theoNguon, rowsDo }) {
   const ten = `vptu-bao-cao-${ngayTep()}.xlsx`;
   taiXuong(ten, taoXlsx([tuBang('Theo phòng', theoPhong), tuBang('Theo nguồn', theoNguon), bang('Danh sách Đỏ', COT_NHIEM_VU, rowsDo)]));
   return ten;
+}
+
+// v3.16: xuất theo kỳ (tuần / tháng / quý / năm — lib/kl/ky.js). k = khoangKyChon(...); rows = toàn bộ việc trong phạm vi (hoặc danh sách đang lọc).
+// 6 sheet: Kỳ (thông tin), Tổng hợp theo phòng / đơn vị, Giao trong kỳ, Hoàn thành trong kỳ, Đến hạn trong kỳ, Còn mở cuối kỳ (15 cột + Ngày giao, Ngày hoàn thành).
+const COT_KY = [COT_NHIEM_VU[0], { nhan: 'Ngày giao', rong: 13, kieu: 'ngay', gt: ngayGiao }, { nhan: 'Ngày hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.ngay_hoan_thanh || '' }, ...COT_NHIEM_VU.slice(1)];
+export function xuatTheoKy(rows, k, { phamVi = 'Toàn bộ việc trong phạm vi', nguoi = '' } = {}) {
+  const pl = phanLoaiTheoKy(rows, k); const th = tongHopTheoKy(rows, k);
+  const thongTin = [['Kỳ', k.ten], ['Từ ngày', k.tu], ['Đến ngày', k.den], ['Phạm vi', phamVi], ['Người xuất', nguoi], ['Xuất lúc', new Date().toLocaleString('vi-VN')],
+    ['Quy ước', 'Giao = ngày nhận văn bản (hoặc ngày ban hành, ngày tạo); Hoàn thành = ngày hoàn thành; Đến hạn = hạn hoàn thành; Còn mở cuối kỳ = giao không sau ngày cuối kỳ và chưa xong (hoặc xong sau kỳ); Quá hạn = hạn trước ngày cuối kỳ.']];
+  const ten = `vptu-nhiem-vu-${k.ma}.xlsx`;
+  taiXuong(ten, taoXlsx([
+    { ten: 'Kỳ', cot: [{ nhan: 'Mục', rong: 14 }, { nhan: 'Giá trị', rong: 110 }], dong: thongTin },
+    { ten: 'Tổng hợp', cot: th.cot.map((nhan, i) => ({ nhan, rong: i === 0 ? 36 : 14 })), dong: th.dong },
+    bang('Giao trong kỳ', COT_KY, pl.giao), bang('Hoàn thành trong kỳ', COT_KY, pl.xong), bang('Đến hạn trong kỳ', COT_KY, pl.denHan), bang('Còn mở cuối kỳ', COT_KY, pl.mo),
+  ]));
+  return { ten, so: { giao: pl.giao.length, xong: pl.xong.length, denHan: pl.denHan.length, mo: pl.mo.length } };
 }
