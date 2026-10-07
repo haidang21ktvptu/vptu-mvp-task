@@ -69,6 +69,8 @@ test.describe.serial('Giao việc — ma trận 7 vai × 5 loại văn bản (kh
       tu_ngay: '2026-01-01', den_ngay: null, ly_do: `${khoa} kiêm nhiệm`, phan_cong_boi: '00000000-0000-4000-8000-000000000008' });
     if (r.error) throw new Error(`Phân công kiêm nhiệm tạm: ${r.error.message}`);
     vbKL = await taoVanBanRieng(db, `${khoa}-KL`, { loai: 'KL_BTV', so_hoi_nghi: 997, ngay_ban_hanh: cong(homNay(), -2), ngay_nhan: cong(homNay(), -1) });
+    // Văn bản chỉ hiện với người thấy ít nhất một việc của nó (kl_van_ban_thay_duoc): việc S ở phòng Tổng hợp để A2 / PCVP / PCVP2 kiêm nhiệm tìm được.
+    await taoViec(db, vbKL, `${khoa} S văn bản`, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: ID.cv1, nguoi_theo_doi: ID.cv1, tao_boi: ID.tp });
     // Chủ trì demo_e2e_cv (mặc định taoViec) — không dùng demo_e2e_kl: bo-cuc đã đăng xuất (huỷ phiên chung) trước project này.
     // Dữ liệu cũ có hạn nộp đã qua: trigger 0077 đưa về NULL ⇒ việc chỉ là Đang thực hiện, không còn nhãn cam.
     K = await taoViec(db, vbKL, `${khoa} K hạn nộp cũ`, { han_nop_minh_chung: cong(homNay(), -1), han_xu_ly: cong(homNay(), 15) });
