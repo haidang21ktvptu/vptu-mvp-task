@@ -19,6 +19,7 @@ async function vanBanMoi(page, so) {
   await page.locator('#klThSoKL').fill(so); await page.locator('#klThNgayBH').fill(cong(homNay(), -1));
 }
 const giaTri = (loc) => loc.evaluateAll((os) => os.map((x) => x.value).filter(Boolean));
+const moc = (t) => console.log(`::notice title=TMN ${new Date().toISOString().slice(11, 19)}::${t}`);   // TẠM: dấu vết bước (annotation CI) — gỡ khi xong
 // Tài khoản ngoài bộ chuẩn (OPTIONAL_USERS — demo_pcvp, demo_qtht): mở phiên đã lưu, chờ tên ở đầu trang; lãnh đạo vào Tổng quan → mở "Cần xử lý".
 async function moTuyChon(browser, role, testInfo) {
   const page = await (await contextAs(browser, role, testInfo)).newPage(); await page.goto('./');
@@ -45,36 +46,57 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
   test('1. Quản trị KL giao thay mặt Lãnh đạo Văn phòng (nhóm) và thay mặt Thường trực; Owner không còn đơn vị ngoài', async ({ browser }, testInfo) => {
     test.setTimeout(150_000);
     await voiPhien(browser, 'QTHT', testInfo, async (page) => {
+      moc('phiên QTHT mở');
       await moGiaoViec(page);
+      moc('await moGiaoViec(page);');
       await expect(page.locator('#klThThayMatWrap')).toBeVisible();
+      moc("await expect(page.locator('#klThThayMatWrap')).toBeVisible();");
       const tm = await giaTri(page.locator('#klThThayMat option'));
       expect(tm.slice(0, 2)).toEqual(['nhom:LANH_DAO_VP', 'nhom:THUONG_TRUC']);
       expect(await page.locator('#klThThayMat optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual(['Nhóm lãnh đạo', 'Từng lãnh đạo']);
       // (1) Lãnh đạo Văn phòng → phạm vi Chánh VP: chuyên viên Tổng hợp chọn được; vẫn có người theo dõi; không có đơn vị ngoài
       await page.locator('#klThThayMat').selectOption('nhom:LANH_DAO_VP'); await expect(page.locator('#gvKhoa')).toBeEnabled(NAP);
+      moc("await page.locator('#klThThayMat').selectOption('nhom:LANH_DAO_VP'); await expect(page.loc");
       const nhomOwner = await page.locator('#klThOwner optgroup').evaluateAll((gs) => gs.map((g) => g.label));
       expect(nhomOwner).not.toContain('Đơn vị ngoài Văn phòng');
       expect(await giaTri(page.locator('#klThOwner option'))).not.toContain('dv:DANG_UY_UBND');
       await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeVisible();
+      moc("await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeVisible();");
       await vanBanMoi(page, `${khoa}-LDVP`);
+      moc('await vanBanMoi(page, `${khoa}-LDVP`);');
       await page.locator('#klThNoiDung').fill(`${khoa} LDVP`); await page.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
+      moc("await page.locator('#klThNoiDung').fill(`${khoa} LDVP`); await page.locator('#klThOwner').");
       await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
+      moc("await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan')");
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('#klThLuu')).toBeEnabled();
+      moc("await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('");
       await page.locator('#klThLuu').click();
+      moc("await page.locator('#klThLuu').click();");
       await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-', NAP);
+      moc("await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-', NAP);");
       await moGiaoViec(page);   // sau khi giao, ngăn chi tiết việc vừa giao mở đè góc phải biểu mẫu (che nút Giao việc) → mở lại mục Giao việc: đóng ngăn, biểu mẫu sạch
+      moc('await moGiaoViec(page);   // sau khi giao, ngăn chi tiết việc vừa giao mở đè góc phải biểu');
       // (2) Thường trực Tỉnh ủy → như Thường trực giao
       await page.locator('#klThThayMat').selectOption('nhom:THUONG_TRUC'); await expect(page.locator('#gvKhoa')).toBeEnabled(NAP);
+      moc("await page.locator('#klThThayMat').selectOption('nhom:THUONG_TRUC'); await expect(page.loc");
       await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();
+      moc("await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();");
       await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');
+      moc("await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');");
       const owner = await giaTri(page.locator('#klThOwner option'));
       expect(owner).toContain('dv:TONG_HOP'); expect(owner).toContain(`tk:${ID.cvp}`); expect(owner).not.toContain(`tk:${ID.cv1}`); expect(owner).not.toContain('dv:VAN_PHONG_TINH_UY');
       await vanBanMoi(page, `${khoa}-TT`);
+      moc('await vanBanMoi(page, `${khoa}-TT`);');
       await page.locator('#klThNoiDung').fill(`${khoa} TT`); await page.locator('#klThOwner').selectOption('dv:TONG_HOP');
+      moc("await page.locator('#klThNoiDung').fill(`${khoa} TT`); await page.locator('#klThOwner').se");
       await page.locator('#klThSanPham').selectOption('TO_TRINH'); await page.locator('#klThHan').fill(H);
+      moc("await page.locator('#klThSanPham').selectOption('TO_TRINH'); await page.locator('#klThHan'");
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('#klThLuu')).toBeEnabled();
+      moc("await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('");
       await page.locator('#klThLuu').click();
+      moc("await page.locator('#klThLuu').click();");
       await expect(page.locator('#toastContainer')).toContainText('Chánh Văn phòng có thông báo', NAP);
+      moc("await expect(page.locator('#toastContainer')).toContainText('Chánh Văn phòng có thông báo'");
     });
     const { data } = await db.from('nhiem_vu').select('noi_dung, giao_thay_mat_nhom, giao_thay_mat_cho, uu_tien, nguoi_theo_doi, owner_tai_khoan, owner_don_vi_ma, do_khan, id')
       .like('noi_dung', `${khoa} %`).order('noi_dung');
