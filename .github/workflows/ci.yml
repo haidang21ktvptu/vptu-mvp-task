@@ -252,9 +252,8 @@ jobs:
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::error::Thiếu secret SUPABASE_ACCESS_TOKEN để deploy Edge Function lên staging."; exit 1; fi
           supabase functions deploy quan-tri-tai-khoan --project-ref "$PROJECT_REF" --use-api 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-      # KHÔNG chạy RLS token thật trên production: bộ RLS giả định seed của staging (id cố định, phân công demo, tổng số dòng, không ai có
-      # quan_tri_kl) nên đỏ hàng loạt trên dữ liệu thật dù mã đúng; RLS đã chạy đủ trên Supabase cục bộ ở job "Áp migration + lint schema".
-      # production: chỉ db push → tài khoản demo → e2e (docs/KIEM-THU.md).
+      # KHÔNG chạy RLS token thật trên production: bộ RLS giả định seed của staging (id cố định, phân công demo, tổng số dòng, không ai có quan_tri_kl)
+      # nên đỏ hàng loạt trên dữ liệu thật dù mã đúng; RLS đã chạy đủ ở job "Áp migration + lint schema". production: db push → demo → e2e (KIEM-THU.md).
       # Cache Chromium theo phiên bản @playwright/test trong lock file; trúng cache thì chỉ cài gói hệ thống.
       # Lưu cache ngay sau khi cài xong (restore/save tách) để lần chạy e2e đỏ vẫn để lại cache cho lần re-run.
       - name: Phiên bản Playwright
