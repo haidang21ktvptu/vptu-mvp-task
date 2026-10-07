@@ -109,8 +109,7 @@ jobs:
       - name: Chú thích test RLS đỏ (đọc được qua API check-runs)
         if: failure()
         run: bash scripts/rls-chu-thich.sh "$RUNNER_TEMP/rls.log"
-  # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ khi thay đổi không ảnh hưởng app (ruleset bắt check theo tên).
-  # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ cho PR docs-only (ruleset bắt check theo tên).
+  # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ khi thay đổi không ảnh hưởng app / PR docs-only (ruleset bắt check theo tên).
   supabase-db-tai-lieu:
     name: Áp migration + lint schema
     needs: phan-loai
