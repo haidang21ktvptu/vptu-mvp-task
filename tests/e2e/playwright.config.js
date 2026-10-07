@@ -26,8 +26,8 @@ export default defineConfig({
   testMatch: /.*\.spec\.js/,
   testIgnore: ['**/smoke/**'],
   fullyParallel: false,
-  workers: 2,
-  retries: 0,
+  workers: Number(process.env.E2E_WORKERS) || 2,   // v3.18: CI đặt theo đích (cục bộ trên runner 3, staging 2)
+  retries: Number(process.env.E2E_RETRIES) || 0,   // chỉ đích hosted chập chờn (staging đêm) mới đặt 1
   timeout: 60_000,
   expect: { timeout: 10_000 },
   // Trên GitHub Actions thêm reporter `github`: mỗi test đỏ thành một annotation (tệp, dòng, thông báo lỗi) ngay trên PR và đọc được qua API

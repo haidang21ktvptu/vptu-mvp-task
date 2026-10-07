@@ -1,0 +1,86 @@
+# Chạy bộ e2e tests/e2e (Playwright) với đích chọn tường minh — dùng chung cho ci.yml (PR: Supabase CỤC BỘ trên runner, v3.18),
+# kiem-thu-dem.yml (đêm: staging) và công tắc production (docs/KIEM-THU.md). Cài Node + phụ thuộc, Chromium có cache theo phiên bản
+# @playwright/test trong lock file (trúng cache thì chỉ cài gói hệ thống; lưu cache ngay sau khi cài để lượt đỏ vẫn để lại cache),
+# chạy `playwright test` rồi lưu báo cáo HTML khi lỗi. Đích local: tests/e2e/lib/keys.mjs đọc key qua `supabase status` — job gọi phải đã
+# `supabase start` và có Supabase CLI trên PATH. Đích staging / production: job cung cấp SUPABASE_URL / SUPABASE_ANON_KEY /
+# SUPABASE_SERVICE_ROLE_KEY ở env (keys.mjs từ chối production trừ khi KIEM_THU_MOI_TRUONG=production).
+name: Test e2e Playwright
+description: Cài Node + Chromium (cache), chạy tests/e2e theo đích local / staging / production, lưu báo cáo khi lỗi
+
+inputs:
+  dich:
+    description: local | staging | production (đặt đúng MỘT biến đích cho tests/e2e/lib/keys.mjs)
+    required: true
+  workers:
+    description: Số worker Playwright (E2E_WORKERS)
+    default: '2'
+  retries:
+    description: Số lần chạy lại test đỏ (E2E_RETRIES) — chỉ nên > 0 với đích hosted (staging nhỏ, chập chờn)
+    default: '0'
+  tham-so:
+    description: Tham số thêm cho `playwright test` (ví dụ --project=desktop)
+    default: ''
+  ten-bao-cao:
+    description: Tên artifact báo cáo HTML khi lỗi
+    default: playwright-report
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: |
+          frontend/package-lock.json
+          tests/e2e/package-lock.json
+    - name: Cài phụ thuộc (frontend, tests/e2e)
+      shell: bash
+      run: |
+        npm ci --prefix frontend
+        npm ci --prefix tests/e2e
+    - name: Phiên bản Playwright
+      id: pw
+      shell: bash
+      run: echo "version=$(node -p "require('./tests/e2e/package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
+    - name: Khôi phục cache Chromium của Playwright
+      id: pw-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+    - name: Cài Chromium cho Playwright (khi chưa có cache)
+      if: steps.pw-cache.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: tests/e2e
+      run: npx playwright install --with-deps chromium
+    - name: Lưu cache Chromium (khi vừa cài)
+      if: steps.pw-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
+    - name: Cài gói hệ thống cho Chromium (khi đã có cache)
+      if: steps.pw-cache.outputs.cache-hit == 'true'
+      shell: bash
+      working-directory: tests/e2e
+      run: npx playwright install-deps chromium
+    - name: Test e2e (đích ${{ inputs.dich }} — build Vite trỏ đích, 2 kích thước, phiên dùng lại)
+      shell: bash
+      working-directory: tests/e2e
+      env:
+        E2E_LOCAL: ${{ inputs.dich == 'local' && '1' || '' }}
+        E2E_STAGING: ${{ inputs.dich == 'staging' && '1' || '' }}
+        KIEM_THU_MOI_TRUONG: ${{ inputs.dich == 'production' && 'production' || '' }}
+        E2E_WORKERS: ${{ inputs.workers }}
+        E2E_RETRIES: ${{ inputs.retries }}
+      run: |
+        echo "### e2e — đích **${{ inputs.dich }}**, ${E2E_WORKERS} worker, retries ${E2E_RETRIES}" >> "$GITHUB_STEP_SUMMARY"
+        npx playwright test ${{ inputs.tham-so }}
+    - name: Lưu báo cáo Playwright khi lỗi
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.ten-bao-cao }}
+        path: tests/e2e/playwright-report
+        retention-days: 7
