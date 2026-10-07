@@ -29,7 +29,7 @@ import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHt
 import { getHomNay, datHomNay, laA0, nhuA0, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
   canNganhHienTai, canNgayNhan, cheDoNhieu } from './trang-thai.js';
 import { kiemTra, docForm, docChung } from './doc-form.js';
-import { datLaiNhieu, datCheDo, anHienNhieu, lamMoiLuaChonLuoi, ganSuKienNhieu, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, tomTatNhieu } from './nhieu.js';
+import { datLaiNhieu, datCheDo, anHienNhieu, lamMoiLuaChonLuoi, ganSuKienNhieu, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, tomTatNhieu, doiDoKhanMacDinhNhieu } from './nhieu.js';
 
 let cha = null; // việc cha khi giao tiếp xuống (nhiem_vu_cha)
 // Lỗi đua (CI #96): trong lúc nạp (mở biểu mẫu, đổi người được thay mặt) mọi ô bị khoá — fieldset#gvKhoa disabled + aria-busy, nút "Giao,
@@ -107,7 +107,10 @@ async function thayMatDoi() {
   khoaBieuMau(true);
   try { await napPhamVi($('klThThayMat').value || null); thayMatCu = $('klThThayMat').value; } catch (e) { notifyError(e.message); $('klThThayMat').value = thayMatCu; }
   khoaBieuMau(false);
-  if (laThayMatTT() !== ttCu) { ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'].forEach((id) => show(id, !laThayMatTT())); if ($('klThDoKhan').value === (laThayMatTT() ? 'THUONG' : 'KHAN')) datDoKhanChinh(laThayMatTT() ? 'KHAN' : 'THUONG'); }
+  if (laThayMatTT() !== ttCu) {   // mức mặc định đổi Thường ↔ Khẩn ở ô chính và các thẻ (chỉ khi còn ở mức mặc định cũ)
+    const [tu, den] = laThayMatTT() ? ['THUONG', 'KHAN'] : ['KHAN', 'THUONG'];
+    ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'].forEach((id) => show(id, !laThayMatTT())); if ($('klThDoKhan').value === tu) datDoKhanChinh(den); doiDoKhanMacDinhNhieu(tu, den);
+  }
   dienOwner(); dienNganh(); capNhatTomTat();
 }
 function dienOwner() {

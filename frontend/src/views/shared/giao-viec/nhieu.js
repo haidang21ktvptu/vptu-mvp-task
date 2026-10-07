@@ -58,6 +58,10 @@ export function xoaDong({ dong }) {
 export function datLaiNhieu() { if (than()) than().innerHTML = ''; }
 // Các thẻ vẽ lại theo ô chính / phạm vi (đổi người được thay mặt, danh mục, ngày ban hành) — giữ giá trị còn hợp lệ.
 export function lamMoiLuaChonLuoi() { dongs().forEach(lamMoiThe); }
+// Vào / rời thay mặt Thường trực (v3.18): thẻ đang ở mức mặc định cũ chuyển sang mức mặc định mới (thẻ người dùng đã chọn mức khác giữ nguyên).
+export function doiDoKhanMacDinhNhieu(tu, den) {
+  dongs().forEach((the) => { const h = o(the, 'do_khan'); if (h.value !== tu) return; h.value = den; the.querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === den))); });
+}
 // Gắn một lần (registerGiaoViec): sự kiện của ô trong thẻ xử lý ở vùng chứa trước khi nổi lên form (capNhatTomTat).
 export function ganSuKienNhieu() { ['change', 'input'].forEach((loai) => than().addEventListener(loai, suKienThe)); }
 

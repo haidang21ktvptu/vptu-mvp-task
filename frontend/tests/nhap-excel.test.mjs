@@ -198,6 +198,18 @@ test('v3.18: cột "Lãnh đạo giao" nhận nhóm (Lãnh đạo Văn phòng / 
   assert.equal(ngoai.ket_qua, 'CHO_HOAN_THIEN'); assert.ok(ngoai.thieu.includes('don_vi') && ngoai.loi.includes('don_vi'));
   assert.ok(ngoai.canhBao.some((c) => c.includes('ngoài Văn phòng')), ngoai.canhBao.join('; '));
   assert.equal(ngoai.du_lieu.owner_don_vi_ma ?? null, null); assert.equal(ngoai.du_lieu.thay_mat_cho, 'cvp', 'không còn đơn vị → lãnh đạo giao mặc định Chánh VP');
+  // dữ liệu cũ đã xong ngoài hệ thống: giữ đơn vị ngoài (kl_nhap_da_xong vẫn nhận)
+  const cu = danhGia(dong({ ...DU, don_vi: 'Đảng ủy Ủy ban nhân dân tỉnh', tien_do: 'Hoàn thành', kq_so_hieu: '12/BC', kq_ngay: '20/09/2026', kq_trich_yeu: 'Báo cáo', kq_mo_ta: 'Đã gửi' }), DG);
+  assert.equal(cu.ket_qua, 'DA_XONG'); assert.equal(cu.du_lieu.owner_don_vi_ma, 'DANG_UY_UBND');
+  // thay mặt Thường trực: Khẩn mặc định; chủ trì phải là lãnh đạo Văn phòng hoặc một phòng
+  const ttPhong = danhGia(dong({ ...DU, lanh_dao_giao: 'Thường trực Tỉnh ủy' }), DG);
+  assert.equal(ttPhong.ket_qua, 'GIAO'); assert.equal(ttPhong.du_lieu.thay_mat_nhom, 'THUONG_TRUC'); assert.equal(ttPhong.du_lieu.do_khan, 'KHAN');
+  const ttCv = danhGia(dong({ ...DU, lanh_dao_giao: 'Thường trực Tỉnh ủy', can_bo: 'Lý Văn Phúc — Phòng Tổng hợp' }), DG);
+  assert.equal(ttCv.ket_qua, 'CHO_HOAN_THIEN'); assert.ok(ttCv.thieu.includes('can_bo') && ttCv.canhBao.some((c) => c.includes('thay mặt Thường trực')), ttCv.canhBao.join('; '));
+  const ttVp = danhGia(dong({ ...DU, lanh_dao_giao: 'Thường trực Tỉnh ủy', don_vi: 'Văn phòng Tỉnh ủy' }), DG);
+  assert.equal(ttVp.ket_qua, 'CHO_HOAN_THIEN'); assert.ok(ttVp.thieu.includes('don_vi'));
+  const ttCvp = danhGia(dong({ ...DU, lanh_dao_giao: 'TTTU', don_vi: 'Văn phòng Tỉnh ủy', can_bo: 'Hoàng Văn Bình' }), DG);
+  assert.equal(ttCvp.ket_qua, 'GIAO'); assert.equal(ttCvp.du_lieu.owner_tai_khoan, 'cvp');
 });
 
 test('Đánh giá: ngành ↔ lĩnh vực suy ra nhau khi xác định; điền hàng loạt lĩnh vực theo ngành của từng dòng', () => {

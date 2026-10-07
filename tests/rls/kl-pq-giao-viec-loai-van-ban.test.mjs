@@ -28,7 +28,7 @@ const OWNER = {
   demo_cvp: { owner_don_vi_ma: 'TONG_HOP' },
   demo_pcvp: { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 },
   demo_truongphong: { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 },
-  demo_cv2: { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp }, // A3 giữ quan_tri_kl, giao thay mặt CVP
+  demo_cv2: { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp }, // A3 giữ quan_tri_kl, giao thay mặt CVP (0079: Owner không còn là đơn vị ngoài)
 };
 const giao = async (username, loai, p = {}) => (await userClient(username)).rpc('giao_viec', { p: {
   van_ban_id: null, van_ban: vanBan(loai, username), noi_dung: `${KHOA} ${loai} ${username}`, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31',

@@ -21,7 +21,7 @@ export function kiemTra(p, { nhieu = false } = {}) {
   } else if (!p.van_ban_id && !laA0()) return 'Chọn văn bản giao việc hoặc nhập văn bản mới.';
   if (!nhieu) {
     if (!p.noi_dung) return 'Nhập nội dung nhiệm vụ.';
-    if (!p.owner_don_vi_ma) return 'Chọn đơn vị hoặc cán bộ chịu trách nhiệm — mỗi việc đúng một Owner.';
+    if (!p.owner_don_vi_ma) return 'Chọn phòng hoặc cán bộ chịu trách nhiệm — mỗi việc đúng một Owner.';
   }
   if (canThayMat() && !p.thay_mat_cho && !p.thay_mat_nhom) return 'Chọn lãnh đạo (hoặc nhóm lãnh đạo) mà đồng chí giao thay mặt — đó là cấp duyệt nếu việc bị từ chối.';
   if (!nhieu) {

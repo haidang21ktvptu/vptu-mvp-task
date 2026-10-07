@@ -113,7 +113,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     P2('7.7 Giao việc thay mặt lãnh đạo'),
     p('Cán bộ tổng hợp giao việc trên cùng biểu mẫu ba khối nhưng phải ghi **Thay mặt** ai — lãnh đạo đó là người giao, là cấp duyệt nếu việc bị từ chối. Ô Thay mặt có hai phần:'),
     ...bullets([
-      '**Nhóm lãnh đạo**: **"Lãnh đạo Văn phòng"** (Chánh và các Phó Chánh Văn phòng) hoặc **"Thường trực Tỉnh ủy"**. Giao thay mặt nhóm thì **cả nhóm được báo**, và **bất kỳ lãnh đạo nào trong nhóm** cũng duyệt được đề nghị từ chối, đề nghị sửa, sửa thông tin giao — không phụ thuộc một người có mặt hay không. Thẻ việc ghi "Thay mặt Lãnh đạo Văn phòng giao"; đề nghị từ chối ghi "chờ Lãnh đạo Văn phòng duyệt".',
+      '**Nhóm lãnh đạo**: **"Lãnh đạo Văn phòng"** (Chánh và các Phó Chánh Văn phòng) hoặc **"Thường trực Tỉnh ủy"**. Giao thay mặt nhóm thì **Chánh Văn phòng và Phó Chánh Văn phòng phụ trách phòng, lĩnh vực của việc** cùng được báo, và **bất kỳ lãnh đạo nào trong số đó** cũng duyệt được đề nghị từ chối, đề nghị sửa, sửa thông tin giao — không phụ thuộc một người có mặt hay không. Thẻ việc ghi "Thay mặt Lãnh đạo Văn phòng giao"; đề nghị từ chối ghi "chờ Lãnh đạo Văn phòng duyệt".',
       '**Từng lãnh đạo**: Chánh Văn phòng, Phó Chánh Văn phòng (chỉ giao trong phòng, lĩnh vực đồng chí ấy phụ trách) hoặc Trưởng phòng (chỉ giao trong phòng).',
       'Thay mặt **Thường trực Tỉnh ủy** = việc Thường trực giao: người chịu trách nhiệm là **một lãnh đạo Văn phòng hoặc một phòng** (hệ thống tự đặt người theo dõi — chính lãnh đạo đó / Trưởng phòng), độ khẩn mặc định **Khẩn**, Chánh Văn phòng được báo, việc mang nhãn "Thường trực giao" và được ưu tiên ở mọi danh sách.',
     ]),

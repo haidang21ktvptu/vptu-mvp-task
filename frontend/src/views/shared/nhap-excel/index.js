@@ -116,11 +116,11 @@ function doiO(e) {
     if (t.value) nx.anhXa[i] = t.value; else delete nx.anhXa[i];
     nx.hoSoTen = ''; nx.mau = 'TU_GHEP'; ve(`[data-nx-cot="${i}"]`); return;
   }
-  if (t.dataset.nxKhop !== undefined && t.value) {   // trùng tên người: chỉ áp cho tệp này (lần sau người cùng tên có thể là người khác)
-    const g = nx.chuaKhop[Number(t.dataset.nxKhop)]; const loai = LOAI_TU_DIEN[truong(g.k).kieu]; const goc = chuanChu(g.v);
+  if (t.dataset.nxKhop !== undefined && t.value) {   // trùng tên người: chỉ áp cho tệp này (lần sau người cùng tên có thể là người khác); nhóm lãnh đạo (v3.18): từ điển
+    const g = nx.chuaKhop[Number(t.dataset.nxKhop)]; const loai = LOAI_TU_DIEN[truong(g.k).kieu]; const goc = chuanChu(g.v);   // can_bo trên máy chủ chỉ nhận id tài khoản → chỉ tệp này
     if (!nx.tuDienMoi.has(loai)) nx.tuDienMoi.set(loai, new Map());
     nx.tuDienMoi.get(loai).set(goc, t.value);
-    if (/trùng tên/.test(g.loi)) nx.khongLuu.add(`${loai}|${goc}`); else nx.khongLuu.delete(`${loai}|${goc}`);
+    if (/trùng tên/.test(g.loi) || t.value.startsWith('nhom:')) nx.khongLuu.add(`${loai}|${goc}`); else nx.khongLuu.delete(`${loai}|${goc}`);
     ve('.nx-khop select, #nxHlTruong, #nxNhap'); return;
   }
   if (t.id === 'nxSheet') {

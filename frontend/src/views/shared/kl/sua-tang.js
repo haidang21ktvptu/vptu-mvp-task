@@ -8,6 +8,7 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { danhMucKl, tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
+import { tenCapDuyet } from '../../../lib/kl/thay-mat.js';
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
@@ -17,7 +18,7 @@ const BUT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke=
 const KHOA = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const DM = { sanPham: 'sanPham', cap: 'cap', nganh: 'nganh', linhVuc: 'linhVuc', nguonNhiemVu: 'nguonNhiemVu' };
 const kieuCua = (cot) => O_GIAO.find(([c]) => c === cot)?.[2] || 'chu';
-const nguoiGiao = (r) => findAccount(r.giao_thay_mat_cho || r.tao_boi)?.full_name || 'cấp giao việc';
+const nguoiGiao = (r) => tenCapDuyet(r, r.giao_thay_mat_cho || r.tao_boi) || 'cấp giao việc';   // nhóm được thay mặt → tên nhóm (v3.18)
 const dongViec = (id) => timKlRow(id) || dh.rows.find((x) => x.id === id);   // ngăn chi tiết (kl.rows) hoặc thẻ "Việc của tôi" (dh.rows)
 
 // Giá trị hiển thị của một ô (mã danh mục → tên).

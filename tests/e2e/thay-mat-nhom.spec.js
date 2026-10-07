@@ -83,7 +83,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
     expect([ldvp.giao_thay_mat_nhom, ldvp.giao_thay_mat_cho, ldvp.uu_tien, ldvp.owner_tai_khoan, ldvp.do_khan]).toEqual(['LANH_DAO_VP', ID.cvp, null, ID.cv1, 'THUONG']);
     expect([tt.giao_thay_mat_nhom, tt.giao_thay_mat_cho, tt.uu_tien, tt.nguoi_theo_doi, tt.owner_don_vi_ma, tt.do_khan]).toEqual(['THUONG_TRUC', ID.a0, 'THUONG_TRUC', ID.tp, 'TONG_HOP', 'KHAN']);
     const { data: tin } = await db.from('direct_messages').select('receiver_id').eq('nhiem_vu_id', ldvp.id).eq('loai', 'he_thong');
-    for (const u of [ID.cvp, ID.pcvp, ID.pcvp2]) expect(tin.map((t) => t.receiver_id), `tin giao tới ${u}`).toContain(u);
+    for (const u of [ID.cvp, ID.pcvp]) expect(tin.map((t) => t.receiver_id), `tin giao tới ${u}`).toContain(u);   // 0083: nhóm trong phạm vi việc (Tổng hợp) — PCVP2 (Quản trị) không
   });
 
   test('2. Chuyên viên đề nghị từ chối việc thay mặt nhóm → thẻ ghi chờ Lãnh đạo Văn phòng duyệt', async ({ browser }, testInfo) => {
