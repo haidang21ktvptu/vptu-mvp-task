@@ -1,15 +1,12 @@
 name: CI
 
-# pull_request không giới hạn nhánh đích để PR xếp chồng (feature → feature) vẫn được kiểm tra.
-# Job "Kiểm thử RLS + e2e trên staging" chỉ chạy cho pull_request (không chạy khi push main để không
-# chen vào deploy-staging đang áp migration). Secrets cần có: xem docs/kien-truc.md.
-#
-# Phân loại thay đổi (job `phan-loai`, script dùng chung .github/scripts/phan-loai.sh — cùng deploy-staging.yml), cho cả
-# pull_request và push main: mọi file đổi khớp `docs/**`, `*.md`, workflows backup-dinh-ky / canh-bao → "không ảnh hưởng app":
-# ba job `supabase-db`, `frontend`, `kiem-thu-staging` thay bằng job rỗng CÙNG TÊN hiển thị (ruleset `main` bắt 4 check theo tên;
-# deploy-prod `kiem-tra` cũng đọc theo tên nên PR release chỉ tài liệu vẫn tag được). `gitleaks` luôn chạy. Không chắc (PR rỗng,
-# API lỗi, lấy không đủ danh sách, push đầu tiên) hoặc đổi chính script / ci.yml / deploy-*.yml → chạy đủ.
-# Test RLS bằng token thật trên staging đã chuyển sang deploy-staging.yml (chạy sau db push); trong PR, RLS chạy cục bộ ở `supabase-db`.
+# pull_request không giới hạn nhánh đích để PR xếp chồng (feature → feature) vẫn được kiểm tra. Job "Kiểm thử RLS + e2e trên staging" chỉ chạy
+# cho pull_request (không chen vào deploy-staging đang áp migration khi push main). Secrets cần có: xem docs/kien-truc.md.
+# Phân loại thay đổi (job `phan-loai`, script dùng chung .github/scripts/phan-loai.sh — cùng deploy-staging.yml), cho cả pull_request và push
+# main: mọi file đổi khớp `docs/**`, `*.md`, workflows backup-dinh-ky / canh-bao → "không ảnh hưởng app": ba job `supabase-db`, `frontend`,
+# `kiem-thu-staging` thay bằng job rỗng CÙNG TÊN hiển thị (ruleset `main` bắt 4 check theo tên; deploy-prod `kiem-tra` cũng đọc theo tên nên PR
+# release chỉ tài liệu vẫn tag được). `gitleaks` luôn chạy. Không chắc (PR rỗng, API lỗi, lấy không đủ danh sách, push đầu tiên) hoặc đổi chính
+# script / ci.yml / deploy-*.yml → chạy đủ. RLS token thật trên staging ở deploy-staging.yml (sau db push); trong PR, RLS chạy cục bộ ở `supabase-db`.
 on:
   pull_request:
   push:
@@ -161,14 +158,11 @@ jobs:
       - name: Không file nào trên 300 dòng
         run: node scripts/check-line-limit.mjs
 
-  # e2e (43 test, 8 lượt đăng nhập) trên staging. RLS bằng token thật đã chuyển sang deploy-staging.yml
-  # (chạy sau db push); trong PR, RLS chạy cục bộ ở `supabase-db` với migration của chính PR. 8 lượt
-  # đăng nhập/lần, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth. Nhóm concurrency để hai PR không
-  # cùng lúc ghi dữ liệu mẫu lên staging (không huỷ lượt đang chạy). Giữ tên hiển thị cũ vì ruleset `main`
-  # bắt check theo tên.
-  # Công tắc môi trường kiểm thử (docs/KIEM-THU.md): biến kho vars.KIEM_THU_MOI_TRUONG = 'staging' (mặc định) | 'production'.
-  # production: db push migration lên project production, nạp tài khoản demo (scripts/seed-demo.mjs, idempotent) rồi CHỈ e2e (không RLS token thật).
-  # Tên job giữ nguyên vì ruleset của main yêu cầu check này; Summary ghi rõ môi trường.
+  # e2e trên staging (8 lượt đăng nhập/lần, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth). RLS token thật ở deploy-staging.yml (sau db push);
+  # trong PR, RLS chạy cục bộ ở `supabase-db` với migration của chính PR. Nhóm concurrency để hai PR không cùng lúc ghi dữ liệu mẫu lên staging
+  # (không huỷ lượt đang chạy). Tên job giữ nguyên vì ruleset `main` bắt check theo tên; Summary ghi rõ môi trường.
+  # Công tắc môi trường kiểm thử (docs/KIEM-THU.md): biến kho vars.KIEM_THU_MOI_TRUONG = 'staging' (mặc định) | 'production' — production: db push
+  # migration lên project production, nạp tài khoản demo (scripts/seed-demo.mjs, idempotent) rồi CHỈ e2e (không RLS token thật).
   kiem-thu-staging:
     name: Kiểm thử RLS + e2e trên staging
     needs: phan-loai
