@@ -160,7 +160,7 @@ export async function openDongNhiemVu({ id }) {
   $('klDongId').value = r.id;
   setText('klDongMoTa', `${r.ma} — ${r.noi_dung}`);
   $('klDongNgay').value = goiY; $('klDongNgay').min = r.ngay_ban_hanh; $('klDongNgay').max = homNay;
-  setText('klDongGhiChu', r.ngay_nhan_uoc_tinh ? 'Ngày nhận văn bản là ước tính nên lead time không được tính.' : `Lead time = ngày hoàn thành − ngày nhận văn bản (${formatNgay(r.ngay_nhan_van_ban)}).`);
+  setText('klDongGhiChu', r.ngay_nhan_uoc_tinh ? 'Ngày giao nhiệm vụ là ước tính (= ngày ban hành) nên lead time không được tính.' : `Lead time = ngày hoàn thành − ngày giao nhiệm vụ (${formatNgay(r.ngay_nhan_van_ban)}).`);
   // PR-3 (0063): lãnh đạo trong phạm vi / quan_tri_kl (không phải Owner của việc) đánh giá chất lượng khi đóng — tuỳ chọn; Owner tự đóng thì không.
   $('klDongChatLuong').value = '';
   show('klDongClWrap', r.owner_tai_khoan !== state.user?.id && (duocChiDao() || laQtklConHan()));

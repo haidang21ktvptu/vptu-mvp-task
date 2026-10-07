@@ -77,7 +77,7 @@ export const TEN_COT = {
   owner_tai_khoan: 'Cán bộ chịu trách nhiệm', nguoi_theo_doi: 'Người theo dõi', noi_dung: 'Nội dung',
   linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn', van_ban_id: 'Văn bản giao việc',
   san_pham_loai: 'Loại sản phẩm', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
-  ngay_nhan_van_ban: 'Ngày nhận văn bản', ngay_nhan_uoc_tinh: 'Ngày nhận ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
+  ngay_nhan_van_ban: 'Ngày giao nhiệm vụ', ngay_nhan_uoc_tinh: 'Ngày giao ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
   xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng', tu_choi: 'Từ chối nhận việc', bi_tu_choi: 'Bị từ chối, chờ giao lại',
   minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận minh chứng', dong_nhiem_vu: 'Đóng nhiệm vụ',
   giao_thay_mat: 'Giao thay mặt', giao_viec: 'Giao việc', canh_bao: 'Cảnh báo', do_khan: 'Độ khẩn', uu_tien: 'Ưu tiên', giao_thay_mat_cho: 'Giao thay mặt cho',

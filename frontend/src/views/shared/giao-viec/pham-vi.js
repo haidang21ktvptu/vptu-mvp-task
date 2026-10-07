@@ -35,10 +35,11 @@ export function phongCuaOwner(value, dm, accounts) {
 export const phongDuocGiao = (phong) => !tap || theoPhong.has(phong || '');
 export const duocGiao = (phong, nganh, lv) => !tap || tap.has(khoa(phong, nganh, lv));
 
-// Bỏ Owner có phòng ngoài phạm vi khỏi ô chọn (nhóm rỗng bỏ luôn).
+// Bỏ Owner có phòng ngoài phạm vi khỏi ô chọn (nhóm rỗng bỏ luôn); chính người giao luôn giữ (v3.17: lãnh đạo giao cho chính mình, DB cho phép ngoài phạm vi).
 export function locOwner(sel, dm, accounts) {
   if (!tap) return;
-  [...sel.options].forEach((o) => { if (o.value && !phongDuocGiao(phongCuaOwner(o.value, dm, accounts))) o.remove(); });
+  const toi = `tk:${state.user?.id}`;
+  [...sel.options].forEach((o) => { if (o.value && o.value !== toi && !phongDuocGiao(phongCuaOwner(o.value, dm, accounts))) o.remove(); });
   [...sel.querySelectorAll('optgroup')].forEach((g) => { if (!g.children.length) g.remove(); });
 }
 // Ngành / lĩnh vực chọn được ở phòng của Owner (null = không lọc).

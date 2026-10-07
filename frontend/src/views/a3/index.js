@@ -78,7 +78,7 @@ const openTheoDoi = () => { openKl({ theoDoiCuaToi: state.user.id }); setActiveN
 async function xacNhanNhanThe({ id }) {
   try {
     const moi = await xacNhanNhanViec(id);
-    notifySuccess(moi ? 'Đã xác nhận nhận việc. Hạn và trạng thái không đổi — đồng hồ đã chạy từ ngày nhận văn bản.' : 'Đồng chí đã xác nhận nhận việc này trước đó.');
+    notifySuccess(moi ? 'Đã xác nhận nhận việc. Hạn và trạng thái không đổi — đồng hồ đã chạy từ ngày giao nhiệm vụ.' : 'Đồng chí đã xác nhận nhận việc này trước đó.');
     await napLaiViec(id); await lamMoiHuyHieu(); await loadViecCuaToi(); // thẻ + số chưa xử lý đổi ngay, rồi nạp lại cả trang
   } catch (e) { notifyError('Không xác nhận được: ' + e.message); }
 }

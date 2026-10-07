@@ -54,7 +54,7 @@ const COT_KY = [COT_NHIEM_VU[0], { nhan: 'Ngày giao', rong: 13, kieu: 'ngay', g
 export function xuatTheoKy(rows, k, { phamVi = 'Toàn bộ việc trong phạm vi', nguoi = '' } = {}) {
   const pl = phanLoaiTheoKy(rows, k); const th = tongHopTheoKy(rows, k);
   const thongTin = [['Kỳ', k.ten], ['Từ ngày', k.tu], ['Đến ngày', k.den], ['Phạm vi', phamVi], ['Người xuất', nguoi], ['Xuất lúc', new Date().toLocaleString('vi-VN')],
-    ['Quy ước', 'Giao = ngày nhận văn bản (hoặc ngày ban hành, ngày tạo); Hoàn thành = ngày hoàn thành; Đến hạn = hạn hoàn thành; Còn mở cuối kỳ = giao không sau ngày cuối kỳ và chưa xong (hoặc xong sau kỳ); Quá hạn = hạn trước ngày cuối kỳ.']];
+    ['Quy ước', 'Giao = ngày giao nhiệm vụ (hoặc ngày ban hành, ngày tạo); Hoàn thành = ngày hoàn thành; Đến hạn = hạn hoàn thành; Còn mở cuối kỳ = giao không sau ngày cuối kỳ và chưa xong (hoặc xong sau kỳ); Quá hạn = hạn trước ngày cuối kỳ.']];
   const ten = `vptu-nhiem-vu-${k.ma}.xlsx`;
   taiXuong(ten, taoXlsx([
     { ten: 'Kỳ', cot: [{ nhan: 'Mục', rong: 14 }, { nhan: 'Giá trị', rong: 110 }], dong: thongTin },

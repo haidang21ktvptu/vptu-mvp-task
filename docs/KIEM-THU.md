@@ -119,7 +119,8 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 ## e2e PR-2b — chuỗi project `pr2b-*` (chỉ máy tính)
 
 - `giao-viec-ma-tran` (trước 3.17: `han-nop-minh-chung`; ma trận 7 vai × 5 loại văn bản không còn ô hạn nộp, giao thật A2 và A0 từ Kết luận, việc có hạn nộp cũ không còn nhãn cam), `nghiem-thu` (A3 nộp → A2 trả lại chỉ với lý do → nộp lại → nghiệm thu; thư ký Thường trực), `hanh-trinh-5-loai-van-ban`, `b4-b6-lanh-dao`. Dùng chung `tests/e2e/lib/pr2b.mjs`; dữ liệu theo khoá riêng, cờ tạm (`quan_tri_kl`, `thu_ky_thuong_truc`, phân công kiêm nhiệm) khôi phục ở `beforeAll` lẫn `afterAll`.
-- Bốn project nối tiếp `pr2b-giao-viec` → `pr2b-nghiem-thu` → `pr2b-hanh-trinh` → `pr2b-b4-b6` (mỗi lúc một spec), sau `pr2a`; `dang-nhap` phụ thuộc `pr2b-b4-b6`. Chạy riêng cả chuỗi: `npx playwright test --project='pr2b-*' --no-deps --workers=1` (kèm biến đích).
+- v3.17: `giao-viec-nhieu` (project `pr2b-giao-nhieu`, sau `pr2b-giao-viec`): Trưởng phòng giao 3 việc bằng lưới (thêm / xoá dòng, dòng giao cho chính mình), tìm nhanh ô Chịu trách nhiệm, nút "Chính tôi". RLS: `kl-0078-giao-nhieu-tu-giao`.
+- Năm project nối tiếp `pr2b-giao-viec` → `pr2b-giao-nhieu` → `pr2b-nghiem-thu` → `pr2b-hanh-trinh` → `pr2b-b4-b6` (mỗi lúc một spec), sau `pr2a`; `dang-nhap` phụ thuộc `pr2b-b4-b6`. Chạy riêng cả chuỗi: `npx playwright test --project='pr2b-*' --no-deps --workers=1` (kèm biến đích).
 
 
 ## e2e PR-3 — chuỗi project `pr3-*` (chỉ máy tính, từ 1/10/2026)

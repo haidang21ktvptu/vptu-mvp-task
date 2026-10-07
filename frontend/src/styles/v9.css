@@ -98,3 +98,22 @@
     .muc .the-con.vct-the .hanh-dong, .muc .the-con.vct-the .trich-phe { margin-left: 0; }
   }
 }
+
+/* v3.17 — Giao việc: chế độ "Nhiều nhiệm vụ từ một văn bản" (lưới), ô tìm nhanh cạnh ô chọn người */
+@layer components {
+  .gv-che-do { margin: 0 0 12px; }
+  .gv-tim-chon { display: grid; gap: 6px; }
+  .gv-tim-chon input[type="search"] { height: 36px; min-height: 36px; font-size: 13.5px; }
+  .gv-luoi-cuon { overflow-x: auto; margin: 4px 0 8px; border: 1px solid var(--vien); border-radius: 12px; }
+  .gv-luoi { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
+  .gv-luoi th { text-align: left; font-size: 12.5px; font-weight: 600; color: var(--chu-phu); padding: 8px 8px 6px; background: var(--nen-mo); border-bottom: 1px solid var(--vien); white-space: nowrap; }
+  .gv-luoi td { padding: 6px 6px; border-bottom: 1px solid var(--vien-nhat); vertical-align: top; }
+  .gv-luoi tr:last-child td { border-bottom: 0; }
+  .gv-luoi td.gvl-so { width: 32px; padding-top: 14px; text-align: center; font-weight: 600; color: var(--chu-mo); }
+  .gv-luoi .o-nhap { width: 100%; min-width: 0; }
+  .gv-luoi td:nth-child(2) { min-width: 260px; } .gv-luoi td:nth-child(3) { width: 220px; } .gv-luoi td:nth-child(4) { width: 170px; } .gv-luoi td:nth-child(5) { width: 150px; }
+  .gv-luoi textarea.o-nhap { min-height: 42px; resize: vertical; }
+  .gv-luoi .gvl-xoa { width: 30px; height: 30px; padding: 0; margin-top: 6px; font-size: 18px; line-height: 1; }
+  .gv-luoi .gvl-xoa:disabled { opacity: .35; cursor: not-allowed; }
+  .gv-luoi-chan { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+}
