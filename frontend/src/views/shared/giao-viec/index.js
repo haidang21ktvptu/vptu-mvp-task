@@ -27,7 +27,7 @@ import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHt
 import { getHomNay, datHomNay, laA0, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
   canNganhHienTai, canNgayNhan, cheDoNhieu } from './trang-thai.js';
 import { kiemTra, docForm, docChung } from './doc-form.js';
-import { datLaiNhieu, datCheDo, anHienNhieu, lamMoiLuaChonLuoi, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, tomTatNhieu } from './nhieu.js';
+import { datLaiNhieu, datCheDo, anHienNhieu, lamMoiLuaChonLuoi, ganSuKienNhieu, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, tomTatNhieu } from './nhieu.js';
 
 let cha = null; // việc cha khi giao tiếp xuống (nhiem_vu_cha)
 // Lỗi đua (CI #96): trong lúc nạp (mở biểu mẫu, đổi người được thay mặt) mọi ô bị khoá — fieldset#gvKhoa disabled + aria-busy, nút "Giao,
@@ -120,12 +120,14 @@ function ownerDoi() {
   capNhatTomTat();
 }
 
-// Ba phần đã điền đủ chưa → chấm sáng; đủ cả ba → nút Giao sáng; thanh tóm tắt đọc lại các ô. Chế độ nhiều: khối 2 + 3 lấy từ lưới (nhieu.js).
+// Ba phần đã điền đủ chưa → chấm sáng; đủ cả ba → nút Giao sáng; thanh tóm tắt đọc lại các ô. Chế độ nhiều: người theo dõi, ngành, lĩnh vực,
+// sản phẩm, hạn ở từng thẻ (nhieu.js thieuNhieu); phần chung chỉ còn thay mặt + ngày giao.
 export function trangThaiPhan() {
   const p1 = vanBanOk() && !thieuNguon(); // v8: khối 1 = văn bản (+ nguồn, PR-3); khối 2 = nội dung + người
-  const nguoi = (laA0() || Boolean($('klThNguoiTheoDoi').value)) && (!canThayMat() || Boolean($('klThThayMat').value));
+  const thayMatOk = !canThayMat() || Boolean($('klThThayMat').value);
+  if (cheDoNhieu()) return [p1, thayMatOk && duNhieu(), !canNgayNhan() || Boolean($('klThNgayNhan').value)];
+  const nguoi = (laA0() || Boolean($('klThNguoiTheoDoi').value)) && thayMatOk;
   const chung3 = (!canNgayNhan() || Boolean($('klThNgayNhan').value)) && (!canNganhHienTai() || (Boolean($('klThNganh').value) && Boolean($('klThLinhVuc').value))) && !theoDoiNgoaiPhamVi();
-  if (cheDoNhieu()) return [p1, nguoi && duNhieu(), chung3];
   const p2 = Boolean($('klThNoiDung').value.trim()) && Boolean($('klThOwner').value) && nguoi;
   const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && !hanTruocBH() && chung3 && !phamViThieu().thieu;
   return [p1, p2, p3];
@@ -135,10 +137,10 @@ function conThieu() {
   const nhieu = cheDoNhieu();
   return [[thieuSoHN(), 'số hội nghị'], [bhTuongLai(), 'ngày ban hành không ở tương lai'], [!vanBanOk() && !thieuSoHN() && !bhTuongLai(), 'văn bản'], [thieuNguon(), 'nguồn nhiệm vụ'],
     [!nhieu && !$('klThNoiDung').value.trim(), 'nội dung'], [!nhieu && !$('klThOwner').value, 'người chịu trách nhiệm'],
-    [!laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!nhieu && !$('klThSanPham').value, 'sản phẩm'],
+    [!nhieu && !laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!nhieu && !$('klThSanPham').value, 'sản phẩm'],
     [!nhieu && $('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [!nhieu && hanTruocBH(), 'hạn sau ngày ban hành'], [canNgayNhan() && !$('klThNgayNhan').value, 'ngày giao nhiệm vụ'],
-    [canNganhHienTai() && !$('klThNganh').value, 'ngành'], [canNganhHienTai() && !$('klThLinhVuc').value, 'lĩnh vực'],
-    [!nhieu && Boolean(phamViThieu().thieu), phamViThieu().thieu], [theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
+    [!nhieu && canNganhHienTai() && !$('klThNganh').value, 'ngành'], [!nhieu && canNganhHienTai() && !$('klThLinhVuc').value, 'lĩnh vực'],
+    [!nhieu && Boolean(phamViThieu().thieu), phamViThieu().thieu], [!nhieu && theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
     .concat(nhieu ? thieuNhieu() : []);
 }
 function capNhatTomTat() {
@@ -265,6 +267,7 @@ export function registerGiaoViec() {
   $('klThLinhVuc').addEventListener('change', dienTheoDoi); $('klThNguon').addEventListener('input', nguonDoi);   // 'input' tới ô trước khi nổi lên form (capNhatTomTat)
   $('klThOwner').addEventListener('change', ownerDoi);
   tim.owner = ganTimChon($('klThOwnerTim'), $('klThOwner')); tim.theoDoi = ganTimChon($('klThNguoiTheoDoiTim'), $('klThNguoiTheoDoi')); ganTimChon($('klThThayMatTim'), $('klThThayMat'));
+  ganSuKienNhieu();   // ô trong thẻ nhiệm vụ: chuỗi Owner → ngành → lĩnh vực → người theo dõi, hạn theo loại — trước khi nổi lên form
   $('giaoViecForm').addEventListener('input', capNhatTomTat);
   $('giaoViecForm').addEventListener('change', capNhatTomTat);
   registerActions({ openGiaoViec: () => openGiaoViec(), giaoTiepXuong: ({ id }) => openGiaoViec({ cha: timKlRow(id) }),
