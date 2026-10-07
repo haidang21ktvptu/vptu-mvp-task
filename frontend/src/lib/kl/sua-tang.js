@@ -4,6 +4,7 @@
 import { supabase } from '../supabase.js';
 import { state, findAccount } from '../state.js';
 import { homNayVN } from './ngay.js';
+import { toiTrongNhom, duyetThayNhom } from './thay-mat.js';
 
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
 export const O_GIAO = [['noi_dung', 'Nội dung', 'vb'], ['san_pham_loai', 'Sản phẩm', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
@@ -13,14 +14,14 @@ export const tenOGiao = (cot) => O_GIAO.find(([c]) => c === cot)?.[1] || cot;
 
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN())
   && state.user?.role_group !== 'A0';
-// Người gọi là tầng giao của việc: người giao = người được thay mặt, không có thì người tạo (vai lãnh đạo A0/A1/A2, tài khoản còn hoạt động);
-// hoặc quản trị nhiệm vụ còn hạn. Người gõ thay (chuyên viên, người nhập Excel) hết ủy quyền thì không còn quyền này.
+// Người gọi là tầng giao của việc: người giao = người được thay mặt (hoặc thành viên nhóm được thay mặt, 0081), không có thì người tạo (vai lãnh
+// đạo A0/A1/A2, tài khoản còn hoạt động); hoặc quản trị nhiệm vụ còn hạn. Người gõ thay (chuyên viên, người nhập Excel) hết ủy quyền thì không còn quyền này.
 export function laTangGiao(r) {
   const me = state.user?.id;
   if (!me || !r) return false;
   if (qtklConHan()) return true;
   const a = findAccount(me) || state.user;
-  return (r.giao_thay_mat_cho || r.tao_boi) === me && ['A0', 'A1', 'A2'].includes(a?.role_group) && !a?.bi_khoa;
+  return ((r.giao_thay_mat_cho || r.tao_boi) === me || toiTrongNhom(r.giao_thay_mat_nhom)) && ['A0', 'A1', 'A2'].includes(a?.role_group) && !a?.bi_khoa;
 }
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
@@ -44,12 +45,12 @@ export async function deNghiChoCuaViec(nhiemVuId) {
   if (r.error) return null;
   return r.data;
 }
-// Đề nghị chờ CHÍNH TÔI duyệt (A0: mọi đề nghị có người duyệt là A0), kèm mã / nội dung việc nếu RLS cho đọc việc.
+// Đề nghị chờ CHÍNH TÔI duyệt (A0: mọi đề nghị có người duyệt là A0; thành viên nhóm được thay mặt: đề nghị mà cấp duyệt là người đại diện nhóm), kèm mã / nội dung việc nếu RLS cho đọc việc.
 export async function deNghiChoToiDuyet() {
-  const r = await supabase.from('de_nghi_sua').select(`${COT_DNS}, nhiem_vu(ma, noi_dung)`).eq('trang_thai', 'CHO_DUYET').order('tao_luc');
+  const r = await supabase.from('de_nghi_sua').select(`${COT_DNS}, nhiem_vu(ma, noi_dung, giao_thay_mat_cho, giao_thay_mat_nhom)`).eq('trang_thai', 'CHO_DUYET').order('tao_luc');
   if (r.error) throw new Error(r.error.message);
   const me = state.user?.id; const a0 = state.user?.role_group === 'A0';
-  return (r.data || []).filter((d) => d.cap_duyet === me || (a0 && findAccount(d.cap_duyet)?.role_group === 'A0'));
+  return (r.data || []).filter((d) => d.cap_duyet === me || (a0 && findAccount(d.cap_duyet)?.role_group === 'A0') || duyetThayNhom(d.nhiem_vu, d.cap_duyet));
 }
 // Đề nghị đang chờ do CHÍNH TÔI gửi (thẻ "Việc của tôi": dòng "chờ … duyệt" + Rút đề nghị); lỗi / bảng chưa có (chưa áp 0071) → rỗng.
 export async function deNghiToiGuiDangCho() {

@@ -12,7 +12,7 @@ export const TRUONG = [
   { k: 'don_vi', nhan: 'Đơn vị chủ trì', muc: 1, mau: true, kieu: 'donVi', ten: ['don vi chu tri', 'co quan/don vi trinh', 'co quan don vi trinh', 'co quan chu tri', 'don vi thuc hien', 'don vi'] },
   { k: 'can_bo', nhan: 'Cán bộ chủ trì', muc: 1, mau: true, kieu: 'canBo', ten: ['can bo chu tri', 'chuyen vien chu tri', 'nguoi chu tri', 'nguoi thuc hien'] },
   { k: 'theo_doi', nhan: 'Người theo dõi', muc: 1, mau: true, kieu: 'canBo', ten: ['nguoi theo doi', 'chu tri theo doi', 'can bo theo doi', 'theo doi'] },
-  { k: 'lanh_dao_giao', nhan: 'Lãnh đạo giao', muc: 1, mau: true, kieu: 'canBo', ten: ['lanh dao giao', 'nguoi giao', 'lanh dao chi dao'] },
+  { k: 'lanh_dao_giao', nhan: 'Lãnh đạo giao', muc: 1, mau: true, kieu: 'lanhDao', ten: ['lanh dao giao', 'nguoi giao', 'lanh dao chi dao'], goiY: 'Họ tên lãnh đạo, hoặc "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" (cả nhóm — v3.18)' },
   { k: 'loai_thoi_han', nhan: 'Loại thời hạn', muc: 1, mau: true, kieu: 'loaiThoiHan', ten: ['loai thoi han', 'loai han'] },
   { k: 'han_xu_ly', nhan: 'Hạn hoàn thành', muc: 1, mau: true, kieu: 'ngay', ten: ['han hoan thanh', 'han xu ly', 'thoi han hoan thanh', 'thoi han', 'han'] },
   { k: 'san_pham', nhan: 'Sản phẩm đầu ra', muc: 1, mau: true, kieu: 'sanPham', ten: ['san pham dau ra', 'loai san pham', 'san pham'] },

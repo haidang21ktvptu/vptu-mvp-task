@@ -8,7 +8,8 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { parseOwner } from '../kl/them-owner.js';
 import { loiNguon, docNguon, docVanBanThem } from './nguon.js';
 import { themHoanThien } from './dien-san.js';
-import { getHomNay, laA0, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
+import { getHomNay, laA0, nhuA0, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
+import { tachThayMat } from '../../../lib/kl/thay-mat.js';
 
 // Kiểm tra phía form; trả về chuỗi lỗi hoặc null.
 export function kiemTra(p, { nhieu = false } = {}) {
@@ -22,7 +23,7 @@ export function kiemTra(p, { nhieu = false } = {}) {
     if (!p.noi_dung) return 'Nhập nội dung nhiệm vụ.';
     if (!p.owner_don_vi_ma) return 'Chọn đơn vị hoặc cán bộ chịu trách nhiệm — mỗi việc đúng một Owner.';
   }
-  if (canThayMat() && !p.thay_mat_cho) return 'Chọn lãnh đạo mà đồng chí giao thay mặt — lãnh đạo đó là cấp duyệt nếu việc bị từ chối.';
+  if (canThayMat() && !p.thay_mat_cho && !p.thay_mat_nhom) return 'Chọn lãnh đạo (hoặc nhóm lãnh đạo) mà đồng chí giao thay mặt — đó là cấp duyệt nếu việc bị từ chối.';
   if (!nhieu) {
     if (!p.san_pham_loai) return 'Chọn loại sản phẩm đầu ra — mỗi việc phải định nghĩa sản phẩm ngay từ đầu.';
   }
@@ -33,7 +34,7 @@ export function kiemTra(p, { nhieu = false } = {}) {
   }
   if (!nhieu) {
     if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
-    if (!laA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
+    if (!nhuA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
   }
   return loiNguon();
 }
@@ -50,7 +51,7 @@ export function docForm(cha) {
     han_xu_ly: $('klThLoai').value === 'KY_BAN_HANH' ? null : $('klThHan').value || null, cap_nhan_san_pham: $('klThCapNhan').value || null, theo_1400: true,
     ...docNguon(),
   };
-  if (canThayMat()) p.thay_mat_cho = $('klThThayMat').value || null;
+  if (canThayMat()) Object.assign(p, tachThayMat($('klThThayMat').value));   // thay_mat_cho (một lãnh đạo) hoặc thay_mat_nhom (v3.18)
   if (cha) p.nhiem_vu_cha = cha.id;
   if (laA0()) {   // A0: DB tự suy người theo dõi, đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
     if (laMoi() && !vbTrong()) p.van_ban = vanBanMoi(); else if (!laMoi()) p.van_ban_id = $('klThVanBan').value;

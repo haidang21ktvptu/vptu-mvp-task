@@ -9,7 +9,7 @@ import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { parseOwner } from '../kl/them-owner.js';
 import { thongBaoPhamVi, theoDoiHopLe } from './pham-vi.js';
-import { phongCuaGiaTri, ngayBH, cheDoNhieu, laA0, canNganhHienTai } from './trang-thai.js';
+import { phongCuaGiaTri, ngayBH, cheDoNhieu, laA0, nhuA0, canNganhHienTai } from './trang-thai.js';
 import { o, taoThe, lamMoiThe, anHienThe, suKienThe } from './nhieu-the.js';
 
 export const TOI_DA = 20;
@@ -17,7 +17,9 @@ export const TOI_DA = 20;
 const AN_KHI_NHIEU = ['gvQuyTac', 'klThNoiDungWrap', 'klThOwnerWrap', 'klThNguoiTheoDoiWrap', 'gvNhanhOwner', 'klThPhoiHopWrap', 'klThDoKhanWrap', 'gvGoiYCanBo',
   'klThSanPhamWrap', 'klThSanPhamMoTaWrap', 'klThCapNhanWrap', 'gvNhanhSanPham', 'klThLoaiWrap', 'klThHanWrap', 'gvNhanhHan', 'klThNganhWrap', 'klThLinhVucWrap', 'klThLuuTiep'];
 // A0 (bản rút gọn) không có các ô này ở cả hai chế độ (cùng AN_A0 của index.js, phần giao với AN_KHI_NHIEU); klThLoaiWrap theo loại văn bản (index.js).
+// Thay mặt Thường trực (v3.18): không ô người theo dõi (nhuA0), vẫn có "Giao, nhập tiếp".
 const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'klThLuuTiep'];
+const AN_NHU_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'];
 const HIEN_KHI_NHIEU = ['gvLuoiWrap', 'gvLuoiChuThich3'];
 
 export const luoiTemplate = `
@@ -65,7 +67,7 @@ export function datCheDo(cheDo) {
   $('giaoViecForm').dataset.cheDo = nhieu ? 'nhieu' : 'mot';
   ['gvCheDoMot', 'gvCheDoNhieu'].forEach((id) => $(id).setAttribute('aria-selected', String((id === 'gvCheDoNhieu') === nhieu)));
   if (nhieu && !soDong()) themDong();
-  if (!nhieu) { AN_KHI_NHIEU.forEach((id) => show(id, true)); if (laA0()) AN_A0.forEach((id) => show(id, false)); }
+  if (!nhieu) { AN_KHI_NHIEU.forEach((id) => show(id, true)); if (laA0()) AN_A0.forEach((id) => show(id, false)); else if (nhuA0()) AN_NHU_A0.forEach((id) => show(id, false)); }
   anHienNhieu();
 }
 // Gọi sau mỗi lần vẽ lại (capNhatTomTat): các ô "một việc" / thẻ theo chế độ — thắng cả ẩn/hiện theo vai A0.
@@ -78,7 +80,7 @@ export function anHienNhieu() {
 
 // Thiếu gì ở từng thẻ (theo thứ tự) — dòng "Còn thiếu"; hợp lệ khi không thiếu gì. Cùng quy tắc với conThieu() của chế độ một việc.
 export function thieuNhieu() {
-  const bh = ngayBH(); const dm = danhMucKl(); const a0 = laA0(); const cn = canNganhHienTai(); const tm = $('klThThayMat').value;
+  const bh = ngayBH(); const dm = danhMucKl(); const a0 = nhuA0(); const cn = canNganhHienTai(); const tm = $('klThThayMat').value;   // a0: không người theo dõi
   return dongs().flatMap((the) => {
     const i = the.dataset.dong; const v = (c) => o(the, c).value;
     const owner = v('owner'); const han = v('han'); const kyBH = v('loai') === 'KY_BAN_HANH'; const nganh = v('nganh'); const lv = v('linh_vuc');
@@ -105,8 +107,8 @@ export function docDong() {
     const d = { noi_dung: v('noi_dung').trim(), owner_don_vi_ma: ow.owner_don_vi_ma, owner_tai_khoan: ow.owner_tai_khoan, do_khan: v('do_khan'),
       san_pham_loai: v('san_pham') || null, san_pham_mo_ta: v('san_pham_mo_ta').trim() || null, cap_nhan_san_pham: v('cap_nhan') || null,
       loai_thoi_han_ma: v('loai'), han_xu_ly: v('loai') === 'KY_BAN_HANH' ? null : v('han') || null, don_vi_phoi_hop: v('phoi_hop').trim() || null };
-    if (!a0) Object.assign(d, { nguoi_theo_doi: v('theo_doi') || null, nganh_ma: v('nganh') || null, linh_vuc_ma: v('linh_vuc') || null });
-    else if (cn) Object.assign(d, { nganh_ma: v('nganh') || null, linh_vuc_ma: v('linh_vuc') || null });
+    if (!a0 || cn) Object.assign(d, { nganh_ma: v('nganh') || null, linh_vuc_ma: v('linh_vuc') || null });
+    if (!nhuA0()) d.nguoi_theo_doi = v('theo_doi') || null;   // A0 / thay mặt Thường trực: DB tự suy người theo dõi
     return d;
   });
 }

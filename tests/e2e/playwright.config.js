@@ -41,7 +41,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/giao-viec-ma-tran.spec.js', '**/giao-viec-nhieu.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/giao-viec-ma-tran.spec.js', '**/giao-viec-nhieu.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/thay-mat-nhom.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
     // GĐ19: chi-dao-tt ghi nhiệm vụ vào phạm vi PCVP2 (Quản trị) — chạy SAU desktop để không đua với bộ số kl-dashboard (PCVP2).
     { name: 'chi-dao-tt', use: DESKTOP, testMatch: /chi-dao-tt\.spec\.js/, dependencies: ['desktop'] },
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở project riêng bên dưới).
@@ -66,7 +66,8 @@ export default defineConfig({
     // PR-3 (chỉ máy tính): giao thật mỗi vai (cờ quan_tri_kl / kiêm nhiệm tạm), vướng mắc, hiển thị + Xuất Excel — nối tiếp sau pr2b-b4-b6, mỗi lúc một
     // spec. Ma trận ô Nguồn 7 vai × 5 loại nằm trong pr2b-giao-viec (cùng phiên). Chạy riêng: npx playwright test --project='pr3-*' --no-deps --workers=1.
     { name: 'pr3-giao-that', use: DESKTOP, testMatch: /pr3-giao-that\.spec\.js/, dependencies: ['pr2b-b4-b6'] },
-    { name: 'pr3-vuong-mac', use: DESKTOP, testMatch: /pr3-vuong-mac\.spec\.js/, dependencies: ['pr3-giao-that'] },
+    { name: 'pr3-thay-mat-nhom', use: DESKTOP, testMatch: /thay-mat-nhom\.spec\.js/, dependencies: ['pr3-giao-that'] },   // v3.18: thay mặt nhóm (demo_qtht cờ tạm), duyệt theo nhóm (PCVP)
+    { name: 'pr3-vuong-mac', use: DESKTOP, testMatch: /pr3-vuong-mac\.spec\.js/, dependencies: ['pr3-thay-mat-nhom'] },
     { name: 'pr3-hien-thi', use: DESKTOP, testMatch: /pr3-hien-thi\.spec\.js/, dependencies: ['pr3-vuong-mac'] },
     // PR-4 (chỉ máy tính, một phiên demo_qtht): sửa phòng + chức danh demo_e2e_dh rồi trả lại — nối sau pr3-hien-thi, trước dang-nhap.
     { name: 'pr4', use: DESKTOP, testMatch: /quan-tri-sua-tai-khoan\.spec\.js/, dependencies: ['pr3-hien-thi'] },

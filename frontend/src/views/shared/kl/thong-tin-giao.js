@@ -9,6 +9,7 @@ import { danhMucKl, datVuongMac } from '../../../lib/kl/du-lieu.js';
 import { nhanChatLuongHtml, tenTienDoHoanThanh, nhomCua } from '../../../lib/kl/nhan.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
+import { toiTrongNhom } from '../../../lib/kl/thay-mat.js';
 import { laBenTrong } from './dong.js';
 import { duocChiDao } from './chi-dao.js';
 
@@ -20,7 +21,7 @@ const qtkl = laQtklConHan;
 export const duocSuaVuongMac = (r) => !laA0() && (laBenTrong(r) || duocChiDao() || qtkl());
 export function duocSuaThongTinGiao(r) {
   const giao = findAccount(r.giao_thay_mat_cho || r.tao_boi);
-  return (Boolean(giao) && giao.id === state.user?.id && ['A0', 'A1', 'A2'].includes(state.user?.role_group) && !giao.bi_khoa) || qtkl();
+  return ((Boolean(giao) && giao.id === state.user?.id || toiTrongNhom(r.giao_thay_mat_nhom)) && ['A0', 'A1', 'A2'].includes(state.user?.role_group) && !state.user?.bi_khoa) || qtkl();
 }
 
 // Ô lưới (dt/dd) của ngăn: Nguồn, Phối hợp (khi có), Kết quả (việc đã hoàn thành). o(nhãn, giá trị, cột) — cột: ô tầng giao có bút / khoá (0070).

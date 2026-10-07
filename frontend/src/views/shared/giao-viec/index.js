@@ -4,7 +4,8 @@
 // lĩnh vực/loại hạn; trích yếu lưu bằng van_ban_dat_trich_yeu sau giao_viec. Giao tiếp xuống (giaoTiepXuong): văn bản của việc cha, gửi nhiem_vu_cha.
 // PR-2a: văn bản tìm ở DB (van-ban.js), phạm vi giao theo DB (pham-vi.js). v9 đợt 2: thẻ Nhập từ Excel / Chờ hoàn thiện (nhap-excel/tab.js), hoàn thiện
 // dòng chờ (dien-san.js). v3.17: chế độ nhiều nhiệm vụ từ một văn bản (nhieu.js, giao_viec_nhieu), tìm nhanh ở ô chọn người (lib/tim-chon.js),
-// lãnh đạo giao cho chính mình (them-owner.js canBoOwner + giao_viec 0078). Trạng thái đọc từ ô: trang-thai.js.
+// lãnh đạo giao cho chính mình (them-owner.js canBoOwner + giao_viec 0078). Trạng thái đọc từ ô: trang-thai.js. v3.18: thay mặt theo nhóm (lib/kl/thay-mat.js) —
+// thay mặt Thường trực: Owner như Thường trực giao, không ô người theo dõi, Khẩn mặc định (nhuA0).
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
@@ -12,6 +13,7 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, homNayTheoDb, giaoViec, giaoViecNhieu, datTrichYeuVanBan } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { ganTimChon } from '../../../lib/tim-chon.js';
+import { laThayMatThuongTruc } from '../../../lib/kl/thay-mat.js';
 import { vb, timTrongDs, napVanBan, datLaiVanBan, themVanBanMoi, timKhiGo } from './van-ban.js';
 import { napPhamVi, locOwner, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi, theoDoiHopLe, locTheoDoi, lanhDaoLoc } from './pham-vi.js';
 import { datLaiNguon, apMacDinhNguon, nguonDoi, thieuNguon } from './nguon.js';   // PR-3
@@ -24,7 +26,7 @@ import { giaoViecTemplate } from './template.js';
 import { apDienSan, boHoanThien } from './dien-san.js';
 import { hienTabGiaoViec } from '../nhap-excel/tab.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN } from '../kl/them-owner.js';
-import { getHomNay, datHomNay, laA0, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
+import { getHomNay, datHomNay, laA0, nhuA0, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
   canNganhHienTai, canNgayNhan, cheDoNhieu } from './trang-thai.js';
 import { kiemTra, docForm, docChung } from './doc-form.js';
 import { datLaiNhieu, datCheDo, anHienNhieu, lamMoiLuaChonLuoi, ganSuKienNhieu, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, tomTatNhieu } from './nhieu.js';
@@ -40,6 +42,7 @@ function khoaBieuMau(khoa) {
   if (khoa) $('klThLuu').disabled = true;
 }
 const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
+function datDoKhanChinh(ma) { $('klThDoKhan').value = ma; $('klThDoKhanWrap').querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === ma))); }
 const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'klThCapQDWrap', 'gvPhuWrap', 'klThLuuTiep'];
 // A0 với văn bản kết luận / thông báo: giao_viec bắt buộc ngành + lĩnh vực (và ngày giao, loại hạn như A1) → hiện các ô này theo loại văn bản.
 const THEO_LOAI_A0 = ['gvNganhWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];
@@ -97,16 +100,19 @@ function dienLinhVuc() {
 }
 function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || getHomNay(); capNhatHienThi(); }
 // Đổi lãnh đạo được thay mặt → phạm vi của người đó; lọc lại Owner / ngành / lĩnh vực. Khoá biểu mẫu khi đọc; lỗi → trả ô Thay mặt về người cũ.
+// Vào / rời "Thường trực Tỉnh ủy" (v3.18): ẩn / hiện người theo dõi, độ khẩn mặc định Khẩn ↔ Thường (chỉ khi người dùng chưa chọn mức khác).
 let thayMatCu = '';
 async function thayMatDoi() {
+  const ttCu = laThayMatThuongTruc(thayMatCu);
   khoaBieuMau(true);
   try { await napPhamVi($('klThThayMat').value || null); thayMatCu = $('klThThayMat').value; } catch (e) { notifyError(e.message); $('klThThayMat').value = thayMatCu; }
   khoaBieuMau(false);
+  if (laThayMatTT() !== ttCu) { ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'].forEach((id) => show(id, !laThayMatTT())); if ($('klThDoKhan').value === (laThayMatTT() ? 'THUONG' : 'KHAN')) datDoKhanChinh(laThayMatTT() ? 'KHAN' : 'THUONG'); }
   dienOwner(); dienNganh(); capNhatTomTat();
 }
 function dienOwner() {
   const cu = $('klThOwner').value;
-  $('klThOwner').innerHTML = ownerOptionsHtml(danhMucKl(), state.accounts, state.user);
+  $('klThOwner').innerHTML = ownerOptionsHtml(danhMucKl(), state.accounts, state.user, laThayMatTT());
   locOwner($('klThOwner'), danhMucKl(), state.accounts);
   if ([...$('klThOwner').options].some((o) => o.value === cu)) $('klThOwner').value = cu;
   tim.owner?.apLai(); lamMoiLuaChonLuoi();
@@ -126,7 +132,7 @@ export function trangThaiPhan() {
   const p1 = vanBanOk() && !thieuNguon(); // v8: khối 1 = văn bản (+ nguồn, PR-3); khối 2 = nội dung + người
   const thayMatOk = !canThayMat() || Boolean($('klThThayMat').value);
   if (cheDoNhieu()) return [p1, thayMatOk && duNhieu(), !canNgayNhan() || Boolean($('klThNgayNhan').value)];
-  const nguoi = (laA0() || Boolean($('klThNguoiTheoDoi').value)) && thayMatOk;
+  const nguoi = (nhuA0() || Boolean($('klThNguoiTheoDoi').value)) && thayMatOk;
   const chung3 = (!canNgayNhan() || Boolean($('klThNgayNhan').value)) && (!canNganhHienTai() || (Boolean($('klThNganh').value) && Boolean($('klThLinhVuc').value))) && !theoDoiNgoaiPhamVi();
   const p2 = Boolean($('klThNoiDung').value.trim()) && Boolean($('klThOwner').value) && nguoi;
   const p3 = Boolean($('klThSanPham').value) && ($('klThLoai').value === 'KY_BAN_HANH' || Boolean($('klThHan').value)) && !hanTruocBH() && chung3 && !phamViThieu().thieu;
@@ -137,7 +143,7 @@ function conThieu() {
   const nhieu = cheDoNhieu();
   return [[thieuSoHN(), 'số hội nghị'], [bhTuongLai(), 'ngày ban hành không ở tương lai'], [!vanBanOk() && !thieuSoHN() && !bhTuongLai(), 'văn bản'], [thieuNguon(), 'nguồn nhiệm vụ'],
     [!nhieu && !$('klThNoiDung').value.trim(), 'nội dung'], [!nhieu && !$('klThOwner').value, 'người chịu trách nhiệm'],
-    [!nhieu && !laA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!nhieu && !$('klThSanPham').value, 'sản phẩm'],
+    [!nhieu && !nhuA0() && !$('klThNguoiTheoDoi').value, 'người theo dõi'], [canThayMat() && !$('klThThayMat').value, 'thay mặt'], [!nhieu && !$('klThSanPham').value, 'sản phẩm'],
     [!nhieu && $('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [!nhieu && hanTruocBH(), 'hạn sau ngày ban hành'], [canNgayNhan() && !$('klThNgayNhan').value, 'ngày giao nhiệm vụ'],
     [!nhieu && canNganhHienTai() && !$('klThNganh').value, 'ngành'], [!nhieu && canNganhHienTai() && !$('klThLinhVuc').value, 'lĩnh vực'],
     [!nhieu && Boolean(phamViThieu().thieu), phamViThieu().thieu], [!nhieu && theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
@@ -202,8 +208,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThLoai').innerHTML = dm.loaiThoiHan.filter((l) => l.cho_phep_tao_moi).map((l) => opt(l.ma, l.ten, l.ma === 'CO_HAN_CU_THE')).join('');
   ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThTrichYeu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
   $('klThNgayNhan').value = homNay;
-  $('klThDoKhan').value = a0 ? 'KHAN' : 'THUONG';
-  $('giaoViecForm').querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === $('klThDoKhan').value)));
+  datDoKhanChinh(a0 ? 'KHAN' : 'THUONG');
   datLaiNhieu(); datCheDo(opts.nhieu && !cha ? 'nhieu' : 'mot');
   dienNganh();
   khoaBieuMau(false);
@@ -238,7 +243,7 @@ async function luu(nhapTiep) {
   $('klThLuu').disabled = true;
   try {
     const kq = await giaoViec(p);
-    notifySuccess(`Đã giao việc ${kq.ma}.${laA0() ? ' Người nhận và Chánh Văn phòng có thông báo; xác nhận nhận việc trong 1 ngày làm việc.' : ''}`);
+    notifySuccess(`Đã giao việc ${kq.ma}.${nhuA0() ? ' Người nhận và Chánh Văn phòng có thông báo; xác nhận nhận việc trong 1 ngày làm việc.' : ''}`);
     const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';
     if (trichYeu) { // văn bản vừa tạo (kể cả mốc "Thường trực giao …" của A0): đặt trích yếu; lỗi → báo rõ, việc đã giao vẫn còn
       try { await datTrichYeuVanBan(kq.van_ban_id, trichYeu); } catch (e) { notifyError(`Đã giao việc ${kq.ma} nhưng chưa lưu được trích yếu văn bản: ${e.message}`); }

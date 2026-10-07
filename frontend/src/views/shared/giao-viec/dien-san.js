@@ -5,6 +5,7 @@
 import { $, show, escapeHtml } from '../../../lib/dom.js';
 import { vanBanTheoKhoa } from '../../../lib/kl/du-lieu.js';
 import { nhanTruong } from '../../../lib/kl/nhap/truong.js';
+import { giaTriNhom } from '../../../lib/kl/thay-mat.js';
 import { napVanBan, MOI } from './van-ban.js';
 
 let dang = null;   // dòng đang hoàn thiện: { id, so_dong, lo_ma, ten_tep, du_lieu, thieu, ghi_chu }
@@ -36,7 +37,7 @@ export async function apDienSan(dong, { nhanMoi }) {
     chon('klThLoaiVB', d.loai_van_ban); go('klThSoHN', d.so_hoi_nghi); go('klThSoKL', d.so_ket_luan); go('klThNgayBH', d.ngay_ban_hanh, 'change');
   }
   // 2. Thay mặt (chuyên viên giao): đổi lãnh đạo → biểu mẫu khoá trong lúc đọc phạm vi → chờ mở lại rồi mới chọn Owner / ngành.
-  if (!$('klThThayMatWrap').classList.contains('hidden') && chon('klThThayMat', d.thay_mat_cho)) { await cho(() => $('gvKhoa').disabled); await cho(() => !$('gvKhoa').disabled); }
+  if (!$('klThThayMatWrap').classList.contains('hidden') && chon('klThThayMat', d.thay_mat_nhom ? giaTriNhom(d.thay_mat_nhom) : d.thay_mat_cho)) { await cho(() => $('gvKhoa').disabled); await cho(() => !$('gvKhoa').disabled); }
   // 3. Owner (cán bộ, không thì đơn vị) → ngành → lĩnh vực → người theo dõi.
   if (!(d.owner_tai_khoan && chon('klThOwner', `tk:${d.owner_tai_khoan}`))) chon('klThOwner', d.owner_don_vi_ma ? `dv:${d.owner_don_vi_ma}` : '');
   chon('klThNganh', d.nganh_ma); chon('klThLinhVuc', d.linh_vuc_ma); chon('klThNguoiTheoDoi', d.nguoi_theo_doi);

@@ -180,6 +180,26 @@ test('Đánh giá: thiếu mức 1 → CHO_HOAN_THIEN; điền hàng loạt lấ
   assert.equal(danhGia(dong({ ...DU, loai_thoi_han: 'Nhiệm vụ thường xuyên' }), DG).ket_qua, 'CHO_HOAN_THIEN');
 });
 
+test('v3.18: cột "Lãnh đạo giao" nhận nhóm (Lãnh đạo Văn phòng / Thường trực, bí danh, đuôi "(cả nhóm)", từ điển) → thay_mat_nhom; chuyên viên không khớp; đơn vị chủ trì ngoài Văn phòng → chờ hoàn thiện', () => {
+  assert.deepEqual(chuanGiaTri('lanhDao', 'Lãnh đạo Văn phòng', CTX), { ma: 'nhom:LANH_DAO_VP', hien: 'Lãnh đạo Văn phòng (cả nhóm)', gan: 'ten' });
+  assert.equal(chuanGiaTri('lanhDao', 'Thường trực Tỉnh ủy (cả nhóm)', CTX).ma, 'nhom:THUONG_TRUC'); assert.equal(chuanGiaTri('lanhDao', 'TT Tỉnh ủy', CTX).ma, 'nhom:THUONG_TRUC');
+  assert.equal(chuanGiaTri('lanhDao', 'LĐVP', CTX).ma, 'nhom:LANH_DAO_VP');
+  assert.equal(chuanGiaTri('lanhDao', 'Nông Thị Lan', CTX).ma, 'tp', 'vẫn khớp một lãnh đạo');
+  assert.ok(chuanGiaTri('lanhDao', 'Lý Văn Phúc — Phòng Quản trị', CTX).loi, 'chuyên viên không phải lãnh đạo giao');
+  const ctxTd = { ...CTX, tuDien: new Map([['can_bo', new Map([['lanh dao', 'nhom:LANH_DAO_VP']])]]) };
+  assert.deepEqual(chuanGiaTri('lanhDao', 'Lãnh đạo', ctxTd), { ma: 'nhom:LANH_DAO_VP', hien: 'Lãnh đạo Văn phòng (cả nhóm)', gan: 'tu_dien' });
+  // đánh giá: nhóm → du_lieu.thay_mat_nhom, thay_mat_cho null; người theo dõi không lấy nhóm làm mặc định
+  const nhom = danhGia(dong({ ...DU, lanh_dao_giao: 'Lãnh đạo Văn phòng', don_vi: undefined, can_bo: undefined, theo_doi: undefined, noi_dung: 'Việc của Văn phòng' }), DG);
+  assert.equal(nhom.du_lieu.thay_mat_nhom, 'LANH_DAO_VP'); assert.equal(nhom.du_lieu.thay_mat_cho, null);
+  assert.equal(nhom.du_lieu.nguoi_theo_doi, 'qtkl', 'không có đơn vị: theo dõi = người nhập, không phải chuỗi nhóm');
+  const nguoi = danhGia(dong(DU), DG); assert.equal(nguoi.du_lieu.thay_mat_cho, 'tp'); assert.equal(nguoi.du_lieu.thay_mat_nhom, null);
+  // đơn vị ngoài Văn phòng (0079): bỏ giá trị, dòng chờ hoàn thiện, cảnh báo nói rõ cách ghi
+  const ngoai = danhGia(dong({ ...DU, don_vi: 'Đảng ủy Ủy ban nhân dân tỉnh' }), DG);
+  assert.equal(ngoai.ket_qua, 'CHO_HOAN_THIEN'); assert.ok(ngoai.thieu.includes('don_vi') && ngoai.loi.includes('don_vi'));
+  assert.ok(ngoai.canhBao.some((c) => c.includes('ngoài Văn phòng')), ngoai.canhBao.join('; '));
+  assert.equal(ngoai.du_lieu.owner_don_vi_ma ?? null, null); assert.equal(ngoai.du_lieu.thay_mat_cho, 'cvp', 'không còn đơn vị → lãnh đạo giao mặc định Chánh VP');
+});
+
 test('Đánh giá: ngành ↔ lĩnh vực suy ra nhau khi xác định; điền hàng loạt lĩnh vực theo ngành của từng dòng', () => {
   const coLv = danhGia(dong({ ...DU, nganh: undefined, linh_vuc: 'Tư pháp' }), DG);
   assert.equal(coLv.gt.nganh, 'NOI_CHINH'); assert.ok(coLv.macDinh.has('nganh')); assert.equal(coLv.ket_qua, 'GIAO');

@@ -2,6 +2,7 @@
 // chọn trước đó) → đúng mã → đúng tên (bỏ số thứ tự "8. ") → gần đúng duy nhất (tên chứa nhau, ≥ 4 ký tự; đánh dấu để người nhập xem lại).
 // Không khớp / khớp nhiều → lỗi kèm danh sách chọn ở bước xem trước; người nhập chọn → lưu vào từ điển cho lần sau. Thuần (không DOM, không mạng).
 import { chuanChu } from './truong.js';
+import { NHOM_THAY_MAT, giaTriNhom } from '../thay-mat.js';
 
 export const LOAI_VB = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'], ['NQ_TW', 'Nghị quyết Trung ương'],
   ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác']];
@@ -18,7 +19,7 @@ const BI_DANH = {
   chat_luong: { 'khong dat': 'KHONG_DAT', 'xuat sac': 'DAT_XUAT_SAC', 'dat xuat sac': 'DAT_XUAT_SAC', tot: 'DAT_TOT', 'dat tot': 'DAT_TOT', dat: 'DAT' },
 };
 // Kiểu trường → loại từ điển (khớp CHECK của tu_dien_nhap).
-export const LOAI_TU_DIEN = { loaiVanBan: 'loai_van_ban', donVi: 'don_vi', canBo: 'can_bo', loaiThoiHan: 'loai_thoi_han', sanPham: 'san_pham', cap: 'cap',
+export const LOAI_TU_DIEN = { loaiVanBan: 'loai_van_ban', donVi: 'don_vi', canBo: 'can_bo', lanhDao: 'can_bo', loaiThoiHan: 'loai_thoi_han', sanPham: 'san_pham', cap: 'cap',
   doKhan: 'do_khan', nguon: 'nguon', nganh: 'nganh', linhVuc: 'linh_vuc', tienDo: 'tien_do', chatLuong: 'chat_luong' };
 
 const boSo = (s) => chuanChu(s).replace(/^\d+[.)]\s*/, '');
@@ -60,6 +61,16 @@ function khopDanhMuc(v, ds, tuDien, biDanh) {
 
 // Cán bộ: từ điển → họ tên đúng (duy nhất) → "Họ tên — Phòng" / "Họ tên (Phòng)" → tên đăng nhập → chức danh lãnh đạo ("Chánh Văn phòng",
 // "Trưởng phòng Tổng hợp").
+// Cột "Lãnh đạo giao" (v3.18): nhóm "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" (bỏ đuôi "(cả nhóm)" của mẫu xuất) → "nhom:<mã>"; còn lại khớp
+// một lãnh đạo A1 / A2 như cán bộ (chuyên viên không nhận — DB cũng từ chối).
+const BI_DANH_NHOM = { LANH_DAO_VP: ['lanh dao van phong', 'lanh dao vp', 'ldvp', 'lanh dao van phong tinh uy'], THUONG_TRUC: ['thuong truc', 'thuong truc tinh uy', 'tt tinh uy', 'tttu'] };
+function khopLanhDao(v, accounts, tuDien, tenPhong) {
+  const c = chuanChu(v).replace(/\s*\(ca nhom\)$/, '');
+  const td = tuDien?.get(c); const nhomTd = NHOM_THAY_MAT.find(([ma]) => giaTriNhom(ma) === td);   // người nhập đã chọn nhóm cho chữ này (từ điển can_bo)
+  const nhom = nhomTd || NHOM_THAY_MAT.find(([ma, ten]) => chuanChu(ten) === c || BI_DANH_NHOM[ma].includes(c));
+  if (nhom) return { ma: giaTriNhom(nhom[0]), hien: `${nhom[1]} (cả nhóm)`, gan: nhomTd ? 'tu_dien' : 'ten' };
+  return khopCanBo(v, accounts.filter((a) => ['A1', 'A2'].includes(a.role_group)), tuDien, tenPhong);
+}
 function khopCanBo(v, accounts, tuDien, tenPhong) {
   const ds = accounts.filter((a) => !a.is_system);
   const c = chuanChu(v); const hien = (a) => `${a.full_name}${a.department ? ` — ${tenPhong(a.department)}` : ''}`;
@@ -98,6 +109,7 @@ export function chuanGiaTri(kieu, v, ctx, them = {}) {
     case 'nganh': return khopDanhMuc(v, ctx.dm.nganh || [], td);
     case 'linhVuc': return khopDanhMuc(v, (ctx.dm.linhVuc || []).filter((l) => !them.nganh || l.nganh_ma === them.nganh), td);
     case 'canBo': return khopCanBo(v, ctx.accounts || [], td, ctx.tenPhong || ((x) => x || ''));
+    case 'lanhDao': return khopLanhDao(v, ctx.accounts || [], td, ctx.tenPhong || ((x) => x || ''));
     default: { const s = String(v).replace(/\r\n?/g, '\n').trim(); return { ma: s, hien: s }; }
   }
 }

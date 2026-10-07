@@ -11,7 +11,7 @@ export const COT_VIEC = cot('id, ma, van_ban_id, van_ban_loai, so_hoi_nghi, so_k
   'ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nhiem_vu_cha, theo_1400, nganh_ma, nganh_ten, linh_vuc_ma, linh_vuc_ten, linh_vuc_chi_tiet, noi_dung',
   'loai_thoi_han_ma, loai_thoi_han_ten, han_xu_ly, ly_do_chua_co_han, tien_do_ma, ngay_hoan_thanh, minh_chung, van_ban_trien_khai, so_lan_gia_han, nguon, ghi_chu',
   'thieu_minh_chung, dong_luc, cap_nhat_luc, tao_boi, created_at, trang_thai, so_ngay_qua, ket_qua, so_ngay_tre, do_tre_nhap_lieu, dang_dinh_chinh, nhom_dem',
-  'muc_canh_bao, lead_time_ngay, tuoi_ngay, so_chi_dao_cho_phan_hoi, so_minh_chung_hop_le, do_khan, uu_tien, giao_thay_mat_cho, giao_thay_mat_cho_ten',
+  'muc_canh_bao, lead_time_ngay, tuoi_ngay, so_chi_dao_cho_phan_hoi, so_minh_chung_hop_le, do_khan, uu_tien, giao_thay_mat_cho, giao_thay_mat_cho_ten, giao_thay_mat_nhom',
   'thu_tu_do_khan, bi_tu_choi, da_xac_nhan_nhan, nguoi_da_nhan, nhom_ngoai_le, khau',
   // PR-2b (0059): bước nghiệm thu, người chịu chậm (KPI tính ở DB; 0077: ba cột hạn nộp còn trong view nhưng không đọc nữa)
   'minh_chung_buoc, nop_dung_han, nghiem_thu_dung_han, so_lan_tra_lai',

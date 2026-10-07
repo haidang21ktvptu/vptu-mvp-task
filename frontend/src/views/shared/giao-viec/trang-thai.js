@@ -7,6 +7,7 @@ import { homNayVN } from '../../../lib/kl/ngay.js';
 import { MOI, timTrongDs } from './van-ban.js';
 import { phongCuaOwner } from './pham-vi.js';
 import { canNganh } from '../kl/them-owner.js';
+import { laThayMatThuongTruc } from '../../../lib/kl/thay-mat.js';
 
 let homNay = homNayVN();
 export const getHomNay = () => homNay;
@@ -14,6 +15,10 @@ export const datHomNay = (v) => { homNay = v || homNayVN(); };
 
 export const laA0 = () => state.user?.role_group === 'A0';
 export const canThayMat = () => state.user?.role_group === 'A3'; // người giao không phải lãnh đạo (giữ quan_tri_kl) → giao thay mặt
+// v3.18: thay mặt "Thường trực Tỉnh ủy" (nhóm) → quy tắc như Thường trực giao (giao_viec v_nhu_a0): Owner là lãnh đạo Văn phòng / phòng, không ô người
+// theo dõi (DB tự suy), Khẩn mặc định; văn bản, ngày giao, ngành / lĩnh vực vẫn theo vai A3.
+export const laThayMatTT = () => canThayMat() && laThayMatThuongTruc($('klThThayMat').value);
+export const nhuA0 = () => laA0() || laThayMatTT();
 export const vanBanChon = () => timTrongDs($('klThVanBan').value);
 export const nhanMoi = () => (laA0() ? 'Văn bản mới hoặc giao trực tiếp…' : 'Văn bản giao việc mới…');
 // Phòng của một giá trị Owner ("tk:<id>" / "dv:<mã>") như giao_viec tính; phongOwner() = ô Chịu trách nhiệm đang chọn. Lãnh đạo (A1/A2) giao cho chính

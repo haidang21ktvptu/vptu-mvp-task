@@ -12,7 +12,7 @@ import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { ganTimChon } from '../../../lib/tim-chon.js';
 import { nguoiTheoDoiOptionsHtml, goiYTheoDoi, parseOwner } from '../kl/them-owner.js';
 import { locTheoDoi, lanhDaoLoc, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi } from './pham-vi.js';
-import { phongCuaGiaTri, ngayBH, laA0, canNganhHienTai, getHomNay } from './trang-thai.js';
+import { phongCuaGiaTri, ngayBH, laA0, nhuA0, canNganhHienTai, getHomNay } from './trang-thai.js';
 
 const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
 const opt = (v, t) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`;
@@ -39,7 +39,7 @@ export function theHtml(k, i) {
       ${truong('theo_doi', `Người theo dõi${BB}`, selTim('theo_doi', 'Người theo dõi'), 'gợi ý theo người chịu trách nhiệm')}
       ${truong('phoi_hop', 'Đơn vị phối hợp', inp('phoi_hop', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ"'), 'không bắt buộc, cách nhau bằng dấu ;')}
     </div>
-    <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml(`do_khan_${k}`, laA0() ? 'KHAN' : 'THUONG', id('do_khan'))}</div>
+    <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml(`do_khan_${k}`, nhuA0() ? 'KHAN' : 'THUONG', id('do_khan'))}</div>
     <div class="cot-3">
       ${truong('san_pham', `Sản phẩm đầu ra${BB}`, sel('san_pham', 'Sản phẩm'))}
       ${truong('san_pham_mo_ta', 'Mô tả sản phẩm', inp('san_pham_mo_ta', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
@@ -95,11 +95,11 @@ export function capNhatHanThe(the) {
   show(the.querySelector('.gvl-bb-han'), !kyBH);
   chuThich(the, 'han', `${kyBH ? `tự tính = ngày ban hành + ${n}` : ''}${h.value ? `${kyBH ? ' · ' : ''}${ghiChuHan(h.value, getHomNay())}` : ''}`);
 }
-// Ẩn / hiện theo vai và loại văn bản (như AN_A0 / THEO_LOAI_A0 của biểu mẫu chính): A0 không có người theo dõi; ngành, lĩnh vực, loại hạn của A0 chỉ
-// với kết luận / thông báo; dấu * ngành, lĩnh vực theo loại văn bản; chú thích phạm vi dưới ô lĩnh vực.
+// Ẩn / hiện theo vai và loại văn bản (như AN_A0 / THEO_LOAI_A0 của biểu mẫu chính): A0 và thay mặt Thường trực (v3.18) không có người theo dõi;
+// ngành, lĩnh vực, loại hạn của A0 chỉ với kết luận / thông báo; dấu * ngành, lĩnh vực theo loại văn bản; chú thích phạm vi dưới ô lĩnh vực.
 export function anHienThe(the) {
   const a0 = laA0(); const cn = canNganhHienTai();
-  show(the.querySelector('[data-wrap="theo_doi"]'), !a0);
+  show(the.querySelector('[data-wrap="theo_doi"]'), !nhuA0());
   ['nganh', 'linh_vuc', 'loai'].forEach((c) => show(the.querySelector(`[data-wrap="${c}"]`), !a0 || cn));
   the.querySelectorAll('.gvl-bb-nganh').forEach((b) => show(b, cn));
   chuThich(the, 'nganh', cn ? 'bắt buộc với kết luận / thông báo' : 'không bắt buộc với loại văn bản này');

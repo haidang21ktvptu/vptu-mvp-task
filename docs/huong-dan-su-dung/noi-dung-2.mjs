@@ -13,7 +13,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     ...hinh('a1-02-can-xu-ly-cat.jpg', 'Cần xử lý hôm nay của Lãnh đạo Văn phòng'),
     ...hinh('a1-02b-nghen-cat.jpg', 'Nghẽn ở khâu nào — thẻ việc Đỏ với bốn trường, nút Đôn đốc tại chỗ'),
     P2('5.3 Giao việc theo văn bản'),
-    p('Cùng biểu mẫu ba khối như Trưởng phòng. Khác biệt: Lãnh đạo Văn phòng giao được cho **phòng** (người chịu trách nhiệm là Trưởng phòng), cho **chuyên viên** trong phạm vi, hoặc ghi nhận việc do **đơn vị ngoài Văn phòng** chủ trì (người theo dõi là cán bộ Văn phòng). Khi giao từ một kết luận / thông báo: nhập văn bản một lần ở Khối 1 (kèm **số nhiệm vụ dự kiến** và ô **đã rà soát toàn văn**), rồi **Giao, nhập tiếp** cho từng nhiệm vụ; cột phải "Văn bản đang nhập" đếm đã nhập x / dự kiến y. Phó Chánh Văn phòng chỉ giao được trong phạm vi phòng, lĩnh vực mình phụ trách.'),
+    p('Cùng biểu mẫu ba khối như Trưởng phòng. Khác biệt: Lãnh đạo Văn phòng giao được cho **phòng** (người chịu trách nhiệm là Trưởng phòng), cho **chuyên viên** trong phạm vi, hoặc cho **một lãnh đạo Văn phòng khác** (Chánh Văn phòng). Việc do **đơn vị ngoài Văn phòng** (sở, ban, ngành, huyện) thực hiện: ghi tên đơn vị ngay trong nội dung, người chịu trách nhiệm vẫn là **phòng hoặc cán bộ Văn phòng** theo dõi việc đó — hệ thống không nhận đơn vị ngoài làm người chịu trách nhiệm. Khi giao từ một kết luận / thông báo: nhập văn bản một lần ở Khối 1 (kèm **số nhiệm vụ dự kiến** và ô **đã rà soát toàn văn**), rồi **Giao, nhập tiếp** cho từng nhiệm vụ; cột phải "Văn bản đang nhập" đếm đã nhập x / dự kiến y. Phó Chánh Văn phòng chỉ giao được trong phạm vi phòng, lĩnh vực mình phụ trách.'),
     ...hinh('a1-03-giao-viec.jpg', 'Biểu mẫu Giao việc của Lãnh đạo Văn phòng'),
     P2('5.4 Nhiệm vụ: lọc, xuất Excel, in'),
     p('Màn **Nhiệm vụ** là danh sách toàn phạm vi với ô đếm theo trạng thái, ô tìm, lọc theo **đơn vị** và **kết luận**, **Thêm bộ lọc** (hội nghị, ngành, lĩnh vực, nguồn); bấm dòng mở ngăn chi tiết. Ba nút góc trên: **Xuất Excel** (đúng danh sách đang lọc, 15 cột), **In / lưu PDF**, **Giao việc**. Người có quyền quản trị nhiệm vụ còn thấy **Xuất theo mẫu nhập** (Phần 7).'),
@@ -63,7 +63,8 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     P2('7.1 Chuẩn bị tệp'),
     ...bullets([
       'Dùng ngay **bảng Phụ lục 2** đang theo dõi (tiêu đề ở dòng 3) — hệ thống nhận dạng sẵn. Hoặc bấm **Tải mẫu nhập chuẩn** để lấy mẫu trống của hệ thống.',
-      'Tệp định dạng **.xlsx**; mỗi dòng một nhiệm vụ; tên người chủ trì ghi đúng họ tên như trong hệ thống; ngày dạng dd/mm/yyyy.',
+      'Tệp định dạng **.xlsx**; mỗi dòng một nhiệm vụ; tên người chủ trì ghi đúng họ tên như trong hệ thống; ngày dạng dd/mm/yyyy. **Đơn vị chủ trì** phải là phòng hoặc cán bộ Văn phòng — dòng ghi sở, ngành, huyện sẽ vào "Chờ hoàn thiện" để chọn lại (tên đơn vị thực hiện ghi trong nội dung).',
+      'Cột **Lãnh đạo giao** (khi người nhập là cán bộ tổng hợp): ghi họ tên lãnh đạo, hoặc ghi **"Lãnh đạo Văn phòng"** / **"Thường trực Tỉnh ủy"** để giao thay mặt cả nhóm (xem 7.7).',
       'Dòng đã có **Mã nhiệm vụ** (NV-…) sẽ được hiểu là **cập nhật** việc đã có (đổi chủ trì, người theo dõi…), không tạo việc mới.',
       '**Bảng theo dõi riêng của phòng** (tên cột khác, có dòng tiêu đề lớn phía trên) cũng nhập được, không cần chép lại theo mẫu — xem mục 7.3.',
     ]),
@@ -109,6 +110,13 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Ở màn **Nhiệm vụ** (Toàn bộ nhiệm vụ), nút **Xuất theo mẫu nhập** xuất danh sách đang lọc ra đúng Mẫu nhập chuẩn (kèm mã nhiệm vụ). Sửa trong Excel (đổi người theo dõi, bổ sung lĩnh vực cho nhiều dòng…) rồi **nhập lại**: hệ thống khớp theo mã và cập nhật, không tạo việc mới.'),
     ...hinh('nx-11-xuat-theo-mau.jpg', 'Nút Xuất theo mẫu nhập ở màn Nhiệm vụ'),
     luuY('Việc nhập từ Excel còn mở được giao như việc bình thường (tính đúng hạn, nhắc hạn). Việc chọn "Đã xong ngoài hệ thống" chỉ lưu để tra cứu, **không tính vào tỷ lệ đúng hạn**.', { nhan: 'Ghi nhớ' }),
+    P2('7.7 Giao việc thay mặt lãnh đạo'),
+    p('Cán bộ tổng hợp giao việc trên cùng biểu mẫu ba khối nhưng phải ghi **Thay mặt** ai — lãnh đạo đó là người giao, là cấp duyệt nếu việc bị từ chối. Ô Thay mặt có hai phần:'),
+    ...bullets([
+      '**Nhóm lãnh đạo**: **"Lãnh đạo Văn phòng"** (Chánh và các Phó Chánh Văn phòng) hoặc **"Thường trực Tỉnh ủy"**. Giao thay mặt nhóm thì **cả nhóm được báo**, và **bất kỳ lãnh đạo nào trong nhóm** cũng duyệt được đề nghị từ chối, đề nghị sửa, sửa thông tin giao — không phụ thuộc một người có mặt hay không. Thẻ việc ghi "Thay mặt Lãnh đạo Văn phòng giao"; đề nghị từ chối ghi "chờ Lãnh đạo Văn phòng duyệt".',
+      '**Từng lãnh đạo**: Chánh Văn phòng, Phó Chánh Văn phòng (chỉ giao trong phòng, lĩnh vực đồng chí ấy phụ trách) hoặc Trưởng phòng (chỉ giao trong phòng).',
+      'Thay mặt **Thường trực Tỉnh ủy** = việc Thường trực giao: người chịu trách nhiệm là **một lãnh đạo Văn phòng hoặc một phòng** (hệ thống tự đặt người theo dõi — chính lãnh đạo đó / Trưởng phòng), độ khẩn mặc định **Khẩn**, Chánh Văn phòng được báo, việc mang nhãn "Thường trực giao" và được ưu tiên ở mọi danh sách.',
+    ]),
 
     // ───────────────────────── PHẦN 8
     P1('Phần 8. Dành cho Quản trị hệ thống'),

@@ -1,14 +1,17 @@
 // Phạm vi giao việc trên biểu mẫu (PR-2a C3): tập (phòng, ngành, lĩnh vực) người giao được giao lấy từ kl_pham_vi_giao() — hàm DB lọc
 // bằng CHÍNH kl_duoc_giao_cho_phong mà giao_viec dùng để chặn (một nguồn, test kl-pq-pham-vi-giao). Biểu mẫu chỉ đưa ra Owner / ngành /
 // lĩnh vực trong tập đó và nói rõ lý do ở dòng "Còn thiếu" + chú thích dưới ô lĩnh vực; DB vẫn là chốt.
-// Không áp: A0 (quy tắc riêng — lãnh đạo Văn phòng hoặc phòng), người quản trị KL chưa chọn lãnh đạo được thay mặt. Owner không thuộc phòng
-// nào (Văn phòng Tỉnh ủy, lãnh đạo Văn phòng, đơn vị ngoài) = dòng phòng NULL của hàm (một dòng, không theo ngành–lĩnh vực).
+// Không áp: A0 và thay mặt Thường trực (quy tắc riêng — lãnh đạo Văn phòng hoặc phòng, ô Owner đã chỉ gồm họ), người quản trị KL chưa chọn
+// lãnh đạo được thay mặt. Owner không thuộc phòng nào (Văn phòng Tỉnh ủy) = dòng phòng NULL của hàm (một dòng, không theo ngành–lĩnh vực).
+// v3.18: thayMat là uuid (một lãnh đạo) hoặc "nhom:LANH_DAO_VP" (kl_pham_vi_giao p_thay_mat_nhom — phạm vi Chánh VP).
 import { supabase } from '../../../lib/supabase.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
+import { tachThayMat } from '../../../lib/kl/thay-mat.js';
 
 let tap = null;             // Set 'phong|nganh|lv' ('phong||' = việc không có ngành–lĩnh vực; '||' = Owner không thuộc phòng) hoặc null = không áp
 let theoPhong = new Map();  // phòng ('' = không thuộc phòng) → [{ nganh_ma, linh_vuc_ma }]
+let giuLanhDaoVp = false;   // lãnh đạo Văn phòng (A1, department LANH_DAO_VAN_PHONG — không phải phòng) là Owner hợp lệ: kl_duoc_giao_cho_phong đúng với mọi phòng
 let luot = 0;
 const khoa = (phong, nganh, lv) => (phong ? `${phong}|${lv ? nganh || '' : ''}|${lv || ''}` : '||');
 const tenPhong = (ma) => DEPT_NAMES[ma] || ma;
@@ -16,8 +19,12 @@ const tenPhong = (ma) => DEPT_NAMES[ma] || ma;
 export async function napPhamVi(thayMat = null) {
   const me = state.user;
   const lan = ++luot;
-  if (!me || me.role_group === 'A0' || (me.role_group === 'A3' && !thayMat)) { tap = null; theoPhong = new Map(); return; }
-  const r = await supabase.rpc('kl_pham_vi_giao', thayMat ? { p_thay_mat: thayMat } : {});
+  const { thay_mat_nhom: nhom, thay_mat_cho: cho } = tachThayMat(thayMat);
+  const tm = cho ? state.accounts.find((a) => a.id === cho) : null; const chanhVp = (a) => a?.role_group === 'A1' && a.is_chief;
+  // Chánh VP (trực tiếp hoặc được thay mặt / nhóm Lãnh đạo VP) và lãnh đạo giữ quan_tri_kl giao được cho lãnh đạo Văn phòng (v3.18 — trước đây ô chọn bỏ sót).
+  giuLanhDaoVp = chanhVp(me) || (Boolean(me?.quan_tri_kl) && ['A1', 'A2'].includes(me?.role_group)) || nhom === 'LANH_DAO_VP' || (me?.role_group === 'A3' && chanhVp(tm));
+  if (!me || me.role_group === 'A0' || (me.role_group === 'A3' && !thayMat) || nhom === 'THUONG_TRUC') { tap = null; theoPhong = new Map(); return; }
+  const r = await supabase.rpc('kl_pham_vi_giao', nhom ? { p_thay_mat_nhom: nhom } : cho ? { p_thay_mat: cho } : {});
   if (lan !== luot) return;   // lượt cũ về muộn (đổi người được thay mặt liên tiếp)
   if (r.error) throw new Error(`Không đọc được phạm vi giao việc: ${r.error.message}`);
   tap = new Set(r.data.map((x) => khoa(x.phong, x.nganh_ma, x.linh_vuc_ma)));
@@ -40,7 +47,8 @@ export const duocGiao = (phong, nganh, lv) => !tap || tap.has(khoa(phong, nganh,
 export function locOwner(sel, dm, accounts) {
   if (!tap) return;
   const toi = ['A1', 'A2'].includes(state.user?.role_group) ? `tk:${state.user.id}` : null;
-  [...sel.options].forEach((o) => { if (o.value && o.value !== toi && !phongDuocGiao(phongCuaOwner(o.value, dm, accounts))) o.remove(); });
+  const ldVp = (v) => giuLanhDaoVp && v.startsWith('tk:') && accounts.find((a) => a.id === v.slice(3))?.role_group === 'A1';
+  [...sel.options].forEach((o) => { if (o.value && o.value !== toi && !ldVp(o.value) && !phongDuocGiao(phongCuaOwner(o.value, dm, accounts))) o.remove(); });
   [...sel.querySelectorAll('optgroup')].forEach((g) => { if (!g.children.length) g.remove(); });
 }
 // Ngành / lĩnh vực chọn được ở phòng của Owner (null = không lọc).
