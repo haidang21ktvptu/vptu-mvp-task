@@ -1,6 +1,6 @@
 // Đọc biểu mẫu Giao việc thành tham số giao_viec và kiểm tra phía form (cùng quy tắc với giao_viec; DB là chốt). Tách khỏi index.js (v3.17).
-// Chế độ nhiều nhiệm vụ (nhieu.js): docForm() cho phần CHUNG (docChung bỏ bốn ô của từng dòng), kiemTra(p, cha, { nhieu: true }) bỏ qua bốn
-// kiểm tra đó — từng dòng kiểm riêng ở nhieu.js.
+// Chế độ nhiều nhiệm vụ (nhieu.js): docForm() cho phần CHUNG (docChung bỏ các ô thuộc từng thẻ nhiệm vụ), kiemTra(p, { nhieu: true }) bỏ qua
+// các kiểm tra của những ô đó — từng thẻ kiểm riêng ở nhieu.js (thieuNhieu).
 import { $ } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { danhMucKl } from '../../../lib/kl/du-lieu.js';
@@ -31,8 +31,10 @@ export function kiemTra(p, { nhieu = false } = {}) {
     if (p.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly) return 'Nhập hạn hoàn thành — mỗi việc phải có một hạn cụ thể.';
     if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
   }
-  if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
-  if (!laA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
+  if (!nhieu) {
+    if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
+    if (!laA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
+  }
   return loiNguon();
 }
 
@@ -64,12 +66,12 @@ export function docForm(cha) {
   return themHoanThien(p);
 }
 
-// Phần chung cho giao_viec_nhieu: bỏ bốn khoá của từng dòng (và cấp nhận, mô tả sản phẩm, đơn vị phối hợp — theo dòng / để trống); loại hạn luôn
-// "Có hạn cụ thể" (A0 giao nhiều việc cũng vậy).
-const KHOA_DONG = ['noi_dung', 'owner_don_vi_ma', 'owner_tai_khoan', 'san_pham_loai', 'san_pham_mo_ta', 'han_xu_ly', 'cap_nhan_san_pham', 'don_vi_phoi_hop', 'dong_nhap_id', 'vuong_mac'];
+// Phần chung cho giao_viec_nhieu: bỏ mọi khoá thuộc từng thẻ nhiệm vụ (nhieu.js docDong ghi đè) — còn lại văn bản, nguồn, thay mặt, ngày giao,
+// cấp quyết định, văn bản triển khai, ghi chú, theo_1400.
+const KHOA_DONG = ['noi_dung', 'owner_don_vi_ma', 'owner_tai_khoan', 'nguoi_theo_doi', 'do_khan', 'san_pham_loai', 'san_pham_mo_ta', 'cap_nhan_san_pham',
+  'loai_thoi_han_ma', 'han_xu_ly', 'nganh_ma', 'linh_vuc_ma', 'don_vi_phoi_hop', 'dong_nhap_id', 'vuong_mac'];
 export function docChung(cha) {
   const p = docForm(cha);
   KHOA_DONG.forEach((k) => { delete p[k]; });
-  p.loai_thoi_han_ma = 'CO_HAN_CU_THE';
   return p;
 }

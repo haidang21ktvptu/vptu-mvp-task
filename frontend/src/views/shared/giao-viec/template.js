@@ -3,7 +3,8 @@
 // Chấm số 1-2-3 sáng khi khối đó điền đủ; chân tấm: dòng "Còn thiếu: …" cạnh nút Giao việc (mờ khi thiếu) + Huỷ + Giao, nhập tiếp. Cột phụ 340px:
 // xem trước thẻ việc (đọc lại các ô) + ba bước sau khi giao. Dùng chung A0 (bản rút gọn = ẩn phần không áp dụng), A1, A2, A3 giao thay mặt.
 // id ô giữ tiền tố klTh* và #gvCham1..3, #gvTomTatChu, .gv-the, .gv-phan (e2e). Độ khẩn: lib/kl/do-khan.js. Quyền và 1-1-1 kiểm trong hàm giao_viec (0035).
-// v3.17: chế độ "Nhiều nhiệm vụ từ một văn bản" (nhieu.js — lưới ở khối 2), ô tìm nhanh cạnh ba ô chọn người (lib/tim-chon.js), nhãn "Ngày giao nhiệm vụ".
+// v3.17: chế độ "Nhiều nhiệm vụ từ một văn bản" (nhieu.js — thẻ nhiệm vụ ở khối 2, mỗi thẻ đủ ô của một việc), ô tìm nhanh cạnh ba ô chọn người
+// (lib/tim-chon.js: gõ → danh sách chỉ còn người khớp + dòng kết quả), nhãn "Ngày giao nhiệm vụ".
 import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { luoiTemplate } from './nhieu.js';
 
@@ -13,7 +14,7 @@ const truong = (id, nhan, o, them = '', chuThich = '') => `<div class="gv-truong
 const sel = (id) => `<select id="${id}" class="o-nhap"></select>`;
 const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" class="o-nhap"${them}>`;
 // Ô chọn người kèm ô tìm nhanh (gõ tên / phòng, bỏ dấu cũng được) — <select> vẫn là ô giá trị thật.
-const selTim = (id) => `<div class="gv-tim-chon"><input type="search" id="${id}Tim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="${id}" aria-label="Tìm nhanh">${sel(id)}</div>`;
+const selTim = (id) => `<div class="gv-tim-chon"><input type="search" id="${id}Tim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="${id}" aria-label="Tìm nhanh (gõ tên hoặc phòng, không cần dấu)">${sel(id)}</div>`;
 
 export const giaoViecTemplate = `
   <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm và hạn hoàn thành</span></div>
@@ -71,12 +72,12 @@ export const giaoViecTemplate = `
         </div>
         <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
         ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
-        <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
+        <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
         <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
       </section>
 
       <section class="gv-phan" id="gvPhan3"><h2><i id="gvCham3" class="gv-so">3</i>Sản phẩm và hạn</h2>
-        <p class="chu-phu hidden" id="gvLuoiChuThich3">Sản phẩm và hạn hoàn thành ghi ở từng dòng của lưới trên; ngày giao, ngành, lĩnh vực, cấp quyết định dưới đây dùng chung cho mọi dòng.</p>
+        <p class="chu-phu hidden" id="gvLuoiChuThich3">Sản phẩm, hạn, ngành, lĩnh vực ghi ở từng thẻ nhiệm vụ trên; ngày giao nhiệm vụ, cấp cần quyết định, văn bản triển khai, ghi chú dưới đây dùng chung cho cả lô.</p>
         <div class="cot-3">
           ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
           ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}

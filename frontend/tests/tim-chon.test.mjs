@@ -1,7 +1,7 @@
 // v3.17 tìm nhanh ở ô chọn người (lib/tim-chon.js): bỏ dấu, lọc lựa chọn (ẩn / hiện, nhóm rỗng ẩn), lựa chọn khớp đầu; giả lập <select> tối thiểu.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { boDau, locLuaChon } from '../src/lib/tim-chon.js';
+import { boDau, locLuaChon, chuKetQua } from '../src/lib/tim-chon.js';
 
 test('boDau: bỏ dấu tiếng Việt, đ → d, chữ thường', () => {
   assert.equal(boDau('Nguyễn Văn Đạt — Phòng Tổng hợp'), 'nguyen van dat — phong tong hop');
@@ -29,4 +29,11 @@ test('locLuaChon: khớp tên hoặc phòng (bỏ dấu), ẩn lựa chọn khô
   assert.deepEqual([kq.hien, kq.dau, s.g1.hidden, s.g2.hidden], [0, null, true, true]);
   kq = locLuaChon(s, '   ');
   assert.equal(kq.hien, 3); assert.ok(s.options.every((o) => !o.hidden) && !s.g1.hidden && !s.g2.hidden);
+});
+
+test('chuKetQua: rỗng khi chưa gõ; số người khớp + người đang chọn; không ai khớp', () => {
+  assert.equal(chuKetQua(3, '  '), '');
+  assert.equal(chuKetQua(2, 'chuyen vien', 'Hoàng Chuyên Viên Hai — Phòng Tổng hợp'), '2 người khớp — đang chọn: Hoàng Chuyên Viên Hai — Phòng Tổng hợp. Bấm tên khác để đổi, xoá chữ để xem đủ.');
+  assert.equal(chuKetQua(1, 'an', ''), '1 người khớp. Bấm tên khác để đổi, xoá chữ để xem đủ.');
+  assert.equal(chuKetQua(0, 'xyz', ''), 'Không ai khớp "xyz" — thử gõ ít chữ hơn.');
 });
