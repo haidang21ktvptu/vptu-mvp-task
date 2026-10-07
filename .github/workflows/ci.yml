@@ -6,7 +6,8 @@ name: CI
 # main: mọi file đổi khớp `docs/**`, `*.md`, workflows backup-dinh-ky / canh-bao → "không ảnh hưởng app": ba job `supabase-db`, `frontend`,
 # `kiem-thu-staging` thay bằng job rỗng CÙNG TÊN hiển thị (ruleset `main` bắt 4 check theo tên; deploy-prod `kiem-tra` cũng đọc theo tên nên PR
 # release chỉ tài liệu vẫn tag được). `gitleaks` luôn chạy. Không chắc (PR rỗng, API lỗi, lấy không đủ danh sách, push đầu tiên) hoặc đổi chính
-# script / ci.yml / deploy-*.yml → chạy đủ. RLS token thật trên staging ở deploy-staging.yml (sau db push); trong PR, RLS chạy cục bộ ở `supabase-db`.
+# script / ci.yml / deploy-*.yml → chạy đủ. Trong PR, RLS và e2e đều chạy trên Supabase cục bộ của runner (v3.18); staging: smoke sau merge
+# (deploy-staging.yml), bộ đủ + RLS token thật mỗi đêm (kiem-thu-dem.yml).
 on:
   pull_request:
   push:
@@ -158,137 +159,66 @@ jobs:
       - name: Không file nào trên 300 dòng
         run: node scripts/check-line-limit.mjs
 
-  # e2e trên staging (8 lượt đăng nhập/lần, dưới giới hạn 30 lượt/5 phút/IP của Supabase Auth). RLS token thật ở deploy-staging.yml (sau db push);
-  # trong PR, RLS chạy cục bộ ở `supabase-db` với migration của chính PR. Nhóm concurrency để hai PR không cùng lúc ghi dữ liệu mẫu lên staging
-  # (không huỷ lượt đang chạy). Tên job giữ nguyên vì ruleset `main` bắt check theo tên; Summary ghi rõ môi trường.
-  # Công tắc môi trường kiểm thử (docs/KIEM-THU.md): biến kho vars.KIEM_THU_MOI_TRUONG = 'staging' (mặc định) | 'production' — production: db push
-  # migration lên project production, nạp tài khoản demo (scripts/seed-demo.mjs, idempotent) rồi CHỈ e2e (không RLS token thật).
+  # v3.18: e2e của PR chạy trên Supabase CỤC BỘ của runner (như RLS ở `supabase-db`): staging gói nhỏ dùng chung với kiểm tay nên e2e cả bộ
+  # hay chạm statement timeout / danh sách không kịp làm mới (#117 đỏ 3 lần ở 3 spec khác nhau). Cục bộ: ~3 phút, không phụ thuộc staging,
+  # không tốn lượt đăng nhập Auth hosted. Bộ đủ trên staging chạy mỗi đêm + khi phát hành (kiem-thu-dem.yml); staging sau merge chỉ smoke
+  # (deploy-staging.yml). Tên job giữ nguyên vì ruleset `main` bắt check theo tên; Summary ghi rõ đích. Công tắc vars.KIEM_THU_MOI_TRUONG =
+  # 'production' (docs/KIEM-THU.md) vẫn như cũ: db push migration lên production, nạp tài khoản demo rồi e2e trên production (không RLS token thật).
   kiem-thu-staging:
     name: Kiểm thử RLS + e2e trên staging
     needs: phan-loai
     if: ${{ !cancelled() && github.event_name == 'pull_request' && needs.phan-loai.outputs.khong_anh_huong_app != 'true' }}
     runs-on: ubuntu-latest
     concurrency:
-      group: kiem-thu-${{ vars.KIEM_THU_MOI_TRUONG || 'staging' }}
+      group: kiem-thu-${{ vars.KIEM_THU_MOI_TRUONG == 'production' && 'production' || github.head_ref }}   # cục bộ: không tranh tài nguyên giữa các PR
       cancel-in-progress: false
     env:
       KIEM_THU_MOI_TRUONG: ${{ vars.KIEM_THU_MOI_TRUONG || 'staging' }}
-      E2E_STAGING: ${{ vars.KIEM_THU_MOI_TRUONG != 'production' && '1' || '' }}   # đích e2e tường minh (tests/e2e/lib/keys.mjs); production: KIEM_THU_MOI_TRUONG
-      PROJECT_REF: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && 'frwyxcmbonjaimziiuqr' || 'vojmrjezspdftovzinek' }}
-      SUPABASE_URL: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && 'https://frwyxcmbonjaimziiuqr.supabase.co' || 'https://vojmrjezspdftovzinek.supabase.co' }}
-      SUPABASE_ANON_KEY: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && secrets.VITE_SUPABASE_ANON_KEY || secrets.STAGING_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      PROJECT_REF: frwyxcmbonjaimziiuqr
+      SUPABASE_URL: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && 'https://frwyxcmbonjaimziiuqr.supabase.co' || '' }}
+      SUPABASE_ANON_KEY: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && secrets.VITE_SUPABASE_ANON_KEY || '' }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ vars.KIEM_THU_MOI_TRUONG == 'production' && secrets.SUPABASE_SERVICE_ROLE_KEY || '' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: |
-            frontend/package-lock.json
-            tests/e2e/package-lock.json
-      - name: Môi trường kiểm thử
-        run: |
-          echo "### Môi trường kiểm thử: **$KIEM_THU_MOI_TRUONG** (project \`$PROJECT_REF\`)" >> "$GITHUB_STEP_SUMMARY"
-          if [ "$KIEM_THU_MOI_TRUONG" = production ]; then
-            echo "production: chỉ e2e (db push + tài khoản demo + e2e; bỏ RLS token thật — bộ RLS giả định seed staging, RLS đã chạy ở job cục bộ)." >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::Thiếu secret anon/service_role cho môi trường $KIEM_THU_MOI_TRUONG (staging: STAGING_SUPABASE_*; production: VITE_SUPABASE_ANON_KEY + SUPABASE_SERVICE_ROLE_KEY)."
-            exit 1
-          fi
-      - name: Cài phụ thuộc (frontend, tests/e2e)
-        run: |
-          npm ci --prefix frontend
-          npm ci --prefix tests/e2e
-      # ---- Chỉ khi KIEM_THU_MOI_TRUONG = production: migration → tài khoản demo (staging: migration do deploy-staging.yml, RLS ở đó) ----
       - uses: supabase/setup-cli@v1
-        if: env.KIEM_THU_MOI_TRUONG == 'production'
         with:
           version: 2.117.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: db push migration lên production (công tắc kiểm thử)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: scripts/package-lock.json
+      # ---- Mặc định: Supabase cục bộ (migration của chính PR) + seed.sql + bộ dữ liệu vàng + tài khoản / dữ liệu mẫu e2e (seed-demo, idempotent) ----
+      - name: Supabase cục bộ + dữ liệu kiểm thử
+        if: env.KIEM_THU_MOI_TRUONG != 'production'
+        run: |
+          echo "### Môi trường kiểm thử: **Supabase cục bộ trên runner** (migration của PR; staging không bị chạm)" >> "$GITHUB_STEP_SUMMARY"
+          supabase start
+          npm ci --prefix scripts
+          node scripts/nhap-kl-btvtu.mjs --file tests/rls/du-lieu-vang/kl-btvtu.json --local --ghi
+          eval "$(supabase status -o env | grep -E '^(API_URL|SERVICE_ROLE_KEY|SECRET_KEY)=')"
+          SUPABASE_URL="$API_URL" SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-$SECRET_KEY}" node scripts/seed-demo.mjs 2>&1 | tail -n 15
+      # ---- Chỉ khi KIEM_THU_MOI_TRUONG = production: db push → tài khoản demo → e2e trên production ----
+      - name: db push migration lên production + tài khoản demo (công tắc kiểm thử)
         if: env.KIEM_THU_MOI_TRUONG == 'production'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
         run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then
-            echo "::error::Thiếu secret SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD ở cấp kho (job này không dùng environment production)."
-            exit 1
+          echo "### Môi trường kiểm thử: **production** (công tắc) — chỉ e2e, không RLS token thật" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ] || [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Thiếu secret SUPABASE_ACCESS_TOKEN / PROD_DB_PASSWORD / VITE_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY ở cấp kho."; exit 1
           fi
-          supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"   # runner không có IPv6 → link để dùng pooler IPv4 (6/10/2026)
-          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --yes 2>&1 | tee -a "$GITHUB_STEP_SUMMARY" # push thật, kết quả vào Summary (không dry-run: dễ đọc nhầm là chưa áp)
-      - name: Nạp tài khoản demo (idempotent, không chạm dữ liệu thật)
-        if: env.KIEM_THU_MOI_TRUONG == 'production'
-        run: |
+          supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"   # runner không có IPv6 → pooler IPv4 (6/10/2026)
+          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --yes 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
           npm ci --prefix scripts
           node scripts/seed-demo.mjs 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-      # ---- v3.15: PR đổi supabase/functions/** → deploy Edge Function của chính PR lên STAGING trước e2e / kiểm tay (deploy-staging deploy lại
-      # sau merge; production chỉ qua deploy-prod). --use-api: không cần Docker; ~20 giây. Chỉ staging — không bao giờ ở công tắc production.
-      # v3.17: PR đổi supabase/migrations/** → áp migration của chính PR lên STAGING trước e2e (giao diện của PR cần schema mới — 0077 bỏ hạn nộp:
-      # biểu mẫu không gửi hạn nộp nữa, trigger cũ sẽ chặn). Đã áp thì db push không làm gì; deploy-staging áp lại sau merge. Chỉ staging. ----
-      - uses: supabase/setup-cli@v1
-        if: env.KIEM_THU_MOI_TRUONG != 'production' && (needs.phan-loai.outputs.cham_function == 'true' || needs.phan-loai.outputs.cham_migration == 'true')
+      - uses: ./.github/actions/e2e-playwright
         with:
-          version: 2.117.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Áp migration của PR lên staging
-        if: env.KIEM_THU_MOI_TRUONG != 'production' && needs.phan-loai.outputs.cham_migration == 'true'
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
-        run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ]; then echo "::error::Thiếu secret SUPABASE_ACCESS_TOKEN / STAGING_DB_PASSWORD để áp migration của PR lên staging."; exit 1; fi
-          supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"   # runner không có IPv6 → pooler IPv4 (6/10/2026)
-          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --dry-run 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-          supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --yes 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Deploy Edge Function của PR lên staging
-        if: env.KIEM_THU_MOI_TRUONG != 'production' && needs.phan-loai.outputs.cham_function == 'true'
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::error::Thiếu secret SUPABASE_ACCESS_TOKEN để deploy Edge Function lên staging."; exit 1; fi
-          supabase functions deploy quan-tri-tai-khoan --project-ref "$PROJECT_REF" --use-api 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-      # KHÔNG chạy RLS token thật trên production: bộ RLS giả định seed của staging (id cố định, phân công demo, tổng số dòng, không ai có quan_tri_kl)
-      # nên đỏ hàng loạt trên dữ liệu thật dù mã đúng; RLS đã chạy đủ ở job "Áp migration + lint schema". production: db push → demo → e2e (KIEM-THU.md).
-      # Cache Chromium theo phiên bản @playwright/test trong lock file; trúng cache thì chỉ cài gói hệ thống.
-      # Lưu cache ngay sau khi cài xong (restore/save tách) để lần chạy e2e đỏ vẫn để lại cache cho lần re-run.
-      - name: Phiên bản Playwright
-        id: pw
-        run: echo "version=$(node -p "require('./tests/e2e/package-lock.json').packages['node_modules/@playwright/test'].version")" >> "$GITHUB_OUTPUT"
-      - name: Khôi phục cache Chromium của Playwright
-        id: pw-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
-      - name: Cài Chromium cho Playwright (khi chưa có cache)
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-        working-directory: tests/e2e
-        run: npx playwright install --with-deps chromium
-      - name: Lưu cache Chromium (khi vừa cài)
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.pw.outputs.version }}
-      - name: Cài gói hệ thống cho Chromium (khi đã có cache)
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        working-directory: tests/e2e
-        run: npx playwright install-deps chromium
-      - name: Test e2e (build Vite trỏ môi trường kiểm thử, 2 kích thước, phiên dùng lại)
-        working-directory: tests/e2e
-        run: npm test
-      - name: Lưu báo cáo Playwright khi lỗi
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: tests/e2e/playwright-report
-          retention-days: 7
+          dich: ${{ env.KIEM_THU_MOI_TRUONG == 'production' && 'production' || 'local' }}
+          workers: '2'
 
   # Job rỗng cùng tên hiển thị với `kiem-thu-staging`, chỉ cho pull_request khi thay đổi không ảnh hưởng app.
   kiem-thu-staging-tai-lieu:

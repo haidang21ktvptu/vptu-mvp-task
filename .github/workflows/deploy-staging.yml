@@ -1,4 +1,5 @@
-# Mỗi lần push main (trừ push chỉ đổi docs/*.md/workflow backup, cảnh báo — job phan-loai): áp migration lên STAGING → (test RLS token thật ‖ build hai bản frontend) → deploy GitHub Pages.
+# Mỗi lần push main (trừ push chỉ đổi docs/*.md/workflow backup, cảnh báo — job phan-loai): áp migration lên STAGING → build hai bản frontend → deploy GitHub Pages → smoke.
+# v3.18: RLS token thật chỉ khi bấm tay; e2e đủ bộ + RLS token thật trên staging chạy mỗi đêm ở kiem-thu-dem.yml (staging nhỏ, chạy ở từng merge thì chập chờn).
 # Migration luôn chạy TRƯỚC deploy frontend (bài học GĐ1: frontend mới gọi hàm chưa có trong DB).
 # Test RLS bằng token thật (7 tài khoản seed) chuyển từ ci.yml sang đây để chạy SAU db push — tức trên
 # schema staging đã có migration mới; trong PR, RLS đã chạy trên Supabase cục bộ (job supabase-db).
@@ -116,7 +117,8 @@ jobs:
   kiem-thu-rls:
     name: Test RLS trên staging (token thật)
     needs: [migration, phan-loai]
-    if: ${{ !cancelled() && needs.migration.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.phan-loai.outputs.cham_rls == 'true') }}
+    # v3.18: chỉ còn khi bấm tay (workflow_dispatch) — mỗi đêm kiem-thu-dem.yml chạy RLS token thật + e2e đủ bộ trên staging; sau merge chỉ smoke (job dưới).
+    if: ${{ !cancelled() && needs.migration.result == 'success' && github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     # PR-2a (D2): RLS đỏ / quá giờ ⇒ job ĐỎ (hiện trên trang run) nhưng KHÔNG chặn Pages — job deploy chỉ `needs: build`.
     timeout-minutes: 14 # bước test giới hạn 12 phút (quá giờ → bước đỏ → bước cảnh báo if: failure() vẫn chạy)
@@ -218,3 +220,34 @@ jobs:
           done
           echo "::error::Sau 3 phút bản staging vẫn chưa thấy commit ${{ github.sha }} tại $URL"
           exit 1
+
+  # v3.18: smoke trên bản staging vừa lên (đăng nhập 1 tài khoản demo seed, vào app, đăng xuất — tests/e2e/smoke, như deploy-prod) thay cho e2e cả
+  # bộ ở từng lần merge; bộ đủ chạy mỗi đêm (kiem-thu-dem.yml). Đỏ ⇒ run đỏ nhưng staging đã lên (không hoàn tác) — xem artifact.
+  smoke:
+    name: Smoke bản staging vừa lên
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - name: Đăng nhập tài khoản demo trên bản staging (Playwright)
+        working-directory: tests/e2e
+        env:
+          SMOKE_URL: https://haidang21ktvptu.github.io/vptu-mvp-task/staging/
+          SMOKE_USERNAME: demo_cv1       # tài khoản seed của staging (supabase/seed.sql), mật khẩu chung công khai của seed
+          SMOKE_PASSWORD: '123456'
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test -c playwright.smoke.config.js
+      - name: Lưu báo cáo smoke khi lỗi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report-staging
+          path: tests/e2e/playwright-report-smoke
+          retention-days: 7

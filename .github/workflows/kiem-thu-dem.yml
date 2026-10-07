@@ -1,0 +1,70 @@
+name: Kiểm thử đêm trên staging
+
+# v3.18 (docs/KIEM-THU.md): bộ e2e ĐỦ và RLS token thật chạy trên staging MỖI ĐÊM (03:00 giờ Việt Nam) và khi bấm tay — thay cho việc chạy
+# cả bộ trên staging ở từng PR / từng lần merge (staging gói nhỏ, dùng chung với kiểm tay → chập chờn). PR: e2e + RLS trên Supabase cục bộ
+# của runner (ci.yml); sau merge: deploy + smoke (deploy-staging.yml). Lịch đêm bắt khác biệt môi trường hosted (Auth, Edge Function,
+# realtime, dữ liệu staging tích luỹ). Đỏ → xem annotation / artifact; chạy lại bằng workflow_dispatch khi staging rảnh.
+on:
+  schedule:
+    - cron: '0 20 * * *'   # 20:00 UTC = 03:00 Asia/Ho_Chi_Minh
+  workflow_dispatch:
+
+concurrency:
+  group: kiem-thu-staging   # cùng nhóm với RLS staging của deploy-staging (workflow_dispatch) — không ghi dữ liệu mẫu chồng nhau
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  STAGING_URL: https://vojmrjezspdftovzinek.supabase.co
+
+jobs:
+  e2e-staging:
+    name: e2e đủ bộ trên staging (retries 1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SUPABASE_URL: https://vojmrjezspdftovzinek.supabase.co
+      SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kiểm tra secrets
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Thiếu secret STAGING_SUPABASE_ANON_KEY / STAGING_SUPABASE_SERVICE_ROLE_KEY (docs/kien-truc.md)."; exit 1
+          fi
+      - uses: ./.github/actions/e2e-playwright
+        with:
+          dich: staging
+          workers: '2'
+          retries: '1'
+          ten-bao-cao: playwright-report-staging-dem
+
+  rls-staging:
+    name: Test RLS trên staging (token thật)
+    needs: e2e-staging
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/rls/package-lock.json
+      - name: Test RLS (token thật, 7 tài khoản seed)
+        timeout-minutes: 12
+        working-directory: tests/rls
+        env:
+          RLS_STAGING: '1'
+          SUPABASE_URL: ${{ env.STAGING_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm ci && npm test 2>&1 | tee "$RUNNER_TEMP/rls.log"   # pipefail: mã thoát là của npm test
+      - name: Chú thích test RLS đỏ + 25 dòng cuối log (đọc được qua API check-runs)
+        if: failure()
+        run: bash scripts/rls-chu-thich.sh "$RUNNER_TEMP/rls.log"
