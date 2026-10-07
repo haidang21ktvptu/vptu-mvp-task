@@ -52,7 +52,8 @@ export function xoaDong({ dong }) {
   danhSoLai();
   $('giaoViecForm').dispatchEvent(new Event('input', { bubbles: true }));
 }
-export function datLaiNhieu() { if (than()) { than().innerHTML = ''; themDong(); } }
+// Mở biểu mẫu: bỏ thẻ cũ; thẻ đầu chỉ tạo khi vào chế độ nhiều (datCheDo) — chế độ một việc không có thẻ ẩn trong DOM (ô độ khẩn, textarea… của biểu mẫu chính là duy nhất).
+export function datLaiNhieu() { if (than()) than().innerHTML = ''; }
 // Các thẻ vẽ lại theo ô chính / phạm vi (đổi người được thay mặt, danh mục, ngày ban hành) — giữ giá trị còn hợp lệ.
 export function lamMoiLuaChonLuoi() { dongs().forEach(lamMoiThe); }
 // Gắn một lần (registerGiaoViec): sự kiện của ô trong thẻ xử lý ở vùng chứa trước khi nổi lên form (capNhatTomTat).

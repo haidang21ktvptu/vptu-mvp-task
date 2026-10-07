@@ -43,7 +43,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();    // người theo dõi tự suy
     await expect(page.locator('#klThThayMatWrap')).toBeHidden();
     await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');
-    await expect(page.locator('#giaoViecForm .dk-chon button[aria-pressed="true"]')).toHaveText(/Khẩn/);
+    await expect(page.locator('#klThDoKhanWrap .dk-chon button[aria-pressed="true"]')).toHaveText(/Khẩn/);   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
     await expect(page.locator('#klThLuu')).toBeDisabled();
     await page.locator('#klThNoiDung').fill(noiDung);
     await page.locator('#klThOwner').selectOption(`tk:${CVP_ID}`);
