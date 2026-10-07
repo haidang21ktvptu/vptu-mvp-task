@@ -119,7 +119,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(2);
       await o(p, 1, 'noi_dung').fill(`${khoa} PCVP thẻ 1`); await o(p, 1, 'owner').selectOption('dv:TONG_HOP');
       await o(p, 1, 'theo_doi').selectOption(ID.tp);   // người theo dõi riêng của thẻ (trưởng phòng Tổng hợp)
-      await o(p, 1, 'nganh').selectOption('KINH_TE_TONG_HOP'); await o(p, 1, 'linh_vuc').selectOption('LV08_TAI_CHINH');
+      await o(p, 1, 'nganh').selectOption('KINH_TE_TONG_HOP'); await o(p, 1, 'linh_vuc').selectOption('LV08_NGAN_SACH');   // không dùng LV08_TAI_CHINH: fixture kiêm nhiệm của spec khác
       await o(p, 1, 'san_pham').selectOption('TO_TRINH'); await o(p, 1, 'han').fill(cong(H, 4));
       await o(p, 2, 'noi_dung').fill(`${khoa} PCVP thẻ 2`); await o(p, 2, 'owner').selectOption(`tk:${ID.pcvp}`);
       await o(p, 2, 'nganh').selectOption('THAM_MUU_TONG_HOP'); await o(p, 2, 'linh_vuc').selectOption('LV01_THAM_MUU_TONG_HOP');
@@ -130,7 +130,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
     });
     const { data } = await db.from('nhiem_vu').select('noi_dung, owner_don_vi_ma, owner_tai_khoan, nguoi_theo_doi, nganh_ma, linh_vuc_ma, cap_nhan_san_pham').like('noi_dung', `${khoa} PCVP thẻ%`).order('noi_dung');
     expect(data.map((x) => [x.owner_don_vi_ma, x.owner_tai_khoan, x.nguoi_theo_doi, x.nganh_ma, x.linh_vuc_ma, x.cap_nhan_san_pham])).toEqual([
-      ['TONG_HOP', null, ID.tp, 'KINH_TE_TONG_HOP', 'LV08_TAI_CHINH', 'PHO_CHANH_VAN_PHONG'],
+      ['TONG_HOP', null, ID.tp, 'KINH_TE_TONG_HOP', 'LV08_NGAN_SACH', 'PHO_CHANH_VAN_PHONG'],
       ['VAN_PHONG_TINH_UY', ID.pcvp, ID.pcvp, 'THAM_MUU_TONG_HOP', 'LV01_THAM_MUU_TONG_HOP', 'THUONG_TRUC']]);
   });
 });

@@ -150,8 +150,8 @@ function capNhatTomTat() {
   const [p1, p2, p3] = trangThaiPhan();
   [p1, p2, p3].forEach((ok, i) => $(`gvCham${i + 1}`).classList.toggle('xong', ok));
   $('klThLuu').disabled = !(p1 && p2 && p3);
-  const dk = tenDoKhan($('klThDoKhan').value);
   const t = cheDoNhieu() ? tomTatNhieu() : null;
+  const maDk = t ? t.doKhan : $('klThDoKhan').value; const dk = tenDoKhan(maDk);
   const owner = t ? t.owner : $('klThOwner').value ? $('klThOwner').selectedOptions[0]?.text : '…';
   const sp = t ? t.sanPham : $('klThSanPham').value ? $('klThSanPham').selectedOptions[0]?.text : '…';
   const nd = t ? t.noiDung : $('klThNoiDung').value.trim(); const han = t ? t.han : $('klThHan').value ? formatNgay($('klThHan').value) : '…';
@@ -160,7 +160,7 @@ function capNhatTomTat() {
   const thieu = conThieu(); setText('gvConThieu', thieu.length ? `Còn thiếu: ${thieu.join(', ')}` : '');
   setText('gvPhamViGhiChu', phamViThieu().chuThich || 'theo ngành đã chọn');
   // Xem trước thẻ việc (cột phụ) đọc lại các ô (chế độ nhiều: dòng 1)
-  setText('gvXtDoKhan', dk); $('gvXtDoKhan').className = `tag ${['THUONG_KHAN', 'HOA_TOC'].includes($('klThDoKhan').value) ? 'do' : $('klThDoKhan').value === 'KHAN' ? 'vang' : ''}`;
+  setText('gvXtDoKhan', dk); $('gvXtDoKhan').className = `tag ${['THUONG_KHAN', 'HOA_TOC'].includes(maDk) ? 'do' : maDk === 'KHAN' ? 'vang' : ''}`;
   setText('gvXtNoiDung', nd || 'Nội dung nhiệm vụ…');
   setText('gvXtPhu', `Chủ trì ${owner} · hạn ${han} · sản phẩm ${sp}${t && t.so > 1 ? ` · và ${t.so - 1} việc khác` : ''}`);
 }
@@ -193,7 +193,7 @@ export async function openGiaoViec(opts = {}) {
   ['klThOwnerTim', 'klThNguoiTheoDoiTim', 'klThThayMatTim'].forEach((id) => { $(id).value = ''; });
   $('klThOwner').innerHTML = ''; dienOwner();
   $('klThNguoiTheoDoi').innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user); $('klThNguoiTheoDoi').value = state.user?.id || '';
-  $('klThThayMat').innerHTML = opt('', 'Chọn lãnh đạo được thay mặt') + thayMatOptionsHtml(state.accounts);
+  $('klThThayMat').innerHTML = opt('', 'Chọn lãnh đạo được thay mặt') + thayMatOptionsHtml(state.accounts); tim.thayMat?.apLai();
   datLaiNguon();
   $('klThSanPham').innerHTML = opt('', 'Chọn loại sản phẩm') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
   $('klThCapNhan').innerHTML = dm.cap.map((c) => opt(c.ma, c.ten)).join('');
@@ -266,7 +266,7 @@ export function registerGiaoViec() {
   $('klThNganh').addEventListener('change', dienLinhVuc);
   $('klThLinhVuc').addEventListener('change', dienTheoDoi); $('klThNguon').addEventListener('input', nguonDoi);   // 'input' tới ô trước khi nổi lên form (capNhatTomTat)
   $('klThOwner').addEventListener('change', ownerDoi);
-  tim.owner = ganTimChon($('klThOwnerTim'), $('klThOwner')); tim.theoDoi = ganTimChon($('klThNguoiTheoDoiTim'), $('klThNguoiTheoDoi')); ganTimChon($('klThThayMatTim'), $('klThThayMat'));
+  tim.owner = ganTimChon($('klThOwnerTim'), $('klThOwner')); tim.theoDoi = ganTimChon($('klThNguoiTheoDoiTim'), $('klThNguoiTheoDoi')); tim.thayMat = ganTimChon($('klThThayMatTim'), $('klThThayMat'));
   ganSuKienNhieu();   // ô trong thẻ nhiệm vụ: chuỗi Owner → ngành → lĩnh vực → người theo dõi, hạn theo loại — trước khi nổi lên form
   $('giaoViecForm').addEventListener('input', capNhatTomTat);
   $('giaoViecForm').addEventListener('change', capNhatTomTat);

@@ -35,6 +35,7 @@ const soDong = () => dongs().length;
 function danhSoLai() {
   dongs().forEach((the, k) => {
     const i = String(k + 1); the.dataset.dong = i; the.setAttribute('aria-label', `Nhiệm vụ ${i}`); the.querySelector('.gvl-so').textContent = `Nhiệm vụ ${i}`;
+    the.querySelectorAll('[aria-label*="nhiệm vụ "]').forEach((el) => el.setAttribute('aria-label', el.getAttribute('aria-label').replace(/nhiệm vụ \d+/, `nhiệm vụ ${i}`)));
     the.querySelector('.gvl-xoa').dataset.dong = i; the.querySelector('.gvl-xoa').disabled = soDong() === 1;
   });
   $('gvThemDong').disabled = soDong() >= TOI_DA;
@@ -114,5 +115,5 @@ export function tomTatNhieu() {
   const nd = dau ? o(dau, 'noi_dung').value.trim() : '';
   const owner = dau && o(dau, 'owner').value ? o(dau, 'owner').selectedOptions[0]?.text : '…';
   return { so: ds.length, chu: `Giao ${ds.length} việc từ văn bản này — nhiệm vụ 1: "${nd ? nd.slice(0, 50) + (nd.length > 50 ? '…' : '') : '…'}" cho ${owner}`,
-    noiDung: nd, owner, han: dau && o(dau, 'han').value ? formatNgay(o(dau, 'han').value) : '…', sanPham: dau && o(dau, 'san_pham').value ? o(dau, 'san_pham').selectedOptions[0]?.text : '…' };
+    noiDung: nd, owner, doKhan: dau ? o(dau, 'do_khan').value : 'THUONG', han: dau && o(dau, 'han').value ? formatNgay(o(dau, 'han').value) : '…', sanPham: dau && o(dau, 'san_pham').value ? o(dau, 'san_pham').selectedOptions[0]?.text : '…' };
 }
