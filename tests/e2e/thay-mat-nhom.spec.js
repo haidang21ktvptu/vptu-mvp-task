@@ -59,10 +59,10 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       await vanBanMoi(page, `${khoa}-LDVP`);
       await page.locator('#klThNoiDung').fill(`${khoa} LDVP`); await page.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
-      await expect(page.locator('#gvConThieu')).toHaveText('', NAP);
+      await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('#klThLuu')).toBeEnabled();
       await page.locator('#klThLuu').click();
       await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-', NAP);
-      await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);   // biểu mẫu mở lại sạch
+      await moGiaoViec(page);   // sau khi giao, ngăn chi tiết việc vừa giao mở đè góc phải biểu mẫu (che nút Giao việc) → mở lại mục Giao việc: đóng ngăn, biểu mẫu sạch
       // (2) Thường trực Tỉnh ủy → như Thường trực giao
       await page.locator('#klThThayMat').selectOption('nhom:THUONG_TRUC'); await expect(page.locator('#gvKhoa')).toBeEnabled(NAP);
       await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();
@@ -72,7 +72,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       await vanBanMoi(page, `${khoa}-TT`);
       await page.locator('#klThNoiDung').fill(`${khoa} TT`); await page.locator('#klThOwner').selectOption('dv:TONG_HOP');
       await page.locator('#klThSanPham').selectOption('TO_TRINH'); await page.locator('#klThHan').fill(H);
-      await expect(page.locator('#gvConThieu')).toHaveText('', NAP);
+      await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('#klThLuu')).toBeEnabled();
       await page.locator('#klThLuu').click();
       await expect(page.locator('#toastContainer')).toContainText('Chánh Văn phòng có thông báo', NAP);
     });
