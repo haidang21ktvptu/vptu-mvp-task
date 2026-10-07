@@ -141,7 +141,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Các tham số nhắc việc (số ngày Vàng, Đỏ đặc biệt, hạn phản hồi chỉ đạo theo độ khẩn, chu kỳ nhắc lại…). Chỉ **Chánh Văn phòng** được sửa, có lý do; mặc định đã phù hợp quy định hiện hành.'),
     ...hinh('qt-03-nguong.jpg', 'Thẻ Ngưỡng cảnh báo'),
     P2('8.5 Ngày nghỉ'),
-    p('Nhập **lịch nghỉ lễ, nghỉ bù, ngày làm bù** của năm để hệ thống tính đúng ngày làm việc (hạn nộp minh chứng, hạn phản hồi chỉ đạo, nhắc việc). Nên nhập đầu năm và mỗi khi có thông báo nghỉ lễ mới.'),
+    p('Nhập **lịch nghỉ lễ, nghỉ bù, ngày làm bù** của năm để hệ thống tính đúng ngày làm việc (hạn xác nhận nhận việc, hạn phản hồi chỉ đạo, nhắc việc). Nên nhập đầu năm và mỗi khi có thông báo nghỉ lễ mới.'),
     ...hinh('qt-04-ngay-nghi.jpg', 'Thẻ Ngày nghỉ'),
     P2('8.6 Nhật ký và Dọn dữ liệu'),
     p('**Nhật ký hệ thống** ghi 100 thao tác gần nhất (tài khoản, cấp quyền, cấu hình, nhập Excel, hoàn tác lô, sao lưu); **Nhật ký cấp quyền** ghi riêng từng lần cấp/thu cờ. **Dọn dữ liệu** chỉ dùng để xoá dữ liệu thử nghiệm theo hai bước (xem trước số dòng → gõ XOÁ) và đòi hỏi đã sao lưu trong 24 giờ — không dùng cho dữ liệu thật.'),

@@ -45,6 +45,10 @@ CAT = {
   'td-06-sau-khi-them-cot': (268, 290, 1536, 545),
   'qt-08-ban-giao': (540, 20, 1020, 700),        # v3.15: hộp Bàn giao tài khoản (ảnh gốc 1568×703)
   'a1-04b-xuat-theo-ky': (560, 140, 1000, 620),   # v3.16: hộp Xuất Excel theo kỳ (ảnh gốc 1568×752)
+  'gv-02-khoi-2': (215, 60, 1210, 560),           # v3.17: khối 2 — nút chế độ, ô tìm nhanh, Chính tôi (trang thu 80%)
+  'gv-03-khoi-3': (215, 150, 1210, 560),          # v3.17: khối 3 — Ngày giao nhiệm vụ, không còn hạn nộp minh chứng
+  'gv-04-nhieu-nhiem-vu': (215, 0, 1210, 682),    # v3.17: thẻ Nhiệm vụ 1 đủ ô, thẻ 2, nút Giao 2 việc
+  'gv-05-tim-nhanh': (215, 200, 1210, 500),       # v3.17: ô tìm nhanh đang gõ — danh sách chỉ còn người khớp + dòng kết quả
 }
 if len(sys.argv) > 1: CAT = {k: v for k, v in CAT.items() if k in sys.argv[1:]}
 for ten, box in CAT.items():
