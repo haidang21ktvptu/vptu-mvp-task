@@ -19,7 +19,8 @@ async function vanBanMoi(page, so) {
   await page.locator('#klThSoKL').fill(so); await page.locator('#klThNgayBH').fill(cong(homNay(), -1));
 }
 const giaTri = (loc) => loc.evaluateAll((os) => os.map((x) => x.value).filter(Boolean));
-const moc = (t) => console.log(`::notice title=TMN ${new Date().toISOString().slice(11, 19)}::${t}`);   // TẠM: dấu vết bước (annotation CI) — gỡ khi xong
+let soMoc = 0;   // TẠM: dấu vết bước (annotation CI, GitHub giới hạn 10 mỗi mức) — gỡ khi xong
+const moc = (t) => { soMoc += 1; console.log(`::${['notice', 'warning', 'error'][Math.min(2, Math.floor((soMoc - 1) / 10))]} title=TMN ${String(soMoc).padStart(2, '0')} ${new Date().toISOString().slice(11, 19)}::${t}`); };
 // Tài khoản ngoài bộ chuẩn (OPTIONAL_USERS — demo_pcvp, demo_qtht): mở phiên đã lưu, chờ tên ở đầu trang; lãnh đạo vào Tổng quan → mở "Cần xử lý".
 async function moTuyChon(browser, role, testInfo) {
   const page = await (await contextAs(browser, role, testInfo)).newPage(); await page.goto('./');
