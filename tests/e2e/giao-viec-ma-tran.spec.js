@@ -21,6 +21,14 @@ const H = cong(homNay(), 20);
 const NGUON = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
 let db; let khoa; let vbKL;
 const conThieu = (p) => p.locator('#gvConThieu');
+// Gõ khoá vào ô tìm văn bản → biểu mẫu tự chọn kết quả đầu (van-ban.js, tìm ở DB sau 300 ms; lỗi mạng / statement timeout trên staging bận thì
+// giữ im lặng) ⇒ gõ lại một lần nếu sau 20 giây vẫn chưa chọn.
+async function chonVanBan(page, tuKhoa, id) {
+  for (let lan = 0; lan < 2; lan += 1) {
+    await page.locator('#klThVanBanTim').fill(''); await page.locator('#klThVanBanTim').fill(tuKhoa);
+    try { await expect(page.locator('#klThVanBan')).toHaveValue(id, NAP); return; } catch (e) { if (lan) throw e; }
+  }
+}
 const khoiPhuc = () => Promise.all([datCo(db, ID.e2eNv, { quan_tri_kl: false }), datCo(db, '00000000-0000-4000-8000-000000000008', { quan_tri_kl: false }),
   db.from('phu_trach_phong').delete().like('ly_do', `${khoa}%`)]);
 
@@ -44,8 +52,7 @@ async function kiemVai(page, v) {
   await expect(page.locator('#klThHanGhiChu'), v.ten).toContainText(/Còn \d+ ngày/, NAP);
   for (const loai of LOAI) await kiemMotLoai(page, v, loai);
   // PR-3: văn bản CÓ SẴN (Kết luận BTV của spec) ⇒ nguồn theo loại của văn bản đó; bỏ chọn ⇒ "Còn thiếu".
-  await page.locator('#klThVanBanTim').fill(`${khoa}-KL`);
-  await expect(page.locator('#klThVanBan')).toHaveValue(vbKL, NAP);
+  await chonVanBan(page, `${khoa}-KL`, vbKL);
   await expect(page.locator('#klThNguon'), `${v.ten} văn bản có sẵn`).toHaveValue('VAN_BAN_CAN_THEO_DOI');
   await page.locator('#klThNguon').selectOption('');
   await expect(conThieu(page), v.ten).toContainText('nguồn nhiệm vụ');
@@ -91,8 +98,7 @@ test.describe.serial('Giao việc — ma trận 7 vai × 5 loại văn bản (kh
     });
     await voiPhien(browser, 'A0', testInfo, async (a0) => {
       await moGiaoViec(a0);
-      await a0.locator('#klThVanBanTim').fill(`${khoa}-KL`);
-      await expect(a0.locator('#klThVanBan')).not.toHaveValue('__moi__', NAP);
+      await chonVanBan(a0, `${khoa}-KL`, vbKL);
       await a0.locator('#klThNoiDung').fill(`${khoa} giao thật A0 từ Kết luận`); await a0.locator('#klThOwner').selectOption(`tk:${ID.cvp}`);
       await a0.locator('#klThSanPham').selectOption('BAO_CAO'); await a0.locator('#klThHan').fill(H);
       await a0.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await a0.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
