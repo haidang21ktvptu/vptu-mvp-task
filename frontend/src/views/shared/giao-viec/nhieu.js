@@ -14,7 +14,7 @@ export const TOI_DA = 20;
 // Ô của "một việc" ẩn khi ở chế độ nhiều (và ngược lại); lưới + chú thích khối 3 chỉ hiện ở chế độ nhiều.
 const AN_KHI_NHIEU = ['gvQuyTac', 'klThNoiDungWrap', 'klThOwnerWrap', 'gvNhanhOwner', 'klThPhoiHopWrap', 'klThSanPhamWrap', 'klThSanPhamMoTaWrap', 'klThCapNhanWrap',
   'gvNhanhSanPham', 'klThLoaiWrap', 'klThHanWrap', 'gvNhanhHan', 'klThLuuTiep'];
-const AN_A0 = ['gvNhanhOwner', 'klThLuuTiep'];   // A0 (bản rút gọn) không có hai ô này ở cả hai chế độ; klThLoaiWrap theo loại văn bản (index.js)
+const AN_A0 = ['klThLuuTiep'];   // A0 (bản rút gọn) không có "Giao, nhập tiếp" ở cả hai chế độ; klThLoaiWrap theo loại văn bản (index.js)
 const HIEN_KHI_NHIEU = ['gvLuoiWrap', 'gvLuoiChuThich3'];
 
 export const luoiTemplate = `
@@ -28,6 +28,8 @@ export const luoiTemplate = `
   </div>`;
 
 const than = () => $('gvLuoiThan');
+// Ô chọn của dòng sao chép lựa chọn của ô chính; bỏ dấu ẩn do ô tìm nhanh (lib/tim-chon.js) đặt — lưới luôn đủ danh sách.
+const boAn = (el) => el.querySelectorAll('[hidden]').forEach((x) => { x.hidden = false; });
 const dongs = () => [...(than()?.querySelectorAll('tr') || [])];
 const o = (tr, cot) => tr.querySelector(`[data-cot="${cot}"]`);
 const soDong = () => dongs().length;
@@ -51,7 +53,7 @@ function danhSoLai() {
 export function themDong() {
   if (soDong() >= TOI_DA) return;
   than().insertAdjacentHTML('beforeend', dongHtml(soDong() + 1));
-  const tr = dongs().at(-1); o(tr, 'han').min = ngayBH() || '';
+  const tr = dongs().at(-1); boAn(tr); o(tr, 'han').min = ngayBH() || '';
   danhSoLai(); o(tr, 'noi_dung').focus();
 }
 export function xoaDong({ dong }) {
@@ -65,7 +67,7 @@ export function datLaiNhieu() { if (than()) { than().innerHTML = ''; themDong();
 export function lamMoiLuaChonLuoi() {
   dongs().forEach((tr) => {
     [['owner', 'klThOwner'], ['san_pham', 'klThSanPham']].forEach(([cot, goc]) => {
-      const s = o(tr, cot); const cu = s.value; s.innerHTML = $(goc).innerHTML;
+      const s = o(tr, cot); const cu = s.value; s.innerHTML = $(goc).innerHTML; boAn(s);
       if ([...s.options].some((x) => x.value === cu)) s.value = cu;
     });
     o(tr, 'han').min = ngayBH() || '';

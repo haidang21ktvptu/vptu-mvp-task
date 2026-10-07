@@ -16,8 +16,10 @@ export const laA0 = () => state.user?.role_group === 'A0';
 export const canThayMat = () => state.user?.role_group === 'A3'; // người giao không phải lãnh đạo (giữ quan_tri_kl) → giao thay mặt
 export const vanBanChon = () => timTrongDs($('klThVanBan').value);
 export const nhanMoi = () => (laA0() ? 'Văn bản mới hoặc giao trực tiếp…' : 'Văn bản giao việc mới…');
-// Phòng của một giá trị Owner ("tk:<id>" / "dv:<mã>") như giao_viec tính; phongOwner() = ô Chịu trách nhiệm đang chọn.
-export const phongCuaGiaTri = (value) => phongCuaOwner(value, danhMucKl(), state.accounts);
+// Phòng của một giá trị Owner ("tk:<id>" / "dv:<mã>") như giao_viec tính; phongOwner() = ô Chịu trách nhiệm đang chọn. Lãnh đạo (A1/A2) giao cho chính
+// mình: DB (0078) bỏ qua kiểm phạm vi ⇒ trả null để ngành / lĩnh vực không bị lọc theo phòng (A1 có department LANH_DAO_VAN_PHONG, không có trong phạm vi).
+export const laChinhToi = (value) => Boolean(state.user) && ['A1', 'A2'].includes(state.user.role_group) && value === `tk:${state.user.id}`;
+export const phongCuaGiaTri = (value) => (laChinhToi(value) ? null : phongCuaOwner(value, danhMucKl(), state.accounts));
 export const phongOwner = () => phongCuaGiaTri($('klThOwner').value);
 export const laMoi = () => $('klThVanBan').value === MOI;
 // A0 chọn "mới" mà để trống cả số hiệu lẫn ngày → giao không kèm văn bản (DB ghi mốc); vai khác bắt buộc đủ số hiệu + ngày.

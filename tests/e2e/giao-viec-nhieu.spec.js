@@ -12,8 +12,9 @@ const dong = (p, i) => p.locator(`#gvLuoiThan tr[data-dong="${i}"]`);
 
 test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản, giao cho chính mình, tìm nhanh người', () => {
   test.describe.configure({ timeout: 180_000 });
-  test.beforeAll(async () => { db = dbAdmin(); khoa = khoaRieng('GN', test.info()); });
-  test.afterAll(async () => { if (db) { await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, `${khoa}-GV`); } });
+  const don = async () => { await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, `${khoa}-GV`); await donVanBan(db, `${khoa}-KL`); };
+  test.beforeAll(async () => { db = dbAdmin(); khoa = khoaRieng('GN', test.info()); await don(); });   // dọn cả lượt chạy dở
+  test.afterAll(async () => { if (db) await don(); });
 
   test('1. Lưới: 1 dòng → thêm / xoá → 3 dòng; dòng 2 giao cho chính mình; "Giao 3 việc" → ba việc cùng văn bản, cấp nhận theo từng dòng', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'A2', testInfo, async (p) => {
@@ -65,5 +66,24 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await p.locator('#gvNhanhOwner button', { hasText: 'Chính tôi' }).click();
       await expect(p.locator('#klThOwner')).toHaveValue(`tk:${ID.tp}`);
     });
+  });
+
+  test('3. Phó Chánh VP tự giao từ Kết luận BTV mới: "Chính tôi" không bị lọc phạm vi, ngành / lĩnh vực chọn được, DB: Owner = chính mình, cấp nhận Thường trực', async ({ browser }, testInfo) => {
+    await voiPhien(browser, 'PCVP', testInfo, async (p) => {
+      await moGiaoViec(p);
+      await p.locator('#klThVanBan').selectOption('__moi__'); await p.locator('#klThLoaiVB').selectOption('KL_BTV');
+      await p.locator('#klThSoHN').fill('996'); await p.locator('#klThSoKL').fill(`${khoa}-KL`); await p.locator('#klThNgayBH').fill(cong(homNay(), -1));
+      await p.locator('#klThNoiDung').fill(`${khoa} PCVP tự giao`);
+      await p.locator('#gvNhanhOwner button', { hasText: 'Chính tôi' }).click();
+      await expect(p.locator('#klThOwner')).toHaveValue(`tk:${ID.pcvp}`);
+      await expect(p.locator('#klThCapNhan')).toHaveValue('THUONG_TRUC');
+      await p.locator('#klThSanPham').selectOption('TO_TRINH'); await p.locator('#klThHan').fill(H);
+      await p.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await p.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+      await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
+      await p.locator('#klThLuu').click();
+      await expect(p.locator('#toastContainer')).toContainText('Đã giao việc NV-', NAP);
+    });
+    const v = (await db.from('nhiem_vu').select('owner_tai_khoan, owner_don_vi_ma, nguoi_theo_doi, cap_nhan_san_pham, nganh_ma').like('noi_dung', `${khoa} PCVP tự giao`).single()).data;
+    expect(v).toEqual({ owner_tai_khoan: ID.pcvp, owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: ID.pcvp, cap_nhan_san_pham: 'THUONG_TRUC', nganh_ma: 'KINH_TE_TONG_HOP' });
   });
 });

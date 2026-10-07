@@ -35,10 +35,11 @@ export function phongCuaOwner(value, dm, accounts) {
 export const phongDuocGiao = (phong) => !tap || theoPhong.has(phong || '');
 export const duocGiao = (phong, nganh, lv) => !tap || tap.has(khoa(phong, nganh, lv));
 
-// Bỏ Owner có phòng ngoài phạm vi khỏi ô chọn (nhóm rỗng bỏ luôn); chính người giao luôn giữ (v3.17: lãnh đạo giao cho chính mình, DB cho phép ngoài phạm vi).
+// Bỏ Owner có phòng ngoài phạm vi khỏi ô chọn (nhóm rỗng bỏ luôn); lãnh đạo A1/A2 luôn giữ chính mình (v3.17: giao cho chính mình, DB bỏ qua phạm vi —
+// A3 quan_tri_kl giao thay mặt thì không).
 export function locOwner(sel, dm, accounts) {
   if (!tap) return;
-  const toi = `tk:${state.user?.id}`;
+  const toi = ['A1', 'A2'].includes(state.user?.role_group) ? `tk:${state.user.id}` : null;
   [...sel.options].forEach((o) => { if (o.value && o.value !== toi && !phongDuocGiao(phongCuaOwner(o.value, dm, accounts))) o.remove(); });
   [...sel.querySelectorAll('optgroup')].forEach((g) => { if (!g.children.length) g.remove(); });
 }
