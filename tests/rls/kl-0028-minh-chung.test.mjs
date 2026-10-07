@@ -157,7 +157,8 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     const mai = new Date(`${homNay}T00:00:00Z`); mai.setUTCDate(mai.getUTCDate() + 1);
     assertLoi(await nop('demo_cv1', 'NV-T61', { ngay_van_ban: mai.toISOString().slice(0, 10) }), /sau hôm nay/, 'hôm nay + 1');
     const r = await nop('demo_cv1', 'NV-T61', { ngay_van_ban: homNay }); assertOk(r, 'ngày văn bản = hôm nay giờ VN');
-    assertOk(await dong('demo_cv1', 'NV-T61'), 'đóng với ngày hoàn thành = hôm nay giờ VN');
+    assertLoi(await dong('demo_cv1', 'NV-T61'), /nghiệm thu/, '0077: việc theo 1400 không tự đóng khi minh chứng chưa được nghiệm thu');
+    assertOk(await xacNhan('demo_truongphong', r.data, true, null, null, 'DAT'), 'A2 nghiệm thu → đóng với ngày hoàn thành = hôm nay giờ VN');
     assert.equal((await view('NV-T61')).ngay_hoan_thanh, homNay);
   });
 });

@@ -19,7 +19,7 @@ import { coNhapExcel, khoiDuLieuGocHtml, napDuLieuGoc } from './du-lieu-goc.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu' };
-const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban'];
+const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban', 'han_nop_minh_chung'];   // han_nop: chỉ còn ở lịch sử cũ (0077)
 const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan'];
 
 export function hienGiaTri(cot, v) {
