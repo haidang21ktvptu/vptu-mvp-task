@@ -94,7 +94,7 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
     const g = await viec(kq1[4].nhiem_vu_id);
     assert.equal(g.nguon, 'app'); assert.equal(g.theo_1400, true); assert.equal(g.tao_boi, IDS.qtht); assert.equal(g.giao_thay_mat_cho, IDS.truongphong);
     assert.equal(g.ngay_nhan_van_ban, BH); assert.equal(g.ngay_nhan_uoc_tinh, true, 'văn bản không có ngày nhận → ngày ban hành, ghi là ước tính');
-    assert.equal(g.vuong_mac, 'Chờ số liệu sở'); assert.ok(g.han_nop_minh_chung, 'hạn nộp minh chứng theo ngày gợi ý');
+    assert.equal(g.vuong_mac, 'Chờ số liệu sở'); assert.equal(g.han_nop_minh_chung, null, '0077: hạn nộp minh chứng đã bỏ, trigger đưa về NULL');
     const x = await viec(kq1[6].nhiem_vu_id);
     assert.equal(x.nguon, 'excel'); assert.equal(x.theo_1400, false); assert.equal(x.tien_do_ma, 'HOAN_THANH'); assert.equal(x.ngay_hoan_thanh, null); assert.equal(x.chat_luong, 'DAT');
     assert.equal(x.ngay_nhan_uoc_tinh, true);

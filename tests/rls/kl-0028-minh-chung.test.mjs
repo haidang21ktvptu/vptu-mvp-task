@@ -2,7 +2,7 @@
 // khoảng ngày, danh mục cấp); phạm vi đọc theo kl_pham_vi; xac_nhan_minh_chung (theo dõi/A1/A2 trong phạm vi, không tự xác nhận);
 // dong_nhiem_vu (chặn khi không có minh chứng hợp lệ, ngày mặc định = ngày văn bản mới nhất, lead time); việc theo_1400 không đóng
 // bằng chữ; chữ cũ (chu_cu) hợp lệ; cờ thieu_minh_chung tính lại; tách số hiệu/ngày; kiểm ngày với cận dưới NULL; múi giờ. Mã NV-T6x, tự dọn.
-// PR-2b (0057): xác nhận hợp lệ = NGHIỆM THU và đóng việc cùng giao dịch (Q2); trả lại việc đang mở bắt buộc hạn nộp lại (Q3).
+// PR-2b (0057): xác nhận hợp lệ = NGHIỆM THU và đóng việc cùng giao dịch (Q2). 0077: trả lại chỉ cần lý do (không còn hạn nộp lại).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, songSong, homNayVN, CHI_CUC_BO } from './lib.mjs';
@@ -100,7 +100,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertDenied(await dong('demo_pcvp2', 'NV-T61'), 'PCVP ngoài phạm vi');
   });
 
-  test('6. xac_nhan_minh_chung: người nộp không tự xác nhận; A3/A2 ngoài phạm vi chặn; PCVP trả lại phải có lý do + hạn nộp lại; theo dõi nghiệm thu → đóng việc (Q2)', async () => {
+  test('6. xac_nhan_minh_chung: người nộp không tự xác nhận; A3/A2 ngoài phạm vi chặn; PCVP trả lại phải có lý do (0077: không cần hạn nộp lại); theo dõi nghiệm thu → đóng việc (Q2)', async () => {
     const r2 = await nop('demo_cv2', 'NV-T60', { so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-25' }); assertOk(r2, 'nộp thứ hai'); mc.b = r2.data;
     assertDenied(await xacNhan('demo_cv2', mc.a, true), 'Owner tài khoản (A3) không có quyền xác nhận');
     const r3 = await nop('demo_cv1', 'NV-T60', { so_hieu: '14/CV-VPTU', ngay_van_ban: '2026-08-18' }); assertOk(r3, 'người theo dõi nộp'); mc.d = r3.data;
@@ -108,9 +108,9 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     const [x1, x2, x3] = await Promise.all([xacNhan('demo_cv1', mc.c, true), xacNhan('demo_truongphong', mc.c, true), xacNhan('demo_pcvp', mc.c, true)]);   // bị chặn (D3)
     assertDenied(x1, 'A3 ngoài nhiệm vụ'); assertDenied(x2, 'A2 ngoài phòng'); assertDenied(x3, 'PCVP ngoài khối');
     assertLoi(await xacNhan('demo_pcvp2', mc.b, false), /ghi lý do/, 'bác thiếu lý do');
-    assertLoi(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), /hạn nộp lại/, 'trả lại việc đang mở thiếu hạn nộp lại (Q3)');
-    assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu', homNayVN()), 'PCVP phụ trách Owner trả lại');
-    assertOk(await xacNhan('demo_pcvp2', mc.d, false, 'Nộp trùng', homNayVN()), 'trả lại minh chứng thứ ba');
+    assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), 'PCVP phụ trách Owner trả lại (0077: không cần hạn nộp lại)');
+    assertOk(await xacNhan('demo_pcvp2', mc.d, false, 'Nộp trùng', homNayVN()), 'trả lại minh chứng thứ ba (hạn nộp lại truyền vào bị bỏ qua)');
+    assert.equal((await db().from('minh_chung').select('han_nop_lai').eq('id', mc.d).single()).data.han_nop_lai, null, '0077: han_nop_lai luôn NULL');
     assertOk(await xacNhan('demo_cv1', mc.a, true, null, null, 'DAT'), 'người theo dõi nghiệm thu (đóng việc — Q2)');
     const rows = (await db().from('minh_chung').select('id, hop_le, xac_nhan_boi, ly_do_khong_hop_le').eq('nhiem_vu_id', id['NV-T60']).order('nop_luc')).data;
     assert.deepEqual(rows.map((x) => [x.hop_le, x.xac_nhan_boi, x.ly_do_khong_hop_le]), [[true, IDS.cv1, null], [false, IDS.pcvp2, 'Sai số hiệu'], [false, IDS.pcvp2, 'Nộp trùng']]);

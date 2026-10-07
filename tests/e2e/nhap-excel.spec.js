@@ -109,9 +109,6 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#klThSanPham')).toHaveValue('BAO_CAO');
       await page.locator('#klThNganh').selectOption('THAM_MUU_TONG_HOP');
       if (await page.locator('#klThLinhVuc').inputValue() !== 'LV01_THAM_MUU_TONG_HOP') await page.locator('#klThLinhVuc').selectOption('LV01_THAM_MUU_TONG_HOP');
-      if (!(await page.locator('#klThHanNop').inputValue())) await page.locator('#klThHanNopDung').click();   // máy chậm: biểu mẫu chưa kịp dùng ngày gợi ý
-      await expect(page.locator('#klThHanNop')).not.toHaveValue('', NAP);
-      if (await page.locator('#klThLyDoSatWrap').isVisible()) await page.locator('#klThLyDoSat').fill('Kiểm thử e2e — nhập Excel');
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP);
       await page.locator('#klThLuu').click();
       await expect(toast(page)).toContainText('Đã giao việc NV-', NAP);

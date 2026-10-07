@@ -1,6 +1,6 @@
 // Dùng chung cho spec PR-2b (project pr2b, chỉ máy tính): id tài khoản seed, client service_role, tạo việc / minh chứng mẫu theo khoá riêng của lần
-// chạy, bật cờ tạm có khôi phục. Việc mẫu chèn bằng service_role (không qua trigger bắt buộc hạn nộp — trigger chỉ ép phiên người dùng), nên đặt
-// được hạn nộp / hạn hoàn thành trong quá khứ để dựng đúng trạng thái cần kiểm. Mọi dữ liệu gắn văn bản so_ket_luan = khoá ⇒ donVanBan dọn hết.
+// chạy, bật cờ tạm có khôi phục. Việc mẫu chèn bằng service_role (không qua kiểm tra của giao_viec), nên đặt được hạn hoàn thành trong quá khứ
+// để dựng đúng trạng thái cần kiểm (0077: hạn nộp minh chứng đã bỏ). Mọi dữ liệu gắn văn bản so_ket_luan = khoá ⇒ donVanBan dọn hết.
 import { expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './keys.mjs';
@@ -17,10 +17,10 @@ export const homNay = () => new Date(Date.now() + 7 * 3600e3).toISOString().slic
 export const cong = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 export const dd = (d) => `${Number(d.slice(8, 10))}/${Number(d.slice(5, 7))}/${d.slice(0, 4)}`;   // như formatNgay của app (không đệm 0)
 
-// Việc mẫu: mặc định chủ trì demo_e2e_cv (phòng E2E_RT), theo dõi = chủ trì, người giao demo_e2e_tp; hạn +20, hạn nộp +10 ngày.
+// Việc mẫu: mặc định chủ trì demo_e2e_cv (phòng E2E_RT), theo dõi = chủ trì, người giao demo_e2e_tp; hạn +20 ngày.
 export async function taoViec(db, vbId, nhan, row = {}) {
   const r = await db.from('nhiem_vu').insert({ van_ban_id: vbId, noi_dung: nhan, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: cong(homNay(), 20),
-    han_nop_minh_chung: cong(homNay(), 10), owner_don_vi_ma: 'E2E_RT', owner_tai_khoan: ID.e2eCv, nguoi_theo_doi: ID.e2eCv, tao_boi: ID.e2eTp,
+    owner_don_vi_ma: 'E2E_RT', owner_tai_khoan: ID.e2eCv, nguoi_theo_doi: ID.e2eCv, tao_boi: ID.e2eTp,
     nganh_ma: 'KINH_TE_TONG_HOP', theo_1400: true, ngay_nhan_van_ban: homNay(), ngay_nhan_uoc_tinh: false, cap_nhan_san_pham: 'TRUONG_PHONG', ...row })
     .select('id, ma').single();
   if (r.error) throw new Error(`Tạo việc mẫu "${nhan}" thất bại: ${r.error.message}`);

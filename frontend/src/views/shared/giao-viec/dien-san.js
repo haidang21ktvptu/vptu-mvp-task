@@ -42,14 +42,10 @@ export async function apDienSan(dong, { nhanMoi }) {
   chon('klThNganh', d.nganh_ma); chon('klThLinhVuc', d.linh_vuc_ma); chon('klThNguoiTheoDoi', d.nguoi_theo_doi);
   // 4. Các ô còn lại.
   go('klThNoiDung', d.noi_dung); chon('klThSanPham', d.san_pham_loai); chon('klThCapNhan', d.cap_nhan_san_pham);
-  chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly); go('klThHanNop', d.han_nop_minh_chung);
+  chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
   if (chon('klThNguon', d.nguon_nhiem_vu_ma)) phat($('klThNguon'), 'input');   // đánh dấu đã chọn: mặc định theo loại văn bản không ghi đè
   go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThGhiChu', d.linh_vuc_chi_tiet);
   $('giaoViecForm').querySelector(`.dk-chon button[data-gia-tri="${d.do_khan || 'THUONG'}"]`)?.click();
-  if (!d.han_nop_minh_chung && (d.han_xu_ly || d.loai_thoi_han_ma === 'KY_BAN_HANH')) {   // hạn nộp: dùng ngày gợi ý của DB khi tệp không ghi
-    await cho(() => !$('klThHanNopDung').classList.contains('hidden'), 3000);
-    if (!$('klThHanNopDung').classList.contains('hidden')) $('klThHanNopDung').click();
-  }
   phat($('giaoViecForm'), 'input');
   $('klThNoiDung').focus();
 }

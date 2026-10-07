@@ -75,7 +75,7 @@ describe('PR-3 A/B/E — chất lượng, nguồn nhiệm vụ, đơn vị phố
     const m1 = await nopMc(nv, 1); const m2 = await nopMc(nv, 2);   // m2 còn chờ sau khi m1 đóng việc
     const xac = (p) => rpc('demo_truongphong', 'xac_nhan_minh_chung', { p_id: m1, ...p });
     const [thieu, la, traLai] = await Promise.all([xac({ p_hop_le: true }), xac({ p_hop_le: true, p_chat_luong: 'TOT' }),
-      xac({ p_hop_le: false, p_ly_do: 'Thiếu', p_han_nop_lai: homNayVN(), p_chat_luong: 'DAT' })]);
+      xac({ p_hop_le: false, p_ly_do: 'Thiếu', p_chat_luong: 'DAT' })]);
     loi(thieu, /phải chọn chất lượng/, 'thiếu chất lượng'); loi(la, /không hợp lệ/, 'mã lạ'); loi(traLai, /không ghi chất lượng/, 'trả lại kèm chất lượng');
     assertDenied(await (await userClient('demo_cv1')).from('nhiem_vu').update({ chat_luong: 'DAT_XUAT_SAC' }).eq('id', nv).select('id'), 'Owner tự chấm qua API');
     assertOk(await xac({ p_hop_le: true, p_chat_luong: 'DAT_TOT' }), 'nghiệm thu Đạt tốt');

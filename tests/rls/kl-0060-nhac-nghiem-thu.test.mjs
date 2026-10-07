@@ -1,6 +1,6 @@
-// PR-2b (0060) — canh_bao_quet theo hạn nộp minh chứng, CHỈ chạy cục bộ (logic thuần; canh-bao.yml quét một lần/ngày 07:30 giờ VN).
-// Ca: người nhận từng mức (NGHIEM_THU, NGHIEM_THU_QUA_HAN, CHAM_NOP_MC, VANG việc có hạn nộp); người nộp không nhận khi chờ / quá hạn nghiệm thu;
-// CHAM_NOP_MC không tới thủ trưởng / Chánh VP; quét hai lần cùng ngày = một; ngày nghỉ (T7) không nhắc quá hạn nghiệm thu; người nhận nhắc chính
+// PR-2b (0060) — canh_bao_quet nhắc nghiệm thu, CHỈ chạy cục bộ (logic thuần; canh-bao.yml quét một lần/ngày 07:30 giờ VN). 0077: bỏ hạn nộp
+// minh chứng ⇒ không còn mức CHAM_NOP_MC / Vàng theo hạn nộp (ca cũ bỏ). Ca: người nhận từng mức (NGHIEM_THU, NGHIEM_THU_QUA_HAN); người nộp
+// không nhận khi chờ / quá hạn nghiệm thu; quét hai lần cùng ngày = một; ngày nghỉ (T7) không nhắc quá hạn nghiệm thu; người nhận nhắc chính
 // của 7 loại chủ trì (bảng A6), kể cả việc Thường trực giao cho Chánh VP (thư ký; không có thì quan_tri_kl). Ngày quét tháng 8/2026 (test khác
 // dùng tháng 9); dọn cảnh báo của các ngày này ở after. Khoá "KL-0060".
 import { test, describe, before, after } from 'node:test';
@@ -16,7 +16,7 @@ const NGAY = ['2026-08-17', '2026-08-18', '2026-08-19', '2026-08-21', '2026-08-2
 let fx; const id = {};
 const them = async (ma, row = {}, nop = IDS.cv1) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: fx.hn, noi_dung: `${KHOA} ${ma}`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-20',
-    han_nop_minh_chung: '2026-08-18', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1,
+    nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1,
     tao_boi: IDS.truongphong, theo_1400: true, ngay_nhan_van_ban: '2026-08-05', ngay_nhan_uoc_tinh: false, ...row }).select('id').single();
   assertOk(r, ma); id[ma] = r.data.id;
   if (nop) assertOk(await db().from('minh_chung').insert({ nhiem_vu_id: id[ma], loai: 'so_hieu', so_hieu: `${KHOA}/${ma}`, ngay_van_ban: '2026-08-10',
@@ -37,7 +37,7 @@ const don = async () => {
   await co(false, false);
 };
 
-describe('0060 — nhắc theo hạn nộp minh chứng và nghiệm thu', { skip: SKIP || CHI_CUC_BO }, () => {
+describe('0060 — nhắc nghiệm thu', { skip: SKIP || CHI_CUC_BO }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await don();
@@ -50,9 +50,7 @@ describe('0060 — nhắc theo hạn nộp minh chứng và nghiệm thu', { ski
       them('CV', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.cvp, nguoi_theo_doi: IDS.cvp, tao_boi: IDS.a0 }, IDS.cvp),      // CVP → thư ký
       them('NG', { owner_don_vi_ma: 'DANG_UY_UBND', owner_tai_khoan: null, tao_boi: null }),        // đơn vị ngoài, không thay mặt → lãnh đạo trực tiếp theo dõi
       them('P1', { tao_boi: IDS.pcvp }),                                                              // PCVP giao cho cán bộ → PCVP
-      them('TD', { nguoi_theo_doi: IDS.truongphong }),                                                // A2 giao, tự theo dõi → A2 (vẫn nhận khi quá hạn nghiệm thu)
-      them('CN', { han_xu_ly: '2026-08-31' }, null),                                                  // chậm nộp từ 19/08
-      them('VG', { han_xu_ly: '2026-08-31', han_nop_minh_chung: '2026-08-21', nguoi_theo_doi: IDS.truongphong }, null)]);   // Vàng; theo dõi = người giao
+      them('TD', { nguoi_theo_doi: IDS.truongphong })]);                                              // A2 giao, tự theo dõi → A2 (vẫn nhận khi quá hạn nghiệm thu)
   });
   after(don);
 
@@ -64,10 +62,10 @@ describe('0060 — nhắc theo hạn nộp minh chứng và nghiệm thu', { ski
     assert.deepEqual(kq, { A3: [IDS.truongphong], A2: [IDS.pcvp], PH: [IDS.pcvp], PC: [IDS.cvp], CV: [TK], NG: [IDS.truongphong], P1: [IDS.pcvp] });
   });
 
-  test('2. VANG việc có hạn nộp: người nộp trừ người giao; CHAM_NOP_MC: người nộp + người nhận nhắc chính, không thủ trưởng / Chánh VP', async () => {
+  test('2. (0077) Không còn mức CHAM_NOP_MC: quét 19/08 không sinh cảnh báo chậm nộp cho việc nào', async () => {
     await quet('2026-08-19');
-    assert.deepEqual(await nhan('VG', 'VANG'), [IDS.cv1], 'Vàng (gửi từ lần quét 18/08: còn 3 ngày tới hạn nộp 21/08) — không gửi người giao');
-    assert.deepEqual(await nhan('CN', 'CHAM_NOP_MC', '2026-08-19'), [IDS.truongphong, IDS.cv1].sort());
+    const r = await db().from('canh_bao').select('id').eq('muc', 'CHAM_NOP_MC').eq('ngay', '2026-08-19');
+    assert.equal((r.data || []).length, 0);
   });
 
   test('3. NGHIEM_THU_QUA_HAN: người nhận nhắc chính + lãnh đạo trực tiếp, không chủ trì / người nộp; quét 2 lần = 1; T7 bỏ qua; Đỏ đặc biệt thêm CVP', async () => {

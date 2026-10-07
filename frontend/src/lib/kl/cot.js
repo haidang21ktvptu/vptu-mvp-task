@@ -13,8 +13,8 @@ export const COT_VIEC = cot('id, ma, van_ban_id, van_ban_loai, so_hoi_nghi, so_k
   'thieu_minh_chung, dong_luc, cap_nhat_luc, tao_boi, created_at, trang_thai, so_ngay_qua, ket_qua, so_ngay_tre, do_tre_nhap_lieu, dang_dinh_chinh, nhom_dem',
   'muc_canh_bao, lead_time_ngay, tuoi_ngay, so_chi_dao_cho_phan_hoi, so_minh_chung_hop_le, do_khan, uu_tien, giao_thay_mat_cho, giao_thay_mat_cho_ten',
   'thu_tu_do_khan, bi_tu_choi, da_xac_nhan_nhan, nguoi_da_nhan, nhom_ngoai_le, khau',
-  // PR-2b (0059): hạn nộp minh chứng, bước nghiệm thu, người chịu chậm (KPI tính ở DB)
-  'han_nop_minh_chung, ly_do_han_nop_sat, han_nop_hieu_luc, minh_chung_buoc, nop_dung_han, nghiem_thu_dung_han, so_lan_tra_lai',
+  // PR-2b (0059): bước nghiệm thu, người chịu chậm (KPI tính ở DB; 0077: ba cột hạn nộp còn trong view nhưng không đọc nữa)
+  'minh_chung_buoc, nop_dung_han, nghiem_thu_dung_han, so_lan_tra_lai',
   'nguoi_nop_cho, nguoi_chiu_cham, nguoi_chiu_cham_ten, phong_chiu_cham',
   // PR-3 (0067): chất lượng, nguồn nhiệm vụ, vướng mắc, đơn vị phối hợp, tiến độ hoàn thành (Trước hạn / Đúng hạn / Trễ)
   'chat_luong, nguon_nhiem_vu_ma, nguon_nhiem_vu_ten, vuong_mac, don_vi_phoi_hop, tien_do_hoan_thanh');
@@ -24,7 +24,7 @@ export const COT_CHI_DAO = cot('id, nhiem_vu_id, nguoi_gui, loai, noi_dung, han_
 export const COT_CHI_DAO_TT = cot('id, nhiem_vu_id, ma, nhiem_vu_noi_dung, han_xu_ly, nguoi_gui, noi_dung, han_phan_hoi, trang_thai, nguoi_nhan',
   'phan_hoi, phan_hoi_boi, phan_hoi_luc, created_at, qua_han_phan_hoi, nguoi_nhan_ten, dong_boi, dong_boi_ten, do_khan');
 export const COT_MINH_CHUNG = cot('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, cap_nhan, noi_dung_chu, nop_boi, nop_luc, hop_le, xac_nhan_boi, xac_nhan_luc',
-  'ly_do_khong_hop_le, trich_yeu, mo_ta_ket_qua, han_nop_lai');
+  'ly_do_khong_hop_le, trich_yeu, mo_ta_ket_qua');
 export const COT_DIEN_BIEN = 'id, nhiem_vu_id, luc, nguon, loai, nguoi, nguoi_ten, noi_dung, gia_tri_cu, trang_thai, chi_dao_id';
 export const COT_TAI_KHOAN = cot('id, username, full_name, role_group, position_title, manager_id, department, must_change_password, is_chief, is_system',
   'quan_tri_kl, quan_tri_he_thong, dien_thoai, anh_url, tuy_chon, quan_tri_kl_het_han, bi_khoa, thu_ky_thuong_truc');

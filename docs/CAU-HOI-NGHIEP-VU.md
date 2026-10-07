@@ -230,6 +230,8 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 ## Nhóm H — Quyết định khi làm PR-2b (hạn nộp minh chứng, nghiệm thu, migration 0053–0060)
 
+> **Từ v3.17 (0077, yêu cầu của chủ dự án 7/10/2026, mục 4.1): bỏ hẳn hạn nộp minh chứng** — mỗi việc chỉ còn hạn hoàn thành; nộp minh chứng và nghiệm thu đều tính theo hạn đó; trả lại chỉ cần lý do (không còn hạn nộp lại); nhắc `CHAM_NOP_MC`, nhãn cam "Chậm nộp minh chứng", màn sửa hạn nộp không còn. Các dòng H-1, H-3, H-4, H-6, H-8, H-10, H-11 dưới đây là **lịch sử**; H-2, H-5, H-7, H-9, H-12 vẫn hiệu lực (H-2 nay áp cho mọi việc theo 1400; H-6 đổi thành: nộp đúng hạn = ngày nộp lượt được nghiệm thu ≤ hạn hoàn thành).
+
 | # | Câu hỏi | Quyết định | Kiểm bằng |
 |---|---|---|---|
 | H-1 (Q1) | Việc cũ chưa có hạn nộp minh chứng chuyển đổi thế nào? | **Không còn (29/9/2026)** — production đã reset, 0 nhiệm vụ. Không có phần chuyển đổi. Nhập Excel qua giao diện (2/10/2026): việc còn mở đi qua `giao_viec` (`nguon = app`, có hạn nộp gợi ý); chỉ việc "đã xong ngoài hệ thống" ghi `nguon = excel`, để trống hạn nộp như việc cũ. | RLS `kl-0058-trang-thai-nghiem-thu` |

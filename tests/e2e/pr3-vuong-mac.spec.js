@@ -17,7 +17,7 @@ test.describe.serial('PR-3 — vướng mắc: Cập nhật nhanh → thẻ Đ�
     await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, khoa);
     const vb = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN', ngay_ban_hanh: cong(homNay(), -20), ngay_nhan: cong(homNay(), -19) });
     // Việc Đỏ (quá hạn 3 ngày, chưa nộp minh chứng): chủ trì demo_e2e_cv (phòng E2E_RT), người giao demo_e2e_tp.
-    V = await taoViec(db, vb, `${khoa} việc Đỏ`, { han_xu_ly: cong(homNay(), -3), han_nop_minh_chung: cong(homNay(), -5), ngay_nhan_van_ban: cong(homNay(), -19) });
+    V = await taoViec(db, vb, `${khoa} việc Đỏ`, { han_xu_ly: cong(homNay(), -3), ngay_nhan_van_ban: cong(homNay(), -19) });
     await db.from('lich_su').insert({ nhiem_vu_id: V.id, nguoi_sua: ID.e2eCv, cot: 'xac_nhan_nhan_viec', gia_tri_moi: 'Đã nhận việc (e2e)', nguon: 'app' });
   });
   test.afterAll(async () => { if (db) { await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, khoa); } });

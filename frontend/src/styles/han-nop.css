@@ -1,6 +1,5 @@
-/* PR-2b — hạn nộp minh chứng, nghiệm thu. Màu CAM = bộ token có sẵn (tokens.css: --cam #D9711C, --cam-nhat #FBEBDC, --cam-chu #7A3E0E; tương
-   phản chữ/nền ≈ 7,2:1), ghi trong DESIGN-V8 mục 1. Chỉ dùng cho "Chậm nộp minh chứng" (mức Vàng, không vào dải Đỏ). Tên lớp nguyên văn — nhan.js,
-   chi-tiet.js dùng đúng các tên này (Tailwind không cắt lớp @layer components khai báo trong nguồn). */
+/* PR-2b — nghiệm thu (0077: bỏ hạn nộp minh chứng — nhóm "Chậm nộp minh chứng" không còn; các lớp .cam giữ lại cho bộ token CAM của DESIGN-V8
+   mục 1, chưa màn nào dùng). Tên lớp nguyên văn (Tailwind không cắt lớp @layer components khai báo trong nguồn). */
 @layer components {
   .tt-cam { background: var(--cam-nhat); color: var(--cam-chu); }
   .the.cam, .nv-dong.cam, .muc.cam { border-left-color: var(--cam); }
@@ -10,5 +9,4 @@
   .muc.cam .the-con::before, .muc .the-con.cam::before { background: var(--cam); }
   /* Người nộp: "Đã nộp — chờ nghiệm thu" — trung tính (Mới 2), không đỏ dù việc đã quá hạn ở bước nghiệm thu */
   .nhan-trung-tinh { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--nen-phu); color: var(--chu-phu); font-size: 12px; font-weight: 600; }
-  #gvHanNopWrap .nut.nho { margin-left: 4px; }
 }

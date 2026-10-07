@@ -81,14 +81,14 @@ Dòng 2 _x005F_x000D_</x:t></x:is></x:c><x:c s="4"><x:v>${46387 - 1462}</x:v></x
   await assert.rejects(docXlsx(new ArrayBuffer(40)), /Không đọc được|không phải \.xlsx/);
 });
 
-test('Nhận tiêu đề: Phụ lục 2 ở dòng 3 theo hồ sơ dựng sẵn; tệp lạ ghép theo tên hay gặp; "Hạn nộp" không bị "Hạn" ăn', async () => {
+test('Nhận tiêu đề: Phụ lục 2 ở dòng 3 theo hồ sơ dựng sẵn; tệp lạ ghép theo tên hay gặp; cột "Hạn nộp minh chứng" (đã bỏ từ 3.17) không ghép vào đâu', async () => {
   const ds = await docXlsx(zipNen(TEP_PL2));
   const t = timTieuDe(ds);
   assert.equal(t.sheet, 0); assert.equal(t.dongTieuDe, 2); assert.equal(t.hoSo?.mau, 'PHU_LUC_2');
   assert.equal(t.anhXa[8], 'noi_dung'); assert.equal(t.anhXa[4], 'theo_doi'); assert.equal(t.anhXa[6], 'don_vi'); assert.equal(t.anhXa[14], 'ma'); assert.equal(t.anhXa[0], undefined);
   const la = timTieuDe([{ ten: 'S', an: false, dong: [['Ghi chú'], ['Nội dung', 'Hạn nộp minh chứng', 'Hạn', 'Người theo dõi (*)', 'Cột lạ']] }]);
   assert.equal(la.hoSo, null); assert.equal(la.dongTieuDe, 1);
-  assert.deepEqual(la.anhXa, { 0: 'noi_dung', 1: 'han_nop', 2: 'han_xu_ly', 3: 'theo_doi' });
+  assert.deepEqual(la.anhXa, { 0: 'noi_dung', 2: 'han_xu_ly', 3: 'theo_doi' });
   assert.equal(doanTruong('Số/ ký hiệu văn bản'), 'so_ket_luan'); assert.equal(chuanTieuDe('  Đơn vị chủ trì (*) '), 'don vi chu tri');
   const them = timTieuDe([{ ten: 'PL2', an: false, dong: [[...TD, 'Cán bộ chủ trì', 'Ghi chú (2)']] }]);
   assert.equal(them.hoSo?.mau, 'PHU_LUC_2'); assert.equal(them.anhXa[16], 'can_bo', 'hồ sơ dựng sẵn: cột người dùng chèn thêm vẫn được đoán');

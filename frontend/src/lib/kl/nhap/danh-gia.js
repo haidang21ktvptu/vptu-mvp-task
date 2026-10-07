@@ -104,7 +104,7 @@ export function danhGia(dong, ctx) {
 function duLieuGui(dong, g, ketQua, thieu, me) {
   const d = { so_dong: dong.soDong, ma: g.ma || null, loai_van_ban: g.loai_van_ban, so_hoi_nghi: g.so_hoi_nghi, so_ket_luan: g.so_ket_luan, ngay_ban_hanh: g.ngay_ban_hanh,
     noi_dung: g.noi_dung, owner_don_vi_ma: g.don_vi, owner_tai_khoan: g.can_bo, nguoi_theo_doi: g.theo_doi, thay_mat_cho: me?.role_group === 'A3' ? g.lanh_dao_giao : null,
-    loai_thoi_han_ma: g.loai_thoi_han, han_xu_ly: g.han_xu_ly, han_nop_minh_chung: g.han_nop, san_pham_loai: g.san_pham, cap_nhan_san_pham: g.cap_nhan,
+    loai_thoi_han_ma: g.loai_thoi_han, han_xu_ly: g.han_xu_ly, san_pham_loai: g.san_pham, cap_nhan_san_pham: g.cap_nhan,
     do_khan: g.do_khan, nguon_nhiem_vu_ma: g.nguon, nganh_ma: g.nganh, linh_vuc_ma: g.linh_vuc, linh_vuc_chi_tiet: g.linh_vuc_chi_tiet,
     van_ban_trien_khai: g.van_ban_trien_khai, don_vi_phoi_hop: g.don_vi_phoi_hop, ghi_chu: g.ghi_chu, tien_do_ma: g.tien_do, vuong_mac: g.vuong_mac,
     kq_so_hieu: g.kq_so_hieu, kq_ngay: g.kq_ngay, kq_trich_yeu: g.kq_trich_yeu, kq_mo_ta: g.kq_mo_ta, chat_luong: g.chat_luong,

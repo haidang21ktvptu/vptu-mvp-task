@@ -114,22 +114,14 @@ export async function datPcvp2E2ERT(denNgay) {
   assertOk(await db.from('phu_trach_phong').update(gt).in('id', r.data.map((x) => x.id)), 'đặt phân công pcvp2 ↔ E2E_RT');
 }
 
-// PR-2b (0054): giao_viec bắt buộc hạn nộp minh chứng khi việc có hạn. Test viết trước PR-2b không truyền khoá này ⇒ userClient điền MẶC ĐỊNH
-// (chỉ khi p KHÔNG có khoá han_nop_minh_chung; test hạn nộp truyền tường minh, kể cả null): hạn hoàn thành còn ≥ hôm nay (giờ VN) ⇒ = hạn
-// hoàn thành (gần ngữ nghĩa cũ nhất: Vàng theo hạn); đã qua hoặc Ký ban hành ⇒ = hôm nay. Kèm lý do vì có thể sát hạn (quy tắc việc gấp).
+// Ngày Việt Nam (đúng cả khung 17–24h UTC). 0077: hạn nộp minh chứng đã bỏ — không còn điền mặc định han_nop_minh_chung cho giao_viec.
 export const homNayVN = () => new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
-export function hanNopMacDinh(p) {
-  if (!p || typeof p !== 'object' || 'han_nop_minh_chung' in p) return p;
-  if (!p.han_xu_ly && p.loai_thoi_han_ma !== 'KY_BAN_HANH') return p;
-  const hom = homNayVN();
-  return { ...p, han_nop_minh_chung: p.han_xu_ly && p.han_xu_ly >= hom ? p.han_xu_ly : hom, ly_do_han_nop_sat: p.ly_do_han_nop_sat ?? 'Kiểm thử — hạn nộp mặc định' };
-}
 // PR-3 (0062): phiên người dùng tạo việc phải có nguồn nhiệm vụ. Test viết trước PR-3 không truyền ⇒ điền NHIEM_VU_PHAT_SINH (chỉ khi p KHÔNG
 // có khoá nguon_nhiem_vu_ma; test PR-3 truyền tường minh, kể cả null để kiểm bị chặn).
 export const nguonMacDinh = (p) => (!p || typeof p !== 'object' || 'nguon_nhiem_vu_ma' in p ? p : { ...p, nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' });
 function boc(c) {
   const goc = c.rpc.bind(c);
-  c.rpc = (fn, args, o) => goc(fn, fn === 'giao_viec' && args?.p ? { ...args, p: nguonMacDinh(hanNopMacDinh(args.p)) } : args, o);
+  c.rpc = (fn, args, o) => goc(fn, fn === 'giao_viec' && args?.p ? { ...args, p: nguonMacDinh(args.p) } : args, o);
   return c;
 }
 

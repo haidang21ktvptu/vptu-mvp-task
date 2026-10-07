@@ -95,11 +95,10 @@ function theViec(r, kieu, homNay) {
     return `<div class="the-con vct-the do" id="vct-${r.id}" data-nhiem-vu="${r.id}" data-tu-choi="1"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} ${nhanDoKhanHtml(r.do_khan)} · <span class="nhan-tu-choi">Đã đồng ý từ chối, chờ giao lại</span></p>
       <div class="hanh-dong">${xem(r)}</div></div>`;
   }
-  const cam = r.nhom_dem === 'CHAM_NOP_MINH_CHUNG';
-  const lop = cam ? 'cam' : kieu === 'minh-chung' && r.muc_canh_bao !== 'VANG' ? 'do' : '';   // mép cam = chậm nộp minh chứng, ở nhóm nào cũng vậy
-  const nopMc = r.han_nop_hieu_luc && !choNghiemThu(r) ? `nộp minh chứng trước ${formatNgay(r.han_nop_hieu_luc)}${r.minh_chung_buoc === 'BI_TRA_LAI' ? ' (bị trả lại, nộp lại)' : ''}, ` : '';
+  const lop = kieu === 'minh-chung' && r.muc_canh_bao !== 'VANG' ? 'do' : '';
+  const nopMc = r.minh_chung_buoc === 'BI_TRA_LAI' && !choNghiemThu(r) ? 'minh chứng bị trả lại — nộp lại trước hạn, ' : '';   // 0077: không còn hạn nộp riêng
   const han = r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)}${kieu === 'minh-chung' ? ` (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : ''}` : 'chưa có hạn';
-  const dau = `<p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}${cam ? ' <span class="trang-thai tt-cam">Chậm nộp minh chứng</span>' : ''}${choNghiemThu(r) ? ' <span class="nhan-trung-tinh">Đã nộp — chờ nghiệm thu</span>' : ''}, ${nopMc}${han}${r.so_ket_luan && kieu === 'moi' ? `, ${escapeHtml(r.so_ket_luan)}` : ''}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>`;
+  const dau = `<p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}${choNghiemThu(r) ? ' <span class="nhan-trung-tinh">Đã nộp — chờ nghiệm thu</span>' : ''}, ${nopMc}${han}${r.so_ket_luan && kieu === 'moi' ? `, ${escapeHtml(r.so_ket_luan)}` : ''}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>`;
   const kq = ketQuaTuChoi(r);
   const kqHtml = kq ? `<p class="chu-canh-bao-inline" data-ket-qua="${kq.t.trang_thai}">${escapeHtml(kq.chu)}</p>` : '';
   if (kieu === 'moi') {

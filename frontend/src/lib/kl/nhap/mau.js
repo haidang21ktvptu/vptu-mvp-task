@@ -28,7 +28,7 @@ const chuCot = (i) => { let s = ''; for (let n = i + 1; n > 0; n = Math.floor((n
 const HUONG_DAN = [
   ['Mẫu nhập chuẩn VPTU-TASK — mỗi dòng ở sheet "Nhập liệu" là một nhiệm vụ.'],
   ['Mức 1 (nền vàng) — đủ để GIAO: văn bản (loại, số hội nghị nếu là Kết luận BTV, số/ký hiệu, ngày ban hành), nội dung, đơn vị hoặc cán bộ chủ trì, sản phẩm, hạn hoàn thành (loại "Có hạn cụ thể"), ngành + lĩnh vực (Kết luận / Thông báo).'],
-  ['Ô để trống được điền theo quy tắc: độ khẩn Thường; loại hạn Có hạn cụ thể; nguồn theo loại văn bản; người theo dõi = cán bộ chủ trì hoặc Trưởng phòng; lãnh đạo giao = Trưởng phòng của phòng chủ trì hoặc Chánh Văn phòng; cấp nhận và hạn nộp minh chứng theo hệ thống.'],
+  ['Ô để trống được điền theo quy tắc: độ khẩn Thường; loại hạn Có hạn cụ thể; nguồn theo loại văn bản; người theo dõi = cán bộ chủ trì hoặc Trưởng phòng; lãnh đạo giao = Trưởng phòng của phòng chủ trì hoặc Chánh Văn phòng; cấp nhận theo hệ thống.'],
   ['Dòng còn thiếu mức 1 không mất: vào mục "Chờ hoàn thiện" để bổ sung bằng biểu mẫu Giao việc.'],
   ['Mức 2 (nền lam) — tiến độ: Đang thực hiện / Hoàn thành; vướng mắc (gửi lãnh đạo quyết định).'],
   ['Mức 3 (nền lục) — đủ để ĐÓNG: số hiệu, ngày, trích yếu văn bản kết quả, mô tả kết quả; chất lượng. Việc Hoàn thành được xử lý theo lựa chọn khi nhập: "Đã xong ngoài hệ thống" (đóng ngay, không tính tỷ lệ đúng hạn) hoặc "Chờ nghiệm thu" (lãnh đạo nghiệm thu, chấm chất lượng).'],

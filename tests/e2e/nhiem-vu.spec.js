@@ -4,7 +4,7 @@
 // cần xác nhận, chỉ có nút xác nhận tuỳ chọn ở ngăn chi tiết.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, moViec, moGiaoViec, NAP, dienHanNop } from './lib/app.js';
+import { pageAs, moViec, moGiaoViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
@@ -61,7 +61,6 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     await page.locator('#klThSanPham').selectOption('BAO_CAO');
     await page.locator('#klThSanPhamMoTa').fill('Báo cáo tham mưu (e2e)');
     await page.locator('#klThHan').fill(congNgay(homNayVN(), 3));
-    await dienHanNop(page);
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
     const { data } = await db.from('nhiem_vu').select('id, ma, theo_1400, owner_tai_khoan, nguoi_theo_doi').eq('noi_dung', title).single();
@@ -92,7 +91,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     // Việc Vàng chưa có minh chứng → thẻ "Sắp đến hạn" có ô nộp 3 trường ngay trên thẻ.
     await expect(page.locator(`#vctMuc-minh-chung #vct-${moiId} form.mc-inline`)).toBeVisible(NAP);
 
-    // GĐ16 (16B): modal Cập nhật không có Hoàn thành. PR-2b (Q2): việc có hạn nộp minh chứng chỉ hoàn thành khi lãnh đạo nghiệm thu ⇒ không có nút Đóng.
+    // GĐ16 (16B): modal Cập nhật không có Hoàn thành. 0077 (Q2 cho mọi việc): chỉ hoàn thành khi lãnh đạo nghiệm thu ⇒ không có nút Đóng.
     await moViec(page, moiId, moiMa); // GĐ22: nút Xem trên thẻ mở diễn biến tại chỗ; ngăn chi tiết mở từ màn hình Nhiệm vụ
     const ngan = page.locator(`#klChiTiet-${moiId}`);
     await expect(ngan).toBeVisible(NAP);

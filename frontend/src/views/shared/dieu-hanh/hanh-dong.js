@@ -66,7 +66,7 @@ async function phanHoiThe(ds, form) {
     await thanhCong(form, 'Đã gửi phản hồi.', nvCua(form, ds));
   } catch (e) { notifyError(e.message); }
 }
-// Minh chứng chờ nghiệm thu: Nghiệm thu (một bấm, đóng việc — Q2) / Trả lại (lý do + hạn nộp lại bắt buộc, Q3; MC-6).
+// Minh chứng chờ nghiệm thu: Nghiệm thu (một bấm, đóng việc — Q2) / Trả lại (lý do bắt buộc; 0077 bỏ hạn nộp lại; MC-6).
 async function mcHopLeThe(ds) {
   try { await xacNhanMinhChung(ds.id, true); notifySuccess('Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.'); await napLaiViec(ds.nv); await lamMoiHuyHieu(); await napLai(); } catch (e) { notifyError(e.message); }
 }
@@ -78,10 +78,8 @@ async function mcNghiemThuThe(ds, form) {
 }
 async function mcKhongHopLeThe(ds, form) {
   const lyDo = noiDung(form);
-  const han = new FormData(form).get('han_nop_lai') || null;
   if (!lyDo) { notifyError('Trả lại minh chứng phải ghi lý do.'); return; }
-  if (!han) { notifyError('Chọn hạn nộp lại.'); return; }
-  try { await xacNhanMinhChung(ds.id, false, lyDo, han); await thanhCong(form, 'Đã trả lại minh chứng. Người nộp nhận thông báo kèm hạn nộp lại.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(ds.id, false, lyDo); await thanhCong(form, 'Đã trả lại minh chứng. Người nộp nhận thông báo để nộp lại trước hạn hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
 // Giao lại tại chỗ (GIAO_LAI, 0045): đổi CHỦ TRÌ + người theo dõi (tuỳ chọn, gợi ý theo chủ trì mới) + một dòng lý do; cờ bị từ chối tự xoá (0034).
 async function giaoLaiThe(ds, form) {

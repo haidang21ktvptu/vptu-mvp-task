@@ -24,8 +24,8 @@ import { theoVanBanTemplate } from './template.js';
 
 const DO_SAU_TOI_DA = 10;
 // Bộ lọc → tập nhom_dem (QUA_HAN gồm đang đính chính; ĐANG THỰC HIỆN gồm cần điền hạn, chờ điều kiện, thường xuyên).
-// PR-2b: quá hạn ở bước nghiệm thu (Đỏ) vào Quá hạn; chậm nộp minh chứng (Vàng) vào Sắp đến hạn; chờ nghiệm thu (Xanh) vào Đang thực hiện.
-const NHOM_LOC = { QUA_HAN: ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'], SAP_DEN_HAN: ['SAP_DEN_HAN', 'CHAM_NOP_MINH_CHUNG'], DANG_THUC_HIEN: ['DANG_THUC_HIEN', 'CAN_DIEN_HAN', 'CHO_DIEU_KIEN', 'THUONG_XUYEN', 'CHO_NGHIEM_THU'], HOAN_THANH: ['HOAN_THANH'] };
+// PR-2b: quá hạn ở bước nghiệm thu (Đỏ) vào Quá hạn; chờ nghiệm thu (Xanh) vào Đang thực hiện.
+const NHOM_LOC = { QUA_HAN: ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'], SAP_DEN_HAN: ['SAP_DEN_HAN'], DANG_THUC_HIEN: ['DANG_THUC_HIEN', 'CAN_DIEN_HAN', 'CHO_DIEU_KIEN', 'THUONG_XUYEN', 'CHO_NGHIEM_THU'], HOAN_THANH: ['HOAN_THANH'] };
 const gap = new Set(); // khoá nhánh đang thu gọn ('vb-<id>' | 'nv-<id>'); mặc định mở
 let rows = []; let mc = []; let vanBan = new Map(); let soViec = new Map(); // văn bản theo id (loadVanBan: có trích yếu 0046); số việc đã nhập (PR-3)
 

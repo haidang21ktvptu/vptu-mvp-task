@@ -97,16 +97,6 @@ export async function moGiaoViec(page, mo = () => nav(page, 'navGiaoViec')) {
   await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
 }
 
-// PR-2b: ô "Hạn nộp minh chứng" bắt buộc — điền bằng ngày gợi ý của DB (nút "Dùng dd/mm/yyyy", xuất hiện khi khung hạn nộp đã về sau khi có
-// hạn hoàn thành); hạn sát (còn dưới 1 ngày làm việc) thì ghi lý do việc gấp.
-export async function dienHanNop(page, lyDo = 'Kiểm thử e2e — việc gấp') {
-  const nut = page.locator('#klThHanNopDung');
-  await expect(nut).toBeVisible(NAP);
-  await nut.click();
-  await expect(page.locator('#klThHanNop')).not.toHaveValue('');
-  if (await page.locator('#klThLyDoSatWrap').isVisible()) await page.locator('#klThLyDoSat').fill(lyDo);
-}
-
 export async function nav(page, id) {
   const pill = page.locator(`#${id}`);
   if (await pill.count() === 0) {

@@ -30,7 +30,6 @@ export const TRUONG = [
   { k: 'chat_luong', nhan: 'Chất lượng', muc: 3, mau: true, kieu: 'chatLuong', ten: ['chat luong', 'danh gia chat luong'] },
   { k: 'linh_vuc_chi_tiet', nhan: 'Lĩnh vực chi tiết', muc: 1, mau: false, ten: ['linh vuc chi tiet'] },
   { k: 'van_ban_trien_khai', nhan: 'Văn bản triển khai', muc: 2, mau: false, ten: ['van ban trien khai'] },
-  { k: 'han_nop', nhan: 'Hạn nộp minh chứng', muc: 1, mau: false, kieu: 'ngay', ten: ['han nop minh chung', 'han nop'] },
   { k: 'don_vi_phoi_hop', nhan: 'Đơn vị phối hợp', muc: 1, mau: false, ten: ['don vi phoi hop', 'phoi hop'] },
   { k: 'ghi_chu', nhan: 'Ghi chú', muc: 2, mau: false, ten: ['ghi chu'] },
 ];
