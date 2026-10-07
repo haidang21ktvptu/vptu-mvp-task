@@ -87,9 +87,8 @@ jobs:
         run: supabase start
       - name: Lint schema
         run: supabase db lint --local --fail-on error
-      # Test RLS trên Postgres cục bộ vừa áp migration của chính PR (staging chỉ có schema đã merge);
-      # không tốn lượt đăng nhập Supabase Auth hosted. seed.sql đã tạo sẵn auth user. Node 24 vì
-      # `node --test --test-isolation=none` cần Node >= 23.
+      # Test RLS trên Postgres cục bộ vừa áp migration của chính PR (staging chỉ có schema đã merge); không tốn lượt đăng nhập Supabase Auth
+      # hosted. seed.sql đã tạo sẵn auth user. Node 24 vì `node --test --test-isolation=none` cần Node >= 23.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -97,8 +96,7 @@ jobs:
           cache-dependency-path: |
             tests/rls/package-lock.json
             scripts/package-lock.json
-      # Nạp bộ dữ liệu vàng ẩn danh (185 dòng, GĐ8 PR 8B) để test mốc kl-moc-2026-09-14 chạy thật trên Postgres cục bộ
-      # với migration của chính PR — không chỉ trên staging.
+      # Nạp bộ dữ liệu vàng ẩn danh (185 dòng, GĐ8 PR 8B) để test mốc kl-moc-2026-09-14 chạy thật trên Postgres cục bộ với migration của chính PR.
       - name: Nạp bộ dữ liệu vàng KL BTVTU vào Supabase cục bộ
         run: |
           npm ci --prefix scripts
@@ -107,7 +105,10 @@ jobs:
         working-directory: tests/rls
         env:
           RLS_LOCAL: '1'
-        run: npm ci && npm test
+        run: npm ci && npm test 2>&1 | tee "$RUNNER_TEMP/rls.log"   # pipefail: mã thoát là của npm test
+      - name: Chú thích test RLS đỏ (đọc được qua API check-runs)
+        if: failure()
+        run: bash scripts/rls-chu-thich.sh "$RUNNER_TEMP/rls.log"
   # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ khi thay đổi không ảnh hưởng app (ruleset bắt check theo tên).
   # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ cho PR docs-only (ruleset bắt check theo tên).
   supabase-db-tai-lieu:

@@ -145,12 +145,13 @@ jobs:
             echo "::error::Thiếu secret STAGING_SUPABASE_ANON_KEY / STAGING_SUPABASE_SERVICE_ROLE_KEY (xem docs/kien-truc.md)."
             exit 1
           fi
-          npm ci && npm test
-      - name: Ghi cảnh báo khi RLS staging lỗi (không chặn deploy)
+          npm ci && npm test 2>&1 | tee "$RUNNER_TEMP/rls.log"   # pipefail: mã thoát là của npm test
+      - name: Ghi cảnh báo khi RLS staging lỗi (không chặn deploy) + chú thích từng test đỏ (đọc được qua API check-runs)
         if: failure()
         run: |
           echo "::warning::RLS staging lỗi hoặc quá 12 phút — không chặn deploy Pages, xem log job 'Test RLS trên staging (token thật)'."
           echo "### ⚠️ RLS staging lỗi — không chặn deploy, xem log job này (outcome: ${{ steps.rls.outcome }})" >> "$GITHUB_STEP_SUMMARY"
+          bash scripts/rls-chu-thich.sh "$RUNNER_TEMP/rls.log"
 
   build:
     name: Build hai bản frontend
