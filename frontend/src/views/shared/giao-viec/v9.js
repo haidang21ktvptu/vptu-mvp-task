@@ -1,12 +1,13 @@
 // Phần v9 của biểu mẫu Giao việc (docs/DESIGN.md mục 10), gắn thêm KHÔNG đổi luồng giao_viec của index.js:
 //  - dải quy tắc 1-1-1-1-3 (một chủ trì, một sản phẩm, một hạn, một minh chứng, ba mức cảnh báo) sáng dần theo ô đã điền;
 //  - chọn nhanh dưới ô Chịu trách nhiệm / Sản phẩm / Hạn hoàn thành: đặt giá trị rồi phát sự kiện change/input như người dùng chọn, để
-//    kiểm tra và "Còn thiếu" chạy đúng đường cũ; hạn gợi ý tính từ ngày nhận văn bản (nhãn ghi rõ ngày), giao tiếp
+//    kiểm tra và "Còn thiếu" chạy đúng đường cũ; hạn gợi ý tính từ ngày giao nhiệm vụ (nhãn ghi rõ ngày), giao tiếp
 //    xuống thì là "sớm n ngày" trước hạn của cấp trên;
 //  - giao tiếp xuống: khối "Kế thừa từ cấp trên" (nội dung, văn bản, hạn, sản phẩm của việc cha — cấp dưới chỉ xem);
 //  - cột phải "Văn bản đang nhập": đã nhập x / dự kiến y và các việc vừa nhập từ văn bản đó (chuyên viên tổng hợp nhập liền một văn bản).
 // Chỉ ghi innerHTML khi nội dung đổi: vẽ lại đúng nút đang được bấm (mousedown → change của ô vừa rời → vẽ lại) làm trình duyệt bỏ cú bấm.
 import { $, escapeHtml } from '../../../lib/dom.js';
+import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { formatNgay, congNgay, homNayVN } from '../../../lib/kl/ngay.js';
 import { soViecTheoVanBan } from '../../../lib/kl/du-lieu.js';
@@ -40,8 +41,9 @@ function veQuyTac() {
 const nut = (o, gt, nhan, goi = '') => `<button type="button" data-action="gvChonNhanh" data-o="${o}" data-gt="${escapeHtml(gt)}"${goi ? ` title="${escapeHtml(goi)}"` : ''}>${escapeHtml(nhan)}</button>`;
 function veChonNhanh() {
   const opts = [...($('klThOwner')?.options || [])].filter((o) => o.value);
-  const uuTien = opts.filter((o) => o.value.startsWith('dv:')).concat(opts.filter((o) => o.value.startsWith('tk:')));
-  dat('gvNhanhOwner', uuTien.slice(0, 4).map((o) => nut('klThOwner', o.value, o.text.split(' — ')[0].replace(/^\d+\.\s*/, ''))).join(''));
+  const toi = `tk:${state.user?.id}`;   // v3.17: lãnh đạo giao cho chính mình — nút "Chính tôi" đứng đầu
+  const uuTien = opts.filter((o) => o.value === toi).concat(opts.filter((o) => o.value.startsWith('dv:')), opts.filter((o) => o.value.startsWith('tk:') && o.value !== toi));
+  dat('gvNhanhOwner', uuTien.slice(0, 4).map((o) => nut('klThOwner', o.value, o.value === toi ? 'Chính tôi' : o.text.split(' — ')[0].replace(/^\d+\.\s*/, ''))).join(''));
   const sp = [...($('klThSanPham')?.options || [])].filter((o) => SP_NHANH.includes(o.text));
   dat('gvNhanhSanPham', sp.map((o) => nut('klThSanPham', o.value, o.text)).join(''));
   const homNay = homNayVN(); const c = cha();
@@ -55,7 +57,7 @@ function veChonNhanh() {
   const [y, m] = moc.split('-').map(Number);
   const cuoi = cuoiThang(y, m) > moc ? cuoiThang(y, m) : cuoiThang(y, m + 1);
   dat('gvNhanhHan', [[congNgay(moc, 7), '7 ngày'], [congNgay(moc, 14), '14 ngày'], [congNgay(moc, 30), '30 ngày'], [cuoi, 'Cuối tháng']]
-    .map(([d, nhan]) => nut('klThHan', d, `${nhan} · ${ngan(d)}${d < homNay ? ', đã qua' : ''}`, `Hạn ${formatNgay(d)}, tính từ ngày nhận ${formatNgay(moc)}`)).join(''));
+    .map(([d, nhan]) => nut('klThHan', d, `${nhan} · ${ngan(d)}${d < homNay ? ', đã qua' : ''}`, `Hạn ${formatNgay(d)}, tính từ ngày giao ${formatNgay(moc)}`)).join(''));
 }
 
 function veKeThua() {

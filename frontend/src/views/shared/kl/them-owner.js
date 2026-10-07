@@ -10,19 +10,22 @@ const nhomOpt = (nhan, ds) => (ds.length ? `<optgroup label="${escapeHtml(nhan)}
 const tenPhong = (ma) => DEPT_NAMES[ma] || ma || '';
 const laQtkl = (me) => Boolean(me?.quan_tri_kl);
 
-// Cán bộ được chọn làm Owner theo vai người giao (A0 — GĐ22: chỉ lãnh đạo Văn phòng, hoặc một phòng ở nhóm dưới).
+// Cán bộ được chọn làm Owner theo vai người giao (A0 — GĐ22: chỉ lãnh đạo Văn phòng, hoặc một phòng ở nhóm dưới). v3.17: lãnh đạo (A1, A2)
+// giao được cho chính mình — A2 thêm chính mình bên cạnh chuyên viên phòng (giao_viec 0078 là chốt; cấp nhận = cấp trên của chính họ).
 export function canBoOwner(accounts, me) {
   const ds = accounts.filter((a) => !a.is_system && a.role_group !== 'A0');
   if (me?.role_group === 'A0') return ds.filter((a) => a.role_group === 'A1');
   if (laQtkl(me) || me?.role_group === 'A1') return ds;
-  if (me?.role_group === 'A2') return ds.filter((a) => a.role_group === 'A3' && a.department === me.department);
+  if (me?.role_group === 'A2') return ds.filter((a) => (a.role_group === 'A3' && a.department === me.department) || a.id === me.id);
   return [];
 }
 
 export function ownerOptionsHtml(dm, accounts, me) {
   const sapTen = (a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi'); // tên trống (tài khoản tạm) không làm hỏng biểu mẫu
   const a0 = me?.role_group === 'A0';
-  const canBo = canBoOwner(accounts, me).sort(sapTen).map((a) => opt(`tk:${a.id}`, `${a.full_name} — ${tenPhong(a.department)}`));
+  const laToi = (a) => a.id === me?.id;   // chính tôi: xếp đầu nhóm cán bộ, nhãn "(chính tôi)"
+  const canBo = canBoOwner(accounts, me).sort((a, b) => Number(laToi(b)) - Number(laToi(a)) || sapTen(a, b))
+    .map((a) => opt(`tk:${a.id}`, `${a.full_name}${laToi(a) ? ' (chính tôi)' : ''} — ${tenPhong(a.department) || 'Lãnh đạo Văn phòng'}`));
   const trongVp = a0 ? dm.donVi.filter((d) => d.trong_van_phong && d.phong).map((d) => opt(`dv:${d.ma}`, d.ten))
     : laQtkl(me) || me?.role_group === 'A1' ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
   const ngoai = laQtkl(me) ? dm.donVi.filter((d) => !d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];

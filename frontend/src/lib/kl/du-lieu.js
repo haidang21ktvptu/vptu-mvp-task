@@ -153,6 +153,13 @@ export async function giaoViec(p) {
   if (r.error) throw new Error(r.error.message);
   return r.data;
 }
+// Giao nhiều việc từ một văn bản (v3.17, 0078): phần chung + mảng dòng (≤ 20), một giao dịch — lỗi dòng nào DB báo "Dòng n: …", không việc nào được
+// tạo. Trả { so, van_ban_id, viec: [{ dong, id, ma }] }.
+export async function giaoViecNhieu(chung, dong) {
+  const r = await supabase.rpc('giao_viec_nhieu', { p_chung: chung, p_dong: dong });
+  if (r.error) throw new Error(r.error.message);
+  return r.data;
+}
 // Xác nhận đã nhận việc (GV-5, CN-2.2): chỉ ghi lịch sử. Trả true nếu ghi mới, false nếu đã xác nhận trước đó.
 export async function xacNhanNhanViec(id) {
   const r = await supabase.rpc('xac_nhan_nhan_viec', { p_id: id });

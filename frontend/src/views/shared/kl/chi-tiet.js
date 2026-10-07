@@ -89,7 +89,7 @@ export function chiTietHtml(r, ls, dc) {
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
       <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${nhanPhuHtml(r)}${nhanTT}</div>
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
-        <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · nhận ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
+        <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
       <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
         ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
         ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}
@@ -108,11 +108,11 @@ export function chiTietHtml(r, ls, dc) {
       <table class="can-cu"><thead><tr><th>Trường</th><th>Giá trị</th><th>Căn cứ</th></tr></thead><tbody>
           ${hang('Chịu trách nhiệm', ownerText(r), canCu(r.owner_tai_khoan ? 'owner_tai_khoan' : 'owner_don_vi_ma', ls))}
           ${hang('Sản phẩm đầu ra', sanPhamText(r) || '(chưa định nghĩa sản phẩm — dữ liệu chuyển đổi)', canCu('san_pham_loai', ls))}
-          ${hang('Ngày nhận văn bản', `${hienGiaTri('ngay_nhan_van_ban', r.ngay_nhan_van_ban)}${r.ngay_nhan_uoc_tinh ? ' (ước tính = ngày ban hành)' : ''}`, canCu('ngay_nhan_van_ban', ls))}
+          ${hang('Ngày giao nhiệm vụ', `${hienGiaTri('ngay_nhan_van_ban', r.ngay_nhan_van_ban)}${r.ngay_nhan_uoc_tinh ? ' (ước tính = ngày ban hành)' : ''}`, canCu('ngay_nhan_van_ban', ls))}
           ${hang('Hạn xử lý', hienGiaTri('han_xu_ly', r.han_xu_ly), r.loai_thoi_han_ma === 'KY_BAN_HANH' ? '<span class="chu-phu">tự tính = ngày ban hành + 10</span>' : canCu('han_xu_ly', ls))}
           ${hang('Loại thời hạn', r.loai_thoi_han_ten, canCu('loai_thoi_han_ma', ls))}
           ${hang('Tiến độ', tenTrongDanhMuc('tienDo', r.tien_do_ma), `${canCu('tien_do_ma', ls)}<br><span class="chu-phu">cập nhật lần cuối ${formatDateTime(r.cap_nhat_luc)}${capNhat !== null ? ` (${capNhat} ngày trước)` : ''}</span>`)}
-          ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày nhận văn bản)` : ''}`, canCu('ngay_hoan_thanh', ls))}
+          ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày giao nhiệm vụ)` : ''}`, canCu('ngay_hoan_thanh', ls))}
           ${r.minh_chung ? hang('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hang('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hang('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
