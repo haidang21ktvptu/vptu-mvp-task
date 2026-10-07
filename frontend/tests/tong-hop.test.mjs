@@ -127,20 +127,20 @@ describe('ngày theo giờ Việt Nam', () => {
   });
 });
 
-// PR-2b: ba nhóm mới (Chậm nộp minh chứng — cam, Chờ nghiệm thu, Quá hạn ở bước nghiệm thu) và góc nhìn người nộp (Mới 2).
-describe('PR-2b — nhóm trạng thái hạn nộp / nghiệm thu', () => {
-  test('THU_TU_NHOM có đủ 3 nhóm mới; đếm đủ khoá (0 khi không có); tổng các nhóm = tổng dòng', () => {
-    for (const k of ['CHAM_NOP_MINH_CHUNG', 'CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU']) assert.ok(THU_TU_NHOM.includes(k), k);
-    const rows = [{ nhom_dem: 'CHAM_NOP_MINH_CHUNG' }, { nhom_dem: 'QUA_HAN_NGHIEM_THU' }, { nhom_dem: 'HOAN_THANH' }];
+// PR-2b: hai nhóm nghiệm thu (Chờ nghiệm thu, Quá hạn ở bước nghiệm thu) và góc nhìn người nộp (Mới 2); 0077: không còn nhóm Chậm nộp minh chứng.
+describe('PR-2b — nhóm trạng thái nghiệm thu', () => {
+  test('THU_TU_NHOM có 2 nhóm nghiệm thu, không còn CHAM_NOP_MINH_CHUNG; đếm đủ khoá (0 khi không có); tổng các nhóm = tổng dòng', () => {
+    for (const k of ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU']) assert.ok(THU_TU_NHOM.includes(k), k);
+    assert.ok(!THU_TU_NHOM.includes('CHAM_NOP_MINH_CHUNG'));
+    const rows = [{ nhom_dem: 'SAP_DEN_HAN' }, { nhom_dem: 'QUA_HAN_NGHIEM_THU' }, { nhom_dem: 'HOAN_THANH' }];
     const d = demTheoNhom(rows);
     assert.equal(d.CHO_NGHIEM_THU, 0); assert.equal(Object.values(d).reduce((s, n) => s + n, 0), rows.length);
   });
-  test('người nộp thấy nhãn trung tính kể cả khi quá hạn ở bước nghiệm thu; lãnh đạo thấy "Cần nghiệm thu" / "Quá hạn ở bước nghiệm thu"; chậm nộp = mép cam', () => {
+  test('người nộp thấy nhãn trung tính kể cả khi quá hạn ở bước nghiệm thu; lãnh đạo thấy "Cần nghiệm thu" / "Quá hạn ở bước nghiệm thu"', () => {
     const r = { nhom_dem: 'QUA_HAN_NGHIEM_THU', so_ngay_qua: 2, owner_tai_khoan: 'cv', nguoi_nop_cho: 'cv', muc_canh_bao: 'DO' };
     assert.equal(nhanTrangThai(r, 'cv'), 'Đã nộp — chờ nghiệm thu'); assert.equal(lopMep(r, 'cv'), 'lam');
     assert.equal(nhanTrangThai(r, 'tp'), 'Quá hạn ở bước nghiệm thu · 2 ngày'); assert.equal(lopMep(r, 'tp'), 'do');
     assert.equal(nhanTrangThai({ ...r, nhom_dem: 'CHO_NGHIEM_THU' }, 'tp'), 'Cần nghiệm thu');
-    assert.equal(lopMep({ nhom_dem: 'CHAM_NOP_MINH_CHUNG', muc_canh_bao: 'VANG' }), 'cam');
   });
 });
 

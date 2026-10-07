@@ -27,7 +27,7 @@ test.describe.serial('Theo văn bản — cây văn bản → nhiệm vụ → v
     await donVanBan(db, khoa); // dấu vết lần chạy dở trước của cùng khoá
     const a1 = clientCuaVai('A1'); const homNay = homNayVN();
     const chung = { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: KL_ID, nguoi_theo_doi: CVP_ID, san_pham_loai: 'BAO_CAO', loai_thoi_han_ma: 'CO_HAN_CU_THE',
-      han_xu_ly: congNgay(homNay, 12), han_nop_minh_chung: congNgay(homNay, 5), ngay_nhan_van_ban: homNay, theo_1400: true, do_khan: 'THUONG',
+      han_xu_ly: congNgay(homNay, 12), ngay_nhan_van_ban: homNay, theo_1400: true, do_khan: 'THUONG',
       nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' };   // PR-3: phiên người dùng bắt buộc nguồn
     const r1 = await a1.rpc('giao_viec', { p: { ...chung, noi_dung: `${E2E_TAG} TVB việc cấp 1 ${testInfo.project.name}`,
       van_ban: { loai: 'CONG_VAN', so_ket_luan: khoa, ngay_ban_hanh: congNgay(homNay, -5), ngay_nhan: homNay } } });

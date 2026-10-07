@@ -71,8 +71,8 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 - **MC-5 [Giữ]** 76 minh chứng chữ cũ → `minh_chung.loai = chu_cu`, tách số hiệu/ngày khi nhận dạng được; không coi là vi phạm; 146 việc đã đóng không đánh giá lại; 78 việc đóng không minh chứng giữ cờ `thieu_minh_chung`.
 - **MC-6 [Mới]** Xác nhận minh chứng: người theo dõi hoặc lãnh đạo trong phạm vi bấm "Xác nhận hợp lệ" / "Không hợp lệ (lý do)" — hành động ghi vết, không phải trạng thái; Owner tài khoản không tự xác nhận minh chứng của mình.
 - **MC-7 [Mới]** Cấp nhận sản phẩm và **cấp cần quyết định** **`[CH-7]`**: hai danh mục riêng (Thường trực / BTV / Chánh VP / PCVP / Trưởng phòng / Đơn vị trình); cấp nhận bắt buộc khi tạo mới (mặc định = cấp trên Owner); cấp quyết định để mở, điền khi việc Đỏ; dashboard ngoại lệ đếm việc Đỏ chưa có cấp quyết định.
-- **MC-8 [Mới, PR-2b 0053–0055]** **Hạn nộp minh chứng** `han_nop_minh_chung` bắt buộc khi giao việc có hạn (phiên người dùng; service_role không ép): trong [hôm nay, H]; muộn hơn `ngay_lam_viec_truoc(H, 1)` phải ghi `ly_do_han_nop_sat` (việc gấp); H đã qua ⇒ trong [hôm nay, `ngay_lam_viec_sau(hôm nay, 2)`], việc vẫn tính Quá hạn. Khung/gợi ý do `kl_khung_han_nop()` trả. Chỉ người giao sửa (`dat_han_nop_minh_chung`, có lý do, ghi lịch sử); người giao không còn ⇒ quản trị KL. Ngày làm việc tính theo `dm_ngay_nghi` (nghỉ lễ, nghỉ bù, làm bù — Quản trị › Ngày nghỉ), đọc một lần mỗi truy vấn.
-- **MC-9 [Mới, PR-2b 0057]** **Nghiệm thu** thay MC-6 cho việc có hạn nộp: "Nghiệm thu, hoàn thành" = xác nhận hợp lệ **và** đóng việc trong cùng giao dịch (`ngay_hoan_thanh` = ngày văn bản minh chứng; Q2 — không đóng bằng nút MC-4); "Trả lại" bắt buộc lý do + `han_nop_lai` ∈ [hôm nay, H] (Q3). Người nghiệm thu: `kl_duoc_nghiem_thu()` (người theo dõi, lãnh đạo có quyền chỉ đạo, quản trị KL; việc Thường trực giao Chánh VP ⇒ thư ký Thường trực, ghi "thay mặt Thường trực" — Q8); người nhận nhắc chính: `nguoi_nghiem_thu_chinh()`. Màn "Cần nghiệm thu" cho A1/A2/quản trị KL/thư ký.
+- **MC-8 [Bỏ từ v3.17 — 0077, yêu cầu 7/10/2026 mục 4.1]** ~~Hạn nộp minh chứng~~: mỗi việc chỉ còn **một hạn** (hạn hoàn thành); người thực hiện nộp minh chứng trước hạn hoàn thành, không còn `han_nop_minh_chung` / `ly_do_han_nop_sat` / `han_nop_lai` (cột giữ trong bảng, trigger `bd_nhiem_vu_han_nop_mc` đưa mọi đường ghi về NULL; `dat_han_nop_minh_chung` báo "đã bỏ"). Ngày làm việc vẫn tính theo `dm_ngay_nghi` (nhắc nghiệm thu, hạn phản hồi chỉ đạo Thường trực, nhắc duyệt từ chối).
+- **MC-9 [Mới, PR-2b 0057; 0077 áp cho mọi việc]** **Nghiệm thu** thay MC-6: việc theo quy tắc 1400 chỉ Hoàn thành khi lãnh đạo nghiệm thu minh chứng (`hop_le = true` — trigger chốt, mọi đường: `dong_nhiem_vu`, Cập nhật nhanh); "Nghiệm thu, hoàn thành" = xác nhận hợp lệ **và** đóng việc trong cùng giao dịch (`ngay_hoan_thanh` = ngày văn bản minh chứng; Q2 — nút MC-4 "Đóng nhiệm vụ" chỉ còn cho việc chuyển đổi hoặc khi đã có minh chứng được nghiệm thu mà việc chưa đóng); "Trả lại" chỉ cần lý do, người nộp nộp lại trước hạn hoàn thành (0077 bỏ `han_nop_lai`). Người nghiệm thu: `kl_duoc_nghiem_thu()` (người theo dõi, lãnh đạo có quyền chỉ đạo, quản trị KL; việc Thường trực giao Chánh VP ⇒ thư ký Thường trực, ghi "thay mặt Thường trực" — Q8); người nhận nhắc chính: `nguoi_nghiem_thu_chinh()`. Màn "Cần nghiệm thu" cho A1/A2/quản trị KL/thư ký.
 
 ### 3.4 CB — Cảnh báo tự động và leo thang (CN-4, NT-5)
 
@@ -82,7 +82,7 @@ Ký hiệu: **[Giữ]** đã có ở v2.3.0; **[Sửa]** đổi cách làm; **[M
 - **CB-4 [Mới]** Luân chuyển nội bộ (xác nhận nhận việc, đọc, chuyển người theo dõi) **không** đổi `ngay_nhan_van_ban`, không đổi deadline (CN-2.2); chỉ chỉ đạo `GIA_HAN` đổi deadline.
 - **CB-5 [Mới]** **Dashboard cấp Thường trực** = màn hình mặc định của vai trò `A0` (**`[CH-11]` = A**): dashboard ngoại lệ với bộ lọc mặc định `DO_DAC_BIET`, mở rộng được sang mọi việc Đỏ và tổng quan; Chánh Văn phòng cũng xem được chế độ này; xuất được bản HTML/PDF (giai đoạn sau, GĐ cũ 13).
 - **CB-6 [Giữ]** Kênh: trong app (chuông + tin hệ thống, realtime) **`[CH-12]`**; nhật ký gửi trong `canh_bao`; kênh ngoài là giai đoạn sau.
-- **CB-7 [Mới, PR-2b 0060]** Ba mức nhắc thêm trong cùng lượt quét hằng ngày: `CHAM_NOP_MC` (qua hạn nộp/hạn nộp lại — người nộp + người nghiệm thu chính), `NGHIEM_THU` (chờ ≥ 1 ngày làm việc — người nghiệm thu chính), `NGHIEM_THU_QUA_HAN` (chờ nghiệm thu mà đã qua H — mỗi ngày làm việc một lần, người nghiệm thu chính + thủ trưởng trực tiếp, thêm Chánh VP khi Đỏ đặc biệt; không gửi chủ trì/người nộp). Ngày không làm việc không gửi nhắc lặp.
+- **CB-7 [Mới, PR-2b 0060; 0077 bỏ mức `CHAM_NOP_MC`]** Hai mức nhắc thêm trong cùng lượt quét hằng ngày: `NGHIEM_THU` (chờ ≥ 1 ngày làm việc — người nghiệm thu chính), `NGHIEM_THU_QUA_HAN` (chờ nghiệm thu mà đã qua H — mỗi ngày làm việc một lần, người nghiệm thu chính + thủ trưởng trực tiếp, thêm Chánh VP khi Đỏ đặc biệt; không gửi chủ trì/người nộp). Ngày không làm việc không gửi nhắc lặp.
 
 ### 3.5 DB — Dashboard quản trị ngoại lệ (CN-5, QT-5)
 
@@ -138,17 +138,16 @@ Chỉ tiếp thu **tính năng**, không nhập dữ liệu của phần mềm �
 | 7 | hạn − ngày tính ≤ `nguong_sap_den_han_ngay` (7) | `SAP_DEN_HAN` | `VANG` nếu còn ≤ `nguong_vang_ngay` (3) và chưa có minh chứng hợp lệ, ngược lại `XANH` **`[CH-10b]`** |
 | 8 | còn lại | `DANG_THUC_HIEN` | `XANH` |
 
-**4.1b Hạn nộp minh chứng (PR-2b, 0058)** — chèn vào bảng trên, N* = hạn nộp lại của lần trả lại gần nhất, không có thì hạn nộp gốc:
+**4.1b Nghiệm thu (PR-2b, 0058; 0077 bỏ hạn nộp — không còn N*, không còn `CHAM_NOP_MINH_CHUNG`)** — chèn vào bảng trên:
 
 | Thứ tự | Điều kiện | `trang_thai` | `muc_canh_bao` |
 |---|---|---|---|
 | 5 | có minh chứng chờ nghiệm thu, ngày tính > H | `QUA_HAN_NGHIEM_THU` (Đỏ tính cho lãnh đạo nghiệm thu — `nguoi_chiu_cham`) | `DO` / `DO_DAC_BIET` |
 | 6 | có minh chứng chờ nghiệm thu | `CHO_NGHIEM_THU` | `XANH` |
 | 7 | ngày tính > H | `QUA_HAN` (như cũ) | `DO` / `DO_DAC_BIET` |
-| 8 | N* < ngày tính | `CHAM_NOP_MINH_CHUNG` (nhãn cam) | `VANG` (không leo thang) |
-| 9–12 | còn lại | như dòng 7–8 cũ; Vàng theo N* khi có hạn nộp | |
+| 8 | còn lại | như dòng 7–8 cũ (Vàng chỉ theo hạn hoàn thành, 0050) | |
 
-Trường mới của `trang_thai_kq`: `han_nop_hieu_luc`, `minh_chung_buoc`, `nop_dung_han`, `nghiem_thu_dung_han`, `so_lan_tra_lai` (hai tỉ lệ đúng hạn chỉ tính việc có hạn nộp). Chủ trì A3 thấy nhãn trung tính "Đã nộp — chờ nghiệm thu".
+Trường mới của `trang_thai_kq`: `han_nop_hieu_luc` (luôn NULL từ 0077), `minh_chung_buoc`, `nop_dung_han` (ngày nộp lượt được nghiệm thu ≤ H — 0077), `nghiem_thu_dung_han` (ngày xác nhận ≤ H), `so_lan_tra_lai`. Chủ trì A3 thấy nhãn trung tính "Đã nộp — chờ nghiệm thu".
 
 Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" (7 ngày) để xem/lọc, mức Vàng (3 ngày) để gửi nhắc; chọn (ii) thì hai ngưỡng bằng nhau. Đang đính chính: `nhom_dem = DANG_DINH_CHINH`, không đếm vào Đỏ. Ngưỡng đọc từ `kl_cau_hinh`; "ngày tính" theo giờ Việt Nam.
 
@@ -182,7 +181,7 @@ Hai ngưỡng tách nhau (`[CH-10b]` = (i)): trạng thái "Sắp đến hạn" 
 | `theo_1400` | boolean | true cho việc tạo từ v3; false cho 185 việc cũ — bật các ràng buộc bắt buộc | |
 | giữ nguyên: `ma`, `nganh_ma`, `linh_vuc_ma`, `linh_vuc_chi_tiet`, `noi_dung`, `loai_thoi_han_ma`, `ly_do_chua_co_han`, `tien_do_ma`, `ngay_hoan_thanh`, `minh_chung` (chữ, di sản), `van_ban_trien_khai`, `so_lan_gia_han`, `nguon`, `ghi_chu`, `thieu_minh_chung`, `cap_nhat_luc/boi`, `tao_boi`, `created_at` | | | |
 
-**5.3b PR-2b:** `nhiem_vu.han_nop_minh_chung date`, `ly_do_han_nop_sat text` (≤ 500); `v_nhiem_vu` thêm `han_nop_hieu_luc`, `minh_chung_buoc`, `nop_dung_han`, `nghiem_thu_dung_han`, `so_lan_tra_lai`, `nguoi_nop_cho`, `nguoi_chiu_cham(_ten)`, `phong_chiu_cham`; khâu `CHO_NGHIEM_THU`, nhóm ngoại lệ `NGHIEM_THU`. `minh_chung.han_nop_lai date` (chỉ khi `hop_le = false`). Bảng mới `dm_ngay_nghi(ngay, loai NGHI_LE/NGHI_BU/LAM_BU, ten)`.
+**5.3b PR-2b:** `nhiem_vu.han_nop_minh_chung date`, `ly_do_han_nop_sat text` (≤ 500) — **không còn ghi từ 0077** (luôn NULL); `v_nhiem_vu` thêm `han_nop_hieu_luc`, `minh_chung_buoc`, `nop_dung_han`, `nghiem_thu_dung_han`, `so_lan_tra_lai`, `nguoi_nop_cho`, `nguoi_chiu_cham(_ten)`, `phong_chiu_cham`; khâu `CHO_NGHIEM_THU`, nhóm ngoại lệ `NGHIEM_THU`. `minh_chung.han_nop_lai date` (không còn ghi từ 0077). Bảng mới `dm_ngay_nghi(ngay, loai NGHI_LE/NGHI_BU/LAM_BU, ten)`.
 
 **5.4 `minh_chung`** (mới; ý tưởng từ `task_evidences`): `id`, `nhiem_vu_id` FK, `loai` (`tep`/`so_hieu`/`chu_cu`), `so_hieu`, `ngay_van_ban`, `cap_nhan` FK `dm_cap`, `tep_path`, `tep_ten`, `tep_kich_thuoc`, `noi_dung_chu` (cho `chu_cu`), `nop_boi`, `nop_luc`, `hop_le` (NULL/true/false), `xac_nhan_boi`, `xac_nhan_luc`, `ly_do_khong_hop_le`. Không xoá; thay bằng minh chứng mới.
 

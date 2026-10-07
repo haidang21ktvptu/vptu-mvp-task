@@ -23,7 +23,7 @@ const nop = async (username, ma, so) => {
   assertOk(r, `${username} nộp ${ma}`); return r.data;
 };
 const xac = async (username, mc, hopLe, lyDo = null) => (await userClient(username)).rpc('xac_nhan_minh_chung',   // PR-3: hợp lệ trên việc mở = đóng ⇒ kèm chất lượng
-  { p_id: mc, p_hop_le: hopLe, p_ly_do: lyDo, p_han_nop_lai: hopLe ? null : homNayVN(), p_chat_luong: hopLe ? 'DAT' : null });
+  { p_id: mc, p_hop_le: hopLe, p_ly_do: lyDo, p_chat_luong: hopLe ? 'DAT' : null });
 const chan = (r, label) => assert.equal(r.error?.code, '42501', `${label}: ${r.error?.message || 'không bị chặn'}`);
 const co = (thuKy, qtkl) => Promise.all([
   db().from('accounts').update({ thu_ky_thuong_truc: thuKy }).eq('id', TK),

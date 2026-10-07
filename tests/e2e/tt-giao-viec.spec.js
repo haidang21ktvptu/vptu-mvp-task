@@ -5,7 +5,7 @@
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { contextAs, pageAs, moGiaoViec, moViec, NAP, dienHanNop } from './lib/app.js';
+import { contextAs, pageAs, moGiaoViec, moViec, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -49,7 +49,6 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await page.locator('#klThOwner').selectOption(`tk:${CVP_ID}`);
     await page.locator('#klThSanPham').selectOption('BAO_CAO');
     await page.locator('#klThHan').fill(congNgay(homNayVN(), 10));
-    await dienHanNop(page);
     await expect(page.locator('#gvTomTatChu')).toContainText('độ khẩn Khẩn');
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();
@@ -86,7 +85,6 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await page.locator('#klThOwner').selectOption(`tk:${CVP_ID}`);
     await page.locator('#klThSanPham').selectOption('BAO_CAO');
     await page.locator('#klThHan').fill(congNgay(homNayVN(), 10));
-    await dienHanNop(page);
     await expect(page.locator('#klThLuu')).toBeDisabled();
     await expect(page.locator('#gvConThieu')).toContainText('ngành');
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');

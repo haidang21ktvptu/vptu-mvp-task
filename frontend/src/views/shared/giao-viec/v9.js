@@ -1,7 +1,7 @@
 // Phần v9 của biểu mẫu Giao việc (docs/DESIGN.md mục 10), gắn thêm KHÔNG đổi luồng giao_viec của index.js:
 //  - dải quy tắc 1-1-1-1-3 (một chủ trì, một sản phẩm, một hạn, một minh chứng, ba mức cảnh báo) sáng dần theo ô đã điền;
 //  - chọn nhanh dưới ô Chịu trách nhiệm / Sản phẩm / Hạn hoàn thành: đặt giá trị rồi phát sự kiện change/input như người dùng chọn, để
-//    kiểm tra, "Còn thiếu" và hạn nộp minh chứng chạy đúng đường cũ; hạn gợi ý tính từ ngày nhận văn bản (nhãn ghi rõ ngày), giao tiếp
+//    kiểm tra và "Còn thiếu" chạy đúng đường cũ; hạn gợi ý tính từ ngày nhận văn bản (nhãn ghi rõ ngày), giao tiếp
 //    xuống thì là "sớm n ngày" trước hạn của cấp trên;
 //  - giao tiếp xuống: khối "Kế thừa từ cấp trên" (nội dung, văn bản, hạn, sản phẩm của việc cha — cấp dưới chỉ xem);
 //  - cột phải "Văn bản đang nhập": đã nhập x / dự kiến y và các việc vừa nhập từ văn bản đó (chuyên viên tổng hợp nhập liền một văn bản).
@@ -31,9 +31,8 @@ function veQuyTac() {
   const sp = $('klThSanPham').value ? chuOpt('klThSanPham') : 'chưa chọn';
   const kyBH = $('klThLoai').value === 'KY_BAN_HANH';
   const han = kyBH ? 'theo kỳ ban hành' : $('klThHan').value ? formatNgay($('klThHan').value) : 'chưa đặt';
-  const nop = $('klThHanNop').value ? `nộp ${formatNgay($('klThHanNop').value)}` : 'tự gợi ý theo hạn';
   dat('gvQuyTac', oQuyTac(1, 'chủ trì', owner, Boolean($('klThOwner').value)) + oQuyTac(1, 'sản phẩm', sp, Boolean($('klThSanPham').value))
-    + oQuyTac(1, 'hạn hoàn thành', han, kyBH || Boolean($('klThHan').value)) + oQuyTac(1, 'minh chứng', nop, Boolean($('klThHanNop').value))
+    + oQuyTac(1, 'hạn hoàn thành', han, kyBH || Boolean($('klThHan').value)) + oQuyTac(1, 'minh chứng', 'nộp trước hạn hoàn thành, lãnh đạo nghiệm thu', kyBH || Boolean($('klThHan').value))
     + oQuyTac(3, 'mức cảnh báo', 'Vàng, Đỏ, Đỏ đặc biệt tự bật theo hạn', Boolean($('klThHan').value) || kyBH));
 }
 

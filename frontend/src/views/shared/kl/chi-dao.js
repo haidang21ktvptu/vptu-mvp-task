@@ -100,7 +100,6 @@ function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
           ${loai.map((l) => `<option value="${l}">${ten(l)}</option>`).join('')}
         </select>
         <input type="date" name="han_moi" class="o-nhap nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
-        ${r.han_nop_minh_chung && (r.giao_thay_mat_cho || r.tao_boi) === state.user?.id ? '<input type="date" name="han_nop_minh_chung_moi" class="o-nhap nho hidden" aria-label="Hạn nộp minh chứng mới (tuỳ chọn, chỉ người giao)" title="Hạn nộp minh chứng mới — để trống thì giữ hạn nộp hiện tại">' : ''}
         <input type="date" name="han_phan_hoi" class="o-nhap nho hidden" aria-label="Hạn phản hồi (mặc định 2 ngày làm việc)" title="Hạn phản hồi — để trống = 2 ngày làm việc">
         <select name="chu_tri_moi" class="o-nhap nho hidden" aria-label="Chủ trì mới"><option value="">— Chọn chủ trì mới —</option>${chuTriMoiOptions(r)}</select>
         <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi (gợi ý theo chủ trì mới, sửa được)"><option value="">— Người theo dõi: giữ như hiện tại —</option>${nguoiTheoDoiOptions(r)}</select>
@@ -155,7 +154,6 @@ async function guiChiDao(ds, form) {
   const f = new FormData(form);
   const p = { nhiem_vu_id: ds.nv, loai: f.get('loai'), noi_dung: (f.get('noi_dung') || '').trim(), do_khan: f.get('do_khan') || 'THUONG' };
   if (p.loai === 'GIA_HAN') p.han_moi = f.get('han_moi') || '';
-  if (p.loai === 'GIA_HAN' && f.get('han_nop_minh_chung_moi')) p.han_nop_minh_chung_moi = f.get('han_nop_minh_chung_moi');   // PR-2b: chỉ người giao (DB chốt)
   if (p.loai === 'GIAO_LAI') { p.chu_tri_moi = f.get('chu_tri_moi') || ''; p.nguoi_theo_doi_moi = f.get('nguoi_theo_doi_moi') || ''; }
   if (p.loai === 'CHI_DAO_TT') p.han_phan_hoi = f.get('han_phan_hoi') || '';
   if (ds.traLoiCho) p.tra_loi_cho = ds.traLoiCho;
@@ -207,7 +205,6 @@ function onDoiLoai(e) {
 }
 function hienOTheoLoai(form, loai) {
   form.querySelector('[name=han_moi]').classList.toggle('hidden', loai !== 'GIA_HAN');
-  form.querySelector('[name=han_nop_minh_chung_moi]')?.classList.toggle('hidden', loai !== 'GIA_HAN');
   form.querySelector('[name=chu_tri_moi]').classList.toggle('hidden', loai !== 'GIAO_LAI');
   form.querySelector('[name=nguoi_theo_doi_moi]').classList.toggle('hidden', loai !== 'GIAO_LAI');
   form.querySelector('[name=han_phan_hoi]').classList.toggle('hidden', loai !== 'CHI_DAO_TT');

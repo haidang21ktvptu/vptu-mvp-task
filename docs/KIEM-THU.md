@@ -44,6 +44,7 @@ Mã ở `supabase/functions/quan-tri-tai-khoan/index.ts` (Deno). Việc cần `s
 - Deploy tự động: `deploy-staging.yml` (push `main`) và `deploy-prod.yml` (tag `v*`) chạy `supabase functions deploy quan-tri-tai-khoan --project-ref <ref> --use-api` ngay sau `db push`.
 - Deploy tay (khi cần thử trên staging trước khi merge): `supabase functions deploy quan-tri-tai-khoan --project-ref vojmrjezspdftovzinek --use-api` (CLI đã `supabase login`). Không cần đặt secret gì thêm.
 - Kiểm thử: màn hình Quản trị → Tài khoản (tài khoản `demo_qtht`): tạo tài khoản thử, đặt lại mật khẩu, khoá/mở; xem dòng tương ứng ở tab Nhật ký hệ thống. Cấp/thu `quan_tri_kl` vẫn qua hàm SQL `admin_dat_co` (e2e `quan-tri.spec.js` không phụ thuộc function).
+- **Từ v3.17 — PR đổi `supabase/migrations/**`**: cùng job đó áp migration **của chính PR** lên staging trước e2e (output `cham_migration` của `phan-loai.sh`; `supabase link` + `db push --linked --dry-run` rồi `--yes`, kết quả vào Summary) — vì giao diện của PR có thể cần schema mới (0077: biểu mẫu không gửi hạn nộp nữa, trigger cũ chặn). Hệ quả: staging mang migration của PR **trước khi merge**; PR bỏ dở thì phải cập nhật staging bằng tay (migration đã áp không tự rút). Chỉ staging; `deploy-staging` áp lại sau merge (đã áp thì không làm gì).
 - **Từ v3.15 — PR đổi `supabase/functions/**`**: job "Kiểm thử RLS + e2e trên staging" của `ci.yml` deploy function **của chính PR** lên staging (output `cham_function` của `phan-loai.sh`, `--use-api`, ~20 giây) trước khi chạy e2e, nên kiểm tay trên `/staging/` trong PR là đúng bản sắp merge; không cần deploy tay nữa. Chỉ staging; production vẫn chỉ qua `deploy-prod.yml`.
 - Hành động `reset_hang_loat` (bàn giao tài khoản, QT-7): kiểm tay trên staging bằng `demo_qtht` với **tài khoản thử tạo riêng** (phạm vi *Theo phòng* của tài khoản đó): tài khoản seed đã đổi mật khẩu (`must_change_password = false`) nên bị bỏ qua, không làm hỏng mật khẩu `123456` của e2e; **không** tick "kể cả tài khoản đang dùng" trên staging. Logic chọn phạm vi và dựng tệp có unit test (`frontend/tests/ban-giao.test.mjs`).
 - Lỗi thường gặp: HTTP 401/403 = phiên hết hạn hoặc không có cờ; 409 = trùng tên đăng nhập; xem log ở Dashboard → Edge Functions → Logs.
@@ -105,9 +106,9 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 ## RLS: logic thuần chỉ chạy cục bộ — `CHI_CUC_BO` (PR-2b, từ 30/9/2026)
 
 - `tests/rls/lib.mjs` xuất `CHI_CUC_BO`: với `RLS_LOCAL=1` là `false` (chạy), với `RLS_STAGING=1` là lý do bỏ qua. Test chỉ kiểm **logic thuần** (tính ngày làm việc, trạng thái, khâu, mốc, nhắc — không phụ thuộc token thật) gắn `{ skip: CHI_CUC_BO }`; job "Áp migration + lint schema" của `ci.yml` vẫn chạy **toàn bộ** bộ RLS trên Supabase cục bộ, staging chỉ giữ phần kiểm quyền bằng token thật.
-- Cả file: `kl-0022-cha-con-owner`, `kl-0024-trang-thai-bi-danh`, `kl-0027-ma-nhiem-vu`, `kl-trang-thai`, `kl-minh-chung-bat-buoc`, `kl-0058-trang-thai-nghiem-thu`, `kl-0060-nhac-nghiem-thu`. Từng khối: `kl-0068-sua-tai-khoan` (bản tin 7h30 mỗi ngày một lần). Từng test: `kl-0028` (8–10), `kl-0029` (2–6), `kl-0032` (1, 7), `kl-0033` (2 test khâu + mốc), `kl-0035` (1–2), `kl-pq-pham-vi-giao` (1, 6), `kl-0053-ngay-lam-viec` (phần logic), `kl-0054-han-nop-minh-chung` (1, 6, khối biên).
+- Cả file: `kl-0022-cha-con-owner`, `kl-0024-trang-thai-bi-danh`, `kl-0027-ma-nhiem-vu`, `kl-trang-thai`, `kl-minh-chung-bat-buoc`, `kl-0060-nhac-nghiem-thu`; khối "trạng thái không còn hạn nộp" của `kl-0077-bo-han-nop` (thay `kl-0058`). Từng khối: `kl-0068-sua-tai-khoan` (bản tin 7h30 mỗi ngày một lần). Từng test: `kl-0028` (8–10), `kl-0029` (2–6), `kl-0032` (1, 7), `kl-0033` (2 test khâu + mốc), `kl-0035` (1–2), `kl-pq-pham-vi-giao` (1, 6), `kl-0053-ngay-lam-viec` (phần logic).
 - Xem trước tập test staging sẽ chạy ngay trên máy: `RLS_LOCAL=1 RLS_NHU_STAGING=1 node --test tests/rls/`.
-- Test mới gọi `giao_viec` qua client bọc sẵn trong `lib.mjs`: thiếu `han_nop_minh_chung` thì tự điền (= hạn hoàn thành nếu chưa qua, không thì hôm nay) để test cũ không phải sửa.
+- Từ 0077 (v3.17) hạn nộp minh chứng đã bỏ: `lib.mjs` không còn điền `han_nop_minh_chung`; trigger đưa mọi giá trị truyền vào về NULL. `kl-0054` và `kl-0058` đã xoá, thay bằng `kl-0077-bo-han-nop` (ghi về NULL, Hoàn thành chỉ khi nghiệm thu, trả lại không hạn nộp lại, bảng trạng thái, Q9 theo hạn hoàn thành).
 
 ## e2e — tối đa 2 phiên mở cùng lúc (từ 30/9/2026, sau CI #97)
 
@@ -117,14 +118,14 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 
 ## e2e PR-2b — chuỗi project `pr2b-*` (chỉ máy tính)
 
-- `han-nop-minh-chung` (ma trận 7 vai × 5 loại văn bản, giao thật A2 và A0 từ Kết luận, sửa hạn nộp, nhãn cam), `nghiem-thu` (A3 nộp → A2 trả lại kèm hạn nộp lại → nộp lại → nghiệm thu; thư ký Thường trực), `hanh-trinh-5-loai-van-ban`, `b4-b6-lanh-dao`. Dùng chung `tests/e2e/lib/pr2b.mjs`; dữ liệu theo khoá riêng, cờ tạm (`quan_tri_kl`, `thu_ky_thuong_truc`, phân công kiêm nhiệm) khôi phục ở `beforeAll` lẫn `afterAll`.
-- Bốn project nối tiếp `pr2b-han-nop` → `pr2b-nghiem-thu` → `pr2b-hanh-trinh` → `pr2b-b4-b6` (mỗi lúc một spec), sau `pr2a`; `dang-nhap` phụ thuộc `pr2b-b4-b6`. Chạy riêng cả chuỗi: `npx playwright test --project='pr2b-*' --no-deps --workers=1` (kèm biến đích).
+- `giao-viec-ma-tran` (trước 3.17: `han-nop-minh-chung`; ma trận 7 vai × 5 loại văn bản không còn ô hạn nộp, giao thật A2 và A0 từ Kết luận, việc có hạn nộp cũ không còn nhãn cam), `nghiem-thu` (A3 nộp → A2 trả lại chỉ với lý do → nộp lại → nghiệm thu; thư ký Thường trực), `hanh-trinh-5-loai-van-ban`, `b4-b6-lanh-dao`. Dùng chung `tests/e2e/lib/pr2b.mjs`; dữ liệu theo khoá riêng, cờ tạm (`quan_tri_kl`, `thu_ky_thuong_truc`, phân công kiêm nhiệm) khôi phục ở `beforeAll` lẫn `afterAll`.
+- Bốn project nối tiếp `pr2b-giao-viec` → `pr2b-nghiem-thu` → `pr2b-hanh-trinh` → `pr2b-b4-b6` (mỗi lúc một spec), sau `pr2a`; `dang-nhap` phụ thuộc `pr2b-b4-b6`. Chạy riêng cả chuỗi: `npx playwright test --project='pr2b-*' --no-deps --workers=1` (kèm biến đích).
 
 
 ## e2e PR-3 — chuỗi project `pr3-*` (chỉ máy tính, từ 1/10/2026)
 
 - `pr3-giao-that` (giao thật một việc mỗi vai — 7 vai tuần tự, cờ `quan_tri_kl` / kiêm nhiệm tạm khôi phục ở `beforeAll` lẫn `afterAll`; nguồn mặc định ở văn bản mới và có sẵn, DB lưu đúng cột), `pr3-vuong-mac` (A3 điền ở Cập nhật nhanh → thẻ Đỏ của Chánh VP trường 5, dải Cần xử lý ngay, Báo cáo → xoá trống tại ngăn), `pr3-hien-thi` (nghiệm thu bắt buộc chất lượng, "Trước hạn n ngày", Xuất Excel đọc lại bằng `tests/e2e/lib/doc-xlsx.mjs`, Báo cáo cột mới, Theo văn bản "đã nhập x / dự kiến y" → rà soát).
-- Ma trận ô **Nguồn nhiệm vụ** 7 vai × 5 loại (mặc định, văn bản có sẵn, "Còn thiếu" khi bỏ chọn) **nằm trong** `pr2b-han-nop` (cùng phiên với ô hạn nộp — quyết định 1/10/2026 để e2e staging ≤ 9 phút).
+- Ma trận ô **Nguồn nhiệm vụ** 7 vai × 5 loại (mặc định, văn bản có sẵn, "Còn thiếu" khi bỏ chọn) **nằm trong** `pr2b-giao-viec` (cùng phiên — quyết định 1/10/2026 để e2e staging ≤ 9 phút).
 - Nối tiếp `pr2b-b4-b6` → `pr3-giao-that` → `pr3-vuong-mac` → `pr3-hien-thi`; `dang-nhap` phụ thuộc `pr3-hien-thi`. Nghiệm thu trong spec dùng `nghiemThuMc` (`lib/pr2b.mjs`: bấm Nghiệm thu → nút xác nhận mờ → chọn chất lượng → xác nhận). Chạy riêng: `npx playwright test --project='pr3-*' --no-deps --workers=1` (kèm biến đích).
 - RLS: `kl-pr3-chat-luong-nguon` (A, B, E; D gắn `CHI_CUC_BO`), `kl-pr3-vuong-mac-ra-soat` (C, F). `lib.mjs` bọc `giao_viec` điền nguồn `NHIEM_VU_PHAT_SINH` khi test cũ không truyền khoá (test PR-3 truyền tường minh, kể cả null).
 

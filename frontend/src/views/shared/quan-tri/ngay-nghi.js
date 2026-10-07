@@ -1,4 +1,4 @@
-// Khu "Ngày nghỉ" (PR-2b, thiết kế A1–A2, Q10): danh mục nghỉ lễ / nghỉ bù / làm bù — DB dùng để tính ngày làm việc (hạn nộp minh chứng, hạn phản
+// Khu "Ngày nghỉ" (PR-2b, thiết kế A1–A2, Q10): danh mục nghỉ lễ / nghỉ bù / làm bù — DB dùng để tính ngày làm việc (nhắc nghiệm thu, hạn phản
 // hồi chỉ đạo Thường trực, nhắc duyệt từ chối, việc Thường trực chưa nhận, Hỏa tốc). Chánh Văn phòng / quan_tri_he_thong thêm, sửa, bỏ qua
 // qt_dat_ngay_nghi (lý do bắt buộc, nhật ký hệ thống ghi giá trị cũ/mới); hàm là chốt. Migration để trống: quản trị nhập lịch nghỉ sau phát hành.
 import { $, escapeHtml } from '../../../lib/dom.js';
@@ -19,7 +19,7 @@ export async function renderNgayNghi() {
   let ds = [];
   try { ds = await dsNgayNghi(); } catch (e) { notifyError(e.message); }
   $('qtKhuNgayNghi').innerHTML = `
-    <p class="chu-phu">Ngày nghỉ lễ, nghỉ bù và ngày làm bù (Thứ Bảy/Chủ nhật đi làm). Hệ thống dùng danh mục này để tính ngày làm việc: hạn nộp minh chứng,
+    <p class="chu-phu">Ngày nghỉ lễ, nghỉ bù và ngày làm bù (Thứ Bảy/Chủ nhật đi làm). Hệ thống dùng danh mục này để tính ngày làm việc: nhắc nghiệm thu,
       hạn phản hồi chỉ đạo, nhắc việc. Mỗi thay đổi phải ghi lý do và được lưu vào nhật ký hệ thống.</p>
     <form id="qtNgayNghiForm" class="cot-3" data-submit="qtThemNgayNghi">
       <input type="date" name="ngay" required class="o-nhap" aria-label="Ngày">

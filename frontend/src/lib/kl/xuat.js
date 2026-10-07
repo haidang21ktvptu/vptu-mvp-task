@@ -24,7 +24,6 @@ export const COT_NHIEM_VU = [
   { nhan: 'Người theo dõi', rong: 22, gt: (r) => r.nguoi_theo_doi_ten || '' },
   { nhan: 'Phòng', rong: 22, gt: phong },
   { nhan: 'Hạn hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.han_xu_ly },
-  { nhan: 'Hạn nộp minh chứng', rong: 13, kieu: 'ngay', gt: (r) => r.han_nop_hieu_luc || r.han_nop_minh_chung },
   { nhan: 'Trạng thái', rong: 24, gt: trangThai },
   { nhan: 'Chất lượng', rong: 13, gt: (r) => tenChatLuong(r.chat_luong) },
   { nhan: 'Tiến độ hoàn thành', rong: 18, gt: tenTienDoHoanThanh },

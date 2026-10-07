@@ -12,7 +12,7 @@ const sel = (id) => `<select id="${id}" class="o-nhap"></select>`;
 const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" class="o-nhap"${them}>`;
 
 export const giaoViecTemplate = `
-  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành và hạn nộp minh chứng</span></div>
+  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm và hạn hoàn thành</span></div>
   <div class="tab-hang hidden" id="gvTabs" role="tablist" aria-label="Cách giao việc">
     <button type="button" id="gvTabGiao" role="tab" data-action="gvChonTab" data-tab="giao" aria-selected="true">Giao từng việc</button>
     <button type="button" id="gvTabNhap" role="tab" data-action="gvChonTab" data-tab="nhap" aria-selected="false">Nhập từ Excel</button>
@@ -78,10 +78,6 @@ export const giaoViecTemplate = `
           ${truong('klThHan', 'Hạn hoàn thành<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
         </div>
         <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
-        <div class="cot-2" id="gvHanNopWrap">
-          ${truong('klThHanNop', `Hạn nộp minh chứng${BB}`, inp('klThHanNop', 'date'), '', '<span id="klThHanNopGoiY" aria-live="polite">chọn hạn hoàn thành trước</span> <button type="button" class="nut nho hidden" id="klThHanNopDung" data-action="gvDungHanNop">Dùng ngày gợi ý</button>')}
-          ${truong('klThLyDoSat', `Lý do việc gấp${BB}`, inp('klThLyDoSat', 'text', ' maxlength="500" placeholder="Vì sao hạn nộp sát hạn hoàn thành"'), '', 'bắt buộc khi hạn nộp sau ngày gợi ý')}
-        </div>
         <div class="cot-3" id="gvNganhWrap">
           ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
           ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
@@ -112,7 +108,7 @@ export const giaoViecTemplate = `
       <ol class="gv-buoc-sau">
         <li><i>1</i><span>Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày nhận văn bản; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
-        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) trước hạn nộp; lãnh đạo nghiệm thu thì việc hoàn thành, trả lại thì kèm hạn nộp lại.</span></li>
+        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) trước hạn hoàn thành; lãnh đạo nghiệm thu thì việc hoàn thành, trả lại thì nộp lại.</span></li>
       </ol></section>
   </aside>
   </div>

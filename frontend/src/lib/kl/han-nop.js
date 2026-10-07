@@ -1,18 +1,10 @@
-// Hạn nộp minh chứng, nghiệm thu, ngày nghỉ (PR-2b, migration 0053–0060). Mọi phép tính ngày làm việc / khung hạn nộp ở DB — client chỉ gọi RPC
-// và hiển thị: kl_khung_han_nop là CÙNG hàm trigger bd_nhiem_vu_han_nop_mc dùng để chặn; quyền thật nằm trong từng hàm ghi.
+// Nghiệm thu, ngày làm việc, ngày nghỉ (PR-2b, migration 0053–0060; 0077 bỏ hạn nộp minh chứng — không còn kl_khung_han_nop / dat_han_nop_minh_chung
+// ở client). Mọi phép tính ngày làm việc ở DB — client chỉ gọi RPC và hiển thị; quyền thật nằm trong từng hàm ghi.
 import { supabase } from '../supabase.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo, viec) => loi(await supabase.rpc(ham, thamSo), viec);
 
-// Khung hạn nộp cho hạn hoàn thành H (hoặc Ký ban hành: ngày BH + cấu hình): { han_xu_ly, tu, den, khong_ly_do_den, goi_y, qua_han } hoặc null.
-export const khungHanNop = (han, ngayBanHanh = null, loaiThoiHan = null) =>
-  rpc('kl_khung_han_nop', { p_han_xu_ly: han || null, p_ngay_ban_hanh: ngayBanHanh || null, p_loai_thoi_han: loaiThoiHan || null }, 'không đọc được khung hạn nộp');
-// Người giao sửa hạn nộp (lý do bắt buộc; quản trị sửa thay khi không có người giao — Q4).
-export const datHanNopMinhChung = (id, han, lyDo) => rpc('dat_han_nop_minh_chung', { p_id: id, p_han: han, p_ly_do: lyDo }, 'không sửa được hạn nộp minh chứng');
-// Số ngày làm việc trong (từ, đến] — "còn n ngày làm việc" ở ngăn chi tiết.
-export const soNgayLamViec = (tu, den) => rpc('kl_so_ngay_lam_viec', { p_tu: tu, p_den: den }, 'không tính được ngày làm việc');
-export const ngayLamViecSau = (tu, so) => rpc('ngay_lam_viec_sau', { p_tu: tu, p_so: so }, 'không tính được ngày làm việc');
 // Màn "Cần nghiệm thu": [{ nhiem_vu_id, minh_chung_id, cua_toi }] — cùng hàm chặn với xac_nhan_minh_chung (kl_duoc_nghiem_thu).
 export const canNghiemThu = async () => (await rpc('kl_can_nghiem_thu', {}, 'không đọc được danh sách cần nghiệm thu')) || [];
 

@@ -18,7 +18,7 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
     db = dbAdmin(); khoa = khoaRieng('PR3H', test.info());
     await donNhiemVuTheoNoiDung(db, khoa);
     vbX = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN', ngay_ban_hanh: cong(homNay(), -30), ngay_nhan: cong(homNay(), -29), so_nhiem_vu_du_kien: 3, tao_boi: ID.tp });
-    T1 = await taoViec(db, vbX, `${khoa} T1 đóng trước hạn`, { ...chung(), han_xu_ly: cong(homNay(), -5), han_nop_minh_chung: null, tien_do_ma: 'HOAN_THANH',
+    T1 = await taoViec(db, vbX, `${khoa} T1 đóng trước hạn`, { ...chung(), han_xu_ly: cong(homNay(), -5), tien_do_ma: 'HOAN_THANH',
       ngay_hoan_thanh: cong(homNay(), -8), chat_luong: 'DAT_TOT', minh_chung: `${khoa}/cũ`, theo_1400: false, ngay_nhan_van_ban: cong(homNay(), -29),
       nguon_nhiem_vu_ma: 'CHUONG_TRINH_CONG_TAC' });
     T2 = await taoViec(db, vbX, `${khoa} T2 chờ nghiệm thu`, { ...chung(), nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' });

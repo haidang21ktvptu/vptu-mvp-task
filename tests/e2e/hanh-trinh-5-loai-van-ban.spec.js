@@ -1,10 +1,10 @@
 // PR-2b (thiết kế E2 "hanh-trinh-5-loai-van-ban"): hành trình đủ của MỖI loại văn bản KL_BTV, TB_THUONG_TRUC, NQ_TW, CONG_VAN, KHAC — Trưởng phòng
-// (demo_e2e_tp, phòng E2E_RT) giao qua BIỂU MẪU THẬT ("Giao, nhập tiếp", văn bản mới mỗi loại, hạn nộp theo gợi ý DB) → chủ trì A3 (demo_e2e_cv)
+// (demo_e2e_tp, phòng E2E_RT) giao qua BIỂU MẪU THẬT ("Giao, nhập tiếp", văn bản mới mỗi loại; 0077: không còn hạn nộp) → chủ trì A3 (demo_e2e_cv)
 // xác nhận nhận việc trên "Việc của tôi" → nộp minh chứng 4 yếu tố ở ngăn chi tiết → Trưởng phòng nghiệm thu ở "Cần nghiệm thu" (đóng luôn — Q2)
 // → Hoàn thành; nhãn "Hoàn thành", Điều hành không còn việc mở của đợt, cây Theo văn bản (Chánh VP) có đủ 5 văn bản với việc đã hoàn thành.
 // Văn bản so_ket_luan = <khoá>-<loại>; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec, moViec, nav, dienHanNop } from './lib/app.js';
+import { NAP, moGiaoViec, moViec, nav } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, moApp, moNghiemThu, nghiemThuMc } from './lib/pr2b.mjs';
 
@@ -22,7 +22,7 @@ test.describe.serial('PR-2b — hành trình 5 loại văn bản: giao → nhậ
   });
   test.afterAll(async () => { await tp?.context().close(); await cv?.context().close(); if (db) await don(); });
 
-  test('1. Trưởng phòng giao 5 việc qua biểu mẫu thật (mỗi loại một văn bản mới, hạn nộp bắt buộc)', async () => {
+  test('1. Trưởng phòng giao 5 việc qua biểu mẫu thật (mỗi loại một văn bản mới, không cần hạn nộp minh chứng — 0077)', async () => {
     await moGiaoViec(tp);
     for (const loai of LOAI) {
       await tp.locator('#klThVanBan').selectOption('__moi__'); await tp.locator('#klThLoaiVB').selectOption(loai);
@@ -31,7 +31,6 @@ test.describe.serial('PR-2b — hành trình 5 loại văn bản: giao → nhậ
       await tp.locator('#klThNoiDung').fill(`${khoa} ${loai} hành trình`); await tp.locator('#klThOwner').selectOption(`tk:${ID.e2eCv}`);
       await tp.locator('#klThSanPham').selectOption('BAO_CAO'); await tp.locator('#klThHan').fill(cong(homNay(), 20));
       if (CAN_NGANH.has(loai)) { await tp.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await tp.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH'); }
-      await dienHanNop(tp);
       await expect(tp.locator('#gvConThieu'), loai).toHaveText('');
       await tp.locator('#klThLuuTiep').click();
       await expect(tp.locator('#toastContainer'), loai).toContainText('Đã giao việc NV-', NAP);
@@ -39,7 +38,7 @@ test.describe.serial('PR-2b — hành trình 5 loại văn bản: giao → nhậ
     }
     const { data } = await db.from('nhiem_vu').select('id, ma, han_nop_minh_chung, van_ban_giao_viec!inner(loai, so_ket_luan)').like('van_ban_giao_viec.so_ket_luan', `${khoa}-%`);
     expect(data.map((x) => x.van_ban_giao_viec.loai).sort()).toEqual([...LOAI].sort());
-    data.forEach((x) => { expect(x.han_nop_minh_chung).toBeTruthy(); viec[x.van_ban_giao_viec.loai] = x; });
+    data.forEach((x) => { expect(x.han_nop_minh_chung).toBeNull(); viec[x.van_ban_giao_viec.loai] = x; });
   });
 
   test('2. Chủ trì A3 xác nhận nhận việc trên "Việc của tôi" rồi nộp minh chứng 4 yếu tố ở ngăn chi tiết', async () => {

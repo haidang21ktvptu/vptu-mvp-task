@@ -6,6 +6,8 @@
 #   dùng để quyết định chạy job RLS token thật trên staging; KHÔNG đổi nghĩa/cách tính khong_anh_huong_app.
 #   cham_function=true ⇔ có file khớp CHAM_FUNCTION (supabase/functions/**) — hoặc không đọc được danh sách. ci.yml dùng để deploy Edge
 #   Function của chính PR lên staging trước khi e2e (v3.15); deploy-staging vẫn deploy lại sau merge.
+#   cham_migration=true ⇔ có file khớp CHAM_MIGRATION (supabase/migrations/**) — hoặc không đọc được danh sách. ci.yml dùng để áp migration
+#   của chính PR lên staging trước khi e2e (v3.17: giao diện của PR cần schema mới; đã áp thì db push không làm gì; deploy-staging áp lại sau merge).
 # Sửa chính file này, ci.yml hay deploy-*.yml đều không khớp mẫu → tự chạy đủ. Không có ngoại lệ theo tên nhánh (PR release chỉ tài liệu
 # cũng bỏ qua: job kiem-tra của deploy-prod chấp nhận job rỗng cùng tên, v3.6.0/v3.6.1 đã chứng minh).
 # Biến vào: GH_TOKEN, REPO, EVENT (pull_request | push), SO_PR (PR), BEFORE + SHA (push). Ghi GITHUB_OUTPUT và GITHUB_STEP_SUMMARY.
@@ -13,7 +15,8 @@ set -u
 KHONG_ANH_HUONG='^docs/|\.md$|^\.github/workflows/(backup-dinh-ky|canh-bao)\.yml$'
 CHAM_RLS='^supabase/|^tests/rls/'
 CHAM_FUNCTION='^supabase/functions/'
-KQ=false; LY_DO=''; FILES=''; RLS=true; HAM=true
+CHAM_MIGRATION='^supabase/migrations/'
+KQ=false; LY_DO=''; FILES=''; RLS=true; HAM=true; MIG=true
 
 lay_files_pr() {
   local mong_doi
@@ -39,12 +42,15 @@ if [ -z "$LY_DO" ]; then
 ' "$FILES" | grep -q -E "$CHAM_RLS"; then RLS=true; else RLS=false; fi
   if printf '%s
 ' "$FILES" | grep -q -E "$CHAM_FUNCTION"; then HAM=true; else HAM=false; fi
+  if printf '%s
+' "$FILES" | grep -q -E "$CHAM_MIGRATION"; then MIG=true; else MIG=false; fi
 fi
 echo "khong_anh_huong_app=$KQ" >> "${GITHUB_OUTPUT:-/dev/null}"
 echo "cham_rls=$RLS" >> "${GITHUB_OUTPUT:-/dev/null}"
 echo "cham_function=$HAM" >> "${GITHUB_OUTPUT:-/dev/null}"
+echo "cham_migration=$MIG" >> "${GITHUB_OUTPUT:-/dev/null}"
 {
-  echo "### Phân loại thay đổi: khong_anh_huong_app=**$KQ** — $LY_DO · cham_rls=**$RLS** · cham_function=**$HAM**"
+  echo "### Phân loại thay đổi: khong_anh_huong_app=**$KQ** — $LY_DO · cham_rls=**$RLS** · cham_function=**$HAM** · cham_migration=**$MIG**"
   echo '```'; printf '%s\n' "${FILES:-(không đọc được danh sách file)}"; echo '```'
   [ -n "${NGOAI:-}" ] && { echo 'File ảnh hưởng app:'; echo '```'; printf '%s\n' "$NGOAI"; echo '```'; }
 } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
