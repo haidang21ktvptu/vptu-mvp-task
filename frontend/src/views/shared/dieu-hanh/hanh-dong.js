@@ -74,7 +74,7 @@ async function mcHopLeThe(ds) {
 async function mcNghiemThuThe(ds, form) {
   const cl = chatLuongCuaForm(form);
   if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
-  try { await xacNhanMinhChung(ds.id, true, null, null, cl); await thanhCong(form, 'Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(ds.id, true, null, cl); await thanhCong(form, 'Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
 async function mcKhongHopLeThe(ds, form) {
   const lyDo = noiDung(form);

@@ -131,7 +131,7 @@ async function xacNhanMinhChungAction(ds) {
 async function nghiemThuMinhChung(ds, form) {
   const cl = chatLuongCuaForm(form);
   if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
-  try { await xacNhanMinhChung(ds.id, true, null, null, cl); notifySuccess('Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.'); sauHanhDong(); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(ds.id, true, null, cl); notifySuccess('Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.'); sauHanhDong(); } catch (e) { notifyError(e.message); }
 }
 // Hộp trả lại (0077: chỉ lý do — không còn hạn nộp lại; người nộp nộp lại trước hạn hoàn thành).
 function moBacMinhChung(ds) {

@@ -85,7 +85,8 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     const mc = (await db.from('minh_chung').select('id').eq('nhiem_vu_id', nvId).single()).data.id;
     const r = await clientCuaVai('A2').rpc('xac_nhan_minh_chung', { p_id: mc, p_hop_le: true, p_chat_luong: 'DAT' });   // demo_truongphong — A2 phòng của người theo dõi
     expect(r.error, r.error?.message).toBeNull();
-    await page.reload(); await nav(page, 'navKl');
+    await page.reload(); await expect(page.locator('#mainHeader')).toBeVisible(NAP);   // nạp lại app rồi mới mở menu (A3 đi qua Điều hành → Nhiệm vụ)
+    await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
     const row = page.locator(`#klRow-${nvId}`);
     await row.click();

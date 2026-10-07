@@ -43,9 +43,9 @@ export function loiMinhChung(p) {
   return null;
 }
 // Nghiệm thu (true — PR-2b Q2: đóng việc cùng giao dịch, ngày hoàn thành = ngày văn bản minh chứng) hoặc trả lại (false: lý do; 0077 bỏ hạn nộp
-// lại — tham số thứ tư giữ chỗ cho chữ ký hàm DB). Ghi vết, không xoá dòng (MC-6).
+// lại — hàm DB vẫn nhận p_han_nop_lai, luôn gửi null). Ghi vết, không xoá dòng (MC-6).
 // PR-3 (0063): nghiệm thu đóng việc bắt buộc chất lượng (KHONG_DAT / DAT / DAT_TOT / DAT_XUAT_SAC); trả lại không kèm chất lượng.
-export const xacNhanMinhChung = (id, hopLe, lyDo = null, _hanNopLai = null, chatLuong = null) =>
+export const xacNhanMinhChung = (id, hopLe, lyDo = null, chatLuong = null) =>
   rpc('xac_nhan_minh_chung', { p_id: id, p_hop_le: hopLe, p_ly_do: lyDo || null, p_han_nop_lai: null, p_chat_luong: chatLuong || null });
 // Đóng nhiệm vụ (MC-4): DB kiểm lại minh chứng hợp lệ; ngay = null → lấy ngày văn bản của minh chứng hợp lệ mới nhất.
 export const dongNhiemVu = (id, ngay = null, chatLuong = null) => rpc('dong_nhiem_vu', { p_id: id, p_ngay_hoan_thanh: ngay || null, p_chat_luong: chatLuong || null });

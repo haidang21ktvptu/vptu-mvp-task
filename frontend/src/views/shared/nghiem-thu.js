@@ -82,7 +82,7 @@ async function ntNghiemThu({ id, ma }) {
 async function ntNghiemThuCl({ id, ma }, form) {
   const cl = chatLuongCuaForm(form);
   if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
-  try { await xacNhanMinhChung(id, true, null, null, cl); await sauHanhDong(`Đã nghiệm thu minh chứng — nhiệm vụ ${ma} hoàn thành.`); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(id, true, null, cl); await sauHanhDong(`Đã nghiệm thu minh chứng — nhiệm vụ ${ma} hoàn thành.`); } catch (e) { notifyError(e.message); }
 }
 async function ntTraLai({ id }, form) {
   const lyDo = (new FormData(form).get('ly_do') || '').trim();
