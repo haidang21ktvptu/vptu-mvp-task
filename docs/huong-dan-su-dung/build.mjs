@@ -8,7 +8,7 @@ const A = (f) => `${import.meta.dirname}/anh/${f}`;
 const trangArg = process.argv.indexOf('--trang');
 const soTrang = trangArg > 0 ? JSON.parse(fs.readFileSync(process.argv[trangArg + 1], 'utf8')) : {};
 
-const PHIEN_BAN = 'Phiên bản 3.17 · tháng 10/2026';
+const PHIEN_BAN = 'Phiên bản 3.20 · tháng 10/2026';
 const TIEU_DE = 'Hướng dẫn sử dụng Hệ thống quản trị nhiệm vụ';
 
 // Bìa
@@ -21,7 +21,7 @@ const bia = [
   pCenter('HỆ THỐNG QUẢN TRỊ NHIỆM VỤ', { bold: true, size: 40, color: NAVY }),
   khoangTrong(),
   pCenter('Dành cho cán bộ, công chức Văn phòng Tỉnh ủy', { italics: true, size: 26 }),
-  pCenter('Giao việc – nhận việc – nộp kết quả – nghiệm thu, theo từng vai trò', { italics: true, size: 26 }),
+  pCenter('Giao việc – thực hiện – nộp kết quả – theo dõi, chỉ đạo, theo từng vai trò', { italics: true, size: 26 }),
   khoangTrong(), khoangTrong(), khoangTrong(), khoangTrong(), khoangTrong(), khoangTrong(), khoangTrong(), khoangTrong(),
   pCenter(PHIEN_BAN, { size: 24 }),
   pCenter('Địa chỉ truy cập: https://haidang21ktvptu.github.io/vptu-mvp-task/', { size: 24 }),
@@ -30,7 +30,7 @@ const bia = [
 const { tieuDeMucLuc, phan } = noiDung({ A, anh, h1, h2, h3, p, steps, bullets, luuY, bang, khoangTrong });
 
 const buf = await taiLieu({
-  tieuDe: TIEU_DE, phienBan: 'v3.17',
+  tieuDe: TIEU_DE, phienBan: 'v3.20',
   sections: [
     { children: bia },
     { children: [h1('Mục lục', { ngat: false }), ...mucLucTinh(tieuDeMucLuc, soTrang)] },
