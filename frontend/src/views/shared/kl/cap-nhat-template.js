@@ -1,5 +1,5 @@
 // Modal cập nhật nhanh của người theo dõi / Owner (thiết kế 3.4, 6.8): đúng 7 cột guard 0015 cho phép. Nhãn trên ô nhập, một nút chính.
-// Đợt C1 v3.19 (0086): việc theo 1400 có thêm mục "Nộp minh chứng nhanh" ngay trong hộp — số hiệu + ngày văn bản là đủ (cấp nhận lấy theo việc
+// Đợt C1 v3.19 (0086; C2: ô đánh dấu "Việc đã hoàn thành — ghi kết quả" mở các ô): việc theo 1400 có thêm mục "Nộp minh chứng nhanh" ngay trong hộp — số hiệu + ngày văn bản là đủ (cấp nhận lấy theo việc
 // nếu để trống; trích yếu, mô tả kết quả không bắt buộc) — một nút Lưu ghi cả cập nhật lẫn minh chứng (nop_minh_chung là chốt).
 export const klCapNhatTemplate = `
 <div id="klCapNhatModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="klCnTieuDe">
@@ -44,16 +44,17 @@ export const klCapNhatTemplate = `
     </div>
     <p id="klCnGhiChu1400" class="chu-phu mt-3 hidden">Nhiệm vụ theo quy tắc 1400: hoàn thành khi lãnh đạo nghiệm thu minh chứng — không chuyển Hoàn thành ở đây.</p>
     <fieldset id="klCnMcWrap" class="khung-mc mt-3 hidden">
-      <legend class="nhan">Nộp minh chứng nhanh <span class="chu-phu">— số hiệu + ngày văn bản là đủ; để trống cả hai = không nộp</span></legend>
-      <div class="cot-3">
+      <legend><label class="nhan-checkbox nhan"><input type="checkbox" id="klCnXong"> Việc đã hoàn thành — ghi kết quả</label></legend>
+      <p class="chu-phu" id="klCnXongGoiY">Đánh dấu khi đã có văn bản kết quả: ghi số hiệu + ngày (đủ để nộp minh chứng nhanh), lãnh đạo nghiệm thu thì việc hoàn thành.</p>
+      <div id="klCnMcTruong" class="hidden"><div class="cot-3">
         <div><label for="klCnMcSoHieu" class="nhan">Số hiệu văn bản</label><input type="text" id="klCnMcSoHieu" class="o-nhap" placeholder="Ví dụ: 15/BC-VPTU" autocomplete="off"></div>
         <div><label for="klCnMcNgay" class="nhan">Ngày văn bản</label><input type="date" id="klCnMcNgay" class="o-nhap"></div>
         <div><label for="klCnMcCap" class="nhan">Cấp nhận <span class="chu-phu">mặc định theo việc</span></label><select id="klCnMcCap" class="o-nhap"></select></div>
       </div>
       <div class="cot-2 mt-2">
         <div><label for="klCnMcTrichYeu" class="nhan">Trích yếu <span class="chu-phu">không bắt buộc</span></label><input type="text" id="klCnMcTrichYeu" class="o-nhap" maxlength="300" autocomplete="off"></div>
-        <div><label for="klCnMcMoTa" class="nhan">Mô tả kết quả <span class="chu-phu">không bắt buộc, ≤ 600 ký tự</span></label><input type="text" id="klCnMcMoTa" class="o-nhap" maxlength="600"></div>
-      </div>
+        <div><label for="klCnMcMoTa" class="nhan">Kết quả thực hiện <span class="chu-phu">không bắt buộc, ≤ 600 ký tự</span></label><input type="text" id="klCnMcMoTa" class="o-nhap" maxlength="600" placeholder="Đã làm gì, kết quả, gửi ai"></div>
+      </div></div>
     </fieldset>
     <div class="cot-2 mt-3">
       <div>

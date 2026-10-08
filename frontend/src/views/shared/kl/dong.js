@@ -7,6 +7,7 @@ import { formatNgay, soNgay } from '../../../lib/kl/ngay.js';
 import { lopMep, boSoThuTu, tenTienDoHoanThanh, nhanChatLuongHtml } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { duocChiDao } from './chi-dao.js';
+import { maNguonHtml, nhanMucHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
 
 // Ai là "bên trong" của việc: người theo dõi hoặc Owner tài khoản.
 export const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
@@ -41,7 +42,7 @@ function phuText(r) {
 export function dongHtml(r, homNay, dangChon) {
   return `<button type="button" class="hang-nv ${lopMep(r, state.user?.id)}${dangChon ? ' dang' : ''}" id="klRow-${r.id}" data-action="chonKlRow" data-id="${r.id}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}" aria-pressed="${String(Boolean(dangChon))}">
       <span class="stt ${lopMep(r, state.user?.id)}"></span><span class="ma">${escapeHtml(r.ma)}</span>
-      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanPhuHtml(r)}${nhanChatLuongHtml(r.chat_luong)}</b><span title="${escapeHtml(phuText(r))}">${escapeHtml(phuText(r))}</span></span>
+      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanChatLuongHtml(r.chat_luong)}</b><span title="${escapeHtml(phuText(r))}">${maNguonHtml(r)}${escapeHtml(phuText(r))}</span></span>
       <span class="han">${hanHtml(r, homNay)}</span>
     </button>`;
 }

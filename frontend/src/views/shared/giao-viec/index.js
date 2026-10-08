@@ -26,7 +26,9 @@ import { timKlRow } from '../kl/danh-sach.js';
 import { giaoViecTemplate } from './template.js';
 import { apDienSan, boHoanThien } from './dien-san.js';
 import { hienTabGiaoViec } from '../nhap-excel/tab.js';
-import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN } from '../kl/them-owner.js';
+import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, LOAI_CO_HOI_NGHI } from '../kl/them-owner.js';
+import { dienThongTinNguon } from './thong-tin-nguon.js';   // Đợt C2: mức quan trọng, cơ quan trình, Thường trực chỉ đạo
+import { dongNganCT } from '../ngan-chi-tiet.js';
 import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
   canNganhHienTai, canNgayNhan } from './trang-thai.js';
 import { kiemTra, docForm, tachDong } from './doc-form.js';
@@ -66,7 +68,7 @@ function capNhatHienThi() {
   const loai = $('klThLoai').value;
   const bh = ngayBH(); const homNay = getHomNay();
   show('klThVanBanMoi', laMoi());
-  show('klThSoHNWrap', laMoi() && $('klThLoaiVB').value === 'KL_BTV');
+  show('klThSoHNWrap', laMoi() && LOAI_CO_HOI_NGHI.includes($('klThLoaiVB').value)); show('klThSoHNBatBuoc', $('klThLoaiVB').value === 'KL_BTV');   // C2: KL / NQ BCH tuỳ chọn
   show('gvVbA0', laA0() && laMoi());
   $('klThHan').min = bh;
   $('klThNgayNhan').min = bh; $('klThNgayNhan').max = homNay;
@@ -185,7 +187,7 @@ export async function openGiaoViec(opts = {}) {
   try {
     await loadDanhMucKl();
     // Văn bản: trang đầu 50 (B6) + văn bản của việc cha; phạm vi giao theo DB (C3) — hai lời gọi song song (biểu mẫu đang khoá).
-    await Promise.all([napVanBan({ nhanMoi: nhanMoi(), giu: '', kem: cha?.van_ban_id }), napPhamVi()]);
+    await Promise.all([napVanBan({ nhanMoi: nhanMoi(), giu: '', kem: cha?.van_ban_id || opts.vanBan }), napPhamVi()]);   // C2: "Giao thêm nhiệm vụ từ văn bản này"
     datHomNay(await homNayTheoDb());
   } catch (e) { if (lan === luotMo) { notifyError(e.message); $('giaoViecForm').dataset.sanSang = 'loi'; } return; }   // lỗi: giữ khoá
   if (lan !== luotMo) return;   // đã mở lại biểu mẫu: lượt mới khởi tạo
@@ -194,7 +196,7 @@ export async function openGiaoViec(opts = {}) {
   setText('gvBuoc1', tuNhanViec() ? 'Người chịu trách nhiệm được báo ngay và việc tính là đã nhận, không cần xác nhận; cần đổi người thì người giao giao lại.' : 'Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.');
   show('klThThayMatWrap', canThayMat());
   if (vb.ds.length && !a0) $('klThVanBan').value = vb.ds[0].id;
-  if (cha && timTrongDs(cha.van_ban_id)) $('klThVanBan').value = cha.van_ban_id; // giao tiếp xuống: cùng văn bản với việc cha
+  const vbGiu = cha?.van_ban_id || opts.vanBan; if (vbGiu && timTrongDs(vbGiu)) $('klThVanBan').value = vbGiu; // giao tiếp xuống / giao thêm từ văn bản: đúng văn bản đó
   setText('gvCha', cha ? `Giao tiếp xuống từ ${cha.ma}: ${cha.noi_dung}` : ''); show('gvCha', Boolean(cha)); $('gvCha').dataset.id = cha?.id || '';
   show('gvLuoiWrap', !cha && !opts.dienSan);   // giao tiếp xuống / hoàn thiện dòng chờ nhập Excel: một việc, không thêm thẻ
   $('klThLoaiVB').innerHTML = LOAI_VAN_BAN.map(([ma, ten]) => opt(ma, ten, ma === 'KL_BTV')).join('');
@@ -203,7 +205,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThOwner').innerHTML = ''; dienOwner();
   $('klThNguoiTheoDoi').innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user); $('klThNguoiTheoDoi').value = state.user?.id || '';
   $('klThThayMat').innerHTML = opt('', 'Không — giao thẳng cho chuyên viên') + thayMatOptionsHtml(state.accounts); tim.thayMat?.apLai();
-  datLaiNguon();
+  datLaiNguon(); dienThongTinNguon();
   $('klThSanPham').innerHTML = opt('', 'Chọn loại sản phẩm') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
   $('klThCapNhan').innerHTML = dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThCapQD').innerHTML = opt('', 'Chưa xác định') + dm.cap.map((c) => opt(c.ma, c.ten)).join('');
@@ -281,7 +283,7 @@ export function registerGiaoViec() {
   $('giaoViecForm').addEventListener('input', capNhatTomTat);
   $('giaoViecForm').addEventListener('change', capNhatTomTat);
   registerActions({ openGiaoViec: () => openGiaoViec(), giaoTiepXuong: ({ id }) => openGiaoViec({ cha: timKlRow(id) }),
-    huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true),
+    huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true), giaoThemTuVanBan: ({ vb: id }) => { dongNganCT(); return openGiaoViec({ vanBan: id }); },
     gvThemDong: () => { themDong(); capNhatTomTat(); }, gvXoaDong: (ds) => { xoaDong(ds); capNhatTomTat(); },
     gvBoHoanThien: () => { boHoanThien(); openGiaoViec({ tab: 'cho' }); },
     gvVbXemThem: () => napVanBan({ them: true, nhanMoi: nhanMoi() }).catch((e) => notifyError(e.message)) });

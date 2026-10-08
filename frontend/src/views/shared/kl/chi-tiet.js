@@ -16,16 +16,19 @@ import { napMinhChung } from './minh-chung.js';
 import { oLuoiPr3Html, khoiPr3Html } from './thong-tin-giao.js';
 import { nutTangHtml, nutHanhDongTang, khoiDeNghiSuaHtml, napDeNghiSua } from './sua-tang.js';
 import { coNhapExcel, khoiDuLieuGocHtml, napDuLieuGoc } from './du-lieu-goc.js';   // v9 đợt 2: dữ liệu gốc của lô nhập Excel
+import { maNguonHtml, nhanMucHtml, oLuoiNguonHtml, nutGiaoThemHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
+import { tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
-  san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu' };
+  san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu', co_quan_trinh: 'donVi' };
 const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban', 'han_nop_minh_chung'];   // han_nop: chỉ còn ở lịch sử cũ (0077)
-const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan'];
+const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan', 'thuong_truc_chi_dao'];
 
 export function hienGiaTri(cot, v) {
   if (v === null || v === undefined || v === '') return '(trống)';
   if (DANH_MUC_COT[cot]) return tenTrongDanhMuc(DANH_MUC_COT[cot], v);
   if (cot === 'chat_luong') return tenChatLuong(v) || v;
+  if (cot === 'muc_quan_trong') return tenMucQuanTrong(v);   // C2 (0087)
   if (COT_NGAY.includes(cot)) return formatNgay(v);
   if (COT_TAI_KHOAN.includes(cot)) return findAccount(v)?.full_name || v;
   if (cot === 'ngay_nhan_uoc_tinh' || cot === 'theo_1400' || cot === 'bi_tu_choi') return v === 'true' || v === true ? 'có' : 'không';
@@ -67,6 +70,7 @@ function hanhDongHtml(r) {
     ${duocCapNhat(r) && mo ? nut('openKlCapNhat', 'Cập nhật') : ''}
     ${duocDong(r) && mo && duocDongTay ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
     ${giaoTiep ? nut('giaoTiepXuong', 'Giao tiếp xuống', '', `id="klGiaoTiep-${r.id}"`) : ''}
+    ${nutGiaoThemHtml(r)}
     ${nutHanhDongTang(r)}
     <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
@@ -88,7 +92,7 @@ export function chiTietHtml(r, ls, dc) {
   // v9 đợt 2: ô do cấp giao điền có bút (sửa ngay) / khoá (đề nghị sửa) — sua-tang.js.
   const o = (nhan, gt, cot = '') => { const nt = cot ? nutTangHtml(r, cot) : ''; return `<div${nt ? ' class="co-tang"' : ''}><dt>${nhan}</dt><dd>${gt}</dd>${nt}</div>`; };
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
-      <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${nhanPhuHtml(r)}${nhanTT}</div>
+      <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanTT}</div>
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
         <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
       <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
@@ -97,7 +101,7 @@ export function chiTietHtml(r, ls, dc) {
         ${o('Hạn hoàn thành', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
         ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'), 'cap_nhan_san_pham')}
-        ${oLuoiPr3Html(r, o)}</dl>
+        ${oLuoiPr3Html(r, o)}${oLuoiNguonHtml(r, o)}</dl>
       ${hanhDongHtml(r)}
       ${khoiDeNghiSuaHtml(r)}
       ${khoiPr3Html(r)}

@@ -1,6 +1,6 @@
-// PR-2a C3: biểu mẫu Giao việc theo phạm vi giao của DB (kl_pham_vi_giao = cùng hàm giao_viec dùng để chặn) — ma trận vai × 5 loại văn bản.
+// PR-2a C3: biểu mẫu Giao việc theo phạm vi giao của DB (kl_pham_vi_giao = cùng hàm giao_viec dùng để chặn) — ma trận vai × 7 loại văn bản.
 // Vai: PCVP2 kiêm nhiệm (Tổng hợp, Kinh tế tổng hợp, Tài chính — phân công tạm do spec tạo), PCVP phụ trách cả Tổng hợp, Chánh VP, Trưởng phòng.
-// Mỗi vai MỘT phiên; đổi 5 loại ngay trên biểu mẫu để kiểm ô ngành/lĩnh vực bắt buộc, lựa chọn Owner / lĩnh vực và dòng "Còn thiếu"; chỉ bấm
+// Mỗi vai MỘT phiên; đổi 7 loại ngay trên biểu mẫu để kiểm ô ngành/lĩnh vực bắt buộc, lựa chọn Owner / lĩnh vực và dòng "Còn thiếu"; chỉ bấm
 // Giao thật ở ô đại diện (mỗi vai ≥ 1 ô được; ô bị chặn = không có lựa chọn / nút mờ kèm lý do). Chỉ máy tính (logic, không bố cục).
 // Dữ liệu: văn bản so_ket_luan = E2E-TEST-GVKN-<project>-<vai>; phân công ly_do = khoá; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
@@ -9,7 +9,7 @@ import { getKeys } from './lib/keys.mjs';
 import { contextAs, moGiaoViec, NAP } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 
-const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'NQ_TW', 'CONG_VAN', 'KHAC'];
+const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'KL_BCH', 'NQ_BCH', 'NQ_TW', 'CONG_VAN', 'KHAC'];   // 0087: + KL / NQ Ban Chấp hành
 const BAT_BUOC = new Set(['KL_BTV', 'TB_THUONG_TRUC']);
 const KN = { phong: 'TONG_HOP', nganh: 'KINH_TE_TONG_HOP', lv: 'LV08_TAI_CHINH', lvKhac: 'LV08_NGAN_SACH' };
 let db; let khoa; const id = {};
@@ -28,7 +28,8 @@ async function chonLoai(page, loai) {
   await page.locator('#klThVanBan').selectOption('__moi__');
   await page.locator('#klThLoaiVB').selectOption(loai);
   await expect(page.locator('#klThNganhBatBuoc')).toBeVisible({ visible: BAT_BUOC.has(loai) });
-  await expect(page.locator('#klThSoHNWrap')).toBeVisible({ visible: loai === 'KL_BTV' });
+  await expect(page.locator('#klThSoHNWrap')).toBeVisible({ visible: ['KL_BTV', 'KL_BCH', 'NQ_BCH'].includes(loai) });   // 0087: KL / NQ BCH hiện, không bắt buộc
+  await expect(page.locator('#klThSoHNBatBuoc')).toBeVisible({ visible: loai === 'KL_BTV' });
 }
 // Điền đủ phần chung rồi Giao; trả về việc vừa tạo (đọc bằng service_role theo văn bản).
 async function giaoThat(page, vai, loai, { owner, nganh, lv }) {

@@ -247,7 +247,7 @@ test('Mẫu nhập chuẩn: 3 sheet, 25 cột đúng thứ tự, danh sách ch�
   assert.equal(r[9], 'Nông Thị Lan — Phòng Tổng hợp', 'lãnh đạo giao = người tạo A2'); assert.equal(r[14], 'Khẩn'); assert.equal(r[11], '2026-12-31');
   assert.ok(ds[1].dong[0].includes('Lĩnh vực')); assert.ok(ds[1].dong.some((d) => d[2] === 'Đàm Văn Sơn — Phòng Quản trị'));
   assert.ok(!ds[1].dong.some((d) => (d[2] || '').startsWith('Hệ thống')), 'không đưa tài khoản hệ thống');
-  const xml = new TextDecoder().decode(b); assert.match(xml, /<dataValidation type="list"[^>]*sqref="B2:B1001"><formula1>&apos;Danh mục&apos;!\$A\$2:\$A\$6<\/formula1>/);
+  const xml = new TextDecoder().decode(b); assert.match(xml, /<dataValidation type="list"[^>]*sqref="B2:B1001"><formula1>&apos;Danh mục&apos;!\$A\$2:\$A\$8<\/formula1>/);   // 0087: 7 loại văn bản (+ KL / NQ Ban Chấp hành)
   assert.match(xml, /<fgColor rgb="FFFFF6D6"\/>/);
   const sTieuDe = (c) => new RegExp(`<c r="${c}1" t="inlineStr" s="(\\d+)"`).exec(xml)?.[1];
   assert.deepEqual(['A', 'B', 'R', 'S', 'T', 'U', 'Y'].map(sTieuDe), ['7', '4', '4', '5', '5', '6', '6'], 'tiêu đề tô theo mức: mã xám, mức 1 vàng, mức 2 lam, mức 3 lục');

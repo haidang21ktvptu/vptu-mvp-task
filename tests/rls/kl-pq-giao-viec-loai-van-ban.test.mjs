@@ -12,7 +12,7 @@ import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
 const db = () => adminClient();
 const KHOA = 'KL-PQ1';
-const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'NQ_TW', 'CONG_VAN', 'KHAC'];
+const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'KL_BCH', 'NQ_BCH', 'NQ_TW', 'CONG_VAN', 'KHAC'];   // 0087: + KL / NQ Ban Chấp hành
 const PTP = { username: 'demo_e2e_nv', id: '00000000-0000-4000-8000-000000000012', chuc_danh_goc: 'Chuyên viên' }; // A3 Tổng hợp (seed.sql)
 const TK = { username: 'demo_e2e_tk', id: '00000000-0000-4000-8000-000000000018' };                                // A3 Tổng hợp, cấp cờ thư ký lúc chạy
 let fx;
@@ -45,7 +45,7 @@ const don = async () => {
   await khoiPhucTaiKhoan();
 };
 
-describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt buộc theo loại, vai không được giao bị chặn', { skip: SKIP }, () => {
+describe('PQ-1 — giao_viec theo 7 loại văn bản × vai: trường bắt buộc theo loại, vai không được giao bị chặn', { skip: SKIP }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await don();
@@ -60,7 +60,7 @@ describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt bu
   const theoId = async (bang, cot, ids) => new Map((await db().from(bang).select(`id, ${cot}`).in('id', ids)).data.map((x) => [x.id, x]));
 
   for (const vai of VAI_GIAO) {
-    test(`1. ${vai} giao được với đủ 5 loại văn bản inline; văn bản tạo bởi chính người giao, loại đúng, KL_BTV giữ số hội nghị`, async () => {
+    test(`1. ${vai} giao được với đủ 7 loại văn bản inline; văn bản tạo bởi chính người giao, loại đúng, KL_BTV giữ số hội nghị`, async () => {
       const rs = await songSong(LOAI.map((loai) => () => giao(vai, loai)));
       rs.forEach((r, i) => assertOk(r, `${vai} giao ${LOAI[i]}`));
       const vbs = await theoId('van_ban_giao_viec', 'loai, so_hoi_nghi, tao_boi', rs.map((r) => r.data.van_ban_id));
@@ -91,8 +91,8 @@ describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt bu
     (await songSong(ca.map((c) => c[1]))).forEach((r, i) => assert.match(loi(r), /ngành và lĩnh vực/, ca[i][0]));
   });
 
-  test('4. NQ_TW / CONG_VAN / KHAC: không đòi ngành, lĩnh vực, số hội nghị — mọi vai được giao giao được khi bỏ trống cả ba', async () => {
-    const ca = VAI_GIAO.flatMap((vai) => ['NQ_TW', 'CONG_VAN', 'KHAC'].map((loai) => [`${vai} ${loai}`, () => giao(vai, loai, { nganh_ma: null, linh_vuc_ma: null })]));
+  test('4. KL_BCH / NQ_BCH / NQ_TW / CONG_VAN / KHAC: không đòi ngành, lĩnh vực, số hội nghị — mọi vai được giao giao được khi bỏ trống cả ba', async () => {
+    const ca = VAI_GIAO.flatMap((vai) => ['KL_BCH', 'NQ_BCH', 'NQ_TW', 'CONG_VAN', 'KHAC'].map((loai) => [`${vai} ${loai}`, () => giao(vai, loai, { nganh_ma: null, linh_vuc_ma: null })]));
     const rs = await songSong(ca.map((c) => c[1]));
     rs.forEach((r, i) => assertOk(r, `${ca[i][0]} giao không ngành/lĩnh vực`));
     const nv = await theoId('nhiem_vu', 'nganh_ma, linh_vuc_ma', rs.map((r) => r.data.id));
@@ -102,7 +102,7 @@ describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt bu
     });
   });
 
-  test('5. Vai không giao được cho PHÒNG (0085: chuyên viên chỉ giao thẳng cho chuyên viên): A3 thường, Phó trưởng phòng (A3), thư ký Thường trực (cờ), QTHT không quan_tri_kl — bị chặn 42501 với cả 5 loại', async () => {
+  test('5. Vai không giao được cho PHÒNG (0085: chuyên viên chỉ giao thẳng cho chuyên viên): A3 thường, Phó trưởng phòng (A3), thư ký Thường trực (cờ), QTHT không quan_tri_kl — bị chặn 42501 với cả 7 loại', async () => {
     const ca = ['demo_cv1', PTP.username, TK.username, 'demo_qtht'].flatMap((vai) => LOAI.map((loai) => [`${vai} giao ${loai}`,
       () => giao(vai, loai, { owner_don_vi_ma: 'TONG_HOP' })]));
     (await songSong(ca.map((c) => c[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
@@ -111,13 +111,13 @@ describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt bu
     assert.equal(rac.data.length, 0, 'vai bị chặn không tạo văn bản');
   });
 
-  test('6. anon gọi giao_viec bị chặn với cả 5 loại', async () => {
+  test('6. anon gọi giao_viec bị chặn với cả 7 loại', async () => {
     const rs = await songSong(LOAI.map((loai) => () => anonClient().rpc('giao_viec', { p: { van_ban_id: null, van_ban: vanBan(loai, 'anon'), noi_dung: `${KHOA} anon`,
       san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31', owner_don_vi_ma: 'TONG_HOP' } })));
     rs.forEach((r, i) => assertDenied(r, `anon giao ${LOAI[i]}`));
   });
 
-  test('7. A0 giao cho A3 / cho đơn vị ngoài bị chặn với cả 5 loại; A2 giao Owner khác phòng bị chặn với cả 5 loại', async () => {
+  test('7. A0 giao cho A3 / cho đơn vị ngoài bị chặn với cả 7 loại; A2 giao Owner khác phòng bị chặn với cả 7 loại', async () => {
     const ca = LOAI.flatMap((loai) => [
       [`A0 giao ${loai} cho A3`, () => giao('demo_a0', loai, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 })],
       [`A0 giao ${loai} cho đơn vị ngoài`, () => giao('demo_a0', loai, { owner_don_vi_ma: 'DANG_UY_UBND', owner_tai_khoan: null })],

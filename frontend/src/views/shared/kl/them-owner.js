@@ -81,7 +81,9 @@ export function nguoiTheoDoiOptionsHtml(accounts, me) {
 }
 
 export const LOAI_VAN_BAN = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'],
+  ['KL_BCH', 'Kết luận Ban Chấp hành Đảng bộ tỉnh'], ['NQ_BCH', 'Nghị quyết Ban Chấp hành Đảng bộ tỉnh'],   // 0087 (Đợt C2)
   ['NQ_TW', 'Nghị quyết Trung ương'], ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác']];
+export const LOAI_CO_HOI_NGHI = ['KL_BTV', 'KL_BCH', 'NQ_BCH'];   // ô "Số hội nghị" hiện (bắt buộc với KL_BTV — CHECK 0022)
 export const tenLoaiVanBan = (ma) => LOAI_VAN_BAN.find(([m]) => m === ma)?.[1] || ma;
 // Ngành/lĩnh vực bắt buộc với việc từ kết luận BTV / thông báo Thường trực (GV-2, phục vụ phân công PCVP).
 export const canNganh = (loaiVanBan) => ['KL_BTV', 'TB_THUONG_TRUC'].includes(loaiVanBan);

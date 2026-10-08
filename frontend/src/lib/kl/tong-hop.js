@@ -4,6 +4,7 @@
 // là bất biến cấu trúc. Có unit test ở frontend/tests/tong-hop.test.mjs.
 import { NHOM, THU_TU_NHOM, nhomCua } from './nhan.js';
 import { ngayTruoc } from './ngay.js';
+import { maTheoNguon } from './ma-nguon.js';
 
 export const CHUA_PHAN_LOAI = 'CHUA_PHAN_LOAI'; // lĩnh vực NULL (134 dòng production 15/9) — nhóm hiển thị, không bị lọc mất
 export const CHUA_CO_NGANH = 'CHUA_CO_NGANH';
@@ -78,7 +79,7 @@ export function locRows(rows, f = {}) {
     && (!f.muc || r.muc_canh_bao === f.muc)
     && (!f.chuaCapQuyetDinh || (laMo(r) && !r.cap_quyet_dinh))
     && (!f.khongCapNhatQua || (laMo(r) && (ngayTruoc(r.cap_nhat_luc, f.now) ?? 0) > f.khongCapNhatQua))
-    && (!kw || `${r.ma} ${r.noi_dung} ${r.nguoi_theo_doi_ten || ''} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''}`.toLowerCase().includes(kw)));
+    && (!kw || `${r.ma} ${maTheoNguon(r)} ${r.so_ket_luan || ''} ${r.noi_dung} ${r.nguoi_theo_doi_ten || ''} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''} ${r.co_quan_trinh_ten || ''} ${r.thuong_truc_chi_dao_ten || ''}`.toLowerCase().includes(kw)));   // C2: + mã theo nguồn, số hiệu, cơ quan trình
 }
 
 // Hàng 4 dashboard: ngành → lĩnh vực, có nhóm "Chưa phân loại" (lĩnh vực NULL) trong mỗi ngành và "Chưa có ngành".

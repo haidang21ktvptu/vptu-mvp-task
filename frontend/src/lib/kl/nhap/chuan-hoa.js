@@ -5,13 +5,14 @@ import { chuanChu } from './truong.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../thay-mat.js';
 
 export const LOAI_VB = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'], ['NQ_TW', 'Nghị quyết Trung ương'],
-  ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác']];
+  ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác'], ['KL_BCH', 'Kết luận Ban Chấp hành Đảng bộ tỉnh'], ['NQ_BCH', 'Nghị quyết Ban Chấp hành Đảng bộ tỉnh']];   // 0087: thêm cuối (mẫu nhập giữ thứ tự cũ)
 export const DO_KHAN = [['THUONG', 'Thường'], ['KHAN', 'Khẩn'], ['THUONG_KHAN', 'Thượng khẩn'], ['HOA_TOC', 'Hỏa tốc']];
 export const TIEN_DO = [['DANG_THUC_HIEN', 'Đang thực hiện'], ['HOAN_THANH', 'Hoàn thành']];
 export const CHAT_LUONG = [['KHONG_DAT', 'Không đạt'], ['DAT', 'Đạt'], ['DAT_TOT', 'Đạt tốt'], ['DAT_XUAT_SAC', 'Đạt xuất sắc']];
 // Cách gọi khác hay gặp (đã chuẩn hoá) → mã.
 const BI_DANH = {
-  loai_van_ban: { 'ket luan': 'KL_BTV', 'ket luan btv': 'KL_BTV', 'thong bao': 'TB_THUONG_TRUC', 'thong bao ket luan': 'TB_THUONG_TRUC', 'nghi quyet': 'NQ_TW', 'cong van': 'CONG_VAN', khac: 'KHAC' },
+  loai_van_ban: { 'ket luan': 'KL_BTV', 'ket luan btv': 'KL_BTV', 'thong bao': 'TB_THUONG_TRUC', 'thong bao ket luan': 'TB_THUONG_TRUC', 'nghi quyet': 'NQ_TW', 'cong van': 'CONG_VAN', khac: 'KHAC',
+    'ket luan bch': 'KL_BCH', 'kl bch': 'KL_BCH', 'ket luan ban chap hanh': 'KL_BCH', 'nghi quyet bch': 'NQ_BCH', 'nq bch': 'NQ_BCH', 'nghi quyet ban chap hanh': 'NQ_BCH' },
   loai_thoi_han: { 'co han': 'CO_HAN_CU_THE', 'ky ban hanh': 'KY_BAN_HANH', 'thuong xuyen': 'THUONG_XUYEN', 'cho quyet dinh': 'CHO_QUYET_DINH' },
   do_khan: { 'binh thuong': 'THUONG', 'hoa toc': 'HOA_TOC', 'thuong khan': 'THUONG_KHAN', khan: 'KHAN', thuong: 'THUONG' },
   tien_do: { 'da hoan thanh': 'HOAN_THANH', xong: 'HOAN_THANH', 'da xong': 'HOAN_THANH', 'hoan thanh': 'HOAN_THANH', 'dang thuc hien': 'DANG_THUC_HIEN',

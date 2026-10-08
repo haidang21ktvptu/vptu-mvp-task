@@ -59,7 +59,7 @@ function nhanhHtml(r, con, kw, cap) {
     <div class="tvb-hang">
       ${coCon ? `<button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} ${escapeHtml(r.ma)}"></button>` : '<i class="tvb-gap trong"></i>'}
       <button type="button" class="tvb-nut" data-action="tvbMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" title="${escapeHtml(nhanTrangThai(r, state.user?.id))}">
-        <i class="tvb-cham ${lopMep(r, state.user?.id) || 'xam'}"></i><span class="ma">${escapeHtml(r.ma)}</span><span class="nd">${escapeHtml(r.noi_dung)}</span>
+        <i class="tvb-cham ${lopMep(r, state.user?.id) || 'xam'}"></i><span class="ma">${escapeHtml(r.ma)}${r.stt_van_ban ? `<small class="tvb-stt" title="Số thứ tự trong văn bản">·${String(r.stt_van_ban).padStart(2, '0')}</small>` : ''}</span><span class="nd">${escapeHtml(r.noi_dung)}</span>
         <span class="chu-tri">${escapeHtml(ownerText(r))}</span><span class="han">${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có hạn'}</span></button>
     </div>
     <div class="tvb-con">${cacCon.join('')}${la}</div></div>`;
@@ -77,7 +77,8 @@ function gocHtml({ vb, viec }, con, kw, tatCa) {
     <div class="tvb-goc-dau">
       <button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} văn bản ${escapeHtml(vb.so_ket_luan || '')}"></button>
       <div class="tvb-vb"><b>${escapeHtml(tenLoaiVanBan(vb.van_ban_loai))} · ${escapeHtml(vb.so_ket_luan || '(không số)')}</b><span class="chu-phu"> · ban hành ${formatNgay(vb.ngay_ban_hanh)}</span>
-        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}${raSoatHtml(vb.van_ban_id, viec.length)}</div>
+        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}${raSoatHtml(vb.van_ban_id, viec.length)}
+        ${state.user?.role_group && !state.user?.bi_khoa ? `<button type="button" class="nut nho tvb-giao-them" data-action="giaoThemTuVanBan" data-vb="${escapeHtml(vb.van_ban_id)}">+ Giao thêm nhiệm vụ từ văn bản này</button>` : ''}</div>
       <div class="tvb-tien"><div class="tvb-thanh" role="img" aria-label="${x} trên ${n} hoàn thành"><i class="luc" style="width:${pc(x)}%"></i><i class="do" style="width:${pc(y)}%"></i><i class="vang" style="width:${pc(z)}%"></i></div>
         <span class="tvb-tien-chu">${x}/${n} hoàn thành · ${y} quá hạn · ${z} sắp đến hạn</span></div>
     </div>

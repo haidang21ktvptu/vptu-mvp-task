@@ -24,6 +24,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     ...hinh('a1-04b-xuat-theo-ky-cat.jpg', 'Hộp Xuất Excel theo kỳ: chọn kỳ, xem bốn số đếm trước khi tải'),
     P2('5.5 Theo văn bản'),
     p('Mỗi **kết luận, thông báo, công văn** là một cây: văn bản → nhiệm vụ giao từ văn bản → việc giao tiếp xuống → minh chứng. Dòng văn bản ghi "đã nhập x / dự kiến y", đã rà soát toàn văn hay chưa (nhãn vàng khi còn thiếu), thanh tiến độ hoàn thành / quá hạn / sắp đến hạn; nút **Sửa** để cập nhật trích yếu, số dự kiến, đánh dấu đã rà soát. Ô tìm theo số hiệu / trích yếu, lọc theo trạng thái, **Mở rộng / Thu gọn tất cả**; bấm một nhánh để mở ngăn chi tiết.'),
+    p('Mỗi việc trong cây có số thứ tự trong văn bản (·01, ·02…). Nút **+ Giao thêm nhiệm vụ từ văn bản này** ở dòng văn bản mở Giao việc với đúng văn bản đó (v3.19).'),
     ...hinh('a1-05-theo-van-ban-cat.jpg', 'Màn Theo văn bản'),
     P2('5.6 Cán bộ thuộc quyền'),
     p('Mỗi phòng một cột, mỗi cán bộ một dòng với thanh tải việc (Đỏ / Vàng / đang làm) và ghi chú "rảnh, có thể nhận thêm"; chất lượng hoàn thành ghi dưới tên. Bấm tên để xem việc đang mở của người đó ngay trong trang — dùng khi đánh giá cán bộ hoặc cân đối việc giữa các phòng.'),

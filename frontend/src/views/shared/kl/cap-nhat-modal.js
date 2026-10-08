@@ -3,7 +3,7 @@
 // Q7 (0052): việc ĐÃ có hạn thì Owner / người theo dõi không tự đổi hạn (đổi hạn = đề nghị gia hạn) — ô hạn chỉ hiện khi việc chưa có hạn,
 // trừ người quản trị KL (quan_tri_kl) vẫn sửa được.
 // Đợt C1 v3.19 (0086): việc theo 1400 đang mở, người mở là Owner / người theo dõi → mục "Nộp minh chứng nhanh" trong cùng hộp; Lưu = cập nhật
-// rồi nop_minh_chung khi có số hiệu hoặc ngày (cấp nhận trống = theo việc; trích yếu, mô tả tuỳ chọn). Minh chứng lỗi → hộp giữ mở để sửa.
+// rồi nop_minh_chung khi đánh dấu "Việc đã hoàn thành — ghi kết quả" (C2; cấp nhận trống = theo việc; trích yếu, mô tả tuỳ chọn). Lỗi → hộp giữ mở.
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
@@ -49,7 +49,7 @@ export async function openKlCapNhat({ id, rows }) {
     .map((t) => `<option value="${t.ma}"${t.ma === row.tien_do_ma ? ' selected' : ''}>${t.ten}</option>`).join('');
   show('klCnMinhChungWrap', !row.theo_1400);
   show('klCnGhiChu1400', theo1400);
-  show('klCnMcWrap', coMcNhanh());
+  show('klCnMcWrap', coMcNhanh()); $('klCnXong').checked = false; show('klCnMcTruong', false); show('klCnXongGoiY', true);   // C2: mở bằng ô đánh dấu
   ['klCnMcSoHieu', 'klCnMcTrichYeu', 'klCnMcMoTa'].forEach((id) => { $(id).value = ''; });
   $('klCnMcNgay').value = ''; $('klCnMcNgay').min = row.ngay_ban_hanh; $('klCnMcNgay').max = homNay;
   $('klCnMcCap').innerHTML = '<option value="">— Theo việc —</option>' + danhMucKl().cap.map((c) => `<option value="${c.ma}"${c.ma === row.cap_nhan_san_pham ? ' selected' : ''}>${escapeHtml(c.ten)}</option>`).join('');
@@ -98,10 +98,9 @@ function kiemTra(p) {
 
 // Minh chứng nhanh: null = không nộp (cả số hiệu lẫn ngày trống); chuỗi = lỗi form; object = tham số nop_minh_chung.
 function minhChungNhanh() {
-  if (!coMcNhanh()) return null;
+  if (!coMcNhanh() || !$('klCnXong').checked) return null;   // C2: chỉ khi đánh dấu "Việc đã hoàn thành — ghi kết quả"
   const p = { nhiem_vu_id: row.id, so_hieu: $('klCnMcSoHieu').value.trim(), ngay_van_ban: $('klCnMcNgay').value, cap_nhan: $('klCnMcCap').value || row.cap_nhan_san_pham,
     trich_yeu: $('klCnMcTrichYeu').value.trim(), mo_ta_ket_qua: $('klCnMcMoTa').value.trim() };
-  if (!p.so_hieu && !p.ngay_van_ban) return null;
   if (p.ngay_van_ban > homNay) return 'Ngày văn bản minh chứng không được sau hôm nay.';
   return loiMinhChung(p, row.cap_nhan_san_pham) || p;
 }
@@ -152,6 +151,7 @@ export function mountKlCapNhatModal(onSave) {
   afterSave = onSave;
   $('modalRoot').insertAdjacentHTML('beforeend', klCapNhatTemplate);
   $('klCnTienDo').addEventListener('change', capNhatHienThi);
+  $('klCnXong').addEventListener('change', () => { const x = $('klCnXong').checked; show('klCnMcTruong', x); show('klCnXongGoiY', !x); if (x) $('klCnMcSoHieu').focus(); });
   $('klCnChuaCoHan').addEventListener('change', () => { if ($('klCnChuaCoHan').checked) $('klCnHan').value = ''; capNhatHienThi(); });
   $('klCnHan').addEventListener('input', capNhatHienThi);
   // Dán minh chứng có "ngày d/m/yyyy" → gợi ý ngày hoàn thành nếu ô còn trống (6.8), người dùng sửa được.
