@@ -7,7 +7,7 @@ import { mo, dauThe, pillCanh, thuoc } from './template.js';
 
 const MAU = ['--f-tot', '--du-lieu', '--f-vang', '--f-nt', '--f-xs', '--f-dt', '--f-tre', '--chu-mo'];
 export const tenLoai = (ma) => (ma === KHONG_VB ? 'Không có văn bản' : tenLoaiVanBan(ma));
-const TEN_NGAN = { KL_BTV: 'Kết luận BTV', TB_THUONG_TRUC: 'Thông báo Thường trực', NQ_TW: 'Nghị quyết TW', CONG_VAN: 'Công văn', KHAC: 'Văn bản khác', [KHONG_VB]: 'Không có văn bản' };
+const TEN_NGAN = { KL_BTV: 'Kết luận BTV', TB_THUONG_TRUC: 'Thông báo Thường trực', KL_BCH: 'Kết luận BCH', NQ_BCH: 'Nghị quyết BCH', NQ_TW: 'Nghị quyết TW', CONG_VAN: 'Công văn', KHAC: 'Văn bản khác', [KHONG_VB]: 'Không có văn bản' };
 const tenNgan = (ma) => TEN_NGAN[ma] || tenLoai(ma);
 const opt = (o, chon) => `<option value="${escapeHtml(o.ma)}"${o.ma === chon ? ' selected' : ''}>${escapeHtml(o.ten)}${o.n === null ? '' : ` (${o.n})`}</option>`;
 const oChon = (id, khoa, nhan, ds, chon, tatCa) => (ds.length ? `<label>${nhan}<select id="${id}" data-loc="${khoa}" aria-label="${nhan}"><option value="">${tatCa}</option>${ds.map((o) => opt(o, chon)).join('')}</select></label>` : '');

@@ -9,6 +9,7 @@ import { danhMucKl, tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tenCapDuyet } from '../../../lib/kl/thay-mat.js';
+import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
@@ -26,6 +27,9 @@ export function giaTriO(cot, v) {
   if (v === null || v === undefined || v === '') return '(trống)';
   const k = kieuCua(cot);
   if (k === 'doKhan') return tenDoKhan(v);
+  if (k === 'mucQT') return tenMucQuanTrong(v);
+  if (k === 'donViNgoai') return tenTrongDanhMuc('donVi', v);
+  if (k === 'thuongTruc') return findAccount(v)?.full_name || String(v);
   return DM[k] ? tenTrongDanhMuc(DM[k], v) : String(v);
 }
 
@@ -117,7 +121,10 @@ function oMoiHtml(cot, r) {
   if (k === 'chu') return `${nhan}<input type="text" id="stMoi" class="o-nhap" maxlength="${cot === 'don_vi_phoi_hop' ? 300 : 1000}" value="${escapeHtml(v)}">`;
   const dm = danhMucKl();
   const ds = k === 'doKhan' ? THU_TU_DO_KHAN.map((m) => ({ ma: m, ten: tenDoKhan(m) }))
-    : k === 'nguonNhiemVu' ? (dm.nguonNhiemVu || []).filter((d) => d.dang_dung || d.ma === v) : (dm[DM[k]] || []);
+    : k === 'nguonNhiemVu' ? (dm.nguonNhiemVu || []).filter((d) => d.dang_dung || d.ma === v)
+      : k === 'mucQT' ? MUC_QUAN_TRONG.map(([ma, ten]) => ({ ma, ten }))
+        : k === 'donViNgoai' ? (dm.donVi || []).filter((d) => !d.trong_van_phong)
+          : k === 'thuongTruc' ? state.accounts.filter((a) => a.role_group === 'A0' && !a.is_system).map((a) => ({ ma: a.id, ten: a.full_name })) : (dm[DM[k]] || []);
   const trong = ['doKhan', 'sanPham', 'cap'].includes(k) ? '' : opt('', '(để trống)', !v);   // độ khẩn, sản phẩm, cấp nhận: luôn phải có
   return `${nhan}<select id="stMoi" class="o-nhap">${trong}${ds.map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>`;
 }

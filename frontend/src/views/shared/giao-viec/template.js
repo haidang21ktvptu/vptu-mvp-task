@@ -3,7 +3,7 @@
 // mặt (khi người giao không phải lãnh đạo); (2) Nhiệm vụ: luôn là các THẺ — thẻ "Nhiệm vụ 1" là bộ ô chính (id klTh*: nội dung, chịu trách nhiệm,
 // người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành, lĩnh vực — kèm chọn nhanh), thẻ 2…20 dựng bằng
 // nhieu-the.js (+ Thêm nhiệm vụ); cuối tấm "Thông tin thêm (không bắt buộc)" thu gọn: cấp cần quyết định, văn bản triển khai, ghi chú — dùng chung
-// cả lượt. Không còn công tắc "Một việc / Nhiều nhiệm vụ": một thẻ → giao_viec (kể cả hoàn thiện dòng Excel, giao tiếp xuống), nhiều thẻ → giao_viec_nhieu.
+// cả lượt (Đợt C2: + mức quan trọng, cơ quan trình, Thường trực chỉ đạo — thong-tin-nguon.js). Không còn công tắc "Một việc / Nhiều nhiệm vụ": một thẻ → giao_viec (kể cả hoàn thiện dòng Excel, giao tiếp xuống), nhiều thẻ → giao_viec_nhieu.
 // Chấm 1-2 sáng khi khối điền đủ; chân tấm: "Còn thiếu: …" cạnh nút Giao việc / Giao N việc + Huỷ + Giao, nhập tiếp (chỉ khi một thẻ). Cột phụ 340px:
 // xem trước thẻ việc + ba bước sau khi giao. Dùng chung A0 (bản rút gọn = ẩn phần không áp dụng), A1, A2, A3 giao thay mặt. id ô giữ tiền tố klTh*,
 // #gvCham1..2, .gv-the, .gv-phan (e2e). Độ khẩn: lib/kl/do-khan.js. Quyền và 1-1-1 kiểm trong hàm giao_viec (0035).
@@ -42,7 +42,7 @@ export const giaoViecTemplate = `
         <div id="klThVanBanMoi" class="hidden">
           <div class="cot-2">
             ${truong('klThLoaiVB', 'Loại văn bản', sel('klThLoaiVB'))}
-            <div class="gv-truong" id="klThSoHNWrap"><label for="klThSoHN" class="nhan">Số hội nghị${BB}</label>${inp('klThSoHN', 'number', ' min="1"')}</div>
+            <div class="gv-truong" id="klThSoHNWrap"><label for="klThSoHN" class="nhan">Số hội nghị<b id="klThSoHNBatBuoc" class="gv-bb" aria-hidden="true">*</b></label>${inp('klThSoHN', 'number', ' min="1"')}</div>
           </div>
           <div class="cot-3">
             ${truong('klThSoKL', `Số hiệu${BB}`, inp('klThSoKL', 'text', ' placeholder="123-KL/TU"'))}
@@ -104,6 +104,11 @@ export const giaoViecTemplate = `
           ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
           ${truong('klThVanBanTK', 'Văn bản triển khai', inp('klThVanBanTK'))}
           ${truong('klThGhiChu', 'Ghi chú / lĩnh vực chi tiết', inp('klThGhiChu'))}
+        </div>
+        <div class="cot-3" id="gvNguonThemWrap">
+          ${truong('klThMucQT', 'Mức quan trọng', sel('klThMucQT'), '', 'A cao nhất')}
+          ${truong('klThCoQuanTrinh', 'Cơ quan trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
+          ${truong('klThTTChiDao', 'Thường trực chỉ đạo', sel('klThTTChiDao'), '', 'đồng chí Thường trực Tỉnh ủy chỉ đạo nội dung này')}
         </div>
       </details>
     </fieldset>

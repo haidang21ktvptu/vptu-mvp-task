@@ -1,8 +1,8 @@
-// Ma trận biểu mẫu Giao việc 7 vai × 5 loại văn bản (trước 3.17 là han-nop-minh-chung.spec.js; 0077 bỏ hạn nộp minh chứng — ô không còn, nút Giao
+// Ma trận biểu mẫu Giao việc 7 vai × 7 loại văn bản (trước 3.17 là han-nop-minh-chung.spec.js; 0077 bỏ hạn nộp minh chứng — ô không còn, nút Giao
 // sáng khi đủ văn bản, nguồn, nội dung, người chịu trách nhiệm, sản phẩm, hạn hoàn thành). Vai: A0 (kể cả giao từ Kết luận có sẵn), Chánh VP, PCVP
 // phụ trách cả phòng, PCVP kiêm nhiệm (phân công tạm), Trưởng phòng, A3 giao thay mặt (cờ quan_tri_kl tạm, thay mặt Trưởng phòng), quan_tri_kl
 // (demo_qtht, cờ tạm, thay mặt Chánh VP). Mỗi ô: không có ô hạn nộp, "Còn thiếu" không nhắc hạn nộp.
-// PR-3 (B, quyết định 1/10/2026 — gộp vào ma trận này, cùng phiên): ô "Nguồn nhiệm vụ" mỗi vai × 5 loại — mặc định theo loại khi tạo văn bản mới, theo loại
+// PR-3 (B, quyết định 1/10/2026 — gộp vào ma trận này, cùng phiên): ô "Nguồn nhiệm vụ" mỗi vai × 7 loại — mặc định theo loại khi tạo văn bản mới, theo loại
 // của văn bản CÓ SẴN khi chọn Kết luận (bài học v3.8.0), bỏ chọn ⇒ "Còn thiếu: nguồn nhiệm vụ". Giao thật mỗi vai: pr3-giao-that.spec.js.
 // Giao thật: Trưởng phòng (văn bản mới) và A0 từ Kết luận — DB lưu han_nop_minh_chung NULL. A3 thường có màn Giao việc (0085); việc có hạn nộp cũ
 // trong dữ liệu không còn nhãn cam "Chậm nộp minh chứng". Dữ liệu theo khoá; cờ khôi phục.
@@ -12,13 +12,13 @@ import { NAP, moGiaoViec } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, taoViec, datCo, voiPhien } from './lib/pr2b.mjs';
 
-const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'NQ_TW', 'CONG_VAN', 'KHAC'];
+const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'KL_BCH', 'NQ_BCH', 'NQ_TW', 'CONG_VAN', 'KHAC'];   // 0087: + KL / NQ Ban Chấp hành (7 vai × 7 loại)
 const VAI = [
   { role: 'A0', ten: 'A0' }, { role: 'A1', ten: 'Chánh VP' }, { role: 'PCVP', ten: 'PCVP phụ trách' }, { role: 'PCVP2', ten: 'PCVP kiêm nhiệm' },
   { role: 'A2', ten: 'Trưởng phòng' }, { role: 'E2E_NV', ten: 'A3 giao thay mặt', thayMat: ID.tp }, { role: 'QTHT', ten: 'quan_tri_kl', thayMat: ID.cvp },
 ];
 const H = cong(homNay(), 20);
-const NGUON = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
+const NGUON = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', KL_BCH: 'VAN_BAN_CAN_THEO_DOI', NQ_BCH: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
 let db; let khoa; let vbKL;
 const conThieu = (p) => p.locator('#gvConThieu');
 // Gõ khoá vào ô tìm văn bản → biểu mẫu tự chọn kết quả đầu (van-ban.js, tìm ở DB sau 300 ms; lỗi mạng / statement timeout trên staging bận thì
@@ -58,7 +58,7 @@ async function kiemVai(page, v) {
   await expect(conThieu(page), v.ten).toContainText('nguồn nhiệm vụ');
 }
 
-test.describe.serial('Giao việc — ma trận 7 vai × 5 loại văn bản (không còn hạn nộp minh chứng)', () => {
+test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (không còn hạn nộp minh chứng)', () => {
   test.describe.configure({ timeout: 180_000 });   // hành trình nhiều bước (staging chậm)
   let K;
   test.beforeAll(async () => {
@@ -80,7 +80,7 @@ test.describe.serial('Giao việc — ma trận 7 vai × 5 loại văn bản (kh
     if (db) { await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, khoa); await donVanBan(db, `${khoa}-GV`); await donVanBan(db, `${khoa}-KL`); await khoiPhuc(); }
   });
 
-  test('1. Ma trận 7 vai × 5 loại văn bản (tuần tự từng vai): không có ô hạn nộp, nguồn mặc định đúng, "Còn thiếu" không nhắc hạn nộp', async ({ browser }, testInfo) => {
+  test('1. Ma trận 7 vai × 7 loại văn bản (tuần tự từng vai): không có ô hạn nộp, nguồn mặc định đúng, "Còn thiếu" không nhắc hạn nộp', async ({ browser }, testInfo) => {
     test.setTimeout(420_000);   // 7 vai nối tiếp, mỗi vai một phiên
     for (const v of VAI) await voiPhien(browser, v.role, testInfo, (p) => kiemVai(p, v));
   });

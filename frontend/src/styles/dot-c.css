@@ -59,3 +59,18 @@
   .khung-mc { border: 1px solid var(--vien); border-radius: 10px; padding: 10px 12px 12px; margin: 0; }
   .khung-mc > legend { padding: 0 6px; }
 }
+@layer components {
+  /* Đợt C2 (0087): mã theo nguồn (cạnh NV-xxx, dòng phụ của danh sách), nhãn mức quan trọng A / B / C. */
+  .ma-nguon { display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--navy); background: var(--navy-nhat);
+    border-radius: 5px; padding: 0 6px; line-height: 18px; white-space: nowrap; }
+  .hang-nv .ten > span .ma-nguon { margin-right: 6px; }
+  .muc-qt { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 5px; font-size: 11px; font-weight: 700; white-space: nowrap;
+    border: 1px solid var(--vien); color: var(--chu-phu); vertical-align: 1px; }
+  /* Không dùng đỏ / vàng (đã là màu cảnh báo): A = khối đặc, B = nền nhạt, C = viền. */
+  .muc-qt.muc-a { border-color: var(--navy-dac); color: #fff; background: var(--navy-dac); }
+  .muc-qt.muc-b { border-color: var(--navy-nhat); color: var(--navy); background: var(--navy-nhat); }
+}
+@layer components {
+  .tvb-stt { font-weight: 600; color: var(--chu-phu); margin-left: 2px; }
+  .tvb-giao-them { margin-top: 6px; }
+}

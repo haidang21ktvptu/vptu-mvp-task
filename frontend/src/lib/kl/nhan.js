@@ -85,6 +85,7 @@ export const TEN_COT = {
   chat_luong: 'Chất lượng hoàn thành', nguon_nhiem_vu_ma: 'Nguồn nhiệm vụ', vuong_mac: 'Vướng mắc / đề nghị lãnh đạo quyết định',
   sua_thong_tin_giao: 'Sửa thông tin giao', de_nghi_sua: 'Đề nghị sửa', nhap_excel: 'Nhập Excel',
   don_vi_phoi_hop: 'Đơn vị phối hợp', van_ban_ra_soat: 'Rà soát văn bản (số nhiệm vụ dự kiến)',
+  muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 

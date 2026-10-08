@@ -73,7 +73,8 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
       const ngan = p.locator(`#klChiTiet-${p2.id}`); await expect(ngan).toBeVisible(NAP);
       await ngan.getByRole('button', { name: 'Cập nhật' }).click();
       await expect(p.locator('#klCapNhatModal')).toBeVisible();
-      await expect(p.locator('#klCnMcWrap')).toBeVisible();
+      await expect(p.locator('#klCnMcWrap')).toBeVisible(); await expect(p.locator('#klCnMcSoHieu')).toBeHidden();
+      await p.locator('#klCnXong').check();   // C2: "Việc đã hoàn thành — ghi kết quả" mở các ô minh chứng
       await expect(p.locator('#klCnMcCap')).toHaveValue('TRUONG_PHONG');
       await p.locator('#klCnMcSoHieu').fill('21/BC-E2E');
       await p.locator('#klCnLuu').click();

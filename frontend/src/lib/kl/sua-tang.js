@@ -1,4 +1,4 @@
-// Nhập theo tầng (0070–0071, giao diện v9 đợt 2): 10 ô "thông tin giao" do cấp giao điền — cấp giao sửa ngay (sua_thong_tin_giao, lý do bắt buộc),
+// Nhập theo tầng (0070–0071, giao diện v9 đợt 2; 0087: + mức quan trọng, cơ quan trình, Thường trực chỉ đạo): 13 ô "thông tin giao" do cấp giao điền — cấp giao sửa ngay (sua_thong_tin_giao, lý do bắt buộc),
 // cấp nhận việc gửi "Đề nghị sửa" (de_nghi_sua_gui) để người giao duyệt (de_nghi_sua_duyet) hoặc tự rút (de_nghi_sua_huy). Quyền thật ở hàm DB;
 // laTangGiao chỉ để ẩn / hiện nút cho đúng (cùng quy tắc kl_la_tang_giao). Đọc de_nghi_sua theo RLS (người gửi, người duyệt, người thấy việc).
 import { supabase } from '../supabase.js';
@@ -9,7 +9,8 @@ import { toiTrongNhom, duyetThayNhom } from './thay-mat.js';
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
 export const O_GIAO = [['noi_dung', 'Nội dung', 'vb'], ['san_pham_loai', 'Sản phẩm', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
   ['cap_nhan_san_pham', 'Cấp nhận sản phẩm', 'cap'], ['do_khan', 'Độ khẩn', 'doKhan'], ['nganh_ma', 'Ngành', 'nganh'], ['linh_vuc_ma', 'Lĩnh vực', 'linhVuc'],
-  ['linh_vuc_chi_tiet', 'Lĩnh vực chi tiết', 'chu'], ['nguon_nhiem_vu_ma', 'Nguồn nhiệm vụ', 'nguonNhiemVu'], ['don_vi_phoi_hop', 'Đơn vị phối hợp', 'chu']];
+  ['linh_vuc_chi_tiet', 'Lĩnh vực chi tiết', 'chu'], ['nguon_nhiem_vu_ma', 'Nguồn nhiệm vụ', 'nguonNhiemVu'], ['don_vi_phoi_hop', 'Đơn vị phối hợp', 'chu'],
+  ['muc_quan_trong', 'Mức quan trọng', 'mucQT'], ['co_quan_trinh', 'Cơ quan trình', 'donViNgoai'], ['thuong_truc_chi_dao', 'Thường trực chỉ đạo', 'thuongTruc']];   // 0087
 export const tenOGiao = (cot) => O_GIAO.find(([c]) => c === cot)?.[1] || cot;
 
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN())

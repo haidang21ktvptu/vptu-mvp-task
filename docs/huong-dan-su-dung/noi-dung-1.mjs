@@ -107,7 +107,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     ...steps([
       'Trên thẻ việc đang thực hiện, bấm **Cập nhật tiến độ** (hoặc **Ghi vướng mắc**).',
       'Ghi ngắn gọn ở ô **Ghi chú** việc đã làm tới đâu; nếu gặp khó khăn cần lãnh đạo quyết, ghi vào ô **Vướng mắc / đề nghị lãnh đạo quyết định** (tối đa 500 ký tự). Ô "Văn bản triển khai" dùng khi đã có văn bản triển khai việc.',
-      'Đã có văn bản kết quả thì điền luôn mục **Nộp minh chứng nhanh** (v3.19) ngay trong hộp: **Số hiệu văn bản** và **Ngày văn bản** là đủ; cấp nhận mặc định theo việc, trích yếu / mô tả kết quả không bắt buộc. Để trống cả số hiệu lẫn ngày = chỉ cập nhật, không nộp.',
+      'Đã có văn bản kết quả thì đánh dấu ô **"Việc đã hoàn thành — ghi kết quả"** (v3.19) ngay trong hộp: các ô minh chứng hiện ra — **Số hiệu văn bản** và **Ngày văn bản** là đủ; cấp nhận mặc định theo việc, trích yếu / kết quả thực hiện không bắt buộc. Không đánh dấu = chỉ cập nhật, không nộp.',
       'Bấm **Lưu cập nhật**. Lần đầu ghi vướng mắc, hệ thống báo ngay cho người giao và Phó Chánh Văn phòng phụ trách; việc hiện ở mục "Việc cần lãnh đạo quyết định" của lãnh đạo. Khi vướng mắc đã được giải quyết, xoá trống ô này. Có minh chứng nhanh thì việc chuyển sang **"Đã nộp — chờ nghiệm thu"**.',
     ]),
     ...hinh('a3-04-cap-nhat-tien-do-cat.jpg', 'Hộp thoại Cập nhật: tiến độ, ghi chú, vướng mắc, nộp minh chứng nhanh'),
@@ -187,6 +187,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     ]),
     ...hinh('gv-04-nhieu-nhiem-vu-cat.jpg', 'Nhiều nhiệm vụ từ một văn bản: thẻ Nhiệm vụ 2 dưới thẻ 1, mỗi thẻ đủ ô của một việc, nút + Thêm nhiệm vụ'),
     ...hinh('gv-05-tim-nhanh-cat.jpg', 'Ô tìm nhanh người: gõ vài chữ (không cần dấu), danh sách chỉ còn người khớp'),
+    luuY('Từ v3.19: loại văn bản có thêm **Kết luận** và **Nghị quyết Ban Chấp hành Đảng bộ tỉnh** (ô Số hội nghị hiện, không bắt buộc). Mục **Thông tin thêm (không bắt buộc)** cuối biểu mẫu có **Mức quan trọng** (A cao nhất), **Cơ quan trình** (cơ quan, đơn vị ngoài Văn phòng đã trình nội dung) và **Thường trực chỉ đạo** — dùng chung cho mọi nhiệm vụ của lượt, sửa từng việc sau bằng **Sửa thông tin giao**. Mỗi việc có **số thứ tự trong văn bản** do hệ thống cấp và **mã theo nguồn** cạnh mã NV, ví dụ KL-BTV·HN39·671·04 (loại · hội nghị · số hiệu · thứ tự); gõ mã này, số hiệu văn bản hoặc tên cơ quan trình vào ô tìm để lọc. Cần giao thêm việc từ một văn bản đã có: mở một việc của văn bản đó (hoặc màn Theo văn bản) → **Giao thêm nhiệm vụ từ văn bản này**.'),
     P2('4.4 Nghiệm thu hoặc Trả lại minh chứng'),
     p('Minh chứng chuyên viên nộp hiện ở hai nơi: khối **"Minh chứng chuyên viên vừa nộp"** trong Cần xử lý và mục **Cần nghiệm thu** trên menu (số trên menu là số minh chứng đang chờ đồng chí).'),
     ...steps([

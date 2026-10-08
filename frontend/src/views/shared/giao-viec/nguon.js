@@ -6,7 +6,7 @@ import { $ } from '../../../lib/dom.js';
 import { nguonOptionsHtml } from '../kl/thong-tin-giao.js';
 
 export const NGUON_THEO_LOAI = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI',
-  CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
+  KL_BCH: 'VAN_BAN_CAN_THEO_DOI', NQ_BCH: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
 export const nguonMacDinh = (loai) => NGUON_THEO_LOAI[loai] || 'NHIEM_VU_PHAT_SINH';
 
 let tuChon = false;   // người dùng đã tự chọn (kể cả bỏ chọn) ⇒ không ghi đè bằng mặc định nữa

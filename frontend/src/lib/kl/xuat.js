@@ -7,6 +7,7 @@ import { homNayVN } from './ngay.js';
 import { tenNhom, tenChatLuong, tenTienDoHoanThanh, boSoThuTu } from './nhan.js';
 import { ngayGiao } from './tong-quan.js';
 import { phanLoaiTheoKy, tongHopTheoKy } from './ky.js';
+import { maTheoNguon } from './ma-nguon.js';
 
 const ngayTep = () => homNayVN().replace(/-/g, '');
 const chuTri = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '';
@@ -14,7 +15,7 @@ const phong = (r) => DEPT_NAMES[r.owner_phong] || r.owner_phong || (r.owner_tron
 const sanPham = (r) => (r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : '');
 const trangThai = (r) => `${tenNhom(r.nhom_dem)}${r.so_ngay_qua ? ` (trễ ${r.so_ngay_qua} ngày)` : ''}`;
 
-// 15 cột màn Nhiệm vụ (thứ tự theo prompt PR-3).
+// Cột màn Nhiệm vụ (thứ tự theo prompt PR-3; C2 thêm 4 cột nguồn ở cuối).
 export const COT_NHIEM_VU = [
   { nhan: 'Mã', rong: 10, gt: (r) => r.ma },
   { nhan: 'Nội dung', rong: 60, gt: (r) => r.noi_dung },
@@ -30,6 +31,11 @@ export const COT_NHIEM_VU = [
   { nhan: 'Vướng mắc', rong: 40, gt: (r) => r.vuong_mac || '' },
   { nhan: 'Sản phẩm', rong: 30, gt: sanPham },
   { nhan: 'Cấp nhận', rong: 20, gt: (r) => r.cap_nhan_san_pham_ten || '' },
+  // Đợt C2 (0087): thêm cuối — mẫu cũ đọc theo tên cột không lệch
+  { nhan: 'Mã theo nguồn', rong: 20, gt: maTheoNguon },
+  { nhan: 'Mức quan trọng', rong: 12, gt: (r) => r.muc_quan_trong || '' },
+  { nhan: 'Cơ quan trình', rong: 28, gt: (r) => boSoThuTu(r.co_quan_trinh_ten) || '' },
+  { nhan: 'Thường trực chỉ đạo', rong: 24, gt: (r) => r.thuong_truc_chi_dao_ten || '' },
 ];
 const bang = (ten, cot, rows) => ({ ten, cot, dong: rows.map((r) => cot.map((c) => c.gt(r))) });
 

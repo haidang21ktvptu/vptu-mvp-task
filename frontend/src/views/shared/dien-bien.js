@@ -5,6 +5,8 @@ import { notifyError } from '../../components/toast.js';
 import { loadDienBien, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
 import { tenCot, tenChatLuong } from '../../lib/kl/nhan.js';
 import { tenTrongDanhMuc } from '../../lib/kl/du-lieu.js';
+import { findAccount } from '../../lib/state.js';
+import { tenMucQuanTrong } from '../../lib/kl/ma-nguon.js';
 import { moNhiemVu } from './kl/index.js';
 
 const NHAN_NGUON = { lich_su: '', canh_bao: 'Cảnh báo', tu_choi: 'Từ chối', tu_choi_ly_do: 'Lý do từ chối', chi_dao: 'Chỉ đạo', phan_hoi: 'Phản hồi', minh_chung: 'Minh chứng' };
@@ -12,7 +14,8 @@ const LOP_NGUON = { lich_su: 'db-lich-su', canh_bao: 'db-canh-bao', tu_choi: 'db
 const TT_MC = { CHO_XAC_NHAN: 'chờ xác nhận', HOP_LE: 'hợp lệ', KHONG_HOP_LE: 'không hợp lệ' };
 
 // PR-3: mã chất lượng / nguồn nhiệm vụ trong lịch sử hiện bằng tên.
-const gt = (cot, v) => (v == null || v === '' ? v : cot === 'chat_luong' ? tenChatLuong(v) || v : cot === 'nguon_nhiem_vu_ma' ? tenTrongDanhMuc('nguonNhiemVu', v) : v);
+const gt = (cot, v) => (v == null || v === '' ? v : cot === 'chat_luong' ? tenChatLuong(v) || v : cot === 'nguon_nhiem_vu_ma' ? tenTrongDanhMuc('nguonNhiemVu', v)
+  : cot === 'co_quan_trinh' ? tenTrongDanhMuc('donVi', v) : cot === 'thuong_truc_chi_dao' ? findAccount(v)?.full_name || v : cot === 'muc_quan_trong' ? tenMucQuanTrong(v) : v);   // C2 (0087)
 function noiDung(d) {
   if (d.nguon === 'lich_su') {
     if (d.loai === '*') return `Tạo dòng ${escapeHtml(d.noi_dung || '')}`;

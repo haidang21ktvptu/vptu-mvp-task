@@ -17,7 +17,9 @@ export const COT_VIEC = cot('id, ma, van_ban_id, van_ban_loai, so_hoi_nghi, so_k
   'minh_chung_buoc, nop_dung_han, nghiem_thu_dung_han, so_lan_tra_lai',
   'nguoi_nop_cho, nguoi_chiu_cham, nguoi_chiu_cham_ten, phong_chiu_cham',
   // PR-3 (0067): chất lượng, nguồn nhiệm vụ, vướng mắc, đơn vị phối hợp, tiến độ hoàn thành (Trước hạn / Đúng hạn / Trễ)
-  'chat_luong, nguon_nhiem_vu_ma, nguon_nhiem_vu_ten, vuong_mac, don_vi_phoi_hop, tien_do_hoan_thanh');
+  'chat_luong, nguon_nhiem_vu_ma, nguon_nhiem_vu_ten, vuong_mac, don_vi_phoi_hop, tien_do_hoan_thanh',
+  // Đợt C2 (0087): số thứ tự trong văn bản (mã theo nguồn), mức quan trọng, cơ quan trình, Thường trực chỉ đạo
+  'stt_van_ban, muc_quan_trong, co_quan_trinh, co_quan_trinh_ten, thuong_truc_chi_dao, thuong_truc_chi_dao_ten');
 export const COT_TU_CHOI = 'id, nhiem_vu_id, nguoi_de_nghi, cap_duyet, ly_do, tao_luc, trang_thai, y_kien_duyet, duyet_luc';
 export const COT_CHI_DAO = cot('id, nhiem_vu_id, nguoi_gui, loai, noi_dung, han_phan_hoi, han_moi, chu_tri_moi, trang_thai, phan_hoi, phan_hoi_boi, phan_hoi_luc',
   'created_at, tra_loi_cho, nguoi_nhan, do_khan, da_nhan, dong_boi, dong_luc');

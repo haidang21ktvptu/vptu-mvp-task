@@ -10,13 +10,14 @@ import { loiNguon, docNguon, docVanBanThem } from './nguon.js';
 import { themHoanThien } from './dien-san.js';
 import { getHomNay, laA0, anTheoDoi, laA3GiaoThang, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
 import { tachThayMat } from '../../../lib/kl/thay-mat.js';
+import { docThongTinNguon } from './thong-tin-nguon.js';
 
 // Kiểm tra phía form (phần chung + thẻ 1); trả về chuỗi lỗi hoặc null. Có thẻ thêm: nhieu.js loiNhieu() kiểm tiếp.
 export function kiemTra(p) {
   const homNay = getHomNay();
   if (p.van_ban) {
     if (!p.van_ban.so_ket_luan || !p.van_ban.ngay_ban_hanh) return 'Văn bản mới phải có số hiệu và ngày ban hành.';
-    if (p.van_ban.loai === 'KL_BTV' && !p.van_ban.so_hoi_nghi) return 'Kết luận Ban Thường vụ phải có số hội nghị.';
+    if (p.van_ban.loai === 'KL_BTV' && !p.van_ban.so_hoi_nghi) return 'Kết luận Ban Thường vụ phải có số hội nghị.';   // KL / NQ Ban Chấp hành: không bắt buộc
     if (p.van_ban.ngay_ban_hanh > homNay) return 'Ngày ban hành ở tương lai — kiểm tra lại năm.';
   } else if (!p.van_ban_id && !laA0()) return 'Chọn văn bản giao việc hoặc nhập văn bản mới.';
   if (canNgayNhan() && !p.ngay_nhan_van_ban) return 'Nhập ngày giao nhiệm vụ (mốc bắt đầu đếm).';
@@ -54,6 +55,7 @@ export function docForm(cha) {
     nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null,
     nguoi_theo_doi: laA3GiaoThang() ? state.user?.id || null : $('klThNguoiTheoDoi').value || null,   // 0085: chuyên viên giao thẳng — theo dõi = người giao
     van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThGhiChu').value.trim() || null,
+    ...docThongTinNguon(),   // Đợt C2: phần chung của lượt (tachDong để ở chung)
   });
   if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;
   return themHoanThien(p);

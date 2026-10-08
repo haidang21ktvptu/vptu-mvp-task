@@ -8,7 +8,8 @@
 import { nhanTruong } from './truong.js';
 import { tachThayMat } from '../thay-mat.js';
 
-const NGUON_THEO_LOAI = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
+const NGUON_THEO_LOAI = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', KL_BCH: 'VAN_BAN_CAN_THEO_DOI',
+  NQ_BCH: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };   // 0087: hai loại Ban Chấp hành
 const CAN_NGANH = new Set(['KL_BTV', 'TB_THUONG_TRUC']);
 export const LOAI_HAN_MOI = new Set(['CO_HAN_CU_THE', 'KY_BAN_HANH']);   // việc mới (giao_viec) chỉ nhận hai loại hạn này
 export const du4YeuTo = (g) => ['kq_so_hieu', 'kq_ngay', 'kq_trich_yeu', 'kq_mo_ta'].every((k) => g[k]);
