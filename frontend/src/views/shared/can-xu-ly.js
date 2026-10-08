@@ -6,6 +6,7 @@ import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
+import { laNguoiGiao, tenCapDuyet } from '../../lib/kl/thay-mat.js';
 import { soChuaXuLy, onSoChuaXuLy, lamMoiHuyHieu } from '../../features/huy-hieu.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
@@ -80,7 +81,7 @@ export function khoiThuongTrucHtml() {
   return `<div class="muc do" id="khoiTT"><b>Việc Thường trực giao, chờ đồng chí xác nhận đã nhận (${ds.length})</b>
     <p>Xác nhận trong 1 ngày làm việc; quá hạn hệ thống nhắc đồng chí và Chánh Văn phòng. Từ chối cần lý do, Thường trực duyệt.</p>
     ${ds.map((r) => `<div class="the-con" id="tt-viec-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} ${nhanPhuHtml(r)}</p>
-      ${r.tu_choi_cho ? `<p class="chu-canh-bao-inline">Đã đề nghị từ chối ${formatDateTime(r.tu_choi_cho.tao_luc)}, chờ ${escapeHtml(findAccount(r.tu_choi_cho.cap_duyet)?.full_name || 'Thường trực')} duyệt.</p><div class="hanh-dong">${xem(r)}</div>`
+      ${r.tu_choi_cho ? `<p class="chu-canh-bao-inline">Đã đề nghị từ chối ${formatDateTime(r.tu_choi_cho.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, r.tu_choi_cho.cap_duyet) || 'Thường trực')} duyệt.</p><div class="hanh-dong">${xem(r)}</div>`
     : `<div class="hanh-dong"><button type="button" class="nut lam" data-action="xacNhanNhanTT" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xác nhận đã nhận</button>
         <button type="button" class="nut" data-action="moO" data-o="oTcTT-${r.id}">Từ chối</button>${xem(r)}</div>
       <form class="o" id="oTcTT-${r.id}" data-submit="deNghiTuChoiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
@@ -90,14 +91,14 @@ export function khoiThuongTrucHtml() {
 
 // Việc TÔI giao (kể cả giao thay mặt cho tôi) bị từ chối (đã duyệt đồng ý) hoặc đang có đề nghị từ chối chờ duyệt.
 export function khoiBiTuChoiHtml() {
-  const ds = dh.rows.filter((r) => mo(r) && (r.bi_tu_choi || r.tu_choi_cho) && (r.tao_boi === me() || r.giao_thay_mat_cho === me()));
+  const ds = dh.rows.filter((r) => mo(r) && (r.bi_tu_choi || r.tu_choi_cho) && laNguoiGiao(r));
   if (ds.length === 0) return '';
   const giaoLai = ['A1', 'A2'].includes(vai());
   return `<div class="muc do" id="khoiBiTuChoi"><b>Việc đồng chí giao bị từ chối / đang đề nghị từ chối (${ds.length})</b>
     <p>${giaoLai ? 'Giao lại = đổi chủ trì ngay tại đây; cờ "bị từ chối" tự xoá; chủ trì mới xác nhận nhận việc lại.' : 'Lãnh đạo Văn phòng giao lại cho chủ trì khác.'}</p>
     ${ds.map((r) => {
     const dn = r.tu_choi_cho; const nd = dn ? findAccount(dn.nguoi_de_nghi) : null;
-    const tt = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : `<span class="nhan-xam">${escapeHtml(nd?.full_name || 'Cán bộ')} đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(findAccount(dn.cap_duyet)?.full_name || 'cấp duyệt')} duyệt</span>`;
+    const tt = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : `<span class="nhan-xam">${escapeHtml(nd?.full_name || 'Cán bộ')} đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, dn.cap_duyet) || 'cấp duyệt')} duyệt</span>`;
     return `<div class="the-con" id="btc-${r.id}" data-tu-choi="${r.bi_tu_choi ? 'da' : 'cho'}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} · ${escapeHtml(r.owner_tai_khoan_ten || r.nguoi_theo_doi_ten || '')} ${tt}</p>
       <div class="hanh-dong">${giaoLai && r.bi_tu_choi ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : ''}${xem(r)}</div>
       ${giaoLai && r.bi_tu_choi ? oGiaoLaiHtml(r) : ''}</div>`;

@@ -1,10 +1,12 @@
-// Giao việc v8 (đợt 3, mockup 07; v9: dải 1-1-1-1-3, chọn nhanh, kế thừa khi giao tiếp xuống, văn bản đang nhập — v9.js): biểu mẫu ba khối đánh số trong một tấm — (1) Văn bản giao việc (chọn có sẵn / tạo mới); (2) Nội dung và người
-// chịu trách nhiệm (nội dung, Owner, người theo dõi gợi ý, Thay mặt khi người giao không phải lãnh đạo, độ khẩn dạng pill); (3) Sản phẩm và hạn.
-// Chấm số 1-2-3 sáng khi khối đó điền đủ; chân tấm: dòng "Còn thiếu: …" cạnh nút Giao việc (mờ khi thiếu) + Huỷ + Giao, nhập tiếp. Cột phụ 340px:
-// xem trước thẻ việc (đọc lại các ô) + ba bước sau khi giao. Dùng chung A0 (bản rút gọn = ẩn phần không áp dụng), A1, A2, A3 giao thay mặt.
-// id ô giữ tiền tố klTh* và #gvCham1..3, #gvTomTatChu, .gv-the, .gv-phan (e2e). Độ khẩn: lib/kl/do-khan.js. Quyền và 1-1-1 kiểm trong hàm giao_viec (0035).
-// v3.17: chế độ "Nhiều nhiệm vụ từ một văn bản" (nhieu.js — thẻ nhiệm vụ ở khối 2, mỗi thẻ đủ ô của một việc), ô tìm nhanh cạnh ba ô chọn người
-// (lib/tim-chon.js: gõ → danh sách chỉ còn người khớp + dòng kết quả), nhãn "Ngày giao nhiệm vụ".
+// Giao việc v8 (đợt 3, mockup 07; v9: dải 1-1-1-1-3, chọn nhanh, kế thừa khi giao tiếp xuống, văn bản đang nhập — v9.js). v3.18 (quyết định 8/10/2026,
+// gộp bố cục): biểu mẫu HAI khối trong một tấm — (1) Văn bản và mốc giao: văn bản (chọn có sẵn / tạo mới), nguồn nhiệm vụ, ngày giao nhiệm vụ, Thay
+// mặt (khi người giao không phải lãnh đạo); (2) Nhiệm vụ: luôn là các THẺ — thẻ "Nhiệm vụ 1" là bộ ô chính (id klTh*: nội dung, chịu trách nhiệm,
+// người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành, lĩnh vực — kèm chọn nhanh), thẻ 2…20 dựng bằng
+// nhieu-the.js (+ Thêm nhiệm vụ); cuối tấm "Thông tin thêm (không bắt buộc)" thu gọn: cấp cần quyết định, văn bản triển khai, ghi chú — dùng chung
+// cả lượt. Không còn công tắc "Một việc / Nhiều nhiệm vụ": một thẻ → giao_viec (kể cả hoàn thiện dòng Excel, giao tiếp xuống), nhiều thẻ → giao_viec_nhieu.
+// Chấm 1-2 sáng khi khối điền đủ; chân tấm: "Còn thiếu: …" cạnh nút Giao việc / Giao N việc + Huỷ + Giao, nhập tiếp (chỉ khi một thẻ). Cột phụ 340px:
+// xem trước thẻ việc + ba bước sau khi giao. Dùng chung A0 (bản rút gọn = ẩn phần không áp dụng), A1, A2, A3 giao thay mặt. id ô giữ tiền tố klTh*,
+// #gvCham1..2, .gv-the, .gv-phan (e2e). Độ khẩn: lib/kl/do-khan.js. Quyền và 1-1-1 kiểm trong hàm giao_viec (0035).
 import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { luoiTemplate } from './nhieu.js';
 
@@ -17,7 +19,7 @@ const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" 
 const selTim = (id) => `<div class="gv-tim-chon"><input type="search" id="${id}Tim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="${id}" aria-label="Tìm nhanh (gõ tên hoặc phòng, không cần dấu)">${sel(id)}</div>`;
 
 export const giaoViecTemplate = `
-  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, ba khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm và hạn hoàn thành</span></div>
+  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, hai khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm và hạn hoàn thành của từng nhiệm vụ</span></div>
   <div class="tab-hang hidden" id="gvTabs" role="tablist" aria-label="Cách giao việc">
     <button type="button" id="gvTabGiao" role="tab" data-action="gvChonTab" data-tab="giao" aria-selected="true">Giao từng việc</button>
     <button type="button" id="gvTabNhap" role="tab" data-action="gvChonTab" data-tab="nhap" aria-selected="false">Nhập từ Excel</button>
@@ -30,7 +32,7 @@ export const giaoViecTemplate = `
   <form id="giaoViecForm" class="gv-the tam" data-submit="luuKlThem" novalidate>
     <ol class="gv-quy-tac" id="gvQuyTac" aria-label="Quy tắc một chủ trì, một sản phẩm, một hạn, một minh chứng, ba mức cảnh báo"></ol>
     <fieldset class="gv-noi" id="gvKhoa" disabled aria-busy="true">
-      <section class="gv-phan" id="gvPhan1"><h2><i id="gvCham1" class="gv-so">1</i>Văn bản giao việc</h2>
+      <section class="gv-phan" id="gvPhan1"><h2><i id="gvCham1" class="gv-so">1</i>Văn bản và mốc giao</h2>
         <p class="chu-phu hidden gv-cha" id="gvCha"></p>
         <div class="gv-ke-thua hidden" id="gvKeThua"></div>
         <div class="gv-truong" id="klThVanBanWrap"><label for="klThVanBanTim" class="nhan">Chọn văn bản có sẵn</label>
@@ -54,52 +56,56 @@ export const giaoViecTemplate = `
           </div>
           <p class="chu-phu hidden" id="gvVbA0">Thường trực giao trực tiếp không kèm văn bản: để trống số hiệu và ngày ban hành, hệ thống ghi mốc "Thường trực giao &lt;thời điểm&gt;". Đã điền thì dùng đúng số hiệu, ngày và trích yếu vừa nhập.</p>
         </div>
-        ${truong('klThNguon', `Nguồn nhiệm vụ${BB}`, sel('klThNguon'), '', 'mặc định theo loại văn bản, đổi được')}
+        <div class="cot-3">
+          ${truong('klThNguon', `Nguồn nhiệm vụ${BB}`, sel('klThNguon'), '', 'mặc định theo loại văn bản, đổi được')}
+          ${truong('klThNgayNhan', `Ngày giao nhiệm vụ${BB}`, inp('klThNgayNhan', 'date'), '', 'mốc bắt đầu tính hạn (ngày Văn phòng nhận văn bản / giao việc) — chung cho mọi nhiệm vụ của lượt này')}
+          ${truong('klThThayMat', 'Thay mặt', selTim('klThThayMat'), ' class="gv-truong hidden"', 'để trống = giao thẳng cho chuyên viên; chọn lãnh đạo / nhóm lãnh đạo khi giao thay mặt (cấp duyệt nếu việc bị từ chối)')}
+        </div>
       </section>
 
-      <section class="gv-phan" id="gvPhan2"><h2><i id="gvCham2" class="gv-so">2</i>Nội dung và người chịu trách nhiệm</h2>
-        <div class="tab-hang gv-che-do" id="gvCheDo" role="tablist" aria-label="Số nhiệm vụ giao từ văn bản này">
-          <button type="button" id="gvCheDoMot" role="tab" data-action="gvDatCheDo" data-che-do="mot" aria-selected="true">Một việc</button>
-          <button type="button" id="gvCheDoNhieu" role="tab" data-action="gvDatCheDo" data-che-do="nhieu" aria-selected="false">Nhiều nhiệm vụ từ văn bản này</button>
-        </div>
-        ${truong('klThNoiDung', `Nội dung nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
+      <section class="gv-phan" id="gvPhan2"><h2><i id="gvCham2" class="gv-so">2</i>Nhiệm vụ</h2>
+        <p class="chu-phu" id="gvPhan2Phu">Mỗi thẻ là một việc: một chủ trì, một sản phẩm, một hạn hoàn thành. Văn bản giao nhiều việc thì bấm <b>+ Thêm nhiệm vụ</b> — tất cả được giao trong một lượt.</p>
+        <article class="gv-nv" id="gvThe1" data-dong="1" aria-label="Nhiệm vụ 1">
+          <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ 1</b></header>
+          ${truong('klThNoiDung', `Nội dung nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
     'việc giao cho đơn vị ngoài Văn phòng (sở, ban, ngành, huyện): ghi rõ đơn vị thực hiện ngay trong nội dung, ví dụ "Sở Tài chính tham mưu…"; người chịu trách nhiệm là phòng / cán bộ Văn phòng theo dõi việc đó')}
+          <div class="cot-3">
+            ${truong('klThOwner', `Chịu trách nhiệm${BB}`, selTim('klThOwner'), '', 'một Owner: phòng hoặc cán bộ — lãnh đạo có thể giao cho chính mình')}
+            ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, selTim('klThNguoiTheoDoi'), '', 'gợi ý theo người chịu trách nhiệm')}
+            ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
+          </div>
+          <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
+          <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
+          <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
+          <div class="cot-3">
+            ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
+            ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
+            ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của người chịu trách nhiệm')}
+          </div>
+          <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
+          <div class="cot-3" id="gvHanWrap">
+            ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
+            ${truong('klThHan', 'Hạn hoàn thành<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
+            <div></div>
+          </div>
+          <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
+          <div class="cot-3" id="gvNganhWrap">
+            ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
+            ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
+            <div></div>
+          </div>
+        </article>
         ${luoiTemplate}
-        <div class="cot-3">
-          ${truong('klThOwner', `Chịu trách nhiệm${BB}`, selTim('klThOwner'), '', 'một Owner: đơn vị, phòng hoặc cán bộ — lãnh đạo có thể giao cho chính mình')}
-          ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, selTim('klThNguoiTheoDoi'), '', 'gợi ý theo người chịu trách nhiệm')}
-          ${truong('klThThayMat', `Thay mặt${BB}`, selTim('klThThayMat'), ' class="gv-truong hidden"', 'lãnh đạo mà đồng chí giao thay mặt')}
-        </div>
-        <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
-        ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
-        <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
-        <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
       </section>
 
-      <section class="gv-phan" id="gvPhan3"><h2><i id="gvCham3" class="gv-so">3</i>Sản phẩm và hạn</h2>
-        <p class="chu-phu hidden" id="gvLuoiChuThich3">Sản phẩm, hạn, ngành, lĩnh vực ghi ở từng thẻ nhiệm vụ trên; ngày giao nhiệm vụ, cấp cần quyết định, văn bản triển khai, ghi chú dưới đây dùng chung cho cả lô.</p>
-        <div class="cot-3">
-          ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
-          ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
-          ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của người chịu trách nhiệm')}
-        </div>
-        <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
-        <div class="cot-3">
-          ${truong('klThNgayNhan', `Ngày giao nhiệm vụ${BB}`, inp('klThNgayNhan', 'date'), '', 'mốc bắt đầu tính hạn (ngày Văn phòng nhận văn bản / giao việc)')}
-          ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
-          ${truong('klThHan', 'Hạn hoàn thành<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
-        </div>
-        <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
-        <div class="cot-3" id="gvNganhWrap">
+      <details class="gv-them" id="gvThemWrap">
+        <summary>Thông tin thêm (không bắt buộc) — dùng chung cho mọi nhiệm vụ của lượt này</summary>
+        <div class="cot-3" id="gvPhuWrap">
           ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
-          ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
-          ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
-        </div>
-        <div class="cot-2" id="gvPhuWrap">
           ${truong('klThVanBanTK', 'Văn bản triển khai', inp('klThVanBanTK'))}
           ${truong('klThGhiChu', 'Ghi chú / lĩnh vực chi tiết', inp('klThGhiChu'))}
         </div>
-      </section>
+      </details>
     </fieldset>
 
     <div class="gv-tom-tat" id="gvTomTat">
@@ -118,7 +124,7 @@ export const giaoViecTemplate = `
         <b id="gvXtNoiDung">Nội dung nhiệm vụ…</b><span id="gvXtPhu">Chủ trì … · hạn … · sản phẩm …</span></div></section>
     <section class="tam"><div class="tam-dau"><h2>Ba bước sau khi giao</h2></div>
       <ol class="gv-buoc-sau">
-        <li><i>1</i><span>Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
+        <li><i>1</i><span id="gvBuoc1">Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
         <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) trước hạn hoàn thành; lãnh đạo nghiệm thu thì việc hoàn thành, trả lại thì nộp lại.</span></li>
       </ol></section>

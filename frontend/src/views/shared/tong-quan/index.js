@@ -3,6 +3,7 @@
 // Quý / Năm đổi tại chỗ (không đọc lại); việc đang mở và cảnh báo luôn tính đến hôm nay. v9 đợt 2: bấm bất kỳ số, cột, đoạn, dòng nào →
 // danh sách đúng các việc làm nên con số đó (lib/kl/tong-quan-loc.js) mở NGAY TẠI CHỖ trong ngăn chi tiết dùng chung → bấm một việc xem chi
 // tiết, có nút quay lại; không chuyển sang mục khác. Realtime: đang xem thì nạp lại nền, gộp sự kiện 2 giây. e2e chờ #viewTongQuan[data-nap].
+// Đợt E v3.18: A0 / A1 có thêm khối "KPI theo cán bộ" (kpi-can-bo.js — từng phòng rồi từng cán bộ chủ trì; A2 đã có bảng Theo cán bộ).
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -11,12 +12,13 @@ import { notifyError } from '../../../components/toast.js';
 import { loadDanhMucKl, loadKlRows } from '../../../lib/kl/du-lieu.js';
 import { loadChiDaoTu } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
-import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo } from '../../../lib/kl/tong-quan.js';
+import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
 import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNganDanhSach } from '../ngan-chi-tiet.js';
 import { dauTrangHtml, canhBaoHtml, theThangHtml, coCauHtml, bangNhomHtml, vanBanHtml, linhVucHtml, chatLuongHtml, chiDaoHtml } from './template.js';
+import { kpiCanBoHtml } from './kpi-can-bo.js';
 
 const tq = { rows: [], cds: [], luc: null, ky: 'nam', loi: null };
 export const dongTongQuan = () => tq.rows;   // dòng đã nạp (Giao việc v9 liệt kê việc vừa nhập theo văn bản)
@@ -32,6 +34,8 @@ function tieuDe() {
   return ['Tổng quan thực hiện nhiệm vụ', u.is_chief ? 'Văn phòng Tỉnh ủy' : 'Các phòng, lĩnh vực đồng chí phụ trách'];
 }
 const coGiaoViec = () => ['A0', 'A1', 'A2'].includes(vai()) || Boolean(state.user?.quan_tri_kl);
+const phongCua = () => Object.fromEntries(state.accounts.map((a) => [a.id, a.department]));   // KPI theo cán bộ: phòng của cán bộ theo danh bạ
+const khoaCua = (kh) => (kh === 'cb' ? khoaCanBo(phongCua()) : kh === 'phong' ? khoaPhongCanBo(phongCua(), DEPT_NAMES) : khoaNhom(vai(), DEPT_NAMES, state.user?.department));
 
 // Khung chờ (lần mở đầu chưa có số): dải đầu + 7 khối nhấp nháy, không hiện số 0 gây hiểu nhầm.
 function khungChoHtml() {
@@ -47,7 +51,8 @@ function ve() {
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
   $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec() })
     + canhBaoHtml(canhBaoDo(rows), v)
-    + `<div class="luoi-tq">${theThangHtml(thang, homNay.slice(0, 4))}${coCauHtml(s, k)}${bangNhomHtml(theoNhom(rows, k, khoaNhom(v, DEPT_NAMES, state.user?.department)), v, k)}`
+    + `<div class="luoi-tq">${v === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}`
+    + `${theThangHtml(thang, homNay.slice(0, 4))}${coCauHtml(s, k)}${bangNhomHtml(theoNhom(rows, k, khoaNhom(v, DEPT_NAMES, state.user?.department)), v, k)}`
     + `${vanBanHtml(theoVanBan(rows))}${linhVucHtml(theoLinhVuc(rows), s.dangMo)}${chatLuongHtml(chatLuongKy(rows, k), k)}`
     + `${chiDaoHtml(chiDaoKy(tq.cds, k, ctxCd()), v, k)}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
@@ -106,7 +111,7 @@ function hienGoi(e) {
 function tqMo({ ct }) {
   let c; try { c = JSON.parse(ct || '{}'); } catch { return; }
   const homNay = homNayVN(); const k = khoangKy(tq.ky, homNay);
-  const kq = locChiTieu(tq.rows, c, k, { khoa: khoaNhom(vai(), DEPT_NAMES, state.user?.department), cds: tq.cds, ctxCd: ctxCd(), homNay });
+  const kq = locChiTieu(tq.rows, c, k, { khoa: khoaCua(c.kh), cds: tq.cds, ctxCd: ctxCd(), homNay });
   const goi = document.getElementById('tqGoi'); if (goi) goi.hidden = true;
   moNganDanhSach(kq);
 }

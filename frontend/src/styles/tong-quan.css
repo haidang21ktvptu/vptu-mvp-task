@@ -60,7 +60,7 @@
   .noi-bd span { color: var(--chu-phu); font-size: 14.5px; }
 
   .luoi-tq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
-  .n7 { grid-column: span 7; } .n5 { grid-column: span 5; } .n4 { grid-column: span 4; }
+  .n7 { grid-column: span 7; } .n5 { grid-column: span 5; } .n4 { grid-column: span 4; } .n12 { grid-column: span 12; }
   .the-bd { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); box-shadow: var(--bong-the); padding: 20px 22px 22px; min-width: 0; display: flex; flex-direction: column; }
   .dau-bd { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 16px; }
   .dau-bd h2 { font-size: 17px; color: var(--chu); }
@@ -112,6 +112,10 @@
   .bang-tq .c-ten b { display: block; font-weight: 600; line-height: 1.3; text-wrap: balance; }
   .bang-tq .c-ten small { display: block; color: var(--chu-phu); font-size: 13.5px; margin-top: 2px; }
   .bang-tq .chi-dt { display: none; }
+  /* KPI theo cán bộ (Đợt E): dòng phòng đậm trên nền nhạt, dòng cán bộ thụt vào */
+  .bang-kpi tr.kpi-phong { background: var(--nen-mo); } .bang-kpi tr.kpi-phong td { border-top: 1px solid var(--vien); }
+  .bang-kpi tr.kpi-phong .c-ten b { font-family: var(--font-tieu-de); font-size: 15.5px; }
+  .bang-kpi tr.kpi-cb td.c-ten { padding-left: 22px; }
   .ten-bam { text-align: left; width: 100%; border-radius: 6px; }
   .ten-bam:hover b { color: var(--lam); text-decoration: underline; text-underline-offset: 3px; }
   .canh-tq { display: inline-flex; gap: 4px; }
@@ -189,7 +193,8 @@
     .bang-tq tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 6px 12px; padding: 12px 0; border-bottom: 1px solid var(--vien-nhat); }
     .bang-tq td { display: block; padding: 0 !important; border: 0; width: auto !important; }
     .bang-tq td.c-ten { grid-column: 1; grid-row: 1 / 3; align-self: center; }
-    .bang-tq td[data-n="Hoàn thành"], .bang-tq td[data-n="Đang làm"] { display: none; }
+    .bang-tq td[data-n="Hoàn thành"], .bang-tq td[data-n="Đang làm"], .bang-tq td[data-n="Tổng"] { display: none; }
+    .bang-kpi tr.kpi-cb td.c-ten { padding-left: 14px !important; }
     .bang-tq td[data-n="Đúng hạn"] { grid-column: 2; grid-row: 1; justify-self: end; }
     .bang-tq td[data-n="Cảnh báo"] { grid-column: 2; grid-row: 2; justify-self: end; }
     .bang-tq td[data-n="Cảnh báo"] .chu-phu { display: none; }

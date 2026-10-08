@@ -1,6 +1,6 @@
 // 0078 (Đợt A v3.17) — giao_viec: lãnh đạo giao cho chính mình (A2, PCVP; cấp nhận = cấp trên, theo dõi = chính họ; vai khác vẫn chặn như 0025);
 // giao_viec_nhieu: nhiều nhiệm vụ từ một văn bản trong một giao dịch (văn bản mới tạo một lần, dòng ghi đè phần chung, cấp nhận từng dòng), lỗi
-// dòng nào báo "Dòng n: …" và hoàn tác cả lô (không việc, không văn bản), giới hạn 1–20 dòng, A3 bị chặn. Khoá "KL-0078"; tự dọn.
+// dòng nào báo "Dòng n: …" và hoàn tác cả lô (không việc, không văn bản), giới hạn 1–20 dòng, A3 giao cho phòng bị chặn (0085). Khoá "KL-0078"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, IDS } from './lib.mjs';
@@ -68,7 +68,7 @@ describe('0078 — giao cho chính mình, giao nhiều nhiệm vụ từ một v
     assert.equal((await db().from('van_ban_giao_viec').select('id').eq('so_ket_luan', `${KHOA} #${dem}`)).data.length, 0, 'không văn bản');
   });
 
-  test('5. Giới hạn: 0 dòng ⇒ 22023; 21 dòng ⇒ "tối đa 20"; văn bản có sẵn (van_ban_id) dùng cho mọi dòng; A3 bị chặn ngay dòng 1', async () => {
+  test('5. Giới hạn: 0 dòng ⇒ 22023; 21 dòng ⇒ "tối đa 20"; văn bản có sẵn (van_ban_id) dùng cho mọi dòng; A3 giao cho phòng bị chặn ngay dòng 1 (0085)', async () => {
     loi(await nhieu('demo_truongphong', {}, []), /ít nhất một dòng/, '0 dòng');
     const dong = (n) => Array.from({ length: n }, (_, i) => ({ noi_dung: `${KHOA} giới hạn ${i + 1}`, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }));
     loi(await nhieu('demo_truongphong', {}, dong(21)), /tối đa 20/, '21 dòng');
@@ -76,7 +76,7 @@ describe('0078 — giao cho chính mình, giao nhiều nhiệm vụ từ một v
     const r = await (await userClient('demo_truongphong')).rpc('giao_viec_nhieu', { p_chung: { van_ban_id: vbr.data.id, ...CHUNG }, p_dong: dong(2) });
     assertOk(r, 'văn bản có sẵn'); assert.equal(r.data.van_ban_id, vbr.data.id);
     assert.ok((await Promise.all(r.data.viec.map((x) => doc(x.id)))).every((v) => v.van_ban_id === vbr.data.id));
-    const a3 = await nhieu('demo_cv1', {}, dong(1));
-    chan(a3, 'A3 giao nhiều'); loi(a3, /^Dòng 1: /, 'tiền tố dòng');
+    const a3 = await nhieu('demo_cv1', {}, [{ noi_dung: `${KHOA} giới hạn a3`, owner_don_vi_ma: 'TONG_HOP' }]);   // 0085: chuyên viên giao thẳng được cho chuyên viên; Owner phòng bị chặn ngay dòng 1
+    chan(a3, 'A3 giao nhiều cho phòng'); loi(a3, /^Dòng 1: /, 'tiền tố dòng');
   });
 });

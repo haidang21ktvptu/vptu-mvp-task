@@ -71,7 +71,8 @@ describe('0047 — thư ký Thường trực: cấp cờ, phạm vi đọc, đó
     const LOAI = ['CHI_DAO_TT', 'DON_DOC', 'Y_KIEN', 'GIA_HAN'];
     (await songSong(LOAI.map((loai) => () => rpc('demo_e2e_kl', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T95'], loai, noi_dung: 'x' } })))).forEach((r, i) => assertDenied(r, `thư ký gửi ${LOAI[i]}`));
     assertDenied(await rpc('demo_e2e_kl', 'nop_minh_chung', { p: { nhiem_vu_id: id['NV-T95'], so_hieu: '1/BC', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nộp minh chứng');
-    assertDenied(await rpc('demo_e2e_kl', 'giao_viec', { p: { van_ban_id: fx.hn, noi_dung: 'x', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, san_pham_loai: 'BAO_CAO', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nhiem_vu_cha: id['NV-T95'] } }), 'giao việc');
+    // 0085: thư ký vẫn là chuyên viên — giao thẳng cho chuyên viên được như mọi A3; cờ thư ký không mở thêm quyền giao cho phòng
+    assertDenied(await rpc('demo_e2e_kl', 'giao_viec', { p: { van_ban_id: fx.hn, noi_dung: 'x', owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.cv1, san_pham_loai: 'BAO_CAO', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nhiem_vu_cha: id['NV-T95'] } }), 'giao việc cho phòng');
     assertDenied(await rpc('demo_e2e_kl', 'xac_nhan_nhan_viec', { p_id: id['NV-T95'] }), 'xác nhận nhận việc');
     const up = await (await userClient('demo_e2e_kl')).from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH' }).eq('id', id['NV-T95']).select('id');
     assert.ok(up.error || up.data.length === 0, 'cập nhật tiến độ phải bị RLS chặn');

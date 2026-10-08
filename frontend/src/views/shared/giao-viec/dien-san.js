@@ -5,6 +5,7 @@
 import { $, show, escapeHtml } from '../../../lib/dom.js';
 import { vanBanTheoKhoa } from '../../../lib/kl/du-lieu.js';
 import { nhanTruong } from '../../../lib/kl/nhap/truong.js';
+import { giaTriNhom } from '../../../lib/kl/thay-mat.js';
 import { napVanBan, MOI } from './van-ban.js';
 
 let dang = null;   // dòng đang hoàn thiện: { id, so_dong, lo_ma, ten_tep, du_lieu, thieu, ghi_chu }
@@ -36,7 +37,7 @@ export async function apDienSan(dong, { nhanMoi }) {
     chon('klThLoaiVB', d.loai_van_ban); go('klThSoHN', d.so_hoi_nghi); go('klThSoKL', d.so_ket_luan); go('klThNgayBH', d.ngay_ban_hanh, 'change');
   }
   // 2. Thay mặt (chuyên viên giao): đổi lãnh đạo → biểu mẫu khoá trong lúc đọc phạm vi → chờ mở lại rồi mới chọn Owner / ngành.
-  if (!$('klThThayMatWrap').classList.contains('hidden') && chon('klThThayMat', d.thay_mat_cho)) { await cho(() => $('gvKhoa').disabled); await cho(() => !$('gvKhoa').disabled); }
+  if (!$('klThThayMatWrap').classList.contains('hidden') && chon('klThThayMat', d.thay_mat_nhom ? giaTriNhom(d.thay_mat_nhom) : d.thay_mat_cho)) { await cho(() => $('gvKhoa').disabled); await cho(() => !$('gvKhoa').disabled); }
   // 3. Owner (cán bộ, không thì đơn vị) → ngành → lĩnh vực → người theo dõi.
   if (!(d.owner_tai_khoan && chon('klThOwner', `tk:${d.owner_tai_khoan}`))) chon('klThOwner', d.owner_don_vi_ma ? `dv:${d.owner_don_vi_ma}` : '');
   chon('klThNganh', d.nganh_ma); chon('klThLinhVuc', d.linh_vuc_ma); chon('klThNguoiTheoDoi', d.nguoi_theo_doi);
@@ -45,6 +46,7 @@ export async function apDienSan(dong, { nhanMoi }) {
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
   if (chon('klThNguon', d.nguon_nhiem_vu_ma)) phat($('klThNguon'), 'input');   // đánh dấu đã chọn: mặc định theo loại văn bản không ghi đè
   go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThGhiChu', d.linh_vuc_chi_tiet);
+  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy
   $('klThDoKhanWrap').querySelector(`.dk-chon button[data-gia-tri="${d.do_khan || 'THUONG'}"]`)?.click();   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
   phat($('giaoViecForm'), 'input');
   $('klThNoiDung').focus();

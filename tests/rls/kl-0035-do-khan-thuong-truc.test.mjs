@@ -78,14 +78,14 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.equal((await tin(IDS.pcvp, v.id, /Giao việc/)).length, 0, 'PCVP không nhận');
   });
 
-  test('4. Giao thay mặt: A3 quan_tri_kl phải ghi lãnh đạo A1/A2 trong phạm vi Owner; vết + tin; cấp duyệt từ chối = lãnh đạo đó', async () => {
+  test('4. Giao thay mặt: A3 quan_tri_kl ghi lãnh đạo A1/A2 trong phạm vi Owner (0085: không thay mặt = giao thẳng, Owner phải là chuyên viên); vết + tin; cấp duyệt từ chối = lãnh đạo đó', async () => {
     await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.qtht);
     const loi4 = await Promise.all([   // bốn ca bị chặn độc lập — một lượt (D3)
-      giao('demo_qtht', { ma: 'khong tm', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }),
+      giao('demo_qtht', { ma: 'khong tm', owner_don_vi_ma: 'TONG_HOP' }),   // 0085: không thay mặt → giao thẳng, Owner phòng bị chặn
       giao('demo_qtht', { ma: 'tm a3', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.cv2 }),
       giao('demo_qtht', { ma: 'tm khac phong', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, thay_mat_cho: IDS.truongphong }),
       giao('demo_cvp', { ma: 'a1 tm', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.pcvp })]);
-    ['thiếu thay mặt', 'thay mặt một A3', 'Trưởng phòng Tổng hợp không thay mặt cho Owner phòng Quản trị', 'lãnh đạo giao trực tiếp, không thay mặt']
+    ['không thay mặt → giao thẳng, Owner phòng', 'thay mặt một A3', 'Trưởng phòng Tổng hợp không thay mặt cho Owner phòng Quản trị', 'lãnh đạo giao trực tiếp, không thay mặt']
       .forEach((nhan, i) => assertLoi(loi4[i], nhan));
     const r = await giao('demo_qtht', { ma: 'thay mat', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.pcvp });
     assertOk(r, 'quản trị KL giao thay mặt PCVP'); id['NV-T43'] = r.data.id;

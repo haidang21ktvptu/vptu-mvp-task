@@ -80,7 +80,8 @@ describe('KL phạm vi và bất biến tổng hợp theo vai', { skip: SKIP }, 
     const kq = {};
     for (const u of VAI) kq[u] = await kiemMotVai(u, 'rỗng');
     assert.ok(kq.demo_cvp.so >= kq.demo_truongphong.so && kq.demo_truongphong.so >= kq.demo_cv1.so, 'CVP ⊇ A2 ⊇ A3');
-    assert.equal(kq.demo_pcvp.so, kq.demo_truongphong.so, 'PCVP cả phòng TONG_HOP = A2 TONG_HOP khi không kiêm nhiệm');
+    // v3.17: PCVP tự giao được việc (Owner = chính mình, ngoài phòng) nên trên staging PCVP có thể thấy NHIỀU hơn Trưởng phòng; bất biến còn lại: không ít hơn.
+    assert.ok(kq.demo_pcvp.so >= kq.demo_truongphong.so, `PCVP cả phòng TONG_HOP ⊇ A2 TONG_HOP khi không kiêm nhiệm (${kq.demo_pcvp.so} < ${kq.demo_truongphong.so})`);
     assert.ok(kq.demo_cvp.demLV.CHUA_PHAN_LOAI >= 3, 'CVP thấy nhóm Chưa phân loại (N5–N7 fixture NULL)');
     assert.equal(kq.demo_cv1.demNhom.CAN_DIEN_HAN, undefined, 'cv1 không có N4 (của cv2)');
   });

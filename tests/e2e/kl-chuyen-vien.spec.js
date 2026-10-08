@@ -44,7 +44,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     if (db) await donVanBan(db, hnKhoa);
   });
 
-  test('mở màn hình: ô Tổng = số dòng; dòng mẫu ở nhóm Đang thực hiện; bấm ô lọc đúng; không có Giao việc', async () => {
+  test('mở màn hình: ô Tổng = số dòng; dòng mẫu ở nhóm Đang thực hiện; bấm ô lọc đúng; có nút Giao việc (v3.18 Đợt E)', async () => {
     await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
@@ -54,7 +54,7 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     const tong = Number(await page.locator('#klSo-TONG').innerText());
     await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(tong);
     await expect(page.locator('#klTinhDen')).toContainText('Số liệu tính đến');
-    await expect(page.locator('#klNutThem')).toBeHidden(); // chuyên viên không có quan_tri_kl → không có nút Giao việc
+    await expect(page.locator('#klNutThem')).toBeVisible(); // 0085: mọi chuyên viên giao thẳng được cho chuyên viên → có nút Giao việc
     await page.locator('#klStats [data-nhom="DANG_THUC_HIEN"]').click();
     const dth = Number(await page.locator('#klSo-DANG_THUC_HIEN').innerText());
     await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(dth);

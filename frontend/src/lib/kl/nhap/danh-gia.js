@@ -6,6 +6,7 @@
 //   CHO_NGHIEM_THU — Hoàn thành + "Chờ nghiệm thu" + đủ 4 yếu tố minh chứng; GIAO — còn lại, đủ mức 1; CHO_HOAN_THIEN — thiếu mức 1.
 // Thuần (không DOM, không mạng): dữ liệu vào là dòng đã chuẩn hoá { k: {ma, hien, gan} | {loi} | null } (chuan-hoa.js).
 import { nhanTruong } from './truong.js';
+import { tachThayMat } from '../thay-mat.js';
 
 const NGUON_THEO_LOAI = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
 const CAN_NGANH = new Set(['KL_BTV', 'TB_THUONG_TRUC']);
@@ -38,7 +39,7 @@ function theoDoiMacDinh(g, dv, accounts, me) {
     const a = dv.phong ? ds.find((x) => x.role_group === 'A2' && x.department === dv.phong) : ds.find((x) => x.role_group === 'A1' && x.is_chief);
     if (a) return a.id;
   }
-  return g.lanh_dao_giao || me?.id || null;
+  return tachThayMat(g.lanh_dao_giao).thay_mat_cho || me?.id || null;   // nhóm lãnh đạo không phải người theo dõi
 }
 
 // dong: { soDong, o: {k: {ma,hien,gan}|{loi}|null}, goc: {tiêu đề: giá trị} }; ctx: { me, dm, accounts, cheDoXong, hangLoat: {k: ma; linh_vuc: [ma]}, maDaCo: Set<MÃ HOA> }
@@ -64,15 +65,22 @@ export function danhGia(dong, ctx) {
     const lvNganh = gt.nganh ? lvDm.filter((l) => l.nganh_ma === gt.nganh) : [];
     md('linh_vuc', lvNganh.length === 1 ? lvNganh[0].ma : null);   // ngành chỉ có một lĩnh vực → lĩnh vực đó
     md('loai_van_ban', doanLoaiVanBan(gt.so_hoi_nghi, gt.so_ket_luan));
-    md('do_khan', 'THUONG'); md('tien_do', 'DANG_THUC_HIEN'); md('loai_thoi_han', 'CO_HAN_CU_THE');
+    const tt = me?.role_group === 'A3' && tachThayMat(gt.lanh_dao_giao).thay_mat_nhom === 'THUONG_TRUC';   // v3.18: thay mặt Thường trực = Thường trực giao
+    md('do_khan', tt ? 'KHAN' : 'THUONG'); md('tien_do', 'DANG_THUC_HIEN'); md('loai_thoi_han', 'CO_HAN_CU_THE');
     md('nguon', NGUON_THEO_LOAI[gt.loai_van_ban] || 'NHIEM_VU_PHAT_SINH');
     md('don_vi', donViCuaCanBo(accounts.find((a) => a.id === gt.can_bo), dm));
-    const dv = dm.donVi.find((d) => d.ma === gt.don_vi);
+    let dv = dm.donVi.find((d) => d.ma === gt.don_vi);
+    const xongNgoai = gt.tien_do === 'HOAN_THANH' && ctx.cheDoXong === 'DA_XONG_NGOAI';   // dữ liệu cũ đã xong: kl_nhap_da_xong vẫn nhận đơn vị ngoài
+    if (dv && !dv.trong_van_phong && !xongNgoai) {   // v3.18 (0079): Owner luôn là phòng / cán bộ Văn phòng — dòng chờ hoàn thiện, người nhập chọn lại
+      delete gt.don_vi; loi.push('don_vi'); dv = undefined; canhBao.push('đơn vị chủ trì ngoài Văn phòng — ghi tên đơn vị thực hiện trong nội dung, chọn phòng / cán bộ Văn phòng chịu trách nhiệm');
+    }
     if (me?.role_group === 'A3') md('lanh_dao_giao', lanhDaoMacDinh(dv, accounts));
     md('theo_doi', theoDoiMacDinh(gt, dv, accounts, me));
     const cb = accounts.find((a) => a.id === gt.can_bo);
     if (cb && dv && (dv.phong ? cb.department !== dv.phong : !(dv.ma === 'VAN_PHONG_TINH_UY' && cb.role_group === 'A1'))) {
       delete gt.can_bo; loi.push('can_bo'); canhBao.push('cán bộ chủ trì không thuộc đơn vị chủ trì');
+    } else if (tt && !xongNgoai && (cb ? cb.role_group !== 'A1' : dv && !dv.phong)) {   // Thường trực giao cho lãnh đạo Văn phòng hoặc một phòng (giao_viec v_nhu_a0)
+      const k = cb ? 'can_bo' : 'don_vi'; delete gt[k]; loi.push(k); canhBao.push('thay mặt Thường trực: người chịu trách nhiệm phải là lãnh đạo Văn phòng hoặc một phòng');
     }
   }
   if (ma && !capNhat) canhBao.push(`mã ${ma} chưa có trên hệ thống — nhập như việc mới, hệ thống cấp mã mới`);
@@ -103,7 +111,7 @@ export function danhGia(dong, ctx) {
 // Dòng gửi DB (nhap_excel_dong): tên khoá theo cột nhiem_vu / tham số giao_viec; dữ liệu gốc = mọi cột của tệp; cap_nhat = xem trước nhận ra mã có sẵn.
 function duLieuGui(dong, g, ketQua, thieu, me) {
   const d = { so_dong: dong.soDong, ma: g.ma || null, loai_van_ban: g.loai_van_ban, so_hoi_nghi: g.so_hoi_nghi, so_ket_luan: g.so_ket_luan, ngay_ban_hanh: g.ngay_ban_hanh,
-    noi_dung: g.noi_dung, owner_don_vi_ma: g.don_vi, owner_tai_khoan: g.can_bo, nguoi_theo_doi: g.theo_doi, thay_mat_cho: me?.role_group === 'A3' ? g.lanh_dao_giao : null,
+    noi_dung: g.noi_dung, owner_don_vi_ma: g.don_vi, owner_tai_khoan: g.can_bo, nguoi_theo_doi: g.theo_doi, ...tachThayMat(me?.role_group === 'A3' ? g.lanh_dao_giao : null),
     loai_thoi_han_ma: g.loai_thoi_han, han_xu_ly: g.han_xu_ly, san_pham_loai: g.san_pham, cap_nhan_san_pham: g.cap_nhan,
     do_khan: g.do_khan, nguon_nhiem_vu_ma: g.nguon, nganh_ma: g.nganh, linh_vuc_ma: g.linh_vuc, linh_vuc_chi_tiet: g.linh_vuc_chi_tiet,
     van_ban_trien_khai: g.van_ban_trien_khai, don_vi_phoi_hop: g.don_vi_phoi_hop, ghi_chu: g.ghi_chu, tien_do_ma: g.tien_do, vuong_mac: g.vuong_mac,

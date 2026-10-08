@@ -9,6 +9,7 @@ import { homNayVN, congNgay } from '../../../lib/kl/ngay.js';
 import { THU_TU_KHAU, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { soSanhDoKhan } from '../../../lib/kl/do-khan.js';
 import { ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
+import { duyetThayNhom } from '../../../lib/kl/thay-mat.js';
 
 export const dh = { rows: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
 
@@ -37,8 +38,8 @@ export async function napSoLieu() {
 }
 
 export { dongNgoaiLe, soSanhNgoaiLe, ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
-// Đề nghị từ chối đang chờ tôi duyệt (0034: RLS chỉ trả dòng mình đọc được; cấp duyệt là mình) / đề nghị của tôi trên một việc.
-export const tuChoiChoToiDuyet = () => dh.tuChoiCho.filter((t) => t.cap_duyet === me() && timRow(t.nhiem_vu_id));
+// Đề nghị từ chối đang chờ tôi duyệt (0034: RLS chỉ trả dòng mình đọc được; cấp duyệt là mình — 0081: hoặc là người đại diện nhóm tôi thuộc) / đề nghị của tôi trên một việc.
+export const tuChoiChoToiDuyet = () => dh.tuChoiCho.filter((t) => { const r = timRow(t.nhiem_vu_id); return r && (t.cap_duyet === me() || duyetThayNhom(r, t.cap_duyet)); });
 export const deNghiCuaToi = (nhiemVuId) => dh.tuChoiCho.find((t) => t.nhiem_vu_id === nhiemVuId && t.nguoi_de_nghi === me());
 
 export const timRow = (id) => dh.rows.find((r) => r.id === id);

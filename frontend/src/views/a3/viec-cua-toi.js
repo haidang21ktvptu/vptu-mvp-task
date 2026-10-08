@@ -11,6 +11,7 @@ import { TEN_LOAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
 import { nhanPhuHtml, nhanDoKhanHtml } from '../../lib/kl/do-khan.js';
 import { cheDoTang, tenOGiao, deNghiToiGuiDangCho } from '../../lib/kl/sua-tang.js';
 import { dh, deNghiCuaToi } from '../shared/dieu-hanh/du-lieu.js';
+import { tenCapDuyet } from '../../lib/kl/thay-mat.js';
 
 const me = () => state.user?.id;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
@@ -103,7 +104,7 @@ function theViec(r, kieu, homNay) {
   const kqHtml = kq ? `<p class="chu-canh-bao-inline" data-ket-qua="${kq.t.trang_thai}">${escapeHtml(kq.chu)}</p>` : '';
   if (kieu === 'moi') {
     const dn = deNghiCuaToi(r.id);
-    const hd = dn ? `<p class="chu-canh-bao-inline">Đã đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(findAccount(dn.cap_duyet)?.full_name || 'lãnh đạo trực tiếp')} duyệt.</p><div class="hanh-dong">${xem(r)}</div>`
+    const hd = dn ? `<p class="chu-canh-bao-inline">Đã đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, dn.cap_duyet) || 'lãnh đạo trực tiếp')} duyệt.</p><div class="hanh-dong">${xem(r)}</div>`
       : `<div class="hanh-dong">${nut('Xác nhận đã nhận việc', 'xacNhanNhanThe', `data-id="${r.id}"`, 'lam')}${moO(`oTc-${r.id}`, 'Từ chối')}${nutDns(r)}${xem(r)}</div>${formTuChoi(r)}`;
     return `<div class="the-con vct-the" id="vct-${r.id}" data-nhiem-vu="${r.id}"${dn ? ' data-de-nghi="1"' : ''}>${dau}${kqHtml}${dnsHtml(r)}${chiDaoHtml(r)}${hd}</div>`;
   }

@@ -7,6 +7,7 @@ import { state, findAccount } from '../../lib/state.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
+import { laNguoiGiao, tenCapDuyet } from '../../lib/kl/thay-mat.js';
 import { dh, canToiQuyet, tuChoiChoToiDuyet } from './dieu-hanh/du-lieu.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 import { dongDeNghiSuaCx } from './kl/sua-tang.js';
@@ -29,7 +30,7 @@ const nut = (nhan, action, data, lop = '') => `<button type="button" class="nut 
 // Việc mới chờ CHÍNH TÔI xác nhận (cùng quy tắc kl_so_chua_xu_ly.viec_moi: owner và người theo dõi mỗi người tự nhận, không nhận thay nhau).
 export const cuaToiChoNhan = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && r.theo_1400 && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
 const canQuyet = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && canToiQuyet(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && !r.dang_dinh_chinh);
-const biTuChoi = () => dh.rows.filter((r) => mo(r) && r.bi_tu_choi && (['A0', 'A1', 'A2'].includes(vai()) || r.tao_boi === me() || r.giao_thay_mat_cho === me()));
+const biTuChoi = () => dh.rows.filter((r) => mo(r) && r.bi_tu_choi && (['A0', 'A1', 'A2'].includes(vai()) || laNguoiGiao(r)));
 const coVuongMac = () => dh.rows.filter((r) => mo(r) && r.vuong_mac);   // cùng quy tắc co_vuong_mac (0067): việc mở có vướng mắc, phạm vi RLS
 const deNghiChoDuyet = () => (vai() === 'A0'
   ? dh.tuChoiCho.filter((t) => findAccount(t.cap_duyet)?.role_group === 'A0' && dh.rows.some((r) => r.id === t.nhiem_vu_id))
@@ -65,7 +66,7 @@ function dongBiTuChoi() {
 }
 function dongViecMoi() {
   return cuaToiChoNhan().map((r) => (r.tu_choi_cho
-    ? dong('moi', r, `${lienQuan(r)} · đã đề nghị từ chối ${formatDateTime(r.tu_choi_cho.tao_luc)}, chờ ${escapeHtml(ten(r.tu_choi_cho.cap_duyet) || 'cấp duyệt')} duyệt`)
+    ? dong('moi', r, `${lienQuan(r)} · đã đề nghị từ chối ${formatDateTime(r.tu_choi_cho.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, r.tu_choi_cho.cap_duyet) || 'cấp duyệt')} duyệt`)
     : dong('moi', r, lienQuan(r), `${nut('Xác nhận đã nhận', 'cxXacNhanNhan', { id: r.id, ma: r.ma }, 'lam')}${nut('Từ chối', 'moO', { o: `cxTc-${r.id}` })}`,
       `<form class="o" id="cxTc-${r.id}" data-submit="deNghiTuChoiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
         <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">

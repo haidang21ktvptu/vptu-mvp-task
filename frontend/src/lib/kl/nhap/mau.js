@@ -4,6 +4,7 @@
 import { taoXlsx } from '../../xlsx.js';
 import { TRUONG_MAU } from './truong.js';
 import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG } from './chuan-hoa.js';
+import { NHOM_THAY_MAT, tenNhomThayMat } from '../thay-mat.js';
 
 const S_MUC = { 0: 7, 1: 4, 2: 5, 3: 6 };   // kiểu tiêu đề theo mức (lib/xlsx.js: 4 vàng, 5 lam, 6 lục, 7 xám)
 const RONG = { noi_dung: 50, kq_mo_ta: 40, vuong_mac: 30, don_vi: 30, can_bo: 28, theo_doi: 28, lanh_dao_giao: 28, nganh: 34, linh_vuc: 30, kq_trich_yeu: 30 };
@@ -16,7 +17,7 @@ function danhMuc({ dm, accounts, tenPhong }) {
   return [
     ['Loại văn bản', LOAI_VB.map(([, t]) => t), 'loai_van_ban'], ['Đơn vị chủ trì', dm.donVi.map((d) => d.ten), 'don_vi'],
     ['Cán bộ', canBo.map((a) => nhanCanBo(a, tenPhong)), 'can_bo theo_doi'],
-    ['Lãnh đạo giao', canBo.filter((a) => ['A1', 'A2'].includes(a.role_group)).map((a) => nhanCanBo(a, tenPhong)), 'lanh_dao_giao'],
+    ['Lãnh đạo giao', [...NHOM_THAY_MAT.map(([, t]) => `${t} (cả nhóm)`), ...canBo.filter((a) => ['A1', 'A2'].includes(a.role_group)).map((a) => nhanCanBo(a, tenPhong))], 'lanh_dao_giao'],
     ['Loại thời hạn', dm.loaiThoiHan.filter((l) => l.cho_phep_tao_moi).map((l) => l.ten), 'loai_thoi_han'], ['Sản phẩm', dm.sanPham.map((x) => x.ten), 'san_pham'],
     ['Cấp nhận', dm.cap.map((x) => x.ten), 'cap_nhan'], ['Độ khẩn', DO_KHAN.map(([, t]) => t), 'do_khan'],
     ['Nguồn nhiệm vụ', (dm.nguonNhiemVu || []).filter((x) => x.dang_dung).map((x) => x.ten), 'nguon'], ['Ngành', dm.nganh.map((x) => x.ten), 'nganh'],
@@ -54,7 +55,7 @@ export function taoMauNhap(ctx, rows = []) {
 // Giá trị một ô khi xuất việc đang có theo mẫu (tên hiển thị — nhập lại khớp ngược về mã).
 function giaTriXuat(r, k, { findAccount, tenPhong }) {
   const nguoi = (id) => { const a = id && findAccount(id); return a ? nhanCanBo(a, tenPhong) : ''; };
-  const lanhDao = () => nguoi(r.giao_thay_mat_cho) || (['A1', 'A2'].includes(findAccount(r.tao_boi)?.role_group) ? nguoi(r.tao_boi) : '');
+  const lanhDao = () => (r.giao_thay_mat_nhom ? `${tenNhomThayMat(r.giao_thay_mat_nhom)} (cả nhóm)` : nguoi(r.giao_thay_mat_cho) || (['A1', 'A2'].includes(findAccount(r.tao_boi)?.role_group) ? nguoi(r.tao_boi) : ''));
   switch (k) {
     case 'ma': return r.ma;
     case 'loai_van_ban': return ten(LOAI_VB, r.van_ban_loai);

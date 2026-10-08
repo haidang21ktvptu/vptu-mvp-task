@@ -3,6 +3,7 @@
 // nhom: nhóm trên menu dọc v8 (Điều hành / Theo dõi / Trao đổi / Hệ thống). id giữ tên cũ ở những mục e2e đã dùng (navKl, navQuanTri, dmBubbleLauncher); action là tên hành động đã đăng ký (lib/actions.js).
 // GĐ22: mục đầu của mọi vai có huy hiệu số chưa xử lý (dhBadge, features/huy-hieu.js); A0 có "Giao việc" (biểu mẫu chung, bản rút gọn).
 // v9: A0/A1/A2 mở đầu bằng "Tổng quan" (shared/tong-quan); màn hình điều hành đổi tên "Cần xử lý" (id navDieuHanh giữ nguyên cho e2e).
+// Đợt E v3.18 (0085): mọi chuyên viên có "Giao việc" (giao thẳng cho chuyên viên, không thay mặt) và "Cần nghiệm thu" (việc mình giao, mình là người theo dõi).
 export const MENU = {
   A0: [
     { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
@@ -31,6 +32,7 @@ export const MENU = {
   ],
   A3: [
     { id: 'navDieuHanh', label: 'Việc của tôi', ngan: 'Việc của tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
+    { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
     { id: 'navTheoDoi', label: 'Việc tôi theo dõi', ngan: 'Theo dõi', action: 'openTheoDoi', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
   ],
 };
@@ -45,8 +47,8 @@ export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thư
 // v9 đợt 2: quản trị hệ thống không giữ quyền giao việc vẫn nhập Excel (thẻ trong màn Giao việc); vai đã có Giao việc dùng thẻ ở đó.
 export const NHAP_EXCEL_NAV = { id: 'navNhapExcel', label: 'Nhập từ Excel', ngan: 'Nhập Excel', action: 'openNhapExcel', section: 'viewGiaoViec', nhom: 'Điều hành' };
 
-// Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Giao việc và Nhiệm vụ toàn phạm vi; Giao việc giữ trên thanh dưới (như trước v9).
-const QTKL_A3 = [{ ...MENU.A1[2], duoi: true }, { ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
+// Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Nhiệm vụ toàn phạm vi (Giao việc đã có với mọi chuyên viên từ 0085).
+const QTKL_A3 = [{ ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
 
 export function menuCuaVai(user) {
   const goc = [...(MENU[user?.role_group] || []), ...(user?.role_group === 'A3' && user?.quan_tri_kl ? QTKL_A3 : [])];
@@ -54,7 +56,7 @@ export function menuCuaVai(user) {
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
   if (user?.quan_tri_he_thong && user.role_group !== 'A0' && !goc.some((it) => it.id === 'navGiaoViec')) goc.push(NHAP_EXCEL_NAV);
-  const nghiemThu = user && user.role_group !== 'A0' && (['A1', 'A2'].includes(user.role_group) || user.quan_tri_kl || user.thu_ky_thuong_truc) ? [NGHIEM_THU_NAV] : [];
+  const nghiemThu = user && user.role_group !== 'A0' ? [NGHIEM_THU_NAV] : [];   // 0085: cả chuyên viên (nghiệm thu việc mình giao)
   const sau = goc.findIndex((it) => it.id === 'navDieuHanh') + 1; // "Cần nghiệm thu" đứng ngay sau màn hình điều hành (sau Tổng quan nếu có)
   return [...goc.slice(0, sau), ...nghiemThu, ...goc.slice(sau), ...thuKy, ...nhanTin, ...quanTri];
 }

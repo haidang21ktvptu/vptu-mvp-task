@@ -58,8 +58,9 @@ function hanhDongHtml(r) {
   const duocDongTay = !r.theo_1400 || r.minh_chung_buoc === 'DA_NGHIEM_THU';
   // Từ chối (0034): cạnh "Xác nhận đã nhận việc", chỉ khi chưa xác nhận và chưa có đề nghị chờ duyệt; lý do bắt buộc, chỉ cấp duyệt và cấp trên đọc.
   const tuChoi = laBenTrong(r) && mo && !r.toi_da_xac_nhan && !r.tu_choi_cho; // chính tôi chưa nhận
-  // Giao tiếp xuống (v8 đợt 4): chủ trì hoặc người theo dõi của việc chưa hoàn thành, và vai được giao việc (A1/A2/quan_tri_kl — giao_viec là chốt).
-  const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
+  // Giao tiếp xuống (v8 đợt 4): chủ trì hoặc người theo dõi của việc chưa hoàn thành, và vai được giao việc (A1/A2/quan_tri_kl; 0085: cả chuyên viên —
+  // chuyên viên chủ trì tách việc được giao thành việc con cho chuyên viên khác; giao_viec là chốt).
+  const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2', 'A3'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
   return `<div class="hanh-dong">
     ${laBenTrong(r) && mo && !r.toi_da_xac_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc', 'lam') : ''}
     ${tuChoi ? nut('moO', 'Từ chối', '', `data-o="oTcNgan-${r.id}"`) : ''}

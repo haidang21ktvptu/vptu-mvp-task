@@ -5,6 +5,7 @@ import { escapeHtml } from '../../../lib/dom.js';
 import { TRUONG, TEN_MUC, nhanTruong, truong } from '../../../lib/kl/nhap/truong.js';
 import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG } from '../../../lib/kl/nhap/chuan-hoa.js';
 import { hienGoc } from '../../../lib/kl/nhap/bang.js';
+import { NHOM_THAY_MAT, giaTriNhom } from '../../../lib/kl/thay-mat.js';
 
 const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 export const KQ = { GIAO: ['Giao ngay', 'nx-kq nx-giao'], DA_XONG: ['Đã xong (ngoài hệ thống)', 'nx-kq nx-xong'], CHO_NGHIEM_THU: ['Chờ nghiệm thu', 'nx-kq nx-nt'],
@@ -48,12 +49,13 @@ export function ghepHtml(s) {
 }
 
 // Danh sách chọn cho một trường (giá trị chưa khớp / điền hàng loạt). Lĩnh vực kèm tên ngành (tên lĩnh vực có thể trùng giữa các ngành); cán bộ
-// không gồm Thường trực (A0); lãnh đạo giao chỉ lãnh đạo Văn phòng / Trưởng phòng (như ô Thay mặt của biểu mẫu Giao việc).
+// không gồm Thường trực (A0); lãnh đạo giao: hai nhóm (v3.18) rồi lãnh đạo Văn phòng / Trưởng phòng (như ô Thay mặt của biểu mẫu Giao việc).
 const tenLv = (l, ctx) => `${l.ten} — ${ctx.dm.nganh?.find((n) => n.ma === l.nganh_ma)?.ten || l.nganh_ma}`;
 const canBoChon = (a, k) => !a.is_system && !a.bi_khoa && a.role_group !== 'A0' && (k !== 'lanh_dao_giao' || ['A1', 'A2'].includes(a.role_group));
 export function luaChon(kieu, ctx, them = [], k = '') {
   const ds = { loaiVanBan: LOAI_VB, doKhan: DO_KHAN, tienDo: TIEN_DO, chatLuong: CHAT_LUONG }[kieu]?.map(([ma, ten]) => ({ ma, ten }))
-    || (kieu === 'canBo' ? ctx.accounts.filter((a) => canBoChon(a, k)).map((a) => ({ ma: a.id, ten: `${a.full_name} — ${ctx.tenPhong(a.department)}` }))
+    || (kieu === 'lanhDao' ? [...NHOM_THAY_MAT.map(([ma, ten]) => ({ ma: giaTriNhom(ma), ten: `${ten} (cả nhóm)` })), ...luaChon('canBo', ctx, [], 'lanh_dao_giao')]
+      : kieu === 'canBo' ? ctx.accounts.filter((a) => canBoChon(a, k)).map((a) => ({ ma: a.id, ten: `${a.full_name} — ${ctx.tenPhong(a.department)}` }))
       : kieu === 'linhVuc' ? (ctx.dm.linhVuc || []).map((l) => ({ ma: l.ma, ten: tenLv(l, ctx) }))
         : { donVi: ctx.dm.donVi, sanPham: ctx.dm.sanPham, cap: ctx.dm.cap, nguon: (ctx.dm.nguonNhiemVu || []).filter((x) => x.dang_dung), nganh: ctx.dm.nganh,
           loaiThoiHan: ctx.dm.loaiThoiHan }[kieu]) || [];
@@ -126,7 +128,7 @@ function hangLoatHtml(thieuDem, s, ctx) {
 // Ô trống tự điền theo quy tắc mặc định (danh-gia.js): một dòng tóm tắt (trường · số dòng), mở ra xem quy tắc — thay cho ghi chú lặp ở từng dòng.
 const QUY_TAC = { loai_van_ban: 'có số hội nghị → Kết luận Hội nghị Ban Thường vụ; ký hiệu TB / NQ / CV → loại tương ứng; còn lại → Văn bản khác',
   do_khan: 'Thường', tien_do: 'Đang thực hiện', loai_thoi_han: 'Có hạn cụ thể', nguon: 'theo loại văn bản', don_vi: 'đơn vị của cán bộ chủ trì',
-  nganh: 'ngành của lĩnh vực', linh_vuc: 'ngành chỉ có một lĩnh vực', lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt)',
+  nganh: 'ngành của lĩnh vực', linh_vuc: 'ngành chỉ có một lĩnh vực', lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)',
   theo_doi: 'cán bộ chủ trì; không có → Trưởng phòng chủ trì (việc của Văn phòng) hoặc lãnh đạo giao' };
 function macDinhHtml(s) {
   const dem = {}; s.dg.forEach((x) => x.macDinh.forEach((k) => { dem[k] = (dem[k] || 0) + 1; }));

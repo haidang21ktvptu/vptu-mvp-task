@@ -3,6 +3,7 @@
 // giao_thay_mat_cho, chi_dao.do_khan); ở đây chỉ đặt tên và vẽ.
 import { escapeHtml } from '../dom.js';
 import { findAccount } from '../state.js';
+import { tenNhomThayMat } from './thay-mat.js';
 
 export const DO_KHAN = {
   THUONG:      { ten: 'Thường',      thuTu: 4, lop: 'dk dk-thuong',      ico: '<circle cx="12" cy="12" r="4"/>' },
@@ -38,13 +39,14 @@ export function chonDoKhan({ giaTri }, el) {
   if (inp) { inp.value = giaTri; inp.dispatchEvent(new Event('change', { bubbles: true })); }
 }
 
-// Nhãn phụ trên thẻ/dòng: Thường trực giao · Thay mặt <chức danh> giao · Bị từ chối · Đề nghị từ chối.
+// Nhãn phụ trên thẻ/dòng: Thường trực giao · Thay mặt <chức danh | nhóm> giao · Bị từ chối · Đề nghị từ chối. Thay mặt Thường trực: đã có nhãn
+// Thường trực giao (uu_tien), không lặp.
 export function nhanPhuHtml(r) {
   const tm = r.giao_thay_mat_cho ? findAccount(r.giao_thay_mat_cho) : null;
   return [
     nhanDoKhanHtml(r.do_khan),
     r.uu_tien === 'THUONG_TRUC' ? '<span class="nhan-tt">Thường trực giao</span>' : '',
-    r.giao_thay_mat_cho ? `<span class="nhan-xam">Thay mặt ${escapeHtml(tm?.position_title || r.giao_thay_mat_cho_ten || 'lãnh đạo')} giao</span>` : '',
+    r.giao_thay_mat_nhom === 'THUONG_TRUC' ? '' : r.giao_thay_mat_cho ? `<span class="nhan-xam">Thay mặt ${escapeHtml(tenNhomThayMat(r.giao_thay_mat_nhom) || tm?.position_title || r.giao_thay_mat_cho_ten || 'lãnh đạo')} giao</span>` : '',
     r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : r.tu_choi_cho ? '<span class="nhan-xam">Đề nghị từ chối, chờ duyệt</span>' : '',
   ].filter(Boolean).join(' ');
 }

@@ -28,7 +28,7 @@ const OWNER = {
   demo_cvp: { owner_don_vi_ma: 'TONG_HOP' },
   demo_pcvp: { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 },
   demo_truongphong: { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 },
-  demo_cv2: { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp }, // A3 giữ quan_tri_kl, giao thay mặt CVP
+  demo_cv2: { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp }, // A3 giữ quan_tri_kl, giao thay mặt CVP (0079: Owner không còn là đơn vị ngoài)
 };
 const giao = async (username, loai, p = {}) => (await userClient(username)).rpc('giao_viec', { p: {
   van_ban_id: null, van_ban: vanBan(loai, username), noi_dung: `${KHOA} ${loai} ${username}`, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31',
@@ -102,9 +102,9 @@ describe('PQ-1 — giao_viec theo 5 loại văn bản × vai: trường bắt bu
     });
   });
 
-  test('5. Vai không được giao: A3 thường, Phó trưởng phòng (A3), thư ký Thường trực (cờ), QTHT không quan_tri_kl — bị chặn 42501 với cả 5 loại', async () => {
+  test('5. Vai không giao được cho PHÒNG (0085: chuyên viên chỉ giao thẳng cho chuyên viên): A3 thường, Phó trưởng phòng (A3), thư ký Thường trực (cờ), QTHT không quan_tri_kl — bị chặn 42501 với cả 5 loại', async () => {
     const ca = ['demo_cv1', PTP.username, TK.username, 'demo_qtht'].flatMap((vai) => LOAI.map((loai) => [`${vai} giao ${loai}`,
-      () => giao(vai, loai, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 })]));
+      () => giao(vai, loai, { owner_don_vi_ma: 'TONG_HOP' })]));
     (await songSong(ca.map((c) => c[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
     // Không có văn bản nào do các vai này tạo (chặn trước khi ghi).
     const rac = await db().from('van_ban_giao_viec').select('id').in('tao_boi', [IDS.cv1, PTP.id, TK.id, IDS.qtht]).like('so_ket_luan', `${KHOA}%`);

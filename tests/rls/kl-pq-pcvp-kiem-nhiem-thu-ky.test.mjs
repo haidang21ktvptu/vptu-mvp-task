@@ -94,16 +94,17 @@ describe('PQ-5 — PCVP kiêm nhiệm ngành–lĩnh vực không giao việc; t
     assert.equal((await db().from('chi_dao').select('trang_thai').eq('id', tt.c).single()).data.trang_thai, 'CHO_PHAN_HOI');
   });
 
-  test('4. A2 / CVP giữ quan_tri_kl: giao thẳng Owner đơn vị ngoài (không thay_mat_cho) được; ghi thay_mat_cho → 22023 "không ghi thay mặt"', async () => {
+  test('4. A2 / CVP giữ quan_tri_kl: giao thẳng Owner ngoài phòng mình (Văn phòng; không thay_mat_cho) được; ghi thay_mat_cho → 22023 "không ghi thay mặt"; đơn vị ngoài bị chặn (0079)', async () => {
     assertOk(await db().from('accounts').update({ quan_tri_kl: true }).in('id', [IDS.truongphong, IDS.cvp]), 'cấp quan_tri_kl');
     for (const u of ['demo_truongphong', 'demo_cvp']) {
-      const r = await giao(u, { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 });
-      assertOk(r, `${u} giữ quan_tri_kl nhập việc đơn vị ngoài`);
+      const r = await giao(u, { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: IDS.cv1 });
+      assertOk(r, `${u} giữ quan_tri_kl nhập việc của Văn phòng`);
       const n = (await db().from('nhiem_vu').select('giao_thay_mat_cho, tao_boi').eq('id', r.data.id).single()).data;
       assert.deepEqual(n, { giao_thay_mat_cho: null, tao_boi: IDS[u.replace('demo_', '')] });
-      assert.match(loi(await giao(u, { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.pcvp })), /không ghi thay mặt/, `${u} ghi thay_mat_cho`);
+      assert.match(loi(await giao(u, { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.pcvp })), /không ghi thay mặt/, `${u} ghi thay_mat_cho`);
+      assert.match(loi(await giao(u, { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 })), /phòng hoặc cán bộ Văn phòng/, `${u} giữ quan_tri_kl vẫn không giao đơn vị ngoài (0079)`);
     }
     await db().from('accounts').update({ quan_tri_kl: false }).in('id', [IDS.truongphong, IDS.cvp]);
-    assertDenied(await giao('demo_truongphong', { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1 }), 'thu cờ → A2 không nhập đơn vị ngoài');
+    assertDenied(await giao('demo_truongphong', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: IDS.cv1 }), 'thu cờ → A2 không giao ngoài phòng mình');
   });
 });

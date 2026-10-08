@@ -2,7 +2,7 @@
 // chỉ đạo, dải cảnh báo; v9 đợt 2: danh sách bấm-xem của từng chỉ tiêu (locChiTieu) bằng đúng con số. Chạy `npm test` trong frontend/ (node:test, không cần trình duyệt hay Supabase).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo, mucMo, ngayGiao } from '../src/lib/kl/tong-quan.js';
+import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo, mucMo, ngayGiao, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../src/lib/kl/tong-quan.js';
 import { locChiTieu } from '../src/lib/kl/tong-quan-loc.js';
 
 const HOM_NAY = '2026-10-02';
@@ -88,6 +88,33 @@ describe('theoNhom', () => {
     const ds = theoNhom(MAU, nam, khoaNhom('A2', {}, 'TONG_HOP'));
     assert.ok(ds.some((d) => d.ten === 'Lý Văn Phúc' && d.ddb === 1));
     assert.deepEqual(ds.map((d) => [d.ten, d.tong]).sort(), [['Lý Văn Phúc', 2], ['Phòng Quản trị', 1], ['Phòng, chưa giao cán bộ', 5], ['Sở Tài chính', 2]]);
+  });
+});
+
+describe('theoCanBo — KPI theo cán bộ (Đợt E): từng phòng rồi từng cán bộ chủ trì', () => {
+  const nam = khoangKy('nam', HOM_NAY);
+  const PHONG = { u_phuc: 'TONG_HOP', u_ha: 'QUAN_TRI' };
+  const TEN = { LANH_DAO_VAN_PHONG: 'Lãnh đạo Văn phòng', TONG_HOP: 'Phòng Tổng hợp', QUAN_TRI: 'Phòng Quản trị' };
+  const ROWS = [...MAU.map((r) => (r.owner_tai_khoan === 'u-phuc' ? { ...r, owner_tai_khoan: 'u_phuc' } : r)),
+    viec({ id: 11, owner_tai_khoan: 'u_ha', owner_tai_khoan_ten: 'Nông Thị Hà', owner_phong: 'QUAN_TRI', owner_don_vi_ma: 'VP_QT', owner_don_vi_ten: '5. Phòng Quản trị', nhom_dem: 'HOAN_THANH', muc_canh_bao: 'KHONG_AP_DUNG', ngay_hoan_thanh: '2026-09-25', ket_qua: 'DUNG_HAN' })];
+  test('phòng theo thứ tự danh bạ, cán bộ có việc Đỏ lên trước; việc phòng chưa giao cán bộ gom một dòng; tổng cộng đủ', () => {
+    const ds = theoCanBo(ROWS, nam, PHONG, TEN);
+    assert.deepEqual(ds.map((p) => p.ma), ['TONG_HOP', 'QUAN_TRI', '']);   // '' = Sở Tài chính (ngoài Văn phòng): "Đơn vị khác"
+    const th = ds[0];
+    assert.deepEqual(th.canBo.map((d) => d.ten), ['Lý Văn Phúc', 'Phòng, chưa giao cán bộ']); assert.equal(th.soCanBo, 1);
+    assert.deepEqual([th.canBo[0].tong, th.canBo[0].do, th.canBo[0].ddb, th.canBo[0].dangMo], [2, 1, 1, 2]);
+    assert.equal(th.tong, th.canBo.reduce((s, d) => s + d.tong, 0));
+    assert.deepEqual([th.xong, th.dangMo, th.tyLe], [2, 4, 50]);   // việc 6, 7 xong trong năm (1 đúng hạn / 2); việc 8 xong năm trước không tính
+    const qt = ds[1]; assert.deepEqual([qt.ten, qt.canBo[0].ten, qt.canBo[0].tyLe, qt.canBo[1].ten], ['Phòng Quản trị', 'Nông Thị Hà', 100, 'Phòng, chưa giao cán bộ']);
+    assert.equal(ds[2].ten, 'Đơn vị khác');
+  });
+  test('bấm tên cán bộ / phòng / pill → locChiTieu với khoá tương ứng bằng đúng con số', () => {
+    const ds = theoCanBo(ROWS, nam, PHONG, TEN); const cb = ds[0].canBo[0];
+    const kq = locChiTieu(ROWS, { t: 'nhom', kh: 'cb', ma: cb.ma, ten: cb.ten }, nam, { khoa: khoaCanBo(PHONG) });
+    assert.equal(kq.nhom[0].rows.length, cb.dangMo);
+    assert.equal(locChiTieu(ROWS, { t: 'nhom', kh: 'cb', ma: cb.ma, m: 'do' }, nam, { khoa: khoaCanBo(PHONG) }).rows.length, cb.do);
+    const ph = locChiTieu(ROWS, { t: 'nhom', kh: 'phong', ma: 'TONG_HOP', ten: 'Phòng Tổng hợp' }, nam, { khoa: khoaPhongCanBo(PHONG, TEN) });
+    assert.deepEqual([ph.nhom[0].rows.length, ph.nhom[1].rows.length], [ds[0].dangMo, ds[0].xong]);
   });
 });
 

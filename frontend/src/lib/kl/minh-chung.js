@@ -10,7 +10,7 @@ const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không 
 
 // Q8 (0057, 0061): việc Thường trực (A0) giao cho Chánh VP chủ trì — chỉ thư ký Thường trực nghiệm thu; không ai giữ cờ thư ký thì quan_tri_kl còn
 // hạn; KHÔNG BAO GIỜ chính Chánh VP. Cùng tập với nguoi_nghiem_thu_chinh (DB là chốt) — để ẩn/hiện nút nghiệm thu.
-export const laViecTtGiaoCvp = (r) => findAccount(r.tao_boi)?.role_group === 'A0'
+export const laViecTtGiaoCvp = (r) => (findAccount(r.tao_boi)?.role_group === 'A0' || r.giao_thay_mat_nhom === 'THUONG_TRUC')   // 0083: thay mặt Thường trực cũng vậy
   && ((o) => o?.role_group === 'A1' && Boolean(o.is_chief))(findAccount(r.owner_tai_khoan));
 export function nghiemThuViecTt(r, nopBoi, me = state.user) {
   const duoc = (a) => a && !a.is_system && !a.bi_khoa && a.role_group !== 'A0' && a.id !== nopBoi && a.id !== r.owner_tai_khoan;

@@ -6,8 +6,8 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { vongHtml, duongHtml, cotThangHtml, xepHtml, chuGiaiHtml, thanhNgangHtml } from './bieu-do.js';
 
-const mo = (ct) => `data-action="tqMo" data-ct='${escapeHtml(JSON.stringify(ct))}'`;
-const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><div><h2>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
+export const mo = (ct) => `data-action="tqMo" data-ct='${escapeHtml(JSON.stringify(ct))}'`;
+export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><div><h2>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
 const ICON_GIAO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
 const KY = ['thang', 'quy', 'nam'];
 
@@ -51,9 +51,10 @@ export function coCauHtml(s, k) {
     ${chuGiaiHtml([...xong.filter((x, i) => i < 2 || x[1] > 0), ...dang.filter((x, i) => i < 5 || x[1] > 0)])}</article>`;
 }
 
-const pillCanh = (d) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do', 'Đỏ'], [d.vang, 'vang', 'Vàng']].filter(([n]) => n)
-  .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} việc ${ten}" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten, m: lop })}>${n}<span class="sr"> việc ${ten}</span></button>`).join('') || '<span class="chu-phu">Không</span>';
-const thuoc = (p) => `<span class="dong-han"><span class="thuoc-tq ${p === null ? '' : p >= 85 ? 'tot' : p >= 70 ? 'canh' : 'nguy'}"><i style="width:${p || 0}%"></i></span><b>${p === null ? '—' : `${p}%`}</b></span>`;
+// kh: cách gom của bảng bấm vào (mặc định khoaNhom theo vai; 'cb' / 'phong' = bảng KPI theo cán bộ, kpi-can-bo.js).
+export const pillCanh = (d, kh = null) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do', 'Đỏ'], [d.vang, 'vang', 'Vàng']].filter(([n]) => n)
+  .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} việc ${ten}" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten, m: lop, ...(kh ? { kh } : {}) })}>${n}<span class="sr"> việc ${ten}</span></button>`).join('') || '<span class="chu-phu">Không</span>';
+export const thuoc = (p) => `<span class="dong-han"><span class="thuoc-tq ${p === null ? '' : p >= 85 ? 'tot' : p >= 70 ? 'canh' : 'nguy'}"><i style="width:${p || 0}%"></i></span><b>${p === null ? '—' : `${p}%`}</b></span>`;
 const TIEU_NHOM = { A0: ['Theo đơn vị chủ trì', 'Đơn vị'], A2: ['Theo cán bộ', 'Cán bộ'], A1: ['Theo phòng, đơn vị', 'Phòng'] };
 export function bangNhomHtml(ds, vai, k) {
   const [tieu, cot] = TIEU_NHOM[vai] || TIEU_NHOM.A1;
