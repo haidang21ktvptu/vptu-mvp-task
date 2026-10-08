@@ -58,8 +58,11 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     assert.equal((await cv2.from('nhiem_vu').update({ ghi_chu: 'x' }).eq('id', fx.n1).select('id')).data.length, 0, 'ngoài phạm vi: 0 dòng');
   });
 
-  test('3. giao_viec: A3 bị chặn; A2 giao cho chuyên viên phòng mình được (cấp nhận = Trưởng phòng, ngày nhận = hôm nay, theo_1400); khác phòng/phòng/đơn vị ngoài bị chặn', async () => {
-    assertDenied(await giao('demo_cv1', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 }), 'A3 giao việc');
+  test('3. giao_viec: A3 chỉ giao thẳng cho chuyên viên / chính mình (0085), phòng bị chặn; A2 giao cho chuyên viên phòng mình được (cấp nhận = Trưởng phòng, ngày nhận = hôm nay, theo_1400); khác phòng/phòng/đơn vị ngoài bị chặn', async () => {
+    assertDenied(await giao('demo_cv1', { owner_don_vi_ma: 'TONG_HOP' }), 'A3 giao việc cho phòng');
+    const tuGiao = await giao('demo_cv1', { ma: 'A3', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
+    assertOk(tuGiao, 'A3 tự giao (0085)');
+    assert.equal((await db().from('nhiem_vu').select('nguoi_theo_doi').eq('id', tuGiao.data.id).single()).data.nguoi_theo_doi, IDS.cv1, 'theo dõi = người giao');
     const ok = await giao('demo_truongphong', { ma: 'A2', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
     assertOk(ok, 'A2 giao cho cv1');
     const nv = (await db().from('nhiem_vu').select('theo_1400, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi, han_xu_ly').eq('id', ok.data.id).single()).data;

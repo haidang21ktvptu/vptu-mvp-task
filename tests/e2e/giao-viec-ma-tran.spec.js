@@ -4,7 +4,7 @@
 // (demo_qtht, cờ tạm, thay mặt Chánh VP). Mỗi ô: không có ô hạn nộp, "Còn thiếu" không nhắc hạn nộp.
 // PR-3 (B, quyết định 1/10/2026 — gộp vào ma trận này, cùng phiên): ô "Nguồn nhiệm vụ" mỗi vai × 5 loại — mặc định theo loại khi tạo văn bản mới, theo loại
 // của văn bản CÓ SẴN khi chọn Kết luận (bài học v3.8.0), bỏ chọn ⇒ "Còn thiếu: nguồn nhiệm vụ". Giao thật mỗi vai: pr3-giao-that.spec.js.
-// Giao thật: Trưởng phòng (văn bản mới) và A0 từ Kết luận — DB lưu han_nop_minh_chung NULL. A3 thường không có màn Giao việc; việc có hạn nộp cũ
+// Giao thật: Trưởng phòng (văn bản mới) và A0 từ Kết luận — DB lưu han_nop_minh_chung NULL. A3 thường có màn Giao việc (0085); việc có hạn nộp cũ
 // trong dữ liệu không còn nhãn cam "Chậm nộp minh chứng". Dữ liệu theo khoá; cờ khôi phục.
 // Một phiên mở mỗi lúc (docs/KIEM-THU.md — CI #97: 7 phiên song song + realtime làm staging nghẽn): các vai chạy TUẦN TỰ, mở–kiểm–đóng.
 import { test, expect } from '@playwright/test';
