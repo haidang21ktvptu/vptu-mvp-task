@@ -19,7 +19,7 @@ export async function renderNgayNghi() {
   let ds = [];
   try { ds = await dsNgayNghi(); } catch (e) { notifyError(e.message); }
   $('qtKhuNgayNghi').innerHTML = `
-    <p class="chu-phu">Ngày nghỉ lễ, nghỉ bù và ngày làm bù (Thứ Bảy/Chủ nhật đi làm). Hệ thống dùng danh mục này để tính ngày làm việc: nhắc nghiệm thu,
+    <p class="chu-phu">Ngày nghỉ lễ, nghỉ bù và ngày làm bù (Thứ Bảy/Chủ nhật đi làm). Hệ thống dùng danh mục này để tính ngày làm việc:
       hạn phản hồi chỉ đạo, nhắc việc. Mỗi thay đổi phải ghi lý do và được lưu vào nhật ký hệ thống.</p>
     <form id="qtNgayNghiForm" class="cot-3" data-submit="qtThemNgayNghi">
       <input type="date" name="ngay" required class="o-nhap" aria-label="Ngày">

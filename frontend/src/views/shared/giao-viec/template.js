@@ -131,7 +131,7 @@ export const giaoViecTemplate = `
       <ol class="gv-buoc-sau">
         <li><i>1</i><span id="gvBuoc1">Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
-        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) trước hạn hoàn thành; lãnh đạo nghiệm thu thì việc hoàn thành, trả lại thì nộp lại.</span></li>
+        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản; có thể kèm tệp) trước hạn hoàn thành — nộp là việc hoàn thành; người giao việc, lãnh đạo xem kết quả và trả lại nếu chưa đạt.</span></li>
       </ol></section>
   </aside>
   </div>

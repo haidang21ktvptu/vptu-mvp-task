@@ -1,7 +1,7 @@
 // Phần chung của màn hình điều hành A0/A1: đầu trang (ngày, "số liệu tính đến", kết nối realtime, Tải lại), 4 số-lọc, thanh trái + danh sách
 // thẻ (hoặc Toàn cảnh N nhiệm vụ khi bấm số hoàn thành). Mỗi vai truyền cấu hình KPI và phần đầu/cuối trang riêng.
 import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
-import { dongBoNutNghiemThu } from '../chat-luong.js';
+import { dongBoNutDanhGia } from '../chat-luong.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
 import { tongHop, locRows } from '../../../lib/kl/tong-hop.js';
@@ -69,7 +69,7 @@ export function veDieuHanh() {
   }
   cauHinh.veThem();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}, so sánh với tuần trước`);
-  traNhap(); dongBoNutNghiemThu($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
+  traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 
 // Lỗi tạm (mạng, staging bận → statement timeout của v_nhiem_vu / v_ngoai_le khi nhiều trang nạp cùng lúc): thử lại MỘT lần sau 800 ms rồi mới báo,
@@ -106,6 +106,10 @@ const boLocDieuHanh = () => { dh.loc = { khau: null, dv: null, kpi: null }; veDi
 // Ô toàn cảnh / số "sắp đến hạn": danh sách việc của nhóm (cùng mảng dòng của màn hình) mở trong ngăn chi tiết, ngay trên Cần xử lý.
 function moKlDanhSach({ loc }) {
   let bo; try { bo = JSON.parse(loc || '{}'); } catch { bo = {}; }
+  if (bo.ketQuaMoi) {   // Đợt D: việc có kết quả nộp trong 7 ngày (ô số "kết quả" A1/A2)
+    const ids = new Set(dh.mcCho.map((m) => m.nhiem_vu_id));
+    moNganDanhSach({ tieuDe: 'Việc có kết quả nộp trong 7 ngày', rows: dh.rows.filter((r) => ids.has(r.id)) }); return;
+  }
   moNganDanhSach({ tieuDe: bo.nhom ? tenNhom(bo.nhom) : 'Toàn bộ nhiệm vụ trong phạm vi', rows: locRows(dh.rows, bo) });
 }
 

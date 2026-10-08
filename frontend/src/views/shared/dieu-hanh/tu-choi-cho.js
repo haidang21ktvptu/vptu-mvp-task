@@ -1,4 +1,4 @@
-// Khối "Đề nghị từ chối nhận việc, cần duyệt" (A1 Điều hành hôm nay / A2 Phòng tôi, 0034): đề nghị mà tôi là cấp duyệt — mã, nội dung việc,
+// Khối "Đề nghị từ chối nhận việc, cần duyệt" (A1 Điều hành hôm nay / A2 Phòng tôi, 0034; Đợt D 0091: cả A3 Việc của tôi — người nhập / giao việc là cấp duyệt): đề nghị mà tôi là cấp duyệt — mã, nội dung việc,
 // người đề nghị, lý do (RLS: chỉ người đề nghị, cấp duyệt và cấp trên đọc được), ô ý kiến + Đồng ý / Không đồng ý (duyet_tu_choi là chốt).
 import { escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { findAccount } from '../../../lib/state.js';

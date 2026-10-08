@@ -1,12 +1,9 @@
-// Nghiệm thu, ngày làm việc, ngày nghỉ (PR-2b, migration 0053–0060; 0077 bỏ hạn nộp minh chứng — không còn kl_khung_han_nop / dat_han_nop_minh_chung
-// ở client). Mọi phép tính ngày làm việc ở DB — client chỉ gọi RPC và hiển thị; quyền thật nằm trong từng hàm ghi.
+// Ngày làm việc, ngày nghỉ (PR-2b, migration 0053–0060; 0077 bỏ hạn nộp minh chứng; Đợt D 0090 bỏ màn "Cần nghiệm thu" — nộp minh chứng hợp lệ
+// là hoàn thành). Mọi phép tính ngày làm việc ở DB — client chỉ gọi RPC và hiển thị; quyền thật nằm trong từng hàm ghi.
 import { supabase } from '../supabase.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo, viec) => loi(await supabase.rpc(ham, thamSo), viec);
-
-// Màn "Cần nghiệm thu": [{ nhiem_vu_id, minh_chung_id, cua_toi }] — cùng hàm chặn với xac_nhan_minh_chung (kl_duoc_nghiem_thu).
-export const canNghiemThu = async () => (await rpc('kl_can_nghiem_thu', {}, 'không đọc được danh sách cần nghiệm thu')) || [];
 
 // Danh mục ngày nghỉ (Quản trị › Ngày nghỉ): đọc cho mọi người đăng nhập; ghi qua qt_dat_ngay_nghi (QTHT / Chánh VP, lý do, nhật ký).
 export async function dsNgayNghi() {

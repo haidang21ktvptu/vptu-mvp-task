@@ -33,7 +33,7 @@ const khongCuonNgang = async (page) => {
 const VAI = [
   { role: 'A1', tieuDe: 'Cần xử lý hôm nay', duoi: ['Tổng quan', 'Cần xử lý', 'Nhiệm vụ', 'Khác'] }, // v9: Tổng quan mở đầu, "Điều hành" → "Cần xử lý"
   { role: 'A2', tieuDe: 'Cần xử lý hôm nay', duoi: ['Tổng quan', 'Cần xử lý', 'Nhiệm vụ', 'Khác'] },
-  { role: 'A3', tieuDe: 'Việc của tôi', duoi: ['Việc của tôi', 'Giao việc', 'Theo dõi', 'Khác'] },   // v3.18 Đợt E: chuyên viên có Giao việc; Nhắn tin, Cần nghiệm thu vào "Khác"
+  { role: 'A3', tieuDe: 'Việc của tôi', duoi: ['Việc của tôi', 'Giao việc', 'Theo dõi', 'Khác'] },   // v3.18 Đợt E: chuyên viên có Giao việc; Nhắn tin vào "Khác" (Đợt D: bỏ Cần nghiệm thu)
 ];
 
 for (const v of VAI) {

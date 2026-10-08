@@ -235,23 +235,34 @@ test('Đánh giá: mã đã có → CAP_NHAT chỉ ô có trong tệp (không m�
   assert.equal(moi.ket_qua, 'GIAO'); assert.ok(moi.canhBao[0].includes('chưa có trên hệ thống'));
 });
 
-test('Mẫu nhập chuẩn: 3 sheet, 25 cột đúng thứ tự, danh sách chọn trỏ sheet Danh mục, tiêu đề tô theo mức; đọc lại tự nhận hồ sơ mẫu', async () => {
+test('Mẫu nhập chuẩn: 3 sheet, 28 cột đúng thứ tự (v3.20: + 3 ô nguồn ở cuối), danh sách chọn trỏ sheet Danh mục, tiêu đề tô theo mức; đọc lại tự nhận hồ sơ mẫu', async () => {
   const b = taoMauNhap({ ...CTX, findAccount: (id) => ACC.find((a) => a.id === id) },
     [{ ma: 'NV-9', van_ban_loai: 'KL_BTV', so_hoi_nghi: 45, so_ket_luan: '45-KL/TU', ngay_ban_hanh: '2026-08-01', noi_dung: 'Báo cáo quý', owner_tai_khoan: 'cv1',
-      nguoi_theo_doi: 'tp', tao_boi: 'tp', do_khan: 'KHAN', tien_do_ma: 'DANG_THUC_HIEN', han_xu_ly: '2026-12-31' }]);
+      nguoi_theo_doi: 'tp', tao_boi: 'tp', do_khan: 'KHAN', tien_do_ma: 'DANG_THUC_HIEN', han_xu_ly: '2026-12-31', muc_quan_trong: 'A', co_quan_trinh_ten: 'Ban Tổ chức Tỉnh ủy' }]);
   const ds = await docXlsx(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
   assert.deepEqual(ds.map((x) => x.ten), ['Nhập liệu', 'Danh mục', 'Hướng dẫn']);
-  assert.equal(TRUONG_MAU.length, 25); assert.deepEqual(ds[0].dong[0], TRUONG_MAU.map((t) => t.nhan));
+  assert.equal(TRUONG_MAU.length, 28); assert.deepEqual(ds[0].dong[0], TRUONG_MAU.map((t) => t.nhan));
   const r = ds[0].dong[1];
   assert.equal(r[0], 'NV-9'); assert.equal(r[1], 'Kết luận Hội nghị Ban Thường vụ'); assert.equal(r[7], 'Lý Văn Phúc — Phòng Tổng hợp');
   assert.equal(r[9], 'Nông Thị Lan — Phòng Tổng hợp', 'lãnh đạo giao = người tạo A2'); assert.equal(r[14], 'Khẩn'); assert.equal(r[11], '2026-12-31');
+  assert.equal(r[25], 'A — rất quan trọng'); assert.equal(r[26], 'Ban Tổ chức Tỉnh ủy');
   assert.ok(ds[1].dong[0].includes('Lĩnh vực')); assert.ok(ds[1].dong.some((d) => d[2] === 'Đàm Văn Sơn — Phòng Quản trị'));
   assert.ok(!ds[1].dong.some((d) => (d[2] || '').startsWith('Hệ thống')), 'không đưa tài khoản hệ thống');
   const xml = new TextDecoder().decode(b); assert.match(xml, /<dataValidation type="list"[^>]*sqref="B2:B1001"><formula1>&apos;Danh mục&apos;!\$A\$2:\$A\$8<\/formula1>/);   // 0087: 7 loại văn bản (+ KL / NQ Ban Chấp hành)
   assert.match(xml, /<fgColor rgb="FFFFF6D6"\/>/);
   const sTieuDe = (c) => new RegExp(`<c r="${c}1" t="inlineStr" s="(\\d+)"`).exec(xml)?.[1];
-  assert.deepEqual(['A', 'B', 'R', 'S', 'T', 'U', 'Y'].map(sTieuDe), ['7', '4', '4', '5', '5', '6', '6'], 'tiêu đề tô theo mức: mã xám, mức 1 vàng, mức 2 lam, mức 3 lục');
+  assert.deepEqual(['A', 'B', 'R', 'S', 'T', 'U', 'Y', 'Z', 'AB'].map(sTieuDe), ['7', '4', '4', '5', '5', '6', '6', '4', '4'], 'tiêu đề tô theo mức: mã xám, mức 1 vàng, mức 2 lam, mức 3 lục; 3 ô nguồn mức 1');
   const t = timTieuDe(ds); assert.equal(t.hoSo?.mau, 'CHUAN'); assert.equal(t.anhXa[0], 'ma'); assert.equal(t.anhXa[24], 'chat_luong');
   const kq = danhGia(chuanDong(layDong(ds[0], 0, t.anhXa)[0], CTX), { ...DG, maDaCo: new Set(['NV-9']) });
   assert.equal(kq.ket_qua, 'CAP_NHAT'); assert.equal(kq.du_lieu.owner_tai_khoan, 'cv1'); assert.equal(kq.du_lieu.do_khan, 'KHAN');
+});
+
+test('v3.20 (0093): ba ô nguồn — Mức quan trọng (A/B/C, chữ "quan trọng"), Cơ quan trình chỉ đơn vị ngoài Văn phòng; không khớp → lỗi ô tuỳ chọn', () => {
+  assert.equal(chuanGiaTri('mucQT', 'b', CTX).ma, 'B');
+  assert.equal(chuanGiaTri('mucQT', 'Rất quan trọng', CTX).ma, 'A');
+  assert.equal(chuanGiaTri('coQuanTrinh', 'Đảng ủy Ủy ban nhân dân tỉnh', CTX).ma, 'DANG_UY_UBND');
+  assert.ok(chuanGiaTri('coQuanTrinh', 'Văn phòng Tỉnh ủy', CTX).loi, 'đơn vị trong Văn phòng không là cơ quan trình');
+  assert.ok(chuanGiaTri('mucQT', 'D', CTX).loi);
+  assert.equal(doanTruong('Mức quan trọng'), 'muc_quan_trong'); assert.equal(doanTruong('Cơ quan trình'), 'co_quan_trinh');
+  assert.equal(doanTruong('Cơ quan/đơn vị trình'), 'don_vi', 'cột Phụ lục 2 vẫn là đơn vị chủ trì');
 });

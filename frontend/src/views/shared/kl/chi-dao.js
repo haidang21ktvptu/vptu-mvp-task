@@ -24,6 +24,10 @@ const LOAI_CON = ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_
 const TEN_A0 = { Y_KIEN: 'Ý kiến', CHI_DAO_TT: 'Chỉ đạo' };
 
 export const duocChiDao = () => ['A1', 'A2'].includes(state.user?.role_group);
+// Đợt D (0092): chuyên viên đã nhập / giao việc (người tạo, không phải chính Owner) đôn đốc, gia hạn, giao lại, ghi ý kiến trên việc mình giao.
+const LOAI_NGUOI_GIAO = ['DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'Y_KIEN'];
+export const laNguoiGiaoViec = (r) => !duocChiDao() && !laA0() && Boolean(state.user?.id) && r?.tao_boi === state.user.id && r.owner_tai_khoan !== state.user.id
+  && !r.giao_thay_mat_cho && !r.giao_thay_mat_nhom;   // 0092: chỉ việc giao thẳng (không thay mặt ai)
 export const laA0 = () => state.user?.role_group === 'A0';
 const tenNguoi = (id) => findAccount(id)?.full_name || 'Cán bộ';
 const laNguoiNhan = (g) => Boolean(state.user?.id) && (g.nguoi_nhan || []).includes(state.user.id);
@@ -118,8 +122,9 @@ export function chiDaoHtml(r, { rows, daDoc }) {
   const phanHoiCua = (g) => rows.filter((c) => c.loai === 'PHAN_HOI' && c.tra_loi_cho === g.id);
   const cho = goc.filter((g) => g.trang_thai === 'CHO_PHAN_HOI').length;
   const chuaDoc = rows.filter((c) => !daDoc.has(c.id)).length;
-  const moMoiNhat = duocChiDao() || laA0() ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
-  const oNhap = duocChiDao() ? formGuiHtml(r) : laA0() ? formGuiHtml(r, ['Y_KIEN', 'CHI_DAO_TT']) : moMoiNhat ? formPhHtml(moMoiNhat, r, 'cd-form-dau') : '';
+  const moMoiNhat = duocChiDao() || laA0() || laNguoiGiaoViec(r) ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
+  const oNhap = duocChiDao() ? formGuiHtml(r) : laA0() ? formGuiHtml(r, ['Y_KIEN', 'CHI_DAO_TT'])
+    : laNguoiGiaoViec(r) ? formGuiHtml(r, LOAI_NGUOI_GIAO) : moMoiNhat ? formPhHtml(moMoiNhat, r, 'cd-form-dau') : '';
   return `
     <div class="luong-cd" id="klChiDao-${r.id}">
       <h4>Chỉ đạo <span class="chu-phu">${goc.length === 0 ? 'chưa có' : `${goc.length} · ${cho} chờ phản hồi`}${chuaDoc ? ` · <span class="chu-canh-bao-inline">${chuaDoc} chưa đọc</span>` : ''}</span></h4>

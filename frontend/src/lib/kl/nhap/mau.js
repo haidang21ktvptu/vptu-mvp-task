@@ -1,10 +1,11 @@
-// "Mẫu nhập chuẩn VPTU-TASK" (v9 đợt 2): sheet "Nhập liệu" 25 cột theo chuẩn 3 mức (nền tiêu đề theo mức), ô danh mục có danh sách chọn lấy từ
+// "Mẫu nhập chuẩn VPTU-TASK" (v9 đợt 2): sheet "Nhập liệu" 28 cột (v3.20: + Mức quan trọng, Cơ quan trình, Thường trực chỉ đạo ở cuối) theo chuẩn 3 mức (nền tiêu đề theo mức), ô danh mục có danh sách chọn lấy từ
 // sheet "Danh mục" (danh mục hiện hành của hệ thống + cán bộ "Họ tên — Phòng"), cột ngày định dạng dd/mm/yyyy; sheet "Hướng dẫn". "Xuất ra Excel
 // theo mẫu": cùng tệp, sheet "Nhập liệu" điền sẵn các việc đang lọc (có mã) — sửa trong Excel rồi nhập lại để cập nhật theo mã.
 import { taoXlsx } from '../../xlsx.js';
 import { TRUONG_MAU } from './truong.js';
 import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG } from './chuan-hoa.js';
 import { NHOM_THAY_MAT, tenNhomThayMat } from '../thay-mat.js';
+import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../ma-nguon.js';
 
 const S_MUC = { 0: 7, 1: 4, 2: 5, 3: 6 };   // kiểu tiêu đề theo mức (lib/xlsx.js: 4 vàng, 5 lam, 6 lục, 7 xám)
 const RONG = { noi_dung: 50, kq_mo_ta: 40, vuong_mac: 30, don_vi: 30, can_bo: 28, theo_doi: 28, lanh_dao_giao: 28, nganh: 34, linh_vuc: 30, kq_trich_yeu: 30 };
@@ -22,6 +23,8 @@ function danhMuc({ dm, accounts, tenPhong }) {
     ['Cấp nhận', dm.cap.map((x) => x.ten), 'cap_nhan'], ['Độ khẩn', DO_KHAN.map(([, t]) => t), 'do_khan'],
     ['Nguồn nhiệm vụ', (dm.nguonNhiemVu || []).filter((x) => x.dang_dung).map((x) => x.ten), 'nguon'], ['Ngành', dm.nganh.map((x) => x.ten), 'nganh'],
     ['Lĩnh vực', dm.linhVuc.map((x) => x.ten), 'linh_vuc'], ['Tiến độ', TIEN_DO.map(([, t]) => t), 'tien_do'], ['Chất lượng', CHAT_LUONG.map(([, t]) => t), 'chat_luong'],
+    ['Mức quan trọng', MUC_QUAN_TRONG.map(([, t]) => t), 'muc_quan_trong'], ['Cơ quan trình', dm.donVi.filter((d) => !d.trong_van_phong).map((d) => d.ten), 'co_quan_trinh'],
+    ['Thường trực chỉ đạo', accounts.filter((a) => a.role_group === 'A0' && !a.is_system && !a.bi_khoa).map((a) => a.full_name), 'thuong_truc_chi_dao'],   // 0093
   ];
 }
 const chuCot = (i) => { let s = ''; for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
@@ -30,9 +33,10 @@ const HUONG_DAN = [
   ['Mẫu nhập chuẩn VPTU-TASK — mỗi dòng ở sheet "Nhập liệu" là một nhiệm vụ.'],
   ['Mức 1 (nền vàng) — đủ để GIAO: văn bản (loại, số hội nghị nếu là Kết luận BTV, số/ký hiệu, ngày ban hành), nội dung, đơn vị hoặc cán bộ chủ trì, sản phẩm, hạn hoàn thành (loại "Có hạn cụ thể"), ngành + lĩnh vực (Kết luận / Thông báo).'],
   ['Ô để trống được điền theo quy tắc: độ khẩn Thường; loại hạn Có hạn cụ thể; nguồn theo loại văn bản; người theo dõi = cán bộ chủ trì hoặc Trưởng phòng; lãnh đạo giao = Trưởng phòng của phòng chủ trì hoặc Chánh Văn phòng; cấp nhận theo hệ thống.'],
+  ['Ba cột cuối (nền vàng, không bắt buộc): Mức quan trọng (A / B / C), Cơ quan trình (đơn vị ngoài Văn phòng trình), Thường trực chỉ đạo (đồng chí Thường trực).'],
   ['Dòng còn thiếu mức 1 không mất: vào mục "Chờ hoàn thiện" để bổ sung bằng biểu mẫu Giao việc.'],
   ['Mức 2 (nền lam) — tiến độ: Đang thực hiện / Hoàn thành; vướng mắc (gửi lãnh đạo quyết định).'],
-  ['Mức 3 (nền lục) — đủ để ĐÓNG: số hiệu, ngày, trích yếu văn bản kết quả, mô tả kết quả; chất lượng. Việc Hoàn thành được xử lý theo lựa chọn khi nhập: "Đã xong ngoài hệ thống" (đóng ngay, không tính tỷ lệ đúng hạn) hoặc "Chờ nghiệm thu" (lãnh đạo nghiệm thu, chấm chất lượng).'],
+  ['Mức 3 (nền lục) — đủ để ĐÓNG: số hiệu, ngày, trích yếu văn bản kết quả, mô tả kết quả; chất lượng. Việc Hoàn thành được xử lý theo lựa chọn khi nhập: "Đã xong ngoài hệ thống" (đóng ngay, không tính tỷ lệ đúng hạn) hoặc "Ghi minh chứng" (hoàn thành theo minh chứng, tính đúng hạn; lãnh đạo đánh giá chất lượng khi muốn).'],
   ['Mã nhiệm vụ (nền xám): để trống khi nhập việc mới. Có mã → cập nhật việc đó (nội dung, sản phẩm, độ khẩn, ngành, lĩnh vực, nguồn, vướng mắc…); ô trống không xoá dữ liệu đang có. Đổi chủ trì / hạn dùng Giao lại / Gia hạn trên hệ thống.'],
   ['Ngày ghi dd/mm/yyyy. Ô có danh sách chọn lấy từ sheet "Danh mục"; gõ giá trị khác vẫn được — hệ thống thử khớp và hỏi lại khi chưa chắc.'],
 ];
@@ -78,6 +82,9 @@ function giaTriXuat(r, k, { findAccount, tenPhong }) {
     case 'tien_do': return ten(TIEN_DO, r.tien_do_ma);
     case 'vuong_mac': return r.vuong_mac || '';
     case 'chat_luong': return ten(CHAT_LUONG, r.chat_luong);
+    case 'muc_quan_trong': return r.muc_quan_trong ? tenMucQuanTrong(r.muc_quan_trong) : '';
+    case 'co_quan_trinh': return r.co_quan_trinh_ten || '';
+    case 'thuong_truc_chi_dao': return r.thuong_truc_chi_dao_ten || '';
     default: return '';
   }
 }

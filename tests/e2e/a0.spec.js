@@ -84,7 +84,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(the.locator(`#db-${id}`)).toHaveCount(0);
   });
 
-  test('Toàn bộ nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ / Nộp minh chứng, chỉ ô Ý kiến / Chỉ đạo', async () => {
+  test('Toàn bộ nhiệm vụ: thấy danh sách, không có Giao việc / Xác nhận nhận việc / Đóng nhiệm vụ; có Nộp minh chứng (Đợt D: lãnh đạo nhập thay được); chỉ ô Ý kiến / Chỉ đạo', async () => {
     await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator('#klBody [id^="klRow-"]').first();
@@ -95,7 +95,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(ngan.locator('.chi-tiet-noi')).toBeVisible();
     await expect(ngan.locator('[data-action=xacNhanNhanViec]')).toHaveCount(0);
     await expect(ngan.locator('[data-action=openDongNhiemVu]')).toHaveCount(0);
-    await expect(ngan.locator('[data-action=openMinhChung]')).toHaveCount(0);
+    await expect(ngan.locator('[data-action=openMinhChung]')).toHaveCount(1, NAP);   // 0089: lãnh đạo (kể cả Thường trực) nộp thay được, không bắt buộc
     await expect(ngan.locator('select.nl-cap')).toHaveCount(0); // cấp quyết định chỉ đọc
     const form = ngan.locator('form.cd-form').first();
     await expect(form).toBeVisible();

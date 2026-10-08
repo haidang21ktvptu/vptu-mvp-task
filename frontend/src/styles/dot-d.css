@@ -1,0 +1,10 @@
+/* Đợt D v3.20 (0089–0090): ô chọn tệp minh chứng (nút "Chọn tệp…" tiếng Việt thay nút gốc của trình duyệt — ô gốc ẩn nhưng vẫn nhận bàn phím và
+   trình đọc màn hình qua nhãn), liên kết xem tệp trong khối minh chứng / kết quả vừa nộp. Chỉ trình bày theo docs/DESIGN.md. */
+@layer components {
+  .o-tep-hang { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .o-tep-hang .ten-tep { font-size: 13px; color: var(--chu-phu); overflow-wrap: anywhere; }
+  .an-tep { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .an-tep:focus-visible + .nut { outline: 2px solid var(--lam); outline-offset: 2px; }
+  .mc-tep { margin: 4px 0 0; } .mc-tep .lien-ket { font-size: 13px; }
+  span.mc-tep { display: block; }
+}

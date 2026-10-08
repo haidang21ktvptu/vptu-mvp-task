@@ -8,7 +8,7 @@ import { hienGoc } from '../../../lib/kl/nhap/bang.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../../../lib/kl/thay-mat.js';
 
 const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
-export const KQ = { GIAO: ['Giao ngay', 'nx-kq nx-giao'], DA_XONG: ['Đã xong (ngoài hệ thống)', 'nx-kq nx-xong'], CHO_NGHIEM_THU: ['Chờ nghiệm thu', 'nx-kq nx-nt'],
+export const KQ = { GIAO: ['Giao ngay', 'nx-kq nx-giao'], DA_XONG: ['Đã xong (ngoài hệ thống)', 'nx-kq nx-xong'], CHO_NGHIEM_THU: ['Hoàn thành theo minh chứng', 'nx-kq nx-nt'],
   CAP_NHAT: ['Cập nhật việc có sẵn', 'nx-kq nx-cn'], CHO_HOAN_THIEN: ['Chờ hoàn thiện', 'nx-kq nx-cho'], BO_QUA: ['Bỏ qua', 'nx-kq nx-bo'], DA_HOAN_THIEN: ['Đã hoàn thiện', 'nx-kq nx-xong'],
   DA_BO: ['Đã bỏ', 'nx-kq nx-bo'], DA_HOAN_TAC: ['Đã hoàn tác', 'nx-kq nx-bo'] };
 export const chipKq = (k) => `<span class="${KQ[k]?.[1] || 'nx-kq'}">${KQ[k]?.[0] || k}</span>`;
@@ -75,7 +75,7 @@ export function xemTruocHtml(s, ctx) {
     ${xong ? `<fieldset class="nx-che-do"${s.loDo ? ' disabled' : ''}><legend>${xong} việc đã hoàn thành trong tệp — xử lý thế nào? <b class="gv-bb">*</b>${
       s.loDo ? ` <span class="chu-phu">(theo lô ${escapeHtml(s.loDo.ma)} đang nhập dở)</span>` : ''}</legend>
       <label><input type="radio" name="nxCheDo" value="DA_XONG_NGOAI"${s.cheDoXong === 'DA_XONG_NGOAI' ? ' checked' : ''}> Đã xong ngoài hệ thống — đóng ngay, không tính tỷ lệ đúng hạn (dữ liệu cũ)</label>
-      <label><input type="radio" name="nxCheDo" value="CHO_NGHIEM_THU"${s.cheDoXong === 'CHO_NGHIEM_THU' ? ' checked' : ''}> Chờ nghiệm thu — giao như thường kèm minh chứng, lãnh đạo nghiệm thu và chấm chất lượng</label></fieldset>` : ''}
+      <label><input type="radio" name="nxCheDo" value="CHO_NGHIEM_THU"${s.cheDoXong === 'CHO_NGHIEM_THU' ? ' checked' : ''}> Ghi minh chứng — giao như thường kèm minh chứng, việc hoàn thành theo ngày văn bản (lãnh đạo xem, đánh giá chất lượng khi muốn)</label></fieldset>` : ''}
     ${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
     <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung</th><th scope="col">Chủ trì</th><th scope="col">Hạn</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
       <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d)).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>

@@ -71,7 +71,11 @@ export async function openViecChat({ nv, ma }) {
   setText('dmChatHeaderRole', 'hội thoại của việc: chỉ đạo, cảnh báo, phản hồi');
   show('dmGuiForm', false); show('dmMoViec', true);
   veDanhBa();
-  const tin = (await loadTinHeThong(200)).filter((t) => t.nhiem_vu_id === nv).sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+  // Một tin gửi nhiều người là nhiều dòng (mỗi người nhận một dòng) — người gửi thấy đủ các dòng: gộp theo (người gửi, nội dung, phút) (TRANG-THAI 6.-6 b).
+  const daThay = new Set();
+  const tin = (await loadTinHeThong(200)).filter((t) => t.nhiem_vu_id === nv)
+    .filter((t) => { const k = `${t.sender_id}|${t.content}|${String(t.created_at).slice(0, 16)}`; if (daThay.has(k)) return false; daThay.add(k); return true; })
+    .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
   const dau = tin[0]?.content.split(': ')[1] || '';
   setText('dmChatHeaderPhu', dau ? ` — ${dau.slice(0, 80)}` : '');
   $('dmChatBox').innerHTML = tin.length ? tin.map(bongViecHtml).join('') : '<p class="trong-nho">Chưa có diễn biến nào.</p>';

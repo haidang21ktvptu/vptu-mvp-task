@@ -51,10 +51,11 @@ function oHtml(r) {
     </form>`;
 }
 
-// Cán bộ Văn phòng chọn được trong ô Giao lại (không A0, không hệ thống; A2 chỉ phòng mình), trừ `loai` (chủ trì hiện tại / không); chi_dao_gui là chốt.
+// Cán bộ Văn phòng chọn được trong ô Giao lại (không A0, không hệ thống; A2 chỉ phòng mình; chuyên viên giao việc — 0092 — chỉ chuyên viên), trừ `loai`
+// (chủ trì hiện tại / không); chi_dao_gui là chốt.
 function canBoOptions(loai, chon) {
-  const me = state.user;
-  return state.accounts.filter((a) => !a.is_system && a.role_group !== 'A0' && a.id !== loai && (me?.role_group !== 'A2' || a.department === me.department))
+  const me = state.user; const a3 = me?.role_group === 'A3' && !me?.quan_tri_kl;
+  return state.accounts.filter((a) => !a.is_system && a.role_group !== 'A0' && a.id !== loai && (me?.role_group !== 'A2' || a.department === me.department) && (!a3 || a.role_group === 'A3'))
     .sort((a, b) => (a.department || '').localeCompare(b.department || '') || a.full_name.localeCompare(b.full_name, 'vi'))
     .map((a) => `<option value="${a.id}"${a.id === chon ? ' selected' : ''}>${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('');
 }

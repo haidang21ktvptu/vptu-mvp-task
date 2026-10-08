@@ -11,7 +11,8 @@ import { maNguonHtml, nhanMucHtml } from './thong-tin-nguon.js';   // Đợt C2 
 
 // Ai là "bên trong" của việc: người theo dõi hoặc Owner tài khoản.
 export const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
-export const duocCapNhat = (r) => laBenTrong(r) || Boolean(state.user?.quan_tri_kl);
+// 0091 (policy nhiem_vu_update): + người tạo việc và lãnh đạo A0/A1/A2 thấy việc — lãnh đạo làm được việc của chuyên viên, không bắt buộc.
+export const duocCapNhat = (r) => laBenTrong(r) || r.tao_boi === state.user?.id || ['A0', 'A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
 // GĐ16 (MC-4): ai được đóng nhiệm vụ — Owner/người theo dõi, lãnh đạo trong phạm vi (A1/A2), quan_tri_kl; hàm dong_nhiem_vu là chốt.
 export const duocDong = (r) => laBenTrong(r) || duocChiDao() || Boolean(state.user?.quan_tri_kl);
 export const sanPhamText = (r) => (r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : '');

@@ -1,9 +1,11 @@
 // GĐ18 (0030) — vai trò A0 Thường trực Tỉnh ủy (CH-11 = A): ĐỌC toàn bộ nhiệm vụ, ngoại lệ, chỉ đạo, minh chứng, cảnh báo;
 // mọi hàm GHI từ chối tường minh (42501) trừ chi_dao_gui loại Y_KIEN; A0 không nằm trong nguoi_lien_quan và chỉ nhận tin hệ
-// thống là phản hồi vào luồng Y_KIEN do chính mình mở; cảnh báo Đỏ đặc biệt không gửi A0. Mã NV-T88/T89, tự dọn.
+// thống là phản hồi vào luồng Y_KIEN do chính mình mở; cảnh báo Đỏ đặc biệt không gửi A0. Mã NV-T87/T88/T89, tự dọn.
+// Đợt D (0089–0091, định hướng 8/10/2026): lãnh đạo — kể cả Thường trực — làm được việc nhập liệu của chuyên viên trong phạm vi: A0 nộp minh
+// chứng, cập nhật ô của Owner (ghi chú, tiến độ…) được; chỉ đạo điều hành (trừ Y_KIEN), nhận việc, đóng nhiệm vụ vẫn chặn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, assertNoRows, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = LA_PRODUCTION ? BO_QUA_PRODUCTION : (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -26,15 +28,16 @@ const don = async () => {
     await db().from('direct_messages').delete().eq('loai', 'he_thong').in('nhiem_vu_id', cua);
     await db().from('lich_su').delete().eq('cot', 'canh_bao').in('nhiem_vu_id', cua);
   }
-  await db().from('nhiem_vu').delete().in('ma', ['NV-T88', 'NV-T89']);
+  await db().from('nhiem_vu').delete().in('ma', ['NV-T87', 'NV-T88', 'NV-T89']);
 };
 
-describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN, tin hệ thống tối thiểu', { skip: SKIP }, () => {
+describe('0030 — vai trò A0: đọc toàn bộ, chỉ đạo chỉ Y_KIEN, nhập liệu thay được (Đợt D), tin hệ thống tối thiểu', { skip: SKIP }, () => {
   before(async () => {
     fx = await setupKlFixtures();
     await don();
     await them({ ma: 'NV-T88', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 });          // Owner cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
     await them({ ma: 'NV-T89', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv2 });      // đơn vị ngoài, theo dõi cv2
+    await them({ ma: 'NV-T87', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });          // việc A0 nhập liệu thay (Đợt D)
     const mc = await db().from('minh_chung').insert({ nhiem_vu_id: id['NV-T88'], loai: 'so_hieu', so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-10', cap_nhan: 'CHANH_VAN_PHONG', nop_boi: IDS.cv1 }).select('id').single();
     assertOk(mc, 'minh chứng mẫu'); mcId = mc.data.id;
     const dd = await rpc('demo_cvp', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T88'], loai: 'DON_DOC', noi_dung: 'KL-0030 đôn đốc' } });
@@ -61,7 +64,7 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
     assertOk(mc, 'A0 đọc minh_chung'); assert.equal(mc.data.length, 1);
   });
 
-  test('2. Mọi hàm ghi từ chối A0 (42501): giao_viec, chỉ đạo điều hành, cấp quyết định, nhận việc, minh chứng, đóng; ghi bảng trực tiếp 0 dòng', async () => {
+  test('2. Hàm ghi của lãnh đạo điều hành từ chối A0 (42501): giao_viec cho chuyên viên, chỉ đạo điều hành, cấp quyết định, nhận việc, đóng; ghi bảng trực tiếp bị chặn', async () => {
     const me = await a0();
     assertDenied(await me.rpc('giao_viec', { p: { noi_dung: 'KL-0030 A0 giao', van_ban_id: fx.hn, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31' } }), 'giao_viec cho chuyên viên (GĐ22: A0 chỉ giao lãnh đạo VP hoặc phòng)');
     // Các ca bị chặn độc lập — songSong giới hạn 4 (D3, PR-2a).
@@ -70,18 +73,27 @@ describe('0030 — vai trò A0: đọc toàn bộ, ghi bị chặn trừ Y_KIEN,
       ['dat_cap_quyet_dinh', () => me.rpc('dat_cap_quyet_dinh', { p_id: id['NV-T88'], p_cap: 'CHANH_VAN_PHONG' })],
       ['xac_nhan_nhan_viec', () => me.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T88'] })]];
     (await songSong(ca.map((x) => x[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));
-    assertDenied(await me.rpc('nop_minh_chung', { p: { nhiem_vu_id: id['NV-T88'], so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nop_minh_chung');
-    assertDenied(await me.rpc('xac_nhan_minh_chung', { p_id: mcId, p_hop_le: true, p_ly_do: null, p_chat_luong: 'DAT' }), 'xac_nhan_minh_chung');
     assertDenied(await me.rpc('dong_nhiem_vu', { p_id: id['NV-T88'], p_ngay_hoan_thanh: null, p_chat_luong: null }), 'dong_nhiem_vu');
     assertDenied(await me.rpc('chi_dao_dong', { p_id: donDocId }), 'chi_dao_dong chỉ đạo của Chánh VP');
     assertDenied(await me.rpc('chi_dao_phan_hoi', { p: { chi_dao_id: donDocId, noi_dung: 'x' } }), 'chi_dao_phan_hoi');
-    assertNoRows(await me.from('nhiem_vu').update({ ghi_chu: 'A0 sửa' }).eq('id', id['NV-T88']).select('id'), 'update nhiem_vu');
     assertDenied(await me.from('minh_chung').insert({ nhiem_vu_id: id['NV-T88'], loai: 'so_hieu', so_hieu: 'x' }).select('id'), 'insert minh_chung');
     assertDenied(await me.from('chi_dao').insert({ nhiem_vu_id: id['NV-T88'], nguoi_gui: IDS.a0, loai: 'Y_KIEN', noi_dung: 'x' }).select('id'), 'insert chi_dao trực tiếp');
     assertOk(await me.from('direct_messages').insert({ sender_id: IDS.a0, receiver_id: IDS.cv1, content: 'KL-0030 A0 nhắn', is_read: false }).select('id'), 'A0 gửi tin nhắn 1-1 (0034 cho phép)');
     await db().from('direct_messages').delete().eq('content', 'KL-0030 A0 nhắn');
-    const nv = await db().from('nhiem_vu').select('ghi_chu, tien_do_ma, cap_quyet_dinh').eq('id', id['NV-T88']).single();
-    assert.equal(nv.data.ghi_chu, null); assert.equal(nv.data.cap_quyet_dinh, null); assert.notEqual(nv.data.tien_do_ma, 'HOAN_THANH');
+    const nv = await db().from('nhiem_vu').select('tien_do_ma, cap_quyet_dinh').eq('id', id['NV-T88']).single();
+    assert.equal(nv.data.cap_quyet_dinh, null); assert.notEqual(nv.data.tien_do_ma, 'HOAN_THANH');
+    assert.ok(mcId, 'minh chứng mẫu (chờ, nộp trước 0090) của NV-T88 không bị đụng');
+  });
+
+  test('2b. (Đợt D) A0 nhập liệu thay chuyên viên: cập nhật ghi chú, nộp minh chứng ⇒ hoàn thành; không tự trả lại / đánh giá minh chứng mình nộp', async () => {
+    const me = await a0();
+    const u = await me.from('nhiem_vu').update({ ghi_chu: 'KL-0030 A0 ghi chú' }).eq('id', id['NV-T87']).select('id');
+    assertOk(u, 'A0 cập nhật ghi chú'); assert.equal(u.data.length, 1);
+    const r = await me.rpc('nop_minh_chung', { p: { nhiem_vu_id: id['NV-T87'], so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG' } });
+    assertOk(r, 'A0 nộp minh chứng');
+    const nv = (await db().from('nhiem_vu').select('ghi_chu, tien_do_ma, ngay_hoan_thanh').eq('id', id['NV-T87']).single()).data;
+    assert.deepEqual([nv.ghi_chu, nv.tien_do_ma, nv.ngay_hoan_thanh], ['KL-0030 A0 ghi chú', 'HOAN_THANH', '2026-08-20']);
+    assertDenied(await me.rpc('xac_nhan_minh_chung', { p_id: r.data, p_hop_le: false, p_ly_do: 'x' }), 'A0 trả lại minh chứng mình nộp');
   });
 
   test('3. A0 ghi Y_KIEN được; không nằm trong nguoi_lien_quan; chỉ nhận tin phản hồi vào luồng mình mở, không đóng/phản hồi được', async () => {

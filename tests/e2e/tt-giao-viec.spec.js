@@ -1,11 +1,11 @@
 // GĐ22 — Thường trực (A0) giao việc trên biểu mẫu chung, bản rút gọn (ẩn người theo dõi, ngày nhận…; v8 đợt 4: khối văn bản hiện, để trống = mốc tự ghi; độ khẩn mặc định Khẩn) cho Chánh
-// Văn phòng → DB: uu_tien THUONG_TRUC, do_khan KHAN, theo dõi = chính Chánh VP (0035) → Chánh VP thấy khối "Việc Thường trực giao" đầu Điều
-// hành hôm nay với nhãn Thường trực giao + Khẩn, dải "Cần xử lý ngay" đếm việc mới → bấm Xác nhận đã nhận → khối biến mất, lich_su ghi vết.
+// Văn phòng → DB: uu_tien THUONG_TRUC, do_khan KHAN, theo dõi = chính Chánh VP (0035) → Đợt D (0090): Chánh VP được ghi "đã nhận" tự động (lãnh
+// đạo không bấm nhận việc) — không có khối chờ nhận; ngăn chi tiết có nhãn Thường trực giao + Khẩn, "đã nhận việc"; lich_su ghi vết tự động.
 // Bỏ qua khi thiếu demo_a0. Dữ liệu tự dọn (nhiệm vụ theo E2E_TAG, văn bản tự tạo của A0).
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { contextAs, pageAs, moGiaoViec, moViec, NAP } from './lib/app.js';
+import { contextAs, pageAs, moGiaoViec, moViec, nav, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -98,20 +98,20 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await context.close();
   });
 
-  test('Chánh VP: khối "Việc Thường trực giao" đầu trang với nhãn Thường trực giao + Khẩn; dải Cần xử lý; Xác nhận đã nhận → khối biến mất', async ({ browser }, testInfo) => {
+  test('Chánh VP: việc Thường trực giao đã nhận tự động (Đợt D) — không khối chờ nhận; ngăn chi tiết có nhãn Thường trực giao + Khẩn, đã nhận việc', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A1', testInfo);
-    const the = page.locator(`#tt-viec-${id}`);
-    await expect(the).toBeVisible({ timeout: 15_000 });
-    await expect(the).toContainText(noiDung, NAP);
-    await expect(the.locator('.nhan-tt')).toHaveText('Thường trực giao');
-    await expect(the.locator('.dk-khan')).toContainText('Khẩn');
-    await expect(page.locator('#dhCanXuLy')).toContainText('việc mới chờ xác nhận');
-    await expect(page.locator('#dhBadge')).toBeVisible();
-    await the.getByRole('button', { name: 'Xác nhận đã nhận' }).click();
-    await expect(page.locator('#toastContainer')).toContainText('Đã xác nhận nhận việc');
+    await nav(page, 'navDieuHanh');
+    await expect(page.locator('#dhCanXuLy')).toBeAttached(NAP);
     await expect(page.locator(`#tt-viec-${id}`)).toHaveCount(0);
-    const ls = await db.from('lich_su').select('id').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec').eq('nguoi_sua', CVP_ID);
-    expect(ls.data.length).toBe(1);
+    const { data: v } = await db.from('nhiem_vu').select('ma').eq('id', id).single();
+    await moViec(page, id, v.ma);
+    const ngan = page.locator(`#klChiTiet-${id}`);
+    await expect(ngan).toContainText(noiDung, NAP);
+    await expect(ngan.locator('.nhan-tt').first()).toHaveText('Thường trực giao');
+    await expect(ngan).toContainText('đã nhận việc');
+    await expect(ngan.getByRole('button', { name: 'Xác nhận đã nhận việc' })).toHaveCount(0);
+    const ls = await db.from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec').eq('nguoi_sua', CVP_ID);
+    expect(ls.data.length).toBe(1); expect(ls.data[0].gia_tri_moi).toMatch(/^tự động khi giao/);
     await page.context().close();
   });
 });

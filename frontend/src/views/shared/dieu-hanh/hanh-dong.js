@@ -66,20 +66,20 @@ async function phanHoiThe(ds, form) {
     await thanhCong(form, 'Đã gửi phản hồi.', nvCua(form, ds));
   } catch (e) { notifyError(e.message); }
 }
-// Minh chứng chờ nghiệm thu: Nghiệm thu (một bấm, đóng việc — Q2) / Trả lại (lý do bắt buộc; 0077 bỏ hạn nộp lại; MC-6).
+// Kết quả vừa nộp (Đợt D v3.20, 0090 — nộp minh chứng hợp lệ là hoàn thành): minh chứng nộp trước v3.20 còn chờ → Xác nhận (một bấm); đánh giá chất
+// lượng (không bắt buộc); Trả lại (lý do bắt buộc — minh chứng hợp lệ cuối cùng bị trả lại thì việc mở lại).
 async function mcHopLeThe(ds) {
-  try { await xacNhanMinhChung(ds.id, true); notifySuccess('Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.'); await napLaiViec(ds.nv); await lamMoiHuyHieu(); await napLai(); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(ds.id, true); notifySuccess('Đã xác nhận minh chứng — nhiệm vụ hoàn thành.'); await napLaiViec(ds.nv); await lamMoiHuyHieu(); await napLai(); } catch (e) { notifyError(e.message); }
 }
-// PR-3: nghiệm thu đóng việc kèm chất lượng hoàn thành (bắt buộc, 0063).
-async function mcNghiemThuThe(ds, form) {
+async function mcDanhGiaThe(ds, form) {
   const cl = chatLuongCuaForm(form);
-  if (!cl) { notifyError('Chọn chất lượng hoàn thành trước khi nghiệm thu.'); return; }
-  try { await xacNhanMinhChung(ds.id, true, null, cl); await thanhCong(form, 'Đã nghiệm thu minh chứng — nhiệm vụ hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
+  if (!cl) { notifyError('Chọn chất lượng hoàn thành.'); return; }
+  try { await xacNhanMinhChung(ds.id, true, null, cl); await thanhCong(form, 'Đã lưu đánh giá chất lượng hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
 async function mcKhongHopLeThe(ds, form) {
   const lyDo = noiDung(form);
   if (!lyDo) { notifyError('Trả lại minh chứng phải ghi lý do.'); return; }
-  try { await xacNhanMinhChung(ds.id, false, lyDo); await thanhCong(form, 'Đã trả lại minh chứng. Người nộp nhận thông báo để nộp lại trước hạn hoàn thành.', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
+  try { await xacNhanMinhChung(ds.id, false, lyDo); await thanhCong(form, 'Đã trả lại minh chứng. Người nộp nhận thông báo (không còn minh chứng hợp lệ thì nhiệm vụ mở lại).', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
 // Giao lại tại chỗ (GIAO_LAI, 0045): đổi CHỦ TRÌ + người theo dõi (tuỳ chọn, gợi ý theo chủ trì mới) + một dòng lý do; cờ bị từ chối tự xoá (0034).
 async function giaoLaiThe(ds, form) {
@@ -104,7 +104,7 @@ async function deNghiTuChoiThe(ds, form) {
   if (!nd) { notifyError('Đề nghị từ chối phải có lý do.'); return; }
   try {
     await deNghiTuChoi(ds.id, nd);
-    await thanhCong(form, `Đã gửi đề nghị từ chối ${ds.ma}. Lãnh đạo trực tiếp của đồng chí sẽ duyệt; hạn và trạng thái việc không đổi.`, ds.id);
+    await thanhCong(form, `Đã gửi đề nghị từ chối ${ds.ma}. Người giao việc sẽ xử lý; hạn và trạng thái việc không đổi.`, ds.id);
   } catch (e) { notifyError(e.message); }
 }
 // Quyết định chỉ qua hai nút bấm (data-dong-y); Enter trong ô ý kiến (submit form) không được coi là đồng ý.
@@ -133,6 +133,6 @@ const cuonToi = ({ toi }) => { const el = $(toi); if (el && !el.classList.contai
 
 export function mountHanhDongDieuHanh() {
   document.addEventListener('change', onDoiChuTri);
-  registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcNghiemThuThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
+  registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcDanhGiaThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
     giaoLaiThe, deNghiTuChoiThe, duyetTuChoiThe, xacNhanNhanTT, chonDoKhan, cuonToi });
 }

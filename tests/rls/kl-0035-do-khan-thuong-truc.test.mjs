@@ -3,6 +3,8 @@
 // là lãnh đạo đó), nhánh A0 (Owner = lãnh đạo VP / phòng, uu_tien THUONG_TRUC chỉ A0 đặt được, Chánh VP nhận tin, cấp duyệt từ chối của CVP = A0);
 // chi_dao_gui: do_khan, hạn phản hồi theo cấp, Hỏa tốc thêm Chánh VP; xac_nhan_da_nhan_chi_dao; canh_bao_quet: HOA_TOC_CHUA_NHAN (mỗi lần quét trong
 // giờ làm việc), TT_CHUA_NHAN (hằng ngày); v_dien_bien không lộ lý do từ chối ngoài chuỗi; thứ tự v_ngoai_le; kl_so_chua_xu_ly. Tự dọn.
+// Đợt D (0090–0091): lãnh đạo được ghi "đã nhận" tự động (việc Thường trực giao không còn chờ nhận / nhắc TT_CHUA_NHAN) nhưng vẫn đề nghị từ chối
+// được; cấp xử lý đề nghị từ chối = người tạo việc (người nhập), người được thay mặt nhận tin.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong, CHI_CUC_BO } from './lib.mjs';
@@ -78,7 +80,7 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.equal((await tin(IDS.pcvp, v.id, /Giao việc/)).length, 0, 'PCVP không nhận');
   });
 
-  test('4. Giao thay mặt: A3 quan_tri_kl ghi lãnh đạo A1/A2 trong phạm vi Owner (0085: không thay mặt = giao thẳng, Owner phải là chuyên viên); vết + tin; cấp duyệt từ chối = lãnh đạo đó', async () => {
+  test('4. Giao thay mặt: A3 quan_tri_kl ghi lãnh đạo A1/A2 trong phạm vi Owner (0085: không thay mặt = giao thẳng, Owner phải là chuyên viên); vết + tin; cấp xử lý từ chối = người nhập (0091), lãnh đạo được thay mặt nhận tin', async () => {
     await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.qtht);
     const loi4 = await Promise.all([   // bốn ca bị chặn độc lập — một lượt (D3)
       giao('demo_qtht', { ma: 'khong tm', owner_don_vi_ma: 'TONG_HOP' }),   // 0085: không thay mặt → giao thẳng, Owner phòng bị chặn
@@ -97,8 +99,9 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.equal(tOwner.length, 1, 'Owner nhận tin');
     const tc = await rpc('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T43'], p_ly_do: LY_DO });
     assertOk(tc, 'cv1 đề nghị từ chối'); tcId = tc.data;
-    assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', tcId).single()).data.cap_duyet, IDS.pcvp, 'cấp duyệt = PCVP được thay mặt, không phải Trưởng phòng');
-    assert.equal((await tin(IDS.qtht, id['NV-T43'], /Đề nghị từ chối/)).length, 1, 'người giao thay mặt nhận tin đề nghị');
+    assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', tcId).single()).data.cap_duyet, IDS.qtht, '0091: cấp xử lý = người nhập việc (quản trị KL)');
+    assert.equal((await tin(IDS.qtht, id['NV-T43'], /Đề nghị từ chối/)).length, 1, 'người nhập việc nhận tin đề nghị');
+    assert.equal((await tin(IDS.pcvp, id['NV-T43'], /Đề nghị từ chối/)).length, 1, 'lãnh đạo được thay mặt nhận tin (xử lý thay được)');
   });
 
   test('5. Thường trực giao việc: Owner = lãnh đạo VP (theo dõi = chính họ) hoặc phòng (theo dõi = Trưởng phòng); mặc định Khẩn; uu_tien THUONG_TRUC; Chánh VP nhận tin; A3 làm Owner bị chặn; cấp duyệt từ chối của Chánh VP = A0', async () => {
@@ -161,17 +164,14 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.equal(q4.data.gui.HOA_TOC_CHUA_NHAN, 0, 'đã nhận cả hai → không nhắc');
   });
 
-  test('8. canh_bao_quet: việc Thường trực giao quá 1 ngày làm việc chưa xác nhận → nhắc người nhận + Chánh VP, một lần mỗi ngày; xác nhận rồi thôi', async () => {
+  test('8. (0090) việc Thường trực giao cho lãnh đạo được ghi "đã nhận" tự động khi giao ⇒ quá 1 ngày làm việc cũng không nhắc TT_CHUA_NHAN', async () => {
     await db().from('nhiem_vu').update({ created_at: '2026-09-07T02:00:00Z' }).eq('id', ttId);
-    const q1 = await db().rpc('canh_bao_quet', { p_ngay: homNayVN() });
-    assertOk(q1, 'quét'); assert.ok(q1.data.gui.TT_CHUA_NHAN >= 1);
-    const cb = await canhBao('TT_CHUA_NHAN', ttId); assert.equal(cb.length, 1); assert.ok(cb[0].nguoi_nhan.includes(IDS.cvp));
-    assert.equal((await tin(IDS.cvp, ttId, /^Việc Thường trực giao chưa xác nhận nhận · NV-/)).length, 1);
-    await db().rpc('canh_bao_quet', { p_ngay: homNayVN() });
-    assert.equal((await canhBao('TT_CHUA_NHAN', ttId)).length, 1, 'cùng ngày không gửi lặp');
-    assertOk(await rpc('demo_cvp', 'xac_nhan_nhan_viec', { p_id: ttId }), 'Chánh VP xác nhận');
-    await db().rpc('canh_bao_quet', { p_ngay: congNgay(homNayVN(), 1) });
-    assert.equal((await canhBao('TT_CHUA_NHAN', ttId)).length, 1, 'đã xác nhận → hôm sau không nhắc');
+    const ls = (await db().from('lich_su').select('nguoi_sua, gia_tri_moi').eq('nhiem_vu_id', ttId).eq('cot', 'xac_nhan_nhan_viec')).data;
+    assert.deepEqual(ls.map((x) => x.nguoi_sua), [IDS.cvp], 'một dòng nhận việc của Chánh VP (chủ trì = theo dõi)');
+    assert.match(ls[0].gia_tri_moi, /^tự động khi giao \(lãnh đạo không phải xác nhận nhận việc\)/);
+    assertOk(await db().rpc('canh_bao_quet', { p_ngay: homNayVN() }), 'quét');
+    assert.equal((await canhBao('TT_CHUA_NHAN', ttId)).length, 0, 'không nhắc');
+    assert.equal((await tin(IDS.cvp, ttId, /^Việc Thường trực giao chưa xác nhận nhận · NV-/)).length, 0);
   });
 
   test('9. v_dien_bien: một dòng thời gian; lý do từ chối chỉ người trong chuỗi thấy; A0 ngoài phạm vi tin', async () => {
@@ -180,9 +180,9 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.ok(cv1.data.some((d) => d.nguon === 'tu_choi_ly_do' && d.noi_dung.includes(LY_DO)), 'người đề nghị thấy lý do');
     assert.ok(cv1.data.some((d) => d.nguon === 'tu_choi' && /đề nghị từ chối/.test(d.noi_dung)), 'vết đề nghị');
     assert.ok(cv1.data.some((d) => d.nguon === 'lich_su' && d.loai === 'giao_thay_mat'), 'vết giao thay mặt');
-    const qt = await dong('demo_qtht'); assertOk(qt, 'quản trị KL (người giao thay) đọc');
+    const qt = await dong('demo_qtht'); assertOk(qt, 'quản trị KL (người nhập việc) đọc');
     assert.ok(qt.data.some((d) => d.nguon === 'tu_choi'), 'thấy sự kiện từ chối');
-    assert.ok(!qt.data.some((d) => d.noi_dung.includes(LY_DO)), 'không thấy lý do');
+    assert.ok(qt.data.some((d) => d.nguon === 'tu_choi_ly_do' && d.noi_dung.includes(LY_DO)), '0091: người nhập việc là cấp xử lý — thấy lý do');
     const cd = await (await userClient('demo_cv1')).from('v_dien_bien').select('nguon, loai, gia_tri_cu').eq('nhiem_vu_id', id['NV-T42']);
     assert.ok(cd.data.some((d) => d.nguon === 'chi_dao' && d.loai === 'DON_DOC' && d.gia_tri_cu === 'Hỏa tốc'), 'chỉ đạo kèm độ khẩn');
     assert.ok(cd.data.some((d) => d.nguon === 'canh_bao'), 'cảnh báo có trong diễn biến');
@@ -198,8 +198,9 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.ok(vt('NV-T48') >= 0 && vt('NV-T48') < vt('NV-T47') && vt('NV-T47') < vt('NV-T46'), `thứ tự ${vt('NV-T48')} < ${vt('NV-T47')} < ${vt('NV-T46')}`);
     const so = async (u) => (await rpc(u, 'kl_so_chua_xu_ly', {})).data;
     const cv1 = await so('demo_cv1'); assert.ok(cv1.viec_moi >= 3, `cv1 việc mới chờ xác nhận: ${cv1.viec_moi}`); assert.equal(cv1.hoa_toc_chi_dao, 0);
-    const tp = await so('demo_truongphong'); assert.ok(tp.tt_cho_nhan >= 1, 'Trưởng phòng có việc Thường trực giao chờ nhận');
-    const pcvp = await so('demo_pcvp'); assert.ok(pcvp.de_nghi_cho_duyet >= 1, 'PCVP có đề nghị từ chối chờ duyệt (giao thay mặt)');
+    const nhan45 = (await db().from('lich_su').select('nguoi_sua').eq('nhiem_vu_id', id['NV-T45']).eq('cot', 'xac_nhan_nhan_viec')).data;
+    assert.deepEqual(nhan45.map((x) => x.nguoi_sua), [IDS.truongphong], '0090: Trưởng phòng (theo dõi việc Thường trực giao phòng) đã nhận tự động');
+    const qt = await so('demo_qtht'); assert.ok(qt.de_nghi_cho_duyet >= 1, 'người nhập việc có đề nghị từ chối chờ xử lý (lãnh đạo không bị đếm)');
     assert.ok((await so('demo_a0')).can_quyet >= 0);
   });
 });

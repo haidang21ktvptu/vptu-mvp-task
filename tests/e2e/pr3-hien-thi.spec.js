@@ -1,12 +1,12 @@
-// PR-3 (A, D, F, G) — hiển thị: (1) Trưởng phòng nghiệm thu ở "Cần nghiệm thu" — nút xác nhận mờ tới khi chọn chất lượng (bắt buộc), DB lưu
-// chat_luong, ngăn chi tiết hiện "Đạt tốt"; hàng việc đã đóng trước hạn hiện "Trước hạn 3 ngày" + chất lượng; Xuất Excel đúng danh sách đang lọc
+// PR-3 (A, D, F, G) — hiển thị: (1) Trưởng phòng xác nhận minh chứng cũ còn chờ (nộp trước v3.20) rồi đánh giá chất lượng ở ngăn chi tiết (Đợt D:
+// tuỳ chọn — nút Lưu mờ tới khi chọn mức), DB lưu chat_luong, ngăn chi tiết hiện "Đạt tốt"; hàng việc đã đóng trước hạn hiện "Trước hạn 3 ngày" + chất lượng; Xuất Excel đúng danh sách đang lọc
 // (bắt sự kiện tải, đọc tệp bằng lib/doc-xlsx.mjs: số dòng = số dòng danh sách + tiêu đề, có cột "Chất lượng"). (2) Chánh VP: Báo cáo có cột
 // Trước hạn + chất lượng, bảng theo nguồn; Theo văn bản: "đã nhập 2 / dự kiến 3" nhãn vàng → sửa tại chỗ (dự kiến 2 + đã rà soát) → nhãn đổi.
 // Tuần tự, mỗi lúc một phiên. Dữ liệu chèn bằng service_role theo khoá riêng; tự dọn.
 import { test, expect } from '@playwright/test';
 import { NAP, nav, moViec } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
-import { ID, dbAdmin, homNay, cong, taoViec, taoMinhChung, moNghiemThu, nghiemThuMc, voiPhien } from './lib/pr2b.mjs';
+import { ID, dbAdmin, homNay, cong, taoViec, taoMinhChung, danhGiaMc, xacNhanMcCu, voiPhien } from './lib/pr2b.mjs';
 import { docXlsx } from './lib/doc-xlsx.mjs';
 
 let db; let khoa; let vbX; let T1; let T2; let mc;
@@ -21,16 +21,18 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
     T1 = await taoViec(db, vbX, `${khoa} T1 đóng trước hạn`, { ...chung(), han_xu_ly: cong(homNay(), -5), tien_do_ma: 'HOAN_THANH',
       ngay_hoan_thanh: cong(homNay(), -8), chat_luong: 'DAT_TOT', minh_chung: `${khoa}/cũ`, theo_1400: false, ngay_nhan_van_ban: cong(homNay(), -29),
       nguon_nhiem_vu_ma: 'CHUONG_TRINH_CONG_TAC' });
-    T2 = await taoViec(db, vbX, `${khoa} T2 chờ nghiệm thu`, { ...chung(), nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' });
+    T2 = await taoViec(db, vbX, `${khoa} T2 minh chứng cũ chờ xác nhận`, { ...chung(), nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH' });
     mc = await taoMinhChung(db, T2.id, ID.cv1, `${khoa}/MC`);
   });
   test.afterAll(async () => { if (db) { await donNhiemVuTheoNoiDung(db, khoa); await donVanBan(db, khoa); } });
 
-  test('1. Trưởng phòng: nghiệm thu bắt buộc chất lượng; Trước hạn trên hàng việc; Xuất Excel đúng danh sách', async ({ browser }, testInfo) => {
+  test('1. Trưởng phòng: xác nhận minh chứng cũ → hoàn thành, đánh giá chất lượng (tuỳ chọn); Trước hạn trên hàng việc; Xuất Excel đúng danh sách', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'A2', testInfo, async (p) => {
-      await moNghiemThu(p);
-      await nghiemThuMc(p, mc, 'DAT_TOT');   // kiểm cả nút mờ khi chưa chọn
-      await expect(p.locator('#toastContainer')).toContainText(`${T2.ma} hoàn thành`, NAP);
+      await moViec(p, T2.id, T2.ma);
+      await xacNhanMcCu(p, mc);
+      await expect.poll(async () => (await db.from('nhiem_vu').select('tien_do_ma').eq('id', T2.id).single()).data.tien_do_ma, NAP).toBe('HOAN_THANH');
+      await moViec(p, T2.id, T2.ma);
+      await danhGiaMc(p, mc, 'DAT_TOT');   // kiểm cả nút mờ khi chưa chọn
       expect((await db.from('nhiem_vu').select('tien_do_ma, chat_luong').eq('id', T2.id).single()).data).toEqual({ tien_do_ma: 'HOAN_THANH', chat_luong: 'DAT_TOT' });
       await moViec(p, T2.id, T2.ma);
       await expect(p.locator(`#klChiTiet-${T2.id} [data-truong="chat-luong"]`)).toHaveText('Đạt tốt');

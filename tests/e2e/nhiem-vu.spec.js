@@ -91,7 +91,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     // Việc Vàng chưa có minh chứng → thẻ "Sắp đến hạn" có ô nộp 3 trường ngay trên thẻ.
     await expect(page.locator(`#vctMuc-minh-chung #vct-${moiId} form.mc-inline`)).toBeVisible(NAP);
 
-    // GĐ16 (16B): modal Cập nhật không có Hoàn thành. 0077 (Q2 cho mọi việc): chỉ hoàn thành khi lãnh đạo nghiệm thu ⇒ không có nút Đóng.
+    // GĐ16 (16B): modal Cập nhật không có Hoàn thành. Đợt D (0090): hoàn thành khi nộp minh chứng hợp lệ ⇒ không có nút Đóng.
     await moViec(page, moiId, moiMa); // GĐ22: nút Xem trên thẻ mở diễn biến tại chỗ; ngăn chi tiết mở từ màn hình Nhiệm vụ
     const ngan = page.locator(`#klChiTiet-${moiId}`);
     await expect(ngan).toBeVisible(NAP);

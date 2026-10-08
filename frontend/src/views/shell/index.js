@@ -13,7 +13,7 @@ import { ngayVanBanVN } from '../../lib/kl/ngay.js';
 
 export { setActiveNav, setNavBadge } from './nav.js';
 
-const SECTIONS = ['viewTongQuan', 'viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', 'viewTheoVanBan', 'viewChiDaoTTThuKy', 'viewNghiemThu', 'viewGiaoViec', 'viewCanBo', 'viewBaoCao', 'viewNhanTin', 'viewQuanTri', 'viewCaNhan', 'viewTroGiup'];
+const SECTIONS = ['viewTongQuan', 'viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', 'viewTheoVanBan', 'viewChiDaoTTThuKy', 'viewGiaoViec', 'viewCanBo', 'viewBaoCao', 'viewNhanTin', 'viewQuanTri', 'viewCaNhan', 'viewTroGiup'];
 
 // Hiện đúng một section trong vùng nội dung.
 // Đổi mục: phát sự kiện 'doi-man' (ngăn chi tiết dùng chung tự đóng); mở lại đúng mục đang xem thì không phát.

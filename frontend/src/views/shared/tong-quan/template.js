@@ -44,7 +44,7 @@ export const theThangHtml = (thang, nam) => `<article class="the-bd n7">${dauThe
 export function coCauHtml(s, k) {
   const xong = [['Đúng hạn', s.dungHan, '--f-tot', mo({ t: 'dg', kq: 'DUNG_HAN' })], ['Trễ hạn', s.tre, '--f-tre', mo({ t: 'dg', kq: 'TRE' })],
     ['Chưa đánh giá', s.chuaDanhGia, '--vien-o', mo({ t: 'dg', kq: 'chua' })]];
-  const dang = [['Trong hạn', s.mo.trongHan, '--du-lieu', mo({ t: 'muc', m: 'trongHan' })], ['Chờ nghiệm thu', s.mo.nt, '--f-nt', mo({ t: 'muc', m: 'nt' })],
+  const dang = [['Trong hạn', s.mo.trongHan, '--du-lieu', mo({ t: 'muc', m: 'trongHan' })], ['Chờ xác nhận minh chứng', s.mo.nt, '--f-nt', mo({ t: 'muc', m: 'nt' })],
     ['Vàng', s.mo.vang, '--f-vang', mo({ t: 'muc', m: 'vang' })], ['Đỏ', s.mo.do, '--f-do', mo({ t: 'muc', m: 'do' })], ['Đỏ đặc biệt', s.mo.ddb, '--f-ddb', mo({ t: 'muc', m: 'ddb' })],
     ['Không áp dụng cảnh báo', s.mo.khac, '--chu-mo', mo({ t: 'muc', m: 'khac' })]];   // cần điền hạn, chờ điều kiện, đang đính chính
   return `<article class="the-bd n5">${dauThe('Cơ cấu trạng thái', `${s.xong} việc hoàn thành ${k.trong}, ${s.dangMo} việc đang mở`)}
@@ -88,7 +88,7 @@ export const linhVucHtml = (ds, dangMo) => `<article class="the-bd n4" id="tqLin
 export function chatLuongHtml(c, k) {
   const phan = [['Xuất sắc', c.xuatSac, '--f-xs', mo({ t: 'cl', cl: 'DAT_XUAT_SAC' })], ['Đạt tốt', c.tot, '--f-dt', mo({ t: 'cl', cl: 'DAT_TOT' })],
     ['Đạt', c.dat, '--f-d', mo({ t: 'cl', cl: 'DAT' })], ['Không đạt', c.khongDat, '--f-do', mo({ t: 'cl', cl: 'KHONG_DAT' })]];
-  return `<article class="the-bd n4" id="tqChatLuong">${dauThe('Chất lượng nghiệm thu', `${c.coDanhGia} việc được đánh giá ${k.trong}${c.chuaDanhGia ? `, ${c.chuaDanhGia} việc cũ chưa đánh giá` : ''}`)}
+  return `<article class="the-bd n4" id="tqChatLuong">${dauThe('Chất lượng hoàn thành', `${c.coDanhGia} việc được đánh giá ${k.trong}${c.chuaDanhGia ? `, ${c.chuaDanhGia} việc chưa đánh giá (không bắt buộc)` : ''}`)}
     <div class="so-dau"><b>${c.tyLeTot === null ? '—' : `${c.tyLeTot}%`}</b><span>đạt tốt trở lên</span></div>${xepHtml(phan, c.coDanhGia)}${chuGiaiHtml(phan, 'sat')}
     <button type="button" class="cuoi-the" ${mo({ t: 'traLai' })}><span>Trả lại để bổ sung</span><b>${c.traLai} lượt</b></button></article>`;
 }

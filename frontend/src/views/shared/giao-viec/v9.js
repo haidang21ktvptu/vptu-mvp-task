@@ -33,7 +33,7 @@ function veQuyTac() {
   const kyBH = $('klThLoai').value === 'KY_BAN_HANH';
   const han = kyBH ? 'theo kỳ ban hành' : $('klThHan').value ? formatNgay($('klThHan').value) : 'chưa đặt';
   dat('gvQuyTac', oQuyTac(1, 'chủ trì', owner, Boolean($('klThOwner').value)) + oQuyTac(1, 'sản phẩm', sp, Boolean($('klThSanPham').value))
-    + oQuyTac(1, 'hạn hoàn thành', han, kyBH || Boolean($('klThHan').value)) + oQuyTac(1, 'minh chứng', 'nộp trước hạn hoàn thành, lãnh đạo nghiệm thu', kyBH || Boolean($('klThHan').value))
+    + oQuyTac(1, 'hạn hoàn thành', han, kyBH || Boolean($('klThHan').value)) + oQuyTac(1, 'minh chứng', 'nộp trước hạn hoàn thành — nộp là hoàn thành', kyBH || Boolean($('klThHan').value))
     + oQuyTac(3, 'mức cảnh báo', 'Vàng, Đỏ, Đỏ đặc biệt tự bật theo hạn', Boolean($('klThHan').value) || kyBH));
 }
 

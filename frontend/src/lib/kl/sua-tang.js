@@ -15,16 +15,20 @@ export const tenOGiao = (cot) => O_GIAO.find(([c]) => c === cot)?.[1] || cot;
 
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN())
   && state.user?.role_group !== 'A0';
-// Người gọi là tầng giao của việc: người giao = người được thay mặt (hoặc thành viên nhóm được thay mặt, 0081), không có thì người tạo (vai lãnh
-// đạo A0/A1/A2, tài khoản còn hoạt động — 0085: hoặc chuyên viên tạo việc giao thẳng, không thay mặt); hoặc quản trị nhiệm vụ còn hạn. Người gõ thay
-// (người nhập Excel) hết ủy quyền thì không còn quyền này.
+// Cấp bậc (kl_cap_bac, 0091): Thường trực 4 > Chánh VP 3 > Phó Chánh VP 2 > Trưởng phòng 1 > chuyên viên 0; không rõ người = -1.
+const capBac = (a) => (!a ? -1 : a.role_group === 'A0' ? 4 : a.role_group === 'A1' ? (a.is_chief ? 3 : 2) : a.role_group === 'A2' ? 1 : 0);
+// Người gọi là tầng giao của việc (kl_la_tang_giao, 0091): người được thay mặt / thành viên nhóm được thay mặt, người tạo việc ở mọi vai (chuyên
+// viên nhập thay mặt lãnh đạo, người nhập Excel — định hướng 8/10/2026: chuyên viên nhập liệu và xử lý đề nghị), lãnh đạo cấp cao hơn người giao
+// (dòng hiện ra = trong phạm vi; Trưởng phòng không sửa thông tin Lãnh đạo VP giao), hoặc quản trị nhiệm vụ còn hạn. Tài khoản khoá thì không.
 export function laTangGiao(r) {
   const me = state.user?.id;
   if (!me || !r) return false;
   if (qtklConHan()) return true;
   const a = findAccount(me) || state.user;
-  const vai = ['A0', 'A1', 'A2'].includes(a?.role_group) || (a?.role_group === 'A3' && !r.giao_thay_mat_cho);
-  return ((r.giao_thay_mat_cho || r.tao_boi) === me || toiTrongNhom(r.giao_thay_mat_nhom)) && vai && !a?.bi_khoa;
+  if (a?.bi_khoa) return false;
+  if ([r.giao_thay_mat_cho, r.tao_boi].includes(me) || toiTrongNhom(r.giao_thay_mat_nhom)) return true;
+  const nguoiGiao = r.giao_thay_mat_cho || r.tao_boi;
+  return ['A0', 'A1', 'A2'].includes(a?.role_group) && capBac(a) > (nguoiGiao ? capBac(findAccount(nguoiGiao)) : -1);
 }
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);

@@ -3,7 +3,7 @@
 // mọi hàm, không ai ghi thẳng bảng; (2) một lô đủ đường đi — GIAO (thay mặt Trưởng phòng, vướng mắc, không tin từng việc), vùng chờ (thiếu /
 // lỗi kèm lý do: chủ trì khác phòng, Trưởng phòng thay mặt phòng khác), DA_XONG (nguồn excel, đóng, minh chứng chữ); gửi lại phần cũ không tạo
 // thêm; chốt lô gửi MỘT tin cho mỗi người; (3) đọc theo vai: người thấy việc đọc dòng nhập + lô, người khác không; (4) hoàn thiện dòng chờ
-// bằng giao_viec + dong_nhap_id, bỏ dòng; (5) lô CHO_NGHIEM_THU (minh chứng chờ nghiệm thu) + cập nhật việc có sẵn theo mã (hạn chỉ báo);
+// bằng giao_viec + dong_nhap_id, bỏ dòng; (5) lô CHO_NGHIEM_THU (0093: minh chứng hợp lệ ngay, việc hoàn thành) + cập nhật việc có sẵn theo mã (hạn chỉ báo);
 // (6) hoàn tác: chỉ người nhập lô / quản trị hệ thống, việc đã có thao tác giữ lại, cập nhật trả giá trị cũ, quá 24 giờ chặn; (7) từ điển,
 // hồ sơ ghép cột, tra mã. Khoá dữ liệu "KL-0072" (nội dung việc, số hiệu văn bản, tên tệp, từ điển, hồ sơ); tự dọn trước và sau.
 import { test, describe, before, after } from 'node:test';
@@ -157,7 +157,7 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
     assert.match((await goi('demo_qtht', 'dong_nhap_bo', { p_id: dong8.id })).error?.message || '', /không còn ở vùng chờ/);
   });
 
-  test('5. quản trị nhiệm vụ (cv2) nhập lô 2 CHO_NGHIEM_THU: việc xong đủ 4 yếu tố → chờ nghiệm thu; cập nhật việc có sẵn theo mã (hạn chỉ báo)', async () => {
+  test('5. quản trị nhiệm vụ (cv2) nhập lô 2 CHO_NGHIEM_THU: việc xong đủ 4 yếu tố → minh chứng hợp lệ, hoàn thành (0093); cập nhật việc có sẵn theo mã (hạn chỉ báo)', async () => {
     assertOk(await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cấp tạm quan_tri_kl cho cv2');
     const tao = await goi('demo_cv2', 'nhap_excel_lo_tao', { p: { ten_tep: `${KHOA}-mau-chuan.xlsx`, mau: 'CHUAN', che_do_xong: 'CHO_NGHIEM_THU', so_dong: 4 } });
     assertOk(tao, 'cv2 mở lô'); lo2 = tao.data;
@@ -175,8 +175,9 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
     assert.match(r.data[2].ghi_chu, /bản xem trước coi là việc mới/, 'mã có sẵn mà xem trước coi là việc mới: không ghi đè');
     assert.match(r.data[3].ghi_chu, /Mã việc trùng với một dòng trước/, 'một mã chỉ cập nhật một lần mỗi lô (hoàn tác trả đúng giá trị gốc)');
     const mc = (await db().from('minh_chung').select('loai, hop_le, nop_boi, so_hieu').eq('nhiem_vu_id', r.data[0].nhiem_vu_id)).data;
-    assert.deepEqual(mc, [{ loai: 'so_hieu', hop_le: null, nop_boi: IDS.cv1, so_hieu: '45/BC-VPTU' }]);
-    assert.equal((await db().from('v_nhiem_vu').select('trang_thai').eq('id', r.data[0].nhiem_vu_id).single()).data.trang_thai, 'CHO_NGHIEM_THU');
+    assert.deepEqual(mc, [{ loai: 'so_hieu', hop_le: true, nop_boi: IDS.cv1, so_hieu: '45/BC-VPTU' }], '0093: hợp lệ ngay');
+    const xong = (await db().from('v_nhiem_vu').select('trang_thai, tien_do_ma, ngay_hoan_thanh').eq('id', r.data[0].nhiem_vu_id).single()).data;
+    assert.deepEqual([xong.trang_thai, xong.tien_do_ma, xong.ngay_hoan_thanh], ['HOAN_THANH', 'HOAN_THANH', KQ], 'hoàn thành theo ngày văn bản minh chứng');
     const v = await viec(coSan.id);
     assert.equal(v.san_pham_loai, 'TO_TRINH'); assert.equal(v.han_xu_ly, HAN, 'hạn không đổi qua nhập Excel');
     assert.deepEqual((await dongCua(lo2.id))[1].gia_tri_cu, { san_pham_loai: 'BAO_CAO' });

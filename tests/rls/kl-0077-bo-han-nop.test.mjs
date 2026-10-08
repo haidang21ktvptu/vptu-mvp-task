@@ -1,6 +1,6 @@
 // 0077 (Đợt A v3.17) — Bỏ hạn nộp minh chứng: mọi đường ghi (giao_viec, INSERT service_role, GIA_HAN kèm hạn nộp mới) đều về NULL; giao không cần
-// hạn nộp; dat_han_nop_minh_chung báo "đã bỏ"; Hoàn thành việc theo_1400 chỉ khi lãnh đạo nghiệm thu (dong_nhiem_vu / Cập nhật nhanh ⇒ 22023);
-// trả lại chỉ cần lý do (han_nop_lai luôn NULL, tin "nộp lại trước hạn hoàn thành"). Khối bảng trạng thái tại ngày cố định (thay 0058) = logic
+// hạn nộp; dat_han_nop_minh_chung báo "đã bỏ"; 0090: nộp minh chứng hợp lệ là hoàn thành (không chờ nghiệm thu); trả lại (tuỳ chọn) chỉ cần lý do
+// (han_nop_lai luôn NULL; minh chứng hợp lệ cuối cùng bị trả lại ⇒ việc mở lại). Khối bảng trạng thái tại ngày cố định (thay 0058) = logic
 // thuần ⇒ chỉ cục bộ: không còn CHAM_NOP_MINH_CHUNG / Vàng theo hạn nộp; Q9 nộp đúng hạn theo hạn hoàn thành. Khoá "KL-0077"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,27 +53,29 @@ describe('0077 — bỏ hạn nộp minh chứng: ghi, giao, nghiệm thu, trả
     assert.equal((await doc(nv)).han_xu_ly, '2026-12-15');
   });
 
-  test('3. Hoàn thành chỉ khi nghiệm thu (mọi việc theo_1400): nộp rồi dong_nhiem_vu / Cập nhật nhanh ⇒ 22023; A2 nghiệm thu ⇒ HOAN_THANH', async () => {
+  test('3. (0090) Nộp minh chứng hợp lệ = hoàn thành: HOAN_THANH, ngày hoàn thành = ngày văn bản, minh chứng hợp lệ tự động; chưa có minh chứng mà Cập nhật nhanh Hoàn thành ⇒ 22023', async () => {
     const r = await giao('demo_truongphong'); assertOk(r, 'A2 giao'); const nv = r.data.id;
+    const r0 = await giao('demo_truongphong'); assertOk(r0, 'A2 giao việc thứ hai');
+    loi(await (await userClient('demo_cv1')).from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNayVN() }).eq('id', r0.data.id), /phải có minh chứng/, 'Cập nhật nhanh không minh chứng');
     await nop(nv, 'Q2');
-    loi(await (await userClient('demo_cv1')).rpc('dong_nhiem_vu', { p_id: nv, p_ngay_hoan_thanh: null }), /nghiệm thu/, 'dong_nhiem_vu');
-    loi(await (await userClient('demo_cv1')).from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNayVN() }).eq('id', nv), /nghiệm thu/, 'Cập nhật nhanh');
-    assert.equal((await doc(nv)).tien_do_ma !== 'HOAN_THANH', true);
-    const mc = await mcCua(nv);
-    assertOk(await (await userClient('demo_truongphong')).rpc('xac_nhan_minh_chung', { p_id: mc.id, p_hop_le: true, p_chat_luong: 'DAT' }), 'A2 nghiệm thu');
-    assert.equal((await doc(nv)).tien_do_ma, 'HOAN_THANH');
+    const v = (await db().from('nhiem_vu').select('tien_do_ma, ngay_hoan_thanh, chat_luong').eq('id', nv).single()).data;
+    assert.deepEqual([v.tien_do_ma, v.ngay_hoan_thanh, v.chat_luong], ['HOAN_THANH', homNayVN(), null], 'nộp là hoàn thành, chưa đánh giá chất lượng');
+    const mc = (await db().from('minh_chung').select('hop_le, xac_nhan_boi').eq('nhiem_vu_id', nv).single()).data;
+    assert.deepEqual([mc.hop_le, mc.xac_nhan_boi], [true, null], 'hợp lệ tự động, không người xác nhận');
   });
 
-  test('4. Trả lại chỉ cần lý do: không hạn nộp lại ⇒ được, han_nop_lai NULL kể cả khi truyền; tin "nộp lại trước hạn hoàn thành"; thiếu lý do ⇒ 22023', async () => {
+  test('4. (0090) Trả lại (không bắt buộc) chỉ cần lý do: minh chứng hợp lệ cuối cùng bị trả lại ⇒ việc mở lại; han_nop_lai NULL kể cả khi truyền; tin cho người nộp; thiếu lý do ⇒ 22023', async () => {
     const r = await giao('demo_truongphong'); assertOk(r, 'A2 giao'); const nv = r.data.id;
     await nop(nv, 'TL1'); const m1 = await mcCua(nv);
     const tp = await userClient('demo_truongphong');
     loi(await tp.rpc('xac_nhan_minh_chung', { p_id: m1.id, p_hop_le: false }), /lý do/, 'thiếu lý do');
-    assertOk(await tp.rpc('xac_nhan_minh_chung', { p_id: m1.id, p_hop_le: false, p_ly_do: 'Thiếu số liệu' }), 'trả lại không hạn nộp lại');
+    assertOk(await tp.rpc('xac_nhan_minh_chung', { p_id: m1.id, p_hop_le: false, p_ly_do: 'Thiếu số liệu' }), 'trả lại');
     assert.equal((await mcCua(nv)).han_nop_lai, null);
-    const tin = await db().from('direct_messages').select('content').eq('nhiem_vu_id', nv).like('content', 'Minh chứng bị trả lại%');
-    assert.match(tin.data[0]?.content || '', /Thiếu số liệu — nộp lại trước hạn hoàn thành 31\/12\/2026/);
+    assert.equal((await doc(nv)).tien_do_ma, 'DANG_THUC_HIEN', 'minh chứng hợp lệ duy nhất bị trả lại ⇒ mở lại');
+    const tin = await db().from('direct_messages').select('content').eq('nhiem_vu_id', nv).eq('receiver_id', IDS.cv1).like('content', 'Minh chứng bị trả lại%');
+    assert.match(tin.data[0]?.content || '', /Thiếu số liệu — nhiệm vụ chưa hoàn thành, nộp minh chứng mới trước hạn 31\/12\/2026/);
     await nop(nv, 'TL2'); const m2 = await mcCua(nv);
+    assert.equal((await doc(nv)).tien_do_ma, 'HOAN_THANH', 'nộp lại ⇒ hoàn thành');
     assertOk(await tp.rpc('xac_nhan_minh_chung', { p_id: m2.id, p_hop_le: false, p_ly_do: 'Nộp trùng', p_han_nop_lai: homNayVN() }), 'trả lại kèm hạn nộp lại (bỏ qua)');
     assert.equal((await mcCua(nv)).han_nop_lai, null, 'han_nop_lai luôn NULL');
   });

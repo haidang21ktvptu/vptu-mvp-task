@@ -1,6 +1,6 @@
 // GĐ16 (PR 16B; giao diện v7 GĐ20; v8 đợt 4 = 4 yếu tố): minh chứng có cấu trúc. Chuyên viên (người theo dõi) mở ngăn chi tiết → việc theo 1400
-// KHÔNG có nút "Đóng nhiệm vụ" (0077: chỉ hoàn thành khi lãnh đạo nghiệm thu) → nộp thiếu ngày bị chặn ở form (0086: trích yếu / mô tả tuỳ chọn) → nộp đủ →
-// khối hiện đủ 4 yếu tố, nhãn "Đã nộp — chờ nghiệm thu" → Trưởng phòng nghiệm thu (RPC) → HOAN_THANH, lead time = 15 ngày; việc cũ (không theo
+// KHÔNG có nút "Đóng nhiệm vụ" → nộp thiếu ngày bị chặn ở form (0086: trích yếu / mô tả tuỳ chọn) → nộp đủ = HOÀN THÀNH (Đợt D, 0090) → khối hiện
+// đủ 4 yếu tố, "Hợp lệ" → Trưởng phòng đánh giá chất lượng (RPC, tuỳ chọn); HOAN_THANH, lead time = 15 ngày; việc cũ (không theo
 // 1400) có minh chứng chữ hiện nhãn "Minh chứng cũ", nút Đóng sáng. Dữ liệu mẫu tạo bằng service_role trong hội nghị 992, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -42,7 +42,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     if (db) await donVanBan(db, hnKhoa);
   });
 
-  test('việc theo 1400: không có nút Đóng; nộp thiếu ngày bị chặn ở form (0086: trích yếu / mô tả tuỳ chọn); nộp đủ → khối hiện 4 yếu tố, chờ nghiệm thu', async () => {
+  test('việc theo 1400: không có nút Đóng; nộp thiếu ngày bị chặn ở form (0086: trích yếu / mô tả tuỳ chọn); nộp đủ → khối hiện 4 yếu tố, hoàn thành', async () => {
     await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
@@ -50,7 +50,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await row.click();
     const ngan = page.locator(`#klChiTiet-${nvId}`);
     await expect(ngan).toBeVisible(NAP);
-    await expect(ngan.getByRole('button', { name: 'Đóng nhiệm vụ' })).toHaveCount(0);   // 0077: việc theo 1400 chỉ đóng khi nghiệm thu
+    await expect(ngan.getByRole('button', { name: 'Đóng nhiệm vụ' })).toHaveCount(0);   // việc theo 1400 hoàn thành khi nộp minh chứng hợp lệ
     const khoi = page.locator(`#klMinhChung-${nvId}`);
     await expect(khoi).toContainText('chưa có', NAP);
     await ngan.getByRole('button', { name: 'Nộp minh chứng' }).click();
@@ -72,13 +72,13 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong .mc-trich-yeu`)).toHaveText('Báo cáo kết quả rà soát (e2e MC)');
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong .mc-mo-ta`)).toContainText('gửi Chánh Văn phòng');
     await expect(page.locator(`#klDienBien-${nvId}`)).toContainText('Nộp minh chứng 15/BC-VPTU · Báo cáo kết quả rà soát (e2e MC)');
-    await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('Chờ nghiệm thu');   // PR-2b: nhãn mới
+    await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`)).toContainText('Hợp lệ');   // 0090: hợp lệ tự động khi nộp
     await expect(page.locator(`#klMinhChung-${nvId} .mc-dong`).getByRole('button', { name: 'Xác nhận hợp lệ' })).toHaveCount(0); // người nộp không tự xác nhận
     await expect(page.locator(`#klChiTiet-${nvId}`).getByRole('button', { name: 'Đóng nhiệm vụ' })).toHaveCount(0);
-    await expect(page.locator(`#klChiTiet-${nvId} .ct-nhan .trang-thai`)).toHaveText('Đã nộp — chờ nghiệm thu', NAP);
+    await expect(page.locator(`#klChiTiet-${nvId} .ct-nhan .trang-thai`)).toHaveText(/^Hoàn thành/, NAP);
   });
 
-  test('Trưởng phòng nghiệm thu (RPC) → HOAN_THANH, ngày hoàn thành = ngày văn bản, lead time 15 ngày, lịch sử có dòng đóng; chuyên viên hết nút', async () => {
+  test('Trưởng phòng đánh giá chất lượng (RPC, tuỳ chọn); HOAN_THANH, ngày hoàn thành = ngày văn bản, lead time 15 ngày, lịch sử có dòng hoàn thành; chuyên viên hết nút', async () => {
     const mc = (await db.from('minh_chung').select('id').eq('nhiem_vu_id', nvId).single()).data.id;
     const r = await clientCuaVai('A2').rpc('xac_nhan_minh_chung', { p_id: mc, p_hop_le: true, p_chat_luong: 'DAT' });   // demo_truongphong — A2 phòng của người theo dõi
     expect(r.error, r.error?.message).toBeNull();

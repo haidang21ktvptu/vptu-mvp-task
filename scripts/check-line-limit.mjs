@@ -1,13 +1,14 @@
 // Kiểm tra quy ước "không file nào trên 300 dòng" (CLAUDE.md, SPEC NF-7) trên các file
 // đã theo dõi trong git. Chạy trong CI: node scripts/check-line-limit.mjs
 //
-// Ngoại lệ (không phải mã nguồn): tài liệu *.md, lockfile, supabase/config.toml (CLI sinh), mockup/, ảnh và phông.
+// Ngoại lệ (không phải mã nguồn): tài liệu *.md, lockfile, supabase/config.toml (CLI sinh), mockup/, ảnh và phông,
+// thư viện bên thứ ba chép nguyên văn (frontend/vendor/ — pdf.js, xem README trong thư mục).
 
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const LIMIT = 300;
-const EXCLUDED = [/\.md$/, /package-lock\.json$/, /^supabase\/config\.toml$/, /^mockup\//, /^docs\/ui-ux\//, /\.(png|jpe?g|gif|webp|svg|ico|woff2?)$/i];
+const EXCLUDED = [/\.md$/, /package-lock\.json$/, /^supabase\/config\.toml$/, /^mockup\//, /^docs\/ui-ux\//, /\.(png|jpe?g|gif|webp|svg|ico|woff2?)$/i, /^frontend\/vendor\//];
 
 const files = execSync('git ls-files', { encoding: 'utf8' })
   .split('\n')

@@ -1,7 +1,7 @@
 // Đợt C1 v3.19 (0086): cấu hình pham_vi_chuyen_vien = 2 (đặt tạm bằng service_role, khôi phục) → chuyên viên demo_e2e_cv (A3, phòng E2E_RT) có
 // menu "Tổng quan phòng" + "Nhiệm vụ của phòng" (nút Việc của tôi / Cả phòng), thấy việc P1 của chuyên viên khác cùng phòng (chỉ xem: ngăn chi
 // tiết không có Cập nhật / Nộp minh chứng), Tổng quan phòng có thanh lọc + khối Theo loại văn bản; việc P2 của mình: một hộp "Cập nhật" gộp
-// "Nộp minh chứng nhanh" (số hiệu + ngày; cấp nhận mặc định theo việc) → Lưu → minh chứng chờ nghiệm thu. Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
+// "Nộp minh chứng nhanh" (số hiệu + ngày; cấp nhận mặc định theo việc) → Lưu → nhiệm vụ hoàn thành (Đợt D, 0090). Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
 import { NAP, nav } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
@@ -65,7 +65,7 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
     });
   });
 
-  test('3. Việc của tôi (P2): hộp Cập nhật có mục Nộp minh chứng nhanh — cấp nhận mặc định theo việc; Lưu → minh chứng chờ nghiệm thu', async ({ browser }, testInfo) => {
+  test('3. Việc của tôi (P2): hộp Cập nhật có mục Nộp minh chứng nhanh — cấp nhận mặc định theo việc; Lưu → minh chứng hợp lệ, nhiệm vụ hoàn thành', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await nav(p, 'navKl');
       await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
@@ -82,13 +82,13 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
       await expect(p.locator('#klCapNhatModal')).toBeVisible();
       await p.locator('#klCnMcNgay').fill(homNay());
       await p.locator('#klCnLuu').click();
-      await expect(p.locator('#toastContainer')).toContainText('nộp minh chứng số 21/BC-E2E', NAP);
+      await expect(p.locator('#toastContainer')).toContainText('nộp minh chứng số 21/BC-E2E — nhiệm vụ hoàn thành', NAP);
       await expect(p.locator('#klCapNhatModal')).toBeHidden();
       await expect(p.locator(`#klMinhChung-${p2.id}`)).toContainText('21/BC-E2E', NAP);
     });
-    const { data: mc } = await db.from('minh_chung').select('so_hieu, cap_nhan, trich_yeu, mo_ta_ket_qua, nop_boi').eq('nhiem_vu_id', p2.id);
-    expect(mc).toEqual([{ so_hieu: '21/BC-E2E', cap_nhan: 'TRUONG_PHONG', trich_yeu: null, mo_ta_ket_qua: null, nop_boi: ID.e2eCv }]);
-    const { data: nv } = await db.from('v_nhiem_vu').select('nhom_dem').eq('id', p2.id).single();
-    expect(nv.nhom_dem).toBe('CHO_NGHIEM_THU');
+    const { data: mc } = await db.from('minh_chung').select('so_hieu, cap_nhan, trich_yeu, mo_ta_ket_qua, nop_boi, hop_le').eq('nhiem_vu_id', p2.id);
+    expect(mc).toEqual([{ so_hieu: '21/BC-E2E', cap_nhan: 'TRUONG_PHONG', trich_yeu: null, mo_ta_ket_qua: null, nop_boi: ID.e2eCv, hop_le: true }]);
+    const { data: nv } = await db.from('v_nhiem_vu').select('nhom_dem, ngay_hoan_thanh').eq('id', p2.id).single();
+    expect(nv).toEqual({ nhom_dem: 'HOAN_THANH', ngay_hoan_thanh: homNay() });
   });
 });

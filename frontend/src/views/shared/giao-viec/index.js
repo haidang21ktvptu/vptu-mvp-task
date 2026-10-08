@@ -46,7 +46,7 @@ function khoaBieuMau(khoa) {
 }
 const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 function datDoKhanChinh(ma) { $('klThDoKhan').value = ma; $('klThDoKhanWrap').querySelectorAll('.dk-chon button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.giaTri === ma))); }
-const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'gvThemWrap', 'klThLuuTiep'];   // A0: không người theo dõi, không "Thông tin thêm" (cấp QĐ, VB triển khai, ghi chú), không "Giao, nhập tiếp"
+const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'gvPhuWrap', 'klThLuuTiep'];   // A0: không người theo dõi, không "Giao, nhập tiếp"; "Thông tin thêm" chỉ ba ô nguồn (Đợt D)
 const anHienTheoDoi = () => ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'].forEach((id) => show(id, !anTheoDoi()));   // ẩn khi Thường trực giao / chuyên viên giao thẳng (0085)
 // A0 với văn bản kết luận / thông báo: giao_viec bắt buộc ngành + lĩnh vực (và ngày giao, loại hạn như A1) → hiện các ô này theo loại văn bản.
 const THEO_LOAI_A0 = ['gvNganhWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];

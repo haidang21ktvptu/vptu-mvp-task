@@ -62,7 +62,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
   const muc = [
     nut('tin', n('nhan_tin'), 'tin chưa đọc'),
     vai() !== 'A3' ? nut('quyet', n('can_quyet'), 'việc cần quyết') : '',
-    vai() !== 'A3' ? nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị chờ duyệt') : '',
+    nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị từ chối chờ duyệt'),   // Đợt D (0091): cả chuyên viên đã nhập / giao việc
     nut('dnsua', n('de_nghi_sua'), 'đề nghị sửa chờ duyệt'),
     nut('tuchoi', n('bi_tu_choi'), 'việc bị từ chối'),
     ['A1', 'A2'].includes(vai()) ? nut('vuongmac', n('co_vuong_mac'), 'việc có vướng mắc') : '',   // PR-3: kl_so_chua_xu_ly.co_vuong_mac (phạm vi do RLS)
@@ -93,9 +93,9 @@ export function khoiThuongTrucHtml() {
 export function khoiBiTuChoiHtml() {
   const ds = dh.rows.filter((r) => mo(r) && (r.bi_tu_choi || r.tu_choi_cho) && laNguoiGiao(r));
   if (ds.length === 0) return '';
-  const giaoLai = ['A1', 'A2'].includes(vai());
+  const giaoLai = vai() !== 'A0';   // Đợt D (0092): chuyên viên giao lại việc mình giao (cho chuyên viên khác)
   return `<div class="muc do" id="khoiBiTuChoi"><b>Việc đồng chí giao bị từ chối / đang đề nghị từ chối (${ds.length})</b>
-    <p>${giaoLai ? 'Giao lại = đổi chủ trì ngay tại đây; cờ "bị từ chối" tự xoá; chủ trì mới xác nhận nhận việc lại.' : 'Lãnh đạo Văn phòng giao lại cho chủ trì khác.'}</p>
+    <p>${giaoLai ? 'Giao lại = đổi chủ trì ngay tại đây; cờ "bị từ chối" tự xoá; chủ trì mới xác nhận nhận việc lại.' : 'Người giao việc giao lại cho chủ trì khác.'}</p>
     ${ds.map((r) => {
     const dn = r.tu_choi_cho; const nd = dn ? findAccount(dn.nguoi_de_nghi) : null;
     const tt = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : `<span class="nhan-xam">${escapeHtml(nd?.full_name || 'Cán bộ')} đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, dn.cap_duyet) || 'cấp duyệt')} duyệt</span>`;

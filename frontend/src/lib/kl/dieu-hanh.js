@@ -16,10 +16,12 @@ export async function loadSoLieuCacMoc(ngay) {
   return ngay.map((_, i) => ds[i] || SO_LIEU_RONG);
 }
 
-// Minh chứng chưa thẩm định (hop_le NULL) trong phạm vi (RLS minh_chung theo phạm vi nhiệm vụ) — khối "chờ xác nhận" A1/A2.
+// Kết quả vừa nộp (Đợt D v3.20, 0090): minh chứng số hiệu nộp trong 7 ngày còn hợp lệ (nộp là hoàn thành) + minh chứng nộp trước v3.20 còn chờ
+// (hop_le NULL); không lấy minh chứng chữ cũ (chu_cu) của việc chuyển đổi. RLS minh_chung theo phạm vi nhiệm vụ — khối Cần xử lý A1/A2.
 export async function loadMinhChungCho() {
-  return loi(await supabase.from('minh_chung').select('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, cap_nhan, trich_yeu, mo_ta_ket_qua, nop_boi, nop_luc')
-    .is('hop_le', null).order('nop_luc', { ascending: false }), 'đọc minh chứng chờ xác nhận') || [];
+  const tu = new Date(Date.now() - 7 * 864e5).toISOString();
+  return loi(await supabase.from('minh_chung').select('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, cap_nhan, trich_yeu, mo_ta_ket_qua, nop_boi, nop_luc, hop_le, tep_path, tep_ten')
+    .eq('loai', 'so_hieu').or(`hop_le.is.null,and(hop_le.eq.true,nop_luc.gte.${tu})`).order('nop_luc', { ascending: false }), 'đọc kết quả vừa nộp') || [];
 }
 
 // Chỉ đạo đang chờ phản hồi trong phạm vi (mọi loại gốc, trừ PHAN_HOI) — A2 "chỉ đạo từ Văn phòng chờ phòng", A3 "chỉ đạo cần trả lời".

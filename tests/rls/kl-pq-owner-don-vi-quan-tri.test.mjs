@@ -62,20 +62,22 @@ describe('PQ-4 — Owner là đơn vị / phòng: chỉ người theo dõi nhậ
     assert.equal((await nhan('demo_cv1', 'DV-A3')).data, false, 'gọi lại không ghi thêm');
   });
 
-  test('3. E1: Owner đơn vị ngoài, theo dõi A2 — Trưởng phòng nhận được; A3 cùng phòng (cv1), CVP, PCVP phụ trách, A0, QTHT bị chặn', async () => {
+  test('3. E1: Owner đơn vị ngoài, theo dõi A2 — Trưởng phòng đã nhận tự động (0090); A3 cùng phòng (cv1), CVP, PCVP phụ trách, A0, QTHT bị chặn', async () => {
     const U2 = ['demo_cv1', 'demo_cvp', 'demo_pcvp', 'demo_a0', 'demo_qtht'];
     (await songSong(U2.map((u) => () => nhan(u, 'DV-A2')))).forEach((r, i) => assertDenied(r, `${U2[i]} nhận DV-A2`));
     const r = await nhan('demo_truongphong', 'DV-A2');
-    assertOk(r, 'Trưởng phòng (theo dõi) nhận'); assert.equal(r.data, true);
+    assertOk(r, 'Trưởng phòng (theo dõi) bấm nhận'); assert.equal(r.data, false, '0090: lãnh đạo được ghi "đã nhận" tự động khi giao — bấm lại không ghi thêm');
+    const ls = (await db().from('lich_su').select('nguoi_sua, gia_tri_moi').eq('nhiem_vu_id', id['DV-A2']).eq('cot', 'xac_nhan_nhan_viec')).data;
+    assert.deepEqual(ls.map((x) => x.nguoi_sua), [IDS.truongphong]); assert.match(ls[0].gia_tri_moi, /^tự động/);
   });
 
-  test('4. E2: Owner là phòng Tổng hợp (không tài khoản), theo dõi = Trưởng phòng — A3 trong phòng không thấy, không nhận; Trưởng phòng nhận được', async () => {
+  test('4. E2: Owner là phòng Tổng hợp (không tài khoản), theo dõi = Trưởng phòng — A3 trong phòng không thấy, không nhận; Trưởng phòng đã nhận tự động', async () => {
     const cv1 = await userClient('demo_cv1');
     const thay = await cv1.from('nhiem_vu').select('id').eq('id', id['PHONG']);
     assertOk(thay, 'cv1 đọc'); assert.equal(thay.data.length, 0, 'A3 trong phòng không thấy việc Owner = phòng');
     assertDenied(await nhan('demo_cv1', 'PHONG'), 'cv1 nhận việc của phòng');
     assertDenied(await nhan('demo_cv2', 'PHONG'), 'cv2 (quan_tri_kl) nhận việc của phòng');
-    assert.equal((await nhan('demo_truongphong', 'PHONG')).data, true, 'Trưởng phòng nhận');
+    assert.equal((await nhan('demo_truongphong', 'PHONG')).data, false, 'Trưởng phòng đã nhận tự động (0090) — gọi lại không ghi thêm');
   });
 
   test('5. QTHT (không quan_tri_kl) gọi hàm nghiệp vụ trên việc/văn bản người khác: chi_dao_gui, dat_cap_quyet_dinh, chi_dao_dong, van_ban_dat_trich_yeu → 42501', async () => {

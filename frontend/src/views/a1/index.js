@@ -17,9 +17,9 @@ import { registerBaoCao } from './bao-cao.js';
 import { registerCanBo } from '../shared/can-bo.js';
 
 // v8 đợt 2 (mockup 03): tầng 2 dải "Cần xử lý ngay" + tấm việc Thường trực giao chờ nhận / đề nghị từ chối cần duyệt / việc mình giao bị từ chối;
-// sau 5 ô số là hai cột: minh chứng chờ xác nhận (chính) và chỉ đạo Thường trực chờ trả lời (phụ 380px); rồi thanh trái + danh sách việc nghẽn.
+// sau 5 ô số là hai cột: kết quả nộp trong 7 ngày (chính — Đợt D: không bắt buộc xử lý) và chỉ đạo Thường trực chờ trả lời (phụ 380px); rồi thanh trái + danh sách việc nghẽn.
 const DAU = '<div id="dhBaCau"></div><div id="dhCanXuLy"></div><section class="tam hidden" id="dhTC"></section>';
-const GIUA = `<div class="hai-cot"><section class="tam" id="dhMcKhoi"><div class="tam-dau"><h2><em class="lam" id="dhMcSo">0</em> minh chứng đã nộp, chờ xác nhận</h2><span>Hợp lệ một bấm; không hợp lệ cần lý do</span></div><div id="dhMc"></div></section>
+const GIUA = `<div class="hai-cot"><section class="tam" id="dhMcKhoi"><div class="tam-dau"><h2><em class="lam" id="dhMcSo">0</em> kết quả nộp trong 7 ngày</h2><span>Nộp minh chứng là hoàn thành — đánh giá hoặc trả lại nếu chưa đạt (không bắt buộc)</span></div><div id="dhMc"></div></section>
   <aside class="tam cot-phu" id="dhTT"></aside></div>`;
 
 function veThem() {

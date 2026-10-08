@@ -62,10 +62,10 @@ describe('0070–0071 — nhập theo tầng, sửa thông tin giao, đề ngh�
     assert.equal((await doc()).tao_boi, IDS.truongphong, 'người giao không đổi');
   });
 
-  test('3. sua_thong_tin_giao: Owner / A1 không phải người giao → chặn; người giao sửa được, có lịch sử + tin cho Owner; giá trị sai → lỗi rõ', async () => {
+  test('3. sua_thong_tin_giao: Owner / PCVP ngoài phạm vi → chặn (0091: lãnh đạo cấp trên người giao trong phạm vi được); người giao sửa được, có lịch sử + tin cho Owner; giá trị sai → lỗi rõ', async () => {
     const tham = (thay, lyDo = `${KHOA} theo giao ban`) => ({ p_id: nv, p_thay_doi: thay, p_ly_do: lyDo });
     assertDenied(await goi('demo_cv1', 'sua_thong_tin_giao', tham({ do_khan: 'KHAN' })), 'Owner gọi');
-    assertDenied(await goi('demo_cvp', 'sua_thong_tin_giao', tham({ do_khan: 'KHAN' })), 'A1 không phải người giao');
+    assertDenied(await goi('demo_pcvp2', 'sua_thong_tin_giao', tham({ do_khan: 'KHAN' })), 'PCVP ngoài phạm vi');
     assertOk(await goi('demo_truongphong', 'sua_thong_tin_giao', tham({ do_khan: 'KHAN', don_vi_phoi_hop: `${KHOA} Phòng Quản trị` })), 'người giao sửa');
     const v = await doc();
     assert.equal(v.do_khan, 'KHAN'); assert.equal(v.don_vi_phoi_hop, `${KHOA} Phòng Quản trị`);

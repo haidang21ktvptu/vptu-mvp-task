@@ -18,8 +18,8 @@
   .tvb-ra-soat-dong { margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .tvb-ra-soat { font-size: 12px; padding: 2px 10px; }
   /* Hộp nghiệm thu (chọn chất lượng) — dùng chung 3 nơi. */
-  .o-nghiem-thu .nhan { flex-basis: 100%; margin: 0; }
-  .o-nghiem-thu select { flex: 0 1 220px; }
+  .o-danh-gia .nhan { flex-basis: 100%; margin: 0; }
+  .o-danh-gia select { flex: 0 1 220px; }
 }
 @layer utilities {
   @media print {
