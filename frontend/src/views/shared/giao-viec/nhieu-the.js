@@ -1,9 +1,9 @@
-// Thẻ "Nhiệm vụ n" của chế độ nhiều nhiệm vụ (v3.17.1, góp ý 7/10/2026): mỗi thẻ mang ĐỦ các ô của một việc — khối 2 (nội dung, chịu trách
-// nhiệm, người theo dõi, đơn vị phối hợp, độ khẩn) và phần riêng của khối 3 (sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành, lĩnh vực)
-// — để một văn bản giao đủ mọi nhiệm vụ trong MỘT lượt dù khác phòng, khác lĩnh vực. Danh sách chọn, gợi ý người theo dõi / cấp nhận, lọc
-// phạm vi dùng chung hàm với chế độ một việc (them-owner.js, pham-vi.js); ô Chịu trách nhiệm / Sản phẩm / Cấp nhận / Loại thời hạn sao chép
-// lựa chọn của ô chính (đã lọc theo vai, thay mặt). Phần chung còn lại (văn bản, nguồn, thay mặt, ngày giao, cấp quyết định, ghi chú) ở biểu
-// mẫu chính. Thẻ có data-dong (số thứ tự hiện, đánh lại khi xoá) và data-khoa (khoá cố định cho id ô); ô của thẻ nhận biết bằng data-cot.
+// Thẻ "Nhiệm vụ n" (n ≥ 2) của biểu mẫu Giao việc (v3.17.1; v3.18 gộp bố cục — thẻ 1 là bộ ô chính ở template.js): mỗi thẻ mang ĐỦ các ô của một
+// việc — nội dung, chịu trách nhiệm, người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành, lĩnh vực —
+// để một văn bản giao đủ mọi nhiệm vụ trong MỘT lượt dù khác phòng, khác lĩnh vực. Danh sách chọn, gợi ý người theo dõi / cấp nhận, lọc phạm vi
+// dùng chung hàm với thẻ 1 (them-owner.js, pham-vi.js); ô Chịu trách nhiệm / Sản phẩm / Cấp nhận / Loại thời hạn sao chép lựa chọn của ô chính
+// (đã lọc theo vai, thay mặt). Phần chung (văn bản, nguồn, thay mặt, ngày giao, thông tin thêm) ở biểu mẫu chính. Thẻ có data-dong (số thứ tự
+// hiện, đánh lại khi xoá) và data-khoa (khoá cố định cho id ô); ô của thẻ nhận biết bằng data-cot.
 import { $, show, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { danhMucKl, linhVucCuaNganh, cauHinhKl } from '../../../lib/kl/du-lieu.js';
@@ -35,7 +35,7 @@ export function theHtml(k, i) {
     <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ ${i}</b><button type="button" class="nut nho gvl-xoa" data-action="gvXoaDong" data-dong="${i}" title="Bỏ nhiệm vụ này">× Bỏ</button></header>
     ${truong('noi_dung', `Nội dung nhiệm vụ${BB}`, `<textarea id="${id('noi_dung')}" class="o-nhap" rows="2" data-cot="noi_dung" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>`)}
     <div class="cot-3">
-      ${truong('owner', `Chịu trách nhiệm${BB}`, selTim('owner', 'Chịu trách nhiệm'), 'một Owner: đơn vị, phòng hoặc cán bộ')}
+      ${truong('owner', `Chịu trách nhiệm${BB}`, selTim('owner', 'Chịu trách nhiệm'), 'một Owner: phòng hoặc cán bộ')}
       ${truong('theo_doi', `Người theo dõi${BB}`, selTim('theo_doi', 'Người theo dõi'), 'gợi ý theo người chịu trách nhiệm')}
       ${truong('phoi_hop', 'Đơn vị phối hợp', inp('phoi_hop', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ"'), 'không bắt buộc, cách nhau bằng dấu ;')}
     </div>

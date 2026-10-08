@@ -46,6 +46,7 @@ export async function apDienSan(dong, { nhanMoi }) {
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
   if (chon('klThNguon', d.nguon_nhiem_vu_ma)) phat($('klThNguon'), 'input');   // đánh dấu đã chọn: mặc định theo loại văn bản không ghi đè
   go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThGhiChu', d.linh_vuc_chi_tiet);
+  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy
   $('klThDoKhanWrap').querySelector(`.dk-chon button[data-gia-tri="${d.do_khan || 'THUONG'}"]`)?.click();   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
   phat($('giaoViecForm'), 'input');
   $('klThNoiDung').focus();

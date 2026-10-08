@@ -59,15 +59,15 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
   });
 
   // eslint-disable-next-line no-empty-pattern
-  test('biểu mẫu một khối: thiếu sản phẩm → nút Giao mờ, chấm 3 chưa sáng; văn bản mới + Owner cán bộ + thay mặt + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
+  test('biểu mẫu hai khối (v3.18): thiếu sản phẩm → nút Giao mờ, chấm 2 chưa sáng; văn bản mới + Owner cán bộ + thay mặt + sản phẩm + hạn → dòng XANH theo 1400, cấp nhận = Trưởng phòng', async ({}, testInfo) => {
     await nav(page, 'navKl');
     await expect(page.locator('#klNutThem')).toBeVisible();
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong (không dựa vào "có dòng đầu")
     await expect(page.locator(`#klRow-${mocId}`)).toBeVisible(NAP);           // việc mốc của tài khoản này có mặt
     await moGiaoViec(page, () => page.locator('#klNutThem').click());
     await expect(page.locator('#viewKl')).toBeHidden();
-    await expect(page.locator('#viewGiaoViec .gv-the')).toHaveCount(1);          // GĐ22: một thẻ, ba phần nối tiếp
-    await expect(page.locator('#viewGiaoViec .gv-phan')).toHaveCount(3);
+    await expect(page.locator('#viewGiaoViec .gv-the')).toHaveCount(1);          // GĐ22: một tấm; v3.18: hai khối (văn bản & mốc giao, nhiệm vụ)
+    await expect(page.locator('#viewGiaoViec .gv-phan')).toHaveCount(2);
     await expect(page.locator('#klThThayMatWrap')).toBeVisible();               // người giao không phải lãnh đạo → ô Thay mặt bắt buộc
     await expect(page.locator('#klThDoKhan')).toHaveValue('THUONG');
     await page.locator('#klThVanBan').selectOption('__moi__');
@@ -87,14 +87,13 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     // PR-2b (3.4/F): người theo dõi lọc theo phạm vi Trưởng phòng được thay mặt — người giao (ngoài phòng) rời danh sách, mặc định = Trưởng phòng
     await expect(page.locator(`#klThNguoiTheoDoi option[value="${QTHT_ID}"]`)).toHaveCount(0);
     await expect(page.locator('#klThNguoiTheoDoi')).toHaveValue(TRUONG_PHONG_ID);
-    await expect(page.locator('#gvCham1')).toHaveClass(/\bxong\b/);
-    await expect(page.locator('#gvCham2')).toHaveClass(/\bxong\b/);
-    await expect(page.locator('#gvCham3')).not.toHaveClass(/\bxong\b/);        // thiếu sản phẩm
+    await expect(page.locator('#gvCham1')).toHaveClass(/\bxong\b/);           // khối 1: văn bản, nguồn, ngày giao, thay mặt đủ
+    await expect(page.locator('#gvCham2')).not.toHaveClass(/\bxong\b/);        // khối 2: thiếu sản phẩm
     await expect(page.locator('#klThLuu')).toBeDisabled();
     await expect(page.locator('#gvTomTatChu')).toContainText('sản phẩm …');
     await page.locator('#klThSanPham').selectOption('TO_TRINH');
     await page.locator('#klThSanPhamMoTa').fill('Tờ trình thử nghiệm e2e');
-    await expect(page.locator('#gvCham3')).toHaveClass(/\bxong\b/);
+    await expect(page.locator('#gvCham2')).toHaveClass(/\bxong\b/);
     await expect(page.locator('#gvTomTatChu')).toContainText('sản phẩm Tờ trình, độ khẩn Thường');
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();

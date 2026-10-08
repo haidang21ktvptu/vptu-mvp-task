@@ -1,4 +1,4 @@
-// Đọc trạng thái biểu mẫu Giao việc từ các ô (dùng chung index.js, doc-form.js, nhieu.js — v3.17 tách khỏi index.js để thêm chế độ nhiều nhiệm vụ).
+// Đọc trạng thái biểu mẫu Giao việc từ các ô (dùng chung index.js, doc-form.js, nhieu.js — v3.17 tách khỏi index.js; v3.18 số thẻ nhiệm vụ: nhieu.js soThe / coThem).
 // Chỉ đọc DOM + state, không ghi. homNay lấy từ DB khi mở biểu mẫu (index.js đặt) — mốc so sánh ngày ban hành / hạn.
 import { $ } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
@@ -39,5 +39,3 @@ export const hanTruocBH = () => Boolean($('klThHan').value && ngayBH()) && $('kl
 export const loaiVanBan = () => (laMoi() ? (vbTrong() ? 'KHAC' : $('klThLoaiVB').value) : vanBanChon()?.loai) || 'KHAC';
 export const canNganhHienTai = () => canNganh(loaiVanBan());
 export const canNgayNhan = () => !laA0() || canNganhHienTai();
-// Chế độ "Nhiều nhiệm vụ từ một văn bản" (v3.17): nội dung / người chịu trách nhiệm / sản phẩm / hạn ghi ở từng dòng của lưới.
-export const cheDoNhieu = () => $('giaoViecForm')?.dataset.cheDo === 'nhieu';

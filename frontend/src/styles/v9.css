@@ -99,9 +99,14 @@
   }
 }
 
-/* v3.17 — Giao việc: chế độ "Nhiều nhiệm vụ từ một văn bản" (thẻ nhiệm vụ, v3.17.1), ô tìm nhanh cạnh ô chọn người */
+/* v3.17 — Giao việc: thẻ nhiệm vụ (v3.18 gộp bố cục: thẻ 1 = bộ ô chính, thẻ 2…20 thêm), ô tìm nhanh cạnh ô chọn người, "Thông tin thêm" thu gọn */
 @layer components {
-  .gv-che-do { margin: 0 0 12px; }
+  #gvPhan2Phu { margin: 2px 0 10px; }
+  .gv-them { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--vien-nhat); }
+  .gv-them summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--navy); list-style: none; display: flex; align-items: center; gap: 8px; }
+  .gv-them summary::-webkit-details-marker { display: none; }
+  .gv-them summary::before { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--navy); border-bottom: 2px solid var(--navy); transform: rotate(-45deg); transition: transform .15s; }
+  .gv-them[open] summary::before { transform: rotate(45deg); }
   .gv-tim-chon { display: grid; gap: 6px; }
   .gv-tim-chon input[type="search"] { height: 36px; min-height: 36px; font-size: 13.5px; padding-left: 32px; background: var(--the) no-repeat 10px center / 15px 15px
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); }
@@ -115,7 +120,6 @@
   .gv-nv { border: 1px solid var(--vien); border-left: 4px solid var(--navy); border-radius: 12px; padding: 2px 14px 14px; background: var(--the); }
   .gv-nv-dau { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
   .gv-nv-dau .gvl-so { font-size: 14px; font-weight: 700; color: var(--navy); }
-  .gv-nv .gvl-xoa:disabled { opacity: .35; cursor: not-allowed; }
   .gv-nv .gv-truong { margin-top: 10px; }
   .gv-nv textarea.o-nhap { min-height: 60px; resize: vertical; }
   .gv-nv .gv-dk { margin-top: 12px; }
