@@ -1,12 +1,13 @@
 // Màn hình "Nhiệm vụ" (mockup: tổng quan → danh sách → chi tiết): mục dùng chung mọi vai — A3 việc mình là Owner hoặc người theo dõi,
 // A2 phòng mình, A1 theo phụ trách/kiêm nhiệm, A0 và quan_tri_kl tất cả — phạm vi do RLS (kl_pham_vi) quyết định, frontend chỉ vẽ.
 // Nút "Giao việc" cho A1/A2/quan_tri_kl (quyền thật trong hàm giao_viec). moNhiemVu(id, ma, cheDo): các màn hình khác mở đúng việc.
+// Đợt C1 v3.19 (0086): cấu hình pham_vi_chuyen_vien = 2 → chuyên viên vào "Nhiệm vụ của phòng" (openKlPhong, nút Việc của tôi / Cả phòng; chỉ xem).
 import { $, show } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
+import { xacNhanNhanViec, chuyenVienXemPhong } from '../../../lib/kl/du-lieu.js';
 import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
@@ -30,18 +31,23 @@ export const chiViecCuaToi = () => state.user?.role_group === 'A3' && !state.use
 const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng', A3: 'Việc của tôi' };
 
 // Mở màn hình; loc (tuỳ chọn) = bộ lọc do màn hình khác truyền sang (thay thế toàn bộ bộ lọc hiện có). A3 thường mặc định = việc của tôi.
-export function openKl(loc) {
+// phong = true (0086, chuyên viên xem cả phòng): tiêu đề "Nhiệm vụ của phòng", không lọc (RLS đã giới hạn trong phòng), hiện nút phạm vi.
+export function openKl(loc, phong = false) {
   showSection('viewKl');
-  setActiveNav('navKl');
+  setActiveNav(chiViecCuaToi() && !phong ? 'navDieuHanh' : 'navKl');   // chuyên viên xem "việc của tôi" (0086: navKl là Nhiệm vụ của phòng)
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
-  $('klTieuDe').textContent = (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
-  const bo = loc || (chiViecCuaToi() ? { cuaToi: state.user.id } : {});
+  $('klTieuDe').textContent = phong ? 'Nhiệm vụ của phòng' : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
+  show('klPhamVi', phong);
+  const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
   const nap = loadKl();
   batKlRealtime(klTheoSuKien, (m) => hienKetNoi('klKetNoi', m));
   return nap;
 }
+// Chuyên viên (cấu hình 2) mở "Nhiệm vụ của phòng"; nút phạm vi: Việc của tôi = lọc cuaToi, Cả phòng = bỏ lọc. Không có cấu hình → như Việc của tôi.
+const openKlPhong = () => openKl(null, chiViecCuaToi() && chuyenVienXemPhong());
+const klPhamVi = ({ pv }) => setKlLoc({ cuaToi: pv === 'toi' ? state.user.id : null });
 
 // Realtime (B6): sự kiện của việc đã có trong danh sách → nạp lại riêng việc đó (dòng + ngăn chi tiết đang mở); còn lại nạp cả danh sách.
 async function klTheoSuKien(su) {
@@ -125,5 +131,5 @@ export function registerKlView() {
   const klXuatExcel = async () => {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
-  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
 }

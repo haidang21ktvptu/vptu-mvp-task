@@ -6,7 +6,7 @@ import { $, show } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
-import { loadKlRows } from '../../lib/kl/du-lieu.js';
+import { loadKlRows, chuyenVienXemPhong } from '../../lib/kl/du-lieu.js';
 import { locRows } from '../../lib/kl/tong-hop.js';
 import { openKl, chiViecCuaToi } from '../shared/kl/index.js';
 import { moNganDanhSach, moNganViec } from '../shared/ngan-chi-tiet.js';
@@ -32,9 +32,9 @@ async function onTim(e) {
   e.preventDefault();
   const tuKhoa = $('timNhanhO').value.trim();
   if (!tuKhoa) return;
-  const loc = chiViecCuaToi() ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };
+  const loc = chiViecCuaToi() && !chuyenVienXemPhong() ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };   // 0086: xem cả phòng → tìm cả phòng
   dongTimNhanh();
-  if (sectionDangHien('viewKl')) { openKl(loc); return; }
+  if (sectionDangHien('viewKl')) { openKl(loc, chiViecCuaToi() && chuyenVienXemPhong()); return; }
   try {
     const ds = locRows((await loadKlRows()).rows, loc);
     const dungMa = ds.filter((r) => r.ma.toLowerCase() === tuKhoa.toLowerCase());

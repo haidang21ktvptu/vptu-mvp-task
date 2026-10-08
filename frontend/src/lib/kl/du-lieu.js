@@ -3,6 +3,7 @@
 import { supabase } from '../supabase.js';
 import { state } from '../state.js';
 import { COT_VIEC, COT_TU_CHOI, taiTheoTrang } from './cot.js';
+import { homNayVN } from './ngay.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -54,6 +55,7 @@ export async function loadCauHinhKl(lai = false) {
 }
 export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
 export const tuNhanViec = () => cauHinhKl('xac_nhan_nhan_viec', 1) === 2;   // 0085: cấu hình 2 = việc coi như đã nhận ngay khi giao (không cần xác nhận)
+export const chuyenVienXemPhong = () => cauHinhKl('pham_vi_chuyen_vien', 1) === 2;   // 0086: cấu hình 2 = chuyên viên xem cả phòng (chỉ xem; RLS là chốt)
 
 // Toàn bộ dòng trong phạm vi người dùng (RLS) + tập id đã có xác nhận nhận việc, kèm mốc thời gian đọc ("Số liệu tính đến").
 let dangDocRows = null;
@@ -166,4 +168,11 @@ export async function xacNhanNhanViec(id) {
   const r = await supabase.rpc('xac_nhan_nhan_viec', { p_id: id });
   if (r.error) throw new Error(r.error.message);
   return r.data;
+}
+// Phân công phụ trách phòng đang hiệu lực (phu_trach_phong, mọi tài khoản đọc được) — Tổng quan Đợt C1: khối / ô lọc "Lãnh đạo VP phụ trách".
+export async function loadPhanCongHieuLuc() {
+  const hom = homNayVN();
+  const r = await supabase.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma').lte('tu_ngay', hom).or(`den_ngay.is.null,den_ngay.gte.${hom}`);
+  if (r.error) throw new Error(r.error.message);
+  return r.data || [];
 }

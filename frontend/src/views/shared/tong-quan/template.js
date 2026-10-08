@@ -11,29 +11,31 @@ export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><div><h2>${
 const ICON_GIAO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
 const KY = ['thang', 'quy', 'nam'];
 
-export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, thang, coGiaoViec }) {
+// Đợt C1: mỗi ô có dòng tỷ lệ (hoàn thành, đang làm trên tổng việc trong phạm vi; cảnh báo trên việc đang làm) và một câu quy tắc cảnh báo (quyTac).
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, thang, coGiaoViec, tong = 0, quyTac = '' }) {
   const capNhat = luc ? `Số liệu cập nhật ${luc.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' })} ngày ${luc.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}` : 'Đang nạp số liệu…';
-  const o = (khoa, so, nhan, phu) => `<button type="button" class="o-hung" data-so="${khoa}" ${mo({ t: khoa })} aria-label="${escapeHtml(`${so} ${nhan} — xem danh sách`)}"><span class="gia">${so}</span><span class="nhan-so">${nhan}</span><span class="phu-h">${phu}</span></button>`;
+  const o = (khoa, so, nhan, phu, tyLe = '') => `<button type="button" class="o-hung" data-so="${khoa}" ${mo({ t: khoa })} aria-label="${escapeHtml(`${so} ${nhan} — xem danh sách`)}"><span class="gia">${so}</span><span class="nhan-so">${nhan}</span><span class="phu-h">${phu}</span>${tyLe ? `<span class="ty-le">${tyLe}</span>` : ''}</button>`;
   return `<section class="anh-hung" aria-label="Tổng quan thực hiện nhiệm vụ">
     <div class="hung-dau"><div><h1>${escapeHtml(tieuDe)}</h1><p>${escapeHtml(phamVi)}. <span class="ngay-hung">${capNhat}</span></p></div>
       <div class="hung-phai"><div class="ky" role="group" aria-label="Kỳ số liệu" id="tqKy">${KY.map((ky) => `<button type="button" data-action="tqKy" data-ky="${ky}" aria-pressed="${String(kyChon === ky)}">${escapeHtml(ten[ky])}</button>`).join('')}</div>
         ${coGiaoViec ? `<button type="button" class="nut chinh" data-action="openGiaoViec" aria-label="Giao việc">${ICON_GIAO}<span class="chu-nut">Giao việc</span></button>` : ''}</div></div>
     <div class="hung-so" id="tqSo">
       <button type="button" class="o-hung o-vong" ${mo({ t: 'dg' })}>${vongHtml(s.tyLeDungHan)}<span class="xh-tq"><span class="nhan-so">Hoàn thành đúng hạn</span><span class="phu-h">${s.xong ? `${s.dungHan} trên ${s.dungHan + s.tre} việc được đánh giá` : 'chưa có việc hoàn thành'}</span>${duongHtml(thang)}</span></button>
-      ${o('giao', s.giao, 'nhiệm vụ giao', k.trong)}
-      ${o('xong', s.xong, 'đã hoàn thành', `${s.dungHan} đúng hạn${s.tre ? `, ${s.tre} trễ` : ''}`)}
-      ${o('mo', s.dangMo, 'đang thực hiện', `${s.mo.trongHan + s.mo.nt} việc trong hạn`)}
-      ${o('canh', s.canhBao, 'cảnh báo', s.canhBao ? `${s.mo.vang} Vàng, ${s.mo.do} Đỏ, ${s.mo.ddb} Đỏ đặc biệt` : 'không có việc chậm')}
-    </div></section>`;
+      ${o('giao', s.giao, 'nhiệm vụ giao', k.trong, `tổng ${tong} nhiệm vụ trong phạm vi`)}
+      ${o('xong', s.xong, 'đã hoàn thành', `${s.dungHan} đúng hạn${s.tre ? `, ${s.tre} trễ` : ''}`, `${pct(s.xong, tong)}% tổng số`)}
+      ${o('mo', s.dangMo, 'đang thực hiện', `${s.mo.trongHan + s.mo.nt} việc trong hạn`, `${pct(s.dangMo, tong)}% tổng số`)}
+      ${o('canh', s.canhBao, 'cảnh báo', s.canhBao ? `${s.mo.vang} Vàng, ${s.mo.do} Đỏ, ${s.mo.ddb} Đỏ đặc biệt` : 'không có việc chậm', `${pct(s.canhBao, s.dangMo)}% việc đang làm`)}
+    </div>${quyTac ? `<p class="hung-quy-tac" id="tqQuyTac">${escapeHtml(quyTac)}</p>` : ''}</section>`;
 }
 
-const LOI_CB = { A0: 'cần Thường trực chú ý', A2: 'trong phòng cần đồng chí đôn đốc' };
+const LOI_CB = { A0: 'cần Thường trực chú ý', A2: 'trong phòng cần đồng chí đôn đốc', A3: 'trong phòng (chỉ xem)' };   // A3: Đợt C1, chuyên viên xem cả phòng
 export function canhBaoHtml(cb, vai) {
   if (!cb.ddb && !cb.do) return '<div class="bao-dong yen" role="note" id="tqCanhBao"><span class="bieu-bd" aria-hidden="true">✓</span><div class="noi-bd"><b>Không có việc Đỏ</b><span>Mọi việc đang mở trong phạm vi đều trong hạn hoặc mới ở mức Vàng.</span></div></div>';
   const phan = [cb.ddb ? `${cb.ddb} việc Đỏ đặc biệt` : '', cb.do ? `${cb.do} việc Đỏ` : ''].filter(Boolean).join(' và ');
   return `<div class="bao-dong" role="note" id="tqCanhBao"><span class="bieu-bd" aria-hidden="true">!</span>
     <div class="noi-bd"><b>${phan} ${LOI_CB[vai] || 'cần đồng chí chỉ đạo'}</b><span>${escapeHtml(cb.nguoi.join(', '))}</span></div>
-    <button type="button" class="nut chinh" ${mo({ t: 'do' })}>Xem và chỉ đạo</button></div>`;
+    <button type="button" class="nut chinh" ${mo({ t: 'do' })}>${vai === 'A3' ? 'Xem danh sách' : 'Xem và chỉ đạo'}</button></div>`;
 }
 
 export const theThangHtml = (thang, nam) => `<article class="the-bd n7">${dauThe('Giao mới và hoàn thành theo tháng', `Số nhiệm vụ, năm ${nam} · bấm một tháng để xem việc`,
@@ -55,7 +57,7 @@ export function coCauHtml(s, k) {
 export const pillCanh = (d, kh = null) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do', 'Đỏ'], [d.vang, 'vang', 'Vàng']].filter(([n]) => n)
   .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} việc ${ten}" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten, m: lop, ...(kh ? { kh } : {}) })}>${n}<span class="sr"> việc ${ten}</span></button>`).join('') || '<span class="chu-phu">Không</span>';
 export const thuoc = (p) => `<span class="dong-han"><span class="thuoc-tq ${p === null ? '' : p >= 85 ? 'tot' : p >= 70 ? 'canh' : 'nguy'}"><i style="width:${p || 0}%"></i></span><b>${p === null ? '—' : `${p}%`}</b></span>`;
-const TIEU_NHOM = { A0: ['Theo đơn vị chủ trì', 'Đơn vị'], A2: ['Theo cán bộ', 'Cán bộ'], A1: ['Theo phòng, đơn vị', 'Phòng'] };
+const TIEU_NHOM = { A0: ['Theo đơn vị chủ trì', 'Đơn vị'], A2: ['Theo cán bộ', 'Cán bộ'], A3: ['Theo cán bộ', 'Cán bộ'], A1: ['Theo phòng, đơn vị', 'Phòng'] };
 export function bangNhomHtml(ds, vai, k) {
   const [tieu, cot] = TIEU_NHOM[vai] || TIEU_NHOM.A1;
   const dong = (d) => {
@@ -91,7 +93,7 @@ export function chatLuongHtml(c, k) {
     <button type="button" class="cuoi-the" ${mo({ t: 'traLai' })}><span>Trả lại để bổ sung</span><b>${c.traLai} lượt</b></button></article>`;
 }
 
-const AI_CD = { A0: 'của Thường trực', A1: 'của lãnh đạo Văn phòng', A2: 'của Trưởng phòng' };
+const AI_CD = { A0: 'của Thường trực', A1: 'của lãnh đạo Văn phòng', A2: 'của Trưởng phòng', A3: 'của Trưởng phòng' };
 export function chiDaoHtml(d, vai, k) {
   return `<article class="the-bd n4" id="tqChiDao">${dauThe('Chỉ đạo và phản hồi', `Chỉ đạo ${AI_CD[vai] || ''} ${k.trong}`)}
     <div class="cd-so"><button type="button" ${mo({ t: 'cd', loai: 'banHanh' })}><b>${d.banHanh}</b><span>ý kiến chỉ đạo</span><small class="on">${d.daPhanHoi} đã phản hồi</small></button>

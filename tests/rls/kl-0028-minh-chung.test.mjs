@@ -50,12 +50,11 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertDenied(ins, 'INSERT'); assertDenied(upd, 'UPDATE'); assertDenied(del, 'DELETE');
   });
 
-  test('2. nop_minh_chung: người ngoài chặn; thiếu một trong ba trường, cấp sai, ngày ngoài khoảng bị chặn; Owner nộp được → dòng + lịch sử + tin', async () => {
-    // Mười hai ca bị chặn độc lập (không ghi gì) — songSong giới hạn 4 (D3). [người, việc, tham số, null = 42501 | regex lỗi, nhãn]
+  test('2. nop_minh_chung: người ngoài chặn; thiếu số hiệu / ngày, cấp sai, ngày ngoài khoảng bị chặn (0086: cấp nhận trống = theo việc; trích yếu, mô tả tuỳ chọn); Owner nộp được → dòng + lịch sử + tin', async () => {
+    // Mười ca bị chặn độc lập (không ghi gì) — songSong giới hạn 4 (D3). [người, việc, tham số, null = 42501 | regex lỗi, nhãn]
     const CA = [['demo_cv2', 'NV-T61', {}, null, 'A3 không phải Owner/theo dõi'], ['demo_truongphong', 'NV-T61', {}, null, 'A2 không phải Owner/theo dõi'],
       ['demo_cvp', 'NV-T61', {}, null, 'Chánh VP không phải Owner/theo dõi'],
-      ...[{ so_hieu: '' }, { ngay_van_ban: null }, { cap_nhan: '  ' }].map((thieu) => ['demo_cv2', 'NV-T60', thieu, /đủ ba trường/, `thiếu ${Object.keys(thieu)}`]),
-      ...[{ trich_yeu: '' }, { mo_ta_ket_qua: '  ' }].map((thieu) => ['demo_cv2', 'NV-T60', thieu, /trích yếu văn bản và mô tả kết quả/, `thiếu ${Object.keys(thieu)} (0046)`]),
+      ...[{ so_hieu: '' }, { ngay_van_ban: null }].map((thieu) => ['demo_cv2', 'NV-T60', thieu, /số hiệu và ngày văn bản/, `thiếu ${Object.keys(thieu)} (0086)`]),
       ['demo_cv2', 'NV-T60', { mo_ta_ket_qua: 'x'.repeat(601) }, /tối đa 600/, 'mô tả quá 600 ký tự (0046)'],
       ['demo_cv2', 'NV-T60', { cap_nhan: 'KHONG_CO' }, /không có trong danh mục/, 'cấp sai'],
       ['demo_cv2', 'NV-T60', { ngay_van_ban: '2026-07-31' }, /từ ngày ban hành\/ngày nhận \(01\/08\/2026\)/, 'trước ngày ban hành'],

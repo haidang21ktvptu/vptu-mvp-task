@@ -18,7 +18,7 @@ function noiDung(d) {
     if (d.loai === '*') return `Tạo dòng ${escapeHtml(d.noi_dung || '')}`;
     if (d.loai === 'han_nop_minh_chung_ly_do') return escapeHtml(d.noi_dung || '');   // PR-2b: tin đã đủ "Đổi hạn nộp minh chứng · mã: cũ → mới — lý do"
     if (d.gia_tri_cu === null || d.gia_tri_cu === undefined) return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(gt(d.loai, d.noi_dung) || '')}`;
-    return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(gt(d.loai, d.gia_tri_cu) || '(trống)')} → ${escapeHtml(gt(d.loai, d.noi_dung) || '(trống)')}`;
+    return `<b>${escapeHtml(tenCot(d.loai))}</b>: <s class="cu">${escapeHtml(gt(d.loai, d.gia_tri_cu) || '(trống)')}</s> → <span class="moi">${escapeHtml(gt(d.loai, d.noi_dung) || '(trống)')}</span>`;   // Đợt C1: cũ gạch ngang
   }
   if (d.nguon === 'chi_dao' || d.nguon === 'phan_hoi') {
     const phu = [d.gia_tri_cu ? `<span class="dk dk-${d.gia_tri_cu === 'Hỏa tốc' ? 'hoa-toc' : d.gia_tri_cu === 'Thượng khẩn' ? 'thuong-khan' : 'khan'}">${escapeHtml(d.gia_tri_cu)}</span>` : '',

@@ -20,7 +20,7 @@ Web app nội bộ cho ~49 cán bộ Văn phòng Tỉnh ủy Cao Bằng: giao vi
 4. **Không bao giờ commit thẳng `main`, kể cả khi chỉ sửa tài liệu (docs-only).** Tạo nhánh `feature/...` hoặc `fix/...`, mở Pull Request, chạy `/code-review` trước khi mở PR. `main` có ruleset của GitHub bắt buộc PR + CI xanh + chặn force-push — không có ngoại lệ nào được chấp nhận, kể cả khi chủ dự án yêu cầu trực tiếp trong hội thoại.
 5. **Giao diện theo `docs/DESIGN.md`.** Không tự chọn màu, font hay bố cục ngoài hệ thống đó.
 6. **Ngôn ngữ giao diện: tiếng Việt có dấu, trang trọng.** Nhãn, thông báo, lỗi đều tiếng Việt. Không dùng tiếng Anh cho người dùng cuối.
-7. **Chuyên viên (A3) không được xem việc của người khác.** Trưởng phòng (A2) chỉ trong phòng mình. Chánh VP thấy tất cả; Phó Chánh VP chỉ khối mình phụ trách. Đây là quy tắc nghiệp vụ cốt lõi, kiểm tra bằng test RLS.
+7. **Chuyên viên (A3) không được xem việc của người khác.** Trưởng phòng (A2) chỉ trong phòng mình. Chánh VP thấy tất cả; Phó Chánh VP chỉ khối mình phụ trách. Đây là quy tắc nghiệp vụ cốt lõi, kiểm tra bằng test RLS. **Ngoại lệ có cấu hình (v3.19, migration 0086, chủ dự án quyết 8/10/2026):** `kl_cau_hinh.pham_vi_chuyen_vien = 2` → chuyên viên xem thêm **mọi việc của phòng mình, chỉ xem** (quyền ghi không đổi); mặc định 1 = như trên; test RLS `kl-0086` kiểm cả hai.
 8. Trước việc trên 3 file: dùng Plan mode, trình kế hoạch, chờ duyệt.
 9. Kết thúc mỗi việc: cập nhật `CHANGELOG.md` (3–6 dòng, tiếng Việt), không viết dài.
 10. Cuối mỗi phiên hoặc trước khi context gần đầy, cập nhật `docs/TRANG-THAI.md`.

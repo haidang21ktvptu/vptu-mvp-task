@@ -61,7 +61,7 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     const ch = await cv1.from('kl_cau_hinh').select('khoa, gia_tri');
     const m = Object.fromEntries(ch.data.map((x) => [x.khoa, x.gia_tri]));
     assert.equal(m.nguong_vang_ngay, '3'); assert.equal(m.nguong_do_dac_biet_ngay, '3'); assert.equal(m.ngay_ra_soat_toi_da, '30');
-    assert.equal(m.nguong_sap_den_han_ngay, '7'); assert.equal(m.canh_bao_nhac_lai_ngay, '3'); assert.equal(m.chi_dao_tt_han_phan_hoi_ngay, '2'); assert.equal(m.tu_choi_han_duyet_ngay, '2'); assert.equal(m.hoa_toc_da_nhan_gio, '2'); assert.equal(m.xac_nhan_nhan_viec, '1'); assert.equal(Object.keys(m).length, 22); // GĐ22: + 11 khoá do_khan_* / hoa_toc / thuong_truc; 0085: + xac_nhan_nhan_viec
+    assert.equal(m.nguong_sap_den_han_ngay, '7'); assert.equal(m.canh_bao_nhac_lai_ngay, '3'); assert.equal(m.chi_dao_tt_han_phan_hoi_ngay, '2'); assert.equal(m.tu_choi_han_duyet_ngay, '2'); assert.equal(m.hoa_toc_da_nhan_gio, '2'); assert.equal(m.xac_nhan_nhan_viec, '1'); assert.equal(m.pham_vi_chuyen_vien, '1'); assert.equal(Object.keys(m).length, 23); // GĐ22: + 11 khoá do_khan_* / hoa_toc / thuong_truc; 0085: + xac_nhan_nhan_viec; 0086: + pham_vi_chuyen_vien
   });
 
   test('4. văn bản: loai mặc định KL_BTV, loai lạ bị chặn; ngày nhận < ngày ban hành hoặc > hôm nay bị chặn; hợp lệ được', async () => {

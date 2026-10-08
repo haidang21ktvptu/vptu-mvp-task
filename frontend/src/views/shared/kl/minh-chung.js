@@ -103,7 +103,7 @@ const demKyTu = () => setText('klMcDem', String($('klMcMoTaKq').value.normalize(
 async function luuMinhChung() {
   const p = { nhiem_vu_id: $('klMcId').value, so_hieu: $('klMcSoHieu').value.trim(), ngay_van_ban: $('klMcNgay').value, cap_nhan: $('klMcCap').value,
     trich_yeu: $('klMcTrichYeu').value.trim(), mo_ta_ket_qua: $('klMcMoTaKq').value.trim() };
-  const loiForm = loiMinhChung(p);
+  const loiForm = loiMinhChung(p, timKlRow(p.nhiem_vu_id)?.cap_nhan_san_pham);
   if (loiForm) { notifyError(loiForm); return; }
   if (p.ngay_van_ban > homNay) { notifyError('Ngày văn bản không được sau hôm nay.'); return; }
   $('klMcLuu').disabled = true;
