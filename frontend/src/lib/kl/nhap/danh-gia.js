@@ -3,7 +3,7 @@
 // thuộc đúng một ngành; ngành chỉ có một lĩnh vực). Kết quả dự kiến của dòng (DB là chốt khi nhập):
 //   CAP_NHAT  — có mã việc đã có trên hệ thống (chỉ ô có giá trị trong tệp; KHÔNG mặc định, không điền hàng loạt — tránh ghi đè dữ liệu đang có);
 //   DA_XONG   — tiến độ Hoàn thành + lô chọn "Đã xong ngoài hệ thống" (cần văn bản, nội dung, người theo dõi);
-//   CHO_NGHIEM_THU — Hoàn thành + "Chờ nghiệm thu" + đủ 4 yếu tố minh chứng; GIAO — còn lại, đủ mức 1; CHO_HOAN_THIEN — thiếu mức 1.
+//   CHO_NGHIEM_THU — Hoàn thành + "Ghi minh chứng" + đủ 4 yếu tố minh chứng (0093: hoàn thành theo minh chứng ngay); GIAO — còn lại, đủ mức 1; CHO_HOAN_THIEN — thiếu mức 1.
 // Thuần (không DOM, không mạng): dữ liệu vào là dòng đã chuẩn hoá { k: {ma, hien, gan} | {loi} | null } (chuan-hoa.js).
 import { nhanTruong } from './truong.js';
 import { tachThayMat } from '../thay-mat.js';
@@ -117,6 +117,7 @@ function duLieuGui(dong, g, ketQua, thieu, me) {
     do_khan: g.do_khan, nguon_nhiem_vu_ma: g.nguon, nganh_ma: g.nganh, linh_vuc_ma: g.linh_vuc, linh_vuc_chi_tiet: g.linh_vuc_chi_tiet,
     van_ban_trien_khai: g.van_ban_trien_khai, don_vi_phoi_hop: g.don_vi_phoi_hop, ghi_chu: g.ghi_chu, tien_do_ma: g.tien_do, vuong_mac: g.vuong_mac,
     kq_so_hieu: g.kq_so_hieu, kq_ngay: g.kq_ngay, kq_trich_yeu: g.kq_trich_yeu, kq_mo_ta: g.kq_mo_ta, chat_luong: g.chat_luong,
+    muc_quan_trong: g.muc_quan_trong, co_quan_trinh: g.co_quan_trinh, thuong_truc_chi_dao: g.thuong_truc_chi_dao,   // 0093
     thieu: ketQua === 'CHO_HOAN_THIEN' ? thieu : [], du_lieu_goc: dong.goc, cap_nhat: ketQua === 'CAP_NHAT' };   // cap_nhat: DB chỉ cập nhật việc có sẵn khi xem trước cũng thấy mã
   Object.keys(d).forEach((k) => { if (d[k] === undefined || d[k] === '') d[k] = null; });
   return d;

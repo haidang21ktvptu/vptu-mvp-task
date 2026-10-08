@@ -1,8 +1,9 @@
 // Đợt B v3.18 (0079–0082): thay mặt theo NHÓM trên biểu mẫu Giao việc và luồng duyệt từ chối theo nhóm. demo_qtht (A3, cờ quan_tri_kl tạm) giao
 // (1) thay mặt "Lãnh đạo Văn phòng" cho chuyên viên → DB ghi nhóm + đại diện Chánh VP; (2) thay mặt "Thường trực Tỉnh ủy" cho phòng → như Thường
 // trực giao (không ô người theo dõi, Khẩn mặc định, Owner chỉ lãnh đạo VP / phòng; DB: uu_tien THUONG_TRUC, theo dõi = Trưởng phòng). Ô Chịu trách
-// nhiệm không còn nhóm "Đơn vị ngoài Văn phòng". Rồi chuyên viên đề nghị từ chối việc (1) → thẻ ghi "chờ Lãnh đạo Văn phòng duyệt"; Phó Chánh VP
-// (thành viên nhóm, không phải cấp duyệt ghi trên đề nghị) thấy và Đồng ý. Một phiên mỗi lúc; dữ liệu theo khoá, cờ khôi phục.
+// nhiệm không còn nhóm "Đơn vị ngoài Văn phòng". Rồi chuyên viên đề nghị từ chối việc (1) → Đợt D (0091): cấp xử lý = người nhập việc (demo_qtht),
+// thẻ ghi "chờ <người nhập> duyệt"; Phó Chánh VP (thành viên nhóm được thay mặt — được báo, xử lý thay được) thấy và Đồng ý. Một phiên mỗi lúc; dữ
+// liệu theo khoá, cờ khôi phục.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { NAP, moGiaoViec, pageAs, contextAs, nav } from './lib/app.js';
@@ -88,7 +89,8 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
     for (const u of [ID.cvp, ID.pcvp]) expect(tin.map((t) => t.receiver_id), `tin giao tới ${u}`).toContain(u);   // 0083: nhóm trong phạm vi việc (Tổng hợp) — PCVP2 (Quản trị) không
   });
 
-  test('2. Chuyên viên đề nghị từ chối việc thay mặt nhóm → thẻ ghi chờ Lãnh đạo Văn phòng duyệt', async ({ browser }, testInfo) => {
+  test('2. Chuyên viên đề nghị từ chối việc thay mặt nhóm → thẻ ghi chờ người nhập việc (0091) duyệt', async ({ browser }, testInfo) => {
+    const tenNhap = (await db.from('accounts').select('full_name').eq('id', QTHT).single()).data.full_name;
     const page = await pageAs(browser, 'A3', testInfo);
     const the = page.locator(`#vctMuc-moi #vct-${nvLdvp}`);
     await expect(the).toBeVisible(NAP);
@@ -98,22 +100,23 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
     await o.locator('input[name=noi_dung]').fill('Không đúng chức năng (e2e thay mặt nhóm)');
     await o.getByRole('button', { name: 'Gửi đề nghị' }).click();
     await expect(page.locator('#toastContainer')).toContainText('Đã gửi đề nghị từ chối', NAP);
-    await expect(page.locator(`#vct-${nvLdvp}`)).toContainText('chờ Lãnh đạo Văn phòng duyệt', NAP);
+    await expect(page.locator(`#vct-${nvLdvp}`)).toContainText(`chờ ${tenNhap} duyệt`, NAP);
     await page.context().close();
   });
 
-  test('3. Phó Chánh VP (thành viên nhóm, không phải cấp duyệt ghi trên đề nghị) thấy và Đồng ý từ chối', async ({ browser }, testInfo) => {
+  test('3. Phó Chánh VP (thành viên nhóm được thay mặt, không phải cấp xử lý ghi trên đề nghị) thấy và Đồng ý từ chối', async ({ browser }, testInfo) => {
     const { data: tc } = await db.from('tu_choi').select('id, cap_duyet').eq('nhiem_vu_id', nvLdvp).eq('trang_thai', 'CHO_DUYET').single();
-    expect(tc.cap_duyet).toBe(ID.cvp);
+    expect(tc.cap_duyet).toBe(QTHT);   // 0091: người nhập việc
+    const tenNhap = (await db.from('accounts').select('full_name').eq('id', QTHT).single()).data.full_name;
     const page = await moTuyChon(browser, 'PCVP', testInfo);
     const de = page.locator(`#tc-${tc.id}`);
     await expect(de).toBeVisible(NAP);
-    await expect(page.locator(`#btc-${nvLdvp}`)).toContainText('chờ Lãnh đạo Văn phòng duyệt');
+    await expect(page.locator(`#btc-${nvLdvp}`)).toContainText(`chờ ${tenNhap} duyệt`);
     await de.getByRole('button', { name: 'Đồng ý từ chối' }).click();
     await expect(page.locator('#toastContainer')).toContainText('Đã đồng ý từ chối', NAP);
     await expect(page.locator(`#btc-${nvLdvp}`)).toHaveAttribute('data-tu-choi', 'da', NAP);
     await page.context().close();
     const { data: sau } = await db.from('tu_choi').select('trang_thai, cap_duyet').eq('id', tc.id).single();
-    expect(sau).toEqual({ trang_thai: 'DONG_Y', cap_duyet: ID.cvp });   // cấp duyệt ghi người đại diện; PCVP duyệt thay nhóm (kl_duoc_duyet_thay)
+    expect(sau).toEqual({ trang_thai: 'DONG_Y', cap_duyet: QTHT });   // cấp xử lý ghi người nhập; PCVP (nhóm được thay mặt) xử lý thay — tầng giao 0091
   });
 });

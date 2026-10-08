@@ -136,11 +136,12 @@ describe('PR-2b — nhóm trạng thái nghiệm thu', () => {
     const d = demTheoNhom(rows);
     assert.equal(d.CHO_NGHIEM_THU, 0); assert.equal(Object.values(d).reduce((s, n) => s + n, 0), rows.length);
   });
-  test('người nộp thấy nhãn trung tính kể cả khi quá hạn ở bước nghiệm thu; lãnh đạo thấy "Cần nghiệm thu" / "Quá hạn ở bước nghiệm thu"', () => {
+  // Đợt D (0090): nộp minh chứng hợp lệ là hoàn thành — hai nhóm chỉ còn với minh chứng nộp trước v3.20, nhãn "chờ xác nhận minh chứng".
+  test('người nộp thấy nhãn trung tính kể cả khi quá hạn chờ xác nhận; người khác thấy "Chờ xác nhận minh chứng" / "Quá hạn, chờ xác nhận minh chứng"', () => {
     const r = { nhom_dem: 'QUA_HAN_NGHIEM_THU', so_ngay_qua: 2, owner_tai_khoan: 'cv', nguoi_nop_cho: 'cv', muc_canh_bao: 'DO' };
-    assert.equal(nhanTrangThai(r, 'cv'), 'Đã nộp — chờ nghiệm thu'); assert.equal(lopMep(r, 'cv'), 'lam');
-    assert.equal(nhanTrangThai(r, 'tp'), 'Quá hạn ở bước nghiệm thu · 2 ngày'); assert.equal(lopMep(r, 'tp'), 'do');
-    assert.equal(nhanTrangThai({ ...r, nhom_dem: 'CHO_NGHIEM_THU' }, 'tp'), 'Cần nghiệm thu');
+    assert.equal(nhanTrangThai(r, 'cv'), 'Đã nộp — chờ xác nhận'); assert.equal(lopMep(r, 'cv'), 'lam');
+    assert.equal(nhanTrangThai(r, 'tp'), 'Quá hạn, chờ xác nhận minh chứng · 2 ngày'); assert.equal(lopMep(r, 'tp'), 'do');
+    assert.equal(nhanTrangThai({ ...r, nhom_dem: 'CHO_NGHIEM_THU' }, 'tp'), 'Chờ xác nhận minh chứng');
   });
 });
 

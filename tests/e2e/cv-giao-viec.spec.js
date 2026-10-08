@@ -2,7 +2,7 @@
 // Thay mặt, không ô Người theo dõi (theo dõi = người giao); cấu hình xac_nhan_nhan_viec = 2 (đặt tạm bằng service_role, khôi phục) → việc coi như đã
 // nhận ngay khi giao. demo_e2e_cv (A3, phòng E2E_RT) giao 2 việc một lượt (thẻ 1 cho demo_e2e_nv phòng Tổng hợp — khác phòng; thẻ 2 cho chính mình)
 // → việc 1 ở "Việc tôi theo dõi", việc 2 ở "Việc của tôi"; demo_e2e_nv (không bị spec nào đăng xuất — bo-cuc đăng xuất demo_e2e_kl) thấy việc 1 ở "Việc của tôi" mục đang làm (không chờ xác nhận, không nút
-// Xác nhận), có tin giao, menu có Giao việc / Cần nghiệm thu. Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
+// Xác nhận), có tin giao, menu có Giao việc (Đợt D: không còn Cần nghiệm thu). Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
 import { NAP, moGiaoViec, nav } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
@@ -29,7 +29,7 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
 
   test('1. demo_e2e_cv: menu có Giao việc; biểu mẫu không ô Thay mặt / Người theo dõi, Owner chỉ chuyên viên; giao 2 việc một lượt từ văn bản X → DB: theo dõi = người giao, đã nhận tự động, tin tới Owner', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
-      await expect(p.locator('#navGiaoViec')).toHaveCount(1); await expect(p.locator('#navNghiemThu')).toHaveCount(1);
+      await expect(p.locator('#navGiaoViec')).toHaveCount(1); await expect(p.locator('#navNghiemThu')).toHaveCount(0);   // Đợt D: bỏ mục Cần nghiệm thu
       await moGiaoViec(p);
       await expect(p.locator('#klThThayMatWrap')).toBeHidden(); await expect(p.locator('#klThNguoiTheoDoiWrap')).toBeHidden();
       expect(await p.locator('#klThOwner optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual(['Chuyên viên']);

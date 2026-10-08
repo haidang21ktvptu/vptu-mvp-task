@@ -3,6 +3,7 @@
 // Không khớp / khớp nhiều → lỗi kèm danh sách chọn ở bước xem trước; người nhập chọn → lưu vào từ điển cho lần sau. Thuần (không DOM, không mạng).
 import { chuanChu } from './truong.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../thay-mat.js';
+import { MUC_QUAN_TRONG } from '../ma-nguon.js';
 
 export const LOAI_VB = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'], ['NQ_TW', 'Nghị quyết Trung ương'],
   ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác'], ['KL_BCH', 'Kết luận Ban Chấp hành Đảng bộ tỉnh'], ['NQ_BCH', 'Nghị quyết Ban Chấp hành Đảng bộ tỉnh']];   // 0087: thêm cuối (mẫu nhập giữ thứ tự cũ)
@@ -18,6 +19,7 @@ const BI_DANH = {
   tien_do: { 'da hoan thanh': 'HOAN_THANH', xong: 'HOAN_THANH', 'da xong': 'HOAN_THANH', 'hoan thanh': 'HOAN_THANH', 'dang thuc hien': 'DANG_THUC_HIEN',
     'dang lam': 'DANG_THUC_HIEN', 'chua hoan thanh': 'DANG_THUC_HIEN', 'chua thuc hien': 'DANG_THUC_HIEN', 'qua han': 'DANG_THUC_HIEN' },
   chat_luong: { 'khong dat': 'KHONG_DAT', 'xuat sac': 'DAT_XUAT_SAC', 'dat xuat sac': 'DAT_XUAT_SAC', tot: 'DAT_TOT', 'dat tot': 'DAT_TOT', dat: 'DAT' },
+  muc_quan_trong: { 'muc a': 'A', 'muc b': 'B', 'muc c': 'C', 'rat quan trong': 'A', 'quan trong': 'B', 'thong thuong': 'C', 'binh thuong': 'C' },   // 0093
 };
 // Kiểu trường → loại từ điển (khớp CHECK của tu_dien_nhap).
 export const LOAI_TU_DIEN = { loaiVanBan: 'loai_van_ban', donVi: 'don_vi', canBo: 'can_bo', lanhDao: 'can_bo', loaiThoiHan: 'loai_thoi_han', sanPham: 'san_pham', cap: 'cap',
@@ -111,6 +113,10 @@ export function chuanGiaTri(kieu, v, ctx, them = {}) {
     case 'linhVuc': return khopDanhMuc(v, (ctx.dm.linhVuc || []).filter((l) => !them.nganh || l.nganh_ma === them.nganh), td);
     case 'canBo': return khopCanBo(v, ctx.accounts || [], td, ctx.tenPhong || ((x) => x || ''));
     case 'lanhDao': return khopLanhDao(v, ctx.accounts || [], td, ctx.tenPhong || ((x) => x || ''));
+    // 0093: ba ô nguồn — không có từ điển (ô tuỳ chọn: không khớp thì bỏ giá trị, vẫn nhập dòng).
+    case 'mucQT': return khopDanhMuc(v, tuDs(MUC_QUAN_TRONG), null, BI_DANH.muc_quan_trong);
+    case 'coQuanTrinh': return khopDanhMuc(v, (ctx.dm.donVi || []).filter((d) => !d.trong_van_phong), null);
+    case 'thuongTruc': return khopCanBo(v, (ctx.accounts || []).filter((a) => a.role_group === 'A0'), null, ctx.tenPhong || ((x) => x || ''));
     default: { const s = String(v).replace(/\r\n?/g, '\n').trim(); return { ma: s, hien: s }; }
   }
 }

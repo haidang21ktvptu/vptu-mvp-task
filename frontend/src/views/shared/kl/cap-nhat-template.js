@@ -1,6 +1,8 @@
 // Modal cập nhật nhanh của người theo dõi / Owner (thiết kế 3.4, 6.8): đúng 7 cột guard 0015 cho phép. Nhãn trên ô nhập, một nút chính.
 // Đợt C1 v3.19 (0086; C2: ô đánh dấu "Việc đã hoàn thành — ghi kết quả" mở các ô): việc theo 1400 có thêm mục "Nộp minh chứng nhanh" ngay trong hộp — số hiệu + ngày văn bản là đủ (cấp nhận lấy theo việc
 // nếu để trống; trích yếu, mô tả kết quả không bắt buộc) — một nút Lưu ghi cả cập nhật lẫn minh chứng (nop_minh_chung là chốt).
+import { oTepHtml } from './minh-chung-tep.js';
+
 export const klCapNhatTemplate = `
 <div id="klCapNhatModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="klCnTieuDe">
   <form class="modal modal-rong" data-submit="luuKlCapNhat" novalidate>
@@ -42,10 +44,10 @@ export const klCapNhatTemplate = `
       <label for="klCnMinhChung" class="nhan">Minh chứng dạng chữ <span class="chu-phu">dữ liệu cũ: số hiệu, ngày văn bản hoặc đường dẫn — bắt buộc khi Hoàn thành</span></label>
       <input type="text" id="klCnMinhChung" class="o-nhap" placeholder="Ví dụ: Báo cáo số 15/BC-VPTU ngày 5/9/2026">
     </div>
-    <p id="klCnGhiChu1400" class="chu-phu mt-3 hidden">Nhiệm vụ theo quy tắc 1400: hoàn thành khi lãnh đạo nghiệm thu minh chứng — không chuyển Hoàn thành ở đây.</p>
+    <p id="klCnGhiChu1400" class="chu-phu mt-3 hidden">Nhiệm vụ theo quy tắc 1400: hoàn thành khi nộp minh chứng hợp lệ — đánh dấu "Việc đã hoàn thành — ghi kết quả" bên dưới.</p>
     <fieldset id="klCnMcWrap" class="khung-mc mt-3 hidden">
       <legend><label class="nhan-checkbox nhan"><input type="checkbox" id="klCnXong"> Việc đã hoàn thành — ghi kết quả</label></legend>
-      <p class="chu-phu" id="klCnXongGoiY">Đánh dấu khi đã có văn bản kết quả: ghi số hiệu + ngày (đủ để nộp minh chứng nhanh), lãnh đạo nghiệm thu thì việc hoàn thành.</p>
+      <p class="chu-phu" id="klCnXongGoiY">Đánh dấu khi đã có văn bản kết quả: ghi số hiệu + ngày (có thể kèm tệp) — Lưu là nhiệm vụ hoàn thành.</p>
       <div id="klCnMcTruong" class="hidden"><div class="cot-3">
         <div><label for="klCnMcSoHieu" class="nhan">Số hiệu văn bản</label><input type="text" id="klCnMcSoHieu" class="o-nhap" placeholder="Ví dụ: 15/BC-VPTU" autocomplete="off"></div>
         <div><label for="klCnMcNgay" class="nhan">Ngày văn bản</label><input type="date" id="klCnMcNgay" class="o-nhap"></div>
@@ -54,7 +56,8 @@ export const klCapNhatTemplate = `
       <div class="cot-2 mt-2">
         <div><label for="klCnMcTrichYeu" class="nhan">Trích yếu <span class="chu-phu">không bắt buộc</span></label><input type="text" id="klCnMcTrichYeu" class="o-nhap" maxlength="300" autocomplete="off"></div>
         <div><label for="klCnMcMoTa" class="nhan">Kết quả thực hiện <span class="chu-phu">không bắt buộc, ≤ 600 ký tự</span></label><input type="text" id="klCnMcMoTa" class="o-nhap" maxlength="600" placeholder="Đã làm gì, kết quả, gửi ai"></div>
-      </div></div>
+      </div>
+      ${oTepHtml('klCn')}</div>
     </fieldset>
     <div class="cot-2 mt-3">
       <div>

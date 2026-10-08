@@ -26,7 +26,7 @@ export async function taoViec(db, vbId, nhan, row = {}) {
   if (r.error) throw new Error(`Tạo việc mẫu "${nhan}" thất bại: ${r.error.message}`);
   return r.data;
 }
-// Minh chứng đang chờ nghiệm thu (nộp lúc chạy).
+// Minh chứng đang chờ xác nhận như dữ liệu nộp trước v3.20 (chèn bằng service_role, hop_le NULL; 0090: nộp qua app là hợp lệ ngay).
 export async function taoMinhChung(db, nvId, nopBoi, so) {
   const r = await db.from('minh_chung').insert({ nhiem_vu_id: nvId, loai: 'so_hieu', so_hieu: so, ngay_van_ban: homNay(), cap_nhan: 'TRUONG_PHONG',
     trich_yeu: 'Báo cáo kết quả (e2e PR-2b)', mo_ta_ket_qua: 'Đã tổng hợp và gửi lãnh đạo.', nop_boi: nopBoi }).select('id').single();
@@ -50,16 +50,24 @@ export async function voiPhien(browser, role, testInfo, fn) {
   const page = await moApp(browser, role, testInfo);
   try { return await fn(page); } finally { await page.context().close(); }
 }
-// PR-3: nghiệm thu ở màn "Cần nghiệm thu" = bấm Nghiệm thu → chọn chất lượng (BẮT BUỘC: nút xác nhận mờ tới khi chọn) → Xác nhận nghiệm thu.
-export async function nghiemThuMc(page, mc, chatLuong = 'DAT') {
-  await page.locator(`#nt-${mc}`).getByRole('button', { name: 'Nghiệm thu' }).click();
-  const f = page.locator(`#oNtCl-${mc}`); const nut = f.getByRole('button', { name: 'Xác nhận nghiệm thu' });
+// Đợt D v3.20 (0090): nộp minh chứng hợp lệ là hoàn thành; xem lại (tuỳ chọn) ở khối Minh chứng của ngăn chi tiết (đã mở bằng moViec):
+// Đánh giá chất lượng → chọn mức (nút Lưu mờ tới khi chọn) → Lưu đánh giá; Trả lại → lý do → Trả lại minh chứng; minh chứng nộp trước v3.20 còn
+// chờ: Xác nhận hợp lệ.
+export async function danhGiaMc(page, mc, chatLuong = 'DAT') {
+  await page.locator(`#mc-${mc}`).getByRole('button', { name: /^(Đánh giá chất lượng|Sửa đánh giá)$/ }).click();
+  const f = page.locator(`#mcDg-${mc}`); const nut = f.getByRole('button', { name: 'Lưu đánh giá' });
   await expect(nut).toBeDisabled();
   await f.locator('select[name="chat_luong"]').selectOption(chatLuong);
   await nut.click();
+  await expect(page.locator('#toastContainer')).toContainText('Đã lưu đánh giá chất lượng hoàn thành', NAP);
 }
-// Mở màn "Cần nghiệm thu" và chờ danh sách nạp xong.
-export async function moNghiemThu(page) {
-  await page.locator('#navNghiemThu').click();
-  await expect(page.locator('#ntDanhSach')).toHaveAttribute('data-nap', /./, NAP);
+export async function traLaiMc(page, mc, lyDo) {
+  await page.locator(`#mc-${mc}`).getByRole('button', { name: 'Trả lại', exact: true }).click();
+  await page.locator(`#mcBac-${mc} [name=ly_do]`).fill(lyDo);
+  await page.locator(`#mcBac-${mc}`).getByRole('button', { name: 'Trả lại minh chứng' }).click();
+  await expect(page.locator('#toastContainer')).toContainText('Đã trả lại minh chứng', NAP);
+}
+export async function xacNhanMcCu(page, mc) {
+  await page.locator(`#mc-${mc}`).getByRole('button', { name: 'Xác nhận hợp lệ' }).click();
+  await expect(page.locator('#toastContainer')).toContainText('Đã xác nhận minh chứng', NAP);
 }

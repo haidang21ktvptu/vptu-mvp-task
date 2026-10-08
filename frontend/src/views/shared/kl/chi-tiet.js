@@ -52,15 +52,17 @@ function capQuyetHtml(r) {
 }
 
 // Nút hành động trong ngăn (ẩn/hiện cho đẹp; hàm DB / policy là chốt).
-function hanhDongHtml(r) {
+function hanhDongHtml(r, nhanViec = []) {
   const mo = nhomCua(r.nhom_dem).mo;
   const nut = (action, nhan, lop = '', them = '') => `<button type="button" class="nut ${lop}" data-action="${action}" data-id="${r.id}" ${them}>${nhan}</button>`;
-  // 0077 (bỏ hạn nộp): mọi việc theo quy tắc 1400 chỉ hoàn thành khi lãnh đạo nghiệm thu; "Đóng nhiệm vụ" chỉ còn cho việc chuyển đổi (không theo 1400)
-  // hoặc khi đã có minh chứng được nghiệm thu mà việc chưa đóng (minh chứng không có ngày văn bản) — trigger bd_nhiem_vu_han_nop_mc là chốt.
+  // Đợt D (0090): việc theo quy tắc 1400 hoàn thành khi nộp minh chứng hợp lệ; "Đóng nhiệm vụ" chỉ còn cho việc chuyển đổi (không theo 1400)
+  // hoặc khi đã có minh chứng hợp lệ mà việc chưa đóng (minh chứng không có ngày văn bản) — trigger bd_nhiem_vu_han_nop_mc là chốt.
   const coMC = (r.so_minh_chung_hop_le || 0) > 0;
   const duocDongTay = !r.theo_1400 || r.minh_chung_buoc === 'DA_NGHIEM_THU';
   // Từ chối (0034): cạnh "Xác nhận đã nhận việc", chỉ khi chưa xác nhận và chưa có đề nghị chờ duyệt; lý do bắt buộc, chỉ cấp duyệt và cấp trên đọc.
-  const tuChoi = laBenTrong(r) && mo && !r.toi_da_xac_nhan && !r.tu_choi_cho; // chính tôi chưa nhận
+  // Đợt D (0090–0091): lãnh đạo được ghi "đã nhận" tự động nhưng vẫn đề nghị từ chối được (de_nghi_tu_choi bỏ qua dòng nhận tự động; tự bấm nhận rồi thì thôi).
+  const nhanTay = nhanViec.some((l) => l.nguoi_sua === state.user?.id && !/^tự động/.test(l.gia_tri_moi || ''));
+  const tuChoi = laBenTrong(r) && mo && !r.bi_tu_choi && !r.tu_choi_cho && (!r.toi_da_xac_nhan || (['A1', 'A2'].includes(state.user?.role_group) && !nhanTay));
   // Giao tiếp xuống (v8 đợt 4): chủ trì hoặc người theo dõi của việc chưa hoàn thành, và vai được giao việc (A1/A2/quan_tri_kl; 0085: cả chuyên viên —
   // chuyên viên chủ trì tách việc được giao thành việc con cho chuyên viên khác; giao_viec là chốt).
   const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2', 'A3'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
@@ -74,7 +76,7 @@ function hanhDongHtml(r) {
     ${nutHanhDongTang(r)}
     <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
-      <small>Lý do chỉ lãnh đạo trực tiếp và cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
+      <small>Lý do chỉ người xử lý đề nghị (người giao việc) và lãnh đạo cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
       <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
       <button type="submit" class="nut chinh">Gửi đề nghị</button><button type="button" class="nut" data-action="dongO" data-o="oTcNgan-${r.id}">Huỷ</button></form>` : ''}`;
 }
@@ -96,13 +98,13 @@ export function chiTietHtml(r, ls, dc) {
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
         <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
       <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
-        ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
+        ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
         ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}
         ${o('Hạn hoàn thành', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
         ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'), 'cap_nhan_san_pham')}
         ${oLuoiPr3Html(r, o)}${oLuoiNguonHtml(r, o)}</dl>
-      ${hanhDongHtml(r)}
+      ${hanhDongHtml(r, nhanViec)}
       ${khoiDeNghiSuaHtml(r)}
       ${khoiPr3Html(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>

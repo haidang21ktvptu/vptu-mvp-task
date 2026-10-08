@@ -1,7 +1,7 @@
 // PQ-2 — hai đường ghi trực tiếp .from() còn lại của frontend (UPDATE nhiem_vu "Cập nhật nhanh" — lib/kl/du-lieu.js; INSERT direct_messages
 // — features/messages/chat.js) và ghi thẳng các bảng chỉ-đọc-qua-hàm (tu_choi, canh_bao, chi_dao_da_doc, nhat_ky_he_thong, dm_cap, dm_san_pham):
-// vai không được phép không ghi được. N10: A1/A2 không phải Owner/theo dõi, A0, thư ký TT, QTHT → UPDATE nhiem_vu 0 dòng (RLS lọc);
-// Owner ghi được 1 dòng, quan_tri_kl ghi được (đối chứng). N8: INSERT/UPDATE/DELETE thẳng 6 bảng bị chặn với MỌI vai kể cả quan_tri_kl và A0.
+// vai không được phép không ghi được. N10: thư ký TT, QTHT, lãnh đạo ngoài phạm vi → UPDATE nhiem_vu 0 dòng (RLS lọc); Owner ghi được 1 dòng,
+// quan_tri_kl ghi được (đối chứng); Đợt D (0091): lãnh đạo trong phạm vi (CVP, PCVP phụ trách, Trưởng phòng, A0) cập nhật thay được. N8: INSERT/UPDATE/DELETE thẳng 6 bảng bị chặn với MỌI vai kể cả quan_tri_kl và A0.
 // Khoá dữ liệu: "KL-PQ2" trong noi_dung / content; tự dọn. Ca độc lập (bị chặn / 0 dòng) chạy songSong giới hạn 4 (D3, PR-2a).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,13 +38,17 @@ describe('PQ-2 — ghi trực tiếp bảng: UPDATE nhiem_vu, INSERT direct_mess
   });
   after(don);
 
-  test('1. UPDATE nhiem_vu (Cập nhật nhanh) bởi CVP, PCVP, Trưởng phòng không phải Owner/theo dõi, A0, thư ký TT, QTHT → 0 dòng; anon bị chặn', async () => {
-    const VAI_0 = ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_a0', TK.username, 'demo_qtht'];
+  test('1. UPDATE nhiem_vu (Cập nhật nhanh) bởi thư ký TT, QTHT, PCVP ngoài phạm vi → 0 dòng; anon bị chặn; (Đợt D) lãnh đạo trong phạm vi → 1 dòng', async () => {
+    const VAI_0 = [TK.username, 'demo_qtht', 'demo_pcvp2'];
     const kq = await songSong([...VAI_0.map((u) => () => capNhat(u, { ghi_chu: `${KHOA} ${u}` })),
       () => anonClient().from('nhiem_vu').update({ ghi_chu: 'x' }).eq('id', nvId).select('id')]);
     VAI_0.forEach((u, i) => assertNoRows(kq[i], `${u} UPDATE nhiem_vu`));
     assertDenied(kq[VAI_0.length], 'anon UPDATE nhiem_vu');
     assert.equal((await db().from('nhiem_vu').select('ghi_chu').eq('id', nvId).single()).data.ghi_chu, null, 'ghi_chu không đổi');
+    for (const u of ['demo_truongphong', 'demo_pcvp', 'demo_cvp', 'demo_a0']) {   // tuần tự: cùng một dòng
+      const r = await capNhat(u, { ghi_chu: `${KHOA} ${u}` }); assertOk(r, `${u} cập nhật`); assert.equal(r.data.length, 1, `${u}: lãnh đạo trong phạm vi cập nhật thay`);
+    }
+    assert.equal((await db().from('nhiem_vu').select('ghi_chu').eq('id', nvId).single()).data.ghi_chu, `${KHOA} demo_a0`);
   });
 
   test('2. Đối chứng: Owner (cv1) sửa cột trong allowlist → 1 dòng; quan_tri_kl (cv2, khác phòng) sửa được', async () => {

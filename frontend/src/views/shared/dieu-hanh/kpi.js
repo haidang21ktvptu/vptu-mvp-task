@@ -43,9 +43,10 @@ export function kpiSapHan() {
   const n = dh.rows.filter((r) => r.nhom_dem === 'SAP_DEN_HAN').length;
   return { lop: 'vang', loc: JSON.stringify({ nhom: 'SAP_DEN_HAN' }), action: 'moKlDanhSach', so: n, nhan: 'việc sắp đến hạn', phu: n ? 'bấm để xem danh sách và nhắc' : 'không có việc nào sắp đến hạn' };
 }
-// Minh chứng chờ xác nhận (A1/A2).
+// Kết quả nộp trong 7 ngày (A1/A2 — Đợt D 0090: nộp là hoàn thành): số việc; bấm mở danh sách — đánh giá / trả lại ở khối cuối trang, không bắt buộc.
 export function kpiMinhChung() {
-  return { lop: 'lam', loc: 'mc', so: dh.mcCho.length, nhan: 'minh chứng đã nộp, chờ xác nhận', phu: dh.mcCho.length ? 'xác nhận bằng một bấm ở cuối trang' : '' };
+  const n = new Set(dh.mcCho.map((m) => m.nhiem_vu_id)).size;
+  return { lop: 'lam', loc: JSON.stringify({ ketQuaMoi: true }), action: 'moKlDanhSach', so: n, nhan: 'việc có kết quả nộp trong 7 ngày', phu: n ? 'bấm để xem; đánh giá hoặc trả lại nếu chưa đạt (không bắt buộc)' : '' };
 }
 
 export const kpiHtml = (ds) => ds.map(o).join('');

@@ -5,6 +5,9 @@
 // GIAO_LAI hoặc giao lại cho Owner khác; canh_bao_quet nhắc cấp duyệt quá 2 ngày làm việc theo ngày Việt Nam (mốc 18h UTC); A0 nhắn 1-1;
 // PCVP đề nghị → Chánh VP duyệt; Chánh VP đề nghị → Thường trực, BẤT KỲ A0 nào duyệt được; việc đã đồng ý từ chối không đề nghị lại.
 // Mã NV-T92…T97 + một tài khoản A0 tạm (kl0034_a0b), tự dọn.
+// Đợt D (0090–0091): cấp xử lý = NGƯỜI TẠO VIỆC (người nhập / giao) trước, rồi người được thay mặt, rồi lãnh đạo trực tiếp như cũ; phía giao việc
+// (người tạo, người được thay mặt, nhóm thay mặt, lãnh đạo cấp trên của người giao trong phạm vi) xử lý được; lãnh đạo không bị nhắc; lãnh đạo
+// "đã nhận" tự động vẫn đề nghị từ chối được.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, anonClient, userClient, assertOk, assertDenied, assertNoRows, IDS, EMAIL_DOMAIN, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
@@ -59,11 +62,11 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
     t0 = new Date().toISOString();
     await songSong([   // sáu việc độc lập (mã cố định) — songSong giới hạn 4 (D3)
       () => them({ ma: 'NV-T92', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.truongphong }), // Trưởng phòng giao
-      () => them({ ma: 'NV-T93', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2, tao_boi: IDS.qtht }),      // phòng Quản trị chưa có A2 → PCVP2
-      () => them({ ma: 'NV-T94', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.qtht }),      // giao thay mặt (quản trị)
+      () => them({ ma: 'NV-T93', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2, tao_boi: null }),          // không rõ người giao; phòng Quản trị chưa có A2 → PCVP2
+      () => them({ ma: 'NV-T94', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.qtht }),      // quản trị nhập việc (0091: cấp xử lý)
       () => them({ ma: 'NV-T95', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.truongphong }),
       () => them({ ma: 'NV-T96', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.pcvp, tao_boi: IDS.cvp }),   // PCVP theo dõi, Chánh VP giao
-      () => them({ ma: 'NV-T97', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cvp, tao_boi: IDS.qtht })]);  // Chánh VP theo dõi
+      () => them({ ma: 'NV-T97', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cvp, tao_boi: IDS.a0 })]);   // Thường trực giao, Chánh VP theo dõi
     a0b = await taoA0B();
   });
   after(don);
@@ -81,29 +84,29 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
     assertLoi(await rpc('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T92'], p_ly_do: 'lần hai' }), 'một đề nghị chờ duyệt mỗi việc');
   });
 
-  test('2. Cấp duyệt = lãnh đạo trực tiếp: A3 → Trưởng phòng cùng phòng; người giao thay mặt không phải cấp duyệt, chỉ nhận tin; phòng không có A2 → PCVP phụ trách', async () => {
+  test('2. Cấp xử lý (0091) = người tạo việc: Trưởng phòng giao → Trưởng phòng; quản trị nhập → quản trị (nhận tin, lãnh đạo trực tiếp không); không rõ người giao → lãnh đạo trực tiếp (phòng không có A2 → PCVP phụ trách)', async () => {
     const t = (await db().from('tu_choi').select('*').eq('id', tc92).single()).data;
     assert.equal(t.cap_duyet, IDS.truongphong, 'cấp duyệt NV-T92 là Trưởng phòng Tổng hợp'); assert.equal(t.trang_thai, 'CHO_DUYET');
     const r94 = await rpc('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T94'], p_ly_do: LY_DO });
     assertOk(r94, 'cv1 đề nghị NV-T94 (giao thay mặt)'); tc94 = r94.data;
     const t94 = (await db().from('tu_choi').select('cap_duyet').eq('id', tc94).single()).data;
-    assert.equal(t94.cap_duyet, IDS.truongphong, 'người giao thay mặt (quản trị) KHÔNG là cấp duyệt');
+    assert.equal(t94.cap_duyet, IDS.qtht, '0091: người nhập việc (quản trị) là cấp xử lý');
     const [tQt, tTp, tCv1] = await Promise.all([tin(IDS.qtht, 'NV-T94'), tin(IDS.truongphong, 'NV-T94'), tin(IDS.cv1, 'NV-T94')]);
-    assert.equal(tQt.length, 1, 'người giao thay mặt nhận tin đề nghị');
-    assert.equal(tTp.length, 1, 'cấp duyệt nhận tin đề nghị');
+    assert.equal(tQt.length, 1, 'cấp xử lý nhận tin đề nghị');
+    assert.equal(tTp.length, 0, 'lãnh đạo trực tiếp không phải người giao: không nhận tin');
     assert.equal(tCv1.length, 0, 'người đề nghị không tự nhận tin');
     const r93 = await rpc('demo_cv2', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T93'], p_ly_do: LY_DO });
     assertOk(r93, 'cv2 đề nghị NV-T93'); tc93 = r93.data;
     assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', tc93).single()).data.cap_duyet, IDS.pcvp2, 'phòng Quản trị chưa có A2 → PCVP phụ trách duyệt');
   });
 
-  test('3. Riêng tư lý do: người đề nghị, cấp duyệt, PCVP phụ trách, Chánh VP, A0 đọc; cv2, PCVP2, quản trị (người giao thay mặt) không; lich_su và tin không chứa lý do', async () => {
+  test('3. Riêng tư lý do: người đề nghị, cấp duyệt, PCVP phụ trách, Chánh VP, A0 đọc; cv2, PCVP2, quản trị (không phải cấp xử lý) không; lich_su và tin không chứa lý do', async () => {
     // Đọc theo vai — độc lập, songSong giới hạn 4 (D3).
     const THAY = ['demo_cv1', 'demo_truongphong', 'demo_pcvp', 'demo_cvp', 'demo_a0']; const KHONG = ['demo_cv2', 'demo_pcvp2', 'demo_qtht'];
     const kq = await songSong([...[...THAY, ...KHONG].map((u) => () => docTuChoi(u, tc92)), () => docTuChoi('demo_qtht', tc94)]);
     THAY.forEach((u, i) => { const r = kq[i]; assertOk(r, `${u} đọc tu_choi`); assert.equal(r.data.length, 1, `${u} thấy đề nghị`); assert.equal(r.data[0].ly_do, LY_DO); });
     KHONG.forEach((u, i) => assertNoRows(kq[THAY.length + i], `${u} không đọc được đề nghị của cv1`));
-    assertNoRows(kq[THAY.length + KHONG.length], 'người giao thay mặt không đọc được lý do dù nhận tin');
+    const q94 = kq[THAY.length + KHONG.length]; assertOk(q94, 'quản trị đọc tc94'); assert.equal(q94.data.length, 1, '0091: cấp xử lý tc94 (người nhập việc) đọc được lý do');
     const ls = (await db().from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', id['NV-T92']).eq('cot', 'tu_choi')).data;
     assert.equal(ls.length, 1, 'lich_su có đúng một dòng đề nghị'); assert.match(ls[0].gia_tri_moi, /đề nghị từ chối/); assert.doesNotMatch(ls[0].gia_tri_moi, /riêng tư/);
     for (const t of await tin(IDS.truongphong, 'NV-T92')) assert.doesNotMatch(t.content, /riêng tư/, 'tin hệ thống không kèm lý do');
@@ -112,8 +115,8 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
   });
 
   test('4. Chỉ cấp duyệt duyệt; đồng ý → bi_tu_choi, khau BI_TU_CHOI ưu tiên đầu (nhom TU_CHOI khi chưa Đỏ); tin cho người đề nghị; duyệt lại bị chặn', async () => {
-    const chan = [['demo_cv1', tc92, 'người đề nghị tự duyệt'], ['demo_pcvp', tc92, 'cấp trên (không phải cấp duyệt) duyệt'], ['demo_a0', tc92, 'A0 duyệt'],
-      ['demo_qtht', tc94, 'người giao thay mặt duyệt']];
+    const chan = [['demo_cv1', tc92, 'người đề nghị tự duyệt'], ['demo_pcvp2', tc92, 'PCVP ngoài phạm vi duyệt'], ['demo_cv2', tc92, 'chuyên viên khác duyệt'],
+      ['demo_e2e_kl', tc94, 'chuyên viên cùng phòng (không phải người giao) duyệt tc94']];
     (await songSong(chan.map(([u, tc]) => () => rpc(u, 'duyet_tu_choi', { p_id: tc, p_dong_y: true })))).forEach((r, i) => assertDenied(r, chan[i][2]));   // bị chặn, độc lập (D3)
     await db().from('nhiem_vu').update({ cap_quyet_dinh: 'TRUONG_PHONG' }).eq('id', id['NV-T92']); // khâu CHO_QUYET sẽ thua BI_TU_CHOI
     assertOk(await rpc('demo_truongphong', 'duyet_tu_choi', { p_id: tc92, p_dong_y: true, p_y_kien: 'Đồng ý, sẽ giao người khác' }), 'Trưởng phòng đồng ý');
@@ -133,7 +136,7 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
   });
 
   test('5. Không đồng ý → giữ nguyên (cờ tắt, việc tiếp tục); người đề nghị nhận tin kèm ý kiến', async () => {
-    assertOk(await rpc('demo_truongphong', 'duyet_tu_choi', { p_id: tc94, p_dong_y: false, p_y_kien: 'Việc thuộc chuyên môn đồng chí' }), 'không đồng ý');
+    assertOk(await rpc('demo_qtht', 'duyet_tu_choi', { p_id: tc94, p_dong_y: false, p_y_kien: 'Việc thuộc chuyên môn đồng chí' }), 'người nhập việc không đồng ý');
     assert.equal((await nv('NV-T94')).bi_tu_choi, false);
     assert.equal((await db().from('tu_choi').select('trang_thai').eq('id', tc94).single()).data.trang_thai, 'KHONG_DONG_Y');
     assert.equal((await tin(IDS.cv1, 'NV-T94')).filter((x) => /không đồng ý.*chuyên môn/.test(x.content)).length, 1);
@@ -157,21 +160,26 @@ describe('0034 — từ chối nhận việc: đề nghị, cấp duyệt, riên
     const q2 = await db().rpc('canh_bao_quet', { p_ngay: '2026-09-16' }); assertOk(q2, 'quét 16/9');
     assert.equal(q2.data.gui.TU_CHOI, 1, '16/9 nhắc một đề nghị');
     const nhac = (await tin(IDS.pcvp2, 'NV-T93')).filter((x) => /chờ duyệt/.test(x.content));
-    assert.equal(nhac.length, 1, 'cấp duyệt nhận tin nhắc'); assert.doesNotMatch(nhac[0].content, /riêng tư/, 'tin nhắc không kèm lý do');
+    assert.equal(nhac.length, 0, '0091: cấp duyệt là lãnh đạo (PCVP) — không bị nhắc');
+    const cb = (await db().from('canh_bao').select('nguoi_nhan').eq('nhiem_vu_id', id['NV-T93']).eq('muc', 'TU_CHOI')).data;
+    assert.deepEqual(cb.map((x) => x.nguoi_nhan), [[]], 'vẫn ghi một dòng cảnh báo (chống lặp), không người nhận');
     const q3 = await db().rpc('canh_bao_quet', { p_ngay: '2026-09-16' }); assertOk(q3, 'quét lại');
     assert.equal(q3.data.gui.TU_CHOI, 0, 'cùng chu kỳ không nhắc lại');
     assertOk(await rpc('demo_pcvp2', 'duyet_tu_choi', { p_id: tc93, p_dong_y: true }), 'PCVP2 duyệt NV-T93');
   });
 
-  test('9. PCVP đề nghị → cấp duyệt là Chánh VP; Chánh VP đề nghị → Thường trực, A0 thứ hai (không phải cap_duyet ghi) vẫn duyệt được', async () => {
+  test('9. (lãnh đạo "đã nhận" tự động vẫn đề nghị được) PCVP đề nghị → Chánh VP (người giao); Chánh VP đề nghị → Thường trực (người giao), A0 thứ hai vẫn duyệt được', async () => {
+    const tuDong = (await db().from('lich_su').select('nguoi_sua, gia_tri_moi').in('nhiem_vu_id', [id['NV-T96'], id['NV-T97']]).eq('cot', 'xac_nhan_nhan_viec')).data;
+    assert.deepEqual(tuDong.map((x) => x.nguoi_sua).sort(), [IDS.cvp, IDS.pcvp].sort(), '0090: lãnh đạo theo dõi được ghi đã nhận tự động');
+    assert.ok(tuDong.every((x) => /^tự động/.test(x.gia_tri_moi)));
     const r96 = await rpc('demo_pcvp', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T96'], p_ly_do: LY_DO }); assertOk(r96, 'PCVP đề nghị');
     assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', r96.data).single()).data.cap_duyet, IDS.cvp, 'PCVP → Chánh VP duyệt');
     const r97 = await rpc('demo_cvp', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T97'], p_ly_do: LY_DO }); assertOk(r97, 'Chánh VP đề nghị');
     const t97 = (await db().from('tu_choi').select('cap_duyet').eq('id', r97.data).single()).data;
-    assert.equal((await db().from('accounts').select('role_group').eq('id', t97.cap_duyet).single()).data.role_group, 'A0', 'Chánh VP → Thường trực duyệt');
+    assert.equal(t97.cap_duyet, IDS.a0, 'Chánh VP → Thường trực (người giao) duyệt');
     assert.notEqual(t97.cap_duyet, a0b, 'cấp duyệt ghi là A0 khác tài khoản tạm');
     assertDenied(await rpc('demo_pcvp2', 'duyet_tu_choi', { p_id: r97.data, p_dong_y: true }), 'PCVP không duyệt đề nghị của Chánh VP');
-    assertDenied(await rpcA0B('duyet_tu_choi', { p_id: r96.data, p_dong_y: true }), 'A0 không duyệt thay Chánh VP (cấp duyệt không phải A0)');
+    assertDenied(await rpc('demo_pcvp2', 'duyet_tu_choi', { p_id: r96.data, p_dong_y: true }), 'PCVP (cấp dưới người giao — Chánh VP) không duyệt');
     assertOk(await rpcA0B('duyet_tu_choi', { p_id: r97.data, p_dong_y: true, p_y_kien: 'Thường trực B duyệt' }), 'A0 thứ hai duyệt đề nghị của Chánh VP');
     assert.equal((await nv('NV-T97')).bi_tu_choi, true);
     assert.equal((await tin(IDS.cvp, 'NV-T97')).filter((x) => /Thường trực B duyệt/.test(x.content)).length, 1, 'Chánh VP nhận tin duyệt');

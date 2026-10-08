@@ -86,7 +86,7 @@ const formVuongMac = (r) => `<form class="o" id="oVmThe-${r.id}" data-submit="lu
     <input name="vuong_mac" maxlength="500" value="${escapeHtml(r.vuong_mac || '')}" placeholder="Vướng mắc / đề nghị lãnh đạo quyết định" aria-label="Vướng mắc / đề nghị lãnh đạo quyết định">
     <button type="submit" class="nut chinh">Lưu</button>${huy(`oVmThe-${r.id}`)}</form>`;
 const formTuChoi = (r) => `<form class="o" id="oTc-${r.id}" data-submit="deNghiTuChoiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
-    <small>Lý do chỉ lãnh đạo trực tiếp và cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
+    <small>Lý do chỉ người xử lý đề nghị (người giao việc) và lãnh đạo cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
     <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
     <button type="submit" class="nut chinh">Gửi đề nghị</button>${huy(`oTc-${r.id}`)}</form>`;
 
@@ -99,7 +99,7 @@ function theViec(r, kieu, homNay) {
   const lop = kieu === 'minh-chung' && r.muc_canh_bao !== 'VANG' ? 'do' : '';
   const nopMc = r.minh_chung_buoc === 'BI_TRA_LAI' && !choNghiemThu(r) ? 'minh chứng bị trả lại — nộp lại trước hạn, ' : '';   // 0077: không còn hạn nộp riêng
   const han = r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)}${kieu === 'minh-chung' ? ` (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : ''}` : 'chưa có hạn';
-  const dau = `<p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}${choNghiemThu(r) ? ' <span class="nhan-trung-tinh">Đã nộp — chờ nghiệm thu</span>' : ''}, ${nopMc}${han}${r.so_ket_luan && kieu === 'moi' ? `, ${escapeHtml(r.so_ket_luan)}` : ''}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>`;
+  const dau = `<p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}${choNghiemThu(r) ? ' <span class="nhan-trung-tinh">Đã nộp — chờ xác nhận</span>' : ''}, ${nopMc}${han}${r.so_ket_luan && kieu === 'moi' ? `, ${escapeHtml(r.so_ket_luan)}` : ''}${r.san_pham_ten ? ` · sản phẩm: ${escapeHtml(r.san_pham_ten)}` : ''} ${nhanPhuHtml(r)}</p>`;
   const kq = ketQuaTuChoi(r);
   const kqHtml = kq ? `<p class="chu-canh-bao-inline" data-ket-qua="${kq.t.trang_thai}">${escapeHtml(kq.chu)}</p>` : '';
   if (kieu === 'moi') {

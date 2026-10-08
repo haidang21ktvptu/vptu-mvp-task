@@ -6,10 +6,10 @@ import { soNgay } from './ngay.js';
 export const NHOM = {
   QUA_HAN:        { ten: 'Quá hạn',                     lop: 'do',   stat: 's-do',   thuTu: 2, mo: true },
   // PR-2b (0058): dòng 5 — đã nộp minh chứng, quá hạn ở bước NGHIỆM THU (chậm tính cho lãnh đạo nghiệm thu, không cho người nộp — Mới 2)
-  QUA_HAN_NGHIEM_THU: { ten: 'Quá hạn ở bước nghiệm thu', lop: 'do', stat: 's-do', thuTu: 2.5, mo: true },
+  QUA_HAN_NGHIEM_THU: { ten: 'Quá hạn, chờ xác nhận minh chứng', lop: 'do', stat: 's-do', thuTu: 2.5, mo: true },
   DANG_DINH_CHINH:{ ten: 'Quá hạn — đang đính chính',   lop: 'vang', stat: 's-vang', thuTu: 3, mo: true },
   SAP_DEN_HAN:    { ten: 'Sắp đến hạn',                 lop: 'vang', stat: 's-vang', thuTu: 4, mo: true },
-  CHO_NGHIEM_THU: { ten: 'Chờ nghiệm thu',              lop: 'lam',  stat: 's-lam',  thuTu: 4.5, mo: true },
+  CHO_NGHIEM_THU: { ten: 'Chờ xác nhận minh chứng',     lop: 'lam',  stat: 's-lam',  thuTu: 4.5, mo: true },
   CAN_DIEN_HAN:   { ten: 'Cần điền hạn',                lop: 'vang', stat: 's-vang', thuTu: 5, mo: true },
   DANG_THUC_HIEN: { ten: 'Đang thực hiện',              lop: 'lam',  stat: 's-lam',  thuTu: 6, mo: true },
   CHO_DIEU_KIEN:  { ten: 'Chờ điều kiện',               lop: '',     stat: '',       thuTu: 7, mo: true },
@@ -43,7 +43,7 @@ export const KHAU = {
   CHO_QUYET:      { ten: 'Chờ cấp trên quyết',        phu: 'đã trình, chưa có ý kiến',  mau: 'cam' },
   CHUA_SAN_PHAM:  { ten: 'Chưa có sản phẩm',          phu: 'đang làm, đã quá hạn',      mau: 'cam' },
   CHO_MINH_CHUNG: { ten: 'Việc Đỏ chờ xác nhận minh chứng', phu: 'đã nộp, chờ Văn phòng',     mau: 'lam' },
-  CHO_NGHIEM_THU: { ten: 'Chờ lãnh đạo nghiệm thu',   phu: 'đã nộp, quá hạn ở bước nghiệm thu', mau: 'lam' },
+  CHO_NGHIEM_THU: { ten: 'Chờ xác nhận minh chứng',   phu: 'nộp trước v3.20, quá hạn chưa xác nhận', mau: 'lam' },
   CHUA_NHAN:      { ten: 'Chưa nhận việc',            phu: 'giao rồi, chưa xác nhận',   mau: 'cam' },
 };
 export const THU_TU_KHAU = Object.keys(KHAU);
@@ -51,10 +51,10 @@ export const tenKhau = (ma) => KHAU[ma]?.ten || ma || '';
 
 // Nhãn trạng thái đầy đủ cho một dòng v_nhiem_vu: "Quá hạn · 30 ngày", "Cần điền hạn · 290 ngày", "Hoàn thành đúng hạn"…
 export function nhanTrangThai(r, me) {
-  if (laBenNop(r, me)) return 'Đã nộp — chờ nghiệm thu';
+  if (laBenNop(r, me)) return 'Đã nộp — chờ xác nhận';   // chỉ minh chứng nộp trước v3.20 (0090: nộp là hoàn thành)
   switch (r.nhom_dem) {
-    case 'QUA_HAN_NGHIEM_THU': return `Quá hạn ở bước nghiệm thu · ${r.so_ngay_qua} ngày`;
-    case 'CHO_NGHIEM_THU': return 'Cần nghiệm thu';
+    case 'QUA_HAN_NGHIEM_THU': return `Quá hạn, chờ xác nhận minh chứng · ${r.so_ngay_qua} ngày`;
+    case 'CHO_NGHIEM_THU': return 'Chờ xác nhận minh chứng';
     case 'QUA_HAN': return `Quá hạn · ${r.so_ngay_qua} ngày`;
     case 'DANG_DINH_CHINH': return `Quá hạn · ${r.so_ngay_qua} ngày · đang đính chính`;
     case 'CAN_DIEN_HAN': return `Cần điền hạn · ${r.tuoi_ngay} ngày tuổi`;
@@ -79,13 +79,14 @@ export const TEN_COT = {
   san_pham_loai: 'Loại sản phẩm', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
   ngay_nhan_van_ban: 'Ngày giao nhiệm vụ', ngay_nhan_uoc_tinh: 'Ngày giao ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
   xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng', tu_choi: 'Từ chối nhận việc', bi_tu_choi: 'Bị từ chối, chờ giao lại',
-  minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận minh chứng', dong_nhiem_vu: 'Đóng nhiệm vụ',
+  minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận / trả lại minh chứng', dong_nhiem_vu: 'Hoàn thành nhiệm vụ',
   giao_thay_mat: 'Giao thay mặt', giao_viec: 'Giao việc', canh_bao: 'Cảnh báo', do_khan: 'Độ khẩn', uu_tien: 'Ưu tiên', giao_thay_mat_cho: 'Giao thay mặt cho',
   han_nop_minh_chung: 'Hạn nộp minh chứng (đã bỏ từ 3.17)', ly_do_han_nop_sat: 'Lý do việc gấp (hạn nộp sát — đã bỏ)', han_nop_minh_chung_ly_do: 'Đổi hạn nộp minh chứng (đã bỏ)',
   chat_luong: 'Chất lượng hoàn thành', nguon_nhiem_vu_ma: 'Nguồn nhiệm vụ', vuong_mac: 'Vướng mắc / đề nghị lãnh đạo quyết định',
   sua_thong_tin_giao: 'Sửa thông tin giao', de_nghi_sua: 'Đề nghị sửa', nhap_excel: 'Nhập Excel',
   don_vi_phoi_hop: 'Đơn vị phối hợp', van_ban_ra_soat: 'Rà soát văn bản (số nhiệm vụ dự kiến)',
   muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
+  tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển người theo dõi',   // 0090, 0092
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 

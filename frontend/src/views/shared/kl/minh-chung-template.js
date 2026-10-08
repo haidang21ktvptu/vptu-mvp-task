@@ -1,6 +1,8 @@
 // Hai hộp của GĐ16 (MC-3, MC-4): "Nộp minh chứng" có cấu trúc (v8 đợt 4: số hiệu, ngày, cấp nhận + trích yếu + mô tả kết quả ≤ 600 ký tự) và "Đóng nhiệm vụ"
-// (ngày hoàn thành gợi ý = ngày văn bản của minh chứng hợp lệ mới nhất, sửa được). Không có ô tệp (CH-6 = B, chờ kinh phí).
+// (việc chuyển đổi cũ; ngày hoàn thành gợi ý = ngày văn bản của minh chứng hợp lệ mới nhất, sửa được). Đợt D v3.20: ô tệp (kho "minh-chung", ≤ 10 MB)
+// + tự điền gợi ý từ tệp (minh-chung-tep.js); nộp minh chứng hợp lệ là hoàn thành nhiệm vụ (0090).
 import { oChonChatLuongHtml } from '../chat-luong.js';
+import { oTepHtml } from './minh-chung-tep.js';
 
 export const klMinhChungTemplate = `
 <div id="klMcModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="klMcTieuDe">
@@ -8,7 +10,8 @@ export const klMinhChungTemplate = `
     <h2 id="klMcTieuDe" class="modal-tieu-de">Nộp minh chứng</h2>
     <p id="klMcMoTa" class="chu-phu mt-1 mb-4"></p>
     <input type="hidden" id="klMcId">
-    <div>
+    ${oTepHtml('klMc')}
+    <div class="mt-3">
       <label for="klMcSoHieu" class="nhan">Số hiệu văn bản</label>
       <input type="text" id="klMcSoHieu" class="o-nhap" placeholder="Ví dụ: 15/BC-VPTU" autocomplete="off">
     </div>
@@ -31,7 +34,7 @@ export const klMinhChungTemplate = `
       <textarea id="klMcMoTaKq" class="o-nhap" rows="4" placeholder="Đã làm gì, kết quả ra sao, đã gửi tới ai…"></textarea>
       <p class="chu-phu mt-1"><span id="klMcDem">0</span>/600 ký tự</p>
     </div>
-    <p class="chu-phu mt-3">Số hiệu và ngày văn bản bắt buộc (tra được trên V-Office); cấp nhận để trống = theo việc; trích yếu, mô tả kết quả nên ghi để lãnh đạo nghiệm thu nhanh. Tệp đính kèm chưa nhận (chờ điều kiện kinh phí).</p>
+    <p class="chu-phu mt-3">Số hiệu và ngày văn bản bắt buộc (tra được trên V-Office); cấp nhận để trống = theo việc. Nộp xong là nhiệm vụ hoàn thành (ngày hoàn thành = ngày văn bản) — người giao việc, lãnh đạo xem được kết quả và trả lại nếu chưa đạt.</p>
     <div class="modal-chan">
       <button type="button" data-action="closeMinhChung" class="nut">Huỷ</button>
       <button type="submit" id="klMcLuu" class="nut chinh">Nộp minh chứng</button>

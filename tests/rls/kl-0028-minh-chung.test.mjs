@@ -3,6 +3,8 @@
 // dong_nhiem_vu (chặn khi không có minh chứng hợp lệ, ngày mặc định = ngày văn bản mới nhất, lead time); việc theo_1400 không đóng
 // bằng chữ; chữ cũ (chu_cu) hợp lệ; cờ thieu_minh_chung tính lại; tách số hiệu/ngày; kiểm ngày với cận dưới NULL; múi giờ. Mã NV-T6x, tự dọn.
 // PR-2b (0057): xác nhận hợp lệ = NGHIỆM THU và đóng việc cùng giao dịch (Q2). 0077: trả lại chỉ cần lý do (không còn hạn nộp lại).
+// Đợt D (0089–0091): lãnh đạo trong phạm vi nộp được; nộp minh chứng hợp lệ = hoàn thành (hop_le true, không người xác nhận); xem lại tuỳ chọn =
+// trả lại (minh chứng hợp lệ cuối cùng ⇒ việc mở lại) hoặc đánh giá chất lượng.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, songSong, homNayVN, CHI_CUC_BO } from './lib.mjs';
@@ -52,8 +54,9 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
 
   test('2. nop_minh_chung: người ngoài chặn; thiếu số hiệu / ngày, cấp sai, ngày ngoài khoảng bị chặn (0086: cấp nhận trống = theo việc; trích yếu, mô tả tuỳ chọn); Owner nộp được → dòng + lịch sử + tin', async () => {
     // Mười ca bị chặn độc lập (không ghi gì) — songSong giới hạn 4 (D3). [người, việc, tham số, null = 42501 | regex lỗi, nhãn]
-    const CA = [['demo_cv2', 'NV-T61', {}, null, 'A3 không phải Owner/theo dõi'], ['demo_truongphong', 'NV-T61', {}, null, 'A2 không phải Owner/theo dõi'],
-      ['demo_cvp', 'NV-T61', {}, null, 'Chánh VP không phải Owner/theo dõi'],
+    // 0089: lãnh đạo trong phạm vi nộp được (nộp thay) ⇒ ca chặn là lãnh đạo NGOÀI phạm vi.
+    const CA = [['demo_cv2', 'NV-T61', {}, null, 'A3 không phải Owner/theo dõi'], ['demo_truongphong', 'NV-T63', {}, null, 'A2 ngoài phòng'],
+      ['demo_pcvp2', 'NV-T61', {}, null, 'PCVP ngoài khối'],
       ...[{ so_hieu: '' }, { ngay_van_ban: null }].map((thieu) => ['demo_cv2', 'NV-T60', thieu, /số hiệu và ngày văn bản/, `thiếu ${Object.keys(thieu)} (0086)`]),
       ['demo_cv2', 'NV-T60', { mo_ta_ket_qua: 'x'.repeat(601) }, /tối đa 600/, 'mô tả quá 600 ký tự (0046)'],
       ['demo_cv2', 'NV-T60', { cap_nhan: 'KHONG_CO' }, /không có trong danh mục/, 'cấp sai'],
@@ -66,9 +69,9 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     const r = await nop('demo_cv2', 'NV-T60');
     assertOk(r, 'Owner nộp'); mc.a = r.data;
     const row = (await db().from('minh_chung').select('*').eq('id', mc.a).single()).data;
-    assert.deepEqual([row.loai, row.so_hieu, row.ngay_van_ban, row.cap_nhan, row.hop_le, row.nop_boi], ['so_hieu', '12/CV-VPTU', '2026-08-20', 'CHANH_VAN_PHONG', null, IDS.cv2]);
+    assert.deepEqual([row.loai, row.so_hieu, row.ngay_van_ban, row.cap_nhan, row.hop_le, row.xac_nhan_boi, row.nop_boi], ['so_hieu', '12/CV-VPTU', '2026-08-20', 'CHANH_VAN_PHONG', true, null, IDS.cv2], '0090: hợp lệ tự động');
     const ls = await lichSu('NV-T60', 'minh_chung_nop');
-    assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, IDS.cv2); assert.match(ls[0].gia_tri_moi, /Nộp minh chứng · NV-T60: số 12\/CV-VPTU · Báo cáo kết quả \(RLS 0028\) \(ngày 20\/08\/2026, Chánh Văn phòng\)/);
+    assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, IDS.cv2); assert.match(ls[0].gia_tri_moi, /Nộp minh chứng · NV-T60: số 12\/CV-VPTU · Báo cáo kết quả \(RLS 0028\) \(ngày 20\/08\/2026, Chánh Văn phòng\) — nhiệm vụ hoàn thành/);
     const tin = await tinCua('NV-T60');
     assert.deepEqual(tin.map((t) => t.receiver_id).sort(), [IDS.cvp, IDS.pcvp, IDS.truongphong, IDS.cv1, IDS.pcvp2].sort(), 'người liên quan trừ người nộp');
   });
@@ -99,7 +102,7 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertDenied(await dong('demo_pcvp2', 'NV-T61'), 'PCVP ngoài phạm vi');
   });
 
-  test('6. xac_nhan_minh_chung: người nộp không tự xác nhận; A3/A2 ngoài phạm vi chặn; PCVP trả lại phải có lý do (0077: không cần hạn nộp lại); theo dõi nghiệm thu → đóng việc (Q2)', async () => {
+  test('6. xac_nhan_minh_chung (0090: trả lại / đánh giá, tuỳ chọn): người nộp không tự xem lại; A3/A2 ngoài phạm vi chặn; trả lại phải có lý do; còn minh chứng hợp lệ thì việc vẫn hoàn thành; đánh giá chất lượng', async () => {
     const r2 = await nop('demo_cv2', 'NV-T60', { so_hieu: '13/CV-VPTU', ngay_van_ban: '2026-08-25' }); assertOk(r2, 'nộp thứ hai'); mc.b = r2.data;
     assertDenied(await xacNhan('demo_cv2', mc.a, true), 'Owner tài khoản (A3) không có quyền xác nhận');
     const r3 = await nop('demo_cv1', 'NV-T60', { so_hieu: '14/CV-VPTU', ngay_van_ban: '2026-08-18' }); assertOk(r3, 'người theo dõi nộp'); mc.d = r3.data;
@@ -110,24 +113,28 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     assertOk(await xacNhan('demo_pcvp2', mc.b, false, 'Sai số hiệu'), 'PCVP phụ trách Owner trả lại (0077: không cần hạn nộp lại)');
     assertOk(await xacNhan('demo_pcvp2', mc.d, false, 'Nộp trùng', homNayVN()), 'trả lại minh chứng thứ ba (hạn nộp lại truyền vào bị bỏ qua)');
     assert.equal((await db().from('minh_chung').select('han_nop_lai').eq('id', mc.d).single()).data.han_nop_lai, null, '0077: han_nop_lai luôn NULL');
-    assertOk(await xacNhan('demo_cv1', mc.a, true, null, null, 'DAT'), 'người theo dõi nghiệm thu (đóng việc — Q2)');
+    assertLoi(await xacNhan('demo_cv1', mc.a, true), /chọn chất lượng/, '0090: minh chứng đã hợp lệ — "đồng ý" phải kèm chất lượng');
+    assertOk(await xacNhan('demo_cv1', mc.a, true, null, null, 'DAT'), 'người theo dõi đánh giá chất lượng');
     const rows = (await db().from('minh_chung').select('id, hop_le, xac_nhan_boi, ly_do_khong_hop_le').eq('nhiem_vu_id', id['NV-T60']).order('nop_luc')).data;
-    assert.deepEqual(rows.map((x) => [x.hop_le, x.xac_nhan_boi, x.ly_do_khong_hop_le]), [[true, IDS.cv1, null], [false, IDS.pcvp2, 'Sai số hiệu'], [false, IDS.pcvp2, 'Nộp trùng']]);
+    assert.deepEqual(rows.map((x) => [x.hop_le, x.xac_nhan_boi, x.ly_do_khong_hop_le]), [[true, null, null], [false, IDS.pcvp2, 'Sai số hiệu'], [false, IDS.pcvp2, 'Nộp trùng']]);
     const v = await view('NV-T60'); assert.equal(v.so_minh_chung_hop_le, 1); assert.equal(v.minh_chung_moi_nhat.hop_le, false);
-    assert.equal((await lichSu('NV-T60', 'minh_chung_xac_nhan')).length, 3);
-    assertOk(await xacNhan('demo_truongphong', mc.a, true), 'A2 cùng phòng người theo dõi được xác nhận');
+    assert.deepEqual([v.tien_do_ma, v.chat_luong], ['HOAN_THANH', 'DAT'], 'còn minh chứng hợp lệ ⇒ vẫn hoàn thành');
+    assert.equal((await lichSu('NV-T60', 'minh_chung_xac_nhan')).length, 2, 'hai lần trả lại; đánh giá ghi ở cột chat_luong');
+    assertOk(await xacNhan('demo_truongphong', mc.a, true, null, null, 'DAT_TOT'), 'A2 cùng phòng người theo dõi sửa đánh giá');
+    assert.equal((await view('NV-T60')).chat_luong, 'DAT_TOT');
   });
 
-  test('7. nghiệm thu đóng việc: ngày hoàn thành = ngày văn bản minh chứng; HOAN_THANH, dong_luc, lead time = 15; dong_nhiem_vu lại bị chặn; bác hết → cờ thiếu', async () => {
-    // Q2 (0057): việc đã đóng ở test 6 khi người theo dõi nghiệm thu mc.a — ngày hoàn thành = ngày văn bản của minh chứng được nghiệm thu.
+  test('7. nộp là hoàn thành: ngày hoàn thành = ngày văn bản minh chứng; HOAN_THANH, dong_luc, lead time = 15; dong_nhiem_vu lại bị chặn; trả lại hết → mở lại', async () => {
+    // 0090: việc hoàn thành ở test 2 khi Owner nộp mc.a — ngày hoàn thành = ngày văn bản của minh chứng đó.
     const v = await view('NV-T60');
     assert.deepEqual([v.tien_do_ma, v.ngay_hoan_thanh, v.thieu_minh_chung, v.lead_time_ngay, v.ket_qua, v.so_ngay_tre], ['HOAN_THANH', '2026-08-20', false, 15, 'TRE', 5]);
     assert.ok(v.dong_luc, 'dong_luc');
-    assert.match((await lichSu('NV-T60', 'dong_nhiem_vu'))[0].gia_tri_moi, /Nghiệm thu và đóng nhiệm vụ · NV-T60: hoàn thành ngày 20\/08\/2026/);
+    assert.match((await lichSu('NV-T60', 'dong_nhiem_vu'))[0].gia_tri_moi, /Hoàn thành nhiệm vụ · NV-T60: theo minh chứng số 12\/CV-VPTU, ngày hoàn thành 20\/08\/2026/);
     assertLoi(await dong('demo_cv1', 'NV-T60'), /đã đóng/, 'đóng lại');
-    assertOk(await xacNhan('demo_pcvp2', mc.a, false, 'Văn bản bị thu hồi'), 'bác minh chứng còn lại sau khi đóng');
-    const v2 = await view('NV-T60'); assert.deepEqual([v2.so_minh_chung_hop_le, v2.thieu_minh_chung, v2.tien_do_ma], [0, true, 'HOAN_THANH']);
-    assert.equal(v2.cap_nhat_boi, IDS.cv1, 'tính lại cờ không ghi đè người cập nhật cuối (vẫn là người nghiệm thu đóng việc)');
+    assertOk(await xacNhan('demo_pcvp2', mc.a, false, 'Văn bản bị thu hồi'), 'trả lại minh chứng hợp lệ cuối cùng');
+    const v2 = await view('NV-T60');
+    assert.deepEqual([v2.so_minh_chung_hop_le, v2.thieu_minh_chung, v2.tien_do_ma, v2.ngay_hoan_thanh, v2.dong_luc, v2.chat_luong], [0, false, 'DANG_THUC_HIEN', null, null, null], 'mở lại, xoá ngày / chất lượng');
+    assert.equal(v2.cap_nhat_boi, IDS.pcvp2, 'người trả lại là người cập nhật cuối');
   });
 
   test('8. chữ cũ (chu_cu, chưa xác nhận) là hợp lệ: đếm được, đóng được việc cũ với ngày văn bản tách được; tách số hiệu/ngày', { skip: CHI_CUC_BO }, async () => {
@@ -156,8 +163,9 @@ describe('0028 — minh chứng có cấu trúc, xác nhận, đóng nhiệm v�
     const mai = new Date(`${homNay}T00:00:00Z`); mai.setUTCDate(mai.getUTCDate() + 1);
     assertLoi(await nop('demo_cv1', 'NV-T61', { ngay_van_ban: mai.toISOString().slice(0, 10) }), /sau hôm nay/, 'hôm nay + 1');
     const r = await nop('demo_cv1', 'NV-T61', { ngay_van_ban: homNay }); assertOk(r, 'ngày văn bản = hôm nay giờ VN');
-    assertLoi(await dong('demo_cv1', 'NV-T61'), /nghiệm thu/, '0077: việc theo 1400 không tự đóng khi minh chứng chưa được nghiệm thu');
-    assertOk(await xacNhan('demo_truongphong', r.data, true, null, null, 'DAT'), 'A2 nghiệm thu → đóng với ngày hoàn thành = hôm nay giờ VN');
+    assert.equal((await view('NV-T61')).ngay_hoan_thanh, homNay, '0090: nộp là hoàn thành, ngày hoàn thành = hôm nay giờ VN');
+    assertLoi(await dong('demo_cv1', 'NV-T61'), /đã đóng/, 'đã hoàn thành khi nộp');
+    assertOk(await xacNhan('demo_truongphong', r.data, true, null, null, 'DAT'), 'A2 đánh giá chất lượng (tuỳ chọn)');
     assert.equal((await view('NV-T61')).ngay_hoan_thanh, homNay);
   });
 });

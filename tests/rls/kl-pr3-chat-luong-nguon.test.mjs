@@ -1,5 +1,7 @@
 // PR-3 (0062–0067) — A. chất lượng hoàn thành khi nghiệm thu / đóng việc; B. nguồn nhiệm vụ (ép ở phiên người dùng, service_role không ép,
 // ai đổi được); E. đơn vị phối hợp; D. tiến độ hoàn thành "Trước hạn" (logic thuần — chỉ cục bộ). Khoá "KL-PR3A"; tự dọn.
+// Đợt D (0090–0091): nộp minh chứng hợp lệ = hoàn thành; chất lượng là đánh giá tuỳ chọn sau đó; lãnh đạo cấp trên người giao trong phạm vi
+// (PCVP phụ trách, Thường trực) đổi được nguồn / đơn vị phối hợp.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, anonClient, assertOk, assertDenied, IDS, homNayVN, CHI_CUC_BO } from './lib.mjs';
@@ -53,13 +55,15 @@ describe('PR-3 A/B/E — chất lượng, nguồn nhiệm vụ, đơn vị phố
     assert.deepEqual(vbRow, { so_nhiem_vu_du_kien: null, da_ra_soat_toan_van: false, ra_soat_boi: null });
   });
 
-  test('B2. Ai đổi nguồn / đơn vị phối hợp: người giao (A2) và quan_tri_kl được; Owner, PCVP không phải người giao, A0 bị chặn; không bỏ nguồn', async () => {
+  test('B2. Ai đổi nguồn / đơn vị phối hợp: người giao (A2), lãnh đạo cấp trên trong phạm vi (0091), quan_tri_kl được; Owner, PCVP ngoài phạm vi bị chặn; không bỏ nguồn', async () => {
     const cv1 = await userClient('demo_cv1');
     assertDenied(await cv1.from('nhiem_vu').update({ nguon_nhiem_vu_ma: 'NHIEM_VU_DINH_KY' }).eq('id', nv).select('id'), 'Owner UPDATE nguồn (guard a3)');
     assertDenied(await cv1.from('nhiem_vu').update({ don_vi_phoi_hop: 'X' }).eq('id', nv).select('id'), 'Owner UPDATE đơn vị phối hợp (guard a3)');
     const goi = (u, ma, ph) => rpc(u, 'dat_thong_tin_giao', { p_id: nv, p_nguon_nhiem_vu_ma: ma, p_don_vi_phoi_hop: ph });
-    const [ow, pc, a0] = await Promise.all([goi('demo_cv1', 'NHIEM_VU_DINH_KY', null), goi('demo_pcvp', 'NHIEM_VU_DINH_KY', null), goi('demo_a0', 'NHIEM_VU_DINH_KY', null)]);
-    assertDenied(ow, 'Owner'); assertDenied(pc, 'PCVP không phải người giao'); assertDenied(a0, 'A0 không phải người giao');
+    const [ow, pc2] = await Promise.all([goi('demo_cv1', 'NHIEM_VU_DINH_KY', null), goi('demo_pcvp2', 'NHIEM_VU_DINH_KY', null)]);
+    assertDenied(ow, 'Owner'); assertDenied(pc2, 'PCVP ngoài phạm vi');
+    assertOk(await goi('demo_pcvp', 'NHIEM_VU_DINH_KY', 'Sở Nội vụ'), 'PCVP phụ trách (cấp trên người giao) đổi');
+    assertOk(await goi('demo_a0', 'NHIEM_VU_DINH_KY', 'Sở Nội vụ'), 'Thường trực đổi được — cùng giá trị ⇒ không ghi gì');
     assertOk(await goi('demo_truongphong', 'LINH_VUC_TRONG_TAM', 'Sở Nội vụ'), 'người giao đổi');
     loi(await goi('demo_truongphong', null, 'Sở Nội vụ'), /Không bỏ nguồn/, 'bỏ nguồn');
     await db().from('accounts').update({ quan_tri_kl: true, quan_tri_kl_het_han: null }).eq('id', IDS.cv2);
@@ -68,23 +72,25 @@ describe('PR-3 A/B/E — chất lượng, nguồn nhiệm vụ, đơn vị phố
     }
     const v = await nvRow(nv); assert.deepEqual([v.nguon_nhiem_vu_ma, v.don_vi_phoi_hop], ['CHUONG_TRINH_CONG_TAC', null]);
     const ls = (await db().from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', nv).in('cot', ['nguon_nhiem_vu_ma', 'don_vi_phoi_hop'])).data;
-    assert.equal(ls.filter((x) => x.cot === 'nguon_nhiem_vu_ma').length, 2, 'lịch sử ghi mỗi lần đổi nguồn');
+    assert.equal(ls.filter((x) => x.cot === 'nguon_nhiem_vu_ma').length, 3, 'lịch sử ghi mỗi lần đổi nguồn (PCVP, người giao, quan_tri_kl)');
   });
 
-  test('A1. Nghiệm thu: bắt buộc chất lượng khi đóng việc; mã lạ / trả lại kèm chất lượng ⇒ lỗi; ghi cột + lịch sử "Nghiệm thu: Đạt tốt"', async () => {
-    const m1 = await nopMc(nv, 1); const m2 = await nopMc(nv, 2);   // m2 còn chờ sau khi m1 đóng việc
+  test('A1. (0090) Nộp là hoàn thành; đánh giá chất lượng tuỳ chọn: "đồng ý" thiếu chất lượng / mã lạ / trả lại kèm chất lượng ⇒ lỗi; ghi cột + lịch sử', async () => {
+    const m1 = await nopMc(nv, 1); const m2 = await nopMc(nv, 2);   // m1 hoàn thành việc; m2 nộp thêm khi việc đã hoàn thành
+    assert.deepEqual([(await nvRow(nv)).tien_do_ma, (await nvRow(nv)).chat_luong], ['HOAN_THANH', null], 'nộp là hoàn thành, chưa đánh giá');
     const xac = (p) => rpc('demo_truongphong', 'xac_nhan_minh_chung', { p_id: m1, ...p });
     const [thieu, la, traLai] = await Promise.all([xac({ p_hop_le: true }), xac({ p_hop_le: true, p_chat_luong: 'TOT' }),
       xac({ p_hop_le: false, p_ly_do: 'Thiếu', p_chat_luong: 'DAT' })]);
-    loi(thieu, /phải chọn chất lượng/, 'thiếu chất lượng'); loi(la, /không hợp lệ/, 'mã lạ'); loi(traLai, /không ghi chất lượng/, 'trả lại kèm chất lượng');
+    loi(thieu, /chọn chất lượng hoàn thành/, 'thiếu chất lượng'); loi(la, /không hợp lệ/, 'mã lạ'); loi(traLai, /không ghi chất lượng/, 'trả lại kèm chất lượng');
     assertDenied(await (await userClient('demo_cv1')).from('nhiem_vu').update({ chat_luong: 'DAT_XUAT_SAC' }).eq('id', nv).select('id'), 'Owner tự chấm qua API');
-    assertOk(await xac({ p_hop_le: true, p_chat_luong: 'DAT_TOT' }), 'nghiệm thu Đạt tốt');
+    assertOk(await xac({ p_hop_le: true, p_chat_luong: 'DAT_TOT' }), 'đánh giá Đạt tốt');
     const v = await nvRow(nv); assert.deepEqual([v.tien_do_ma, v.chat_luong], ['HOAN_THANH', 'DAT_TOT']);
-    const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', nv).eq('cot', 'dong_nhiem_vu')).data;
-    assert.match(ls[0].gia_tri_moi, /Nghiệm thu: Đạt tốt/);
+    const ls = (await db().from('lich_su').select('gia_tri_moi, nguoi_sua').eq('nhiem_vu_id', nv).eq('cot', 'chat_luong')).data;
+    assert.deepEqual(ls.map((x) => [x.gia_tri_moi, x.nguoi_sua]), [['DAT_TOT', IDS.truongphong]], 'lịch sử cột chất lượng (diễn biến hiện tên mức)');
     const vv = (await (await userClient('demo_cv1')).from('v_nhiem_vu').select('chat_luong, nguon_nhiem_vu_ten').eq('id', nv).single()).data;
     assert.deepEqual(vv, { chat_luong: 'DAT_TOT', nguon_nhiem_vu_ten: 'Chương trình công tác năm' });
-    loi(await rpc('demo_truongphong', 'xac_nhan_minh_chung', { p_id: m2, p_hop_le: true, p_chat_luong: 'DAT' }), /khi nghiệm thu đóng/, 'việc đã đóng');
+    assertOk(await rpc('demo_truongphong', 'xac_nhan_minh_chung', { p_id: m2, p_hop_le: false, p_ly_do: 'Nộp trùng' }), 'trả lại minh chứng thừa');
+    assert.deepEqual([(await nvRow(nv)).tien_do_ma, (await nvRow(nv)).chat_luong], ['HOAN_THANH', 'DAT_TOT'], 'còn minh chứng hợp lệ ⇒ giữ hoàn thành và đánh giá');
     assertOk(await db().from('nhiem_vu').update({ tien_do_ma: 'DANG_THUC_HIEN', ngay_hoan_thanh: null }).eq('id', nv), 'mở lại (service_role)');
     assert.equal((await nvRow(nv)).chat_luong, null, 'mở lại ⇒ bỏ chất lượng');
   });

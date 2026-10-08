@@ -3,6 +3,8 @@
 // không nhận khi chờ / quá hạn nghiệm thu; quét hai lần cùng ngày = một; ngày nghỉ (T7) không nhắc quá hạn nghiệm thu; người nhận nhắc chính
 // của 7 loại chủ trì (bảng A6), kể cả việc Thường trực giao cho Chánh VP (thư ký; không có thì quan_tri_kl). Ngày quét tháng 8/2026 (test khác
 // dùng tháng 9); dọn cảnh báo của các ngày này ở after. Khoá "KL-0060".
+// Đợt D (0090–0091): nộp mới không còn chờ nghiệm thu (ca ở đây là minh chứng cũ chèn bằng service_role); nhắc NGHIEM_THU / NGHIEM_THU_QUA_HAN
+// không gửi lãnh đạo (A1 / A2) — chỉ thư ký / quản trị nhiệm vụ (chuyên viên) còn nhận; dòng canh_bao vẫn ghi (chống lặp), không ghi diễn biến.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, assertOk, IDS, CHI_CUC_BO } from './lib.mjs';
@@ -59,7 +61,10 @@ describe('0060 — nhắc nghiệm thu', { skip: SKIP || CHI_CUC_BO }, () => {
     assert.equal((await cb('A3', 'NGHIEM_THU')).length, 0, 'nộp 17/08, quét 17/08 ⇒ chưa đủ 1 ngày làm việc');
     await quet('2026-08-18');
     const kq = Object.fromEntries(await Promise.all(['A3', 'A2', 'PH', 'PC', 'CV', 'NG', 'P1'].map(async (m) => [m, await nhan(m, 'NGHIEM_THU', '2026-08-18')])));
-    assert.deepEqual(kq, { A3: [IDS.truongphong], A2: [IDS.pcvp], PH: [IDS.pcvp], PC: [IDS.cvp], CV: [TK], NG: [IDS.truongphong], P1: [IDS.pcvp] });
+    assert.deepEqual(kq, { A3: [], A2: [], PH: [], PC: [], CV: [TK], NG: [], P1: [] }, '0091: lãnh đạo không bị nhắc; thư ký (chuyên viên) vẫn nhận');
+    assert.equal((await cb('A3', 'NGHIEM_THU', '2026-08-18')).length, 1, 'vẫn ghi dòng canh_bao (không người nhận) để chống lặp');
+    const ls = await db().from('lich_su').select('id').eq('nhiem_vu_id', id.A3).eq('cot', 'canh_bao');
+    assert.equal(ls.data.length, 0, 'nhắc không người nhận không ghi diễn biến');
   });
 
   test('2. (0077) Không còn mức CHAM_NOP_MC: quét 19/08 không sinh cảnh báo chậm nộp cho việc nào', async () => {
@@ -70,15 +75,16 @@ describe('0060 — nhắc nghiệm thu', { skip: SKIP || CHI_CUC_BO }, () => {
 
   test('3. NGHIEM_THU_QUA_HAN: người nhận nhắc chính + lãnh đạo trực tiếp, không chủ trì / người nộp; quét 2 lần = 1; T7 bỏ qua; Đỏ đặc biệt thêm CVP', async () => {
     await quet('2026-08-21'); await quet('2026-08-21');
-    assert.deepEqual(await nhan('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [IDS.pcvp, IDS.truongphong].sort());
+    assert.deepEqual(await nhan('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [], '0091: lãnh đạo không bị nhắc');
     assert.equal((await cb('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-21')).length, 1, 'idempotent');
-    assert.deepEqual(await nhan('TD', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [IDS.pcvp, IDS.truongphong].sort(), 'người nhận nhắc chính là người theo dõi vẫn nhận');
+    assert.deepEqual(await nhan('TD', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), []);
     assert.deepEqual(await nhan('CV', 'NGHIEM_THU_QUA_HAN', '2026-08-21'), [TK], 'việc Chánh VP: chỉ thư ký, không Chánh VP, không A0');
     assert.equal((await cb('A3', 'DO')).length, 0, 'dòng 5 không đi nhánh Đỏ nhắc chủ trì');
     await quet('2026-08-22');
     assert.equal((await cb('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-22')).length, 0, 'Thứ Bảy không nhắc');
     await quet('2026-08-24');
-    assert.deepEqual(await nhan('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-24'), [IDS.cvp, IDS.pcvp, IDS.truongphong].sort());
+    assert.deepEqual(await nhan('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-24'), [], 'Đỏ đặc biệt: Chánh VP cũng không bị nhắc');
+    assert.equal((await cb('A3', 'NGHIEM_THU_QUA_HAN', '2026-08-24')).length, 1);
   });
 
   test('4. Việc Chánh VP khi không ai giữ cờ thư ký ⇒ quan_tri_kl nhận nhắc', async () => {

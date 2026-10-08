@@ -91,8 +91,8 @@ function ve() {
     <div class="tq" role="group" aria-label="Tổng quan">${o(t.tong, 'việc trong phạm vi', '')}
       ${o(t.nhom.QUA_HAN + t.nhom.DANG_DINH_CHINH, 'quá hạn', 's-do')}${o(t.nhom.SAP_DEN_HAN, 'sắp đến hạn', 's-vang')}
       ${o(t.nhom.DANG_THUC_HIEN, 'đang thực hiện', 's-lam')}${o(t.nhom.HOAN_THANH, `hoàn thành · ${t.tyLeHoanThanh}%`, 's-luc')}
-      ${o(t.nhom.CHO_NGHIEM_THU, 'chờ nghiệm thu', 's-lam')}${o(t.nhom.QUA_HAN_NGHIEM_THU, 'quá hạn ở bước nghiệm thu', 's-do')}
-      ${tyLe(rowsHienTai, 'nop_dung_han', 'nộp minh chứng trước hạn hoàn thành')}${tyLe(rowsHienTai, 'nghiem_thu_dung_han', 'nghiệm thu trước hạn hoàn thành')}</div>
+      ${o(t.nhom.CHO_NGHIEM_THU, 'chờ xác nhận minh chứng', 's-lam')}${o(t.nhom.QUA_HAN_NGHIEM_THU, 'quá hạn, chờ xác nhận minh chứng', 's-do')}
+      ${tyLe(rowsHienTai, 'nop_dung_han', 'nộp minh chứng trước hạn hoàn thành')}</div>
     <div>
       ${khoi('bcCanQuyet', 'Việc cần lãnh đạo quyết định', 'việc đang mở có vướng mắc hoặc đã xác định cấp cần quyết định', bangCanQuyet(rowsHienTai))}
       ${khoi('bcTheoPhong', 'Theo phòng, đơn vị chịu trách nhiệm', 'bấm một số hoặc một dòng để xem việc ngay dưới', bangNhom('Đơn vị / văn bản', nhomOwner(rowsHienTai), (d) => ({ donVi: d.ma })))}

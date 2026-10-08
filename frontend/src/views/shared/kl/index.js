@@ -97,7 +97,7 @@ async function tuChoiNhanViec({ id, ma }, form) {
   if (!lyDo) { notifyError('Đề nghị từ chối phải có lý do.'); return; }
   try {
     await deNghiTuChoi(id, lyDo);
-    notifySuccess(`Đã gửi đề nghị từ chối ${ma}. Lãnh đạo trực tiếp của đồng chí sẽ duyệt; hạn và trạng thái việc không đổi.`);
+    notifySuccess(`Đã gửi đề nghị từ chối ${ma}. Người giao việc sẽ xử lý; hạn và trạng thái việc không đổi.`);
     await napLaiSauHanhDong(id);
   } catch (e) { notifyError(e.message); }
 }

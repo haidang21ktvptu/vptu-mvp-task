@@ -6,7 +6,7 @@ import { ngayGiao, laMo, laXong, xongTrongKy, mucMo, chiDaoPhan } from './tong-q
 import { loaiCua } from './tong-quan-them.js';
 import { CHUA_PHAN_LOAI } from './tong-hop.js';
 
-export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ nghiệm thu', vang: 'Cảnh báo Vàng', do: 'Cảnh báo Đỏ', ddb: 'Cảnh báo Đỏ đặc biệt',
+export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ xác nhận minh chứng (nộp trước v3.20)', vang: 'Cảnh báo Vàng', do: 'Cảnh báo Đỏ', ddb: 'Cảnh báo Đỏ đặc biệt',
   khac: 'Không áp dụng cảnh báo (cần điền hạn, chờ điều kiện, đang đính chính)' };
 const TEN_DG = { DUNG_HAN: 'Hoàn thành đúng hạn', TRE: 'Hoàn thành trễ hạn', chua: 'Hoàn thành, chưa đánh giá đúng hạn' };
 const TEN_CL = { DAT_XUAT_SAC: 'Xuất sắc', DAT_TOT: 'Đạt tốt', DAT: 'Đạt', KHONG_DAT: 'Không đạt' };

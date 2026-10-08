@@ -9,6 +9,7 @@ import { registerView } from '../registry.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { xacNhanNhanViec } from '../../lib/kl/du-lieu.js';
 import { nopMinhChung, loiMinhChung } from '../../lib/kl/minh-chung.js';
+import { batBuocTep } from '../../lib/kl/tep-minh-chung.js';
 import { homNayVN, ghiChuHan } from '../../lib/kl/ngay.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { dh, napDieuHanh } from '../shared/dieu-hanh/du-lieu.js';
@@ -21,6 +22,7 @@ import { openKl } from '../shared/kl/index.js';
 import { openKlCapNhat } from '../shared/kl/cap-nhat-modal.js';
 import { nhomViecCuaToi, mucHtml, thanhTuChoiHtml, napDnsCuaToi } from './viec-cua-toi.js';
 import { canXuLyHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
+import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
 import { giuDienBien } from '../shared/dien-bien.js';
 
 function ve() {
@@ -31,8 +33,9 @@ function ve() {
   $('dhCanXuLy').innerHTML = canXuLyHtml();
   const traDienBien = giuDienBien($('vctMuc')); // khối Xem diễn biến đang mở giữ qua lần vẽ lại
   $('vctMuc').innerHTML = [
+    tuChoiChoHtml(),          // Đợt D (0091): đề nghị từ chối việc tôi đã nhập / giao — tôi xử lý (lãnh đạo không bắt buộc)
     thanhTuChoiHtml(),        // GĐ22: kết quả đề nghị từ chối của tôi (đã đồng ý / không đồng ý)
-    khoiBiTuChoiHtml(),       // GĐ22: việc tôi giao thay mặt bị từ chối (chuyên viên giữ quan_tri_kl)
+    khoiBiTuChoiHtml(),       // GĐ22: việc tôi giao bị từ chối (chuyên viên giao thẳng / nhập thay mặt) → Giao lại
     mucHtml('do', 'Bị từ chối, chờ lãnh đạo giao lại', n.tuChoi, 'tu-choi'),
     mucHtml('lam', 'Việc mới giao — cần xác nhận đã nhận', n.moi, 'moi'),
     mucHtml('do', 'Có chỉ đạo chờ đồng chí trả lời', n.chiDao, 'chi-dao'),
@@ -89,9 +92,10 @@ async function nopMinhChungThe(ds, form) {
     trich_yeu: (f.get('trich_yeu') || '').trim(), mo_ta_ket_qua: (f.get('mo_ta_ket_qua') || '').trim() };
   const loiForm = loiMinhChung(p, dh.rows.find((r) => r.id === ds.id)?.cap_nhan_san_pham);
   if (loiForm) { notifyError(loiForm); return; }
+  if (batBuocTep()) { notifyError('Minh chứng phải kèm tệp — bấm mã việc để mở ngăn chi tiết, chọn "Nộp minh chứng" và đính kèm tệp.'); return; }   // 0089 cấu hình 2
   try {
     await nopMinhChung(p);
-    notifySuccess(`Đã nộp minh chứng số ${p.so_hieu}. Người liên quan nhận thông báo trên hệ thống.`);
+    notifySuccess(`Đã nộp minh chứng số ${p.so_hieu} — nhiệm vụ hoàn thành. Người liên quan nhận thông báo trên hệ thống.`);
     await napLaiViec(ds.id); await lamMoiHuyHieu(); await loadViecCuaToi();
   } catch (e) { notifyError(e.message); }
 }
@@ -111,7 +115,7 @@ export function registerA3View() {
             <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem toàn bộ việc của tôi</button></div></section>
           <aside class="cot-phu">
             <section class="tam"><div class="tam-dau"><h2>Hạn trong 7 ngày tới</h2></div><div id="vctTuan"></div></section>
-            <section class="tam"><div class="tam-dau"><h2>Hướng dẫn nhanh</h2></div><p class="huong-dan">Việc hoàn thành khi có minh chứng hợp lệ: số hiệu, ngày văn bản, cấp nhận — nộp ngay trên hàng việc. Sau khi nộp, lãnh đạo xác nhận thì việc mới đóng. Việc mới giao cần xác nhận đã nhận trong ngày làm việc.</p></section>
+            <section class="tam"><div class="tam-dau"><h2>Hướng dẫn nhanh</h2></div><p class="huong-dan">Việc hoàn thành khi nộp minh chứng hợp lệ: số hiệu, ngày văn bản (kèm tệp nếu có) — nộp ngay trên hàng việc hoặc trong ngăn chi tiết. Người giao việc, lãnh đạo xem kết quả và có thể trả lại nếu chưa đạt. Việc mới giao cần xác nhận đã nhận trong ngày làm việc.</p></section>
           </aside>
         </div>`;
       datNapLai(loadViecCuaToi);

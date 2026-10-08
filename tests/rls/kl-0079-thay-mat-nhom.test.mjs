@@ -45,16 +45,16 @@ describe('0079 — thay mặt theo nhóm, Owner luôn là phòng / cán bộ Vă
     assert.equal(v.giao_thay_mat_nhom, 'LANH_DAO_VP');
   });
 
-  test('2. đề nghị từ chối: cấp duyệt = Chánh VP; Phó Chánh VP (thành viên nhóm trong phạm vi) thấy, được đếm và duyệt; Trưởng phòng không duyệt được; tin đề nghị tới nhóm + người giao', async () => {
+  test('2. đề nghị từ chối: cấp xử lý = người nhập việc (0091); Phó Chánh VP (thành viên nhóm trong phạm vi) thấy và duyệt thay; Trưởng phòng không duyệt được; tin đề nghị tới nhóm + người giao', async () => {
     const tc = await (await userClient('demo_cv1')).rpc('de_nghi_tu_choi', { p_nhiem_vu: nvLdvp, p_ly_do: `${KHOA} không đúng chức năng` });
     assertOk(tc, 'cv1 đề nghị từ chối');
     const t = (await db().from('tu_choi').select('cap_duyet').eq('id', tc.data).single()).data;
-    assert.equal(t.cap_duyet, IDS.cvp, 'cấp duyệt ghi người đại diện');
+    assert.equal(t.cap_duyet, IDS.cv2, '0091: cấp xử lý là người nhập việc (quản trị KL cv2), không phải người đại diện');
     const nhanTc = await nguoiNhanTin(nvLdvp, 'Đề nghị từ chối');
     for (const u of [IDS.cvp, IDS.pcvp, IDS.cv2]) assert.ok(nhanTc.includes(u), `tin đề nghị từ chối tới ${u} (nhóm trong phạm vi + người giao)`);
     const pcvp = await userClient('demo_pcvp');
     assert.equal((await pcvp.from('tu_choi').select('id').eq('id', tc.data)).data?.length, 1, 'PCVP thấy đề nghị');
-    assert.ok(Number((await pcvp.rpc('kl_so_chua_xu_ly')).data?.de_nghi_cho_duyet) >= 1, 'PCVP có đề nghị chờ duyệt trong số đếm');
+    assert.ok(Number((await (await userClient('demo_cv2')).rpc('kl_so_chua_xu_ly')).data?.de_nghi_cho_duyet) >= 1, 'người nhập việc có đề nghị chờ xử lý trong số đếm (lãnh đạo không bị đếm / nhắc)');
     ma(await (await userClient('demo_truongphong')).rpc('duyet_tu_choi', { p_id: tc.data, p_dong_y: true }), '42501', 'Trưởng phòng không duyệt được');
     assertOk(await pcvp.rpc('duyet_tu_choi', { p_id: tc.data, p_dong_y: true, p_y_kien: 'đồng ý' }), 'PCVP duyệt thay nhóm');
     assert.equal((await db().from('tu_choi').select('trang_thai').eq('id', tc.data).single()).data.trang_thai, 'DONG_Y');

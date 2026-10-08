@@ -2,8 +2,10 @@
 // 0015/0021/0052 và policy — lỗi DB qua loiDeHieu (câu tiếng Việt dễ hiểu). Mục tiêu: một lần cập nhật < 30 giây.
 // Q7 (0052): việc ĐÃ có hạn thì Owner / người theo dõi không tự đổi hạn (đổi hạn = đề nghị gia hạn) — ô hạn chỉ hiện khi việc chưa có hạn,
 // trừ người quản trị KL (quan_tri_kl) vẫn sửa được.
-// Đợt C1 v3.19 (0086): việc theo 1400 đang mở, người mở là Owner / người theo dõi → mục "Nộp minh chứng nhanh" trong cùng hộp; Lưu = cập nhật
+// Đợt C1 v3.19 (0086): việc theo 1400 đang mở, người mở được nộp minh chứng → mục "Nộp minh chứng nhanh" trong cùng hộp; Lưu = cập nhật
 // rồi nop_minh_chung khi đánh dấu "Việc đã hoàn thành — ghi kết quả" (C2; cấp nhận trống = theo việc; trích yếu, mô tả tuỳ chọn). Lỗi → hộp giữ mở.
+// Đợt D v3.20 (0089–0090): nộp minh chứng hợp lệ = nhiệm vụ hoàn thành; ô tệp + tự điền (minh-chung-tep.js); người nộp gồm cả người giao việc,
+// lãnh đạo trong phạm vi (duocNopMinhChung — chuyên viên nộp thay khi Owner là lãnh đạo).
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
@@ -12,7 +14,9 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { danhMucKl, capNhatNhiemVu, homNayTheoDb, datThongTinGiao } from '../../../lib/kl/du-lieu.js';
 import { duocSuaThongTinGiao, nguonOptionsHtml } from './thong-tin-giao.js';
 import { homNayVN, formatNgay, ghiChuHan, ngayTrongMinhChung } from '../../../lib/kl/ngay.js';
-import { nopMinhChung, loiMinhChung } from '../../../lib/kl/minh-chung.js';
+import { nopMinhChung, loiMinhChung, duocNopMinhChung } from '../../../lib/kl/minh-chung.js';
+import { batBuocTep, taiLenTep, xoaTepChuaGan } from '../../../lib/kl/tep-minh-chung.js';
+import { ganSuKienTep, tepDangChon, datLaiTep } from './minh-chung-tep.js';
 import { klCapNhatTemplate } from './cap-nhat-template.js';
 import { timKlRow } from './danh-sach.js';
 
@@ -21,7 +25,7 @@ let row = null;
 let homNay = homNayVN();
 
 const laHT = () => $('klCnTienDo').value === 'HOAN_THANH';
-const coMcNhanh = () => Boolean(row?.theo_1400) && row.tien_do_ma !== 'HOAN_THANH' && [row.owner_tai_khoan, row.nguoi_theo_doi].includes(state.user?.id);
+const coMcNhanh = () => Boolean(row?.theo_1400) && row.tien_do_ma !== 'HOAN_THANH' && duocNopMinhChung(row);
 const khoaHan = () => Boolean(row?.han_xu_ly) && !state.user?.quan_tri_kl;
 const trong = (s) => !s || !s.trim();
 
@@ -52,6 +56,7 @@ export async function openKlCapNhat({ id, rows }) {
   show('klCnMcWrap', coMcNhanh()); $('klCnXong').checked = false; show('klCnMcTruong', false); show('klCnXongGoiY', true);   // C2: mở bằng ô đánh dấu
   ['klCnMcSoHieu', 'klCnMcTrichYeu', 'klCnMcMoTa'].forEach((id) => { $(id).value = ''; });
   $('klCnMcNgay').value = ''; $('klCnMcNgay').min = row.ngay_ban_hanh; $('klCnMcNgay').max = homNay;
+  datLaiTep('klCn', batBuocTep());
   $('klCnMcCap').innerHTML = '<option value="">— Theo việc —</option>' + danhMucKl().cap.map((c) => `<option value="${c.ma}"${c.ma === row.cap_nhan_san_pham ? ' selected' : ''}>${escapeHtml(c.ten)}</option>`).join('');
   $('klCnHan').value = row.han_xu_ly || '';
   show('klCnHanWrap', !khoaHan());
@@ -102,7 +107,7 @@ function minhChungNhanh() {
   const p = { nhiem_vu_id: row.id, so_hieu: $('klCnMcSoHieu').value.trim(), ngay_van_ban: $('klCnMcNgay').value, cap_nhan: $('klCnMcCap').value || row.cap_nhan_san_pham,
     trich_yeu: $('klCnMcTrichYeu').value.trim(), mo_ta_ket_qua: $('klCnMcMoTa').value.trim() };
   if (p.ngay_van_ban > homNay) return 'Ngày văn bản minh chứng không được sau hôm nay.';
-  return loiMinhChung(p, row.cap_nhan_san_pham) || p;
+  return loiMinhChung(p, row.cap_nhan_san_pham, { batBuoc: batBuocTep(), coTep: Boolean(tepDangChon('klCn')) }) || p;
 }
 
 async function luuKlCapNhat() {
@@ -128,7 +133,12 @@ async function luuKlCapNhat() {
   try {
     await capNhatNhiemVu(row.id, p);
     if (mc) {
-      try { await nopMinhChung(mc); } catch (e) {   // cập nhật đã lưu — giữ hộp mở để sửa minh chứng rồi Lưu lại (cập nhật lưu lại là vô hại)
+      const tep = tepDangChon('klCn'); let path = null;
+      try {
+        if (tep) { path = await taiLenTep(row.id, tep); Object.assign(mc, { tep_path: path, tep_ten: tep.name }); }
+        await nopMinhChung(mc);
+      } catch (e) {   // cập nhật đã lưu — giữ hộp mở để sửa minh chứng rồi Lưu lại (cập nhật lưu lại là vô hại)
+        await xoaTepChuaGan(path);
         notifyError(`Đã cập nhật ${row.ma} nhưng chưa nộp được minh chứng: ${e.message}`); $('klCnLuu').disabled = false; afterSave(row.id); return;
       }
     }
@@ -138,7 +148,7 @@ async function luuKlCapNhat() {
         notifyError(`Đã cập nhật ${row.ma} nhưng chưa lưu được nguồn / đơn vị phối hợp: ${loiDeHieu(e)}`); closeKlCapNhat(); afterSave(row.id); return;
       }
     }
-    notifySuccess(mc ? `Đã cập nhật ${row.ma} và nộp minh chứng số ${mc.so_hieu} — chờ lãnh đạo nghiệm thu.` : `Đã cập nhật ${row.ma}.`);
+    notifySuccess(mc ? `Đã cập nhật ${row.ma} và nộp minh chứng số ${mc.so_hieu} — nhiệm vụ hoàn thành.` : `Đã cập nhật ${row.ma}.`);
     closeKlCapNhat();
     afterSave(row.id);
   } catch (e) {
@@ -151,6 +161,7 @@ export function mountKlCapNhatModal(onSave) {
   afterSave = onSave;
   $('modalRoot').insertAdjacentHTML('beforeend', klCapNhatTemplate);
   $('klCnTienDo').addEventListener('change', capNhatHienThi);
+  ganSuKienTep('klCn', { soHieu: 'klCnMcSoHieu', ngay: 'klCnMcNgay', trichYeu: 'klCnMcTrichYeu' });
   $('klCnXong').addEventListener('change', () => { const x = $('klCnXong').checked; show('klCnMcTruong', x); show('klCnXongGoiY', !x); if (x) $('klCnMcSoHieu').focus(); });
   $('klCnChuaCoHan').addEventListener('change', () => { if ($('klCnChuaCoHan').checked) $('klCnHan').value = ''; capNhatHienThi(); });
   $('klCnHan').addEventListener('input', capNhatHienThi);

@@ -24,7 +24,7 @@ export async function apDienSan(dong, { nhanMoi }) {
   dang = dong; const d = dong.du_lieu || {};
   $('gvHoanThien').innerHTML = `<b>Hoàn thiện dòng ${dong.so_dong} của lô ${escapeHtml(dong.lo_ma)}</b> (tệp ${escapeHtml(dong.ten_tep)})${dong.thieu?.length
     ? ` — còn thiếu: ${escapeHtml(dong.thieu.map(nhanTruong).join(', '))}` : ''}${dong.ghi_chu ? `. Hệ thống báo: ${escapeHtml(dong.ghi_chu)}` : ''}.${
-    d.tien_do_ma === 'HOAN_THANH' ? ' Tệp ghi việc đã hoàn thành: giao xong, chủ trì nộp minh chứng để lãnh đạo nghiệm thu.' : ''}
+    d.tien_do_ma === 'HOAN_THANH' ? ' Tệp ghi việc đã hoàn thành: giao xong, chủ trì nộp minh chứng là việc hoàn thành.' : ''}
     <button type="button" class="nut nho" data-action="gvBoHoanThien">Thôi, về danh sách chờ</button>`;
   show('gvHoanThien', true);
   // 1. Văn bản: đã có trên hệ thống (đúng khoá: số hội nghị + số hiệu, hoặc loại + số hiệu + ngày ban hành) → chọn; chưa có → văn bản mới điền sẵn.

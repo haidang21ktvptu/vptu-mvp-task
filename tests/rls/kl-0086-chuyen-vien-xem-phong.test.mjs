@@ -62,15 +62,15 @@ describe('0086 — chuyên viên xem cả phòng (cấu hình 2, chỉ xem); min
     assert.deepEqual(await thay('demo_cv1'), [], 'về cấu hình 1 lại không thấy');
   });
 
-  test('4. minh chứng nhanh: số hiệu + ngày → cấp nhận = cap_nhan_san_pham, trích yếu / mô tả trống, chờ nghiệm thu, lịch sử gọn; thiếu ngày bị chặn; đủ bốn yếu tố vẫn nộp được', async () => {
+  test('4. minh chứng nhanh: số hiệu + ngày → cấp nhận = cap_nhan_san_pham, trích yếu / mô tả trống, hoàn thành (0090), lịch sử gọn; thiếu ngày bị chặn; đủ bốn yếu tố vẫn nộp được', async () => {
     const cv2 = await userClient('demo_cv2');
     const r = await cv2.rpc('nop_minh_chung', { p: { nhiem_vu_id: c, so_hieu: '12/BC-QT', ngay_van_ban: '2026-10-06' } }); assertOk(r, 'nộp nhanh');
     const mc = (await db().from('minh_chung').select('so_hieu, cap_nhan, trich_yeu, mo_ta_ket_qua').eq('id', r.data).single()).data;
     const nv = (await db().from('nhiem_vu').select('cap_nhan_san_pham').eq('id', c).single()).data;
     assert.deepEqual(mc, { so_hieu: '12/BC-QT', cap_nhan: nv.cap_nhan_san_pham, trich_yeu: null, mo_ta_ket_qua: null });
-    assert.equal((await db().from('v_nhiem_vu').select('nhom_dem').eq('id', c).single()).data.nhom_dem, 'CHO_NGHIEM_THU');
+    assert.equal((await db().from('v_nhiem_vu').select('nhom_dem').eq('id', c).single()).data.nhom_dem, 'HOAN_THANH', '0090: nộp minh chứng hợp lệ là hoàn thành');
     const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', c).eq('cot', 'minh_chung_nop').single()).data;
-    assert.match(ls.gia_tri_moi, /^Nộp minh chứng · NV-\d+: số 12\/BC-QT \(ngày 06\/10\/2026, [^)]+\)$/);
+    assert.match(ls.gia_tri_moi, /^Nộp minh chứng · NV-\d+: số 12\/BC-QT \(ngày 06\/10\/2026, [^)]+\) — nhiệm vụ hoàn thành$/);
     loi(await cv2.rpc('nop_minh_chung', { p: { nhiem_vu_id: b, so_hieu: '13/BC', ngay_van_ban: '' } }), /số hiệu và ngày văn bản/, 'thiếu ngày');
     const r2 = await cv2.rpc('nop_minh_chung', { p: { nhiem_vu_id: b, so_hieu: '14/BC', ngay_van_ban: '2026-10-06', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'Báo cáo', mo_ta_ket_qua: 'đủ 4 yếu tố' } });
     assertOk(r2, 'nộp đủ');

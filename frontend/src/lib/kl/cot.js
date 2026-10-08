@@ -26,7 +26,7 @@ export const COT_CHI_DAO = cot('id, nhiem_vu_id, nguoi_gui, loai, noi_dung, han_
 export const COT_CHI_DAO_TT = cot('id, nhiem_vu_id, ma, nhiem_vu_noi_dung, han_xu_ly, nguoi_gui, noi_dung, han_phan_hoi, trang_thai, nguoi_nhan',
   'phan_hoi, phan_hoi_boi, phan_hoi_luc, created_at, qua_han_phan_hoi, nguoi_nhan_ten, dong_boi, dong_boi_ten, do_khan');
 export const COT_MINH_CHUNG = cot('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban, cap_nhan, noi_dung_chu, nop_boi, nop_luc, hop_le, xac_nhan_boi, xac_nhan_luc',
-  'ly_do_khong_hop_le, trich_yeu, mo_ta_ket_qua');
+  'ly_do_khong_hop_le, trich_yeu, mo_ta_ket_qua, tep_path, tep_ten');   // Đợt D (0089–0090): tệp minh chứng
 export const COT_DIEN_BIEN = 'id, nhiem_vu_id, luc, nguon, loai, nguoi, nguoi_ten, noi_dung, gia_tri_cu, trang_thai, chi_dao_id';
 export const COT_TAI_KHOAN = cot('id, username, full_name, role_group, position_title, manager_id, department, must_change_password, is_chief, is_system',
   'quan_tri_kl, quan_tri_he_thong, dien_thoai, anh_url, tuy_chon, quan_tri_kl_het_han, bi_khoa, thu_ky_thuong_truc');

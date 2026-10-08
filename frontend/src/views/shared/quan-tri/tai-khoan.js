@@ -9,6 +9,7 @@ import { goiQuanTriTaiKhoan } from '../../../lib/quan-tri-api.js';
 import { askLyDo } from './ly-do-modal.js';
 import { nhanNganhLinhVuc } from './danh-muc.js';
 import { hienMatKhauTam } from './tai-khoan-form.js';
+import { duocChuyenTheoDoi } from './chuyen-theo-doi.js';
 
 export const SO_NGUOI_QUAN_TRI_KL = 2; // quy định: đúng hai người (một Tổng hợp, một CĐS-CY)
 const nut = (label, action, a, extra = '') => `<button type="button" class="nut nho" data-action="${action}" data-id="${a.id}" data-username="${escapeHtml(a.username)}" ${extra}>${label}</button>`;
@@ -26,6 +27,7 @@ function taiKhoanRowHtml(a) {
   const btnTk = a.role_group === 'A0' ? '' : nut(a.thu_ky_thuong_truc ? 'Thu thư ký TT' : 'Cấp thư ký TT', 'toggleThuKyTT', a, `data-bat="${a.thu_ky_thuong_truc ? '0' : '1'}"`);
   const btnKhoa = me || a.quan_tri_he_thong ? '' : nut(a.bi_khoa ? 'Mở khoá' : 'Khoá', 'khoaTaiKhoan', a, `data-bat="${a.bi_khoa ? '0' : '1'}"`);
   const btnSua = state.user.quan_tri_he_thong && !a.is_system ? nut('Sửa', 'moSuaTaiKhoan', a, `aria-label="Sửa vai trò, phòng, chức danh của ${escapeHtml(a.full_name)}"`) : ''; // PR-4, 0068
+  const btnCtd = duocChuyenTheoDoi() && !a.is_system && a.role_group !== 'A0' ? nut('Chuyển việc theo dõi', 'moChuyenTheoDoi', a, `aria-label="Chuyển việc đang theo dõi của ${escapeHtml(a.full_name)}"`) : '';   // J-6, 0092
   return `
     <tr data-search="${escapeHtml(search)}">
       <td class="tieude">${escapeHtml(a.full_name)}${me ? ' (tôi)' : ''}<small>${escapeHtml(a.username)}${a.position_title ? ` · ${escapeHtml(a.position_title)}` : ''}${a.dien_thoai ? ` · ${escapeHtml(a.dien_thoai)}` : ''}</small></td>
@@ -33,7 +35,7 @@ function taiKhoanRowHtml(a) {
       <td data-nhan="Vai trò">${escapeHtml(ROLE_LABELS[a.role_group] || a.role_group)}</td>
       <td data-nhan="Quản trị KL BTVTU">${kl}</td>
       <td data-nhan="Hệ thống">${ht}${tk}${khoa}</td>
-      <td><div class="thao-tac">${btnSua}${btnKl}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
+      <td><div class="thao-tac">${btnSua}${btnCtd}${btnKl}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
     </tr>`;
 }
 

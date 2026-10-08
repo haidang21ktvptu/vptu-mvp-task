@@ -3,7 +3,7 @@
 // sắp đến hạn (hàng có Đôn đốc / Nhắc tại chỗ), minh chứng chuyên viên vừa nộp; cột phụ 360px = tải việc từng cán bộ (đếm từ dòng RLS đã tải,
 // không truy vấn thêm) + việc do chính Trưởng phòng chủ trì. Menu: Giao việc trong phòng, Nhiệm vụ của phòng, Cán bộ, Nhắn tin. Quyền thật ở hàm DB.
 import { $, show, setText, escapeHtml, formatDateTime, giuONhap } from '../../lib/dom.js';
-import { dongBoNutNghiemThu } from '../shared/chat-luong.js';
+import { dongBoNutDanhGia } from '../shared/chat-luong.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -65,12 +65,12 @@ function ve() {
   const cd = mucChiDaoChoHtml(); $('ptChiDao').innerHTML = cd; show('ptChiDao', Boolean(cd));
   $('ptDo').innerHTML = mucViecDoHtml();
   $('ptVang').innerHTML = mucSapHanHtml();
-  $('ptMc').innerHTML = dh.mcCho.length ? `<div class="muc lam"><b>Minh chứng chuyên viên vừa nộp (${dh.mcCho.length})</b>${minhChungChoHtml()}</div>` : '';
+  $('ptMc').innerHTML = dh.mcCho.length ? `<div class="muc lam"><b>Kết quả nộp trong 7 ngày (${dh.mcCho.length}) — đánh giá hoặc trả lại nếu chưa đạt, không bắt buộc</b>${minhChungChoHtml()}</div>` : '';
   show('ptMc', dh.mcCho.length > 0);
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
   if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
-  traNhap(); dongBoNutNghiemThu($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
+  traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 
 async function loadPhongToi() {

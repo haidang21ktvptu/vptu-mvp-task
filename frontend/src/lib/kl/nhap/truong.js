@@ -1,5 +1,5 @@
 // Chuẩn nhập của hệ thống (v9 đợt 2 — nhập Excel toàn trình), 3 mức: mức 1 = đủ để GIAO việc; mức 2 = tiến độ (tuỳ chọn); mức 3 = đủ để
-// ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). 25 trường đầu (mau: true) là cột của "Mẫu nhập chuẩn VPTU-TASK"; trường phụ (mau: false) nhận
+// ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). 28 trường (mau: true — 25 cũ + 3 ô nguồn v3.20 ở cuối) là cột của "Mẫu nhập chuẩn VPTU-TASK"; trường phụ (mau: false) nhận
 // khi tệp khác có cột tương ứng. Mã trường khớp kl_truong_nhap() (migration 0072). ten: tiêu đề hay gặp (đã chuẩn hoá — chuanTieuDe) để tự ghép cột.
 
 export const TRUONG = [
@@ -28,6 +28,10 @@ export const TRUONG = [
   { k: 'kq_trich_yeu', nhan: 'Trích yếu văn bản kết quả', muc: 3, mau: true, ten: ['trich yeu van ban ket qua', 'trich yeu ket qua', 'trich yeu'] },
   { k: 'kq_mo_ta', nhan: 'Mô tả kết quả', muc: 3, mau: true, ten: ['mo ta ket qua', 'ket qua thuc hien / minh chung', 'ket qua thuc hien', 'ket qua'] },
   { k: 'chat_luong', nhan: 'Chất lượng', muc: 3, mau: true, kieu: 'chatLuong', ten: ['chat luong', 'danh gia chat luong'] },
+  // Đợt D v3.20 (0093): ba ô nguồn của 0087 — thêm cuối mẫu (giữ vị trí 25 cột cũ để tệp đã điền / "Xuất theo mẫu" nhập lại đúng cột).
+  { k: 'muc_quan_trong', nhan: 'Mức quan trọng', muc: 1, mau: true, kieu: 'mucQT', ten: ['muc quan trong', 'muc do quan trong'] },
+  { k: 'co_quan_trinh', nhan: 'Cơ quan trình', muc: 1, mau: true, kieu: 'coQuanTrinh', ten: ['co quan trinh'] },
+  { k: 'thuong_truc_chi_dao', nhan: 'Thường trực chỉ đạo', muc: 1, mau: true, kieu: 'thuongTruc', ten: ['thuong truc chi dao', 'dong chi thuong truc chi dao'] },
   { k: 'linh_vuc_chi_tiet', nhan: 'Lĩnh vực chi tiết', muc: 1, mau: false, ten: ['linh vuc chi tiet'] },
   { k: 'van_ban_trien_khai', nhan: 'Văn bản triển khai', muc: 2, mau: false, ten: ['van ban trien khai'] },
   { k: 'don_vi_phoi_hop', nhan: 'Đơn vị phối hợp', muc: 1, mau: false, ten: ['don vi phoi hop', 'phoi hop'] },
