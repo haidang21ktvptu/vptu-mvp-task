@@ -20,7 +20,7 @@ BEGIN
   ELSIF v_loai = 'CHI_DAO_TT' THEN RAISE EXCEPTION 'Chỉ Thường trực Tỉnh ủy mới gửi chỉ đạo Thường trực.' USING ERRCODE = '42501';
   -- 0092: + người tạo việc giao thẳng (không thay mặt ai — "việc mình giao"), còn thấy việc: đôn đốc, gia hạn, giao lại, ý kiến.
   ELSIF v_nv."id" IS NULL OR NOT ("public"."kl_duoc_chi_dao"(v_nv."id")
-        OR (v_nv."tao_boi" = "auth"."uid"() AND v_nv."giao_thay_mat_cho" IS NULL AND v_nv."giao_thay_mat_nhom" IS NULL AND "public"."kl_thay_nhiem_vu"(v_nv."id"))) THEN
+        OR coalesce(v_nv."tao_boi" = "auth"."uid"() AND v_nv."giao_thay_mat_cho" IS NULL AND v_nv."giao_thay_mat_nhom" IS NULL AND "public"."kl_thay_nhiem_vu"(v_nv."id"), false)) THEN   -- tao_boi NULL ⇒ false (không để NULL lọt qua IF)
     RAISE EXCEPTION 'Chỉ lãnh đạo trong phạm vi hoặc người giao việc mới ra chỉ đạo, đôn đốc trên nhiệm vụ này.' USING ERRCODE = '42501'; END IF;
   IF v_loai NOT IN ('DON_DOC', 'GIA_HAN', 'GIAO_LAI', 'YEU_CAU_MINH_CHUNG', 'KIEM_TRA_SO_LIEU', 'Y_KIEN', 'CHI_DAO_TT') THEN RAISE EXCEPTION 'Loại chỉ đạo không hợp lệ.' USING ERRCODE = '22023'; END IF;
   IF v_noi_dung = '' THEN RAISE EXCEPTION 'Chỉ đạo phải có nội dung (lý do).' USING ERRCODE = '22023'; END IF;

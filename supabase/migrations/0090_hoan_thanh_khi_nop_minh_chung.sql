@@ -74,8 +74,8 @@ $$;
 -- Chánh VP chủ trì việc Thường trực giao không tự xem lại.
 CREATE OR REPLACE FUNCTION "public"."kl_duoc_xem_lai_minh_chung"("p_nv" "public"."nhiem_vu") RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT "auth"."uid"() IS NOT NULL AND ("public"."kl_duoc_nghiem_thu"(("p_nv")."id")
-    OR ("public"."kl_la_tang_giao"("p_nv") AND NOT ("public"."kl_viec_a0_giao_cvp"("p_nv") AND ("p_nv")."owner_tai_khoan" = "auth"."uid"())));
+  SELECT coalesce("auth"."uid"() IS NOT NULL AND ("public"."kl_duoc_nghiem_thu"(("p_nv")."id")
+    OR ("public"."kl_la_tang_giao"("p_nv") AND NOT coalesce("public"."kl_viec_a0_giao_cvp"("p_nv") AND ("p_nv")."owner_tai_khoan" = "auth"."uid"(), false))), false);
 $$;
 REVOKE ALL ON FUNCTION "public"."kl_duoc_xem_lai_minh_chung"("public"."nhiem_vu") FROM public, "anon";
 GRANT EXECUTE ON FUNCTION "public"."kl_duoc_xem_lai_minh_chung"("public"."nhiem_vu") TO "authenticated";
@@ -147,7 +147,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_mc "public"."minh_chung"; v_ma text; v_ten text := left(nullif(btrim(coalesce("p_tep_ten", '')), ''), 200);
 BEGIN
   SELECT * INTO v_mc FROM "public"."minh_chung" WHERE "id" = "p_id";
-  IF v_mc."id" IS NULL OR NOT (v_mc."nop_boi" = "auth"."uid"() OR "public"."kl_duoc_nop_minh_chung"(v_mc."nhiem_vu_id")) THEN
+  IF v_mc."id" IS NULL OR NOT (coalesce(v_mc."nop_boi" = "auth"."uid"(), false) OR "public"."kl_duoc_nop_minh_chung"(v_mc."nhiem_vu_id")) THEN
     RAISE EXCEPTION 'Chỉ người nộp hoặc người được nộp minh chứng của nhiệm vụ mới gắn tệp.' USING ERRCODE = '42501';
   END IF;
   IF v_mc."loai" <> 'so_hieu' OR v_mc."tep_path" IS NOT NULL THEN RAISE EXCEPTION 'Minh chứng này đã có tệp hoặc không gắn tệp được.' USING ERRCODE = '22023'; END IF;

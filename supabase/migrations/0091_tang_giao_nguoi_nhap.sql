@@ -32,13 +32,13 @@ GRANT EXECUTE ON FUNCTION "public"."kl_cap_bac"(uuid) TO "authenticated";
 -- ---- 2 ----
 CREATE OR REPLACE FUNCTION "public"."kl_la_tang_giao"("p_nv" "public"."nhiem_vu") RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT "auth"."uid"() IS NOT NULL AND (
+  SELECT coalesce("auth"."uid"() IS NOT NULL AND (
     ("public"."me_quan_tri_kl"() AND "public"."me_role"() IS DISTINCT FROM 'A0')
     OR EXISTS (SELECT 1 FROM "public"."accounts" a WHERE a."id" = "auth"."uid"() AND NOT coalesce(a."bi_khoa", false) AND NOT a."is_system"
                AND (a."id" = "p_nv"."giao_thay_mat_cho" OR (a."id" = "p_nv"."tao_boi" AND "public"."kl_thay_nhiem_vu"("p_nv"."id"))))   -- người tạo còn thấy việc
     OR "public"."kl_trong_nhom_thay_mat"("auth"."uid"(), "p_nv"."giao_thay_mat_nhom", "p_nv"."id")
     OR ("public"."kl_lanh_dao_pham_vi"("p_nv"."id")   -- lãnh đạo trong phạm vi, cấp cao hơn người giao (việc không rõ người giao: mọi lãnh đạo trong phạm vi)
-        AND "public"."kl_cap_bac"("auth"."uid"()) > coalesce("public"."kl_cap_bac"(coalesce("p_nv"."giao_thay_mat_cho", "p_nv"."tao_boi")), -1)));
+        AND "public"."kl_cap_bac"("auth"."uid"()) > coalesce("public"."kl_cap_bac"(coalesce("p_nv"."giao_thay_mat_cho", "p_nv"."tao_boi")), -1))), false);
 $$;
 REVOKE ALL ON FUNCTION "public"."kl_la_tang_giao"("public"."nhiem_vu") FROM public, "anon";
 GRANT EXECUTE ON FUNCTION "public"."kl_la_tang_giao"("public"."nhiem_vu") TO "authenticated";   -- guard a3 (SECURITY INVOKER) gọi trực tiếp
@@ -103,7 +103,7 @@ DECLARE v "public"."nhiem_vu"; v_me "public"."accounts"; v_cap "public"."account
 BEGIN
   SELECT * INTO v_me FROM "public"."accounts" WHERE "id" = "auth"."uid"();
   SELECT * INTO v FROM "public"."nhiem_vu" WHERE "id" = "p_nhiem_vu";
-  IF v_me."id" IS NULL OR v_me."role_group" = 'A0' OR v."id" IS NULL OR NOT (v."nguoi_theo_doi" = v_me."id" OR v."owner_tai_khoan" = v_me."id") THEN
+  IF v_me."id" IS NULL OR v_me."role_group" = 'A0' OR v."id" IS NULL OR NOT coalesce(v."nguoi_theo_doi" = v_me."id" OR v."owner_tai_khoan" = v_me."id", false) THEN
     RAISE EXCEPTION 'Chỉ Owner hoặc người theo dõi vừa được giao việc mới đề nghị từ chối.' USING ERRCODE = '42501';
   END IF;
   IF v."tien_do_ma" = 'HOAN_THANH' THEN RAISE EXCEPTION 'Nhiệm vụ đã đóng, không còn từ chối được.' USING ERRCODE = '22023'; END IF;

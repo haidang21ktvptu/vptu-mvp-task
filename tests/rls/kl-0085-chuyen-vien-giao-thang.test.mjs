@@ -94,7 +94,10 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
     assert.deepEqual(await daNhan(nv1), [], 'việc giao dưới cấu hình 1 không được điền lại');
     assertOk(await datCauHinh('1'), 'về cấu hình 1');
     const r2 = await giao('demo_truongphong', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
-    assertOk(r2, 'giao dưới cấu hình 1'); assert.deepEqual(await daNhan(r2.data.id), [], 'cấu hình 1: chờ xác nhận như cũ');
+    assertOk(r2, 'giao dưới cấu hình 1');
+    assert.deepEqual(await daNhan(r2.data.id), [IDS.truongphong], 'cấu hình 1: chỉ lãnh đạo (người theo dõi) đã nhận tự động (0090); chuyên viên chờ xác nhận');
+    const v2 = (await db().from('v_nhiem_vu').select('da_xac_nhan_nhan, khau').eq('id', r2.data.id).single()).data;
+    assert.equal(v2.da_xac_nhan_nhan, false, '0094: "đã nhận" tự động của lãnh đạo chỉ theo dõi không thay chủ trì nhận việc');
   });
 
   test('7. quản trị KL (cv2 cấp tạm) không chọn thay mặt → giao thẳng (phòng bị chặn); có thay mặt → như trước; giao_viec_nhieu của chuyên viên: hai dòng cùng theo dõi = người giao', async () => {

@@ -98,7 +98,7 @@ export function chiTietHtml(r, ls, dc) {
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
         <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
       <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
-        ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${nhanViec.length ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
+        ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
         ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}
         ${o('Hạn hoàn thành', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
