@@ -16,6 +16,9 @@ export const klTemplate = `
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 
   <div class="kl-loc">
+    <div id="klPhamVi" class="pham-vi hidden" role="group" aria-label="Phạm vi xem" title="Cấu hình của Văn phòng cho phép chuyên viên xem mọi việc của phòng mình (chỉ xem)">
+      <button type="button" data-action="klPhamVi" data-pv="toi" aria-pressed="false">Việc của tôi</button>
+      <button type="button" data-action="klPhamVi" data-pv="phong" aria-pressed="true">Cả phòng</button></div>
     <div id="klStats" class="tq" role="group" aria-label="Tổng quan, bấm để lọc">
       <button type="button" class="o-so" data-action="locKlNhom" data-nhom="" aria-pressed="true"><b id="klSo-TONG">0</b> tổng</button>
       ${THU_TU_NHOM.map(oSo).join('')}

@@ -1,0 +1,61 @@
+/* Đợt C1 v3.19 (0086): nút phạm vi "Việc của tôi / Cả phòng" của chuyên viên xem cả phòng (màn Nhiệm vụ); thanh lọc Tổng quan; khối
+   "Theo loại văn bản" (vòng tròn nhỏ + 3 số); cột thanh tải chồng trong bảng KPI; "Theo lãnh đạo VP phụ trách"; giá trị cũ gạch ngang ở lịch sử.
+   Chỉ trình bày theo docs/DESIGN.md — id, data-*, tên lớp cũ giữ nguyên. Tên lớp viết nguyên văn trong JS. */
+@layer components {
+  .pham-vi { display: inline-flex; border: 1px solid var(--vien); border-radius: 18px; padding: 2px; background: var(--the); }
+  .pham-vi button { height: 30px; padding: 0 12px; border-radius: 16px; font-size: 13px; font-weight: 600; color: var(--chu); white-space: nowrap; }
+  .pham-vi button[aria-pressed="true"] { background: var(--navy-dac); color: #fff; }
+
+  /* Thanh lọc Tổng quan: một hàng ô chọn + chip loại văn bản; nằm dưới hero, trên lưới khối. */
+  .tq-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 14px 0 0; padding: 10px 12px; border: 1px solid var(--vien); border-radius: 12px; background: var(--the); }
+  .tq-loc > label { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--chu-phu); }
+  .tq-loc select { height: 32px; padding: 0 8px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px; color: var(--chu); max-width: 220px; }
+  .tq-loc .chip-loai { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .tq-loc .chip-loai button { height: 28px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 14px; background: var(--the); font-size: 12.5px; font-weight: 600; color: var(--chu); }
+  .tq-loc .chip-loai button[aria-pressed="true"] { background: var(--navy-dac); border-color: var(--navy-dac); color: #fff; }
+  .tq-loc .tq-loc-bo { margin-left: auto; font-size: 12.5px; color: var(--navy); text-decoration: underline; }
+  .tq-loc .tq-loc-bo:disabled { color: var(--chu-phu); text-decoration: none; }
+  .tq-dang-loc { font-size: 12.5px; color: var(--chu-phu); flex-basis: 100%; }
+
+  /* Hero: tỷ lệ % nhỏ dưới số, dòng quy tắc một câu. */
+  .hung-so .ty-le { font-size: 12.5px; font-weight: 600; opacity: .85; }
+  .hung-quy-tac { margin: 10px 0 0; font-size: 12.5px; opacity: .8; }
+
+  /* Lưới khối: thêm khối n5 / n7 theo vai nên cho phép lấp chỗ trống (dense) — khối sau vừa chỗ thì lên lấp, không để ô trắng. */
+  .luoi-tq { grid-auto-flow: row dense; }
+  /* Khối Theo loại văn bản: vòng tròn (conic) + bảng 3 số; mỗi dòng là nút lọc. */
+  .loai-vb { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px 18px; align-items: center; }
+  .loai-vb td:not(:first-child) { width: 1%; white-space: nowrap; }
+  .loai-vb .ten-bam { width: auto; font-weight: 600; }
+  .loai-vb .loai-nut::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--mau); margin-right: 6px; vertical-align: -1px; }
+  .loai-vb td > small.chu-phu { display: block; font-size: 12px; margin-left: 16px; }
+  .loai-vb td.so .ten-bam { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+  .loai-vb td.so .ten-bam b { font-size: 17px; } .loai-vb td.so .ten-bam small { font-size: 11.5px; color: var(--chu-phu); }
+  .loai-vb .vong { width: 120px; height: 120px; border-radius: 50%; position: relative; }
+  .loai-vb .vong::after { content: attr(data-tong); position: absolute; inset: 22px; border-radius: 50%; background: var(--the); display: grid; place-items: center; font-weight: 800; font-size: 20px; color: var(--chu); }
+  .loai-vb table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .loai-vb td { padding: 5px 4px; border-top: 1px solid var(--vien-nhat); vertical-align: middle; }
+  .loai-vb tr:first-child td { border-top: 0; }
+  .loai-vb td.so { text-align: right; font-weight: 700; white-space: nowrap; }
+  .loai-vb .ten-bam[aria-pressed="true"] { color: var(--navy); text-decoration: underline; }
+
+  /* Cột "Tải" trong bảng KPI: thanh chồng hoàn thành / đang làm (vàng / đỏ / đỏ đặc biệt) theo tỷ lệ trên tổng. */
+  .tai { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--nen-phu); min-width: 90px; }
+  .tai > i { display: block; height: 100%; }
+  .tai .t-xong { background: var(--luc); } .tai .t-mo { background: var(--navy); opacity: .45; }
+  .tai .t-vang { background: var(--vang); } .tai .t-do { background: var(--do); } .tai .t-ddb { background: var(--do-dam); }
+  .bang-kpi td.c-tai { min-width: 110px; }
+
+  /* Diễn biến / lịch sử: giá trị cũ gạch ngang, giá trị mới đậm. */
+  .dien-bien .cu { text-decoration: line-through; color: var(--chu-phu); }
+  .dien-bien .moi { font-weight: 600; }
+}
+@media (max-width: 640px) {
+  .loai-vb { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .tq-loc select { max-width: 100%; }
+}
+@layer components {
+  /* Hộp Cập nhật: mục "Nộp minh chứng nhanh" đóng khung nhẹ để tách khỏi các ô cập nhật. */
+  .khung-mc { border: 1px solid var(--vien); border-radius: 10px; padding: 10px 12px 12px; margin: 0; }
+  .khung-mc > legend { padding: 0 6px; }
+}

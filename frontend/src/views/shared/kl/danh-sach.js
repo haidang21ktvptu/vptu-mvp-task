@@ -129,6 +129,8 @@ function veChip() {
     `<span class="chip">${escapeHtml(NHAN_CHIP[k](v))}<button type="button" data-action="boKlLoc" data-khoa="${k}" aria-label="Bỏ lọc">✕</button></span>`);
   $('klChipLoc').innerHTML = chips.join('');
   $('klChipLoc').classList.toggle('hidden', chips.length === 0);
+  // 0086: nút phạm vi của chuyên viên xem cả phòng (Việc của tôi / Cả phòng) luôn khớp khoá cuaToi — kể cả khi bỏ chip.
+  document.querySelectorAll('#klPhamVi button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.pv === 'toi') === Boolean(kl.loc.cuaToi))));
 }
 
 export function ganBoLoc() {

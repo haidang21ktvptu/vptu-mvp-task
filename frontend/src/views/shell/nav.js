@@ -3,6 +3,7 @@
 // có id <id>Duoi để không trùng id. Chân menu ghi phiên bản + giờ build đọc từ phien-ban.json (không có khi chạy local → để trống).
 import { $, show, setText, escapeHtml } from '../../lib/dom.js';
 import { menuCuaVai } from './menu.js';
+import { chuyenVienXemPhong } from '../../lib/kl/du-lieu.js';
 
 let items = [];
 const NHOM = ['Điều hành', 'Theo dõi', 'Trao đổi', 'Hệ thống'];
@@ -36,7 +37,7 @@ function duoiHtml(it) {
 }
 
 export function renderNav(user) {
-  items = menuCuaVai(user);
+  items = menuCuaVai(user, { xemPhong: user?.role_group === 'A3' && chuyenVienXemPhong() });   // 0086: Tổng quan phòng, Nhiệm vụ của phòng cho chuyên viên
   $('mainNav').innerHTML = NHOM.map((n) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? `<div class="menu-nhom">${n}</div>${ds.map(pillHtml).join('')}` : ''; }).join('')
     + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>';
   veChanMenu();

@@ -68,7 +68,8 @@ export default defineConfig({
     { name: 'pr3-giao-that', use: DESKTOP, testMatch: /pr3-giao-that\.spec\.js/, dependencies: ['pr2b-b4-b6'] },
     { name: 'pr3-thay-mat-nhom', use: DESKTOP, testMatch: /thay-mat-nhom\.spec\.js/, dependencies: ['pr3-giao-that'] },   // v3.18: thay mặt nhóm (demo_qtht cờ tạm), duyệt theo nhóm (PCVP)
     { name: 'dot-e-cv-giao', use: DESKTOP, testMatch: /cv-giao-viec\.spec\.js/, dependencies: ['pr3-thay-mat-nhom'] },   // v3.18 Đợt E: chuyên viên giao thẳng, cấu hình coi như đã nhận (tạm)
-    { name: 'pr3-vuong-mac', use: DESKTOP, testMatch: /pr3-vuong-mac\.spec\.js/, dependencies: ['dot-e-cv-giao'] },
+    { name: 'dot-c1-cv-xem-phong', use: DESKTOP, testMatch: /cv-xem-phong\.spec\.js/, dependencies: ['dot-e-cv-giao'] },   // v3.19 Đợt C1: chuyên viên xem cả phòng (cấu hình 2 tạm), cập nhật + minh chứng nhanh
+    { name: 'pr3-vuong-mac', use: DESKTOP, testMatch: /pr3-vuong-mac\.spec\.js/, dependencies: ['dot-c1-cv-xem-phong'] },
     { name: 'pr3-hien-thi', use: DESKTOP, testMatch: /pr3-hien-thi\.spec\.js/, dependencies: ['pr3-vuong-mac'] },
     // PR-4 (chỉ máy tính, một phiên demo_qtht): sửa phòng + chức danh demo_e2e_dh rồi trả lại — nối sau pr3-hien-thi, trước dang-nhap.
     { name: 'pr4', use: DESKTOP, testMatch: /quan-tri-sua-tai-khoan\.spec\.js/, dependencies: ['pr3-hien-thi'] },

@@ -147,8 +147,9 @@ export function chatLuongKy(rows, k) {
 // Chỉ đạo gốc (không tính phản hồi) gửi trong kỳ, của người gửi thuộc phạm vi vai: A0 = chỉ đạo Thường trực; A1 = lãnh đạo Văn phòng;
 // A2 = chính Trưởng phòng. Đúng hạn = phản hồi không muộn hơn hạn phản hồi (trên số đã phản hồi có hạn); thời gian trung bình tính theo ngày.
 // chiDaoPhan: các tập chỉ đạo (banHanh / daPhanHoi / dangCho / quaHan) — Tổng quan bấm số → danh sách việc của đúng tập đó.
-export function chiDaoPhan(cds, k, { vai, me, laLanhDaoVP = () => false }, now = new Date()) {
-  const cuaVai = (c) => (vai === 'A0' ? c.loai === 'CHI_DAO_TT' : vai === 'A2' ? c.nguoi_gui === me : c.loai !== 'CHI_DAO_TT' && laLanhDaoVP(c.nguoi_gui));
+// A3 (Đợt C1, chuyên viên xem cả phòng): chỉ đạo của Trưởng phòng mình (laTruongPhong).
+export function chiDaoPhan(cds, k, { vai, me, laLanhDaoVP = () => false, laTruongPhong = () => false }, now = new Date()) {
+  const cuaVai = (c) => (vai === 'A0' ? c.loai === 'CHI_DAO_TT' : vai === 'A2' ? c.nguoi_gui === me : vai === 'A3' ? laTruongPhong(c.nguoi_gui) : c.loai !== 'CHI_DAO_TT' && laLanhDaoVP(c.nguoi_gui));
   const banHanh = cds.filter((c) => c.loai !== 'PHAN_HOI' && !c.tra_loi_cho && cuaVai(c) && trong(ngayCua(c.created_at), k));
   const dangCho = banHanh.filter((c) => !c.phan_hoi_luc && c.trang_thai === 'CHO_PHAN_HOI');
   const homNay = homNayVN(now);

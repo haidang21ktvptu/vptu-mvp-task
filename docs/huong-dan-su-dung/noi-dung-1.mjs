@@ -87,6 +87,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     // ───────────────────────── PHẦN 3
     P1('Phần 3. Dành cho Chuyên viên'),
     p('Chuyên viên chỉ nhìn thấy **việc của chính mình**: việc mình chủ trì, việc mình là người theo dõi và việc mình đã giao. Menu có các mục: **Việc của tôi**, **Giao việc** (nhập nhiệm vụ từ văn bản được phân chủ trì — mục 3.11), **Cần nghiệm thu** (kết quả của việc mình giao), **Việc tôi theo dõi**; ngoài ra có **Nhắn tin**.'),
+    luuY('Từ v3.19, nếu Văn phòng bật cấu hình **"chuyên viên xem cả phòng"** (mục 8.4), menu có thêm **Tổng quan phòng** và **Nhiệm vụ của phòng** (mục 3.12): đồng chí xem được mọi việc của phòng mình — **chỉ xem**, không cập nhật, nộp minh chứng hay xác nhận thay người khác.'),
     P2('3.1 Màn hình "Việc của tôi"'),
     p('Đây là nơi bắt đầu mỗi ngày. Dải **"Cần xử lý ngay"** ở trên cùng đếm tin chưa đọc và việc mới chờ xác nhận. Khối **"Hôm nay của tôi"** xếp mọi việc thành **một thẻ mỗi việc**, theo nhóm ưu tiên từ trên xuống: *Việc mới giao — cần xác nhận đã nhận* → *Sắp đến hạn hoặc quá hạn, chưa có minh chứng* → *Đang thực hiện, còn thời gian*. Bên phải là **"Hạn trong 7 ngày tới"**. Mọi thao tác làm **ngay trên thẻ**, không phải mở trang khác.'),
     ...hinh('a3-01-viec-cua-toi.jpg', 'Màn hình "Việc của tôi" của chuyên viên'),
@@ -106,15 +107,16 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     ...steps([
       'Trên thẻ việc đang thực hiện, bấm **Cập nhật tiến độ** (hoặc **Ghi vướng mắc**).',
       'Ghi ngắn gọn ở ô **Ghi chú** việc đã làm tới đâu; nếu gặp khó khăn cần lãnh đạo quyết, ghi vào ô **Vướng mắc / đề nghị lãnh đạo quyết định** (tối đa 500 ký tự). Ô "Văn bản triển khai" dùng khi đã có văn bản triển khai việc.',
-      'Bấm **Lưu cập nhật**. Lần đầu ghi vướng mắc, hệ thống báo ngay cho người giao và Phó Chánh Văn phòng phụ trách; việc hiện ở mục "Việc cần lãnh đạo quyết định" của lãnh đạo. Khi vướng mắc đã được giải quyết, xoá trống ô này.',
+      'Đã có văn bản kết quả thì điền luôn mục **Nộp minh chứng nhanh** (v3.19) ngay trong hộp: **Số hiệu văn bản** và **Ngày văn bản** là đủ; cấp nhận mặc định theo việc, trích yếu / mô tả kết quả không bắt buộc. Để trống cả số hiệu lẫn ngày = chỉ cập nhật, không nộp.',
+      'Bấm **Lưu cập nhật**. Lần đầu ghi vướng mắc, hệ thống báo ngay cho người giao và Phó Chánh Văn phòng phụ trách; việc hiện ở mục "Việc cần lãnh đạo quyết định" của lãnh đạo. Khi vướng mắc đã được giải quyết, xoá trống ô này. Có minh chứng nhanh thì việc chuyển sang **"Đã nộp — chờ nghiệm thu"**.',
     ]),
-    ...hinh('a3-04-cap-nhat-tien-do-cat.jpg', 'Hộp thoại Cập nhật: tiến độ, ghi chú, vướng mắc'),
+    ...hinh('a3-04-cap-nhat-tien-do-cat.jpg', 'Hộp thoại Cập nhật: tiến độ, ghi chú, vướng mắc, nộp minh chứng nhanh'),
     luuY('Hạn hoàn thành đã chốt khi giao, chuyên viên không tự đổi được. Cần thêm thời gian thì đề nghị lãnh đạo **gia hạn** (ghi vào vướng mắc hoặc trao đổi trực tiếp); lãnh đạo gia hạn có lý do, hạn cũ vẫn lưu trong lịch sử.'),
     P2('3.5 Nộp minh chứng (kết quả thực hiện)'),
     p('Minh chứng là **văn bản đã phát hành hoặc đã trình** ghi nhận kết quả. Hệ thống không yêu cầu tải tệp lên — chỉ cần các thông tin tra cứu được trên V-Office. Với việc sắp/quá hạn, ô nộp minh chứng **mở sẵn** ngay trên thẻ.'),
     ...steps([
       'Trên thẻ việc, bấm **Nộp minh chứng** (nếu ô chưa mở sẵn).',
-      'Điền **Số hiệu văn bản**, **Ngày văn bản**, **Cấp nhận** (cấp đã trình/gửi — hệ thống gợi ý sẵn cấp nhận sản phẩm của việc), **Trích yếu văn bản** và **Mô tả kết quả** (khoảng 100 chữ: đã làm gì, kết quả, gửi ai).',
+      'Điền **Số hiệu văn bản** và **Ngày văn bản** (bắt buộc); **Cấp nhận** (cấp đã trình/gửi — hệ thống gợi ý sẵn cấp nhận sản phẩm của việc, để trống = theo việc), **Trích yếu văn bản** và **Mô tả kết quả** (khoảng 100 chữ: đã làm gì, kết quả, gửi ai) nên ghi để lãnh đạo nghiệm thu nhanh — từ v3.19 không bắt buộc.',
       'Bấm **Nộp minh chứng**. Thẻ chuyển sang nhãn **"Đã nộp — chờ nghiệm thu"**; lãnh đạo nhận thông báo để nghiệm thu. Nếu bị **Trả lại** kèm lý do, việc quay về đầu danh sách — sửa rồi nộp lại trước hạn hoàn thành.',
     ]),
     ...hinh('a3-05-nop-minh-chung-cat.jpg', 'Ô nộp minh chứng mở sẵn trên thẻ việc sắp/quá hạn'),
@@ -153,6 +155,8 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Việc đã được giao cho đồng chí mà cần tách cho người khác cùng làm: mở việc, bấm **Giao tiếp xuống** — biểu mẫu mở sẵn văn bản của việc gốc. Trên việc mình đã giao, đồng chí **sửa được thông tin giao** (nút bút), **duyệt đề nghị sửa** của người thực hiện và **nghiệm thu** minh chứng ở mục **Cần nghiệm thu** (xem 4.4); việc tự giao cho mình thì Trưởng phòng nghiệm thu.'),
     luuY('Chuyên viên không giao việc cho **phòng** hay cho **lãnh đạo**; những việc đó do lãnh đạo giao. Phạm vi xem không đổi: Trưởng phòng của đồng chí và Trưởng phòng của người được giao đều thấy việc.'),
 
+    P2('3.12 Tổng quan phòng và Nhiệm vụ của phòng (khi Văn phòng bật cấu hình xem cả phòng)'),
+    p('**Nhiệm vụ của phòng** mở danh sách mọi việc của phòng (việc phòng theo dõi hoặc phòng chủ trì) với nút **Việc của tôi / Cả phòng** ở đầu dải số; bấm một dòng để xem chi tiết, chỉ đạo, minh chứng và lịch sử — với việc của người khác, ngăn chi tiết không có nút Cập nhật / Nộp minh chứng. **Tổng quan phòng** giống Tổng quan của Trưởng phòng (mục 4.1): dải số theo tháng / quý / năm, dải cảnh báo Đỏ, bảng Theo cán bộ, Theo loại văn bản, Tiến độ theo văn bản; **thanh lọc** dưới dải số (Phạm vi: toàn bộ / việc của tôi; loại văn bản; cán bộ chủ trì; độ khẩn) lọc mọi khối bên dưới. Ô tìm nhanh trên đầu trang cũng tìm trong cả phòng.'),
     // ───────────────────────── PHẦN 4
     P1('Phần 4. Dành cho Trưởng phòng'),
     p('Trưởng phòng nhìn thấy **mọi việc của phòng mình** và là cấp giao việc trực tiếp cho chuyên viên. Menu: **Tổng quan phòng**, **Cần xử lý**, **Cần nghiệm thu**, **Giao việc trong phòng**, **Nhiệm vụ của phòng**, **Cán bộ trong phòng**, Nhắn tin.'),

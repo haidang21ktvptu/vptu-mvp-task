@@ -31,7 +31,7 @@ export const klMinhChungTemplate = `
       <textarea id="klMcMoTaKq" class="o-nhap" rows="4" placeholder="Đã làm gì, kết quả ra sao, đã gửi tới ai…"></textarea>
       <p class="chu-phu mt-1"><span id="klMcDem">0</span>/600 ký tự</p>
     </div>
-    <p class="chu-phu mt-3">Cả năm ô đều bắt buộc; văn bản tra được trên V-Office theo số hiệu. Tệp đính kèm chưa nhận (chờ điều kiện kinh phí).</p>
+    <p class="chu-phu mt-3">Số hiệu và ngày văn bản bắt buộc (tra được trên V-Office); cấp nhận để trống = theo việc; trích yếu, mô tả kết quả nên ghi để lãnh đạo nghiệm thu nhanh. Tệp đính kèm chưa nhận (chờ điều kiện kinh phí).</p>
     <div class="modal-chan">
       <button type="button" data-action="closeMinhChung" class="nut">Huỷ</button>
       <button type="submit" id="klMcLuu" class="nut chinh">Nộp minh chứng</button>

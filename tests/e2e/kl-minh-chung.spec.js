@@ -1,5 +1,5 @@
 // GĐ16 (PR 16B; giao diện v7 GĐ20; v8 đợt 4 = 4 yếu tố): minh chứng có cấu trúc. Chuyên viên (người theo dõi) mở ngăn chi tiết → việc theo 1400
-// KHÔNG có nút "Đóng nhiệm vụ" (0077: chỉ hoàn thành khi lãnh đạo nghiệm thu) → nộp thiếu ngày, rồi thiếu trích yếu/mô tả bị chặn ở form → nộp đủ →
+// KHÔNG có nút "Đóng nhiệm vụ" (0077: chỉ hoàn thành khi lãnh đạo nghiệm thu) → nộp thiếu ngày bị chặn ở form (0086: trích yếu / mô tả tuỳ chọn) → nộp đủ →
 // khối hiện đủ 4 yếu tố, nhãn "Đã nộp — chờ nghiệm thu" → Trưởng phòng nghiệm thu (RPC) → HOAN_THANH, lead time = 15 ngày; việc cũ (không theo
 // 1400) có minh chứng chữ hiện nhãn "Minh chứng cũ", nút Đóng sáng. Dữ liệu mẫu tạo bằng service_role trong hội nghị 992, tự dọn.
 import { test, expect } from '@playwright/test';
@@ -42,7 +42,7 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     if (db) await donVanBan(db, hnKhoa);
   });
 
-  test('việc theo 1400: không có nút Đóng; nộp thiếu ngày rồi thiếu trích yếu/mô tả bị chặn ở form; nộp đủ → khối hiện 4 yếu tố, chờ nghiệm thu', async () => {
+  test('việc theo 1400: không có nút Đóng; nộp thiếu ngày bị chặn ở form (0086: trích yếu / mô tả tuỳ chọn); nộp đủ → khối hiện 4 yếu tố, chờ nghiệm thu', async () => {
     await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP); // danh sách đã nạp xong
     const row = page.locator(`#klRow-${nvId}`);
@@ -58,12 +58,9 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     await expect(page.locator('#klMcCap')).toHaveValue('CHANH_VAN_PHONG'); // cấp nhận gợi ý = cấp nhận sản phẩm của nhiệm vụ
     await page.locator('#klMcSoHieu').fill('15/BC-VPTU');
     await page.locator('#klMcLuu').click();
-    await expect(page.locator('#toastContainer')).toContainText('đủ ba trường');
+    await expect(page.locator('#toastContainer')).toContainText('số hiệu và ngày văn bản');   // 0086: thiếu ngày → chặn ở form, hộp vẫn mở
     await expect(page.locator('#klMcModal')).toBeVisible();
     await page.locator('#klMcNgay').fill('2026-08-20');
-    await page.locator('#klMcLuu').click(); // 0046: đủ ba ô cũ nhưng thiếu trích yếu + mô tả → chặn ở form, hộp vẫn mở
-    await expect(page.locator('#toastContainer')).toContainText('trích yếu văn bản và mô tả kết quả');
-    await expect(page.locator('#klMcModal')).toBeVisible();
     await page.locator('#klMcTrichYeu').fill('Báo cáo kết quả rà soát (e2e MC)');
     await page.locator('#klMcMoTaKq').fill('Đã rà soát, tổng hợp và gửi Chánh Văn phòng.');
     await expect(page.locator('#klMcDem')).toHaveText('44'); // đếm ký tự theo ô mô tả

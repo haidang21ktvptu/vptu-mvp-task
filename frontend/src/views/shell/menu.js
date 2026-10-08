@@ -4,6 +4,7 @@
 // GĐ22: mục đầu của mọi vai có huy hiệu số chưa xử lý (dhBadge, features/huy-hieu.js); A0 có "Giao việc" (biểu mẫu chung, bản rút gọn).
 // v9: A0/A1/A2 mở đầu bằng "Tổng quan" (shared/tong-quan); màn hình điều hành đổi tên "Cần xử lý" (id navDieuHanh giữ nguyên cho e2e).
 // Đợt E v3.18 (0085): mọi chuyên viên có "Giao việc" (giao thẳng cho chuyên viên, không thay mặt) và "Cần nghiệm thu" (việc mình giao, mình là người theo dõi).
+// Đợt C1 v3.19 (0086): cấu hình pham_vi_chuyen_vien = 2 → chuyên viên có thêm "Tổng quan phòng" và "Nhiệm vụ của phòng" (chỉ xem; xemPhong).
 export const MENU = {
   A0: [
     { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
@@ -49,9 +50,14 @@ export const NHAP_EXCEL_NAV = { id: 'navNhapExcel', label: 'Nhập từ Excel', 
 
 // Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Nhiệm vụ toàn phạm vi (Giao việc đã có với mọi chuyên viên từ 0085).
 const QTKL_A3 = [{ ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
+// 0086: chuyên viên xem cả phòng — Tổng quan phòng (đầu menu, như các vai lãnh đạo) và Nhiệm vụ của phòng (danh sách, chip Việc của tôi / Cả phòng).
+// Không lên thanh dưới điện thoại (duoi: false) — thanh của chuyên viên giữ Việc của tôi / Giao việc / Theo dõi.
+const PHONG_A3 = { tongQuan: { ...MENU.A2[0], label: 'Tổng quan phòng', duoi: false }, nhiemVu: { ...MENU.A2[3], label: 'Nhiệm vụ của phòng', duoi: false, action: 'openKlPhong' } };
 
-export function menuCuaVai(user) {
-  const goc = [...(MENU[user?.role_group] || []), ...(user?.role_group === 'A3' && user?.quan_tri_kl ? QTKL_A3 : [])];
+export function menuCuaVai(user, { xemPhong = false } = {}) {
+  const a3 = user?.role_group === 'A3';
+  const goc = [...(a3 && xemPhong ? [PHONG_A3.tongQuan] : []), ...(MENU[user?.role_group] || []),
+    ...(a3 && user?.quan_tri_kl ? QTKL_A3 : a3 && xemPhong ? [PHONG_A3.nhiemVu] : [])];
   const nhanTin = [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];

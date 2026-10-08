@@ -4,6 +4,7 @@ import { supabase, sessionStorageKey } from '../lib/supabase.js';
 import { show, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
 import { initUserInterface } from '../views/shell/index.js';
+import { loadCauHinhKl } from '../lib/kl/du-lieu.js';
 import { batDemPhien, tatDemPhien, phienDaQuaHan, soPhut } from './het-phien.js';
 import { CAU_HET_PHIEN } from '../lib/het-phien.js';
 
@@ -19,8 +20,9 @@ export async function loadAccountsCache() {
   if (data) state.accounts = data.filter((a) => !a.is_system);
 }
 
-export function enterApp() {
+export async function enterApp() {
   show('changePasswordModal', false);
+  try { await loadCauHinhKl(); } catch { /* không đọc được cấu hình: menu theo mặc định (0086: chuyên viên chưa có mục phòng) */ }
   initUserInterface();
   hooks.onEnter.forEach((fn) => fn());
   batDemPhien(() => hooks.onLeave.forEach((fn) => fn()));   // v3.15.1: tự đăng xuất khi không thao tác (lib/het-phien.js)
