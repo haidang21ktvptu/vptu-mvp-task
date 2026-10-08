@@ -34,7 +34,7 @@ async function onTim(e) {
   if (!tuKhoa) return;
   const loc = chiViecCuaToi() && !chuyenVienXemPhong() ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };   // 0086: xem cả phòng → tìm cả phòng
   dongTimNhanh();
-  if (sectionDangHien('viewKl')) { openKl(loc); return; }
+  if (sectionDangHien('viewKl')) { openKl(loc, chiViecCuaToi() && chuyenVienXemPhong()); return; }
   try {
     const ds = locRows((await loadKlRows()).rows, loc);
     const dungMa = ds.filter((r) => r.ma.toLowerCase() === tuKhoa.toLowerCase());

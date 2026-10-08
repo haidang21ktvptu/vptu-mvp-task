@@ -2,7 +2,8 @@
 // dùng chung (views/shared/ngan-chi-tiet.js) — cùng quy ước đếm với lib/kl/tong-quan.js nên tổng của danh sách luôn bằng con số đã bấm.
 // ct (chỉ tiêu, do template gắn vào data-ct): { t: 'giao'|'xong'|'mo'|'canh'|'do'|'muc'|'dg'|'thang'|'nhom'|'vb'|'lv'|'cl'|'traLai'|'cd', … }.
 // Trả { tieuDe, rows } hoặc { tieuDe, nhom: [{ ten, rows }] }. Thuần (không DOM, không Supabase); unit test ở frontend/tests/tong-quan.test.mjs.
-import { ngayGiao, laMo, xongTrongKy, mucMo, chiDaoPhan } from './tong-quan.js';
+import { ngayGiao, laMo, laXong, xongTrongKy, mucMo, chiDaoPhan } from './tong-quan.js';
+import { loaiCua } from './tong-quan-them.js';
 import { CHUA_PHAN_LOAI } from './tong-hop.js';
 
 export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ nghiệm thu', vang: 'Cảnh báo Vàng', do: 'Cảnh báo Đỏ', ddb: 'Cảnh báo Đỏ đặc biệt',
@@ -47,6 +48,11 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'vb': {
       const cua = rows.filter((r) => r.van_ban_id === ct.id);
       return { tieuDe: `Văn bản ${ct.ten || ''}`.trim(), nhom: [{ ten: 'Đang thực hiện', rows: cua.filter(laMo) }, { ten: 'Đã hoàn thành', rows: cua.filter((r) => r.nhom_dem === 'HOAN_THANH') }] };
+    }
+    case 'loai': {   // Đợt C1: khối Theo loại văn bản — số bấm là TỔNG mọi kỳ nên danh sách gồm cả việc không mở, không xong (thường xuyên, chờ điều kiện…)
+      const cua = rows.filter((r) => loaiCua(r) === ct.ma);
+      return { tieuDe: `Loại văn bản: ${ct.ten || ''}`.trim(), nhom: [{ ten: 'Đang thực hiện', rows: cua.filter(laMo) }, { ten: 'Đã hoàn thành (mọi kỳ)', rows: cua.filter(laXong) },
+        { ten: 'Khác (thường xuyên, chờ điều kiện, không áp dụng)', rows: cua.filter((r) => !laMo(r) && !laXong(r)) }] };
     }
     case 'lv': return { tieuDe: `Lĩnh vực ${ct.ten || ''} — đang thực hiện`, rows: rows.filter((r) => laMo(r) && (ct.ma === CHUA_PHAN_LOAI ? !r.linh_vuc_ma : r.linh_vuc_ma === ct.ma)) };
     case 'cl': return { tieuDe: `Nghiệm thu “${TEN_CL[ct.cl] || ''}” ${k.trong}`, rows: xong().filter((r) => r.chat_luong === ct.cl) };

@@ -34,7 +34,7 @@ const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng'
 // phong = true (0086, chuyên viên xem cả phòng): tiêu đề "Nhiệm vụ của phòng", không lọc (RLS đã giới hạn trong phòng), hiện nút phạm vi.
 export function openKl(loc, phong = false) {
   showSection('viewKl');
-  setActiveNav('navKl');
+  setActiveNav(chiViecCuaToi() && !phong ? 'navDieuHanh' : 'navKl');   // chuyên viên xem "việc của tôi" (0086: navKl là Nhiệm vụ của phòng)
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
   $('klTieuDe').textContent = phong ? 'Nhiệm vụ của phòng' : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';

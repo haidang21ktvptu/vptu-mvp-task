@@ -36,9 +36,10 @@ export function loadMinhChungTatCa() {
 export const nfc = (s) => (typeof s === 'string' ? s.normalize('NFC') : s);
 export const nopMinhChung = (p) => rpc('nop_minh_chung', { p: { ...p, trich_yeu: nfc(p.trich_yeu), mo_ta_ket_qua: nfc(p.mo_ta_ket_qua) } });
 // Kiểm phía form dùng chung cho hộp Nộp minh chứng và ô nộp tại chỗ (A3): trả chuỗi lỗi hoặc null — hàm nop_minh_chung là chốt.
-// Đợt C1 (0086): số hiệu + ngày văn bản là đủ; cấp nhận trống = cấp nhận sản phẩm của việc; trích yếu, mô tả kết quả tuỳ chọn (≤ 600 ký tự).
-export function loiMinhChung(p) {
+// Đợt C1 (0086): số hiệu + ngày văn bản là đủ; cấp nhận trống = cấp nhận sản phẩm của việc (capViec); trích yếu, mô tả kết quả tuỳ chọn (≤ 600 ký tự).
+export function loiMinhChung(p, capViec = null) {
   if (!p.so_hieu || !p.ngay_van_ban) return 'Minh chứng phải có số hiệu và ngày văn bản (cấp nhận lấy theo việc nếu để trống).';
+  if (!p.cap_nhan && !capViec) return 'Việc chưa ghi cấp nhận sản phẩm — chọn cấp nhận cho minh chứng.';
   if (nfc(p.mo_ta_ket_qua || '').length > 600) return 'Mô tả kết quả tối đa 600 ký tự.';
   return null;
 }

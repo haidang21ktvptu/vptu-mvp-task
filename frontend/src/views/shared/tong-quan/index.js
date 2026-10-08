@@ -13,7 +13,7 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, cauHinhKl } from '../../../lib/kl/du-lieu.js';
-import { LOC_TRONG, coLoc, locTongQuan, tuyChonLoc, theoLoaiVanBan, theoLanhDaoVP, lanhDaoPhuTrach, loaiCua, CHUA_LDVP } from '../../../lib/kl/tong-quan-them.js';
+import { LOC_TRONG, coLoc, locTongQuan, tuyChonLoc, theoLoaiVanBan, theoLanhDaoVP, lanhDaoPhuTrach, CHUA_LDVP } from '../../../lib/kl/tong-quan-them.js';
 import { loadChiDaoTu } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
@@ -45,10 +45,9 @@ function tieuDe() {
 }
 const coGiaoViec = () => Boolean(state.user?.role_group);   // 0085: mọi vai giao việc được (chuyên viên giao thẳng)
 const phongCua = () => Object.fromEntries(state.accounts.map((a) => [a.id, a.department]));   // KPI theo cán bộ: phòng của cán bộ theo danh bạ
-// Hàm gom của bảng bấm vào (kh): cán bộ / phòng (KPI), loại văn bản, lãnh đạo VP phụ trách (một việc có thể thuộc nhiều lãnh đạo → so với ma đang bấm).
+// Hàm gom của bảng bấm vào (kh): cán bộ / phòng (KPI), lãnh đạo VP phụ trách (một việc có thể thuộc nhiều lãnh đạo → so với ma đang bấm).
 const khoaCua = (c) => (c.kh === 'cb' ? khoaCanBo(phongCua()) : c.kh === 'phong' ? khoaPhongCanBo(phongCua(), DEPT_NAMES)
-  : c.kh === 'loai' ? (r) => [loaiCua(r), tenLoai(loaiCua(r)), null]
-    : c.kh === 'ldvp' ? (r) => { const ids = lanhDaoPhuTrach(r, tq.phanCong); return [ids.includes(c.ma) ? c.ma : ids.length ? 'KHAC' : CHUA_LDVP, c.ten, null]; }
+  : c.kh === 'ldvp' ? (r) => { const ids = lanhDaoPhuTrach(r, tq.phanCong); return [ids.includes(c.ma) ? c.ma : ids.length ? 'KHAC' : CHUA_LDVP, c.ten, null]; }
       : khoaNhom(vaiNhom(), DEPT_NAMES, state.user?.department));
 const dongDaLoc = () => locTongQuan(tq.rows, tq.loc, { me: state.user?.id, phanCong: tq.phanCong });
 const quyTac = () => `Quy tắc: Vàng = còn ≤ ${cauHinhKl('nguong_vang_ngay', 3)} ngày tới hạn mà chưa có minh chứng (Khẩn trở lên ≤ ${cauHinhKl('do_khan_KHAN_vang', 5)} ngày); Đỏ = quá hạn; Đỏ đặc biệt = quá hạn ≥ ${cauHinhKl('nguong_do_dac_biet_ngay', 3)} ngày; đúng hạn tính trên việc hoàn thành đã được đánh giá.`;

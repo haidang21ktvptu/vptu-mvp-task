@@ -87,7 +87,7 @@ async function nopMinhChungThe(ds, form) {
   const f = new FormData(form);
   const p = { nhiem_vu_id: ds.id, so_hieu: (f.get('so_hieu') || '').trim(), ngay_van_ban: f.get('ngay_van_ban'), cap_nhan: f.get('cap_nhan'),
     trich_yeu: (f.get('trich_yeu') || '').trim(), mo_ta_ket_qua: (f.get('mo_ta_ket_qua') || '').trim() };
-  const loiForm = loiMinhChung(p);
+  const loiForm = loiMinhChung(p, dh.rows.find((r) => r.id === ds.id)?.cap_nhan_san_pham);
   if (loiForm) { notifyError(loiForm); return; }
   try {
     await nopMinhChung(p);

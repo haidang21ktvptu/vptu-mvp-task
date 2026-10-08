@@ -103,7 +103,7 @@ function minhChungNhanh() {
     trich_yeu: $('klCnMcTrichYeu').value.trim(), mo_ta_ket_qua: $('klCnMcMoTa').value.trim() };
   if (!p.so_hieu && !p.ngay_van_ban) return null;
   if (p.ngay_van_ban > homNay) return 'Ngày văn bản minh chứng không được sau hôm nay.';
-  return loiMinhChung(p) || p;
+  return loiMinhChung(p, row.cap_nhan_san_pham) || p;
 }
 
 async function luuKlCapNhat() {

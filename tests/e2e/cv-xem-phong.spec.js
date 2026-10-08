@@ -43,6 +43,7 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
       await expect(p.locator(`#klRow-${p1.id}`)).toBeVisible();
       await p.locator(`#klRow-${p1.id}`).click();
       const ngan = p.locator(`#klChiTiet-${p1.id}`); await expect(ngan).toBeVisible(NAP);
+      await expect(p.locator(`#klMinhChung-${p1.id}[data-hop-le]`)).toBeVisible(NAP);   // khối minh chứng đã nạp (nút Nộp nằm trong khối)
       await expect(ngan.getByRole('button', { name: 'Cập nhật' })).toHaveCount(0);
       await expect(ngan.getByRole('button', { name: 'Nộp minh chứng' })).toHaveCount(0);
       await expect(ngan.getByRole('button', { name: 'Xác nhận đã nhận việc' })).toHaveCount(0);

@@ -4,6 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { locTongQuan, tuyChonLoc, theoLoaiVanBan, theoLanhDaoVP, lanhDaoPhuTrach, phanTai, coLoc, LOC_TRONG, NGOAI_VP, CHUA_LDVP, KHONG_VB } from '../src/lib/kl/tong-quan-them.js';
 import { khoangKy, chiDaoPhan } from '../src/lib/kl/tong-quan.js';
+import { locChiTieu } from '../src/lib/kl/tong-quan-loc.js';
 
 const K = khoangKy('nam', '2026-10-02');
 const viec = (o) => ({ nhom_dem: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH', owner_trong_van_phong: true, owner_phong: 'TONG_HOP', nguoi_theo_doi_phong: 'TONG_HOP',
@@ -51,6 +52,14 @@ describe('khối mới', () => {
   test('theo loại văn bản: tổng / hoàn thành / đang làm / cảnh báo, tỷ lệ trên tổng, nhiều việc trước', () => {
     const ds = theoLoaiVanBan(ROWS);
     assert.deepEqual(ds.map((d) => [d.ma, d.tong, d.xong, d.dangMo, d.canhBao, d.tyLe]), [['KL_BTV', 3, 0, 3, 1, 60], ['CONG_VAN', 1, 0, 1, 1, 20], [KHONG_VB, 1, 1, 0, 0, 20]]);
+  });
+  test('bấm số của một loại văn bản: danh sách (ba phần) cộng đúng bằng tổng của loại, kể cả việc thường xuyên', () => {
+    const rows = [...ROWS, viec({ id: 6, nhom_dem: 'THUONG_XUYEN', muc_canh_bao: 'KHONG_AP_DUNG' })];
+    theoLoaiVanBan(rows).forEach((d) => {
+      const kq = locChiTieu(rows, { t: 'loai', ma: d.ma, ten: d.ma }, K);
+      assert.equal(kq.nhom.reduce((s, n) => s + n.rows.length, 0), d.tong, d.ma);
+      assert.equal(kq.nhom[0].rows.length, d.dangMo); assert.equal(kq.nhom[1].rows.length, d.xong);
+    });
   });
   test('theo lãnh đạo VP: mỗi Phó một dòng với phòng cả phòng; việc kiêm nhiệm tính cho người kiêm nhiệm; cuối là chưa có lãnh đạo', () => {
     const ds = theoLanhDaoVP(ROWS, K, PHAN_CONG, LD, { TONG_HOP: 'Phòng Tổng hợp', QUAN_TRI: 'Phòng Quản trị' });

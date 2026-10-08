@@ -56,7 +56,7 @@ const PHONG_A3 = { tongQuan: { ...MENU.A2[0], label: 'Tổng quan phòng', duoi:
 
 export function menuCuaVai(user, { xemPhong = false } = {}) {
   const a3 = user?.role_group === 'A3';
-  const goc = [...(a3 && xemPhong ? [PHONG_A3.tongQuan] : []), ...(MENU[user?.role_group] || []),
+  const goc = [...(a3 && xemPhong && !user?.quan_tri_kl ? [PHONG_A3.tongQuan] : []), ...(MENU[user?.role_group] || []),   // quản trị KL thấy toàn Văn phòng: không gắn nhãn "phòng"
     ...(a3 && user?.quan_tri_kl ? QTKL_A3 : a3 && xemPhong ? [PHONG_A3.nhiemVu] : [])];
   const nhanTin = [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];

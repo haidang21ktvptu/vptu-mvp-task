@@ -32,7 +32,7 @@ export function loaiVanBanHtml(ds, locLoai) {
   const doan = ds.map((d, i) => { const tu = goc; goc += (d.tong / (tong || 1)) * 360; return `var(${MAU[i % MAU.length]}) ${tu}deg ${goc}deg`; });
   const dong = (d, i) => `<tr><td><button type="button" class="ten-bam loai-nut" style="--mau:var(${MAU[i % MAU.length]})" data-action="tqLocLoai" data-loai="${escapeHtml(d.ma)}" aria-pressed="${String(locLoai === d.ma)}" title="Bấm để lọc toàn bộ Tổng quan theo loại này">${escapeHtml(tenLoai(d.ma))}</button>
       <small class="chu-phu">${d.xong} hoàn thành · ${d.dangMo} đang làm${d.canhBao ? ` · ${d.canhBao} cảnh báo` : ''}</small></td>
-    <td class="so" data-n="Tổng"><button type="button" class="ten-bam" ${mo({ t: 'nhom', kh: 'loai', ma: d.ma, ten: tenLoai(d.ma) })}><b>${d.tong}</b><small>${d.tyLe}%</small></button></td></tr>`;
+    <td class="so" data-n="Tổng"><button type="button" class="ten-bam" ${mo({ t: 'loai', ma: d.ma, ten: tenLoai(d.ma) })}><b>${d.tong}</b><small>${d.tyLe}%</small></button></td></tr>`;
   return `<article class="the-bd n5" id="tqLoaiVanBan">${dauThe('Theo loại văn bản giao việc', 'Tổng, hoàn thành (mọi kỳ) và đang làm · bấm tên loại để lọc cả Tổng quan, bấm số để xem việc')}
     ${ds.length ? `<div class="loai-vb"><div class="vong" data-tong="${tong}" style="background:conic-gradient(${doan.join(', ')})" role="img" aria-label="${tong} nhiệm vụ theo loại văn bản"></div>
       <table><tbody>${ds.map(dong).join('')}</tbody></table></div>` : '<p class="trong">Chưa có nhiệm vụ trong phạm vi.</p>'}</article>`;
