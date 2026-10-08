@@ -86,13 +86,14 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
 
     // ───────────────────────── PHẦN 3
     P1('Phần 3. Dành cho Chuyên viên'),
-    p('Chuyên viên chỉ nhìn thấy **việc của chính mình**: việc mình chủ trì hoặc việc mình là người theo dõi. Menu có hai mục: **Việc của tôi** và **Việc tôi theo dõi**; ngoài ra có **Nhắn tin**.'),
+    p('Chuyên viên chỉ nhìn thấy **việc của chính mình**: việc mình chủ trì, việc mình là người theo dõi và việc mình đã giao. Menu có các mục: **Việc của tôi**, **Giao việc** (nhập nhiệm vụ từ văn bản được phân chủ trì — mục 3.11), **Cần nghiệm thu** (kết quả của việc mình giao), **Việc tôi theo dõi**; ngoài ra có **Nhắn tin**.'),
     P2('3.1 Màn hình "Việc của tôi"'),
     p('Đây là nơi bắt đầu mỗi ngày. Dải **"Cần xử lý ngay"** ở trên cùng đếm tin chưa đọc và việc mới chờ xác nhận. Khối **"Hôm nay của tôi"** xếp mọi việc thành **một thẻ mỗi việc**, theo nhóm ưu tiên từ trên xuống: *Việc mới giao — cần xác nhận đã nhận* → *Sắp đến hạn hoặc quá hạn, chưa có minh chứng* → *Đang thực hiện, còn thời gian*. Bên phải là **"Hạn trong 7 ngày tới"**. Mọi thao tác làm **ngay trên thẻ**, không phải mở trang khác.'),
     ...hinh('a3-01-viec-cua-toi.jpg', 'Màn hình "Việc của tôi" của chuyên viên'),
     ...hinh('a3-02-the-viec-cat.jpg', 'Thẻ việc mới giao với bốn nút: Xác nhận đã nhận việc – Từ chối – Đề nghị sửa – Xem diễn biến'),
     P2('3.2 Xác nhận đã nhận việc'),
     p('Việc mới giao nằm ở nhóm đầu tiên. Bấm **Xác nhận đã nhận việc** trong ngày làm việc để người giao biết việc đã tới tay; thẻ chuyển xuống nhóm "Đang thực hiện". Việc Hỏa tốc chưa bấm nhận sẽ được nhắc mỗi ngày.'),
+    luuY('Từ v3.18, Quản trị hệ thống có thể đặt cấu hình **"coi như đã nhận ngay khi giao"** (mục 8.4). Khi đó việc mới được giao hiện thẳng ở nhóm "Đang thực hiện", không còn nút Xác nhận / Từ chối; cần đổi người thì người giao dùng **Giao lại**. Việc giao trước ngày đổi cấu hình vẫn chờ xác nhận như cũ.'),
     luuY('Bấm "Đã nhận" không làm đồng hồ dừng — thời gian được tính từ **ngày giao nhiệm vụ** ghi trên việc, không phải ngày bấm nút.'),
     P2('3.3 Nếu việc giao không đúng: Từ chối có lý do'),
     ...steps([
@@ -140,6 +141,17 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Mục **Nhắn tin**: bên trái là **"Việc có diễn biến"** (thông báo hệ thống của từng việc gom thành một hội thoại — ai liên quan tới việc đều thấy, bấm **Mở việc** để xử lý) và **"Cán bộ"** (danh bạ trong phạm vi để trao đổi 1-1). Gõ tên hoặc mã việc vào ô tìm để lọc. Số tin chưa đọc hiện trên menu.'),
     ...hinh('a3-09-nhan-tin.jpg', 'Hội thoại của một việc trong mục Nhắn tin'),
     ...hinh('a3-09b-nhan-tin-1-1.jpg', 'Trao đổi 1-1 với Trưởng phòng'),
+    P2('3.11 Giao việc: nhập các nhiệm vụ từ văn bản mình được phân chủ trì'),
+    p('Khi lãnh đạo phòng phân đồng chí **chủ trì xử lý một văn bản gốc** (chuyển qua V-Office), đồng chí đọc văn bản, xác định từng nhiệm vụ cần làm và nhập **tất cả** vào hệ thống bằng mục **Giao việc** — mỗi nhiệm vụ giao cho **một chuyên viên** (phòng bất kỳ) hoặc **chính mình**. Hệ thống tự đặt đồng chí là **người theo dõi** của các việc đó (không có ô người theo dõi, không có ô thay mặt): đồng chí đôn đốc, nhận báo cáo tiến độ, nghiệm thu kết quả; lãnh đạo phòng và Lãnh đạo Văn phòng nhìn thấy toàn bộ trên Tổng quan.'),
+    ...steps([
+      'Mở **Giao việc**. Khối 1 **"Văn bản và mốc giao"**: chọn **Văn bản giao việc mới…**, nhập loại văn bản, số hiệu, ngày ban hành (trích yếu nếu có), nguồn nhiệm vụ và **ngày giao nhiệm vụ** (ngày văn bản tới tay — mốc tính hạn, chung cho mọi nhiệm vụ của lượt này). Văn bản đã có trên hệ thống thì gõ số hiệu vào ô tìm để chọn.',
+      'Khối 2 **"Nhiệm vụ"**: thẻ **Nhiệm vụ 1** — ghi nội dung, chọn **Chịu trách nhiệm** (danh sách chỉ gồm chuyên viên; "Chính tôi" đứng đầu, có thể gõ tên để tìm), sản phẩm đầu ra, hạn hoàn thành; độ khẩn, mô tả sản phẩm, đơn vị phối hợp nếu cần.',
+      'Văn bản có nhiều nhiệm vụ: bấm **+ Thêm nhiệm vụ** để có thẻ 2, 3… (tối đa 20), điền như thẻ 1; bỏ thẻ bằng nút **× Bỏ**. Dòng "Còn thiếu" cạnh nút Giao cho biết thẻ nào còn thiếu gì.',
+      'Bấm **Giao việc** (hoặc **Giao 3 việc**…). Mỗi người được giao có thông báo ngay; việc đồng chí tự nhận nằm ở **Việc của tôi**, việc giao người khác ở **Việc tôi theo dõi**.',
+    ]),
+    ...hinh('a3-11-giao-viec.jpg', 'Chuyên viên nhập hai nhiệm vụ từ một văn bản và giao cho chuyên viên khác / chính mình'),
+    p('Việc đã được giao cho đồng chí mà cần tách cho người khác cùng làm: mở việc, bấm **Giao tiếp xuống** — biểu mẫu mở sẵn văn bản của việc gốc. Trên việc mình đã giao, đồng chí **sửa được thông tin giao** (nút bút), **duyệt đề nghị sửa** của người thực hiện và **nghiệm thu** minh chứng ở mục **Cần nghiệm thu** (xem 4.4); việc tự giao cho mình thì Trưởng phòng nghiệm thu.'),
+    luuY('Chuyên viên không giao việc cho **phòng** hay cho **lãnh đạo**; những việc đó do lãnh đạo giao. Phạm vi xem không đổi: Trưởng phòng của đồng chí và Trưởng phòng của người được giao đều thấy việc.'),
 
     // ───────────────────────── PHẦN 4
     P1('Phần 4. Dành cho Trưởng phòng'),

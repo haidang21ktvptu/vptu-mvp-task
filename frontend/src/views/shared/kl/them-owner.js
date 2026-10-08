@@ -14,26 +14,29 @@ const laQtkl = (me) => Boolean(me?.quan_tri_kl);
 
 // Cán bộ được chọn làm Owner theo vai người giao (A0 — GĐ22: chỉ lãnh đạo Văn phòng, hoặc một phòng ở nhóm dưới; nhuA0 = thay mặt Thường
 // trực, cùng quy tắc). v3.17: lãnh đạo (A1, A2) giao được cho chính mình — A2 thêm chính mình bên cạnh chuyên viên phòng (giao_viec 0078 là
-// chốt; cấp nhận = cấp trên của chính họ).
-export function canBoOwner(accounts, me, nhuA0 = false) {
+// chốt; cấp nhận = cấp trên của chính họ). Đợt E (0085): chuyên viên không thay mặt (thayMat trống) giao thẳng cho chuyên viên phòng bất kỳ
+// hoặc chính mình; người quản trị KL chọn thay mặt thì như trước.
+export const laGiaoThang = (me, thayMat = '') => me?.role_group === 'A3' && !thayMat;
+export function canBoOwner(accounts, me, nhuA0 = false, thayMat = '') {
   const ds = accounts.filter((a) => !a.is_system && a.role_group !== 'A0');
   if (me?.role_group === 'A0' || nhuA0) return ds.filter((a) => a.role_group === 'A1');
+  if (laGiaoThang(me, thayMat)) return ds.filter((a) => a.role_group === 'A3');
   if (laQtkl(me) || me?.role_group === 'A1') return ds;
   if (me?.role_group === 'A2') return ds.filter((a) => (a.role_group === 'A3' && a.department === me.department) || a.id === me.id);
   return [];
 }
 
 // nhuA0 (v3.18): A3 giao thay mặt Thường trực → danh sách như Thường trực giao (lãnh đạo Văn phòng hoặc một phòng).
-export function ownerOptionsHtml(dm, accounts, me, nhuA0 = false) {
+export function ownerOptionsHtml(dm, accounts, me, nhuA0 = false, thayMat = '') {
   const sapTen = (a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi'); // tên trống (tài khoản tạm) không làm hỏng biểu mẫu
-  const a0 = me?.role_group === 'A0' || nhuA0;
+  const a0 = me?.role_group === 'A0' || nhuA0; const thang = laGiaoThang(me, thayMat);
   const laToi = (a) => a.id === me?.id;   // chính tôi: xếp đầu nhóm cán bộ, nhãn "(chính tôi)"
-  const canBo = canBoOwner(accounts, me, nhuA0).sort((a, b) => Number(laToi(b)) - Number(laToi(a)) || sapTen(a, b))
+  const canBo = canBoOwner(accounts, me, nhuA0, thayMat).sort((a, b) => Number(laToi(b)) - Number(laToi(a)) || sapTen(a, b))
     .map((a) => opt(`tk:${a.id}`, `${a.full_name}${laToi(a) ? ' (chính tôi)' : ''} — ${tenPhong(a.department) || 'Lãnh đạo Văn phòng'}`));
   const trongVp = a0 ? dm.donVi.filter((d) => d.trong_van_phong && d.phong).map((d) => opt(`dv:${d.ma}`, d.ten))
-    : laQtkl(me) || me?.role_group === 'A1' ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
-  return opt('', a0 ? 'Chọn lãnh đạo Văn phòng hoặc phòng nhận việc' : 'Chọn phòng hoặc cán bộ chịu trách nhiệm')
-    + nhomOpt(a0 ? 'Lãnh đạo Văn phòng' : 'Cán bộ', canBo) + nhomOpt(a0 ? 'Các phòng' : 'Văn phòng và các phòng', trongVp);
+    : !thang && (laQtkl(me) || me?.role_group === 'A1') ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
+  return opt('', a0 ? 'Chọn lãnh đạo Văn phòng hoặc phòng nhận việc' : thang ? 'Chọn chuyên viên thực hiện (hoặc chính tôi)' : 'Chọn phòng hoặc cán bộ chịu trách nhiệm')
+    + nhomOpt(a0 ? 'Lãnh đạo Văn phòng' : thang ? 'Chuyên viên' : 'Cán bộ', canBo) + nhomOpt(a0 ? 'Các phòng' : 'Văn phòng và các phòng', trongVp);
 }
 
 // Lãnh đạo được giao thay mặt (GĐ22): nhóm (v3.18 — "nhom:<mã>", cả nhóm được báo / duyệt) rồi A1/A2 đang hoạt động; giao_viec kiểm phạm vi với Owner.

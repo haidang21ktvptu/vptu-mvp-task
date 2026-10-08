@@ -59,7 +59,7 @@ export const giaoViecTemplate = `
         <div class="cot-3">
           ${truong('klThNguon', `Nguồn nhiệm vụ${BB}`, sel('klThNguon'), '', 'mặc định theo loại văn bản, đổi được')}
           ${truong('klThNgayNhan', `Ngày giao nhiệm vụ${BB}`, inp('klThNgayNhan', 'date'), '', 'mốc bắt đầu tính hạn (ngày Văn phòng nhận văn bản / giao việc) — chung cho mọi nhiệm vụ của lượt này')}
-          ${truong('klThThayMat', `Thay mặt${BB}`, selTim('klThThayMat'), ' class="gv-truong hidden"', 'lãnh đạo hoặc nhóm lãnh đạo mà đồng chí giao thay mặt — là cấp duyệt nếu việc bị từ chối')}
+          ${truong('klThThayMat', 'Thay mặt', selTim('klThThayMat'), ' class="gv-truong hidden"', 'để trống = giao thẳng cho chuyên viên; chọn lãnh đạo / nhóm lãnh đạo khi giao thay mặt (cấp duyệt nếu việc bị từ chối)')}
         </div>
       </section>
 
@@ -124,7 +124,7 @@ export const giaoViecTemplate = `
         <b id="gvXtNoiDung">Nội dung nhiệm vụ…</b><span id="gvXtPhu">Chủ trì … · hạn … · sản phẩm …</span></div></section>
     <section class="tam"><div class="tam-dau"><h2>Ba bước sau khi giao</h2></div>
       <ol class="gv-buoc-sau">
-        <li><i>1</i><span>Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
+        <li><i>1</i><span id="gvBuoc1">Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
         <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản, cấp nhận) trước hạn hoàn thành; lãnh đạo nghiệm thu thì việc hoàn thành, trả lại thì nộp lại.</span></li>
       </ol></section>

@@ -28,8 +28,8 @@ test.describe.serial('PR-2b — nghiệm thu minh chứng', () => {
     if (db) { await donVanBan(db, khoa); await datCo(db, ID.e2eTk, { thu_ky_thuong_truc: false }); }
   });
 
-  test('1. A3 nộp minh chứng → nhãn trung tính; không có mục Cần nghiệm thu; việc đã quá hạn ở bước nghiệm thu cũng trung tính', async () => {
-    await expect(cv.locator('#navNghiemThu')).toHaveCount(0);
+  test('1. A3 nộp minh chứng → nhãn trung tính; có mục Cần nghiệm thu (v3.18 Đợt E: nghiệm thu việc mình giao) nhưng không có minh chứng chờ; việc đã quá hạn ở bước nghiệm thu cũng trung tính', async () => {
+    await expect(cv.locator('#navNghiemThu')).toHaveCount(1);
     await moViec(cv, T.id, T.ma);
     const ngan = cv.locator(`#klChiTiet-${T.id}`);
     await expect(ngan).toBeVisible(NAP); await expect(ngan).not.toContainText('Hạn nộp MC');   // 0077: không còn hạn nộp riêng

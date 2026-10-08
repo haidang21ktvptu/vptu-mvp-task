@@ -15,13 +15,15 @@ export const tenOGiao = (cot) => O_GIAO.find(([c]) => c === cot)?.[1] || cot;
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN())
   && state.user?.role_group !== 'A0';
 // Người gọi là tầng giao của việc: người giao = người được thay mặt (hoặc thành viên nhóm được thay mặt, 0081), không có thì người tạo (vai lãnh
-// đạo A0/A1/A2, tài khoản còn hoạt động); hoặc quản trị nhiệm vụ còn hạn. Người gõ thay (chuyên viên, người nhập Excel) hết ủy quyền thì không còn quyền này.
+// đạo A0/A1/A2, tài khoản còn hoạt động — 0085: hoặc chuyên viên tạo việc giao thẳng, không thay mặt); hoặc quản trị nhiệm vụ còn hạn. Người gõ thay
+// (người nhập Excel) hết ủy quyền thì không còn quyền này.
 export function laTangGiao(r) {
   const me = state.user?.id;
   if (!me || !r) return false;
   if (qtklConHan()) return true;
   const a = findAccount(me) || state.user;
-  return ((r.giao_thay_mat_cho || r.tao_boi) === me || toiTrongNhom(r.giao_thay_mat_nhom)) && ['A0', 'A1', 'A2'].includes(a?.role_group) && !a?.bi_khoa;
+  const vai = ['A0', 'A1', 'A2'].includes(a?.role_group) || (a?.role_group === 'A3' && !r.giao_thay_mat_cho);
+  return ((r.giao_thay_mat_cho || r.tao_boi) === me || toiTrongNhom(r.giao_thay_mat_nhom)) && vai && !a?.bi_khoa;
 }
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);

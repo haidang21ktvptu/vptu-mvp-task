@@ -112,10 +112,10 @@ test.describe.serial('Giao việc — ma trận 7 vai × 5 loại văn bản (kh
     expect(data.map((x) => x.han_nop_minh_chung)).toEqual([null, null]);
   });
 
-  test('3. A3 thường không có màn Giao việc; việc có hạn nộp cũ không còn nhãn cam "Chậm nộp minh chứng"', async ({ browser }, testInfo) => {
+  test('3. A3 thường có màn Giao việc (v3.18 Đợt E, giao thẳng cho chuyên viên); việc có hạn nộp cũ không còn nhãn cam "Chậm nộp minh chứng"', async ({ browser }, testInfo) => {
     expect((await db.from('nhiem_vu').select('han_nop_minh_chung').eq('id', K.id).single()).data.han_nop_minh_chung).toBeNull();
     await voiPhien(browser, 'E2E_CV', testInfo, async (a3) => {
-      await expect(a3.locator('#navGiaoViec')).toHaveCount(0);
+      await expect(a3.locator('#navGiaoViec')).toHaveCount(1);
       const the = a3.locator(`#vct-${K.id}`);
       await expect(the).toBeVisible(NAP);
       await expect(the.locator('.tt-cam')).toHaveCount(0);

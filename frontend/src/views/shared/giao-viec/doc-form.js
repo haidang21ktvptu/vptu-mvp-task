@@ -8,7 +8,7 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { parseOwner } from '../kl/them-owner.js';
 import { loiNguon, docNguon, docVanBanThem } from './nguon.js';
 import { themHoanThien } from './dien-san.js';
-import { getHomNay, laA0, nhuA0, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
+import { getHomNay, laA0, anTheoDoi, laA3GiaoThang, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
 import { tachThayMat } from '../../../lib/kl/thay-mat.js';
 
 // Kiểm tra phía form (phần chung + thẻ 1); trả về chuỗi lỗi hoặc null. Có thẻ thêm: nhieu.js loiNhieu() kiểm tiếp.
@@ -19,7 +19,6 @@ export function kiemTra(p) {
     if (p.van_ban.loai === 'KL_BTV' && !p.van_ban.so_hoi_nghi) return 'Kết luận Ban Thường vụ phải có số hội nghị.';
     if (p.van_ban.ngay_ban_hanh > homNay) return 'Ngày ban hành ở tương lai — kiểm tra lại năm.';
   } else if (!p.van_ban_id && !laA0()) return 'Chọn văn bản giao việc hoặc nhập văn bản mới.';
-  if (canThayMat() && !p.thay_mat_cho && !p.thay_mat_nhom) return 'Chọn lãnh đạo (hoặc nhóm lãnh đạo) mà đồng chí giao thay mặt — đó là cấp duyệt nếu việc bị từ chối.';
   if (canNgayNhan() && !p.ngay_nhan_van_ban) return 'Nhập ngày giao nhiệm vụ (mốc bắt đầu đếm).';
   if (!p.noi_dung) return 'Nhập nội dung nhiệm vụ.';
   if (!p.owner_don_vi_ma) return 'Chọn phòng hoặc cán bộ chịu trách nhiệm — mỗi việc đúng một Owner.';
@@ -27,7 +26,7 @@ export function kiemTra(p) {
   if (p.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly) return 'Nhập hạn hoàn thành — mỗi việc phải có một hạn cụ thể.';
   if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
   if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
-  if (!nhuA0() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
+  if (!anTheoDoi() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
   return loiNguon();
 }
 
@@ -43,7 +42,7 @@ export function docForm(cha) {
     han_xu_ly: $('klThLoai').value === 'KY_BAN_HANH' ? null : $('klThHan').value || null, cap_nhan_san_pham: $('klThCapNhan').value || null, theo_1400: true,
     ...docNguon(),
   };
-  if (canThayMat()) Object.assign(p, tachThayMat($('klThThayMat').value));   // thay_mat_cho (một lãnh đạo) hoặc thay_mat_nhom (v3.18)
+  if (canThayMat()) Object.assign(p, tachThayMat($('klThThayMat').value));   // thay_mat_cho (một lãnh đạo) hoặc thay_mat_nhom (v3.18); trống = giao thẳng (0085)
   if (cha) p.nhiem_vu_cha = cha.id;
   if (laA0()) {   // A0: DB tự suy người theo dõi, đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
     if (laMoi() && !vbTrong()) p.van_ban = vanBanMoi(); else if (!laMoi()) p.van_ban_id = $('klThVanBan').value;
@@ -52,7 +51,8 @@ export function docForm(cha) {
   }
   Object.assign(p, {
     ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value, cap_quyet_dinh: $('klThCapQD').value || null,
-    nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null, nguoi_theo_doi: $('klThNguoiTheoDoi').value || null,
+    nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null,
+    nguoi_theo_doi: laA3GiaoThang() ? state.user?.id || null : $('klThNguoiTheoDoi').value || null,   // 0085: chuyên viên giao thẳng — theo dõi = người giao
     van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThGhiChu').value.trim() || null,
   });
   if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;

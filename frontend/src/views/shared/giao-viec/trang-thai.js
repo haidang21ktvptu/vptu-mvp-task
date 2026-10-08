@@ -14,11 +14,15 @@ export const getHomNay = () => homNay;
 export const datHomNay = (v) => { homNay = v || homNayVN(); };
 
 export const laA0 = () => state.user?.role_group === 'A0';
-export const canThayMat = () => state.user?.role_group === 'A3'; // người giao không phải lãnh đạo (giữ quan_tri_kl) → giao thay mặt
+// Ô Thay mặt: chỉ người quản trị KL (A3 giữ quan_tri_kl), TUỲ CHỌN từ Đợt E (0085) — để trống = giao thẳng như mọi chuyên viên.
+export const canThayMat = () => state.user?.role_group === 'A3' && Boolean(state.user?.quan_tri_kl);
+// Đợt E (0085): chuyên viên giao thẳng (không thay mặt) — Owner là một chuyên viên (phòng bất kỳ) hoặc chính mình; người theo dõi = người giao (ô ẩn).
+export const laA3GiaoThang = () => state.user?.role_group === 'A3' && !$('klThThayMat')?.value;
 // v3.18: thay mặt "Thường trực Tỉnh ủy" (nhóm) → quy tắc như Thường trực giao (giao_viec v_nhu_a0): Owner là lãnh đạo Văn phòng / phòng, không ô người
 // theo dõi (DB tự suy), Khẩn mặc định; văn bản, ngày giao, ngành / lĩnh vực vẫn theo vai A3.
 export const laThayMatTT = () => canThayMat() && laThayMatThuongTruc($('klThThayMat').value);
 export const nhuA0 = () => laA0() || laThayMatTT();
+export const anTheoDoi = () => nhuA0() || laA3GiaoThang();   // ô người theo dõi ẩn: DB tự suy (Thường trực giao) hoặc = người giao (chuyên viên)
 export const vanBanChon = () => timTrongDs($('klThVanBan').value);
 export const nhanMoi = () => (laA0() ? 'Văn bản mới hoặc giao trực tiếp…' : 'Văn bản giao việc mới…');
 // Phòng của một giá trị Owner ("tk:<id>" / "dv:<mã>") như giao_viec tính; phongOwner() = ô Chịu trách nhiệm đang chọn. Lãnh đạo (A1/A2) giao cho chính

@@ -90,6 +90,27 @@ export function theoNhom(rows, k, khoa) {
     .sort((a, b) => b.ddb - a.ddb || b.do - a.do || b.vang - a.vang || (b.dangMo + b.xong) - (a.dangMo + a.xong) || a.ten.localeCompare(b.ten, 'vi'));
 }
 
+// KPI theo cán bộ (Đợt E v3.18 — Tổng quan của Thường trực / lãnh đạo Văn phòng; A2 đã có bảng "Theo cán bộ"): mỗi cán bộ chủ trì (Owner tài
+// khoản) một dòng, gom theo phòng của cán bộ (phongCua: id → mã phòng, từ danh bạ; không có thì phòng của đơn vị Owner); việc phòng / đơn vị chủ trì
+// chưa giao cán bộ gom một dòng "Phòng, chưa giao cán bộ" trong phòng đó. Cột như theoNhom + tổng; mỗi phòng có dòng tổng (soLieuChinh trên việc của
+// phòng). Thứ tự phòng: theo tenPhong (Lãnh đạo Văn phòng trước), phòng lạ sau; trong phòng: nhiều Đỏ trước (theoNhom).
+export const khoaCanBo = (phongCua = {}) => (r) => (r.owner_tai_khoan
+  ? [r.owner_tai_khoan, r.owner_tai_khoan_ten || 'Cán bộ', phongCua[r.owner_tai_khoan] || r.owner_phong || '']
+  : [`PHONG:${r.owner_phong || r.owner_don_vi_ma || ''}`, 'Phòng, chưa giao cán bộ', r.owner_phong || '']);
+export const khoaPhongCanBo = (phongCua = {}, tenPhong = {}) => (r) => { const p = khoaCanBo(phongCua)(r)[2]; return [p, tenPhong[p] || (p ? boSoThuTu(r.owner_don_vi_ten) || p : 'Đơn vị khác'), p]; };
+export function theoCanBo(rows, k, phongCua = {}, tenPhong = {}) {
+  const thuTu = Object.keys(tenPhong); const cb = theoNhom(rows, k, khoaCanBo(phongCua)); const kp = khoaPhongCanBo(phongCua, tenPhong);
+  const m = new Map();
+  rows.forEach((r) => { const [ma, ten] = kp(r); if (!m.has(ma)) m.set(ma, { ma, ten, rows: [], canBo: [] }); m.get(ma).rows.push(r); });
+  cb.forEach((d) => m.get(d.donVi || '')?.canBo.push(d));
+  return [...m.values()].map((p) => {
+    const s = soLieuChinh(p.rows, k); const soCanBo = p.canBo.filter((d) => !String(d.ma).startsWith('PHONG:')).length;   // không tính dòng "Phòng, chưa giao cán bộ"
+    return { ma: p.ma, ten: p.ten, canBo: p.canBo, soCanBo, tong: p.rows.length, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
+  })
+    .filter((p) => p.canBo.length)
+    .sort((a, b) => { const ia = thuTu.indexOf(a.ma); const ib = thuTu.indexOf(b.ma); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.ten.localeCompare(b.ten, 'vi'); });
+}
+
 // Tiến độ theo văn bản giao việc: đã hoàn thành / tổng, số việc Đỏ đang mở; văn bản có việc Đỏ lên trước, rồi mới ban hành trước.
 export function theoVanBan(rows, n = 5) {
   const m = new Map();

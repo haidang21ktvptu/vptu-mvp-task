@@ -53,6 +53,7 @@ export async function loadCauHinhKl(lai = false) {
   return cauHinh;
 }
 export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
+export const tuNhanViec = () => cauHinhKl('xac_nhan_nhan_viec', 1) === 2;   // 0085: cấu hình 2 = việc coi như đã nhận ngay khi giao (không cần xác nhận)
 
 // Toàn bộ dòng trong phạm vi người dùng (RLS) + tập id đã có xác nhận nhận việc, kèm mốc thời gian đọc ("Số liệu tính đến").
 let dangDocRows = null;

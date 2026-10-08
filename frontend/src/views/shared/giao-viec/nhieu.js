@@ -9,7 +9,7 @@ import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { parseOwner } from '../kl/them-owner.js';
 import { thongBaoPhamVi, theoDoiHopLe } from './pham-vi.js';
-import { phongCuaGiaTri, ngayBH, laA0, nhuA0, canNganhHienTai } from './trang-thai.js';
+import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, laA3GiaoThang, canNganhHienTai } from './trang-thai.js';
 import { o, taoThe, lamMoiThe, anHienThe, suKienThe } from './nhieu-the.js';
 
 export const TOI_DA = 20;   // kể cả thẻ 1
@@ -64,7 +64,7 @@ export function anHienNhieu() {
 
 // Thiếu gì ở từng thẻ thêm (theo thứ tự) — dòng "Còn thiếu"; hợp lệ khi không thiếu gì. Cùng quy tắc với conThieu() của thẻ 1 (index.js).
 export function thieuNhieu() {
-  const bh = ngayBH(); const dm = danhMucKl(); const a0 = nhuA0(); const cn = canNganhHienTai(); const tm = $('klThThayMat').value;   // a0: không người theo dõi
+  const bh = ngayBH(); const dm = danhMucKl(); const a0 = anTheoDoi(); const cn = canNganhHienTai(); const tm = $('klThThayMat').value;   // a0: không ô người theo dõi (Thường trực giao / chuyên viên giao thẳng)
   return dongs().flatMap((the) => {
     const i = the.dataset.dong; const v = (c) => o(the, c).value;
     const owner = v('owner'); const han = v('han'); const kyBH = v('loai') === 'KY_BAN_HANH'; const nganh = v('nganh'); const lv = v('linh_vuc');
@@ -92,7 +92,7 @@ export function docDong() {
       san_pham_loai: v('san_pham') || null, san_pham_mo_ta: v('san_pham_mo_ta').trim() || null, cap_nhan_san_pham: v('cap_nhan') || null,
       loai_thoi_han_ma: v('loai'), han_xu_ly: v('loai') === 'KY_BAN_HANH' ? null : v('han') || null, don_vi_phoi_hop: v('phoi_hop').trim() || null };
     if (!a0 || cn) Object.assign(d, { nganh_ma: v('nganh') || null, linh_vuc_ma: v('linh_vuc') || null });
-    if (!nhuA0()) d.nguoi_theo_doi = v('theo_doi') || null;
+    if (!nhuA0()) d.nguoi_theo_doi = laA3GiaoThang() ? state.user?.id || null : v('theo_doi') || null;   // 0085: chuyên viên giao thẳng — theo dõi = người giao
     return d;
   });
 }

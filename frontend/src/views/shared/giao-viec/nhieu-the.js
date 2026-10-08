@@ -12,7 +12,7 @@ import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { ganTimChon } from '../../../lib/tim-chon.js';
 import { nguoiTheoDoiOptionsHtml, goiYTheoDoi, parseOwner } from '../kl/them-owner.js';
 import { locTheoDoi, lanhDaoLoc, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi } from './pham-vi.js';
-import { phongCuaGiaTri, ngayBH, laA0, nhuA0, canNganhHienTai, getHomNay } from './trang-thai.js';
+import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, canNganhHienTai, getHomNay } from './trang-thai.js';
 
 const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
 const opt = (v, t) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`;
@@ -99,7 +99,7 @@ export function capNhatHanThe(the) {
 // ngành, lĩnh vực, loại hạn của A0 chỉ với kết luận / thông báo; dấu * ngành, lĩnh vực theo loại văn bản; chú thích phạm vi dưới ô lĩnh vực.
 export function anHienThe(the) {
   const a0 = laA0(); const cn = canNganhHienTai();
-  show(the.querySelector('[data-wrap="theo_doi"]'), !nhuA0());
+  show(the.querySelector('[data-wrap="theo_doi"]'), !anTheoDoi());   // 0085: chuyên viên giao thẳng cũng không có ô (theo dõi = người giao)
   ['nganh', 'linh_vuc', 'loai'].forEach((c) => show(the.querySelector(`[data-wrap="${c}"]`), !a0 || cn));
   the.querySelectorAll('.gvl-bb-nganh').forEach((b) => show(b, cn));
   chuThich(the, 'nganh', cn ? 'bắt buộc với kết luận / thông báo' : 'không bắt buộc với loại văn bản này');
