@@ -88,14 +88,13 @@ describe('0021 — Hoàn thành bắt buộc minh chứng và ngày hoàn thành
     const cv1 = await userClient('demo_cv1');
     const dn = await cv1.rpc('kl_de_nghi_dinh_chinh', { p_nhiem_vu: id['NV-T24'], p_cot: 'tien_do_ma', p_gia_tri_moi: 'HOAN_THANH', p_ly_do: `${LY_DO} sửa tiến độ` });
     assertOk(dn, 'đề nghị');
-    const qtht = await userClient('demo_qtht');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO }), 'cấp quan_tri_kl tạm');
+    assertOk(await adminClient().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cờ cũ quan_tri_kl tạm (service_role — 0096)');
     const cv2 = await userClient('demo_cv2');
     assert.match((await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true })).error?.message || '', /phải có minh chứng/);
     const { data } = await adminClient().from('dinh_chinh').select('trang_thai').eq('id', dn.data).single();
     assert.equal(data.trang_thai, 'CHO_DUYET');
     assertOk(await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: false, p_ly_do: `${LY_DO} cần minh chứng trước` }), 'bác bỏ để dọn');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY_DO }), 'thu');
+    assertOk(await adminClient().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2), 'thu');
   });
   test('10. múi giờ: ngày hoàn thành = kl_hom_nay() (giờ Việt Nam) được nhận ở mọi giờ chạy; hôm nay + 1 bị chặn', async () => {
     const cv1 = await userClient('demo_cv1');

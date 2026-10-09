@@ -59,7 +59,7 @@ export const giaoViecTemplate = `
         <div class="cot-3">
           ${truong('klThNguon', `Nguồn nhiệm vụ${BB}`, sel('klThNguon'), '', 'mặc định theo loại văn bản, đổi được')}
           ${truong('klThNgayNhan', `Ngày giao nhiệm vụ${BB}`, inp('klThNgayNhan', 'date'), '', 'mốc bắt đầu tính hạn (ngày Văn phòng nhận văn bản / giao việc) — chung cho mọi nhiệm vụ của lượt này')}
-          ${truong('klThThayMat', 'Thay mặt', selTim('klThThayMat'), ' class="gv-truong hidden"', 'để trống = giao thẳng cho chuyên viên; chọn lãnh đạo / nhóm lãnh đạo khi giao thay mặt (cấp duyệt nếu việc bị từ chối)')}
+          ${truong('klThThayMat', 'Thay mặt', selTim('klThThayMat'), ' class="gv-truong hidden"', 'để trống = giao thẳng cho chuyên viên; chọn lãnh đạo / nhóm lãnh đạo khi nhập việc thay mặt (đề nghị từ chối về người nhập)')}
         </div>
       </section>
 

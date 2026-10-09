@@ -1,6 +1,6 @@
 // GĐ23 (0041, 0042) — quản trị hệ thống: qt_xem_truoc_xoa / qt_xoa_du_lieu chỉ quan_tri_he_thong; sai chữ XOÁ bị chặn, không mất dòng; xoá đúng
 // phạm vi (văn bản riêng của test) và ghi nhat_ky_he_thong (chỉ quan_tri_he_thong đọc); xoa_co_doi_mat_khau chỉ chính chủ; qt_dat_cau_hinh chỉ
-// Chánh VP / quan_tri_he_thong, ghi nhật ký; a2_uy_quyen: Trưởng phòng cấp có hạn cho chuyên viên phòng mình, hết hạn → quan_tri_kl false trong view.
+// Chánh VP / quan_tri_he_thong, ghi nhật ký; a2_uy_quyen ngừng từ 0096 (v3.21); cờ cũ có hạn: hết hạn → quan_tri_kl false trong view, a2_thu_uy_quyen thu được.
 // Dữ liệu riêng: văn bản so_hoi_nghi 997 / RLS-TEST-0041, nhiệm vụ NV-T41x; tự dọn. Không đụng tài khoản demo (không dùng bộ du_lieu_thu).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -86,12 +86,13 @@ describe('0041/0042 — quản trị hệ thống', { skip: SKIP }, () => {
     assert.equal(nk.data[0].doi_tuong, 'nguong_sap_den_han_ngay'); assert.equal(nk.data[0].chi_tiet.moi, '5');
   });
 
-  test('a2_uy_quyen: Trưởng phòng cấp có hạn cho chuyên viên phòng mình; ngoài phòng / A3 gọi bị chặn; hết hạn → view quan_tri_kl false', async () => {
+  test('0096: a2_uy_quyen ngừng với mọi vai (không đổi cờ); cờ cũ có hạn: hết hạn → view quan_tri_kl false; a2_thu_uy_quyen vẫn thu được', async () => {
     const tp = await userClient('demo_truongphong');
     const mai = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
-    assertDenied(await (await userClient('demo_cv1')).rpc('a2_uy_quyen', { p_nguoi: IDS.cv2, p_den_ngay: mai, p_ly_do: 'x' }), 'A3 ủy quyền');
-    assert.ok((await tp.rpc('a2_uy_quyen', { p_nguoi: IDS.cv2, p_den_ngay: mai, p_ly_do: 'KL-0041' })).error, 'cv2 khác phòng (QUAN_TRI)');
-    assertOk(await tp.rpc('a2_uy_quyen', { p_nguoi: IDS.cv1, p_den_ngay: mai, p_ly_do: 'KL-0041 đi công tác' }), 'ủy quyền cv1');
+    assert.ok((await (await userClient('demo_cv1')).rpc('a2_uy_quyen', { p_nguoi: IDS.cv2, p_den_ngay: mai, p_ly_do: 'x' })).error, 'A3 ủy quyền');
+    assert.match((await tp.rpc('a2_uy_quyen', { p_nguoi: IDS.cv1, p_den_ngay: mai, p_ly_do: 'KL-0041 đi công tác' })).error?.message || '', /đã bỏ từ v3\.21/);
+    assert.equal((await db().from('accounts').select('quan_tri_kl').eq('id', IDS.cv1).single()).data.quan_tri_kl, false, 'không cấp');
+    assertOk(await db().from('accounts').update({ quan_tri_kl: true, quan_tri_kl_het_han: mai }).eq('id', IDS.cv1), 'cờ cũ có hạn (trước 0096)');
     const cv1 = await userClient('demo_cv1');
     assert.equal((await cv1.rpc('me_quan_tri_kl')).data, true);
     assert.equal((await cv1.from('accounts_public').select('quan_tri_kl').eq('id', IDS.cv1).single()).data.quan_tri_kl, true);
@@ -103,7 +104,7 @@ describe('0041/0042 — quản trị hệ thống', { skip: SKIP }, () => {
     const acc = (await db().from('accounts').select('quan_tri_kl, quan_tri_kl_het_han').eq('id', IDS.cv1).single()).data;
     assert.equal(acc.quan_tri_kl, false); assert.equal(acc.quan_tri_kl_het_han, null);
     const ls = await db().from('quyen_lich_su').select('bat').eq('tai_khoan', IDS.cv1).like('ly_do', 'KL-0041%').order('id');
-    assert.deepEqual(ls.data.map((r) => r.bat), [true, false]);
+    assert.deepEqual(ls.data.map((r) => r.bat), [false], 'chỉ dòng thu (lần ủy quyền bị từ chối không ghi)');
     await db().from('quyen_lich_su').delete().like('ly_do', 'KL-0041%');
   });
 });

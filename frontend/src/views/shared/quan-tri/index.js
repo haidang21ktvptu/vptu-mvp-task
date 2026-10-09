@@ -1,5 +1,5 @@
 // Màn hình "Quản trị" (thiết kế KL BTVTU Phần 5; GĐ23 mở rộng): khu theo quyền — Phân công phụ trách (quan_tri_he_thong, Chánh VP), Tài khoản
-// (quan_tri_he_thong), Danh mục (quan_tri_kl), Nhật ký cấp quyền, Ngưỡng cảnh báo (A1: CVP sửa, PCVP xem), Ủy quyền giao việc (A2),
+// (quan_tri_he_thong), Danh mục (mọi tài khoản trừ Thường trực — Đợt F v3.21, 0096), Nhật ký cấp quyền, Ngưỡng cảnh báo (A1: CVP sửa, PCVP xem),
 // Dọn dữ liệu + Nhật ký hệ thống (quan_tri_he_thong). Vào từ pill "Quản trị" (cờ) hoặc menu bánh răng (data-tab). Quyền thật ở hàm SQL / RLS /
 // Edge Function; ở đây chỉ ẩn/hiện tab và khu.
 import { $, show, filterRowsByKeyword } from '../../../lib/dom.js';
@@ -11,7 +11,8 @@ import { setActiveNav, showSection } from '../../shell/index.js';
 import { quanTriTemplate } from './template.js';
 import { mountLyDoModal } from './ly-do-modal.js';
 import { loadDanhMuc } from './danh-muc.js';
-import { renderTaiKhoan, renderNhatKy, toggleQuanTriKl, toggleThuKyTT, toggleQuanTriHeThong, khoaTaiKhoan, resetMatKhau } from './tai-khoan.js';
+import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
+import { renderTaiKhoan, renderNhatKy, toggleThuKyTT, toggleQuanTriHeThong, khoaTaiKhoan, resetMatKhau } from './tai-khoan.js';
 import { mountTaiKhoanForm } from './tai-khoan-form.js';
 import { mountBanGiao } from './ban-giao.js';
 import { mountSuaTaiKhoan } from './sua-tai-khoan.js';
@@ -20,7 +21,6 @@ import { renderPhuTrach, togglePhuTrach, ketThucKiemNhiem } from './phu-trach.js
 import { mountKiemNhiemModal } from './kiem-nhiem-modal.js';
 import { mountDanhMucLinhVuc, renderDanhMucLinhVuc } from './danh-muc-linh-vuc.js';
 import { renderCauHinh, luuCauHinh } from './cau-hinh.js';
-import { renderUyQuyen, guiUyQuyen, thuUyQuyen } from './uy-quyen.js';
 import { renderDonDuLieu, mountDonDuLieu } from './don-du-lieu.js';
 import { renderNhatKyHeThong } from './nhat-ky-he-thong.js';
 import { renderNgayNghi, themNgayNghi, boNgayNghi } from './ngay-nghi.js';
@@ -29,11 +29,10 @@ import { renderNgayNghi, themNgayNghi, boNgayNghi } from './ngay-nghi.js';
 const KHU = {
   qtKhuPhuTrach: { tab: 'qtTabPhuTrach', cho: (u) => u.quan_tri_he_thong || (u.role_group === 'A1' && isChief()), ve: renderPhuTrach },
   qtKhuTaiKhoan: { tab: 'qtTabTaiKhoan', cho: (u) => u.quan_tri_he_thong, ve: renderTaiKhoan },
-  qtKhuDanhMuc: { tab: 'qtTabDanhMuc', cho: (u) => u.quan_tri_kl, ve: renderDanhMucLinhVuc },
+  qtKhuDanhMuc: { tab: 'qtTabDanhMuc', cho: (u) => laNguoiNhap(u), ve: renderDanhMucLinhVuc },   // 0096: quyền chung (kl_kiem_tra_quan_tri_kl)
   qtKhuCauHinh: { tab: 'qtTabCauHinh', cho: (u) => u.quan_tri_he_thong || u.role_group === 'A1', ve: renderCauHinh },
   qtKhuNgayNghi: { tab: 'qtTabNgayNghi', cho: (u) => u.quan_tri_he_thong || (u.role_group === 'A1' && isChief()), ve: renderNgayNghi },   // PR-2b
-  qtKhuUyQuyen: { tab: 'qtTabUyQuyen', cho: (u) => u.role_group === 'A2', ve: renderUyQuyen },
-  qtKhuNhatKy: { tab: 'qtTabNhatKy', cho: (u) => u.quan_tri_he_thong || u.quan_tri_kl, ve: renderNhatKy },
+  qtKhuNhatKy: { tab: 'qtTabNhatKy', cho: (u) => u.quan_tri_he_thong || laNguoiNhap(u), ve: renderNhatKy },
   qtKhuDonDuLieu: { tab: 'qtTabDonDuLieu', cho: (u) => u.quan_tri_he_thong, ve: renderDonDuLieu },
   qtKhuNhatKyHeThong: { tab: 'qtTabNhatKyHeThong', cho: (u) => u.quan_tri_he_thong, ve: renderNhatKyHeThong },
 };
@@ -51,10 +50,10 @@ export async function loadQuanTri() {
   const me = state.accounts.find((a) => a.id === state.user.id);
   if (me) state.user = { ...state.user, quan_tri_kl: me.quan_tri_kl, quan_tri_he_thong: me.quan_tri_he_thong, quan_tri_kl_het_han: me.quan_tri_kl_het_han };
   const u = state.user;
-  if (u.quan_tri_kl || u.quan_tri_he_thong) { try { await loadDanhMuc(); } catch (e) { notifyError('Không đọc được danh mục ngành/lĩnh vực: ' + e.message); } }
+  if (laNguoiNhap(u) || u.quan_tri_he_thong) { try { await loadDanhMuc(); } catch (e) { notifyError('Không đọc được danh mục ngành/lĩnh vực: ' + e.message); } }
   const hopLe = Object.keys(KHU).filter((k) => KHU[k].cho(u));
   Object.entries(KHU).forEach(([k, d]) => show(d.tab, hopLe.includes(k)));
-  show('qtKhuNhatKyQuyen', Boolean(u.quan_tri_he_thong)); show('qtKhuNhatKyDanhMuc', Boolean(u.quan_tri_kl));
+  show('qtKhuNhatKyQuyen', Boolean(u.quan_tri_he_thong)); show('qtKhuNhatKyDanhMuc', laNguoiNhap(u) || Boolean(u.quan_tri_he_thong));
   chonTabQuanTri({ tab: hopLe.includes(tabDangChon) ? tabDangChon : hopLe[0] });
   await Promise.all(hopLe.map((k) => KHU[k].ve()));
 }
@@ -79,10 +78,8 @@ export function registerQuanTriView() {
   mountChuyenTheoDoi(loadQuanTri);   // J-6 (0092)
   mountDonDuLieu();
   $('qtTimTaiKhoan').addEventListener('input', (e) => filterRowsByKeyword('qtTaiKhoanBody', e.target.value));
-  $('qtUyQuyenForm').addEventListener('submit', (e) => guiUyQuyen(e, loadQuanTri));
   registerActions({
     openQuanTri, loadQuanTri, chonTabQuanTri,
-    toggleQuanTriKl: (ds) => toggleQuanTriKl(ds, loadQuanTri),
     toggleQuanTriHeThong: (ds) => toggleQuanTriHeThong(ds, loadQuanTri),
     toggleThuKyTT: (ds) => toggleThuKyTT(ds, loadQuanTri),
     khoaTaiKhoan: (ds) => khoaTaiKhoan(ds, loadQuanTri),
@@ -90,7 +87,6 @@ export function registerQuanTriView() {
     togglePhuTrach: (ds) => togglePhuTrach(ds, loadQuanTri),
     ketThucKiemNhiem: (ds) => ketThucKiemNhiem(ds, loadQuanTri),
     luuCauHinh: (ds) => luuCauHinh(ds, loadQuanTri),
-    thuUyQuyen: (ds) => thuUyQuyen(ds, loadQuanTri),
     qtThemNgayNghi: (ds, form) => themNgayNghi(form), qtBoNgayNghi: boNgayNghi,
   });
 }

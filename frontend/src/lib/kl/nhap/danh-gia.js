@@ -34,6 +34,7 @@ function lanhDaoMacDinh(dv, accounts) {
 }
 // Người theo dõi mặc định: cán bộ chủ trì → Trưởng phòng của phòng chủ trì → Chánh VP (việc của Văn phòng) → lãnh đạo giao → người nhập.
 function theoDoiMacDinh(g, dv, accounts, me) {
+  if (me?.role_group === 'A3' && !g.lanh_dao_giao) return me.id;   // Đợt F: chuyên viên giao thẳng — người theo dõi = người nhập (giao_viec ép)
   if (g.can_bo) return g.can_bo;
   const ds = accounts.filter((a) => !a.is_system && !a.bi_khoa);
   if (dv?.trong_van_phong) {
@@ -92,7 +93,8 @@ export function danhGia(dong, ctx) {
   if (!capNhat) {
     can('so_ket_luan'); can('ngay_ban_hanh'); can('so_hoi_nghi', gt.loai_van_ban === 'KL_BTV'); can('noi_dung'); can('theo_doi');
     if (!daXong) {
-      can('don_vi'); can('lanh_dao_giao', me?.role_group === 'A3'); can('san_pham'); can('nguon');
+      // Đợt F (0095): chuyên viên không ghi Lãnh đạo giao (không suy được mặc định) mà chủ trì là chuyên viên → giao thẳng (người theo dõi = người nhập).
+      can('don_vi'); can('lanh_dao_giao', me?.role_group === 'A3' && accounts.find((a) => a.id === gt.can_bo)?.role_group !== 'A3'); can('san_pham'); can('nguon');
       can('han_xu_ly', gt.loai_thoi_han === 'CO_HAN_CU_THE');
       can('nganh', CAN_NGANH.has(gt.loai_van_ban)); can('linh_vuc', CAN_NGANH.has(gt.loai_van_ban));
       if (gt.loai_thoi_han && !LOAI_HAN_MOI.has(gt.loai_thoi_han)) { thieu.push('loai_thoi_han'); canhBao.push('việc mới chỉ nhận "Có hạn cụ thể" hoặc "Ký ban hành"'); }

@@ -70,7 +70,7 @@ export function locRows(rows, f = {}) {
     && (!f.donVi || r.owner_don_vi_ma === f.donVi)
     && (!f.ketLuan || (r.so_ket_luan || '(không có số hiệu)') === f.ketLuan)   // v9: trước đây ô "Mọi kết luận" đặt khoá nhưng không lọc
     && (!f.cuaToi || r.nguoi_theo_doi === f.cuaToi || r.owner_tai_khoan === f.cuaToi)
-    && (!f.theoDoiCuaToi || (r.nguoi_theo_doi === f.theoDoiCuaToi && r.owner_tai_khoan !== f.theoDoiCuaToi))   // v3.14.2: nhãn có từ v3 nhưng chưa lọc
+    && (!f.theoDoiCuaToi || ((r.nguoi_theo_doi === f.theoDoiCuaToi || r.tao_boi === f.theoDoiCuaToi) && r.owner_tai_khoan !== f.theoDoiCuaToi))   // v3.14.2; Đợt F: + việc tôi đã nhập
     && (!f.chiMo || laMo(r))
     && (!f.thieuMinhChung || (r.nhom_dem === 'HOAN_THANH' && r.thieu_minh_chung))
     && (!f.khongNgayHoanThanh || (r.nhom_dem === 'HOAN_THANH' && !r.ngay_hoan_thanh))

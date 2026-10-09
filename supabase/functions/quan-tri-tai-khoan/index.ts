@@ -145,6 +145,8 @@ Deno.serve(async (req) => {
     if (hanhDong === 'cap_co') {
       const co = String(body.co || ''); const bat = body.bat === true; const ly_do = String(body.ly_do || '').trim();
       if (!['quan_tri_kl', 'quan_tri_he_thong'].includes(co)) return loi('Cờ không hợp lệ.');
+      // v3.21 (0096): quyền quản trị nhiệm vụ đã bỏ — chỉ còn thu cờ cũ, không cấp lại (như admin_dat_co).
+      if (co === 'quan_tri_kl' && bat) return loi('Quyền quản trị nhiệm vụ đã bỏ từ v3.21: mọi chuyên viên nhập Excel, nhập việc thay mặt lãnh đạo và sửa danh mục lĩnh vực được.');
       if (!ly_do) return loi('Phải ghi lý do cấp/thu cờ.');
       if (co === 'quan_tri_he_thong' && id === me.user.id && !bat) return loi('Không tự thu quyền quản trị hệ thống của mình.');
       const doi: Record<string, unknown> = { [co]: bat };

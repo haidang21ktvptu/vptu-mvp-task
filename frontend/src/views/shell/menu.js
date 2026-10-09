@@ -47,7 +47,7 @@ export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thư
 // v9 đợt 2: quản trị hệ thống không giữ quyền giao việc vẫn nhập Excel (thẻ trong màn Giao việc); vai đã có Giao việc dùng thẻ ở đó.
 export const NHAP_EXCEL_NAV = { id: 'navNhapExcel', label: 'Nhập từ Excel', ngan: 'Nhập Excel', action: 'openNhapExcel', section: 'viewGiaoViec', nhom: 'Điều hành' };
 
-// Chuyên viên giữ quan_tri_kl (nhập/sửa mọi nhiệm vụ) có thêm Nhiệm vụ toàn phạm vi (Giao việc đã có với mọi chuyên viên từ 0085).
+// Chuyên viên giữ quan_tri_kl (cờ cũ — 0096 thu hết, không cấp lại; giữ cho kiểm thử dùng cờ tạm) có thêm Nhiệm vụ toàn phạm vi.
 const QTKL_A3 = [{ ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
 // 0086: chuyên viên xem cả phòng — Tổng quan phòng (đầu menu, như các vai lãnh đạo) và Nhiệm vụ của phòng (danh sách, chip Việc của tôi / Cả phòng).
 // Không lên thanh dưới điện thoại (duoi: false) — thanh của chuyên viên giữ Việc của tôi / Giao việc / Theo dõi.
@@ -55,7 +55,7 @@ const PHONG_A3 = { tongQuan: { ...MENU.A2[0], label: 'Tổng quan phòng', duoi:
 
 export function menuCuaVai(user, { xemPhong = false } = {}) {
   const a3 = user?.role_group === 'A3';
-  const goc = [...(a3 && xemPhong && !user?.quan_tri_kl ? [PHONG_A3.tongQuan] : []), ...(MENU[user?.role_group] || []),   // quản trị KL thấy toàn Văn phòng: không gắn nhãn "phòng"
+  const goc = [...(a3 && xemPhong ? [PHONG_A3.tongQuan] : []), ...(MENU[user?.role_group] || []),   // 0096: không còn ngoại lệ quản trị KL
     ...(a3 && user?.quan_tri_kl ? QTKL_A3 : a3 && xemPhong ? [PHONG_A3.nhiemVu] : [])];
   const nhanTin = [{ ...NHAN_TIN_NAV, duoi: user?.role_group === 'A3' }];
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];

@@ -18,8 +18,7 @@ const THEO_VAI = {
     <li><b>Phân công phụ trách</b> (Chánh Văn phòng, bánh răng): Phó Chánh Văn phòng phụ trách phòng nào, hiệu lực theo ngày. <b>Ngưỡng cảnh báo</b>: số ngày "sắp đến hạn", hạn phản hồi mặc định…</li></ul>`,
   A2: `<h3>Trưởng phòng</h3>
     <ul><li><b>Phòng tôi hôm nay</b>: việc của phòng theo khâu, việc Đỏ cần quyết, đề nghị từ chối của chuyên viên chờ duyệt.</li>
-    <li><b>Giao việc trong phòng</b>: giao cho chuyên viên phòng mình; theo dõi xác nhận nhận việc và minh chứng.</li>
-    <li><b>Ủy quyền giao việc</b> (bánh răng): khi đi vắng, cấp quyền nhập/sửa nhiệm vụ có hạn (tối đa 90 ngày) cho một chuyên viên trong phòng; thu lại bất cứ lúc nào.</li></ul>`,
+    <li><b>Giao việc trong phòng</b>: giao cho chuyên viên phòng mình; theo dõi kết quả nộp, trả lại nếu chưa đạt.</li></ul>`,
   A3: `<h3>Chuyên viên</h3>
     <ul><li><b>Việc của tôi</b>: việc mới cần bấm "Đã nhận", việc sắp đến hạn / quá hạn, chỉ đạo cần phản hồi.</li>
     <li>Mở một việc → cập nhật tiến độ, nộp minh chứng (số hiệu văn bản hoặc tệp), phản hồi chỉ đạo; đề nghị từ chối khi không đúng phạm vi (Trưởng phòng duyệt).</li>

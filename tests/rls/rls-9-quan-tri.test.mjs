@@ -52,29 +52,31 @@ describe('RLS-9 cờ đặc quyền và admin_dat_co', { skip: SKIP }, () => {
     assertDenied(await anonClient().rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO }), 'anon');
   });
 
-  test('được phép: QTHT cấp rồi thu quan_tri_kl; cờ đổi và nhật ký ghi đủ hai dòng', async () => {
+  test('0096: QTHT không cấp được quan_tri_kl (quyền đã bỏ); thu cờ cũ vẫn được, cờ đổi và nhật ký ghi một dòng', async () => {
     const qtht = await userClient('demo_qtht');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO }), 'cấp');
+    const cap = await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO });
+    assert.match(cap.error?.message || '', /đã bỏ từ v3\.21/, 'cấp bị từ chối');
     const cv2 = await userClient('demo_cv2');
     const r1 = await cv2.from('accounts_public').select('quan_tri_kl').eq('id', IDS.cv2).single();
-    assertOk(r1, 'đọc cờ'); assert.equal(r1.data.quan_tri_kl, true);
+    assertOk(r1, 'đọc cờ'); assert.equal(r1.data.quan_tri_kl, false);
 
+    assertOk(await adminClient().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cờ cũ (service_role)');
     assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: `${LY_DO} thu` }), 'thu');
     const r2 = await cv2.from('accounts_public').select('quan_tri_kl').eq('id', IDS.cv2).single();
     assert.equal(r2.data.quan_tri_kl, false);
 
     const log = await qtht.from('quyen_lich_su').select('cap_boi, co, bat, ly_do').eq('tai_khoan', IDS.cv2).order('id');
     assertOk(log, 'đọc nhật ký');
-    // Nhật ký không xoá được nên tích luỹ qua các lần chạy: chỉ so hai dòng cuối.
-    const mine = log.data.filter((l) => l.ly_do.startsWith(LY_DO)).slice(-2);
-    assert.deepEqual(mine.map((l) => [l.cap_boi, l.co, l.bat]), [[IDS.qtht, 'quan_tri_kl', true], [IDS.qtht, 'quan_tri_kl', false]]);
+    // Nhật ký không xoá được nên tích luỹ qua các lần chạy: chỉ so dòng cuối (lần cấp bị từ chối không ghi).
+    const mine = log.data.filter((l) => l.ly_do.startsWith(LY_DO)).slice(-1);
+    assert.deepEqual(mine.map((l) => [l.cap_boi, l.co, l.bat, l.ly_do]), [[IDS.qtht, 'quan_tri_kl', false, `${LY_DO} thu`]]);
   });
 
   test('bị chặn: cấp quan_tri_he_thong qua hàm; thiếu lý do; tài khoản không tồn tại', async () => {
     const qtht = await userClient('demo_qtht');
     assert.ok((await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_he_thong', p_bat: true, p_ly_do: LY_DO })).error, 'cờ hệ thống');
     assert.ok((await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: '  ' })).error, 'thiếu lý do');
-    assert.ok((await qtht.rpc('admin_dat_co', { p_username: 'khong_co', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY_DO })).error, 'không có tài khoản');
+    assert.ok((await qtht.rpc('admin_dat_co', { p_username: 'khong_co', p_co: 'thu_ky_thuong_truc', p_bat: true, p_ly_do: LY_DO })).error, 'không có tài khoản');
     const chk = await qtht.from('accounts_public').select('quan_tri_kl, quan_tri_he_thong').eq('id', IDS.cv2).single();
     assert.deepEqual(chk.data, { quan_tri_kl: false, quan_tri_he_thong: false });
   });

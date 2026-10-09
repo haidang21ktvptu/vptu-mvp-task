@@ -8,7 +8,7 @@
 --   demo_cv1         A3  Chuyên viên TONG_HOP
 --   demo_cv2         A3  Chuyên viên QUAN_TRI (khác phòng, khác khối)
 --   smoke_test       A3  Tài khoản hệ thống (is_system, phòng CDS_CY) — smoke test sau phát hành; ẩn khỏi danh bạ
---   demo_qtht        A3  Chuyên viên CDS_CY giữ cờ quan_tri_he_thong (GĐ8) — cấp/thu quan_tri_kl, phân công phụ trách phòng
+--   demo_qtht        A3  Chuyên viên CDS_CY giữ cờ quan_tri_he_thong (GĐ8) — cấp/thu cờ thư ký Thường trực, phân công phụ trách phòng (0096: không còn quan_tri_kl)
 --   demo_a0          A0  Thường trực Tỉnh ủy (GĐ18, CH-11 = A): chỉ đọc + ghi ý kiến; không phòng
 -- Tài khoản riêng cho từng spec e2e (GĐ18, Playwright 2 worker — spec không dùng chung tài khoản; test RLS vẫn dùng bộ trên):
 --   demo_e2e_kl / demo_e2e_mc / demo_e2e_nv / demo_e2e_dh  A3 TONG_HOP — kl-chuyen-vien / kl-minh-chung / nhiem-vu / dieu-hanh

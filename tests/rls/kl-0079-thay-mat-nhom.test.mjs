@@ -39,8 +39,8 @@ describe('0079 — thay mặt theo nhóm, Owner luôn là phòng / cán bộ Vă
     const nhan = await nguoiNhanTin(nvLdvp, 'Giao việc thay mặt Lãnh đạo Văn phòng');
     for (const u of [IDS.cvp, IDS.pcvp, IDS.cv1]) assert.ok(nhan.includes(u), `tin giao tới ${u}`);   // staging có thể thêm lãnh đạo khác
     assert.ok(!nhan.includes(IDS.pcvp2), 'PCVP2 (Quản trị) ngoài phạm vi việc Tổng hợp: không được báo');
-    const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', nvLdvp).eq('cot', 'giao_thay_mat').single()).data;
-    assert.match(ls.gia_tri_moi, /giao thay mặt Lãnh đạo Văn phòng$/);
+    const ls = (await db().from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', nvLdvp).in('cot', ['giao_viec', 'giao_thay_mat'])).data;
+    assert.deepEqual(ls, [{ cot: 'giao_viec', gia_tri_moi: 'Nhập bởi Demo Chuyên viên Hai' }], '0095: vết chỉ ghi tài khoản nhập');
     const v = (await db().from('v_nhiem_vu').select('giao_thay_mat_nhom, giao_thay_mat_cho_ten').eq('id', nvLdvp).single()).data;
     assert.equal(v.giao_thay_mat_nhom, 'LANH_DAO_VP');
   });

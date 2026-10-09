@@ -2,7 +2,7 @@
 // minh chứng, đọc = ai thấy việc, xoá = người tải khi tệp chưa gắn; đường dẫn <id việc>/<tên>); nộp kèm tệp = hoàn thành; tệp dùng lại / sai việc
 // bị chặn; cấu hình "Minh chứng phải kèm tệp"; gắn tệp sau; danh mục sản phẩm mở rộng; chuyên viên người giao đôn đốc / gia hạn / giao lại (0092);
 // chuyển việc đang theo dõi (J-6, 0092); nhập Excel ba ô nguồn, hoàn tác lô "Hoàn thành" (0093); thư ký Thường trực mở tệp việc Thường trực giao Chánh
-// VP; người gõ thay hết quyền quản trị thì hết quyền người tạo. Khoá "KL-0089"; tài khoản tạm kl0089_td (mật khẩu ngẫu nhiên); tự dọn.
+// VP; người nhập việc thay mặt giữ quyền người tạo (0096 — mọi chuyên viên). Khoá "KL-0089"; tài khoản tạm kl0089_td (mật khẩu ngẫu nhiên); tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -174,18 +174,17 @@ describe('Đợt D (0089–0093) — tệp minh chứng, chuyên viên người 
     const v = await viec(r.data[0].nhiem_vu_id);
     assert.deepEqual([v.muc_quan_trong, v.co_quan_trinh, v.thuong_truc_chi_dao, v.san_pham_loai], ['A', 'DANG_UY_UBND', IDS.a0, 'DE_AN']);
     // Lô cập nhật việc có sẵn "Hoàn thành" kèm kết quả (CHO_NGHIEM_THU): minh chứng hợp lệ ngay, việc hoàn thành; hoàn tác lô ⇒ xoá minh chứng, mở lại.
-    assertOk(await db().from('accounts').update({ quan_tri_kl: true, quan_tri_kl_het_han: null }).eq('id', IDS.cv2), 'cấp tạm quan_tri_kl cho cv2');
-    try {
-      const lo2 = await goi('demo_cv2', 'nhap_excel_lo_tao', { p: { ten_tep: `${KHOA}-xong.xlsx`, mau: 'CHUAN', che_do_xong: 'CHO_NGHIEM_THU', so_dong: 1 } });
+    {   // 0096: người nhập (demo_qtht, chuyên viên) cập nhật lại việc mình nhập — không cần cờ
+      const lo2 = await goi('demo_qtht', 'nhap_excel_lo_tao', { p: { ten_tep: `${KHOA}-xong.xlsx`, mau: 'CHUAN', che_do_xong: 'CHO_NGHIEM_THU', so_dong: 1 } });
       assertOk(lo2, 'mở lô cập nhật');
-      const r2 = await goi('demo_cv2', 'nhap_excel_dong', { p_lo: lo2.data.id, p_dong: [{ so_dong: 2, ma: r.data[0].ma, cap_nhat: true, tien_do_ma: 'HOAN_THANH',
+      const r2 = await goi('demo_qtht', 'nhap_excel_dong', { p_lo: lo2.data.id, p_dong: [{ so_dong: 2, ma: r.data[0].ma, cap_nhat: true, tien_do_ma: 'HOAN_THANH',
         kq_so_hieu: `${KHOA}/KQ`, kq_ngay: homNayVN(), kq_trich_yeu: 'Báo cáo kết quả', kq_mo_ta: 'Đã gửi Trưởng phòng', du_lieu_goc: {} }] });
       assertOk(r2, 'nhập dòng cập nhật'); assert.equal(r2.data[0].ket_qua, 'CAP_NHAT', r2.data[0].ghi_chu);
       assert.equal((await viec(v.id)).tien_do_ma, 'HOAN_THANH', 'lô ghi minh chứng ⇒ hoàn thành');
-      assertOk(await goi('demo_cv2', 'hoan_tac_lo', { p_lo: lo2.data.id }), 'hoàn tác lô cập nhật');
+      assertOk(await goi('demo_qtht', 'hoan_tac_lo', { p_lo: lo2.data.id }), 'hoàn tác lô cập nhật');
       assert.equal((await viec(v.id)).tien_do_ma, v.tien_do_ma, 'mở lại về tiến độ trước khi nhập');
       assert.equal((await db().from('minh_chung').select('id').eq('nhiem_vu_id', v.id)).data.length, 0, 'minh chứng lô ghi đã xoá');
-    } finally { await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2); }
+    }
   });
 
   test('8. Thư ký Thường trực tải được tệp minh chứng của việc Thường trực giao Chánh VP (cùng phạm vi bảng minh_chung)', async () => {
@@ -203,17 +202,17 @@ describe('Đợt D (0089–0093) — tệp minh chứng, chuyên viên người 
     } finally { await db().from('accounts').update({ thu_ky_thuong_truc: false }).eq('id', TK); }
   });
 
-  test('9. Người gõ thay mặt lãnh đạo đã hết quyền quản trị nhiệm vụ: không nộp minh chứng, không gia hạn; đề nghị từ chối về người được thay mặt', async () => {
-    assertOk(await db().from('accounts').update({ quan_tri_kl: true, quan_tri_kl_het_han: null }).eq('id', IDS.cv2), 'cấp tạm quan_tri_kl cho cv2');
-    try {
-      const r = await goi('demo_cv2', 'giao_viec', { p: { van_ban_id: vb, noi_dung: `${KHOA} H gõ thay mặt`, san_pham_loai: 'BAO_CAO', han_xu_ly: '2026-12-31',
-        owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.truongphong } });
-      assertOk(r, 'quản trị KL giao thay mặt Trưởng phòng'); nv.H = r.data.id;
-    } finally { await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2); }
-    assertDenied(await nop('demo_cv2', 'H'), 'hết quyền: không nộp minh chứng');
-    assertDenied(await goi('demo_cv2', 'chi_dao_gui', { p: { nhiem_vu_id: nv.H, loai: 'GIA_HAN', noi_dung: 'x', han_moi: '2027-02-01' } }), 'hết quyền: không gia hạn');
+  test('9. (0096) Người nhập việc thay mặt lãnh đạo (mọi chuyên viên, không cờ) giữ quyền người tạo: thấy việc, xử lý đề nghị từ chối, nộp minh chứng thay; không gia hạn (người giao là lãnh đạo)', async () => {
+    const r = await goi('demo_cv2', 'giao_viec', { p: { van_ban_id: vb, noi_dung: `${KHOA} H gõ thay mặt`, san_pham_loai: 'BAO_CAO', han_xu_ly: '2026-12-31',
+      owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.truongphong } });
+    assertOk(r, 'chuyên viên giao thay mặt Trưởng phòng'); nv.H = r.data.id;
+    assert.equal((await (await userClient('demo_cv2')).from('v_nhiem_vu').select('id').eq('id', nv.H)).data?.length, 1, 'người nhập thấy việc mình nhập (khác phòng)');
+    assertDenied(await goi('demo_cv2', 'chi_dao_gui', { p: { nhiem_vu_id: nv.H, loai: 'GIA_HAN', noi_dung: 'x', han_moi: '2027-02-01' } }), 'người nhập không gia hạn');
     const tc = await goi('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: nv.H, p_ly_do: `${KHOA} không đúng chức năng` });
     assertOk(tc, 'chủ trì đề nghị từ chối');
-    assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', tc.data).single()).data.cap_duyet, IDS.truongphong, 'cấp xử lý = người được thay mặt');
+    assert.equal((await db().from('tu_choi').select('cap_duyet').eq('id', tc.data).single()).data.cap_duyet, IDS.cv2, 'cấp xử lý = người nhập (0091, 0096)');
+    assertOk(await goi('demo_cv2', 'duyet_tu_choi', { p_id: tc.data, p_dong_y: false, p_y_kien: `${KHOA} đề nghị tiếp tục` }), 'người nhập không đồng ý');
+    assertOk(await nop('demo_cv2', 'H'), 'người nhập nộp minh chứng thay');
+    assert.equal((await viec(nv.H)).tien_do_ma, 'HOAN_THANH');
   });
 });
