@@ -797,3 +797,4 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Hướng dẫn sử dụng **3.21** (59 trang): 1.3 bỏ dòng "Cán bộ tổng hợp" (chuyên viên nhập Excel, nhập thay mặt, sửa danh mục), 2 (bánh răng có Danh mục lĩnh vực), 3.11, 4.6, Phần 7 (7.7 nhập việc thay mặt — "Nhập bởi …"), Phần 8 (bỏ cấp quyền quản trị nhiệm vụ), Phần 9; chụp lại `a3-11-giao-viec`, `qt-02-tai-khoan`.
 - `docs/GO-LIVE-V3.21.md`: kiểm tay staging, câu SELECT xem trước (số tài khoản sẽ bị thu cờ, thư ký Thường trực còn hoạt động), tag, cấu hình `pham_vi_chuyen_vien`.
 - Khi áp production: **0096 thu cờ quản trị nhiệm vụ của mọi tài khoản** (ghi nhật ký); 0095, 0097–0099 chỉ đổi hàm / view.
+- **Kết quả phát hành** (9/10/2026 10:53): SELECT xem trước trên production = 15 tài khoản giữ quyền quản trị nhiệm vụ (thu khi áp 0096), 4 thư ký Thường trực; chủ dự án xác nhận áp 0095–0099, đẩy tag `v3.21.0` (`f53d794`), duyệt; deploy-prod xanh đủ, `phien-ban.json` = v3.21.0; PR #127 merge.
