@@ -94,7 +94,7 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.equal((await nv(id['NV-T43'])).giao_thay_mat_cho, IDS.pcvp);
     const ls = (await db().from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', id['NV-T43']).in('cot', ['giao_viec', 'giao_thay_mat'])).data;
     assert.deepEqual(ls, [{ cot: 'giao_viec', gia_tri_moi: 'Nhập bởi Demo Quản trị hệ thống' }], '0095: vết chỉ ghi tài khoản nhập, không ghi "thay mặt"');
-    const [tPcvp, tOwner] = await Promise.all([tin(IDS.pcvp, id['NV-T43'], /^Giao việc thay mặt Demo Phó Chánh Văn phòng · NV-/), tin(IDS.cv1, id['NV-T43'], /Giao việc thay mặt/)]);
+    const [tPcvp, tOwner] = await Promise.all([tin(IDS.pcvp, id['NV-T43'], /^Giao việc · NV-/), tin(IDS.cv1, id['NV-T43'], /^Giao việc · NV-/)]);
     assert.equal(tPcvp.length, 1, 'lãnh đạo được thay mặt nhận tin ngay');
     assert.equal(tOwner.length, 1, 'Owner nhận tin');
     const tc = await rpc('demo_cv1', 'de_nghi_tu_choi', { p_nhiem_vu: id['NV-T43'], p_ly_do: LY_DO });

@@ -120,7 +120,7 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
     const tin = (await db().from('direct_messages').select('receiver_id, content, nhiem_vu_id').like('content', `Nhập Excel · lô ${lo1.ma} (%`)).data;
     assert.deepEqual(tin.map((t) => t.receiver_id).sort(), [IDS.truongphong, IDS.cv1].sort());
     assert.match(tin.find((t) => t.receiver_id === IDS.cv1).content, new RegExp(`1 việc đồng chí chủ trì / theo dõi \\(${g.ma}\\)`));
-    assert.match(tin.find((t) => t.receiver_id === IDS.truongphong).content, /1 việc giao thay mặt đồng chí/);
+    assert.match(tin.find((t) => t.receiver_id === IDS.truongphong).content, /1 việc ghi đồng chí là lãnh đạo giao/);
     const sau = await goi('demo_qtht', 'nhap_excel_dong', { p_lo: lo1.id, p_dong: [{ so_dong: 9 }] });
     assert.ok(sau.error); assert.match(sau.error.message, /đã chốt/);
   });
@@ -237,8 +237,13 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
     }
     const hs = { p_ten: `${KHOA} Phụ lục 2 (thử)`, p_ten_sheet: 'Phụ lục 2', p_dong_tieu_de: 3, p_anh_xa: { 'so tb/kl': 'so_ket_luan', 'noi dung': 'noi_dung' } };
     const h1 = await goi('demo_qtht', 'ho_so_nhap_luu', hs); assertOk(h1, 'lưu hồ sơ');
-    const h2 = await goi('demo_cv2', 'ho_so_nhap_luu', { ...hs, p_dong_tieu_de: 4 }); assertOk(h2, 'người nhập khác ghi đè cùng tên');
-    assert.equal(h2.data, h1.data);
+    const h2 = await goi('demo_cv2', 'ho_so_nhap_luu', { ...hs, p_dong_tieu_de: 4 });   // 0099: không ghi đè cách ghép của người khác
+    assertDenied(h2, 'người nhập khác ghi đè cùng tên'); assert.match(h2.error.message, /do cán bộ khác lưu/);
+    const h3 = await goi('demo_qtht', 'ho_so_nhap_luu', { ...hs, p_dong_tieu_de: 4 }); assertOk(h3, 'người lưu sửa hồ sơ của mình'); assert.equal(h3.data, h1.data);
+    assertDenied(await goi('demo_cv2', 'ho_so_nhap_xoa', { p_id: h1.data }), 'người khác xoá hồ sơ');
+    const doiMa = await goi('demo_cv2', 'tu_dien_nhap_luu', { p_muc: [{ loai: 'don_vi', goc: `${KHOA} UBND`, ma: 'TONG_HOP' }] });
+    assertOk(doiMa, 'gửi mục trùng của người khác'); assert.equal(doiMa.data, 0, '0099: mục từ điển của người khác giữ nguyên');
+    assert.equal((await db().from('tu_dien_nhap').select('ma').eq('loai', 'don_vi').eq('goc', `${KHOA.toLowerCase()} ubnd`).single()).data.ma, 'DANG_UY_UBND');
     assert.match((await goi('demo_qtht', 'ho_so_nhap_luu', { ...hs, p_anh_xa: { a: 'truong_la' } })).error?.message || '', /không có trong chuẩn nhập/);
     assertOk(await goi('demo_qtht', 'ho_so_nhap_xoa', { p_id: h1.data }), 'xoá hồ sơ');
     const ma = await goi('demo_qtht', 'kl_nhap_ma_da_co', { p_ma: [` ${coSan.ma.toLowerCase()} `, 'NV-KHONG-CO-0072'] });

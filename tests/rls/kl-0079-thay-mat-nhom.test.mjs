@@ -36,7 +36,7 @@ describe('0079 — thay mặt theo nhóm, Owner luôn là phòng / cán bộ Vă
     const r = await giao('demo_cv2', { owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.cv1, thay_mat_nhom: 'LANH_DAO_VP' });
     assertOk(r, 'giao thay mặt nhóm'); nvLdvp = r.data.id;
     assert.deepEqual(await doc(nvLdvp), { giao_thay_mat_cho: IDS.cvp, giao_thay_mat_nhom: 'LANH_DAO_VP', uu_tien: null, nguoi_theo_doi: IDS.cv1, owner_tai_khoan: null, do_khan: 'THUONG' });
-    const nhan = await nguoiNhanTin(nvLdvp, 'Giao việc thay mặt Lãnh đạo Văn phòng');
+    const nhan = await nguoiNhanTin(nvLdvp, 'Giao việc · NV-');
     for (const u of [IDS.cvp, IDS.pcvp, IDS.cv1]) assert.ok(nhan.includes(u), `tin giao tới ${u}`);   // staging có thể thêm lãnh đạo khác
     assert.ok(!nhan.includes(IDS.pcvp2), 'PCVP2 (Quản trị) ngoài phạm vi việc Tổng hợp: không được báo');
     const ls = (await db().from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', nvLdvp).in('cot', ['giao_viec', 'giao_thay_mat'])).data;
@@ -92,7 +92,7 @@ describe('0079 — thay mặt theo nhóm, Owner luôn là phòng / cán bộ Vă
   test('7. (0083) nhóm theo phạm vi: thay mặt Lãnh đạo VP cho phòng Quản trị → tin tới Chánh VP + PCVP2, không PCVP (khối Tổng hợp); PCVP không thấy việc / đề nghị, không duyệt; PCVP2 duyệt', async () => {
     const r = await giao('demo_cv2', { owner_don_vi_ma: 'QUAN_TRI', nguoi_theo_doi: IDS.cv2, thay_mat_nhom: 'LANH_DAO_VP' });
     assertOk(r, 'giao thay mặt nhóm cho Quản trị');
-    const nhan = await nguoiNhanTin(r.data.id, 'Giao việc thay mặt Lãnh đạo Văn phòng');
+    const nhan = await nguoiNhanTin(r.data.id, 'Giao việc · NV-');
     assert.ok(nhan.includes(IDS.cvp) && nhan.includes(IDS.pcvp2) && !nhan.includes(IDS.pcvp), `tin giao: ${nhan}`);
     const tc = await (await userClient('demo_cv2')).rpc('de_nghi_tu_choi', { p_nhiem_vu: r.data.id, p_ly_do: `${KHOA} quá tải` });
     assertOk(tc, 'cv2 (theo dõi) đề nghị từ chối');
