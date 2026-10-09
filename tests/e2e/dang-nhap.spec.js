@@ -48,11 +48,12 @@ test.describe.serial('Đăng nhập theo vai trò', () => {
   test('Kịch bản 2: A2 (Trưởng phòng) đăng nhập → view Trưởng phòng', async ({ page }) => {
     await loginAs(page, 'A2');
     await expect(page.locator('#currentRoleDisplay')).toHaveText('Trưởng phòng · Phòng Tổng hợp');
-    // Menu bánh răng của Trưởng phòng: có Ủy quyền giao việc, Đăng xuất cuối cùng; không có nhóm Quản trị hệ thống.
+    // Menu bánh răng của Trưởng phòng: có Danh mục lĩnh vực (Đợt F v3.21: quyền chung; Ủy quyền giao việc đã bỏ), Đăng xuất cuối cùng; không có nhóm Quản trị hệ thống.
     await page.locator('#banhRangBtn').click();
     await expect(page.locator('#banhRangMenu')).toBeVisible();
     await expect(page.locator('#banhRangMenu [role="menuitem"]').last()).toHaveText('Đăng xuất');
-    await expect(page.locator('#banhRangMenu')).toContainText('Ủy quyền giao việc');
+    await expect(page.locator('#banhRangMenu')).toContainText('Danh mục lĩnh vực');
+    await expect(page.locator('#banhRangMenu')).not.toContainText('Ủy quyền giao việc');
     await expect(page.locator('#banhRangMenu')).not.toContainText('Quản trị hệ thống');
     await page.keyboard.press('Escape');
     await logout(page);

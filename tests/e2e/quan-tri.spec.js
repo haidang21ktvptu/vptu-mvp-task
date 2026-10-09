@@ -1,6 +1,6 @@
 // Kịch bản 8 (GĐ8; giao diện v7 GĐ20): tài khoản có quan_tri_he_thong thấy mục "Quản trị" (tab: Phân công phụ trách lên đầu, Tài khoản và cờ,
-// Nhật ký), cấp rồi thu quyền quản trị KL cho demo_cv2 qua hộp lý do (bắt buộc), nhật ký hiện đúng hai dòng; tài khoản thường (A3) không có
-// mục này. Bảng phụ trách có nút "Kiêm nhiệm lĩnh vực", hộp chọn ngành → lĩnh vực khoá theo ngành. Tự bỏ qua khi thiếu demo_qtht / dm_linh_vuc.
+// Nhật ký), cấp rồi thu quyền thư ký Thường trực cho demo_cv2 qua hộp lý do (bắt buộc), nhật ký hiện đúng hai dòng (Đợt F v3.21: không còn cột /
+// nút quyền quản trị nhiệm vụ); tài khoản thường (A3) không có mục này. Bảng phụ trách có nút "Kiêm nhiệm lĩnh vực", hộp chọn ngành → lĩnh vực khoá theo ngành. Tự bỏ qua khi thiếu demo_qtht / dm_linh_vuc.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -24,7 +24,7 @@ async function pageAsQtht(browser, testInfo) {
   return page;
 }
 
-test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do', () => {
+test.describe.serial('Quản trị: cấp/thu quyền thư ký Thường trực có lý do', () => {
   let coLinhVuc = false;
   test.beforeAll(async () => {
     coLinhVuc = !(await dbAdmin().from('dm_linh_vuc').select('ma').limit(1)).error;
@@ -35,7 +35,7 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
   });
 
   test.afterAll(async () => {
-    await dbAdmin().from('accounts').update({ quan_tri_kl: false }).eq('id', CV2_ID); // thu về trạng thái seed dù test lỗi giữa chừng
+    await dbAdmin().from('accounts').update({ quan_tri_kl: false, thu_ky_thuong_truc: false }).eq('id', CV2_ID); // thu về trạng thái seed dù test lỗi giữa chừng
   });
 
   test('A3 thường không có mục Quản trị', async ({ browser }, testInfo) => {
@@ -44,7 +44,7 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
     await page.context().close();
   });
 
-  test('QTHT: tab Phân công phụ trách lên đầu; cấp rồi thu quyền cho demo_cv2, lý do bắt buộc, nhật ký ghi hai dòng', async ({ browser }, testInfo) => {
+  test('QTHT: tab Phân công phụ trách lên đầu; không còn quyền quản trị nhiệm vụ; cấp rồi thu thư ký Thường trực cho demo_cv2, lý do bắt buộc, nhật ký ghi hai dòng', async ({ browser }, testInfo) => {
     const page = await pageAsQtht(browser, testInfo);
     await nav(page, 'navQuanTri');
     await expect(page.locator('#viewQuanTri')).toBeVisible();
@@ -67,36 +67,37 @@ test.describe.serial('Quản trị: cấp/thu quyền quản trị KL có lý do
     await page.locator('#qtKiemNhiemModal button[data-action="dongKiemNhiem"]').click();
     await expect(page.locator('#qtKiemNhiemModal')).toBeHidden();
 
-    // Tab Tài khoản và cờ: cấp quyền — bỏ trống lý do → bị chặn; ghi lý do → cờ đổi, toast, nhật ký.
+    // Tab Tài khoản và cờ (Đợt F v3.21): không cột / nút quản trị nhiệm vụ, không tab Ủy quyền; cấp thư ký TT — bỏ trống lý do → bị chặn; ghi lý do → cờ đổi, toast, nhật ký.
+    await expect(page.locator('#qtTabUyQuyen')).toHaveCount(0);
     await page.locator('#qtTabTaiKhoan').click();
     await expect(page.locator('#qtKhuTaiKhoan')).toBeVisible();
+    await expect(page.locator('#qtKhuTaiKhoan thead')).not.toContainText('Quản trị KL');
     const row = page.locator('#qtTaiKhoanBody tr', { hasText: 'demo_cv2' });
-    await expect(row).toContainText('Không', NAP);
+    await expect(row.getByRole('button', { name: /Cấp thư ký TT/ })).toBeVisible(NAP);
+    await expect(row.getByRole('button', { name: /^(Cấp|Thu) quyền$/ })).toHaveCount(0);
     const lyDo = `${E2E_TAG} ${testInfo.project.name} ${Date.now()}`;
-    await row.getByRole('button', { name: /Cấp quyền/ }).click();
+    await row.getByRole('button', { name: /Cấp thư ký TT/ }).click();
     await expect(page.locator('#qtLyDoModal')).toBeVisible();
     await page.locator('#qtLyDoXacNhan').click();
     await expect(page.locator('#toastContainer')).toContainText('Phải ghi lý do');
     await page.locator('#qtLyDo').fill(lyDo);
     await page.locator('#qtLyDoXacNhan').click();
-    await expect(page.locator('#toastContainer')).toContainText('Đã cấp quyền quản trị KL BTVTU cho Demo Chuyên viên Hai.');
+    await expect(page.locator('#toastContainer')).toContainText('Đã cấp quyền thư ký Thường trực cho Demo Chuyên viên Hai.');
     await expect(page.locator('#qtTabTaiKhoan')).toHaveAttribute('aria-selected', 'true'); // nạp lại giữ đúng tab
-    await expect(row).toContainText('Có quyền', NAP);
+    await expect(row).toContainText('Thư ký Thường trực', NAP);
     await page.locator('#qtTabNhatKy').click();
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText(lyDo);
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText('Bật');
 
     // Thu quyền.
     await page.locator('#qtTabTaiKhoan').click();
-    await row.getByRole('button', { name: /Thu quyền/ }).click();
+    await row.getByRole('button', { name: /Thu thư ký TT/ }).click();
     await page.locator('#qtLyDo').fill(`${lyDo} thu`);
     await page.locator('#qtLyDoXacNhan').click();
-    await expect(page.locator('#toastContainer')).toContainText('Đã thu quyền quản trị KL BTVTU của Demo Chuyên viên Hai.');
-    await expect(row).toContainText('Không', NAP);
+    await expect(page.locator('#toastContainer')).toContainText('Đã thu quyền thư ký Thường trực của Demo Chuyên viên Hai.');
+    await expect(row.getByRole('button', { name: /Cấp thư ký TT/ })).toBeVisible(NAP);
     await page.locator('#qtTabNhatKy').click();
     await expect(page.locator('#qtNhatKyBody tr').first()).toContainText('Tắt');
-    const soKl = (await dbAdmin().from('accounts').select('id').eq('quan_tri_kl', true)).data.length; // spec khác (kl-them-nhiem-vu) có thể đang cấp tạm
-    await expect(page.locator('#qtCanhBao')).toContainText(`Đang có ${soKl} người giữ quyền quản trị KL BTVTU (quy định: 2).`);
 
     // Về mục theo vai trò: section vai trò hiện lại, mục Quản trị ẩn.
     await nav(page, 'navKl');

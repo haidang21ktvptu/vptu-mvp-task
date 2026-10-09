@@ -113,24 +113,22 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
     await adminClient().from('dm_lich_su').delete().like('ly_do', `${LY}%`);
     await adminClient().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2);
   });
-  test('ai đã đăng nhập đọc 32 lĩnh vực (ngành 8 có 4); anon bị chặn; ghi thẳng bị chặn với MỌI người kể cả quan_tri_kl', async () => {
+  test('ai đã đăng nhập đọc 32 lĩnh vực (ngành 8 có 4); anon bị chặn; ghi thẳng bị chặn với MỌI người (0096: chỉ qua hàm, có nhật ký)', async () => {
     const cv1 = await userClient('demo_cv1');
     const all = await cv1.from('dm_linh_vuc').select('ma, nganh_ma');
     assertOk(all, 'đọc'); assert.equal(all.data.length, 32); assert.equal(all.data.filter((l) => l.nganh_ma === NGANH).length, 4);
     assertDenied(await anonClient().from('dm_linh_vuc').select('ma').limit(1), 'anon');
     const qtht = await userClient('demo_qtht');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY }), 'cấp');
     const row = { ma: 'LV08_RLS_TEST', nganh_ma: NGANH, ten: 'RLS-TEST lĩnh vực', thu_tu: 99 };
-    const ca = [['cv1', cv1], ['qtht', qtht], ['cv2 (quan_tri_kl)', await userClient('demo_cv2')]].flatMap(([u, c]) => [
+    const ca = [['cv1', cv1], ['qtht', qtht], ['cvp', await userClient('demo_cvp')]].flatMap(([u, c]) => [
       [`${u} insert thẳng`, () => c.from('dm_linh_vuc').insert(row).select('ma')],
       [`${u} update thẳng`, () => c.from('dm_linh_vuc').update({ ten: 'x' }).eq('ma', 'LV08_TAI_CHINH').select('ma')],
       [`${u} delete`, () => c.from('dm_linh_vuc').delete().eq('ma', 'LV08_TAI_CHINH').select('ma')]]);
     (await songSong(ca.map((x) => x[1]))).forEach((r, i) => assertDenied(r, ca[i][0]));   // ghi thẳng bị chặn, độc lập (D3)
   });
-  test('admin_them_linh_vuc: A3/QTHT bị chặn; quan_tri_kl thêm → mã LV08_… sinh ở server, thu_tu cuối ngành, dm_lich_su ghi "them"', async () => {
-    const cv1 = await userClient('demo_cv1'); const qtht = await userClient('demo_qtht'); const cv2 = await userClient('demo_cv2');
-    assertDenied(await cv1.rpc('admin_them_linh_vuc', { p_nganh_ma: NGANH, p_ten: 'RLS-TEST Tài chính công', p_ly_do: LY }), 'A3');
-    assertDenied(await qtht.rpc('admin_them_linh_vuc', { p_nganh_ma: NGANH, p_ten: 'RLS-TEST Tài chính công', p_ly_do: LY }), 'QTHT không có quan_tri_kl');
+  test('admin_them_linh_vuc (0096 quyền chung): Thường trực bị chặn; chuyên viên thường thêm → mã LV08_… sinh ở server, thu_tu cuối ngành, dm_lich_su ghi "them"', async () => {
+    const a0 = await userClient('demo_a0'); const cv2 = await userClient('demo_cv2');
+    assertDenied(await a0.rpc('admin_them_linh_vuc', { p_nganh_ma: NGANH, p_ten: 'RLS-TEST Tài chính công', p_ly_do: LY }), 'A0');
     assert.ok((await cv2.rpc('admin_them_linh_vuc', { p_nganh_ma: NGANH, p_ten: 'RLS-TEST Tài chính công', p_ly_do: ' ' })).error, 'thiếu lý do');
     assert.ok((await cv2.rpc('admin_them_linh_vuc', { p_nganh_ma: 'KHONG_CO', p_ten: 'x', p_ly_do: LY })).error, 'ngành lạ');
     assert.ok((await cv2.rpc('admin_them_linh_vuc', { p_nganh_ma: NGANH, p_ten: 'tài chính', p_ly_do: LY })).error, 'trùng tên (không phân biệt hoa thường)');
@@ -141,7 +139,7 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
     const { data: ls } = await cv2.from('dm_lich_su').select('nguoi, nguoi_ghi_chu, bang, ma, hanh_dong, gia_tri_cu, ly_do').eq('ma', maMoi);
     assert.deepEqual(ls, [{ nguoi: IDS.cv2, nguoi_ghi_chu: null, bang: 'dm_linh_vuc', ma: maMoi, hanh_dong: 'them', gia_tri_cu: null, ly_do: LY }]);
   });
-  test('admin_sua_linh_vuc: đổi tên/thứ tự ghi cột đổi; không đổi gì → lỗi; dm_lich_su chỉ quan_tri_kl/QTHT đọc, không ghi thẳng', async () => {
+  test('admin_sua_linh_vuc: đổi tên/thứ tự ghi cột đổi; không đổi gì → lỗi; dm_lich_su mọi người nhập liệu đọc (Thường trực không), không ghi thẳng', async () => {
     const cv2 = await userClient('demo_cv2');
     assert.ok((await cv2.rpc('admin_sua_linh_vuc', { p_ma: maMoi, p_ten: 'RLS-TEST Tài chính công – Đầu tư', p_thu_tu: 5, p_ly_do: LY })).error, 'không đổi gì');
     assertOk(await cv2.rpc('admin_sua_linh_vuc', { p_ma: maMoi, p_ten: 'RLS-TEST Tài chính công (sửa)', p_thu_tu: 9, p_ly_do: `${LY} sửa` }), 'sửa');
@@ -149,21 +147,22 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
     assert.deepEqual(lv, { ten: 'RLS-TEST Tài chính công (sửa)', thu_tu: 9 });
     const { data: ls } = await cv2.from('dm_lich_su').select('hanh_dong, gia_tri_cu, gia_tri_moi').eq('ma', maMoi).eq('hanh_dong', 'sua');
     assert.deepEqual(ls, [{ hanh_dong: 'sua', gia_tri_cu: { ten: 'RLS-TEST Tài chính công – Đầu tư', thu_tu: 5 }, gia_tri_moi: { ten: 'RLS-TEST Tài chính công (sửa)', thu_tu: 9 } }]);
-    const cv1 = await userClient('demo_cv1'); const qtht = await userClient('demo_qtht');
-    const r0 = await cv1.from('dm_lich_su').select('id'); assertOk(r0, 'cv1 đọc'); assert.equal(r0.data.length, 0);
+    const cv1 = await userClient('demo_cv1'); const qtht = await userClient('demo_qtht'); const a0 = await userClient('demo_a0');
+    const r0 = await cv1.from('dm_lich_su').select('id, nguoi').eq('ma', maMoi); assertOk(r0, 'cv1 đọc'); assert.equal(r0.data.length, 2);
+    assert.ok(r0.data.every((x) => x.nguoi === IDS.cv2), 'lưu vết người sửa');
     const r1 = await qtht.from('dm_lich_su').select('id').eq('ma', maMoi); assertOk(r1, 'QTHT đọc'); assert.equal(r1.data.length, 2);
+    const ra = await a0.from('dm_lich_su').select('id'); assertOk(ra, 'A0 đọc'); assert.equal(ra.data.length, 0);
     assertDenied(await cv2.from('dm_lich_su').insert({ bang: 'dm_linh_vuc', ma: maMoi, hanh_dong: 'them', ly_do: 'giả' }).select('id'), 'insert thẳng');
     assertDenied(await cv2.from('dm_lich_su').delete().eq('ma', maMoi).select('id'), 'delete');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: false, p_ly_do: LY }), 'thu');
-    assertDenied(await cv2.rpc('admin_sua_linh_vuc', { p_ma: maMoi, p_ten: 'x', p_thu_tu: 9, p_ly_do: LY }), 'sau khi thu cờ');
+    assertDenied(await a0.rpc('admin_sua_linh_vuc', { p_ma: maMoi, p_ten: 'x', p_thu_tu: 9, p_ly_do: LY }), 'Thường trực sửa');
   });
   test('đính chính linh_vuc_ma (0020): chủ trì đề nghị → quan_tri_kl duyệt → cột đổi, lịch sử nguon dinh_chinh; sai ngành → duyệt bị FK chặn, đề nghị vẫn CHO_DUYET', async () => {
-    const cv1 = await userClient('demo_cv1'); const qtht = await userClient('demo_qtht'); const cv2 = await userClient('demo_cv2');
+    const cv1 = await userClient('demo_cv1'); const cv2 = await userClient('demo_cv2');
     const dn = await cv1.rpc('kl_de_nghi_dinh_chinh', { p_nhiem_vu: fx.n5, p_cot: 'linh_vuc_ma', p_gia_tri_moi: 'LV08_TAI_CHINH', p_ly_do: 'RLS-TEST gán lĩnh vực' });
     assertOk(dn, 'đề nghị'); assert.ok(dn.data);
     const sai = await cv1.rpc('kl_de_nghi_dinh_chinh', { p_nhiem_vu: fx.n6, p_cot: 'linh_vuc_ma', p_gia_tri_moi: 'LV03_TU_PHAP', p_ly_do: 'RLS-TEST sai ngành' });
     assertOk(sai, 'đề nghị sai ngành vẫn ghi nhận (kiểm khi duyệt)');
-    assertOk(await qtht.rpc('admin_dat_co', { p_username: 'demo_cv2', p_co: 'quan_tri_kl', p_bat: true, p_ly_do: LY }), 'cấp');
+    assertOk(await adminClient().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cờ cũ tạm (service_role) — duyệt đính chính vẫn theo me_quan_tri_kl');
     assertOk(await cv2.rpc('kl_duyet_dinh_chinh', { p_id: dn.data, p_chap_nhan: true }), 'duyệt');
     const { data: n5 } = await adminClient().from('nhiem_vu').select('linh_vuc_ma').eq('id', fx.n5).single();
     assert.equal(n5.linh_vuc_ma, 'LV08_TAI_CHINH');

@@ -1,12 +1,10 @@
-// Lời gọi DB của nhập Excel (0072–0075). Quyền thật ở hàm DB (kl_nguoi_nhap: quản trị nhiệm vụ còn hạn / quản trị hệ thống); bảng chỉ đọc qua RLS.
+// Lời gọi DB của nhập Excel (0072–0075). Quyền thật ở hàm DB (kl_nguoi_nhap — 0096: mọi tài khoản trừ Thường trực); bảng chỉ đọc qua RLS.
 // Nhập một lô: mở lô → gửi TUẦN TỰ từng phần ≤ 50 dòng (mỗi phần một giao dịch, tránh quá giờ chạy câu lệnh; gửi lại phần cũ an toàn) → chốt lô.
 // Lỗi giữa chừng: lần bấm sau gửi tiếp vào cùng lô (không mở lô mới — tránh tạo việc trùng).
 import { supabase } from '../../supabase.js';
-import { homNayVN } from '../ngay.js';
 
-// Người nhập (cùng quy tắc kl_nguoi_nhap — chỉ để ẩn / hiện): quản trị nhiệm vụ còn hạn hoặc quản trị hệ thống, không phải A0, tài khoản không khoá.
-export const laNguoiNhap = (u) => Boolean(u) && u.role_group !== 'A0' && !u.bi_khoa
-  && Boolean(u.quan_tri_he_thong || (u.quan_tri_kl && (!u.quan_tri_kl_het_han || u.quan_tri_kl_het_han >= homNayVN())));
+// Người nhập liệu (cùng quy tắc kl_nguoi_nhap — chỉ để ẩn / hiện; Đợt F v3.21: quyền chung): mọi tài khoản trừ Thường trực, tài khoản hệ thống, đã khoá.
+export const laNguoiNhap = (u) => Boolean(u) && u.role_group !== 'A0' && !u.bi_khoa && !u.is_system;
 
 const goi = async (fn, args) => { const r = await supabase.rpc(fn, args); if (r.error) throw new Error(r.error.message); return r.data; };
 const doc = async (q) => { const r = await q; if (r.error) throw new Error(r.error.message); return r.data || []; };

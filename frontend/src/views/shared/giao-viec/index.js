@@ -1,5 +1,5 @@
 // Màn hình Giao việc (GĐ22; SPEC GV-2: người giao thiết lập Owner, Product, Deadline — hệ thống tự điền, cho sửa ngày giao, cấp nhận, người theo
-// dõi). Dùng chung: A1/A2 (đầy đủ), A3 quan_tri_kl (thêm ô Thay mặt bắt buộc), A0 (rút gọn: DB tự suy người theo dõi, ngày giao, loại hạn…; để trống số
+// dõi). Dùng chung: A1/A2 (đầy đủ), A3 (ô Thay mặt tuỳ chọn — Đợt F v3.21: mọi chuyên viên), A0 (rút gọn: DB tự suy người theo dõi, ngày giao, loại hạn…; để trống số
 // hiệu + ngày → DB ghi mốc "Thường trực giao …"). Kiểm phía form để báo sớm (doc-form.js); DB là chốt (giao_viec). "Giao, nhập tiếp" giữ văn bản/ngành/
 // lĩnh vực/loại hạn; trích yếu lưu bằng van_ban_dat_trich_yeu sau giao_viec. Giao tiếp xuống (giaoTiepXuong): văn bản của việc cha, gửi nhiem_vu_cha.
 // PR-2a: văn bản tìm ở DB (van-ban.js), phạm vi giao theo DB (pham-vi.js). v9 đợt 2: thẻ Nhập từ Excel / Chờ hoàn thiện (nhap-excel/tab.js), hoàn thiện

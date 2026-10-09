@@ -1,12 +1,13 @@
 // Menu bánh răng trên dải (GĐ23): mục chung (Hồ sơ, Đổi mật khẩu, Thông báo, Trợ giúp) → Kiểu giao diện (v9: Thanh lịch / Trang nghiêm, Nền tối;
 // shell/kieu-giao-dien.js, nhớ theo máy) → mục theo vai (A0 Bản gọn; A1 Phân công phụ trách,
-// Ngưỡng cảnh báo; A2 Ủy quyền giao việc) → nhóm Quản trị hệ thống (chỉ cờ quan_tri_he_thong) → Đăng xuất (đỏ, cuối). Gạch ngăn giữa nhóm.
+// Ngưỡng cảnh báo; Danh mục lĩnh vực cho mọi vai trừ A0 — Đợt F v3.21) → nhóm Quản trị hệ thống (chỉ cờ quan_tri_he_thong) → Đăng xuất (đỏ, cuối). Gạch ngăn giữa nhóm.
 // Frontend chỉ ẩn/hiện; quyền thật ở hàm SQL / RLS / Edge Function.
 import { $, show, escapeHtml } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { handleLogout } from '../../auth/session.js';
 import { kieuHienTai, nenToiDangBat } from './kieu-giao-dien.js';
+import { laNguoiNhap } from '../../lib/kl/nhap/du-lieu.js';
 
 export const LINK_SAO_LUU = 'https://github.com/haidang21ktvptu/vptu-mvp-task/actions/workflows/backup-dinh-ky.yml';
 
@@ -27,7 +28,7 @@ export function menuBanhRang(user) {
   ]];
   if (user.role_group === 'A0') nhom.push([muc('Bản gọn', 'toggleBanGon', {}, ['menuitemcheckbox', user.tuy_chon?.ban_gon === true])]);
   if (user.role_group === 'A1') nhom.push([qt('Phân công phụ trách', 'qtKhuPhuTrach'), qt('Ngưỡng cảnh báo', 'qtKhuCauHinh')]);
-  if (user.role_group === 'A2') nhom.push([qt('Ủy quyền giao việc', 'qtKhuUyQuyen')]);
+  if (laNguoiNhap(user) && !user.quan_tri_he_thong) nhom.push([qt('Danh mục lĩnh vực', 'qtKhuDanhMuc')]);   // 0096: quyền chung (quản trị hệ thống có ở nhóm dưới)
   if (user.quan_tri_he_thong) {
     nhom.push([`<span class="br-nhom">Quản trị hệ thống</span>`, qt('Tài khoản', 'qtKhuTaiKhoan'), qt('Danh mục', 'qtKhuDanhMuc'), qt('Dọn dữ liệu', 'qtKhuDonDuLieu'),
       qt('Nhật ký hệ thống', 'qtKhuNhatKyHeThong'), `<a role="menuitem" href="${LINK_SAO_LUU}" target="_blank" rel="noopener">Sao lưu (workflow GitHub)</a>`]);

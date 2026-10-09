@@ -1,4 +1,4 @@
-// Markup các khu quản trị GĐ23: Ngưỡng cảnh báo (kl_cau_hinh), Ủy quyền giao việc (A2), Dọn dữ liệu (hai bước), Nhật ký hệ thống, hộp tạo tài khoản
+// Markup các khu quản trị GĐ23: Ngưỡng cảnh báo (kl_cau_hinh), Dọn dữ liệu (hai bước), Nhật ký hệ thống, hộp tạo tài khoản
 // và hộp hiện mật khẩu tạm (một lần). Quyền thật ở hàm SQL / Edge Function; ở đây chỉ ẩn/hiện.
 export const quanTriHeThongTemplate = `
   <div id="qtKhuNgayNghi" class="qt-khu hidden"></div>
@@ -8,21 +8,6 @@ export const quanTriHeThongTemplate = `
       <div class="bang-cuon"><table>
         <thead><tr><th>Khoá</th><th>Ý nghĩa</th><th>Giá trị (ngày)</th><th>Lý do thay đổi</th><th class="phai">Thao tác</th></tr></thead>
         <tbody id="qtCauHinhBody"><tr><td colspan="5" class="trong">Đang tải dữ liệu</td></tr></tbody></table></div>
-    </div>
-  </div>
-
-  <div id="qtKhuUyQuyen" class="qt-khu hidden">
-    <div class="bang">
-      <div class="bang-dau"><h2>Ủy quyền giao việc<span class="chu-phu">cấp quyền nhập/sửa nhiệm vụ có hạn (tối đa 90 ngày) cho một chuyên viên trong phòng</span></h2></div>
-      <form id="qtUyQuyenForm" class="qt-form" novalidate>
-        <label>Chuyên viên<select id="qtUqNguoi" class="o-nhap"></select></label>
-        <label>Đến ngày<input type="date" id="qtUqDenNgay" class="o-nhap" required></label>
-        <label class="rong">Lý do<input type="text" id="qtUqLyDo" class="o-nhap" placeholder="Ví dụ: Trưởng phòng đi công tác 20–25/9" required></label>
-        <button type="submit" class="nut chinh">Ủy quyền</button>
-      </form>
-      <div class="bang-cuon"><table>
-        <thead><tr><th>Chuyên viên</th><th>Hiệu lực đến</th><th class="phai">Thao tác</th></tr></thead>
-        <tbody id="qtUyQuyenBody"><tr><td colspan="3" class="trong">Chưa ủy quyền cho ai.</td></tr></tbody></table></div>
     </div>
   </div>
 

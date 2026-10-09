@@ -1,5 +1,5 @@
 // 0085 (Đợt E v3.18): chuyên viên (A3 thường, không quan_tri_kl) giao thẳng — Owner là chuyên viên phòng bất kỳ hoặc chính mình, người theo dõi ép =
-// người giao, không áp GV-3, tin giao tới Owner; phòng / lãnh đạo / thay mặt / đơn vị ngoài bị chặn; tầng giao = chuyên viên tạo việc (sửa thông tin
+// người giao, không áp GV-3, tin giao tới Owner; phòng / lãnh đạo / đơn vị ngoài bị chặn (0095: ghi thay mặt thành quyền chung — kl-0095); tầng giao = chuyên viên tạo việc (sửa thông tin
 // giao, cấp duyệt đề nghị sửa); phạm vi thấy việc của các vai; cấu hình xac_nhan_nhan_viec = 2 → trigger ghi "đã nhận" cho Owner và người theo dõi
 // (giao_viec, giao lại), viec_moi = 0, từ chối không còn. Khoá "KL-0085"; cấu hình và cờ quan_tri_kl (cv2, cấp tạm ở test 7) khôi phục; tự dọn.
 import { test, describe, before, after } from 'node:test';
@@ -49,14 +49,12 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
     const d = await doc(r.data.id); assert.deepEqual([d.owner_tai_khoan, d.nguoi_theo_doi, d.tao_boi], [IDS.cv1, IDS.cv1, IDS.cv1]);
   });
 
-  test('3. chuyên viên bị chặn: Owner là phòng, lãnh đạo (Trưởng phòng / Chánh VP), đơn vị ngoài; ghi thay mặt (người / nhóm) → 42501', async () => {
+  test('3. chuyên viên giao thẳng (không ghi thay mặt) bị chặn: Owner là phòng, lãnh đạo (Trưởng phòng / Chánh VP), đơn vị ngoài → 42501', async () => {
     for (const [p, re, label] of [
       [{ owner_don_vi_ma: 'TONG_HOP' }, /chuyên viên/i, 'phòng'],
       [{ owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.truongphong }, /chuyên viên/i, 'Trưởng phòng'],
       [{ owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.cvp }, /chuyên viên/i, 'Chánh VP'],
       [{ owner_don_vi_ma: 'DANG_UY_UBND' }, /chuyên viên|Văn phòng/, 'đơn vị ngoài'],
-      [{ owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.cvp }, /quản trị KL/, 'thay mặt một lãnh đạo'],
-      [{ owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_nhom: 'LANH_DAO_VP' }, /quản trị KL/, 'thay mặt nhóm'],
     ]) { const r = await giao('demo_cv1', p); ma(r, '42501', label); loi(r, re, label); }
   });
 

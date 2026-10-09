@@ -84,6 +84,7 @@ function hanhDongHtml(r, nhanViec = []) {
 export function chiTietHtml(r, ls, dc) {
   const capNhat = ngayTruoc(r.cap_nhat_luc);
   const nguonDong = r.nguon === 'excel' ? 'Nhập từ Excel' : 'Nhập trên hệ thống';
+  const nguoiNhap = r.tao_boi ? findAccount(r.tao_boi)?.full_name : '';   // Đợt F v3.21: lưu vết — chỉ tài khoản thực hiện (không ghi "thay mặt")
   const dinhChinh = dc.length === 0 ? 'chưa có' : dc.map((d) => `${tenCot(d.cot)}: ${hienGiaTri(d.cot, d.gia_tri_cu)} → ${hienGiaTri(d.cot, d.gia_tri_moi)} (${d.ly_do})`).join('; ');
   const nhanViec = ls.filter((l) => l.cot === 'xac_nhan_nhan_viec');
   const hanLop = r.nhom_dem === 'QUA_HAN' || r.nhom_dem === 'DANG_DINH_CHINH' ? ' style="color:var(--do)"' : '';
@@ -96,7 +97,7 @@ export function chiTietHtml(r, ls, dc) {
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
       <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanTT}</div>
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
-        <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}</p></div>
+        <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}${nguoiNhap ? ` bởi ${escapeHtml(nguoiNhap)}` : ''}</p></div>
       <dl class="ct-luoi">${o('Chủ trì', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
         ${o('Theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
         ${o('Sản phẩm', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}

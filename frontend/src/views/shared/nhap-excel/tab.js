@@ -1,6 +1,5 @@
-// Thẻ của màn Giao việc (v9 đợt 2): Giao từng việc · Nhập từ Excel · Chờ hoàn thiện (n). Hai thẻ nhập chỉ với người nhập (quản trị nhiệm vụ còn
-// hạn / quản trị hệ thống, không phải A0); người nhập không có quyền giao (chuyên viên giữ quyền quản trị hệ thống) chỉ thấy hai thẻ nhập. Mở thẻ
-// nào thì nạp thẻ đó (hàm do nhap-excel/index.js, cho.js đăng ký). Quyền thật ở DB.
+// Thẻ của màn Giao việc (v9 đợt 2): Giao từng việc · Nhập từ Excel · Chờ hoàn thiện (n). Hai thẻ nhập với người nhập liệu (Đợt F v3.21, 0096:
+// mọi tài khoản trừ Thường trực); mọi vai dùng biểu mẫu Giao việc (chuyên viên giao thẳng từ 0085). Mở thẻ nào thì nạp thẻ đó (hàm do nhap-excel/index.js, cho.js đăng ký). Quyền thật ở DB.
 import { $, show, setText } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
@@ -14,7 +13,7 @@ const PHU_DE = { nhap: 'mẫu chuẩn của hệ thống hoặc bảng đang dù
 const nap = {};
 let phuDeGiao = '';
 export const datNapTab = (ten, fn) => { nap[ten] = fn; };
-export const duocGiao = (u) => ['A0', 'A1', 'A2'].includes(u?.role_group) || Boolean(u?.quan_tri_kl);   // dùng được biểu mẫu Giao việc
+export const duocGiao = (u) => Boolean(u) && !u.is_system;   // dùng được biểu mẫu Giao việc (mọi vai từ 0085)
 
 // Gọi mỗi lần mở Giao việc (openGiaoViec): tab mong muốn, không hợp lệ với vai → thẻ mặc định của vai.
 export function hienTabGiaoViec(tab) {

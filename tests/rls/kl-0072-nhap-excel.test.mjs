@@ -1,6 +1,6 @@
-// 0072–0075 (giao diện v9 đợt 2, B) — NHẬP EXCEL TOÀN TRÌNH, bằng token thật. Người nhập: demo_qtht (quản trị hệ thống) và demo_cv2 (cấp tạm
-// quản trị nhiệm vụ); không phải người nhập: demo_cv1 (chủ trì các việc nhập), demo_truongphong, demo_cvp. Kiểm: (1) chỉ người nhập gọi được
-// mọi hàm, không ai ghi thẳng bảng; (2) một lô đủ đường đi — GIAO (thay mặt Trưởng phòng, vướng mắc, không tin từng việc), vùng chờ (thiếu /
+// 0072–0075 (giao diện v9 đợt 2, B) — NHẬP EXCEL TOÀN TRÌNH, bằng token thật. Đợt F v3.21 (0095–0096): nhập Excel là quyền chung của mọi tài
+// khoản trừ Thường trực; lô / dòng chờ chỉ người nhập lô (hoặc quản trị hệ thống) đọc, xử lý. Kiểm: (1) Thường trực bị chặn, chuyên viên / lãnh
+// đạo mở được lô, không ai ghi thẳng bảng; (2) một lô đủ đường đi — GIAO (thay mặt Trưởng phòng, vướng mắc, không tin từng việc), vùng chờ (thiếu /
 // lỗi kèm lý do: chủ trì khác phòng, Trưởng phòng thay mặt phòng khác), DA_XONG (nguồn excel, đóng, minh chứng chữ); gửi lại phần cũ không tạo
 // thêm; chốt lô gửi MỘT tin cho mỗi người; (3) đọc theo vai: người thấy việc đọc dòng nhập + lô, người khác không; (4) hoàn thiện dòng chờ
 // bằng giao_viec + dong_nhap_id, bỏ dòng; (5) lô CHO_NGHIEM_THU (0093: minh chứng hợp lệ ngay, việc hoàn thành) + cập nhật việc có sẵn theo mã (hạn chỉ báo);
@@ -44,7 +44,7 @@ const LO1 = [
     thay_mat_cho: IDS.truongphong, vuong_mac: 'Chờ số liệu sở', tien_do_ma: 'DANG_THUC_HIEN', du_lieu_goc: { STT: '1', 'Ngày cập nhật gần nhất': '01/09/2026' } },
   { so_dong: 5, ...VB1, noi_dung: `${KHOA} thiếu sản phẩm`, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, thieu: ['san_pham'],
     du_lieu_goc: { STT: '2' } },
-  { so_dong: 6, ...VB1, noi_dung: `${KHOA} đã xong ngoài hệ thống`, owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, loai_thoi_han_ma: 'THUONG_XUYEN',
+  { so_dong: 6, ...VB1, noi_dung: `${KHOA} đã xong ngoài hệ thống`, owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp, loai_thoi_han_ma: 'THUONG_XUYEN',
     tien_do_ma: 'HOAN_THANH', kq_so_hieu: '12/BC-UBND', kq_ngay: KQ, kq_trich_yeu: 'Báo cáo kết quả', kq_mo_ta: 'Đã gửi Thường trực', chat_luong: 'DAT', du_lieu_goc: { STT: '3' } },
   { so_dong: 7, ...VB1, ...DU_GIAO, noi_dung: `${KHOA} chủ trì khác phòng`, owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1,
     thay_mat_cho: IDS.cvp, du_lieu_goc: {} },
@@ -65,16 +65,20 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
   });
   after(don);
 
-  test('1. không phải người nhập (A3 thường, A2, A1 không giữ cờ): mọi hàm nhập bị chặn; không ai ghi thẳng bảng', async () => {
-    const lo = { p: { ten_tep: `${KHOA}-chan.xlsx`, mau: 'TU_GHEP', che_do_xong: 'DA_XONG_NGOAI', so_dong: 1 } };
+  test('1. Đợt F: chuyên viên, Trưởng phòng, Chánh VP mở được lô, tra mã, lưu từ điển / hồ sơ; Thường trực bị chặn; không ai ghi thẳng bảng', async () => {
+    const lo = (u) => ({ p: { ten_tep: `${KHOA}-chung-${u}.xlsx`, mau: 'TU_GHEP', che_do_xong: 'DA_XONG_NGOAI', so_dong: 1 } });
     const kq = await songSong([
-      () => goi('demo_cv1', 'nhap_excel_lo_tao', lo), () => goi('demo_truongphong', 'nhap_excel_lo_tao', lo), () => goi('demo_cvp', 'nhap_excel_lo_tao', lo),
-      () => goi('demo_a0', 'nhap_excel_lo_tao', lo), () => goi('demo_cv1', 'kl_nhap_ma_da_co', { p_ma: [coSan.ma] }),
+      () => goi('demo_cv1', 'nhap_excel_lo_tao', lo('cv1')), () => goi('demo_truongphong', 'nhap_excel_lo_tao', lo('tp')), () => goi('demo_cvp', 'nhap_excel_lo_tao', lo('cvp')),
+      () => goi('demo_cv1', 'kl_nhap_ma_da_co', { p_ma: [coSan.ma] }),
       () => goi('demo_cv1', 'tu_dien_nhap_luu', { p_muc: [{ loai: 'don_vi', goc: `${KHOA} x`, ma: 'DANG_UY_UBND' }] }),
-      () => goi('demo_cv1', 'ho_so_nhap_luu', { p_ten: `${KHOA} chặn`, p_ten_sheet: null, p_dong_tieu_de: 1, p_anh_xa: { 'noi dung': 'noi_dung' } }),
+      () => goi('demo_cv1', 'ho_so_nhap_luu', { p_ten: `${KHOA} chung`, p_ten_sheet: null, p_dong_tieu_de: 1, p_anh_xa: { 'noi dung': 'noi_dung' } }),
+      () => goi('demo_a0', 'nhap_excel_lo_tao', lo('a0')),
     ]);
-    ['cv1', 'truongphong', 'cvp', 'a0', 'cv1 tra mã', 'cv1 từ điển', 'cv1 hồ sơ'].forEach((n, i) => assertDenied(kq[i], `${n}`));
-    assert.match(kq[0].error.message, /Chỉ quản trị nhiệm vụ hoặc quản trị hệ thống/);
+    ['cv1', 'truongphong', 'cvp', 'cv1 tra mã', 'cv1 từ điển', 'cv1 hồ sơ'].forEach((n, i) => assertOk(kq[i], `${n}`));
+    assertDenied(kq[6], 'Thường trực'); assert.match(kq[6].error.message, /không nhập liệu được/);
+    const loCv1 = kq[0].data.id;
+    assert.equal((await (await userClient('demo_cv2')).from('lo_nhap').select('id').eq('id', loCv1)).data.length, 0, 'người khác không đọc lô của cv1');
+    assert.equal((await (await userClient('demo_cv1')).from('lo_nhap').select('id').eq('id', loCv1)).data.length, 1, 'người nhập đọc lô của mình');
     const qt = await userClient('demo_qtht');
     const ghi = await songSong([
       () => qt.from('lo_nhap').insert({ ten_tep: `${KHOA}-thang.xlsx`, mau: 'TU_GHEP', che_do_xong: 'DA_XONG_NGOAI', so_dong: 1, tao_boi: IDS.qtht }),
@@ -82,6 +86,7 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
       () => qt.from('ho_so_nhap').insert({ ten: `${KHOA} thang`, anh_xa: {}, tao_boi: IDS.qtht }),
     ]);
     ghi.forEach((r, i) => assertDenied(r, `qtht ghi thẳng bảng ${i}`));
+    await db().from('tu_dien_nhap').delete().eq('goc', `${KHOA.toLowerCase()} x`);   // bài 7 đếm từ điển theo khoá — dọn mục cv1 vừa lưu
   });
 
   test('2. qtht nhập lô 1: GIAO / chờ (thiếu, lỗi kèm lý do) / DA_XONG; gửi lại phần cũ không tạo thêm; chốt lô — một tin mỗi người, lô chốt không nhận thêm', async () => {
@@ -120,23 +125,24 @@ describe('0072–0075 — nhập Excel toàn trình (lô, vùng chờ, hoàn tá
     assert.ok(sau.error); assert.match(sau.error.message, /đã chốt/);
   });
 
-  test('3. đọc theo vai: chủ trì đọc dòng của việc mình + lô; chuyên viên phòng khác không đọc gì; từ điển chỉ người nhập; người gõ thay không là tầng giao', async () => {
+  test('3. đọc theo vai: chủ trì đọc dòng của việc mình + lô; chuyên viên phòng khác không đọc lô người khác; Thường trực không đọc từ điển; người nhập là tầng giao', async () => {
     const [cv1, cv2, tp] = await Promise.all(['demo_cv1', 'demo_cv2', 'demo_truongphong'].map(userClient));
-    const [dCv1, lCv1, dCv2, lCv2, dTp, tdCv1] = await songSong([
+    const a0 = await userClient('demo_a0');
+    const [dCv1, lCv1, dCv2, lCv2, dTp, tdA0] = await songSong([
       () => cv1.from('dong_nhap').select('so_dong, du_lieu_goc').eq('lo_id', lo1.id).order('so_dong'), () => cv1.from('lo_nhap').select('ma').eq('id', lo1.id),
       () => cv2.from('dong_nhap').select('id').eq('lo_id', lo1.id), () => cv2.from('lo_nhap').select('id').eq('id', lo1.id),
-      () => tp.from('dong_nhap').select('so_dong').eq('lo_id', lo1.id), () => cv1.from('tu_dien_nhap').select('goc').limit(5),
+      () => tp.from('dong_nhap').select('so_dong').eq('lo_id', lo1.id), () => a0.from('tu_dien_nhap').select('goc').limit(5),
     ]);
     assert.deepEqual(dCv1.data.map((x) => x.so_dong), [4, 6], 'chủ trì / theo dõi: dòng có việc của mình'); assert.equal(dCv1.data[0].du_lieu_goc.STT, '1');
     assert.equal(lCv1.data.length, 1, 'thấy mã lô của việc mình');
-    assert.equal(dCv2.data.length, 0); assert.equal(lCv2.data.length, 0); assert.equal(tdCv1.data.length, 0);
+    assert.equal(dCv2.data.length, 0); assert.equal(lCv2.data.length, 0); assert.equal(tdA0.data.length, 0, 'Thường trực không đọc từ điển nhập');
     assert.ok(dTp.data.some((x) => x.so_dong === 4), 'Trưởng phòng thấy dòng của việc phòng mình');
     assert.ok(!dTp.data.some((x) => [5, 7, 8].includes(x.so_dong)), 'dòng chờ (chưa có việc) chỉ người nhập thấy');
     const qt = await userClient('demo_qtht');
     assertDenied(await qt.from('dong_nhap').update({ ket_qua: 'DA_BO' }).eq('lo_id', lo1.id).select('id'), 'người nhập sửa thẳng dòng nhập');
     assert.equal((await qt.from('dong_nhap').select('id').eq('lo_id', lo1.id)).data.length, 5, 'người nhập thấy cả dòng chờ');
-    const sua = await goi('demo_qtht', 'sua_thong_tin_giao', { p_id: kq1[4].nhiem_vu_id, p_thay_doi: { do_khan: 'HOA_TOC' }, p_ly_do: `${KHOA} thử` });
-    assertDenied(sua, 'người nhập (gõ thay, không phải lãnh đạo, không giữ quan_tri_kl) không là tầng giao của việc mình nhập');
+    const sua = await goi('demo_qtht', 'sua_thong_tin_giao', { p_id: kq1[4].nhiem_vu_id, p_thay_doi: { san_pham_mo_ta: `${KHOA} người nhập sửa` }, p_ly_do: `${KHOA} thử` });
+    assertOk(sua, 'Đợt F: người nhập là người giao việc — sửa được thông tin giao của việc mình nhập (lưu vết lich_su)');
   });
 
   test('4. hoàn thiện dòng chờ bằng giao_viec + dong_nhap_id (chỉ người nhập, một lần); bỏ dòng chờ', async () => {

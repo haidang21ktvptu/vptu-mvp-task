@@ -27,7 +27,7 @@ async function kyVong(username) {
   const db = adminClient();
   // Ba lần đọc độc lập — một lượt khứ hồi (D3, PR-2a).
   const [{ data: rows }, { data: pc }, { data: dv }] = await Promise.all([
-    db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma'),
+    db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma, tao_boi'),
     db.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, tu_ngay, den_ngay'),
     db.from('dm_don_vi').select('ma, phong')]);
   const hieuLuc = (p) => p.tu_ngay <= homNay() && (!p.den_ngay || p.den_ngay >= homNay());
@@ -41,7 +41,7 @@ async function kyVong(username) {
     return pc.some((p) => hieuLuc(p) && p.lanh_dao_id === me.id && p.phong === phong && !p.nganh_ma);
   };
   return new Set(rows.filter((r) => {
-    if (me.quan_tri_kl || r.nguoi_theo_doi === me.id || r.owner_tai_khoan === me.id) return true;
+    if (me.quan_tri_kl || r.nguoi_theo_doi === me.id || r.owner_tai_khoan === me.id || r.tao_boi === me.id) return true;   // 0096: người nhập
     const phong = phongCua(r.nguoi_theo_doi);
     if (me.role_group === 'A2') return phong === me.department || phongOwner(r) === me.department;
     if (me.role_group !== 'A1') return false;

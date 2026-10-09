@@ -1,5 +1,5 @@
-// Khu "Tài khoản và cờ đặc quyền" (thiết kế KL BTVTU 5.2, GĐ23): danh sách, cấp/thu quan_tri_kl qua hàm SQL admin_dat_co (quyen_lich_su cùng
-// transaction); tạo tài khoản, đặt lại mật khẩu tạm, khoá/mở và cờ quan_tri_he_thong qua Edge Function quan-tri-tai-khoan (nhat_ky_he_thong).
+// Khu "Tài khoản và cờ đặc quyền" (thiết kế KL BTVTU 5.2, GĐ23): danh sách, cấp/thu thư ký Thường trực qua hàm SQL admin_dat_co (quyen_lich_su cùng
+// transaction; Đợt F v3.21 / 0096: bỏ quyền quản trị nhiệm vụ — nhập Excel, thay mặt, danh mục là quyền chung); tạo tài khoản, đặt lại mật khẩu tạm, khoá/mở và cờ quan_tri_he_thong qua Edge Function quan-tri-tai-khoan (nhat_ky_he_thong).
 import { supabase } from '../../../lib/supabase.js';
 import { $, escapeHtml, formatDateTime, filterRowsByKeyword } from '../../../lib/dom.js';
 import { DEPT_NAMES, ROLE_LABELS } from '../../../lib/constants.js';
@@ -11,18 +11,14 @@ import { nhanNganhLinhVuc } from './danh-muc.js';
 import { hienMatKhauTam } from './tai-khoan-form.js';
 import { duocChuyenTheoDoi } from './chuyen-theo-doi.js';
 
-export const SO_NGUOI_QUAN_TRI_KL = 2; // quy định: đúng hai người (một Tổng hợp, một CĐS-CY)
 const nut = (label, action, a, extra = '') => `<button type="button" class="nut nho" data-action="${action}" data-id="${a.id}" data-username="${escapeHtml(a.username)}" ${extra}>${label}</button>`;
 
 function taiKhoanRowHtml(a) {
   const me = a.id === state.user.id;
   const search = `${a.full_name} ${a.username}`.toLowerCase();
-  const kl = a.quan_tri_kl ? `<span class="trang-thai tt-xong">Có quyền${a.quan_tri_kl_het_han ? ` đến ${a.quan_tri_kl_het_han.split('-').reverse().join('/')}` : ''}</span>` : '<span class="trang-thai tt-xam">Không</span>';
   const ht = a.quan_tri_he_thong ? '<span class="trang-thai tt-cho">Quản trị hệ thống</span>' : '';
   const tk = a.thu_ky_thuong_truc ? '<span class="trang-thai tt-xong nhan-thu-ky-tt">Thư ký Thường trực</span>' : ''; // 0047: đóng chỉ đạo TT thay mặt
   const khoa = a.bi_khoa ? '<span class="trang-thai tt-qua">Đã khoá</span>' : '';
-  const btnKl = `<button type="button" class="nut nho ${a.quan_tri_kl ? 'chinh' : ''}" data-action="toggleQuanTriKl" data-username="${escapeHtml(a.username)}" data-bat="${a.quan_tri_kl ? '0' : '1'}"
-      aria-label="${a.quan_tri_kl ? 'Thu' : 'Cấp'} quyền quản trị KL của ${escapeHtml(a.full_name)}">${a.quan_tri_kl ? 'Thu quyền' : 'Cấp quyền'}</button>`;
   const btnHt = me ? '' : nut(a.quan_tri_he_thong ? 'Thu QTHT' : 'Cấp QTHT', 'toggleQuanTriHeThong', a, `data-bat="${a.quan_tri_he_thong ? '0' : '1'}"`);
   const btnTk = a.role_group === 'A0' ? '' : nut(a.thu_ky_thuong_truc ? 'Thu thư ký TT' : 'Cấp thư ký TT', 'toggleThuKyTT', a, `data-bat="${a.thu_ky_thuong_truc ? '0' : '1'}"`);
   const btnKhoa = me || a.quan_tri_he_thong ? '' : nut(a.bi_khoa ? 'Mở khoá' : 'Khoá', 'khoaTaiKhoan', a, `data-bat="${a.bi_khoa ? '0' : '1'}"`);
@@ -33,40 +29,23 @@ function taiKhoanRowHtml(a) {
       <td class="tieude">${escapeHtml(a.full_name)}${me ? ' (tôi)' : ''}<small>${escapeHtml(a.username)}${a.position_title ? ` · ${escapeHtml(a.position_title)}` : ''}${a.dien_thoai ? ` · ${escapeHtml(a.dien_thoai)}` : ''}</small></td>
       <td data-nhan="Phòng">${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</td>
       <td data-nhan="Vai trò">${escapeHtml(ROLE_LABELS[a.role_group] || a.role_group)}</td>
-      <td data-nhan="Quản trị KL BTVTU">${kl}</td>
-      <td data-nhan="Hệ thống">${ht}${tk}${khoa}</td>
-      <td><div class="thao-tac">${btnSua}${btnCtd}${btnKl}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
+      <td data-nhan="Quyền">${ht}${tk}${khoa}</td>
+      <td><div class="thao-tac">${btnSua}${btnCtd}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
     </tr>`;
-}
-
-// Dòng vàng theo 5.2: số người giữ quan_tri_kl ≠ 2; chủ dự án đang tự giữ quan_tri_kl.
-function renderCanhBao(accounts) {
-  const soKl = accounts.filter((a) => a.quan_tri_kl).length;
-  // Luôn hiện dòng đếm (đủ, thiếu, vượt) — chỉ đổi cấp độ: vượt = đỏ, đúng = trung tính, thiếu = nhắc (vàng mặc định).
-  const msgs = [`Đang có ${soKl} người giữ quyền quản trị KL BTVTU (quy định: ${SO_NGUOI_QUAN_TRI_KL}).`];
-  if (state.user.quan_tri_kl) msgs.push('Đồng chí đang tự giữ quyền quản trị KL — thu lại khi xong việc.');
-  const box = $('qtCanhBao');
-  box.innerText = msgs.join(' ');
-  box.classList.remove('hidden');
-  box.classList.toggle('vuot', soKl > SO_NGUOI_QUAN_TRI_KL);
-  box.classList.toggle('du', soKl === SO_NGUOI_QUAN_TRI_KL && !state.user.quan_tri_kl);
-  box.dataset.muc = soKl > SO_NGUOI_QUAN_TRI_KL ? 'vuot' : soKl === SO_NGUOI_QUAN_TRI_KL ? 'du' : 'thieu';
-  $('qtSoNguoiKl').innerText = `${soKl}/${SO_NGUOI_QUAN_TRI_KL} người giữ quyền quản trị KL`;
 }
 
 export function renderTaiKhoan() {
   const accounts = [...state.accounts].sort((a, b) => a.full_name.localeCompare(b.full_name, 'vi'));
-  renderCanhBao(accounts);
-  $('qtTaiKhoanBody').innerHTML = accounts.length === 0 ? '<tr><td colspan="6" class="trong">Không có tài khoản.</td></tr>' : accounts.map(taiKhoanRowHtml).join('');
+  $('qtTaiKhoanBody').innerHTML = accounts.length === 0 ? '<tr><td colspan="5" class="trong">Không có tài khoản.</td></tr>' : accounts.map(taiKhoanRowHtml).join('');
   filterRowsByKeyword('qtTaiKhoanBody', $('qtTimTaiKhoan').value);
 }
 
-// Nhãn cột "Quyền": quan_tri_kl | quan_tri_he_thong | phu_trach:<phòng> | kiem_nhiem:<phòng>:<ngành>:<lĩnh vực> (0013, 0018).
+// Nhãn cột "Quyền": quan_tri_kl (đã bỏ từ 0096) | quan_tri_he_thong | thu_ky_thuong_truc | phu_trach:<phòng> | kiem_nhiem:<phòng>:<ngành>:<lĩnh vực> (0013, 0018, 0047).
 function nhanQuyen(co) {
   const [loai, phong, nganh, linhVuc] = co.split(':');
   if (loai === 'phu_trach') return `Phụ trách cả ${DEPT_NAMES[phong] || phong}`;
   if (loai === 'kiem_nhiem') return `Kiêm nhiệm ${nhanNganhLinhVuc(nganh, linhVuc)} — ${DEPT_NAMES[phong] || phong}`;
-  return { quan_tri_kl: 'Quản trị KL BTVTU', quan_tri_he_thong: 'Quản trị hệ thống' }[co] || co;
+  return { quan_tri_kl: 'Quản trị nhiệm vụ (đã bỏ từ v3.21)', quan_tri_he_thong: 'Quản trị hệ thống', thu_ky_thuong_truc: 'Thư ký Thường trực' }[co] || co;
 }
 
 // Dòng sửa tài khoản (0068): co = sua:<cột>, gia_tri_cu → gia_tri_moi.
@@ -89,24 +68,6 @@ export async function renderNhatKy() {
   $('qtNhatKyBody').innerHTML = data.length === 0 ? '<tr><td colspan="6" class="trong">Chưa có lần cấp quyền nào.</td></tr>' : data.map(nhatKyRowHtml).join('');
 }
 
-// Bấm "Cấp quyền"/"Thu quyền" → hộp lý do → admin_dat_co → nạp lại (onDone do index.js truyền vào).
-export async function toggleQuanTriKl({ username, bat }, onDone) {
-  const acc = state.accounts.find((a) => a.username === username);
-  if (!acc) return;
-  const turnOn = bat === '1';
-  const answer = await askLyDo({
-    title: turnOn ? 'Cấp quyền quản trị KL BTVTU' : 'Thu quyền quản trị KL BTVTU',
-    moTa: `${turnOn ? 'Cấp cho' : 'Thu của'} ${acc.full_name} (${username}). Người này ${turnOn ? 'sẽ' : 'sẽ không còn'} nhập hội nghị, sửa mọi nhiệm vụ KL, duyệt đính chính và xuất báo cáo.`,
-    nhanXacNhan: turnOn ? 'Cấp quyền' : 'Thu quyền',
-  });
-  if (!answer) return;
-  const { error } = await supabase.rpc('admin_dat_co', { p_username: username, p_co: 'quan_tri_kl', p_bat: turnOn, p_ly_do: answer.lyDo });
-  if (error) { notifyError('Không thực hiện được: ' + error.message); return; }
-  notifySuccess(`${turnOn ? 'Đã cấp' : 'Đã thu'} quyền quản trị KL BTVTU ${turnOn ? 'cho' : 'của'} ${acc.full_name}.`);
-  await onDone();
-}
-
-// Cờ thư ký Thường trực (0047): cùng hàm admin_dat_co (chỉ quan_tri_he_thong; lý do bắt buộc; quyen_lich_su + nhat_ky_he_thong).
 export async function toggleThuKyTT({ username, bat }, onDone) {
   const acc = state.accounts.find((a) => a.username === username);
   if (!acc) return;

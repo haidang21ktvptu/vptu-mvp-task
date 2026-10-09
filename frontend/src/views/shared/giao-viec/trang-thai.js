@@ -14,8 +14,8 @@ export const getHomNay = () => homNay;
 export const datHomNay = (v) => { homNay = v || homNayVN(); };
 
 export const laA0 = () => state.user?.role_group === 'A0';
-// Ô Thay mặt: chỉ người quản trị KL (A3 giữ quan_tri_kl), TUỲ CHỌN từ Đợt E (0085) — để trống = giao thẳng như mọi chuyên viên.
-export const canThayMat = () => state.user?.role_group === 'A3' && Boolean(state.user?.quan_tri_kl);
+// Ô Thay mặt: mọi chuyên viên (Đợt F v3.21, 0095 — quyền chung, lưu vết người nhập), TUỲ CHỌN — để trống = giao thẳng cho chuyên viên (0085).
+export const canThayMat = () => state.user?.role_group === 'A3';
 // Đợt E (0085): chuyên viên giao thẳng (không thay mặt) — Owner là một chuyên viên (phòng bất kỳ) hoặc chính mình; người theo dõi = người giao (ô ẩn).
 export const laA3GiaoThang = () => state.user?.role_group === 'A3' && !$('klThThayMat')?.value;
 // v3.18: thay mặt "Thường trực Tỉnh ủy" (nhóm) → quy tắc như Thường trực giao (giao_viec v_nhu_a0): Owner là lãnh đạo Văn phòng / phòng, không ô người

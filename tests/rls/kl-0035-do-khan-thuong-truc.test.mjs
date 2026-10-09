@@ -1,5 +1,5 @@
 // GĐ22 (0035–0037) — độ khẩn 4 cấp: ngưỡng theo cấp (kl_nguong_do_khan), giờ làm việc 7h30–17h VN (gio_lam_viec_sau, có mốc 17–23h UTC),
-// Vàng theo cấp trong trang_thai; giao_viec: do_khan, giao thay mặt (bắt buộc với A3 quan_tri_kl, phải là A1/A2 trong phạm vi → cấp duyệt từ chối
+// Vàng theo cấp trong trang_thai; giao_viec: do_khan, giao thay mặt (A3 — 0095 mọi chuyên viên, phải là A1/A2 trong phạm vi → cấp duyệt từ chối
 // là lãnh đạo đó), nhánh A0 (Owner = lãnh đạo VP / phòng, uu_tien THUONG_TRUC chỉ A0 đặt được, Chánh VP nhận tin, cấp duyệt từ chối của CVP = A0);
 // chi_dao_gui: do_khan, hạn phản hồi theo cấp, Hỏa tốc thêm Chánh VP; xac_nhan_da_nhan_chi_dao; canh_bao_quet: HOA_TOC_CHUA_NHAN (mỗi lần quét trong
 // giờ làm việc), TT_CHUA_NHAN (hằng ngày); v_dien_bien không lộ lý do từ chối ngoài chuỗi; thứ tự v_ngoai_le; kl_so_chua_xu_ly. Tự dọn.
@@ -80,7 +80,7 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     assert.equal((await tin(IDS.pcvp, v.id, /Giao việc/)).length, 0, 'PCVP không nhận');
   });
 
-  test('4. Giao thay mặt: A3 quan_tri_kl ghi lãnh đạo A1/A2 trong phạm vi Owner (0085: không thay mặt = giao thẳng, Owner phải là chuyên viên); vết + tin; cấp xử lý từ chối = người nhập (0091), lãnh đạo được thay mặt nhận tin', async () => {
+  test('4. Giao thay mặt: A3 (cờ cũ quan_tri_kl; 0095: mọi chuyên viên) ghi lãnh đạo A1/A2 trong phạm vi Owner (0085: không thay mặt = giao thẳng, Owner phải là chuyên viên); vết "Nhập bởi" + tin; cấp xử lý từ chối = người nhập (0091), lãnh đạo được thay mặt nhận tin', async () => {
     await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.qtht);
     const loi4 = await Promise.all([   // bốn ca bị chặn độc lập — một lượt (D3)
       giao('demo_qtht', { ma: 'khong tm', owner_don_vi_ma: 'TONG_HOP' }),   // 0085: không thay mặt → giao thẳng, Owner phòng bị chặn
@@ -92,8 +92,8 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     const r = await giao('demo_qtht', { ma: 'thay mat', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, thay_mat_cho: IDS.pcvp });
     assertOk(r, 'quản trị KL giao thay mặt PCVP'); id['NV-T43'] = r.data.id;
     assert.equal((await nv(id['NV-T43'])).giao_thay_mat_cho, IDS.pcvp);
-    const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', id['NV-T43']).eq('cot', 'giao_thay_mat')).data;
-    assert.equal(ls.length, 1); assert.match(ls[0].gia_tri_moi, /Demo Quản trị hệ thống giao thay mặt Demo Phó Chánh Văn phòng/);
+    const ls = (await db().from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', id['NV-T43']).in('cot', ['giao_viec', 'giao_thay_mat'])).data;
+    assert.deepEqual(ls, [{ cot: 'giao_viec', gia_tri_moi: 'Nhập bởi Demo Quản trị hệ thống' }], '0095: vết chỉ ghi tài khoản nhập, không ghi "thay mặt"');
     const [tPcvp, tOwner] = await Promise.all([tin(IDS.pcvp, id['NV-T43'], /^Giao việc thay mặt Demo Phó Chánh Văn phòng · NV-/), tin(IDS.cv1, id['NV-T43'], /Giao việc thay mặt/)]);
     assert.equal(tPcvp.length, 1, 'lãnh đạo được thay mặt nhận tin ngay');
     assert.equal(tOwner.length, 1, 'Owner nhận tin');
@@ -179,7 +179,8 @@ describe('0035–0037 — độ khẩn, giao thay mặt, Thường trực giao, 
     const cv1 = await dong('demo_cv1'); assertOk(cv1, 'cv1 đọc diễn biến');
     assert.ok(cv1.data.some((d) => d.nguon === 'tu_choi_ly_do' && d.noi_dung.includes(LY_DO)), 'người đề nghị thấy lý do');
     assert.ok(cv1.data.some((d) => d.nguon === 'tu_choi' && /đề nghị từ chối/.test(d.noi_dung)), 'vết đề nghị');
-    assert.ok(cv1.data.some((d) => d.nguon === 'lich_su' && d.loai === 'giao_thay_mat'), 'vết giao thay mặt');
+    assert.ok(cv1.data.some((d) => d.nguon === 'lich_su' && d.loai === 'giao_viec' && d.noi_dung === 'Nhập bởi Demo Quản trị hệ thống'), 'vết người nhập (0095)');
+    assert.ok(!cv1.data.some((d) => d.nguon === 'lich_su' && /thay mặt/.test(d.noi_dung || '')), '0095: vết giao không ghi "thay mặt"');
     const qt = await dong('demo_qtht'); assertOk(qt, 'quản trị KL (người nhập việc) đọc');
     assert.ok(qt.data.some((d) => d.nguon === 'tu_choi'), 'thấy sự kiện từ chối');
     assert.ok(qt.data.some((d) => d.nguon === 'tu_choi_ly_do' && d.noi_dung.includes(LY_DO)), '0091: người nhập việc là cấp xử lý — thấy lý do');
