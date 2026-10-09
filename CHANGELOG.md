@@ -792,3 +792,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - 0098: tin giao việc "Giao việc · …" (nhập thay mặt Thường trực: "Thường trực giao việc · …"), tin chốt lô Excel "n việc ghi đồng chí là lãnh đạo giao"; bỏ nhãn "Thay mặt … giao" trên thẻ / dòng việc. Lời "đóng thay mặt Thường trực" của thư ký giữ nguyên.
 - 0099: hồ sơ ghép cột trùng tên của người khác → báo đặt tên khác; chỉ người lưu / quản trị hệ thống sửa, xoá; mục từ điển của người khác không bị ghi đè.
 - Kiểm thử: sửa RLS kl-0035 / 0072 / 0079 (lời tin, hồ sơ, từ điển), e2e thay-mat-nhom (thẻ không ghi "Thay mặt").
+
+## 66. Phát hành v3.21.0 — Đợt F (9/10/2026; PR #126, #128 + `release/v3.21.0`; migration **0095–0099**)
+- Hướng dẫn sử dụng **3.21** (59 trang): 1.3 bỏ dòng "Cán bộ tổng hợp" (chuyên viên nhập Excel, nhập thay mặt, sửa danh mục), 2 (bánh răng có Danh mục lĩnh vực), 3.11, 4.6, Phần 7 (7.7 nhập việc thay mặt — "Nhập bởi …"), Phần 8 (bỏ cấp quyền quản trị nhiệm vụ), Phần 9; chụp lại `a3-11-giao-viec`, `qt-02-tai-khoan`.
+- `docs/GO-LIVE-V3.21.md`: kiểm tay staging, câu SELECT xem trước (số tài khoản sẽ bị thu cờ, thư ký Thường trực còn hoạt động), tag, cấu hình `pham_vi_chuyen_vien`.
+- Khi áp production: **0096 thu cờ quản trị nhiệm vụ của mọi tài khoản** (ghi nhật ký); 0095, 0097–0099 chỉ đổi hàm / view.
