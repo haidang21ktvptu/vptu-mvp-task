@@ -94,7 +94,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
     const page = await pageAs(browser, 'A3', testInfo);
     const the = page.locator(`#vctMuc-moi #vct-${nvLdvp}`);
     await expect(the).toBeVisible(NAP);
-    await expect(the).toContainText('Thay mặt Lãnh đạo Văn phòng giao');
+    await expect(the).not.toContainText('Thay mặt');   // v3.21 (0098): thẻ việc không ghi "Thay mặt … giao"
     await the.getByRole('button', { name: 'Từ chối' }).click();
     const o = page.locator(`#oTc-${nvLdvp}`);
     await o.locator('input[name=noi_dung]').fill('Không đúng chức năng (e2e thay mặt nhóm)');

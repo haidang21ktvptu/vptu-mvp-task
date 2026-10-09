@@ -80,7 +80,7 @@ export const TEN_COT = {
   ngay_nhan_van_ban: 'Ngày giao nhiệm vụ', ngay_nhan_uoc_tinh: 'Ngày giao ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
   xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng', tu_choi: 'Từ chối nhận việc', bi_tu_choi: 'Bị từ chối, chờ giao lại',
   minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận / trả lại minh chứng', dong_nhiem_vu: 'Hoàn thành nhiệm vụ',
-  giao_thay_mat: 'Giao thay mặt', giao_viec: 'Giao việc', canh_bao: 'Cảnh báo', do_khan: 'Độ khẩn', uu_tien: 'Ưu tiên', giao_thay_mat_cho: 'Giao thay mặt cho',
+  giao_thay_mat: 'Giao việc', giao_viec: 'Giao việc', canh_bao: 'Cảnh báo', do_khan: 'Độ khẩn', uu_tien: 'Ưu tiên', giao_thay_mat_cho: 'Lãnh đạo giao',
   han_nop_minh_chung: 'Hạn nộp minh chứng (đã bỏ từ 3.17)', ly_do_han_nop_sat: 'Lý do việc gấp (hạn nộp sát — đã bỏ)', han_nop_minh_chung_ly_do: 'Đổi hạn nộp minh chứng (đã bỏ)',
   chat_luong: 'Chất lượng hoàn thành', nguon_nhiem_vu_ma: 'Nguồn nhiệm vụ', vuong_mac: 'Vướng mắc / đề nghị lãnh đạo quyết định',
   sua_thong_tin_giao: 'Sửa thông tin giao', de_nghi_sua: 'Đề nghị sửa', nhap_excel: 'Nhập Excel',
