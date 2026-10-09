@@ -62,13 +62,13 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Ba mục tra cứu giống của Lãnh đạo Văn phòng (mục 5.4 – 5.6): danh sách có lọc và ngăn chi tiết, cây theo từng kết luận / thông báo, tải việc của từng cán bộ. Thường trực chỉ xem, không sửa.'),
 
     // ───────────────────────── PHẦN 7
-    P1('Phần 7. Nhập nhiệm vụ từ Excel (cán bộ tổng hợp)'),
-    p('Dành cho cán bộ được cấp **quyền quản trị nhiệm vụ** (tối đa 2 người) và Quản trị hệ thống. Thay vì gõ từng việc, đồng chí **đưa cả bảng theo dõi hiện có lên hệ thống trong vài phút**: hệ thống tự nhận cột, chuẩn hoá tên người, ngày tháng, danh mục; dòng nào còn thiếu thông tin thì giữ ở "Chờ hoàn thiện", **không mất dòng nào**. Vào bằng mục **Nhập từ Excel** (hoặc thẻ *Nhập từ Excel* trong màn Giao việc).'),
+    P1('Phần 7. Nhập nhiệm vụ từ Excel, nhập việc thay mặt lãnh đạo'),
+    p('Từ v3.21, **mọi cán bộ** (trừ tài khoản Thường trực) đều nhập được — không còn quyền riêng "quản trị nhiệm vụ"; mỗi lô nhập chỉ người nhập (và Quản trị hệ thống) xem, hoàn thiện, hoàn tác, mỗi việc ghi rõ **"Nhập bởi …"**. Thay vì gõ từng việc, đồng chí **đưa cả bảng theo dõi hiện có lên hệ thống trong vài phút**: hệ thống tự nhận cột, chuẩn hoá tên người, ngày tháng, danh mục; dòng nào còn thiếu thông tin thì giữ ở "Chờ hoàn thiện", **không mất dòng nào**. Vào bằng mục **Nhập từ Excel** (hoặc thẻ *Nhập từ Excel* trong màn Giao việc).'),
     P2('7.1 Chuẩn bị tệp'),
     ...bullets([
       'Dùng ngay **bảng Phụ lục 2** đang theo dõi (tiêu đề ở dòng 3) — hệ thống nhận dạng sẵn. Hoặc bấm **Tải mẫu nhập chuẩn** để lấy mẫu trống của hệ thống (28 cột, từ v3.20 có thêm **Mức quan trọng**, **Cơ quan trình**, **Thường trực chỉ đạo**).',
       'Tệp định dạng **.xlsx**; mỗi dòng một nhiệm vụ; tên người chủ trì ghi đúng họ tên như trong hệ thống; ngày dạng dd/mm/yyyy. **Đơn vị chủ trì** phải là phòng hoặc cán bộ Văn phòng — dòng ghi sở, ngành, huyện sẽ vào "Chờ hoàn thiện" để chọn lại (tên đơn vị thực hiện ghi trong nội dung).',
-      'Cột **Lãnh đạo giao** (khi người nhập là cán bộ tổng hợp): ghi họ tên lãnh đạo, hoặc ghi **"Lãnh đạo Văn phòng"** / **"Thường trực Tỉnh ủy"** để giao thay mặt cả nhóm (xem 7.7).',
+      'Cột **Lãnh đạo giao** (khi người nhập là chuyên viên): ghi họ tên lãnh đạo, hoặc ghi **"Lãnh đạo Văn phòng"** / **"Thường trực Tỉnh ủy"** để nhập thay mặt cả nhóm (xem 7.7). Để trống thì hệ thống điền sẵn Trưởng phòng của phòng chủ trì (không có thì Chánh Văn phòng); không có lãnh đạo mà chủ trì là chuyên viên thì việc là **chuyên viên giao thẳng** (người theo dõi = người nhập).',
       'Dòng đã có **Mã nhiệm vụ** (NV-…) sẽ được hiểu là **cập nhật** việc đã có (đổi chủ trì, người theo dõi…), không tạo việc mới.',
       '**Bảng theo dõi riêng của phòng** (tên cột khác, có dòng tiêu đề lớn phía trên) cũng nhập được, không cần chép lại theo mẫu — xem mục 7.3.',
     ]),
@@ -111,11 +111,11 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Nhập nhầm tệp hoặc nhầm cách ghép cột? Trong vòng **24 giờ** sau khi nhập, bấm **Hoàn tác lô**: các việc do lô tạo mà **chưa ai thao tác** sẽ bị xoá, việc được cập nhật trả về giá trị cũ, các dòng chờ bị bỏ. Việc đã có người xác nhận, chỉ đạo hoặc nộp minh chứng được **giữ lại**; việc lô đã chuyển "Hoàn thành" (cập nhật bằng mã) được **mở lại** như trước khi nhập. Mỗi lần hoàn tác đều ghi nhật ký.'),
     ...hinh('nx-09-hoan-tac-cat.jpg', 'Xác nhận hoàn tác lô'),
     P2('7.6 Xuất theo mẫu để sửa hàng loạt'),
-    p('Ở màn **Nhiệm vụ** (Toàn bộ nhiệm vụ), nút **Xuất theo mẫu nhập** xuất danh sách đang lọc ra đúng Mẫu nhập chuẩn (kèm mã nhiệm vụ). Sửa trong Excel (đổi người theo dõi, bổ sung lĩnh vực cho nhiều dòng…) rồi **nhập lại**: hệ thống khớp theo mã và cập nhật, không tạo việc mới.'),
+    p('Ở màn **Nhiệm vụ**, nút **Xuất theo mẫu nhập** xuất danh sách đang lọc ra đúng Mẫu nhập chuẩn (kèm mã nhiệm vụ). Sửa trong Excel (đổi người theo dõi, bổ sung lĩnh vực cho nhiều dòng…) rồi **nhập lại**: hệ thống khớp theo mã và cập nhật, không tạo việc mới (dòng có mã của việc đồng chí không xem được thì bỏ qua).'),
     ...hinh('nx-11-xuat-theo-mau.jpg', 'Nút Xuất theo mẫu nhập ở màn Nhiệm vụ'),
     luuY('Việc nhập từ Excel còn mở được giao như việc bình thường (tính đúng hạn, nhắc hạn). Việc chọn "Đã xong ngoài hệ thống" chỉ lưu để tra cứu, **không tính vào tỷ lệ đúng hạn**.', { nhan: 'Ghi nhớ' }),
-    P2('7.7 Giao việc thay mặt lãnh đạo'),
-    p('Cán bộ tổng hợp giao việc trên cùng biểu mẫu hai khối nhưng phải ghi **Thay mặt** ai (ô ở khối 1) — lãnh đạo đó là người giao, là cấp duyệt nếu việc bị từ chối. Ô Thay mặt có hai phần:'),
+    P2('7.7 Nhập việc thay mặt lãnh đạo'),
+    p('Mọi chuyên viên nhập việc do lãnh đạo giao trên cùng biểu mẫu hai khối, chọn **Thay mặt** ai ở ô khối 1 (để trống = chuyên viên giao thẳng). Hệ thống chỉ ghi **tài khoản đã nhập** ("Nhập bởi …" ở ngăn chi tiết và diễn biến); người chịu trách nhiệm và người theo dõi phải trong phạm vi của lãnh đạo đó (người theo dõi có thể là chính đồng chí). Đề nghị từ chối / đề nghị sửa gửi tới người nhập, lãnh đạo được thay mặt cũng xử lý được. Ô Thay mặt có hai phần:'),
     ...bullets([
       '**Nhóm lãnh đạo**: **"Lãnh đạo Văn phòng"** (Chánh và các Phó Chánh Văn phòng) hoặc **"Thường trực Tỉnh ủy"**. Giao thay mặt nhóm thì **Chánh Văn phòng và Phó Chánh Văn phòng phụ trách phòng, lĩnh vực của việc** cùng được báo, và **bất kỳ lãnh đạo nào trong số đó** cũng duyệt được đề nghị từ chối, đề nghị sửa, sửa thông tin giao — không phụ thuộc một người có mặt hay không. Thẻ việc ghi "Thay mặt Lãnh đạo Văn phòng giao"; đề nghị từ chối ghi "chờ Lãnh đạo Văn phòng duyệt".',
       '**Từng lãnh đạo**: Chánh Văn phòng, Phó Chánh Văn phòng (chỉ giao trong phòng, lĩnh vực đồng chí ấy phụ trách) hoặc Trưởng phòng (chỉ giao trong phòng).',
@@ -124,14 +124,14 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
 
     // ───────────────────────── PHẦN 8
     P1('Phần 8. Dành cho Quản trị hệ thống'),
-    p('Mục **Quản trị** (nhóm Hệ thống) gồm các thẻ: Phân công phụ trách, Tài khoản và cờ, Ngưỡng cảnh báo, Ngày nghỉ, Nhật ký cấp quyền, Dọn dữ liệu, Nhật ký hệ thống. **Mọi thay đổi đều phải ghi lý do và được lưu vào nhật ký.**'),
-    P2('8.1 Tài khoản: tạo, sửa, khoá, đặt lại mật khẩu, cấp quyền'),
+    p('Mục **Quản trị** (nhóm Hệ thống) gồm các thẻ: Phân công phụ trách, Tài khoản và cờ, Danh mục lĩnh vực, Ngưỡng cảnh báo, Ngày nghỉ, Nhật ký, Dọn dữ liệu, Nhật ký hệ thống. Từ v3.21 không còn quyền "quản trị nhiệm vụ" và "Ủy quyền giao việc": nhập Excel, nhập việc thay mặt lãnh đạo, sửa danh mục lĩnh vực là việc chung của mọi cán bộ (menu bánh răng → Danh mục lĩnh vực; mỗi lần sửa ghi lý do vào nhật ký danh mục). **Mọi thay đổi đều phải ghi lý do và được lưu vào nhật ký.**'),
+    P2('8.1 Tài khoản: tạo, sửa, khoá, đặt lại mật khẩu, cấp cờ'),
     ...steps([
       '**Tạo tài khoản**: bấm *Tạo tài khoản*, nhập họ tên, tên đăng nhập, chức danh, vai trò (Thường trực / Lãnh đạo Văn phòng / Trưởng phòng / Chuyên viên), phòng. Hệ thống sinh **mật khẩu tạm** — chuyển cho cán bộ bằng kênh riêng; lần đầu đăng nhập họ phải đổi.',
       '**Sửa**: đổi vai trò, phòng, chức danh (có lý do). Mỗi phòng chỉ có **một Trưởng phòng đang hoạt động** — muốn đổi Trưởng phòng, khoá hoặc đổi vai tài khoản cũ trước.',
       '**Đặt lại mật khẩu** khi cán bộ quên: hệ thống sinh mật khẩu tạm mới.',
       '**Khoá** tài khoản cán bộ chuyển công tác (không xoá — lịch sử việc giữ nguyên).',
-      '**Cấp quyền** quản trị nhiệm vụ (tối đa 2 người, nhập Excel và sửa mọi việc), **Cấp QTHT** (quản trị hệ thống), **Cấp thư ký TT** (thư ký Thường trực: xử lý chỉ đạo Thường trực thay mặt).',
+      '**Cấp QTHT** (quản trị hệ thống), **Cấp thư ký TT** (thư ký Thường trực: xử lý, đóng chỉ đạo Thường trực thay mặt) — có lý do, ghi nhật ký.',
       '**Chuyển việc theo dõi** (v3.20, Quản trị hệ thống): cán bộ nghỉ, chuyển công tác hoặc đổi nhiệm vụ — bấm nút này ở dòng tài khoản, chọn **Người nhận theo dõi**: hệ thống báo ngay số việc đang mở sẽ chuyển (kèm mã); ghi **lý do** (vào lịch sử từng việc) rồi bấm **Chuyển**. Người nhận có một thông báo kê mã việc; việc nào không chuyển được được báo riêng và giữ nguyên; việc đã hoàn thành giữ người theo dõi cũ. Nên chuyển **trước khi khoá** tài khoản.',
     ]),
     ...hinh('qt-10-chuyen-theo-doi-cat.jpg', 'Hộp Chuyển việc đang theo dõi: người nhận, số việc sẽ chuyển, lý do'),
@@ -161,7 +161,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('Nhập **lịch nghỉ lễ, nghỉ bù, ngày làm bù** của năm để hệ thống tính đúng ngày làm việc (hạn xác nhận nhận việc, hạn phản hồi chỉ đạo, nhắc việc). Nên nhập đầu năm và mỗi khi có thông báo nghỉ lễ mới.'),
     ...hinh('qt-04-ngay-nghi.jpg', 'Thẻ Ngày nghỉ'),
     P2('8.6 Nhật ký và Dọn dữ liệu'),
-    p('**Nhật ký hệ thống** ghi 100 thao tác gần nhất (tài khoản, cấp quyền, cấu hình, nhập Excel, hoàn tác lô, sao lưu); **Nhật ký cấp quyền** ghi riêng từng lần cấp/thu cờ. **Dọn dữ liệu** chỉ dùng để xoá dữ liệu thử nghiệm theo hai bước (xem trước số dòng → gõ XOÁ) và đòi hỏi đã sao lưu trong 24 giờ — không dùng cho dữ liệu thật.'),
+    p('**Nhật ký hệ thống** ghi 100 thao tác gần nhất (tài khoản, cấp quyền, cấu hình, nhập Excel, hoàn tác lô, sao lưu); thẻ **Nhật ký** ghi riêng từng lần cấp/thu cờ, sửa tài khoản (Quản trị hệ thống) và từng lần sửa danh mục lĩnh vực (mọi cán bộ xem được). **Dọn dữ liệu** chỉ dùng để xoá dữ liệu thử nghiệm theo hai bước (xem trước số dòng → gõ XOÁ) và đòi hỏi đã sao lưu trong 24 giờ — không dùng cho dữ liệu thật.'),
     ...hinh('qt-06-nhat-ky.jpg', 'Thẻ Nhật ký hệ thống'),
 
     // ───────────────────────── PHẦN 9
@@ -170,7 +170,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
       ['Tôi không thấy một việc mà tôi biết là có.', 'Hệ thống chỉ hiện việc trong phạm vi của mình: chuyên viên thấy việc mình chủ trì/theo dõi; Trưởng phòng thấy việc của phòng. Nhờ người giao kiểm tra lại người chủ trì / người theo dõi của việc, hoặc dùng Đề nghị sửa.'],
       ['Việc giao nhầm người / nhầm hạn.', 'Chuyên viên: bấm *Đề nghị sửa* (ô có khoá) hoặc *Từ chối* có lý do. Người giao: *Giao lại* hoặc *Gia hạn* trong ô Chỉ đạo — không xoá việc.'],
       ['Lãnh đạo có phải bấm gì để việc hoàn thành không?', 'Không. Nộp minh chứng hợp lệ là việc **hoàn thành** (ngày hoàn thành = ngày văn bản). Lãnh đạo chỉ **Trả lại** khi kết quả chưa đạt (việc mở lại) hoặc **đánh giá chất lượng** nếu muốn — đều không bắt buộc.'],
-      ['Việc lãnh đạo chủ trì thì ai nhập kết quả?', 'Người đã nhập việc (chuyên viên, cán bộ nhập thay mặt lãnh đạo) hoặc cán bộ tổng hợp có quyền quản trị nhiệm vụ cập nhật và **nộp minh chứng thay**; lãnh đạo không phải tự nhập (mục 3.5).'],
+      ['Việc lãnh đạo chủ trì thì ai nhập kết quả?', 'Người đã nhập việc (chuyên viên giao, chuyên viên nhập thay mặt lãnh đạo) cập nhật và **nộp minh chứng thay**; lãnh đạo không phải tự nhập (mục 3.5).'],
       ['Cán bộ nghỉ / chuyển công tác, việc đang theo dõi xử lý sao?', 'Quản trị hệ thống dùng **Chuyển việc theo dõi** ở thẻ Tài khoản (mục 8.1) để chuyển một lần mọi việc đang mở sang người khác, rồi mới khoá tài khoản.'],
       ['Nhập Excel xong thấy sai.', 'Trong 24 giờ: thẻ Chờ hoàn thiện → **Hoàn tác lô**. Sau 24 giờ: sửa từng việc bằng Cập nhật nhanh / Sửa thông tin giao, hoặc Xuất theo mẫu → sửa → nhập lại.'],
       ['Bảng Excel của phòng không theo mẫu, có nhập được không?', 'Được. Chọn tệp, ghép cột "Công việc" (hay tên tương tự) vào **Nội dung nhiệm vụ**, xem trước rồi nhập; **Lưu cách ghép** để lần sau hệ thống tự nhận (mục 7.3). Bảng thường thiếu số/ngày văn bản và sản phẩm — thêm hai cột vào Excel hoặc hoàn thiện từng dòng.'],

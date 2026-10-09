@@ -787,3 +787,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Rà soát độc lập trước PR: 0097 — dòng Excel "đã xong ngoài hệ thống" kiểm phạm vi như `giao_viec`, cập nhật theo mã việc ngoài phạm vi bị bỏ qua (không lộ nội dung); thay mặt kiểm người theo dõi; văn bản trùng khoá được dùng lại; Lãnh đạo giao không bắt buộc khi chủ trì là chuyên viên.
 - Giao diện: bỏ cột / nút "Quản trị KL BTVTU", tab Ủy quyền; menu bánh răng mọi vai (trừ Thường trực) có Danh mục lĩnh vực; ô Thay mặt tuỳ chọn cho mọi chuyên viên; chuyên viên thôi bị ẩn "Tổng quan phòng" khi giữ cờ cũ; ngăn chi tiết "… bởi X".
 - Kiểm thử: RLS mới `kl-0095-dot-f` (6 bài), sửa rls-9/10/11, kl-0035/0041/0072/0079/0085/0089, minh-chung-bat-buoc, pham-vi-tong-hop, pq-pham-vi-giao; e2e quan-tri, dang-nhap, cv-giao-viec.
+
+## 65. Phát hành v3.21.0 — Đợt F (9/10/2026; PR #126 + `release/v3.21.0`; migration **0095–0097**)
+- Hướng dẫn sử dụng **3.21** (59 trang): 1.3 bỏ dòng "Cán bộ tổng hợp" (chuyên viên nhập Excel, nhập thay mặt, sửa danh mục), 2 (bánh răng có Danh mục lĩnh vực), 3.11, 4.6, Phần 7 (7.7 nhập việc thay mặt — "Nhập bởi …"), Phần 8 (bỏ cấp quyền quản trị nhiệm vụ), Phần 9; chụp lại `a3-11-giao-viec`, `qt-02-tai-khoan`.
+- `docs/GO-LIVE-V3.21.md`: kiểm tay staging, câu SELECT xem trước (số tài khoản sẽ bị thu cờ, thư ký Thường trực còn hoạt động), tag, cấu hình `pham_vi_chuyen_vien`.
+- Khi áp production: **0096 thu cờ quản trị nhiệm vụ của mọi tài khoản** (ghi nhật ký); 0095, 0097 chỉ đổi hàm / view.

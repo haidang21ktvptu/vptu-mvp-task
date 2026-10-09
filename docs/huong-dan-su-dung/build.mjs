@@ -8,7 +8,7 @@ const A = (f) => `${import.meta.dirname}/anh/${f}`;
 const trangArg = process.argv.indexOf('--trang');
 const soTrang = trangArg > 0 ? JSON.parse(fs.readFileSync(process.argv[trangArg + 1], 'utf8')) : {};
 
-const PHIEN_BAN = 'Phiên bản 3.20 · tháng 10/2026';
+const PHIEN_BAN = 'Phiên bản 3.21 · tháng 10/2026';
 const TIEU_DE = 'Hướng dẫn sử dụng Hệ thống quản trị nhiệm vụ';
 
 // Bìa
@@ -30,7 +30,7 @@ const bia = [
 const { tieuDeMucLuc, phan } = noiDung({ A, anh, h1, h2, h3, p, steps, bullets, luuY, bang, khoangTrong });
 
 const buf = await taiLieu({
-  tieuDe: TIEU_DE, phienBan: 'v3.20',
+  tieuDe: TIEU_DE, phienBan: 'v3.21',
   sections: [
     { children: bia },
     { children: [h1('Mục lục', { ngat: false }), ...mucLucTinh(tieuDeMucLuc, soTrang)] },
