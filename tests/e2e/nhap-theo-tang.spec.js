@@ -30,6 +30,7 @@ test.describe.serial('Nhập theo tầng — khoá / bút, Đề nghị sửa v�
     const page = await pageAs(browser, 'E2E_CV', testInfo);
     const the = page.locator(`#vct-${nv.id}`);
     await expect(the).toBeVisible(NAP);
+    await the.getByRole('button', { name: 'Chi tiết', exact: true }).click();   // v3.23: thẻ tối giản — thao tác phụ trong "Chi tiết"
     await the.getByRole('button', { name: 'Đề nghị sửa', exact: true }).click();
     const hop = page.locator('#stModal');
     await expect(hop).toBeVisible();

@@ -29,13 +29,13 @@ export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, thang, co
     </div>${quyTac ? `<p class="hung-quy-tac" id="tqQuyTac">${escapeHtml(quyTac)}</p>` : ''}</section>`;
 }
 
-const LOI_CB = { A0: 'cần Thường trực chú ý', A2: 'trong phòng cần đồng chí đôn đốc', A3: 'trong phòng (chỉ xem)' };   // A3: Đợt C1, chuyên viên xem cả phòng
+const LOI_CB = { A0: 'cần Thường trực chú ý', A2: 'trong phòng cần đồng chí đôn đốc', A3: 'trong phòng (chỉ xem)', VP: 'trong Văn phòng' };   // VP: 0103 toàn Văn phòng   // A3: Đợt C1, chuyên viên xem cả phòng
 export function canhBaoHtml(cb, vai) {
   if (!cb.ddb && !cb.do) return '<div class="bao-dong yen" role="note" id="tqCanhBao"><span class="bieu-bd" aria-hidden="true">✓</span><div class="noi-bd"><b>Không có việc Đỏ</b><span>Mọi việc đang mở trong phạm vi đều trong hạn hoặc mới ở mức Vàng.</span></div></div>';
   const phan = [cb.ddb ? `${cb.ddb} việc Đỏ đặc biệt` : '', cb.do ? `${cb.do} việc Đỏ` : ''].filter(Boolean).join(' và ');
   return `<div class="bao-dong" role="note" id="tqCanhBao"><span class="bieu-bd" aria-hidden="true">!</span>
     <div class="noi-bd"><b>${phan} ${LOI_CB[vai] || 'cần đồng chí chỉ đạo'}</b><span>${escapeHtml(cb.nguoi.join(', '))}</span></div>
-    <button type="button" class="nut chinh" ${mo({ t: 'do' })}>${vai === 'A3' ? 'Xem danh sách' : 'Xem và chỉ đạo'}</button></div>`;
+    <button type="button" class="nut chinh" ${mo({ t: 'do' })}>${vai === 'A3' || vai === 'VP' ? 'Xem danh sách' : 'Xem và chỉ đạo'}</button></div>`;
 }
 
 export const theThangHtml = (thang, nam) => `<article class="the-bd n7">${dauThe('Giao mới và hoàn thành theo tháng', `Số nhiệm vụ, năm ${nam} · bấm một tháng để xem việc`,

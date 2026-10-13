@@ -81,6 +81,7 @@ function capNhatHienThi() {
     setText('klThHanLoai', '');
   }
   show('klThHanBatBuoc', loai !== 'KY_BAN_HANH');
+  show('gvGoiYHan', loai !== 'KY_BAN_HANH');   // v3.23: hướng dẫn việc không xác định được thời hạn
   setText('klThHanGhiChu', $('klThHan').value ? `${$('klThHanLoai').textContent ? ' · ' : ''}${ghiChuHan($('klThHan').value, homNay)}` : '');
   lamMoiLuaChonLuoi();   // min hạn từng dòng theo ngày ban hành
   capNhatNganh();

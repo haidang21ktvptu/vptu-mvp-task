@@ -7,6 +7,7 @@ import { COT_MINH_CHUNG, taiTheoTrang } from './cot.js';
 import { state, findAccount } from '../state.js';
 import { homNayVN } from './ngay.js';
 import { laTangGiao } from './sua-tang.js';
+import { chiXem } from './pham-vi.js';
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
@@ -27,14 +28,14 @@ const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_t
 // lãnh đạo / quản trị nhiệm vụ thấy việc (dòng hiện ra = trong phạm vi). Chuyên viên chỉ xem cả phòng (0086) không nộp việc người khác.
 export function duocNopMinhChung(r) {
   const me = state.user?.id;
-  return Boolean(me && r) && ([r.owner_tai_khoan, r.nguoi_theo_doi, r.tao_boi].includes(me) || laLanhDao() || qtklConHan());
+  return Boolean(me && r) && !chiXem(r) && ([r.owner_tai_khoan, r.nguoi_theo_doi, r.tao_boi].includes(me) || laLanhDao() || qtklConHan());   // 0103: việc chỉ xem → không
 }
 // Ai trả lại / đánh giá được (kl_duoc_xem_lai_minh_chung, 0090): tầng giao (người giao kể cả Thường trực, người tạo việc, quản trị — 0091), như
 // nghiệm thu cũ (người theo dõi, lãnh đạo Văn phòng / phòng trong phạm vi; việc Thường trực giao Chánh VP: thư ký Thường trực); không phải minh
 // chứng do chính mình nộp; Chánh VP không tự xem lại việc Thường trực giao cho mình (0061).
 export function duocXemLaiMinhChung(r, m) {
   const me = state.user?.id;
-  if (!me || !r || !m || m.nop_boi === me || (laViecTtGiaoCvp(r) && r.owner_tai_khoan === me)) return false;
+  if (!me || !r || !m || chiXem(r) || m.nop_boi === me || (laViecTtGiaoCvp(r) && r.owner_tai_khoan === me)) return false;
   if (laTangGiao(r)) return true;
   if (laViecTtGiaoCvp(r)) return nghiemThuViecTt(r, m.nop_boi);
   return r.nguoi_theo_doi === me || ['A1', 'A2'].includes(state.user?.role_group) || qtklConHan();

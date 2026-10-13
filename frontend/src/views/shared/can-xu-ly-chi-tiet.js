@@ -16,7 +16,6 @@ const me = () => state.user?.id;
 const vai = () => state.user?.role_group;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const trich = (s, n = 110) => { const t = (s || '').trim(); return t.length > n ? `${t.slice(0, n)}…` : t; };
-const ten = (id) => findAccount(id)?.full_name || '';
 // Ai liên quan (đã escape — chu của dong() là HTML).
 const lienQuan = (r) => escapeHtml([r.owner_tai_khoan_ten || r.owner_don_vi_ten, r.nguoi_theo_doi_ten && r.nguoi_theo_doi_ten !== r.owner_tai_khoan_ten ? `theo dõi: ${r.nguoi_theo_doi_ten}` : '']
   .filter(Boolean).join(' · '));
@@ -37,14 +36,11 @@ const deNghiChoDuyet = () => (vai() === 'A0'
   : tuChoiChoToiDuyet());
 
 // ---- Dòng theo mục
+// v3.23: bỏ nhắn tin 1-1 — mục này chỉ còn thông báo hệ thống trên nhiệm vụ (đọc ở chuông).
 function dongTin(so) {
-  const ds = Object.entries(state.dmUnread || {}).filter(([k, n]) => k && k !== 'null' && n > 0)
-    .map(([k, n]) => `<div class="cx-dong"><p><b>${escapeHtml(ten(k) || 'Cán bộ')}</b><span class="chu-phu"> · ${n} tin chưa đọc</span></p>
-      <div class="hanh-dong">${nut('Mở hội thoại', 'openDMChat', { 'peer-id': k }, 'lam')}</div></div>`);
   const tb = Number(so?.thong_bao || 0);
-  if (tb) ds.unshift(`<div class="cx-dong"><p><b>Thông báo trên nhiệm vụ</b><span class="chu-phu"> · ${tb} chưa đọc (chỉ đạo, minh chứng, cảnh báo)</span></p>
-      <div class="hanh-dong">${nut('Mở chuông', 'cxMoChuong', {}, 'lam')}</div></div>`);
-  return ds;
+  return tb ? [`<div class="cx-dong"><p><b>Thông báo trên nhiệm vụ</b><span class="chu-phu"> · ${tb} chưa đọc (chỉ đạo, minh chứng, vướng mắc, cảnh báo)</span></p>
+      <div class="hanh-dong">${nut('Mở chuông', 'cxMoChuong', {}, 'lam')}</div></div>`] : [];
 }
 const dongCanQuyet = () => canQuyet().map((r) => dong('quyet', r, `${escapeHtml(r.cap_quyet_dinh_ten || 'cấp cần quyết')} · ${lienQuan(r)}`,
   nut('Chỉ đạo / ý kiến', 'moChiDaoViec', { id: r.id, ma: r.ma }, 'lam')));
@@ -80,7 +76,7 @@ const dongHoaToc = (so) => (so?.hoa_toc || []).map((x) => `<div class="cx-dong t
 const dongVuongMac = () => coVuongMac().map((r) => dong('vuongmac', r, `<b>Vướng mắc:</b> ${escapeHtml(trich(r.vuong_mac, 160))} · ${lienQuan(r)}`,
   nut('Chỉ đạo / ý kiến', 'moChiDaoViec', { id: r.id, ma: r.ma }, 'lam')));
 
-export const TIEU_DE_MUC = { vuongmac: 'Việc có vướng mắc, đề nghị lãnh đạo quyết định', tin: 'Tin chưa đọc', quyet: 'Việc cần đồng chí quyết', denghi: 'Đề nghị từ chối chờ đồng chí duyệt', tuchoi: 'Việc bị từ chối, cần giao lại',
+export const TIEU_DE_MUC = { vuongmac: 'Việc có vướng mắc, đề nghị lãnh đạo quyết định', tin: 'Thông báo chưa đọc', quyet: 'Việc cần đồng chí quyết', denghi: 'Đề nghị từ chối chờ đồng chí duyệt', tuchoi: 'Việc bị từ chối, cần giao lại',
   moi: 'Việc mới chờ đồng chí xác nhận đã nhận', hoatoc: 'Hỏa tốc chưa bấm Đã nhận', dnsua: 'Đề nghị sửa thông tin giao chờ đồng chí duyệt' };
 
 // Nội dung hộp dưới dải cho một mục; rỗng → câu "không còn việc nào" (dải và danh sách có thể lệch vài giây khi realtime).

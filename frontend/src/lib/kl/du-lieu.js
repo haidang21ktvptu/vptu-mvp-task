@@ -4,6 +4,7 @@ import { supabase } from '../supabase.js';
 import { state } from '../state.js';
 import { COT_VIEC, COT_TU_CHOI, taiTheoTrang } from './cot.js';
 import { homNayVN } from './ngay.js';
+import { trongPhamVi, ghiNgoaiPhamVi } from './pham-vi.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -56,14 +57,17 @@ export async function loadCauHinhKl(lai = false) {
 export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
 export const tuNhanViec = () => cauHinhKl('xac_nhan_nhan_viec', 1) === 2;   // 0085: cấu hình 2 = việc coi như đã nhận ngay khi giao (không cần xác nhận)
 export const chuyenVienXemPhong = () => cauHinhKl('pham_vi_chuyen_vien', 1) === 2;   // 0086: cấu hình 2 = chuyên viên xem cả phòng (chỉ xem; RLS là chốt)
+export const xemToanBo = () => cauHinhKl('xem_toan_bo', 1) === 2;   // 0103: cấu hình 2 = mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem ngoài phạm vi)
 
 // Toàn bộ dòng trong phạm vi người dùng (RLS) + tập id đã có xác nhận nhận việc, kèm mốc thời gian đọc ("Số liệu tính đến").
+// v3.23 (0103): rows = việc TRONG phạm vi xử lý (mọi màn hình làm việc giữ nguyên); tatCa = mọi dòng đọc được (cấu hình xem toàn bộ: cả việc
+// chỉ xem, trong_pham_vi = false) — chỉ Tổng quan, Nhiệm vụ, Theo văn bản, tìm nhanh dùng khi người xem chọn "Toàn Văn phòng".
 let dangDocRows = null;
 export function loadKlRows() {
   // Đang có lượt đọc → dùng chung kết quả (không chạy chồng truy vấn nặng); mỗi nơi gọi nhận MẢNG RIÊNG để Điều hành và Nhiệm vụ không
   // cùng trỏ một mảng (nap-lai-viec thay dòng tại chỗ).
   if (!dangDocRows) dangDocRows = docKlRows().finally(() => { dangDocRows = null; });
-  return dangDocRows.then((r) => ({ ...r, rows: [...r.rows] }));
+  return dangDocRows.then((r) => ({ ...r, rows: [...r.rows], tatCa: [...r.tatCa] }));
 }
 async function docKlRows() {
   // B6: da_xac_nhan_nhan / nguoi_da_nhan lấy từ v_nhiem_vu (0051, cùng giá trị với lich_su 'xac_nhan_nhan_viec') — bỏ truy vấn lich_su toàn phạm vi.
@@ -77,7 +81,8 @@ async function docKlRows() {
   const tcTheoViec = new Map(); tcAll.forEach((t) => { if (!tcTheoViec.has(t.nhiem_vu_id)) tcTheoViec.set(t.nhiem_vu_id, t); });
   const choTheoViec = new Map(); tcCho.forEach((t) => { if (!choTheoViec.has(t.nhiem_vu_id)) choTheoViec.set(t.nhiem_vu_id, t); });
   rows.forEach((r) => ganCo(r, choTheoViec.get(r.id), tcTheoViec.get(r.id)));
-  return { rows, luc: new Date(), tuChoiCho: tcCho, tuChoi: tcAll };
+  ghiNgoaiPhamVi(rows);
+  return { rows: trongPhamVi(rows), tatCa: rows, luc: new Date(), tuChoiCho: tcCho, tuChoi: tcAll };
 }
 // Cờ ghép vào một dòng (dùng chung với nap-lai-viec): tôi đã xác nhận nhận (owner và người theo dõi mỗi người tự nhận — cùng
 // kl_so_chua_xu_ly.viec_moi), đề nghị từ chối đang chờ / mới nhất.
@@ -147,7 +152,8 @@ export async function datTrichYeuVanBan(id, trichYeu) {
 // quan_tri_kl), số nhiệm vụ dự kiến + rà soát toàn văn (như trích yếu). kl_van_ban_so_viec: số việc gốc đã nhập — tổng thật, chỉ văn bản xem được.
 const goi = async (fn, args) => { const r = await supabase.rpc(fn, args); if (r.error) throw new Error(r.error.message); return r.data; };
 export const datThongTinGiao = (id, nguon, phoiHop) => goi('dat_thong_tin_giao', { p_id: id, p_nguon_nhiem_vu_ma: nguon || null, p_don_vi_phoi_hop: phoiHop || null });
-export const datVuongMac = (id, noiDung) => goi('dat_vuong_mac', { p_id: id, p_noi_dung: noiDung || null });
+// 0103: guiCho = người được đề nghị xử lý (một tin hệ thống cho đúng người đó); không chọn = báo tự động như cũ (người giao, Phó Chánh VP phụ trách).
+export const datVuongMac = (id, noiDung, guiCho = null) => goi('dat_vuong_mac', { p_id: id, p_noi_dung: noiDung || null, p_gui_cho: guiCho || null });
 export const datRaSoatVanBan = (id, so, daRaSoat) => goi('van_ban_dat_ra_soat', { p_id: id, p_so: so ?? null, p_da_ra_soat: daRaSoat });
 export const soViecTheoVanBan = async () => new Map(((await goi('kl_van_ban_so_viec', {})) || []).map((x) => [x.van_ban_id, x.so_viec]));
 // Giao việc (GV-2, GV-3): một RPC kiểm quyền và 1-1-1 phía DB (0025). Trả { id, ma, van_ban_id }.

@@ -9,6 +9,7 @@ import { getKlRows, render, dangNapKl } from './danh-sach.js';
 import { dh, dongNgoaiLe, soSanhNgoaiLe, dangNapDh } from '../dieu-hanh/du-lieu.js';
 import { veDieuHanh } from '../dieu-hanh/man-hinh.js';
 import { sectionDangHien } from '../../shell/index.js';
+import { chiXem, datNgoaiPhamVi } from '../../../lib/kl/pham-vi.js';
 
 // Một dòng v_nhiem_vu kèm cờ đã xác nhận nhận và đề nghị từ chối (cùng cách ghép như loadKlRows); null nếu ngoài phạm vi / đã xoá.
 export async function docMotViec(id) {
@@ -41,8 +42,10 @@ export async function napLaiViec(id, { nemLoi = false, veLai = true, chiKhiDoi =
     const { row, ngoaiLe, tuChoi } = await docMotViec(id);
     const doi = JSON.stringify(getKlRows().find((x) => x.id === id) || null) !== JSON.stringify(row);
     thay(getKlRows(), id, row);
-    thay(dh.rows, id, row);
-    thay(dh.ngoaiLe, id, ngoaiLe);
+    const trong = row && !chiXem(row);
+    if (row) datNgoaiPhamVi(id, !trong);   // 0103: màn điều hành chỉ giữ việc trong phạm vi xử lý (việc vừa ra / vào phạm vi: bỏ / thêm)
+    thay(dh.rows, id, trong ? row : null);
+    thay(dh.ngoaiLe, id, trong ? ngoaiLe : null);
     dh.ngoaiLe.sort(soSanhNgoaiLe);
     dh.tuChoiCho = [...(dh.tuChoiCho || []).filter((t) => t.nhiem_vu_id !== id), ...tuChoi.filter((t) => t.trang_thai === 'CHO_DUYET')];
     if (!veLai || (chiKhiDoi && !doi)) return;

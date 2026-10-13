@@ -14,6 +14,9 @@ export function nhanPhamViTvb(user, xemPhong = false) {
 export const theoVanBanTemplate = `
   <div class="dau"><h1>Theo văn bản</h1><span>mỗi văn bản một cây: nhiệm vụ giao từ văn bản → việc giao tiếp xuống → minh chứng; bấm một nhánh để mở ngăn chi tiết</span></div>
   <div class="kl-loc tvb-loc">
+    <div id="tvbToanBo" class="pham-vi hidden" role="group" aria-label="Phạm vi cây văn bản">
+      <button type="button" data-action="tvbToanBo" data-tb="1" aria-pressed="true">Toàn Văn phòng</button>
+      <button type="button" data-action="tvbToanBo" data-tb="0" aria-pressed="false">Phạm vi của tôi</button></div>
     <label class="kl-tim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input type="search" id="tvbTim" placeholder="Tìm số hiệu, trích yếu, mã hoặc nội dung việc" aria-label="Tìm trong cây" autocomplete="off"></label>
     <select id="tvbLoc" aria-label="Lọc theo trạng thái">${LOC_TRANG_THAI.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>

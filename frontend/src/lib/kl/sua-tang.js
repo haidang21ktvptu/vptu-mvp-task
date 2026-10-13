@@ -6,6 +6,7 @@ import { state, findAccount } from '../state.js';
 import { homNayVN } from './ngay.js';
 import { toiTrongNhom, duyetThayNhom } from './thay-mat.js';
 import { laToanQuyen } from '../toan-quyen.js';
+import { chiXem } from './pham-vi.js';
 
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
 export const O_GIAO = [['noi_dung', 'Nội dung', 'vb'], ['san_pham_loai', 'Sản phẩm', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
@@ -24,7 +25,7 @@ const capBac = (a) => (!a ? -1 : a.role_group === 'A0' ? 4 : laToanQuyen(a) ? 2 
 // (dòng hiện ra = trong phạm vi; Trưởng phòng không sửa thông tin Lãnh đạo VP giao), hoặc quản trị nhiệm vụ còn hạn. Tài khoản khoá thì không.
 export function laTangGiao(r) {
   const me = state.user?.id;
-  if (!me || !r) return false;
+  if (!me || !r || chiXem(r)) return false;   // 0103: việc ngoài phạm vi xử lý — chỉ xem
   if (qtklConHan()) return true;
   const a = findAccount(me) || state.user;
   if (a?.bi_khoa) return false;

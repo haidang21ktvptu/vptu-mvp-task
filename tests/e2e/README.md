@@ -6,7 +6,7 @@
 |---|---|---|
 | 1–3 | Đăng nhập A1/A2/A3 vào đúng view; sai mật khẩu báo lỗi; tải lại giữ phiên; đăng xuất | `dang-nhap.spec.js` |
 | 4–6 | A2 giao việc → A3 tiếp nhận + nộp minh chứng (URL sai bị chặn) → A2 duyệt, KPI | `nhiem-vu.spec.js` |
-| 7 (bổ sung) | Hai phiên song song: A2 gửi ý kiến chỉ đạo và tin nhắn riêng → A3 nhận realtime (huy hiệu, viền dòng, toast) và trả lời | `realtime.spec.js` |
+| 7 (bổ sung) | ~~Nhắn tin 1-1 realtime~~ — bỏ ở v3.23 (chủ dự án 13/10/2026: bỏ chức năng nhắn tin; thông báo hệ thống vẫn ở chuông) | (đã xoá `realtime.spec.js`) |
 | 8 (GĐ8) | Tài khoản có `quan_tri_he_thong` (`demo_qtht`) vào "Quản trị hệ thống", cấp/thu quyền quản trị KL cho `demo_cv2` qua hộp lý do bắt buộc, nhật ký ghi hai dòng; A3 thường không có mục này | `quan-tri.spec.js` |
 
 ```
@@ -23,6 +23,6 @@ npm run report            # mở báo cáo HTML của lần chạy gần nhất
 - Kịch bản 12 (`kl-them-nhiem-vu.spec.js`, GĐ10): người có `quan_tri_kl` (cấp tạm cho `demo_qtht` bằng service_role, thu lại sau) thêm nhiệm vụ mới: hội nghị mới, ngành → lĩnh vực bắt buộc, chủ trì bắt buộc, Ký ban hành tự tính hạn; hội nghị 995, tự dọn.
 - `global-setup.mjs` dọn nhiệm vụ `E2E-TEST%` của lần chạy trước bằng service_role, rồi đăng nhập A1/A2/A3 qua API (3 lượt, + `demo_qtht` nếu project đã có — kịch bản 8 tự bỏ qua khi chưa có) và lưu PHIÊN (cặp access/refresh token) vào `.auth/<vai trò>.json`; mỗi context của kịch bản lấy phiên riêng bằng refresh theo chuỗi có khoá (`lib/app.js` `phienMoi`, giới hạn refresh 150/5 phút, tách khỏi 30 lượt đăng nhập) — CI-4.
 - Chạy tuần tự (1 worker): dữ liệu mẫu cô lập theo hội nghị (993–997) nhưng mọi spec dùng chung 3 tài khoản seed nên chạy song song làm lệch ô Tổng/modal bắt buộc/realtime (CI-4 đã thử 2 worker, quay về; muốn song song phải cấp tài khoản riêng từng spec). Project `desktop` và `mobile` mở trang với phiên riêng (`pageAs`/`contextAs`, không tốn lượt đăng nhập); project `dang-nhap` (kịch bản 1–3, đăng nhập thật qua form, A3 ở 360px) chạy **sau cùng** (`dependencies`) vì đăng xuất huỷ phiên toàn cục của tài khoản. Tổng **7 lượt đăng nhập/lần chạy** (4 global-setup + 3 dang-nhap).
-- `realtime.spec.js` tạo nhiệm vụ mẫu bằng service_role và xoá tin nhắn cũ giữa `demo_truongphong` ↔ `demo_cv1` (dữ liệu giả) để huy hiệu bắt đầu từ 0; realtime gói Free có thể trễ vài giây nên các khẳng định realtime chờ tới 20 s.
+- v3.23: `xem-toan-bo.spec.js` (project `v323-xem-toan-bo`, nối sau `v3221-tvb`) bật tạm cấu hình `xem_toan_bo = 2` — chạy một mình trong chuỗi nối tiếp vì cấu hình là chung.
 - Chạy trong CI ở job `Kiểm thử RLS + e2e trên staging` (`ci.yml`, mọi PR trừ PR chỉ tài liệu) — 7 lượt đăng nhập; Chromium được cache theo phiên bản Playwright; `tests/rls` token thật đã chuyển sang `deploy-staging.yml`; xem `docs/kien-truc.md`.
 - `smoke/` + `playwright.smoke.config.js`: smoke test sau phát hành production (`deploy-prod.yml`) — mở bản live, đăng nhập 1 tài khoản (`SMOKE_USERNAME`/`SMOKE_PASSWORD`), vào app, đăng xuất. Chạy tay: `SMOKE_URL=... SMOKE_USERNAME=... SMOKE_PASSWORD=... npx playwright test -c playwright.smoke.config.js`.
