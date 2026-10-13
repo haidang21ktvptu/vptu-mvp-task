@@ -1,7 +1,7 @@
 // Phần thuần (không DOM) của form giao việc GĐ14: ô "Chịu trách nhiệm" (Owner, NT-1) gộp hai kiểu trong MỘT ô chọn — Văn phòng/phòng
 // (A1, quan_tri_kl), cán bộ (A2 chỉ chuyên viên phòng mình) — giá trị "dv:<mã>" hoặc "tk:<id>"; v3.18 (0079): Owner luôn là phòng / cán bộ
 // Văn phòng, đơn vị ngoài không còn trong ô chọn (việc giao cho sở, ngành ghi tên đơn vị trong nội dung). Cấp nhận sản phẩm mặc định = cấp
-// ngay trên Owner (CH-7); người theo dõi trong phạm vi người giao (mặc định = người nhập). Ô Thay mặt (A3 quản trị KL): nhóm "Lãnh đạo Văn
+// ngay trên Owner (CH-7); người theo dõi trong phạm vi người giao (mặc định = người nhập). Ô Thay mặt (mọi chuyên viên, 0095): nhóm "Lãnh đạo Văn
 // phòng" / "Thường trực Tỉnh ủy" (lib/kl/thay-mat.js) rồi từng lãnh đạo. Quyền thật kiểm trong hàm giao_viec (0025); đây chỉ là gợi ý đúng.
 import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';

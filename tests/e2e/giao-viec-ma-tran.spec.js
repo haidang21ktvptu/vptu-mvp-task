@@ -122,4 +122,15 @@ test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (kh
       await expect(the).not.toHaveClass(/\bcam\b/);
     });
   });
+
+  // v3.21.1: các vai thay mặt ở bài 1 mang cờ quan_tri_kl tạm (che lỗi) — bài này dùng chuyên viên KHÔNG có cờ như mọi tài khoản thật sau 0096.
+  test('4. Chuyên viên không có cờ quản trị KL chọn Thay mặt Trưởng phòng → ô Chịu trách nhiệm có cán bộ và phòng của Trưởng phòng (trước v3.21.1 rỗng)', async ({ browser }, testInfo) => {
+    await voiPhien(browser, 'E2E_CV', testInfo, async (a3) => {
+      await moGiaoViec(a3);
+      await a3.locator('#klThThayMat').selectOption(ID.tp); await expect(a3.locator('#gvKhoa')).toBeEnabled(NAP);
+      await expect(a3.locator(`#klThOwner option[value="tk:${ID.cv1}"]`)).toHaveCount(1, NAP);
+      await expect(a3.locator('#klThOwner option[value="dv:TONG_HOP"]')).toHaveCount(1);
+      await expect(a3.locator(`#klThOwner option[value="tk:${ID.cvp}"]`), 'ngoài phạm vi Trưởng phòng').toHaveCount(0);
+    });
+  });
 });
