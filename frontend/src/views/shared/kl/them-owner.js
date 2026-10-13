@@ -11,6 +11,9 @@ const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' 
 const nhomOpt = (nhan, ds) => (ds.length ? `<optgroup label="${escapeHtml(nhan)}">${ds.join('')}</optgroup>` : '');
 const tenPhong = (ma) => DEPT_NAMES[ma] || ma || '';
 const laQtkl = (me) => Boolean(me?.quan_tri_kl);
+// v3.21.1: từ 0095/0096 mọi chuyên viên được giao thay mặt (cờ quản trị KL đã thu) — chọn Thay mặt thì ô Chịu trách nhiệm có đủ cán bộ, Văn phòng
+// và các phòng như người quản trị KL trước đây; pham-vi.js lọc theo phạm vi lãnh đạo được thay mặt. Trước bản này danh sách rỗng.
+const a3ThayMat = (me, thayMat) => me?.role_group === 'A3' && Boolean(thayMat);
 
 // Cán bộ được chọn làm Owner theo vai người giao (A0 — GĐ22: chỉ lãnh đạo Văn phòng, hoặc một phòng ở nhóm dưới; nhuA0 = thay mặt Thường
 // trực, cùng quy tắc). v3.17: lãnh đạo (A1, A2) giao được cho chính mình — A2 thêm chính mình bên cạnh chuyên viên phòng (giao_viec 0078 là
@@ -21,7 +24,7 @@ export function canBoOwner(accounts, me, nhuA0 = false, thayMat = '') {
   const ds = accounts.filter((a) => !a.is_system && a.role_group !== 'A0');
   if (me?.role_group === 'A0' || nhuA0) return ds.filter((a) => a.role_group === 'A1');
   if (laGiaoThang(me, thayMat)) return ds.filter((a) => a.role_group === 'A3');
-  if (laQtkl(me) || me?.role_group === 'A1') return ds;
+  if (laQtkl(me) || a3ThayMat(me, thayMat) || me?.role_group === 'A1') return ds;
   if (me?.role_group === 'A2') return ds.filter((a) => (a.role_group === 'A3' && a.department === me.department) || a.id === me.id);
   return [];
 }
@@ -34,7 +37,7 @@ export function ownerOptionsHtml(dm, accounts, me, nhuA0 = false, thayMat = '') 
   const canBo = canBoOwner(accounts, me, nhuA0, thayMat).sort((a, b) => Number(laToi(b)) - Number(laToi(a)) || sapTen(a, b))
     .map((a) => opt(`tk:${a.id}`, `${a.full_name}${laToi(a) ? ' (chính tôi)' : ''} — ${tenPhong(a.department) || 'Lãnh đạo Văn phòng'}`));
   const trongVp = a0 ? dm.donVi.filter((d) => d.trong_van_phong && d.phong).map((d) => opt(`dv:${d.ma}`, d.ten))
-    : !thang && (laQtkl(me) || me?.role_group === 'A1') ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
+    : !thang && (laQtkl(me) || a3ThayMat(me, thayMat) || me?.role_group === 'A1') ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
   return opt('', a0 ? 'Chọn lãnh đạo Văn phòng hoặc phòng nhận việc' : thang ? 'Chọn chuyên viên thực hiện (hoặc chính tôi)' : 'Chọn phòng hoặc cán bộ chịu trách nhiệm')
     + nhomOpt(a0 ? 'Lãnh đạo Văn phòng' : thang ? 'Chuyên viên' : 'Cán bộ', canBo) + nhomOpt(a0 ? 'Các phòng' : 'Văn phòng và các phòng', trongVp);
 }

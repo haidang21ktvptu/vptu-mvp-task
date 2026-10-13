@@ -31,6 +31,15 @@ test('người quản trị KL: không thay mặt → như chuyên viên; chọn
   assert.deepEqual(ids(canBoOwner(DS, qtkl, true, 'nhom:THUONG_TRUC')), ['cvp'], 'thay mặt Thường trực: chỉ lãnh đạo Văn phòng');
 });
 
+test('v3.21.1: chuyên viên KHÔNG có cờ quản trị KL (mọi tài khoản từ 0096) chọn thay mặt → đủ cán bộ, Văn phòng và các phòng (trước đây rỗng)', () => {
+  for (const tm of ['tp', 'cvp', 'nhom:LANH_DAO_VP']) {
+    assert.deepEqual(ids(canBoOwner(DS, CV, false, tm)), ['cv', 'cv2', 'cvp', 'tp'], `thay mặt ${tm}`);
+    const html = ownerOptionsHtml(DM, DS, CV, false, tm);
+    assert.match(html, /Chọn phòng hoặc cán bộ chịu trách nhiệm/); assert.match(html, /tk:cv2"/); assert.match(html, /dv:TONG_HOP"/);
+  }
+  assert.deepEqual(ids(canBoOwner(DS, CV, true, 'nhom:THUONG_TRUC')), ['cvp'], 'thay mặt Thường trực: chỉ lãnh đạo Văn phòng');
+});
+
 test('lãnh đạo không đổi: Trưởng phòng = chuyên viên phòng mình + chính mình; Chánh VP = mọi cán bộ', () => {
   assert.deepEqual(ids(canBoOwner(DS, TP)), ['cv', 'tp']);
   assert.deepEqual(ids(canBoOwner(DS, CVP)), ['cv', 'cv2', 'cvp', 'tp']);
