@@ -54,6 +54,7 @@ const TAI_KHOAN = [
   [17, 'demo_e2e_cv2', 'Demo E2E Chuyên viên GL', 'A3', 'Chuyên viên', null, 'E2E_RT', false, false, false], // giao lại đổi chủ trì (0045): chủ trì mới cùng phòng E2E_RT
   [18, 'demo_e2e_tk', 'Demo E2E Thư ký TT', 'A3', 'Chuyên viên', null, 'TONG_HOP', false, false, false], // thư ký Thường trực (0047): spec cấp cờ lúc chạy, thu lại khi xong
   [19, 'demo_e2e_anh', 'Demo E2E Chuyên viên Ảnh', 'A3', 'Chuyên viên', null, 'TONG_HOP', false, false, false], // ảnh hồ sơ (PR-2a C2): chỉ spec ca-nhan-anh đăng nhập
+  [20, 'demo_e2e_tq', 'Demo E2E Toàn quyền', 'A3', 'Chuyên viên', null, 'CDS_CY', false, false, false], // tài khoản toàn quyền (0100): spec toan-quyen bật cờ lúc chạy, thu lại khi xong
 ];
 const PHU_TRACH = [[2, 'TONG_HOP'], [6, 'QUAN_TRI']];
 

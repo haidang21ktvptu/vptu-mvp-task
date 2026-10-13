@@ -5,6 +5,7 @@ import { supabase } from '../supabase.js';
 import { state, findAccount } from '../state.js';
 import { homNayVN } from './ngay.js';
 import { toiTrongNhom, duyetThayNhom } from './thay-mat.js';
+import { laToanQuyen } from '../toan-quyen.js';
 
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
 export const O_GIAO = [['noi_dung', 'Nội dung', 'vb'], ['san_pham_loai', 'Sản phẩm', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
@@ -16,7 +17,8 @@ export const tenOGiao = (cot) => O_GIAO.find(([c]) => c === cot)?.[1] || cot;
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN())
   && state.user?.role_group !== 'A0';
 // Cấp bậc (kl_cap_bac, 0091): Thường trực 4 > Chánh VP 3 > Phó Chánh VP 2 > Trưởng phòng 1 > chuyên viên 0; không rõ người = -1.
-const capBac = (a) => (!a ? -1 : a.role_group === 'A0' ? 4 : a.role_group === 'A1' ? (a.is_chief ? 3 : 2) : a.role_group === 'A2' ? 1 : 0);
+// 0100: tài khoản toàn quyền là người giao cấp 2 (Chánh VP thật, Thường trực sửa được thông tin giao của việc nó giao).
+const capBac = (a) => (!a ? -1 : a.role_group === 'A0' ? 4 : laToanQuyen(a) ? 2 : a.role_group === 'A1' ? (a.is_chief ? 3 : 2) : a.role_group === 'A2' ? 1 : 0);
 // Người gọi là tầng giao của việc (kl_la_tang_giao, 0091): người được thay mặt / thành viên nhóm được thay mặt, người tạo việc ở mọi vai (chuyên
 // viên nhập thay mặt lãnh đạo, người nhập Excel — định hướng 8/10/2026: chuyên viên nhập liệu và xử lý đề nghị), lãnh đạo cấp cao hơn người giao
 // (dòng hiện ra = trong phạm vi; Trưởng phòng không sửa thông tin Lãnh đạo VP giao), hoặc quản trị nhiệm vụ còn hạn. Tài khoản khoá thì không.
@@ -26,6 +28,7 @@ export function laTangGiao(r) {
   if (qtklConHan()) return true;
   const a = findAccount(me) || state.user;
   if (a?.bi_khoa) return false;
+  if (laToanQuyen(state.user)) return true;   // 0100: tài khoản toàn quyền sửa thông tin giao của mọi việc (kl_la_tang_giao)
   if ([r.giao_thay_mat_cho, r.tao_boi].includes(me) || toiTrongNhom(r.giao_thay_mat_nhom)) return true;
   const nguoiGiao = r.giao_thay_mat_cho || r.tao_boi;
   return ['A0', 'A1', 'A2'].includes(a?.role_group) && capBac(a) > (nguoiGiao ? capBac(findAccount(nguoiGiao)) : -1);

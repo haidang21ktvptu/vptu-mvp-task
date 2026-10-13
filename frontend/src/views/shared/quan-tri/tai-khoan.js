@@ -19,6 +19,7 @@ function taiKhoanRowHtml(a) {
   const ht = a.quan_tri_he_thong ? '<span class="trang-thai tt-cho">Quản trị hệ thống</span>' : '';
   const tk = a.thu_ky_thuong_truc ? '<span class="trang-thai tt-xong nhan-thu-ky-tt">Thư ký Thường trực</span>' : ''; // 0047: đóng chỉ đạo TT thay mặt
   const khoa = a.bi_khoa ? '<span class="trang-thai tt-qua">Đã khoá</span>' : '';
+  const tq = a.toan_quyen && a.role_group !== 'A0' ? '<span class="trang-thai tt-cho" title="Như Chánh Văn phòng ở mọi kiểm tra quyền; chỉ đặt qua bản cập nhật cơ sở dữ liệu">Toàn quyền</span>' : '';
   const btnHt = me ? '' : nut(a.quan_tri_he_thong ? 'Thu QTHT' : 'Cấp QTHT', 'toggleQuanTriHeThong', a, `data-bat="${a.quan_tri_he_thong ? '0' : '1'}"`);
   const btnTk = a.role_group === 'A0' ? '' : nut(a.thu_ky_thuong_truc ? 'Thu thư ký TT' : 'Cấp thư ký TT', 'toggleThuKyTT', a, `data-bat="${a.thu_ky_thuong_truc ? '0' : '1'}"`);
   const btnKhoa = me || a.quan_tri_he_thong ? '' : nut(a.bi_khoa ? 'Mở khoá' : 'Khoá', 'khoaTaiKhoan', a, `data-bat="${a.bi_khoa ? '0' : '1'}"`);
@@ -29,7 +30,7 @@ function taiKhoanRowHtml(a) {
       <td class="tieude">${escapeHtml(a.full_name)}${me ? ' (tôi)' : ''}<small>${escapeHtml(a.username)}${a.position_title ? ` · ${escapeHtml(a.position_title)}` : ''}${a.dien_thoai ? ` · ${escapeHtml(a.dien_thoai)}` : ''}</small></td>
       <td data-nhan="Phòng">${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</td>
       <td data-nhan="Vai trò">${escapeHtml(ROLE_LABELS[a.role_group] || a.role_group)}</td>
-      <td data-nhan="Quyền">${ht}${tk}${khoa}</td>
+      <td data-nhan="Quyền">${tq}${ht}${tk}${khoa}</td>
       <td><div class="thao-tac">${btnSua}${btnCtd}${btnHt}${btnTk}${nut('Đặt lại mật khẩu', 'resetMatKhau', a)}${btnKhoa}</div></td>
     </tr>`;
 }
@@ -45,7 +46,7 @@ function nhanQuyen(co) {
   const [loai, phong, nganh, linhVuc] = co.split(':');
   if (loai === 'phu_trach') return `Phụ trách cả ${DEPT_NAMES[phong] || phong}`;
   if (loai === 'kiem_nhiem') return `Kiêm nhiệm ${nhanNganhLinhVuc(nganh, linhVuc)} — ${DEPT_NAMES[phong] || phong}`;
-  return { quan_tri_kl: 'Quản trị nhiệm vụ (đã bỏ từ v3.21)', quan_tri_he_thong: 'Quản trị hệ thống', thu_ky_thuong_truc: 'Thư ký Thường trực' }[co] || co;
+  return { quan_tri_kl: 'Quản trị nhiệm vụ (đã bỏ từ v3.21)', quan_tri_he_thong: 'Quản trị hệ thống', thu_ky_thuong_truc: 'Thư ký Thường trực', toan_quyen: 'Toàn quyền (như Chánh Văn phòng)' }[co] || co;
 }
 
 // Dòng sửa tài khoản (0068): co = sua:<cột>, gia_tri_cu → gia_tri_moi.

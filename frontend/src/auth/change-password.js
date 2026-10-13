@@ -6,6 +6,7 @@ import { COT_TAI_KHOAN } from '../lib/kl/cot.js';
 import { supabase } from '../lib/supabase.js';
 import { $, show, setText, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
+import { hoSoHieuDung } from '../lib/toan-quyen.js';
 import { registerActions } from '../lib/actions.js';
 import { notifySuccess } from '../components/toast.js';
 import { enterApp } from './session.js';
@@ -58,7 +59,7 @@ async function handleChangePassword(e) {
     if (error) { showInlineError('changePasswordError', changePasswordErrorMessage(error)); return; }
     await supabase.rpc('xoa_co_doi_mat_khau');
     const { data: profile } = await supabase.from('accounts_public').select(COT_TAI_KHOAN).eq('id', state.user.id).single();
-    if (profile) state.user = profile;
+    if (profile) state.user = hoSoHieuDung(profile);
     matKhauTam = null;
     if (batBuoc) { batBuoc = false; show('changePasswordModal', false); enterApp(); return; }
     show('changePasswordModal', false);

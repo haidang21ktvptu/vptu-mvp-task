@@ -1,4 +1,5 @@
 // Hằng số nghiệp vụ dùng chung (giữ nguyên nhãn tiếng Việt của bản index.html cũ).
+import { laToanQuyen } from './toan-quyen.js';
 
 export const AUTH_EMAIL_DOMAIN = 'vptu.caobang.local';
 
@@ -33,6 +34,7 @@ export const TEN_PHONG_NGAN = { LANH_DAO_VAN_PHONG: 'Lãnh đạo VP', TONG_HOP:
 // phongPhuTrach: danh sách mã phòng PCVP đang phụ trách (shell nạp từ phu_trach_phong), chỉ dùng cho A1 không phải Chánh VP.
 export function nhanChucDanh(user, phongPhuTrach = []) {
   if (!user) return '';
+  if (laToanQuyen(user)) return 'Quản trị toàn quyền';   // v3.22 (0100): giao diện như Chánh VP, không xưng Chánh VP
   if (user.role_group === 'A0') return 'Thường trực Tỉnh ủy';
   if (user.role_group === 'A1') {
     if (user.is_chief) return 'Chánh Văn phòng';

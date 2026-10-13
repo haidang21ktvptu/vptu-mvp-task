@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase.js';
 import { AUTH_EMAIL_DOMAIN } from '../lib/constants.js';
 import { $, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
+import { hoSoHieuDung } from '../lib/toan-quyen.js';
 import { loadAccountsCache, enterApp } from './session.js';
 import { datMatKhauTam, moTrangDoiMatKhau } from './change-password.js';
 import { cauLyDoThoat } from './het-phien.js';
@@ -60,7 +61,7 @@ export async function startSession(session) {
     showInlineError('loginError', 'Không tải được hồ sơ cán bộ. Đồng chí vui lòng tải lại trang hoặc thử lại sau.');
     return;
   }
-  state.user = profile;
+  state.user = hoSoHieuDung(profile);   // v3.22 (0100): tài khoản toàn quyền dùng giao diện Chánh Văn phòng
   await loadAccountsCache();
   if (profile.must_change_password) {
     moTrangDoiMatKhau(true); // chặn mọi màn hình tới khi đặt mật khẩu mới (AUTH-2)

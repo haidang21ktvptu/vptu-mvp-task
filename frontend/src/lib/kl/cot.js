@@ -29,7 +29,7 @@ export const COT_MINH_CHUNG = cot('id, nhiem_vu_id, loai, so_hieu, ngay_van_ban,
   'ly_do_khong_hop_le, trich_yeu, mo_ta_ket_qua, tep_path, tep_ten');   // Đợt D (0089–0090): tệp minh chứng
 export const COT_DIEN_BIEN = 'id, nhiem_vu_id, luc, nguon, loai, nguoi, nguoi_ten, noi_dung, gia_tri_cu, trang_thai, chi_dao_id';
 export const COT_TAI_KHOAN = cot('id, username, full_name, role_group, position_title, manager_id, department, must_change_password, is_chief, is_system',
-  'quan_tri_kl, quan_tri_he_thong, dien_thoai, anh_url, tuy_chon, quan_tri_kl_het_han, bi_khoa, thu_ky_thuong_truc');
+  'quan_tri_kl, quan_tri_he_thong, dien_thoai, anh_url, tuy_chon, quan_tri_kl_het_han, bi_khoa, thu_ky_thuong_truc, toan_quyen');   // 0100: toàn quyền
 export const COT_TIN_NHAN = 'id, sender_id, receiver_id, content, is_read, created_at, loai, nhiem_vu_id';
 
 // Đọc đủ mọi dòng theo trang (.range) cho danh sách cần đếm đủ ở client (v_nhiem_vu, tu_choi, v_minh_chung) — không phụ thuộc
