@@ -810,3 +810,4 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - 0101–0102: `giao_viec`, `kl_nhap_da_xong`, `chi_dao_gui` đọc hồ sơ người gọi qua `kl_toi_hieu_dung()` — giao trực tiếp, không ghi thay mặt; lô Excel của tài khoản này đi đường lãnh đạo (cột Lãnh đạo giao bỏ qua). Vai khác không đổi hành vi.
 - Giao diện: hồ sơ hiệu dụng như Chánh VP (menu, Tổng quan toàn Văn phòng, Giao việc, Báo cáo) + Quản trị; chức danh "Quản trị toàn quyền"; nhãn "Toàn quyền" ở Quản trị › Tài khoản.
 - Kiểm thử: RLS `kl-0100-toan-quyen` (6 bài), unit `toan-quyen.test.mjs`, e2e `toan-quyen.spec.js` (tài khoản seed mới `demo_e2e_tq`, bật cờ lúc chạy); quy tắc 7 CLAUDE.md thêm ngoại lệ.
+- **Kết quả phát hành** (13/10/2026 11:40): PR #132 CI xanh đủ 4 check (e2e 137 bài); chủ dự án xác nhận áp 0100–0102, đẩy tag `v3.22.0` (`975467a`), duyệt — deploy-prod xanh (backup, migration, Pages, smoke), tag `production` = `975467a`; PR #132 merge `9e40e08`.
