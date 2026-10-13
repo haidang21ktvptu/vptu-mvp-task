@@ -17,7 +17,8 @@ export const laThayMatThuongTruc = (v) => nhomCuaGiaTri(v) === 'THUONG_TRUC';
 // Thành viên nhóm (cùng kl_nhom_thay_mat_thanh_vien): LANH_DAO_VP = A1, THUONG_TRUC = A0; đang hoạt động, không hệ thống.
 export const laThanhVienNhom = (nhom, a) => Boolean(nhom && a) && !a.is_system && !a.bi_khoa
   && (nhom === 'LANH_DAO_VP' ? a.role_group === 'A1' : nhom === 'THUONG_TRUC' && a.role_group === 'A0');
-export const toiTrongNhom = (nhom) => laThanhVienNhom(nhom, state.user);
+// 0100: tài khoản toàn quyền (vai hiệu dụng A1) không thuộc nhóm Lãnh đạo VP — xét theo vai thật (vai_goc), như kl_nhom_thay_mat_thanh_vien.
+export const toiTrongNhom = (nhom) => laThanhVienNhom(nhom, state.user?.vai_goc ? { ...state.user, role_group: state.user.vai_goc } : state.user);
 // Cấp duyệt ghi trên một đề nghị (tu_choi / de_nghi_sua) là người đại diện nhóm của việc → mọi thành viên nhóm được duyệt (kl_duoc_duyet_thay).
 export const duyetThayNhom = (r, capDuyet) => Boolean(r?.giao_thay_mat_nhom) && r.giao_thay_mat_cho === capDuyet && toiTrongNhom(r.giao_thay_mat_nhom);
 // "Người giao" của việc là tôi: người được thay mặt, người tạo, hoặc thành viên nhóm được thay mặt.
