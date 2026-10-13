@@ -62,11 +62,11 @@ const formTuChoi = (r) => `<form class="o" id="oTc-${r.id}" data-submit="deNghiT
 
 const lopTT = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU', 'DANG_DINH_CHINH'].includes(r.nhom_dem) ? 'tt-qua' : 'tt-cho');
 // Phần luôn hiện: mã + trạng thái + nhãn phụ; nội dung (2 dòng); hạn · văn bản gốc.
-function chinhHtml(r, homNay) {
+function chinhHtml(r, homNay, nhanPhu = true) {
   const han = r.nhom_dem === 'HOAN_THANH' ? (r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}` : 'đã hoàn thành')
     : r.han_xu_ly ? `hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})` : 'chưa có hạn';
   const traLai = r.minh_chung_buoc === 'BI_TRA_LAI' && !choNghiemThu(r) ? 'minh chứng bị trả lại — nộp lại · ' : '';   // 0077: không còn hạn nộp riêng
-  return `<p class="vct-chinh"><b>${escapeHtml(r.ma)}</b><span class="trang-thai ${lopTT(r)}">${escapeHtml(nhanTrangThai(r, me()))}</span> ${nhanPhuHtml(r)}
+  return `<p class="vct-chinh"><b>${escapeHtml(r.ma)}</b><span class="trang-thai ${lopTT(r)}">${escapeHtml(nhanTrangThai(r, me()))}</span> ${nhanPhu ? nhanPhuHtml(r) : ''}
     <span class="vct-nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}</span>
     <span class="vct-phu">${traLai}${han} · <span class="vct-vb">${escapeHtml(vanBanGocText(r, tenLoaiVanBan, formatNgay))}</span></span></p>`;
 }
@@ -84,7 +84,7 @@ function themHtml(r, phu, form = '') {
 
 // Một thẻ việc. kieu = nhóm của việc (tu-choi | moi | chi-dao | minh-chung | dang-lam | theo-doi | xong) — quyết định thao tác chính.
 export function theViec(r, kieu, homNay = homNayVN()) {
-  const dau = chinhHtml(r, homNay);
+  const dau = chinhHtml(r, homNay, kieu !== 'tu-choi');   // thẻ bị từ chối: nhãn riêng bên dưới (không lặp nhãn "Bị từ chối")
   if (kieu === 'tu-choi') {
     return `<div class="the-con vct-the do" id="vct-${r.id}" data-nhiem-vu="${r.id}" data-tu-choi="1">${dau}<p class="chu-canh-bao-inline"><span class="nhan-tu-choi">Đã đồng ý từ chối, chờ giao lại</span> ${nhanDoKhanHtml(r.do_khan)}</p>
       <div class="hanh-dong">${nutChiTiet(r)}</div>${themHtml(r, xem(r))}</div>`;
