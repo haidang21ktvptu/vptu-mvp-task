@@ -147,6 +147,10 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - `dang-nhap` phụ thuộc thêm `v9-dot2`, `v9-nhap-excel`. Project chưa áp 0071 / 0072 → spec tự skip (PR chạy e2e trên staging chưa có migration của PR; chạy thật sau khi merge). PR #101: staging được áp tay 0070–0075 ngày 2/10 (trước merge) nên hai spec chạy thật ngay trong PR.
 - RLS: `kl-0070-nhap-theo-tang` (lỗi giá trị của sua_thong_tin_giao chỉ chạy cục bộ), `kl-0072-nhap-excel` (test 7 từ điển / hồ sơ gắn `CHI_CUC_BO`); cả hai cấp tạm `quan_tri_kl` cho demo_cv2 và trả lại trong `finally` / `after`.
 
+## e2e v3.22 — `toan-quyen.spec.js` (desktop), project `v3221-tvb` (từ 13/10/2026)
+- `toan-quyen.spec.js` (desktop, chỉ đọc giao diện): demo_e2e_tq bật tạm `toan_quyen` + `quan_tri_he_thong` → chức danh, menu như Chánh VP + Quản trị, Giao việc mọi phòng; thu cờ ở afterAll. RLS: `kl-0100-toan-quyen` (demo_qtht cờ tạm).
+- `theo-van-ban-chuyen-vien.spec.js` (project `v3221-tvb`, sau `v9-nhap-excel`; `dang-nhap` phụ thuộc thêm `v3221-tvb`): Theo văn bản của demo_e2e_kl (A3) / demo_e2e_tp (A2) chỉ gồm việc trong phạm vi. Chạy riêng: `npx playwright test --project=v3221-tvb --no-deps` (kèm biến đích).
+
 
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 

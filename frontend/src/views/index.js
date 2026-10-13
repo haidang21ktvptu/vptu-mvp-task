@@ -33,7 +33,7 @@ export function registerViews() {
   registerGiaoViec();    // Giao việc ba bước một trang (A1/A2/quan_tri_kl)
   mountGiaoViecV9();     // v9: dải 1-1-1-1-3, chọn nhanh, kế thừa, văn bản đang nhập
   mountTabGiaoViec(openGiaoViec); mountNhapExcel(); mountChoHoanThien();   // v9 đợt 2: Nhập từ Excel, Chờ hoàn thiện (người nhập)
-  registerTheoVanBan();  // Cây "Theo văn bản" (A0/A1, v8 đợt 4)
+  registerTheoVanBan();  // Cây "Theo văn bản" (v8 đợt 4; mọi vai từ v3.22.1 — phạm vi RLS)
   registerChiDaoTTThuKy(); // "Chỉ đạo Thường trực" của thư ký Thường trực (0047)
   mountDieuHanh();       // hành động dùng chung của các màn hình điều hành (A0/A1)
   registerTongQuan();    // v9: Tổng quan — trang mở đầu của A0/A1/A2

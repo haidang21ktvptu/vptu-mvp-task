@@ -1,7 +1,15 @@
-// Màn hình "Theo văn bản" (v8 đợt 4, A0/A1): đầu trang + thanh lọc (tìm, trạng thái, mở/thu gọn tất cả, tóm tắt) + vùng cây #tvbCay
+// Màn hình "Theo văn bản" (v8 đợt 4, A0/A1; v3.22.1: cả Trưởng phòng, chuyên viên — phạm vi RLS của người xem): đầu trang + thanh lọc (tìm, trạng thái, mở/thu gọn tất cả, tóm tắt) + vùng cây #tvbCay
 // (data-nap đặt khi nạp xong — e2e chờ). Cây do index.js vẽ: gốc .tvb-goc (văn bản + thanh tiến độ), nhánh .tvb-nhanh (nhiệm vụ, cấp 1..n theo
 // nhiem_vu_cha), lá .tvb-la (minh chứng). Bộ lọc trạng thái gom theo nhom_dem của v_nhiem_vu (DB tính, frontend chỉ đặt tên).
 export const LOC_TRANG_THAI = [['', 'Tất cả trạng thái'], ['QUA_HAN', 'Quá hạn'], ['SAP_DEN_HAN', 'Sắp đến hạn'], ['DANG_THUC_HIEN', 'Đang thực hiện'], ['HOAN_THANH', 'Hoàn thành']];
+
+// v3.22.1: chú thích phạm vi trên dòng tóm tắt (Trưởng phòng / chuyên viên chỉ thấy việc trong phạm vi; Thường trực, lãnh đạo VP: không ghi thêm).
+export function nhanPhamViTvb(user, xemPhong = false) {
+  if (user?.role_group === 'A2') return 'việc của phòng đồng chí';
+  if (user?.role_group !== 'A3') return '';
+  const pv = xemPhong ? 'việc của phòng đồng chí (việc người khác chỉ xem)' : 'việc đồng chí chủ trì, theo dõi hoặc đã giao';
+  return user.thu_ky_thuong_truc ? `${pv}; việc có chỉ đạo Thường trực` : pv;   // thư ký Thường trực (0047) thấy thêm
+}
 
 export const theoVanBanTemplate = `
   <div class="dau"><h1>Theo văn bản</h1><span>mỗi văn bản một cây: nhiệm vụ giao từ văn bản → việc giao tiếp xuống → minh chứng; bấm một nhánh để mở ngăn chi tiết</span></div>
