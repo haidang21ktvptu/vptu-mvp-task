@@ -811,3 +811,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Giao diện: hồ sơ hiệu dụng như Chánh VP (menu, Tổng quan toàn Văn phòng, Giao việc, Báo cáo) + Quản trị; chức danh "Quản trị toàn quyền"; nhãn "Toàn quyền" ở Quản trị › Tài khoản.
 - Kiểm thử: RLS `kl-0100-toan-quyen` (6 bài), unit `toan-quyen.test.mjs`, e2e `toan-quyen.spec.js` (tài khoản seed mới `demo_e2e_tq`, bật cờ lúc chạy); quy tắc 7 CLAUDE.md thêm ngoại lệ.
 - **Kết quả phát hành** (13/10/2026 11:40): PR #132 CI xanh đủ 4 check (e2e 137 bài); chủ dự án xác nhận áp 0100–0102, đẩy tag `v3.22.0` (`975467a`), duyệt — deploy-prod xanh (backup, migration, Pages, smoke), tag `production` = `975467a`; PR #132 merge `9e40e08`.
+
+## 69. v3.22.1: "Theo văn bản" cho Trưởng phòng và chuyên viên; nhập lô LO-0002 (13/10/2026, chủ dự án duyệt; chỉ giao diện, không migration)
+- Lô `LO-0002` (11:58, `qt_vptu`): 189 dòng bảng theo dõi KL BTVTU khóa XX (206 dòng trừ 17 việc đã có của LO-0001) — 3 việc giao (3 việc đã hoàn tác ở LO-0001), 186 "đã xong ngoài hệ thống" (102 kèm minh chứng chữ); người theo dõi = "Chủ trì theo dõi", "VPTU" → Trưởng phòng Tổng hợp, sửa 3 lỗi gõ năm như biên bản 15/9 (STT 9, 30, 44). Production: 207 việc, 37 văn bản.
+- Menu "Theo văn bản" thêm cho A2, A3 (SPEC GV-20): cây chỉ gồm việc trong phạm vi RLS, dòng tóm tắt ghi phạm vi; `registerTheoVanBan` đã đăng ký cho mọi vai.
+- Kiểm thử: unit `theo-van-ban.test.mjs`; e2e `theo-van-ban-chuyen-vien.spec.js` (project `v3221-tvb`, nối sau `v9-nhap-excel`): chuyên viên thấy việc mình, không thấy việc người khác cùng văn bản, "đã nhập 3"; Trưởng phòng chỉ việc phòng mình.

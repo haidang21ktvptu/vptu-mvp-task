@@ -6,6 +6,8 @@
 // Đợt E v3.18 (0085): mọi chuyên viên có "Giao việc" (giao thẳng cho chuyên viên, không thay mặt). Đợt D v3.20 (0090): bỏ màn "Cần nghiệm thu" —
 // nộp minh chứng hợp lệ là hoàn thành; xem / đánh giá / trả lại (không bắt buộc) ở ngăn chi tiết và khối "Kết quả nộp trong 7 ngày" của Cần xử lý.
 // Đợt C1 v3.19 (0086): cấu hình pham_vi_chuyen_vien = 2 → chuyên viên có thêm "Tổng quan phòng" và "Nhiệm vụ của phòng" (chỉ xem; xemPhong).
+// v3.22.1 (chủ dự án 13/10/2026): Trưởng phòng, chuyên viên có "Theo văn bản" — cây chỉ gồm việc trong phạm vi RLS của người xem (không đổi quyền);
+// không lên thanh dưới điện thoại (vào "Khác").
 export const MENU = {
   A0: [
     { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
@@ -30,12 +32,14 @@ export const MENU = {
     { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc trong phòng', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
     { id: 'navKl', label: 'Nhiệm vụ của phòng', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
+    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },   // v3.22.1
     { id: 'navCanBo', label: 'Cán bộ trong phòng', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
   ],
   A3: [
     { id: 'navDieuHanh', label: 'Việc của tôi', ngan: 'Việc của tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
     { id: 'navTheoDoi', label: 'Việc tôi theo dõi', ngan: 'Theo dõi', action: 'openTheoDoi', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
+    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },   // v3.22.1
   ],
 };
 

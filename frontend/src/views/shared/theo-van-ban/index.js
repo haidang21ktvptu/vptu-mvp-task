@@ -1,5 +1,5 @@
-// Màn hình cây "Theo văn bản" (v8 đợt 4; menu nhóm Theo dõi của A0 và A1). Dữ liệu: v_nhiem_vu (đã có văn bản, nhiem_vu_cha, nhom_dem — DB tính)
-// + v_minh_chung (0046); phạm vi do RLS (A0 toàn bộ, A1 theo kl_pham_vi). Gốc = văn bản + thanh tiến độ "x/n hoàn thành · y quá hạn · z sắp đến
+// Màn hình cây "Theo văn bản" (v8 đợt 4; menu nhóm Theo dõi của A0 và A1; v3.22.1: cả A2, A3). Dữ liệu: v_nhiem_vu (đã có văn bản, nhiem_vu_cha, nhom_dem — DB tính)
+// + v_minh_chung (0046); phạm vi do RLS (A0 toàn bộ, A1/A2/A3 theo kl_pham_vi). Gốc = văn bản + thanh tiến độ "x/n hoàn thành · y quá hạn · z sắp đến
 // hạn"; nhánh cấp 1 = việc giao từ văn bản, cấp 2+ = việc giao tiếp xuống (nhiem_vu_cha), lá = minh chứng + người xác nhận. Thu gọn/mở rộng
 // từng nhánh (nhớ theo khoá trong phiên), lọc trạng thái (giữ nhánh có con khớp), bấm nhánh → moNhiemVu() mở #klChiTiet sẵn có ở màn Nhiệm vụ.
 // PR-3 F: gốc hiện "đã nhập x / dự kiến y" (x = kl_van_ban_so_viec — tổng thật việc gốc của văn bản, kể cả ngoài phạm vi xem) + cờ rà soát toàn văn;
@@ -8,7 +8,7 @@ import { $, escapeHtml, giuONhap } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { state } from '../../../lib/state.js';
 import { notifyError, notifySuccess } from '../../../components/toast.js';
-import { loadKlRows, loadVanBan, soViecTheoVanBan, datRaSoatVanBan } from '../../../lib/kl/du-lieu.js';
+import { loadKlRows, loadVanBan, soViecTheoVanBan, datRaSoatVanBan, chuyenVienXemPhong } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { laQtklConHan } from '../kl/thong-tin-giao.js';
 import { soNguyenKhongAm } from '../giao-viec/nguon.js';
@@ -20,7 +20,7 @@ import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js
 import { moNhiemVu } from '../kl/index.js';
 import { ownerText } from '../kl/dong.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
-import { theoVanBanTemplate } from './template.js';
+import { theoVanBanTemplate, nhanPhamViTvb } from './template.js';
 
 const DO_SAU_TOI_DA = 10;
 // Bộ lọc → tập nhom_dem (QUA_HAN gồm đang đính chính; ĐANG THỰC HIỆN gồm cần điền hạn, chờ điều kiện, thường xuyên).
@@ -114,7 +114,8 @@ function render() {
   const traNhap = giuONhap(o);   // PR-3: ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
   o.innerHTML = html.length ? html.join('') : '<p class="trong">Không có văn bản nào khớp bộ lọc.</p>';
   traNhap();
-  $('tvbTomTat').textContent = `${html.length}/${goc.length} văn bản · ${rows.length} nhiệm vụ trong phạm vi`;
+  const pv = nhanPhamViTvb(state.user, chuyenVienXemPhong());   // v3.22.1: Trưởng phòng / chuyên viên — ghi rõ phạm vi
+  $('tvbTomTat').textContent = `${html.length}/${goc.length} văn bản · ${rows.length} nhiệm vụ trong phạm vi${pv ? ` (${pv})` : ''}`;
   o.dataset.nap = String(Date.now());
 }
 
