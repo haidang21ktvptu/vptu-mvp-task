@@ -65,7 +65,7 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
 
   test('2. demo_e2e_cv: việc 1 ở "Việc tôi theo dõi" (có Giao tiếp xuống), việc 2 ở "Việc của tôi" — không chờ xác nhận', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
-      await expect(p.locator(`#vct-${viec[1].id}`)).toBeVisible(NAP);
+      await expect(p.locator(`#vctDong-${viec[1].id}`)).toBeVisible(NAP);   // v3.23.1: việc đang làm ở phần "Nhiệm vụ theo văn bản gốc"
       await expect(p.locator(`#vctMuc-moi #vct-${viec[1].id}`)).toHaveCount(0);
       await nav(p, 'navTheoDoi');
       await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
@@ -79,11 +79,10 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
 
   test('3. demo_e2e_nv (Owner, phòng khác): việc ở "Việc của tôi" mục đang làm, không nút Xác nhận, có tin giao', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_NV', testInfo, async (p) => {
-      const the1 = p.locator(`#vct-${viec[0].id}`);
+      const the1 = p.locator(`#vctDong-${viec[0].id}`);   // v3.23.1: dòng ở phần theo văn bản gốc
       await expect(the1).toBeVisible(NAP);
       await expect(p.locator(`#vctMuc-moi #vct-${viec[0].id}`)).toHaveCount(0);
-      await expect(the1.getByRole('button', { name: 'Xác nhận đã nhận' })).toHaveCount(0);
-      await expect(the1.getByRole('button', { name: 'Từ chối' })).toHaveCount(0);
+      await expect(p.locator(`#vct-${viec[0].id}`)).toHaveCount(0);   // không có thẻ hành động (không chờ xác nhận / từ chối)
       await expect(p.locator('#navGiaoViec')).toHaveCount(1);
     });
   });

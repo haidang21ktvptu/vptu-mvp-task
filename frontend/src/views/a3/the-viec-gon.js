@@ -72,7 +72,7 @@ function chinhHtml(r, homNay, nhanPhu = true) {
 }
 // Phần "Chi tiết": đủ thông tin + thao tác phụ.
 function themHtml(r, phu, form = '') {
-  const giao = findAccount(r.giao_thay_mat_cho || r.tao_boi)?.full_name;
+  const giao = findAccount(r.tao_boi)?.full_name;   // v3.23.1: tài khoản đã giao việc (chủ dự án 13/10/2026)
   const o = (nhan, gt) => (gt ? `<dt>${nhan}</dt><dd>${gt}</dd>` : '');
   return `<div class="vct-them" id="vctThem-${r.id}"${moRong.has(r.id) ? '' : ' hidden'}><dl>
       ${o('Chủ trì', escapeHtml(r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định'))}${o('Người theo dõi', escapeHtml(r.nguoi_theo_doi_ten || ''))}

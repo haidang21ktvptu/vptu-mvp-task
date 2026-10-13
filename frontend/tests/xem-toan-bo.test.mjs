@@ -67,3 +67,13 @@ test('Menu: không còn Nhắn tin ở mọi vai; cấu hình xem toàn bộ →
   assert.equal(menuCuaVai(tk('A2'), { xemToanBo: true }).find((m) => m.id === 'navTongQuan').label, 'Tổng quan');
   assert.equal(menuCuaVai(tk('A2')).find((m) => m.id === 'navTongQuan').label, 'Tổng quan phòng');
 });
+
+test('v3.23.1: người giao của văn bản = tài khoản tao_boi của việc giao thẳng (không tính việc giao tiếp xuống), nhiều việc trước; tiến độ văn bản', async () => {
+  const { nguoiGiaoVanBan, nguoiGiaoText, tienDoVanBan } = await import('../src/lib/kl/pham-vi.js');
+  const ds = [{ tao_boi: 'u1' }, { tao_boi: 'u2' }, { tao_boi: 'u2' }, { tao_boi: 'u3', nhiem_vu_cha: 'x' }, { tao_boi: null }];
+  const ng = nguoiGiaoVanBan(ds, (id) => ({ u1: 'Một', u2: 'Hai' })[id]);
+  assert.deepEqual(ng.map((x) => [x.id, x.n]), [['u2', 2], ['u1', 1]]);
+  assert.equal(nguoiGiaoText(ng), 'Hai (2 việc), Một (1 việc)');
+  assert.equal(nguoiGiaoVanBan([{ tao_boi: 'u9' }])[0].ten, 'Tài khoản không còn trong danh bạ');
+  assert.deepEqual(tienDoVanBan([{ tien_do_ma: 'HOAN_THANH' }, { tien_do_ma: 'DANG_THUC_HIEN', muc_canh_bao: 'DO' }, { tien_do_ma: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH' }]), { n: 3, xong: 1, quaHan: 1 });
+});

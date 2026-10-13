@@ -12,7 +12,7 @@ import { ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
 import { duyetThayNhom, laNguoiGiao } from '../../../lib/kl/thay-mat.js';
 import { locTheoViec } from '../../../lib/kl/pham-vi.js';
 
-export const dh = { rows: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
+export const dh = { rows: [], tatCa: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
 
 // Lượt nạp đang chạy (nap-lai-viec chờ nó xong trước khi thay một dòng); lượt cũ về sau lượt mới thì bỏ (không ghi đè dữ liệu mới hơn).
 let luotDh = 0;
@@ -29,7 +29,7 @@ async function napDieuHanhMot(lan) {
   const [r, tt, mc, cd] = await Promise.all([loadKlRows(), loadChiDaoTT(), loadMinhChungCho(), loadChiDaoCho()]);
   if (lan !== luotDh) return dh;
   // 0103 (cấu hình xem toàn bộ): chỉ đạo chờ, kết quả vừa nộp đọc theo RLS (mọi việc) — giữ đúng việc trong phạm vi xử lý như trước.
-  Object.assign(dh, { rows: r.rows, ngoaiLe: ngoaiLeTu(r.rows), chiDaoTT: tt, mcCho: locTheoViec(mc, r.rows), chiDaoCho: locTheoViec(cd, r.rows), tuChoiCho: r.tuChoiCho, luc: r.luc });
+  Object.assign(dh, { rows: r.rows, tatCa: r.tatCa, ngoaiLe: ngoaiLeTu(r.rows), chiDaoTT: tt, mcCho: locTheoViec(mc, r.rows), chiDaoCho: locTheoViec(cd, r.rows), tuChoiCho: r.tuChoiCho, luc: r.luc });
   await napSoLieu();
   return dh;
 }

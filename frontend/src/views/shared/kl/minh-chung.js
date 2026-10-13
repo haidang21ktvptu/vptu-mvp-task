@@ -121,7 +121,7 @@ async function luuMinhChung() {
     await nopMinhChung(p);
     notifySuccess(r && dangMo(r) ? `Đã nộp minh chứng số ${p.so_hieu} — nhiệm vụ ${r.ma} hoàn thành.` : `Đã nộp minh chứng số ${p.so_hieu}.`);
     closeMinhChung();
-    sauHanhDong();
+    sauHanhDong(p.nhiem_vu_id);   // v3.23.1: nạp lại đúng việc vừa nộp (cả khi mở hộp từ "Việc của tôi", ngăn chi tiết đang đóng)
   } catch (e) {
     await xoaTepChuaGan(path);
     notifyError(e.message);

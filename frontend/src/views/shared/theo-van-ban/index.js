@@ -6,10 +6,10 @@
 // nhãn vàng khi x < y hoặc chưa rà soát; người tạo văn bản / A1 / quan_tri_kl sửa tại chỗ (van_ban_dat_ra_soat là chốt).
 import { $, escapeHtml, giuONhap, show } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
-import { state } from '../../../lib/state.js';
+import { state, findAccount } from '../../../lib/state.js';
 import { notifyError, notifySuccess } from '../../../components/toast.js';
 import { loadKlRows, loadVanBan, soViecTheoVanBan, datRaSoatVanBan, chuyenVienXemPhong, xemToanBo } from '../../../lib/kl/du-lieu.js';
-import { chiXem } from '../../../lib/kl/pham-vi.js';
+import { chiXem, nguoiGiaoVanBan, nguoiGiaoText } from '../../../lib/kl/pham-vi.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { laQtklConHan } from '../kl/thong-tin-giao.js';
 import { soNguyenKhongAm } from '../giao-viec/nguon.js';
@@ -82,7 +82,7 @@ function gocHtml({ vb, viec }, con, kw, tatCa) {
     <div class="tvb-goc-dau">
       <button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} văn bản ${escapeHtml(vb.so_ket_luan || '')}"></button>
       <div class="tvb-vb"><b>${escapeHtml(tenLoaiVanBan(vb.van_ban_loai))} · ${escapeHtml(vb.so_ket_luan || '(không số)')}</b><span class="chu-phu"> · ban hành ${formatNgay(vb.ngay_ban_hanh)}</span>
-        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}${raSoatHtml(vb.van_ban_id, viec.length, tatCa.every(chiXem))}
+        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}${nguoiGiaoHtml(tatCa)}${raSoatHtml(vb.van_ban_id, viec.length, tatCa.every(chiXem))}
         ${state.user?.role_group && !state.user?.bi_khoa ? `<button type="button" class="nut nho tvb-giao-them" data-action="giaoThemTuVanBan" data-vb="${escapeHtml(vb.van_ban_id)}">+ Giao thêm nhiệm vụ từ văn bản này</button>` : ''}</div>
       <div class="tvb-tien"><div class="tvb-thanh" role="img" aria-label="${x} trên ${n} hoàn thành"><i class="luc" style="width:${pc(x)}%"></i><i class="do" style="width:${pc(y)}%"></i><i class="vang" style="width:${pc(z)}%"></i></div>
         <span class="tvb-tien-chu">${x}/${n} hoàn thành · ${y} quá hạn · ${z} sắp đến hạn</span></div>
@@ -90,6 +90,9 @@ function gocHtml({ vb, viec }, con, kw, tatCa) {
     <div class="tvb-con">${nhanh.join('')}</div></section>`;
 }
 
+// v3.23.1 (chủ dự án 13/10/2026): người giao = tài khoản đã giao việc (tao_boi) từ văn bản này — việc giao thẳng từ văn bản, trong phạm vi đang xem.
+const nguoiGiaoHtml = (ds) => { const ng = nguoiGiaoVanBan(ds, (id) => findAccount(id)?.full_name);
+  return `<p class="tvb-giao" data-truong="nguoi-giao">Người giao: ${ng.length ? escapeHtml(nguoiGiaoText(ng)) : 'chưa xác định'}</p>`; };
 // PR-3 F: nhãn rà soát + ô sửa tại chỗ. Quyền hiện nút như van_ban_dat_ra_soat: người tạo văn bản, A1, quan_tri_kl.
 function raSoatHtml(id, soGocThay, chiXemCa = false) {
   const h = vanBan.get(id) || {}; const x = soViec.get(id) ?? soGocThay; const y = h.so_nhiem_vu_du_kien;

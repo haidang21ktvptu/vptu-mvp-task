@@ -1,6 +1,6 @@
 // Dữ liệu "Việc của tôi" (A3): nhóm theo thứ tự ưu tiên, mỗi việc ở một nhóm — bị từ chối chờ giao lại → mới giao chưa xác nhận → có chỉ đạo chờ
-// trả lời → sắp đến hạn / quá hạn chưa có minh chứng hợp lệ → đang thực hiện (tôi chủ trì). Việc tôi theo dõi (không chủ trì) và việc đã hoàn
-// thành tách riêng (v3.23: xem bằng dải số đầu trang — tong-viec.js). Thẻ vẽ ở the-viec-gon.js. Quyền thật ở hàm DB / policy.
+// trả lời → sắp đến hạn / quá hạn chưa có minh chứng hợp lệ → đang thực hiện (tôi chủ trì). v3.23.1: phần "Cần xử lý ngay" chỉ vẽ bốn nhóm đầu;
+// mọi việc (kể cả đang thực hiện, theo dõi, đã xong) xem ở phần theo văn bản gốc (van-ban-cua-toi.js). Thẻ vẽ ở the-viec-gon.js. Quyền thật ở DB.
 import { escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { deNghiToiGuiDangCho } from '../../lib/kl/sua-tang.js';
@@ -31,7 +31,7 @@ export function thanhTuChoiHtml() {
     `<p data-nhiem-vu="${r.id}" data-ket-qua="${t.trang_thai}"><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} — <b>${escapeHtml(chu)}</b> (${escapeHtml(findAccount(t.cap_duyet)?.full_name || 'cấp duyệt')} duyệt ${t.duyet_luc ? formatDateTime(t.duyet_luc) : ''})</p>`).join('')}</div>`;
 }
 
-// rows: việc của tôi (đã qua bộ lọc cán bộ — tong-viec.js). Trả các nhóm ưu tiên + theo dõi (đang mở, không chủ trì) + đã hoàn thành.
+// rows: việc của tôi (chủ trì hoặc theo dõi). Trả các nhóm ưu tiên + theo dõi (đang mở, không chủ trì) + đã hoàn thành + tất cả.
 export function nhomViecCuaToi(rows = dh.rows.filter(laCuaToi)) {
   const daXep = new Set();
   const lay = (ds) => { const kq = ds.filter((r) => !daXep.has(r.id)); kq.forEach((r) => daXep.add(r.id)); return kq; };
@@ -44,14 +44,6 @@ export function nhomViecCuaToi(rows = dh.rows.filter(laCuaToi)) {
   const xong = rows.filter((r) => !mo(r));
   return { tuChoi, moi, chiDao, canMinhChung, dangLam, theoDoi, xong, tatCa: rows };
 }
-// Kiểu thẻ của từng việc (quyết định thao tác chính): theo nhóm ưu tiên; còn lại theo dõi / đã hoàn thành.
-export function kieuTheo(n) {
-  const m = new Map();
-  [['tuChoi', 'tu-choi'], ['moi', 'moi'], ['chiDao', 'chi-dao'], ['canMinhChung', 'minh-chung'], ['dangLam', 'dang-lam'], ['theoDoi', 'theo-doi'], ['xong', 'xong']]
-    .forEach(([k, kieu]) => n[k].forEach((r) => { if (!m.has(r.id)) m.set(r.id, kieu); }));
-  return m;
-}
-
 // Đề nghị sửa của tôi đang chờ duyệt (0071): thẻ ghi "chờ … duyệt" + nút Rút thay nút Đề nghị sửa. Đọc khi nạp trang và mỗi lần số chưa xử lý
 // làm mới (a3/index.js — sau ghi, theo hai kênh realtime); trả true khi danh sách đổi (để vẽ lại).
 let dnsCuaToi = [];
