@@ -6,7 +6,7 @@ import { $, show } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
-import { loadKlRows, chuyenVienXemPhong } from '../../lib/kl/du-lieu.js';
+import { loadKlRows, chuyenVienXemPhong, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { locRows } from '../../lib/kl/tong-hop.js';
 import { openKl, chiViecCuaToi } from '../shared/kl/index.js';
 import { moNganDanhSach, moNganViec } from '../shared/ngan-chi-tiet.js';
@@ -32,11 +32,14 @@ async function onTim(e) {
   e.preventDefault();
   const tuKhoa = $('timNhanhO').value.trim();
   if (!tuKhoa) return;
-  const loc = chiViecCuaToi() && !chuyenVienXemPhong() ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };   // 0086: xem cả phòng → tìm cả phòng
+  // 0086: xem cả phòng → tìm cả phòng; 0103: cấu hình xem toàn bộ → tìm mọi việc của Văn phòng (việc ngoài phạm vi chỉ xem).
+  const tb = xemToanBo();
+  const loc = tb ? { tuKhoa, toanBo: true } : chiViecCuaToi() && !chuyenVienXemPhong() ? { cuaToi: state.user.id, tuKhoa } : { tuKhoa };
   dongTimNhanh();
-  if (sectionDangHien('viewKl')) { openKl(loc, chiViecCuaToi() && chuyenVienXemPhong()); return; }
+  if (sectionDangHien('viewKl')) { openKl(loc, !tb && chiViecCuaToi() && chuyenVienXemPhong()); return; }
   try {
-    const ds = locRows((await loadKlRows()).rows, loc);
+    const r = await loadKlRows();
+    const ds = locRows(tb ? r.tatCa : r.rows, loc);
     const dungMa = ds.filter((r) => r.ma.toLowerCase() === tuKhoa.toLowerCase());
     if (dungMa.length === 1) { await moNganViec(dungMa[0].id, { row: dungMa[0] }); return; }
     moNganDanhSach({ tieuDe: `Kết quả tìm “${tuKhoa}”`, rows: ds });

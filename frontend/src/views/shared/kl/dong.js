@@ -8,13 +8,16 @@ import { lopMep, boSoThuTu, tenTienDoHoanThanh, nhanChatLuongHtml } from '../../
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { duocChiDao } from './chi-dao.js';
 import { maNguonHtml, nhanMucHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
+import { chiXem } from '../../../lib/kl/pham-vi.js';
 
 // Ai là "bên trong" của việc: người theo dõi hoặc Owner tài khoản.
 export const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
 // 0091 (policy nhiem_vu_update): + người tạo việc và lãnh đạo A0/A1/A2 thấy việc — lãnh đạo làm được việc của chuyên viên, không bắt buộc.
-export const duocCapNhat = (r) => laBenTrong(r) || r.tao_boi === state.user?.id || ['A0', 'A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);
+export const duocCapNhat = (r) => !chiXem(r) && (laBenTrong(r) || r.tao_boi === state.user?.id || ['A0', 'A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
 // GĐ16 (MC-4): ai được đóng nhiệm vụ — Owner/người theo dõi, lãnh đạo trong phạm vi (A1/A2), quan_tri_kl; hàm dong_nhiem_vu là chốt.
-export const duocDong = (r) => laBenTrong(r) || duocChiDao() || Boolean(state.user?.quan_tri_kl);
+export const duocDong = (r) => !chiXem(r) && (laBenTrong(r) || duocChiDao() || Boolean(state.user?.quan_tri_kl));
+// 0103: việc ngoài phạm vi xử lý của người xem (cấu hình xem toàn bộ) — nhãn trung tính, chỉ xem.
+export const NHAN_CHI_XEM = ' <span class="nhan-trung-tinh nhan-chi-xem" title="Việc ngoài phạm vi xử lý của đồng chí — chỉ xem">Chỉ xem</span>';
 export const sanPhamText = (r) => (r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : '');
 export const ownerText = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định';
 
@@ -43,7 +46,7 @@ function phuText(r) {
 export function dongHtml(r, homNay, dangChon) {
   return `<button type="button" class="hang-nv ${lopMep(r, state.user?.id)}${dangChon ? ' dang' : ''}" id="klRow-${r.id}" data-action="chonKlRow" data-id="${r.id}" data-nhom="${r.nhom_dem}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}" aria-pressed="${String(Boolean(dangChon))}">
       <span class="stt ${lopMep(r, state.user?.id)}"></span><span class="ma">${escapeHtml(r.ma)}</span>
-      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanChatLuongHtml(r.chat_luong)}</b><span title="${escapeHtml(phuText(r))}">${maNguonHtml(r)}${escapeHtml(phuText(r))}</span></span>
+      <span class="ten"><b>${escapeHtml(r.noi_dung)} ${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanChatLuongHtml(r.chat_luong)}${chiXem(r) ? NHAN_CHI_XEM : ''}</b><span title="${escapeHtml(phuText(r))}">${maNguonHtml(r)}${escapeHtml(phuText(r))}</span></span>
       <span class="han">${hanHtml(r, homNay)}</span>
     </button>`;
 }

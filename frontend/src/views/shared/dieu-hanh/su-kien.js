@@ -5,19 +5,23 @@
 import { dh, timRow, napSoLieu } from './du-lieu.js';
 import { loadChiDaoTT, loadChiDaoCho, loadMinhChungCho } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from '../kl/nap-lai-viec.js';
+import { locTheoViec, laNgoaiPhamVi } from '../../../lib/kl/pham-vi.js';
 
 const TOI_DA_VIEC = 5;
 
-export async function dieuHanhTheoSuKien(suKien, napCa, ve) {
+export async function dieuHanhTheoSuKien(tatCaSuKien, napCa, ve) {
+  const suKien = tatCaSuKien.filter((e) => !(e.bang !== 'nhiem_vu' && e.id && laNgoaiPhamVi(e.id)));   // 0103: chỉ đạo / minh chứng việc chỉ xem
+  if (tatCaSuKien.length && !suKien.length) return undefined;
   const ids = [...new Set(suKien.map((e) => e.id))];
-  if (!suKien.length || ids.length > TOI_DA_VIEC || !ids.every((id) => id && timRow(id))) return napCa();
+  // 0103: việc đã biết là ngoài phạm vi (cấu hình xem toàn bộ — sự kiện của mọi việc tới đây) → nạp lại riêng việc đó (vừa vào phạm vi thì thêm), không nạp cả màn.
+  if (!suKien.length || ids.length > TOI_DA_VIEC || !ids.every((id) => id && (timRow(id) || laNgoaiPhamVi(id)))) return napCa();
   const bang = new Set(suKien.map((e) => e.bang));
   try {
     await Promise.all([
       ...ids.map((id) => napLaiViec(id, { nemLoi: true, veLai: false })),
       napSoLieu(),
-      bang.has('chi_dao') ? Promise.all([loadChiDaoTT(), loadChiDaoCho()]).then(([tt, cd]) => { dh.chiDaoTT = tt; dh.chiDaoCho = cd; }) : null,
-      bang.has('minh_chung') ? loadMinhChungCho().then((mc) => { dh.mcCho = mc; }) : null,
+      bang.has('chi_dao') ? Promise.all([loadChiDaoTT(), loadChiDaoCho()]).then(([tt, cd]) => { dh.chiDaoTT = tt; dh.chiDaoCho = locTheoViec(cd, dh.rows); }) : null,
+      bang.has('minh_chung') ? loadMinhChungCho().then((mc) => { dh.mcCho = locTheoViec(mc, dh.rows); }) : null,
     ]);
     dh.luc = new Date();
     ve();

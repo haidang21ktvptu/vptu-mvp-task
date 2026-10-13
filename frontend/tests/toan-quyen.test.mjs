@@ -27,9 +27,9 @@ test('Chức danh "Quản trị toàn quyền" (không xưng Chánh Văn phòng)
   assert.equal(nhanChucDanh({ ...QT, toan_quyen: false }), 'Chuyên viên · Phòng Chuyển đổi số - Cơ yếu');
 });
 
-test('Menu: như Chánh Văn phòng + Nhắn tin + Quản trị; không thêm "Nhập từ Excel" riêng (đã có Giao việc)', () => {
+test('Menu: như Chánh Văn phòng + Quản trị (v3.23: không còn Nhắn tin); không thêm "Nhập từ Excel" riêng (đã có Giao việc)', () => {
   const ids = menuCuaVai(hoSoHieuDung(QT)).map((m) => m.id);
-  assert.deepEqual(ids, [...MENU.A1.map((m) => m.id), 'dmBubbleLauncher', 'navQuanTri']);
+  assert.deepEqual(ids, [...MENU.A1.map((m) => m.id), 'navQuanTri']);
   assert.ok(!ids.includes('navNhapExcel'));
 });
 

@@ -12,7 +12,7 @@ import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien, doiKlToanBo } from './danh-sach.js';
 import { mountXuatKy } from './xuat-ky.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
@@ -23,6 +23,7 @@ import { mountSuaTang } from './sua-tang.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { moNganViec } from '../ngan-chi-tiet.js';
 import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
+import { chiXem } from '../../../lib/kl/pham-vi.js';
 
 export const duocGiaoViec = () => ['A1', 'A2', 'A3'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);   // 0085: cả chuyên viên (giao thẳng)
 // Chuyên viên thường: màn này là "Việc của tôi" (mặc định lọc việc mình chủ trì / theo dõi). Chuyên viên giữ quyền quản trị nhiệm vụ vào
@@ -37,7 +38,8 @@ export function openKl(loc, phong = false) {
   setActiveNav(chiViecCuaToi() && !phong ? 'navDieuHanh' : 'navKl');   // chuyên viên xem "việc của tôi" (0086: navKl là Nhiệm vụ của phòng)
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
-  $('klTieuDe').textContent = phong ? 'Nhiệm vụ của phòng' : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
+  $('klTieuDe').textContent = loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
+    : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
   show('klPhamVi', phong);
   const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
@@ -48,6 +50,9 @@ export function openKl(loc, phong = false) {
 // Chuyên viên (cấu hình 2) mở "Nhiệm vụ của phòng"; nút phạm vi: Việc của tôi = lọc cuaToi, Cả phòng = bỏ lọc. Không có cấu hình → như Việc của tôi.
 const openKlPhong = () => openKl(null, chiViecCuaToi() && chuyenVienXemPhong());
 const klPhamVi = ({ pv }) => setKlLoc({ cuaToi: pv === 'toi' ? state.user.id : null });
+// v3.23 (0103): chuyên viên mở "Toàn bộ nhiệm vụ" (menu khi cấu hình xem toàn bộ) — danh sách Toàn Văn phòng, chỉ xem việc ngoài phạm vi.
+const openKlToanBo = () => { const p = openKl({ toanBo: true }); setActiveNav('navKl'); return p; };
+const klToanBo = ({ tb }) => doiKlToanBo(tb === '1');
 
 // Realtime (B6): sự kiện của việc đã có trong danh sách → nạp lại riêng việc đó (dòng + ngăn chi tiết đang mở); còn lại nạp cả danh sách.
 async function klTheoSuKien(su) {
@@ -63,7 +68,7 @@ async function klTheoSuKien(su) {
 // tiết dùng chung NGAY TRÊN màn hình đang xem (không chuyển sang mục Nhiệm vụ); đang ở mục Nhiệm vụ thì lọc theo mã rồi mở ngăn trong trang.
 export async function moNhiemVu(id, ma, cheDo = 'chi-tiet') {
   if (!sectionDangHien('viewKl')) { await moNganViec(id, { cheDo }); return; }
-  await openKl({ tuKhoa: ma });
+  await openKl({ tuKhoa: ma, ...(chiXem(timKlRow(id)) ? { toanBo: true } : {}) });   // 0103: việc chỉ xem → danh sách Toàn Văn phòng
   if (!timKlRow(id)) await loadKl(); // đọc lỗi tạm / dòng vừa thêm chưa kịp về → đọc lại một lần
   await toggleKlChiTiet({ id, cheDo });
   $(`klRow-${id}`)?.scrollIntoView({ block: 'nearest' });
@@ -131,5 +136,5 @@ export function registerKlView() {
   const klXuatExcel = async () => {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
-  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
 }

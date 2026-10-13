@@ -13,9 +13,14 @@ const opt = (o, chon) => `<option value="${escapeHtml(o.ma)}"${o.ma === chon ? '
 const oChon = (id, khoa, nhan, ds, chon, tatCa) => (ds.length ? `<label>${nhan}<select id="${id}" data-loc="${khoa}" aria-label="${nhan}"><option value="">${tatCa}</option>${ds.map((o) => opt(o, chon)).join('')}</select></label>` : '');
 
 // tc: tuyChonLoc(); loc: tq.loc; hien: { phong, ldvp } — ô theo vai (phòng: A0/A1; lãnh đạo VP: A0/Chánh VP); phamViNhan: nhãn ô phạm vi theo vai.
-export function thanhLocHtml(loc, tc, { phong = false, ldvp = false, phamViNhan = 'Việc tôi theo dõi hoặc giao' } = {}, soHien, soTong) {
+export function thanhLocHtml(loc, tc, hien = {}, soHien, soTong) {
+  const { phong = false, ldvp = false, phamViNhan = 'Việc tôi theo dõi hoặc giao' } = hien;
   const chipLoai = tc.loai.map((o) => `<button type="button" data-action="tqLocLoai" data-loai="${escapeHtml(o.ma)}" aria-pressed="${String(loc.loai === o.ma)}" title="${escapeHtml(tenLoai(o.ma))}">${escapeHtml(tenNgan(o.ma))} <b>${o.n}</b></button>`).join('');
-  return `<div class="tq-loc" id="tqLoc" role="group" aria-label="Lọc số liệu Tổng quan">
+  // 0103: nút Toàn Văn phòng / Phạm vi của tôi (null = không hiện — cấu hình tắt hoặc người xem vốn thấy toàn bộ).
+  const tb = hien.toanBo === null || hien.toanBo === undefined ? '' : `<div class="pham-vi" id="tqToanBo" role="group" aria-label="Phạm vi số liệu">
+      <button type="button" data-action="tqToanBo" data-tb="1" aria-pressed="${String(hien.toanBo)}">Toàn Văn phòng</button>
+      <button type="button" data-action="tqToanBo" data-tb="0" aria-pressed="${String(!hien.toanBo)}">Phạm vi của tôi</button></div>`;
+  return `<div class="tq-loc" id="tqLoc" role="group" aria-label="Lọc số liệu Tổng quan">${tb}
     <label>Phạm vi<select id="tqLocPhamVi" data-loc="phamVi" aria-label="Phạm vi"><option value="">Toàn bộ trong phạm vi</option><option value="toi"${loc.phamVi ? ' selected' : ''}>${escapeHtml(phamViNhan)}</option></select></label>
     ${phong ? oChon('tqLocPhong', 'phong', 'Phòng', tc.phong, loc.phong, 'Mọi phòng, đơn vị') : ''}
     ${oChon('tqLocCanBo', 'canBo', 'Cán bộ chủ trì', tc.canBo, loc.canBo, 'Mọi cán bộ')}
@@ -23,7 +28,7 @@ export function thanhLocHtml(loc, tc, { phong = false, ldvp = false, phamViNhan 
     ${ldvp ? oChon('tqLocLdvp', 'ldvp', 'Lãnh đạo VP phụ trách', [...tc.ldvp, { ma: CHUA_LDVP, ten: 'Chưa có lãnh đạo phụ trách', n: null }], loc.ldvp, 'Mọi lãnh đạo') : ''}
     <button type="button" class="tq-loc-bo" data-action="tqLocBo" ${coLoc(loc) ? '' : 'disabled'}>Bỏ lọc</button>
     <div class="chip-loai" role="group" aria-label="Loại văn bản">${chipLoai}</div>
-    <span class="tq-dang-loc" id="tqDangLoc">${coLoc(loc) ? `Đang lọc: <b>${soHien}</b> / ${soTong} nhiệm vụ — mọi khối bên dưới tính trên số đã lọc.` : `${soTong} nhiệm vụ trong phạm vi.`}</span></div>`;
+    <span class="tq-dang-loc" id="tqDangLoc">${coLoc(loc) ? `Đang lọc: <b>${soHien}</b> / ${soTong} nhiệm vụ — mọi khối bên dưới tính trên số đã lọc.` : `${soTong} nhiệm vụ ${hien.toanBo ? 'toàn Văn phòng' : 'trong phạm vi'}.`}</span></div>`;
 }
 
 export function loaiVanBanHtml(ds, locLoai) {

@@ -15,7 +15,7 @@ test('Mọi vai có "Theo văn bản" ở nhóm Theo dõi; Trưởng phòng / ch
   assert.ok(!tvb(tk('A2')).duoi); assert.ok(!tvb(tk('A3')).duoi);
   const xp = menuCuaVai(tk('A3'), { xemPhong: true }).map((m) => m.id);   // chuyên viên xem cả phòng (0086): vẫn một mục, không trùng
   assert.equal(xp.filter((id) => id === 'navTheoVanBan').length, 1);
-  assert.deepEqual(menuCuaVai(tk('A3')).filter((m) => m.duoi).map((m) => m.id), ['navDieuHanh', 'navGiaoViec', 'navTheoDoi', 'dmBubbleLauncher']);
+  assert.deepEqual(menuCuaVai(tk('A3')).filter((m) => m.duoi).map((m) => m.id), ['navDieuHanh', 'navGiaoViec', 'navTheoDoi']);   // v3.23: bỏ Nhắn tin
 });
 
 test('Chú thích phạm vi: Trưởng phòng = phòng mình; chuyên viên = việc mình (hoặc cả phòng khi bật xem cả phòng); lãnh đạo VP, Thường trực không ghi', () => {

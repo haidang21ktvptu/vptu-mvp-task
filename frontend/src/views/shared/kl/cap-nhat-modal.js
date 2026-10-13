@@ -11,8 +11,8 @@ import { state } from '../../../lib/state.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { danhMucKl, capNhatNhiemVu, homNayTheoDb, datThongTinGiao } from '../../../lib/kl/du-lieu.js';
-import { duocSuaThongTinGiao, nguonOptionsHtml } from './thong-tin-giao.js';
+import { danhMucKl, capNhatNhiemVu, homNayTheoDb, datThongTinGiao, datVuongMac } from '../../../lib/kl/du-lieu.js';
+import { duocSuaThongTinGiao, nguonOptionsHtml, duocSuaVuongMac, nguoiNhanVuongMacHtml } from './thong-tin-giao.js';
 import { homNayVN, formatNgay, ghiChuHan, ngayTrongMinhChung } from '../../../lib/kl/ngay.js';
 import { nopMinhChung, loiMinhChung, duocNopMinhChung } from '../../../lib/kl/minh-chung.js';
 import { batBuocTep, taiLenTep, xoaTepChuaGan } from '../../../lib/kl/tep-minh-chung.js';
@@ -73,6 +73,8 @@ export async function openKlCapNhat({ id, rows }) {
   $('klCnGhiChu').value = row.ghi_chu || '';
   // PR-3: vướng mắc (Owner / người theo dõi / quan_tri_kl — guard a3 0062 cho cột này); nguồn + đơn vị phối hợp chỉ người giao / quan_tri_kl (hàm 0065).
   $('klCnVuongMac').value = row.vuong_mac || '';
+  $('klCnVmGuiCho').innerHTML = nguoiNhanVuongMacHtml(row);   // 0103: đề nghị xử lý gửi tới (dat_vuong_mac — không ghi thẳng cột)
+  show('klCnVuongMacWrap', duocSuaVuongMac(row));
   show('klCnGiaoWrap', duocSuaThongTinGiao(row));
   $('klCnNguon').innerHTML = nguonOptionsHtml(row.nguon_nhiem_vu_ma, row.nguon_nhiem_vu_ma ? null : 'Chưa xác định');
   $('klCnPhoiHop').value = row.don_vi_phoi_hop || '';
@@ -124,8 +126,10 @@ async function luuKlCapNhat() {
     ...(row.theo_1400 ? {} : { minh_chung: $('klCnMinhChung').value.trim() || null }), // việc 1400: minh chứng ở bảng minh_chung, không gửi cột chữ
     van_ban_trien_khai: $('klCnVanBan').value.trim() || null,
     ghi_chu: $('klCnGhiChu').value.trim() || null,
-    vuong_mac: $('klCnVuongMac').value.trim() || null,
   };
+  // 0103: vướng mắc + người nhận ghi qua dat_vuong_mac (kiểm người nhận, gửi tin đúng người) — chỉ khi đổi.
+  const vm = duocSuaVuongMac(row) && { nd: $('klCnVuongMac').value.trim(), guiCho: $('klCnVmGuiCho').value };
+  const doiVm = vm && (vm.nd !== (row.vuong_mac || '') || (vm.nd && vm.guiCho !== (row.vuong_mac_gui_cho || '')));
   if (row.loai_thoi_han_ma !== 'KY_BAN_HANH' && !khoaHan()) p.han_xu_ly = chuaCoHan ? null : $('klCnHan').value || null;   // Q7: hạn đã chốt thì không gửi
   const loi = kiemTra(p); const mc = minhChungNhanh();
   if (loi || typeof mc === 'string') { notifyError(loi || mc); return; }
@@ -140,6 +144,11 @@ async function luuKlCapNhat() {
       } catch (e) {   // cập nhật đã lưu — giữ hộp mở để sửa minh chứng rồi Lưu lại (cập nhật lưu lại là vô hại)
         await xoaTepChuaGan(path);
         notifyError(`Đã cập nhật ${row.ma} nhưng chưa nộp được minh chứng: ${e.message}`); $('klCnLuu').disabled = false; afterSave(row.id); return;
+      }
+    }
+    if (doiVm) {
+      try { await datVuongMac(row.id, vm.nd, vm.guiCho); } catch (e) {   // cập nhật chính đã lưu — báo đúng phần chưa lưu
+        notifyError(`Đã cập nhật ${row.ma} nhưng chưa lưu được vướng mắc: ${loiDeHieu(e)}`); closeKlCapNhat(); afterSave(row.id); return;
       }
     }
     const giao = !$('klCnGiaoWrap').classList.contains('hidden') && { nguon: $('klCnNguon').value, phoiHop: $('klCnPhoiHop').value.trim() };

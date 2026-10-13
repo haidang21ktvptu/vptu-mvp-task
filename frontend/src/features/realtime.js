@@ -1,27 +1,18 @@
 // Realtime (MSG-2): nghe INSERT trên direct_messages; chỉ những dòng RLS cho đọc mới tới được client. Đăng ký khi vào app,
 // huỷ khi đăng xuất. Kênh luồng ý kiến theo tasks (task_directives) đã bỏ ở GĐ14 — chỉ đạo theo nhiệm vụ là GĐ18.
 import { supabase } from '../lib/supabase.js';
-import { state, findAccount } from '../lib/state.js';
+import { state } from '../lib/state.js';
 import { onSessionEnter, onSessionLeave } from '../auth/session.js';
-import { loadDMUnreadMap } from './messages/index.js';
-import { loadDirectMessages, isChatOpenWith, showDMToast } from './messages/chat.js';
 import { onTinHeThongMoi } from './thong-bao/index.js';
 import { baoHuyHieu } from './huy-hieu.js';
 
 let channel = null;
 
-async function onMessageInsert(dm) {
+// v3.23 (chủ dự án 13/10/2026): bỏ nhắn tin 1-1 — chỉ tin hệ thống (chuông + toast mở nhiệm vụ); tin người cũ giữ trong cơ sở dữ liệu.
+function onMessageInsert(dm) {
   if (dm.receiver_id !== state.user.id) return;
-  baoHuyHieu(); // huy hiệu Nhắn tin (tin người + hệ thống chưa đọc), GĐ22
-  if (dm.loai === 'he_thong') { onTinHeThongMoi(dm); return; } // GĐ15: chuông + toast mở nhiệm vụ
-  if (isChatOpenWith(dm.sender_id)) {
-    await loadDirectMessages(dm.sender_id, true);
-    return;
-  }
-  state.dmUnread[dm.sender_id] = (state.dmUnread[dm.sender_id] || 0) + 1;
-  loadDMUnreadMap();
-  const sender = findAccount(dm.sender_id);
-  showDMToast(sender ? sender.full_name : 'Cán bộ', dm.content, dm.sender_id);
+  baoHuyHieu(); // số chưa xử lý (dải Cần xử lý ngay, chuông), GĐ22
+  if (dm.loai === 'he_thong') onTinHeThongMoi(dm); // GĐ15: chuông + toast mở nhiệm vụ
 }
 
 export function setupRealtimeSubscriptions() {

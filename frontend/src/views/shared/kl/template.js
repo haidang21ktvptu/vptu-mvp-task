@@ -19,6 +19,9 @@ export const klTemplate = `
     <div id="klPhamVi" class="pham-vi hidden" role="group" aria-label="Phạm vi xem" title="Cấu hình của Văn phòng cho phép chuyên viên xem mọi việc của phòng mình (chỉ xem)">
       <button type="button" data-action="klPhamVi" data-pv="toi" aria-pressed="false">Việc của tôi</button>
       <button type="button" data-action="klPhamVi" data-pv="phong" aria-pressed="true">Cả phòng</button></div>
+    <div id="klToanBo" class="pham-vi hidden" role="group" aria-label="Phạm vi danh sách" title="Cấu hình của Văn phòng: mọi cán bộ xem toàn bộ nhiệm vụ — việc ngoài phạm vi xử lý chỉ xem">
+      <button type="button" data-action="klToanBo" data-tb="0" aria-pressed="true">Phạm vi của tôi</button>
+      <button type="button" data-action="klToanBo" data-tb="1" aria-pressed="false">Toàn Văn phòng</button></div>
     <div id="klStats" class="tq" role="group" aria-label="Tổng quan, bấm để lọc">
       <button type="button" class="o-so" data-action="locKlNhom" data-nhom="" aria-pressed="true"><b id="klSo-TONG">0</b> tổng</button>
       ${THU_TU_NHOM.map(oSo).join('')}
@@ -27,6 +30,9 @@ export const klTemplate = `
       <input type="search" id="klTimKiem" placeholder="Tìm mã, nội dung, số kết luận, người" aria-label="Tìm nhiệm vụ"></label>
     <select id="klLocDonVi" aria-label="Đơn vị chịu trách nhiệm"><option value="">Đơn vị</option></select>
     <select id="klLocKetLuan" aria-label="Kết luận / văn bản"><option value="">Mọi kết luận</option></select>
+    <select id="klLocChuTri" aria-label="Lọc theo cán bộ chủ trì"><option value="">Cán bộ chủ trì</option></select>
+    <select id="klLocTheoDoi" aria-label="Lọc theo người theo dõi"><option value="">Người theo dõi</option></select>
+    <select id="klLocLdvp" aria-label="Lọc theo lãnh đạo Văn phòng phụ trách"><option value="">Lãnh đạo VP phụ trách</option></select>
     <details class="kl-them"><summary>Thêm bộ lọc</summary><div class="them-loc">
       <select id="klLocHoiNghi" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
       <select id="klLocNganh" aria-label="Lọc theo ngành"><option value="">Mọi ngành</option></select>

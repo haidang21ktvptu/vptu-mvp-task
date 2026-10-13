@@ -18,6 +18,7 @@ import { nutTangHtml, nutHanhDongTang, khoiDeNghiSuaHtml, napDeNghiSua } from '.
 import { coNhapExcel, khoiDuLieuGocHtml, napDuLieuGoc } from './du-lieu-goc.js';   // v9 đợt 2: dữ liệu gốc của lô nhập Excel
 import { maNguonHtml, nhanMucHtml, oLuoiNguonHtml, nutGiaoThemHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
 import { tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
+import { chiXem } from '../../../lib/kl/pham-vi.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu', co_quan_trinh: 'donVi' };
@@ -46,13 +47,18 @@ const hang = (nhan, giaTri, canCuHtml) => `<tr><th scope="row">${nhan}</th><td>$
 
 // Cấp cần quyết định: A1/A2 chọn tại chỗ (dat_cap_quyet_dinh 0026, CN-5.2(4)); vai khác chỉ đọc.
 function capQuyetHtml(r) {
-  if (!duocChiDao() || !nhomCua(r.nhom_dem).mo) return escapeHtml(r.cap_quyet_dinh_ten || 'chưa xác định');
+  if (chiXem(r) || !duocChiDao() || !nhomCua(r.nhom_dem).mo) return escapeHtml(r.cap_quyet_dinh_ten || 'chưa xác định');
   const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
   return `<select class="o-nhap nho nl-cap" data-id="${r.id}" aria-label="Cấp cần quyết định của ${escapeHtml(r.ma)}">${opt('', 'chưa xác định', !r.cap_quyet_dinh)}${danhMucKl().cap.map((c) => opt(c.ma, c.ten, r.cap_quyet_dinh === c.ma)).join('')}</select>`;
 }
 
 // Nút hành động trong ngăn (ẩn/hiện cho đẹp; hàm DB / policy là chốt).
 function hanhDongHtml(r, nhanViec = []) {
+  // 0103: việc ngoài phạm vi xử lý (cấu hình xem toàn bộ) — chỉ xem, không nút ghi nào.
+  if (chiXem(r)) {
+    return `<div class="hanh-dong"><p class="chu-phu ct-chi-xem" data-chi-xem="1">Chỉ xem — việc ngoài phạm vi xử lý của đồng chí. Cần trao đổi, đồng chí liên hệ cán bộ chủ trì hoặc lãnh đạo phụ trách.</p>
+      <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>`;
+  }
   const mo = nhomCua(r.nhom_dem).mo;
   const nut = (action, nhan, lop = '', them = '') => `<button type="button" class="nut ${lop}" data-action="${action}" data-id="${r.id}" ${them}>${nhan}</button>`;
   // Đợt D (0090): việc theo quy tắc 1400 hoàn thành khi nộp minh chứng hợp lệ; "Đóng nhiệm vụ" chỉ còn cho việc chuyển đổi (không theo 1400)

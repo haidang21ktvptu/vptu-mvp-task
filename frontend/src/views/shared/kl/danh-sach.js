@@ -4,18 +4,22 @@
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, linhVucCuaNganh, tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, linhVucCuaNganh, tenTrongDanhMuc, loadPhanCongHieuLuc, xemToanBo } from '../../../lib/kl/du-lieu.js';
+import { trongPhamVi, locCanBo, tuyChonCanBo, chiXem } from '../../../lib/kl/pham-vi.js';
 import { tongHop, sapXep, locRows, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
 import { THU_TU_NHOM, tenNhom, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { dongHtml } from './dong.js';
 import { veLaiChiTiet, idDangMo } from './chi-tiet.js';
 
-const kl = { rows: [], luc: null, loc: {} };
+// v3.23 (0103): kl.rows = mọi dòng đọc được (cấu hình xem toàn bộ: cả việc chỉ xem); danh sách mặc định chỉ việc trong phạm vi xử lý, nút
+// "Toàn Văn phòng" (kl.loc.toanBo) mở cả việc chỉ xem. Ngăn chi tiết tìm dòng trong kl.rows nên mở được mọi việc đọc được (ngoài phạm vi: chỉ xem).
+const kl = { rows: [], luc: null, loc: {}, phanCong: [] };
 let sauKhiNap = null;
 export const setKlSauKhiNap = (fn) => { sauKhiNap = fn; };
 export const getKlRows = () => kl.rows;
 export const timKlRow = (id) => kl.rows.find((r) => r.id === id);
+const coSo = () => (kl.loc.toanBo ? kl.rows : trongPhamVi(kl.rows));
 
 // Khoá lọc do màn hình điều hành đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm (đơn vị, kết luận, hội nghị, ngành, lĩnh vực) không hiện chip.
 const NHAN_CHIP = {
@@ -32,7 +36,8 @@ const NHAN_CHIP = {
   chuaCapQuyetDinh: () => 'Đang mở, chưa xác định cấp cần quyết định',
   nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
-const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klLocNguon: 'nguon', klTimKiem: 'tuKhoa' };
+const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klLocNguon: 'nguon', klTimKiem: 'tuKhoa',
+  klLocChuTri: 'chuTri', klLocTheoDoi: 'theoDoi', klLocLdvp: 'ldvp' };   // v3.23: lọc theo cán bộ chủ trì, người theo dõi, lãnh đạo VP phụ trách
 // PR-3: danh sách ĐANG HIỆN (lọc ngữ cảnh + nhóm, đã sắp xếp) — nút Xuất Excel xuất đúng các dòng này.
 let dangHien = [];
 export const dsDangHien = () => dangHien;
@@ -63,8 +68,8 @@ export function loadKl() {
 async function napKl(lanThu = 0) {
   try {
     await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
-    const { rows, luc } = await loadKlRows();
-    kl.rows = rows; kl.luc = luc;
+    const [{ tatCa: rows, luc }, phanCong] = await Promise.all([loadKlRows(), loadPhanCongHieuLuc().catch(() => kl.phanCong)]);
+    kl.rows = rows; kl.luc = luc; kl.phanCong = phanCong;
     const bb = kiemBatBien(rows);
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     dienBoLoc();
@@ -78,21 +83,29 @@ async function napKl(lanThu = 0) {
 
 const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 function dienBoLoc() {
-  const kls = [...new Set(kl.rows.map((r) => r.so_ket_luan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi', { numeric: true }));
+  const rows = coSo();
+  const kls = [...new Set(rows.map((r) => r.so_ket_luan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi', { numeric: true }));
   $('klLocKetLuan').innerHTML = opt('', 'Mọi kết luận') + kls.map((k) => opt(k, k, kl.loc.ketLuan === k)).join('');
-  const hn = [...new Set(kl.rows.map((r) => r.so_hoi_nghi).filter(Boolean))].sort((a, b) => b - a);
+  const hn = [...new Set(rows.map((r) => r.so_hoi_nghi).filter(Boolean))].sort((a, b) => b - a);
   $('klLocHoiNghi').innerHTML = opt('', 'Mọi hội nghị') + hn.map((s) => opt(s, `Hội nghị ${s}`, String(kl.loc.hoiNghi) === String(s))).join('');
-  const coNganhTrong = kl.rows.some((r) => !r.nganh_ma);
+  const coNganhTrong = rows.some((r) => !r.nganh_ma);
   $('klLocNganh').innerHTML = opt('', 'Mọi ngành') + danhMucKl().nganh.map((n) => opt(n.ma, n.ten, kl.loc.nganh === n.ma)).join('')
     + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa có ngành', kl.loc.nganh === CHUA_CO_NGANH) : '');
   dienLinhVuc();
   $('klLocNguon').innerHTML = opt('', 'Mọi nguồn') + (danhMucKl().nguonNhiemVu || []).map((d) => opt(d.ma, d.ten, kl.loc.nguon === d.ma)).join('')
-    + (kl.rows.some((r) => !r.nguon_nhiem_vu_ma) ? opt(CHUA_CO_NGUON, 'Chưa xác định nguồn', kl.loc.nguon === CHUA_CO_NGUON) : '');
+    + (rows.some((r) => !r.nguon_nhiem_vu_ma) ? opt(CHUA_CO_NGUON, 'Chưa xác định nguồn', kl.loc.nguon === CHUA_CO_NGUON) : '');
   // Ô chọn Đơn vị chịu trách nhiệm (có đếm), nhiều việc trước; A2/A3 thường chỉ một đơn vị → ẩn ô.
-  const dv = new Map(); kl.rows.forEach((r) => { if (!r.owner_don_vi_ma) return; const c = dv.get(r.owner_don_vi_ma) || { ten: boSoThuTu(r.owner_don_vi_ten), n: 0 }; c.n++; dv.set(r.owner_don_vi_ma, c); });
+  const dv = new Map(); rows.forEach((r) => { if (!r.owner_don_vi_ma) return; const c = dv.get(r.owner_don_vi_ma) || { ten: boSoThuTu(r.owner_don_vi_ten), n: 0 }; c.n++; dv.set(r.owner_don_vi_ma, c); });
   const ds = [...dv].sort((a, b) => b[1].n - a[1].n || a[1].ten.localeCompare(b[1].ten, 'vi'));
   $('klLocDonVi').innerHTML = opt('', `Đơn vị (${dv.size})`) + ds.map(([ma, c]) => opt(ma, `${c.ten} (${c.n})`, kl.loc.donVi === ma)).join('');
   show('klLocDonVi', dv.size > 1 || Boolean(kl.loc.donVi));
+  // v3.23: ba ô lọc theo cán bộ (có đếm, trên dòng của phạm vi đang xem); ô chỉ một lựa chọn và chưa chọn thì ẩn.
+  const tc = tuyChonCanBo(rows, { ten: (id) => state.accounts.find((a) => a.id === id)?.full_name, phanCong: kl.phanCong,
+    lanhDaoVP: state.accounts.filter((a) => a.role_group === 'A1' && !a.is_chief && !a.is_system) });
+  [['klLocChuTri', 'chuTri', 'Cán bộ chủ trì'], ['klLocTheoDoi', 'theoDoi', 'Người theo dõi'], ['klLocLdvp', 'ldvp', 'Lãnh đạo VP phụ trách']].forEach(([id, k, nhan]) => {
+    $(id).innerHTML = opt('', `${nhan} (${tc[k].length})`) + tc[k].map((o) => opt(o.ma, `${o.ten} (${o.n})`, kl.loc[k] === o.ma)).join('');
+    show(id, tc[k].length > 1 || Boolean(kl.loc[k]));
+  });
 }
 function dienLinhVuc() {
   const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;
@@ -104,7 +117,8 @@ function dienLinhVuc() {
 // của ngăn đang mở mỗi lần gõ ô tìm / đổi bộ lọc).
 export function render(veLaiNgan = false) {
   const { nhom, ...nguCanh } = kl.loc;
-  const trongNguCanh = locRows(kl.rows, nguCanh);
+  const goc = coSo();
+  const trongNguCanh = locCanBo(locRows(goc, nguCanh), kl.loc, kl.phanCong);
   const t = tongHop(trongNguCanh);
   setText('klSo-TONG', t.tong);
   THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
@@ -114,10 +128,12 @@ export function render(veLaiNgan = false) {
   const homNay = homNayVN();
   const dangMo = idDangMo();
   $('klBody').innerHTML = list.length === 0
-    ? `<p class="trong-nho">${kl.rows.length === 0 ? 'Không có nhiệm vụ nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</p>`
+    ? `<p class="trong-nho">${goc.length === 0 ? 'Không có nhiệm vụ nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</p>`
     : list.map((r) => dongHtml(r, homNay, r.id === dangMo)).join('');
   if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
-  setText('klSoDong', `${list.length} / ${kl.rows.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);
+  setText('klSoDong', `${list.length} / ${goc.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);
+  setText('klPhuDe', kl.loc.toanBo ? 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết'
+    : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
   // Dấu hiệu "đã nạp xong" cho mọi màn / vai (e2e chờ thuộc tính này, không dựa vào "có dòng đầu"): đặt ở đây để cả danh sách rỗng cũng có.
   if (kl.luc) $('klBody').dataset.nap = kl.luc.toISOString(); else $('klBody').removeAttribute('data-nap');
   if (kl.luc) setText('klTinhDen', `Số liệu tính đến ${formatDateTime(kl.luc)}:${String(kl.luc.getSeconds()).padStart(2, '0')}`);
@@ -131,6 +147,8 @@ function veChip() {
   $('klChipLoc').classList.toggle('hidden', chips.length === 0);
   // 0086: nút phạm vi của chuyên viên xem cả phòng (Việc của tôi / Cả phòng) luôn khớp khoá cuaToi — kể cả khi bỏ chip.
   document.querySelectorAll('#klPhamVi button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.pv === 'toi') === Boolean(kl.loc.cuaToi))));
+  show('klToanBo', xemToanBo() && kl.rows.some(chiXem));   // v3.23 (0103): chỉ khi có việc ngoài phạm vi (Thường trực, Chánh VP vốn thấy hết)
+  document.querySelectorAll('#klToanBo button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.tb === '1') === Boolean(kl.loc.toanBo))));
 }
 
 export function ganBoLoc() {
@@ -141,4 +159,6 @@ export function ganBoLoc() {
   }));
 }
 export const locKlNhom = ({ nhom }) => { kl.loc.nhom = nhom || ''; render(); };
+// v3.23: đổi phạm vi danh sách (Phạm vi của tôi / Toàn Văn phòng) — bỏ khoá "việc của tôi"; ô chọn vẽ lại theo dòng của phạm vi mới.
+export const doiKlToanBo = (toanBo) => { kl.loc = { ...kl.loc, toanBo, ...(toanBo ? { cuaToi: null, theoDoiCuaToi: null } : {}) }; dienBoLoc(); render(); };
 export const boKlLoc = ({ khoa }) => { delete kl.loc[khoa]; render(); };

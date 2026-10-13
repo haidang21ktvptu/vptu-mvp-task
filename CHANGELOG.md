@@ -817,3 +817,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Menu "Theo văn bản" thêm cho A2, A3 (SPEC GV-20): cây chỉ gồm việc trong phạm vi RLS, dòng tóm tắt ghi phạm vi; `registerTheoVanBan` đã đăng ký cho mọi vai.
 - Kiểm thử: unit `theo-van-ban.test.mjs`; e2e `theo-van-ban-chuyen-vien.spec.js` (project `v3221-tvb`, nối sau `v9-nhap-excel`): chuyên viên thấy việc mình, không thấy việc người khác cùng văn bản, "đã nhập 3"; Trưởng phòng chỉ việc phòng mình.
 - **Kết quả phát hành** (13/10/2026 13:50): PR #134 CI xanh (e2e 139 bài; lần đầu đỏ do demo_e2e_kl bị bo-cuc-mobile đăng xuất — đổi sang demo_e2e_cv); chủ dự án đẩy tag `v3.22.1` (`309cd46`), duyệt — deploy-prod xanh, tag `production` = `309cd46`; PR #134 merge `03d2a90`.
+
+## 70. v3.23.0: mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem), lọc theo cán bộ, Việc của tôi tối giản, vướng mắc gửi tới, bỏ Nhắn tin (13/10/2026, chủ dự án duyệt; migration **0103**)
+- 0103: cấu hình `xem_toan_bo` (mặc định 1); 2 = mọi tài khoản đọc mọi nhiệm vụ qua `kl_xem_tat_ca`, `v_nhiem_vu.trong_pham_vi`; quyền ghi không đổi; `kl_so_chua_xu_ly`, `kl_so_lieu_cac_moc` lọc lại phạm vi. `nhiem_vu.vuong_mac_gui_cho` + `dat_vuong_mac(…, p_gui_cho)`: một tin cho người được chọn.
+- Giao diện: Tổng quan / Nhiệm vụ / Theo văn bản có nút Toàn Văn phòng — Phạm vi của tôi; việc ngoài phạm vi ghi "Chỉ xem", ngăn chi tiết không nút ghi; chuyên viên có Tổng quan, Toàn bộ nhiệm vụ (khi bật). Lọc cán bộ chủ trì / người theo dõi / lãnh đạo VP phụ trách.
+- Việc của tôi: dải số tổng, thẻ tối giản + "Chi tiết", nhóm theo văn bản, nộp minh chứng trên thẻ có tệp; "Đề nghị xử lý gửi tới" ở ngăn, thẻ, hộp Cập nhật; hướng dẫn hạn cho việc không xác định thời hạn. Bỏ menu Nhắn tin (tin cũ giữ; thông báo ở chuông).
+- Kiểm thử: RLS `kl-0103` (5 bài); unit `xem-toan-bo.test.mjs`; e2e `xem-toan-bo.spec.js` (project `v323-xem-toan-bo`); bỏ `realtime.spec.js` (nhắn tin 1-1), sửa `tu-choi-ba-phia`, `a0`, `nhap-theo-tang`.

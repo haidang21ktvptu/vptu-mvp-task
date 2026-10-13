@@ -11,7 +11,6 @@ import { soChuaXuLy, onSoChuaXuLy, lamMoiHuyHieu } from '../../features/huy-hieu
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
 import { xacNhanNhanViec } from '../../lib/kl/du-lieu.js';
-import { loadDMUnreadMap } from '../../features/messages/index.js';
 import { napLaiViec } from './kl/nap-lai-viec.js';
 import { reloadCurrentView } from '../shell/index.js';
 import { chiTietHtml } from './can-xu-ly-chi-tiet.js';
@@ -31,7 +30,6 @@ export function mountCanXuLy() {
 // Bấm một mục của dải: mở / đóng danh sách của mục đó (tin: đọc lại số chưa đọc theo người trước khi vẽ).
 async function moCanXuLy({ muc }) {
   mucDangMo = mucDangMo === muc ? null : muc;
-  if (mucDangMo === 'tin') { try { await loadDMUnreadMap(); } catch { /* vẽ theo số đang có */ } }
   if (mucDangMo === 'dnsua') await napDnsChoToi();   // v9 đợt 2: đề nghị sửa chờ tôi duyệt (0071) — đọc khi mở mục
   const el = $('dhCanXuLy'); if (el) el.innerHTML = canXuLyHtml();
   $('cxChiTiet')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -60,7 +58,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
   const n = (k) => Number(so[k] || 0);
   const nut = (muc, so_, chu, lop = '') => (so_ ? `<button type="button" class="${lop}" data-action="moCanXuLy" data-muc="${muc}" aria-expanded="${String(mucDangMo === muc)}"><b>${so_}</b> ${chu}</button>` : '');
   const muc = [
-    nut('tin', n('nhan_tin'), 'tin chưa đọc'),
+    nut('tin', n('thong_bao'), 'thông báo chưa đọc'),   // v3.23: bỏ nhắn tin 1-1 — chỉ thông báo hệ thống (chuông)
     vai() !== 'A3' ? nut('quyet', n('can_quyet'), 'việc cần quyết') : '',
     nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị từ chối chờ duyệt'),   // Đợt D (0091): cả chuyên viên đã nhập / giao việc
     nut('dnsua', n('de_nghi_sua'), 'đề nghị sửa chờ duyệt'),

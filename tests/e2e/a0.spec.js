@@ -35,7 +35,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await expect(page.locator('#navChiDaoDaGui')).toBeVisible();
     await expect(page.locator('#navKl')).toBeVisible();
     await expect(page.locator('#navCanBo')).toBeVisible();           // GĐ21: Cán bộ toàn Văn phòng
-    await expect(page.locator('#dmBubbleLauncher')).toBeVisible();   // GĐ21: A0 nhắn tin 1-1
+    await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);   // v3.23: bỏ Nhắn tin ở mọi vai (thông báo ở chuông)
     await expect(page.locator('#navQuanTri')).toHaveCount(0);
     await page.locator('#navCanBo').click();
     await expect(page.locator('#viewCanBo .cb section').first()).toContainText('Lãnh đạo Văn phòng');

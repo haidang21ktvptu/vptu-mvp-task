@@ -13,6 +13,7 @@ import { loadChiDao, chiDaoGui, chiDaoPhanHoi, chiDaoDong, chiDaoDanhDauDoc, xac
 import { nutDoKhanHtml, nhanDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { chuTriMoiOptions, nguoiTheoDoiOptions } from '../dieu-hanh/the-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
+import { chiXem } from '../../../lib/kl/pham-vi.js';
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 const LOP_LOAI = { DON_DOC: 'cd-loai cd-loai-DON_DOC', GIA_HAN: 'cd-loai cd-loai-GIA_HAN', GIAO_LAI: 'cd-loai cd-loai-GIAO_LAI',
@@ -52,7 +53,7 @@ const formPhHtml = (g, r, them = '') => `
 
 // gocDau: chỉ đạo mở mới nhất — với vai không ra chỉ đạo, ô phản hồi của nó đặt ở ĐẦU khối (cùng vị trí ô gửi của A1/A2).
 function gocHtml(g, phanHoi, daDoc, r, gocDau) {
-  const me = state.user?.id;
+  const me = state.user?.id; const ro = chiXem(r);   // 0103: việc chỉ xem — không ô / nút ghi
   const phu = [
     g.loai === 'GIA_HAN' && g.han_moi ? `Hạn mới: ${formatNgay(g.han_moi)}` : '',
     g.loai === 'GIAO_LAI' && g.chu_tri_moi ? `Chủ trì mới: ${escapeHtml(tenNguoi(g.chu_tri_moi))}` : '',
@@ -61,7 +62,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
     g.loai !== 'CHI_DAO_TT' && g.tra_loi_cho ? 'Theo chỉ đạo Thường trực' : '',
     (g.da_nhan || []).length ? `Đã nhận: ${g.da_nhan.map((u) => escapeHtml(tenNguoi(u))).join(', ')}` : '',
   ].filter(Boolean).join(' · ');
-  const mo = g.trang_thai !== 'DA_DONG';
+  const mo = g.trang_thai !== 'DA_DONG' && !ro;
   const dongDuoc = mo && g.nguoi_gui === me && (g.loai === 'CHI_DAO_TT' ? laA0() : !laA0());
   // Thư ký Thường trực (0047): đóng thay mặt luồng CHI_DAO_TT (hàm chi_dao_dong là chốt; không đóng loại khác).
   const thayMat = mo && g.loai === 'CHI_DAO_TT' && Boolean(state.user?.thu_ky_thuong_truc) && g.nguoi_gui !== me;
@@ -122,8 +123,9 @@ export function chiDaoHtml(r, { rows, daDoc }) {
   const phanHoiCua = (g) => rows.filter((c) => c.loai === 'PHAN_HOI' && c.tra_loi_cho === g.id);
   const cho = goc.filter((g) => g.trang_thai === 'CHO_PHAN_HOI').length;
   const chuaDoc = rows.filter((c) => !daDoc.has(c.id)).length;
-  const moMoiNhat = duocChiDao() || laA0() || laNguoiGiaoViec(r) ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
-  const oNhap = duocChiDao() ? formGuiHtml(r) : laA0() ? formGuiHtml(r, ['Y_KIEN', 'CHI_DAO_TT'])
+  const ro = chiXem(r);   // 0103: việc ngoài phạm vi xử lý — chỉ đọc luồng chỉ đạo
+  const moMoiNhat = ro || duocChiDao() || laA0() || laNguoiGiaoViec(r) ? null : [...goc].reverse().find((g) => g.trang_thai !== 'DA_DONG' && trongLuong(g, phanHoiCua(g), r));
+  const oNhap = ro ? '' : duocChiDao() ? formGuiHtml(r) : laA0() ? formGuiHtml(r, ['Y_KIEN', 'CHI_DAO_TT'])
     : laNguoiGiaoViec(r) ? formGuiHtml(r, LOAI_NGUOI_GIAO) : moMoiNhat ? formPhHtml(moMoiNhat, r, 'cd-form-dau') : '';
   return `
     <div class="luong-cd" id="klChiDao-${r.id}">
@@ -145,6 +147,7 @@ export async function napChiDao(r) {
   if (!o) return;
   try {
     const d = await loadChiDao(r.id);
+    if (chiXem(r)) d.daDoc = new Set(d.rows.map((c) => c.id));   // 0103: việc chỉ xem — không đánh dấu "chưa đọc", không ghi đã đọc (hàm chặn ngoài phạm vi)
     o.outerHTML = chiDaoHtml(r, d);
     khoiPhucNhap($(`klChiDao-${r.id}`)); // ngăn vẽ lại (realtime / nạp lại nền) không được xoá loại, độ khẩn, nội dung đang nhập
     if (d.rows.some((c) => !d.daDoc.has(c.id))) chiDaoDanhDauDoc(r.id);

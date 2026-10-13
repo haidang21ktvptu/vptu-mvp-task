@@ -25,6 +25,7 @@ export const klCapNhatTemplate = `
 
     <div id="klCnChuaCoHanWrap" class="mt-3">
       <label class="nhan-checkbox"><input type="checkbox" id="klCnChuaCoHan"> Chưa xác định được hạn (phụ thuộc yếu tố bên ngoài)</label>
+      <p class="chu-phu goi-y-han">Nhiệm vụ thường xuyên hoặc chờ điều kiện: tích ô này và ghi lý do (ví dụ "chờ hướng dẫn của Trung ương"); khi có mốc thì bỏ tích, điền hạn.</p>
       <div id="klCnLyDoWrap" class="hidden">
         <label for="klCnLyDo" class="nhan">Lý do chưa có hạn (bắt buộc)</label>
         <textarea id="klCnLyDo" class="o-nhap" rows="2"></textarea>
@@ -69,9 +70,11 @@ export const klCapNhatTemplate = `
         <input type="text" id="klCnGhiChu" class="o-nhap">
       </div>
     </div>
-    <div class="mt-3">
+    <div class="mt-3" id="klCnVuongMacWrap">
       <label for="klCnVuongMac" class="nhan">Vướng mắc / đề nghị lãnh đạo quyết định <span class="chu-phu">không bắt buộc, tối đa 500 ký tự — để trống = đã giải quyết</span></label>
       <textarea id="klCnVuongMac" class="o-nhap" rows="2" maxlength="500" placeholder="Nêu vướng mắc, đề nghị cấp nào quyết định việc gì"></textarea>
+      <label for="klCnVmGuiCho" class="nhan mt-2">Đề nghị xử lý gửi tới <span class="chu-phu">người được chọn nhận thông báo ngay; "Tự động" = người giao việc và lãnh đạo phụ trách</span></label>
+      <select id="klCnVmGuiCho" class="o-nhap"></select>
     </div>
     <div class="cot-2 mt-3 hidden" id="klCnGiaoWrap">
       <div><label for="klCnNguon" class="nhan">Nguồn nhiệm vụ</label><select id="klCnNguon" class="o-nhap"></select></div>

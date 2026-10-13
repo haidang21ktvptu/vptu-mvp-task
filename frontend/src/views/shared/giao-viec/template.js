@@ -89,6 +89,7 @@ export const giaoViecTemplate = `
             <div></div>
           </div>
           <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
+          <p class="chu-phu goi-y-han" id="gvGoiYHan">Nhiệm vụ không xác định được thời hạn (thường xuyên, chờ điều kiện): chọn mốc rà soát gần nhất làm hạn (ví dụ cuối quý hoặc 31/12) và ghi rõ "thực hiện thường xuyên" trong nội dung; đến mốc, người chủ trì báo cáo kết quả hoặc đề nghị gia hạn.</p>
           <div class="cot-3" id="gvNganhWrap">
             ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
             ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}

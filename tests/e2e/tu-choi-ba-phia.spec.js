@@ -1,10 +1,10 @@
 // GĐ22 — từ chối hiện rõ ba phía: A3 (demo_e2e_nv) đề nghị từ chối trên thẻ "Việc mới giao" → thẻ ghi "Đã đề nghị từ chối, chờ Demo Trưởng phòng
 // duyệt"; A2 (người giao, cấp duyệt) thấy đề nghị ở khối cần duyệt và việc mình giao trong khối "đang đề nghị từ chối" → Đồng ý → khối "Việc đồng
-// chí giao bị từ chối" có nút Giao lại; A3 quay lại thấy "Đã đồng ý từ chối, chờ giao lại", huy hiệu Nhắn tin (tin duyệt = tin hệ thống chưa đọc)
-// có số, hội thoại của việc trong Nhắn tin có tin duyệt. Dữ liệu tạo bằng service_role, tự dọn.
+// chí giao bị từ chối" có nút Giao lại; A3 quay lại thấy "Đã đồng ý từ chối, chờ giao lại", chuông (tin duyệt = tin hệ thống chưa đọc) có số và
+// danh sách thông báo có tin duyệt (v3.23: bỏ Nhắn tin). Dữ liệu tạo bằng service_role, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, NAP } from './lib/app.js';
+import { pageAs, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { kiemThayViec } from './lib/du-lieu.mjs';
@@ -87,18 +87,15 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     await page.context().close();
   });
 
-  test('A3: thấy "Đã đồng ý từ chối, chờ giao lại"; huy hiệu Nhắn tin có số; hội thoại của việc có tin duyệt', async ({ browser }, testInfo) => {
+  test('A3: thấy "Đã đồng ý từ chối, chờ giao lại"; chuông có số; thông báo của việc có tin duyệt (v3.23: bỏ Nhắn tin)', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     await expect(page.locator('#vctThanhTuChoi')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator(`#vctThanhTuChoi p[data-nhiem-vu="${id}"]`)).toContainText('Đã đồng ý từ chối, chờ giao lại', NAP);
     await expect(page.locator(`#vctMuc-tu-choi #vct-${id}`)).toContainText('Đã đồng ý từ chối', NAP);
-    await expect(page.locator('#dmBubbleBadge')).toBeVisible();
-    await expect(page.locator('#dmBubbleBadge')).toHaveText(/^[1-9]\d*$/);
-    await nav(page, 'dmBubbleLauncher');
-    const viec = page.locator(`#dmViecList [data-nv="${id}"]`);
-    await expect(viec).toBeVisible(NAP);
-    await viec.click();
-    await expect(page.locator('#dmChatBox')).toContainText(`Duyệt đề nghị từ chối · ${ma}`);
+    await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);   // v3.23: không còn mục Nhắn tin
+    await expect(page.locator('#chuongBadge')).toHaveText(/^[1-9]\d*$/, NAP);
+    await page.locator('#chuongBtn').click();
+    await expect(page.locator('#thongBaoList')).toContainText(`Duyệt đề nghị từ chối · ${ma}`, NAP);
     await page.context().close();
   });
 });
