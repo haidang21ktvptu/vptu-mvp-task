@@ -798,3 +798,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - `docs/GO-LIVE-V3.21.md`: kiểm tay staging, câu SELECT xem trước (số tài khoản sẽ bị thu cờ, thư ký Thường trực còn hoạt động), tag, cấu hình `pham_vi_chuyen_vien`.
 - Khi áp production: **0096 thu cờ quản trị nhiệm vụ của mọi tài khoản** (ghi nhật ký); 0095, 0097–0099 chỉ đổi hàm / view.
 - **Kết quả phát hành** (9/10/2026 10:53): SELECT xem trước trên production = 15 tài khoản giữ quyền quản trị nhiệm vụ (thu khi áp 0096), 4 thư ký Thường trực; chủ dự án xác nhận áp 0095–0099, đẩy tag `v3.21.0` (`f53d794`), duyệt; deploy-prod xanh đủ, `phien-ban.json` = v3.21.0; PR #127 merge.
+
+## 67. Sửa lỗi v3.21.1: ô "Chịu trách nhiệm" rỗng khi chuyên viên chọn Thay mặt (13/10/2026, chủ dự án báo từ production; chỉ giao diện)
+- Lỗi: `them-owner.js` (`canBoOwner`, `ownerOptionsHtml`) chỉ đưa danh sách cán bộ / Văn phòng và các phòng cho người giữ cờ `quan_tri_kl` khi có Thay mặt; 0096 đã thu cờ của mọi tài khoản nên mọi chuyên viên chọn Thay mặt đều gặp ô rỗng — kể cả khi hoàn thiện dòng "Chờ hoàn thiện" của lô Excel (điền sẵn Thay mặt = Trưởng phòng, mất cán bộ chủ trì đã điền).
+- Sửa: chuyên viên có Thay mặt nhận đủ danh sách như người quản trị KL trước đây; `pham-vi.js` vẫn lọc theo phạm vi lãnh đạo được thay mặt, `giao_viec` là chốt. Không đổi DB.
+- Kiểm thử: unit `giao-thang.test.mjs` thêm bài chuyên viên không có cờ chọn thay mặt (Trưởng phòng, Chánh VP, nhóm Lãnh đạo VP, Thường trực) — đỏ trên mã cũ, xanh sau khi sửa; e2e `giao-viec-ma-tran` bài 4 (chuyên viên không cờ thay mặt Trưởng phòng → có cán bộ, phòng của Trưởng phòng; không có lãnh đạo Văn phòng). Các vai thay mặt ở bài 1 còn mang cờ tạm nên đã che lỗi.
