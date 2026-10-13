@@ -80,7 +80,7 @@ export default defineConfig({
     // v9 đợt 2 (chỉ máy tính): nhập Excel toàn trình — demo_e2e_tk cấp tạm quan_tri_kl; tin tổng hợp của lô tới demo_e2e_cv / demo_e2e_tp nên
     // nối sau v9-dot2. Project chưa áp 0072 → spec tự skip.
     { name: 'v9-nhap-excel', use: DESKTOP, testMatch: /nhap-excel\.spec\.js/, dependencies: ['v9-dot2'] },
-    // v3.22.1: Theo văn bản cho Trưởng phòng / chuyên viên (demo_e2e_kl, demo_e2e_tp) — nối sau v9-nhap-excel để không dùng chung phiên với spec khác.
+    // v3.22.1: Theo văn bản cho Trưởng phòng / chuyên viên (demo_e2e_cv, demo_e2e_tp) — nối sau v9-nhap-excel để không dùng chung phiên với spec khác.
     { name: 'v3221-tvb', use: DESKTOP, testMatch: /theo-van-ban-chuyen-vien\.spec\.js/, dependencies: ['v9-nhap-excel'] },
     // GĐ23: doi-mat-khau tạo tài khoản tạm bằng service_role và đăng nhập qua form — chạy cùng lượt cuối với dang-nhap.
     { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4', 'v9-dot2', 'v9-nhap-excel', 'v3221-tvb'] },

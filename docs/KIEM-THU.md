@@ -149,7 +149,7 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 
 ## e2e v3.22 — `toan-quyen.spec.js` (desktop), project `v3221-tvb` (từ 13/10/2026)
 - `toan-quyen.spec.js` (desktop, chỉ đọc giao diện): demo_e2e_tq bật tạm `toan_quyen` + `quan_tri_he_thong` → chức danh, menu như Chánh VP + Quản trị, Giao việc mọi phòng; thu cờ ở afterAll. RLS: `kl-0100-toan-quyen` (demo_qtht cờ tạm).
-- `theo-van-ban-chuyen-vien.spec.js` (project `v3221-tvb`, sau `v9-nhap-excel`; `dang-nhap` phụ thuộc thêm `v3221-tvb`): Theo văn bản của demo_e2e_kl (A3) / demo_e2e_tp (A2) chỉ gồm việc trong phạm vi. Chạy riêng: `npx playwright test --project=v3221-tvb --no-deps` (kèm biến đích).
+- `theo-van-ban-chuyen-vien.spec.js` (project `v3221-tvb`, sau `v9-nhap-excel`; `dang-nhap` phụ thuộc thêm `v3221-tvb`): Theo văn bản của demo_e2e_cv (A3) / demo_e2e_tp (A2) chỉ gồm việc trong phạm vi (không dùng demo_e2e_kl — bo-cuc-mobile đăng xuất tài khoản đó). Chạy riêng: `npx playwright test --project=v3221-tvb --no-deps` (kèm biến đích).
 
 
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
