@@ -110,7 +110,8 @@ export const hanhDongVbc = {
 // Ô chọn lọc / ô tìm (sự kiện change / input gắn ở a3/index.js): trả true khi trạng thái đổi.
 export function doiLocVbc(el) {
   if (el.matches?.('select[data-vbc-loc]')) { vbc.loc = { ...vbc.loc, [el.dataset.vbcLoc]: el.value }; return true; }
-  if (el.id === 'vbcTim') { vbc.tuKhoa = el.value; return true; }
+  // Ô tìm: 'input' đã vẽ lại khi gõ; 'change' lúc rời ô (bấm nút ngay sau khi gõ) không vẽ lại — tránh thay nút đang bấm (mất cú bấm).
+  if (el.id === 'vbcTim') { if (vbc.tuKhoa === el.value) return false; vbc.tuKhoa = el.value; return true; }
   return false;
 }
 export const datLaiVbc = () => { Object.assign(vbc, { pham: 'toi', trangThai: 'mo', loc: { chuTri: '', theoDoi: '' }, tuKhoa: '', vanBan: new Map() }); vbc.moNhom.clear(); vbc.chiTiet.clear(); };
