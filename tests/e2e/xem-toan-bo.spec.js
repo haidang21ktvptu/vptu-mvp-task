@@ -1,7 +1,7 @@
 // v3.23 (0103, chủ dự án 13/10/2026): cấu hình xem_toan_bo = 2 (đặt tạm bằng service_role, khôi phục) → mọi cán bộ xem toàn bộ nhiệm vụ, chỉ xem việc
 // ngoài phạm vi xử lý. Văn bản mẫu: P1 demo_e2e_cv chủ trì (phòng E2E_RT, người giao demo_e2e_tp), P3 phòng Tổng hợp (ngoài phạm vi của cả
 // chuyên viên lẫn Trưởng phòng E2E_RT). Kiểm: menu không còn Nhắn tin, chuyên viên có Tổng quan (Toàn Văn phòng mặc định) + Toàn bộ nhiệm vụ; P3
-// ghi "Chỉ xem", ngăn chi tiết không nút ghi (cả với Trưởng phòng — không ô gửi chỉ đạo); Việc của tôi: dải số tổng, Chi tiết, nhóm theo văn bản;
+// ghi "Chỉ xem", ngăn chi tiết không nút ghi (cả với Trưởng phòng — không ô gửi chỉ đạo); Việc của tôi theo văn bản gốc (v3.23.1: người giao, dòng + Chi tiết, Toàn VP);
 // vướng mắc gửi tới người được chọn (một tin cho đúng người); hộp Cập nhật có ô gửi tới; Giao việc có hướng dẫn hạn. Project riêng nối sau
 // v3221-tvb (cấu hình chung — chạy một mình). Dữ liệu theo khoá riêng, tự dọn.
 import { test, expect } from '@playwright/test';
@@ -9,7 +9,7 @@ import { NAP, nav, moGiaoViec } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, taoViec, voiPhien } from './lib/pr2b.mjs';
 
-let db; let khoa; let vbId; let p1; let p3; let cauHinhCu = '1';
+let db; let khoa; let vbId; let p1; let p3; let tenTp = ''; let cauHinhCu = '1';
 const datCauHinh = (v) => db.from('kl_cau_hinh').update({ gia_tri: v }).eq('khoa', 'xem_toan_bo');
 
 test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của tôi tối giản, vướng mắc gửi tới (v3.23)', () => {
@@ -23,6 +23,7 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
     p1 = await taoViec(db, vbId, `${khoa} P1 việc chuyên viên chủ trì`);
     p3 = await taoViec(db, vbId, `${khoa} P3 việc phòng Tổng hợp`, { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: ID.e2eOwner, nguoi_theo_doi: ID.cvp,
       tao_boi: ID.cvp, cap_nhan_san_pham: 'CHANH_VAN_PHONG' });
+    tenTp = (await db.from('accounts').select('full_name').eq('id', ID.e2eTp).single()).data.full_name;   // người giao P1 (tao_boi)
     const r = await datCauHinh('2'); if (r.error) throw new Error(`Đặt cấu hình thất bại: ${r.error.message}`);
   });
   test.afterAll(async () => { if (!db) return; await datCauHinh(cauHinhCu); await donVanBan(db, khoa); });
@@ -71,23 +72,30 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
     });
   });
 
-  test('3. Việc của tôi: dải số tổng (bấm "tất cả"), thẻ tối giản có văn bản gốc, Chi tiết mở đủ thông tin, nhóm theo văn bản; không có P3', async ({ browser }, testInfo) => {
+  test('3. Việc của tôi theo văn bản gốc (v3.23.1): người giao, dòng tối giản + Chi tiết, Toàn Văn phòng (P3 chỉ xem), lọc chủ trì; Theo văn bản ghi người giao', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await nav(p, 'navDieuHanh');
-      const tong = p.locator('#vctTongSo');
-      await expect(tong.locator('[data-xem="dang-lam"]')).toHaveAttribute('aria-pressed', 'true', NAP);
-      await expect(p.locator('#vctTom')).toContainText('việc của đồng chí');
-      const the = p.locator(`#vct-${p1.id}`); await expect(the).toBeVisible(NAP);
-      await expect(the.locator('.vct-vb')).toContainText(khoa);
-      await expect(p.locator(`#vct-${p3.id}`)).toHaveCount(0);
-      await the.getByRole('button', { name: 'Chi tiết', exact: true }).click();
-      await expect(p.locator(`#vctThem-${p1.id}`)).toBeVisible(); await expect(p.locator(`#vctThem-${p1.id}`)).toContainText('Người giao');
-      await tong.locator('[data-xem="tat-ca"]').click();
-      await expect(tong.locator('[data-xem="tat-ca"]')).toHaveAttribute('aria-pressed', 'true');
-      expect(Number(await tong.locator('[data-xem="tat-ca"] b').innerText())).toBeGreaterThanOrEqual(1);
-      await expect(p.locator(`#vctMuc-tat-ca-mo #vct-${p1.id}`)).toBeVisible();
-      await p.locator('#vctTheoVb').check();
-      await expect(p.locator(`#vctVb-${vbId} #vct-${p1.id}`)).toBeVisible(NAP);
+      await expect(p.locator('#vbcCay')).toHaveAttribute('data-nap', /./, NAP);
+      await expect(p.locator('#vctTom')).toContainText('việc cần làm');
+      const khoi = p.locator(`#vctVb-${vbId}`); await expect(khoi).toBeVisible(NAP);
+      await expect(khoi.locator('[data-truong="nguoi-giao"]')).toContainText(tenTp);
+      const dong = p.locator(`#vctDong-${p1.id}`); await expect(dong).toBeVisible();
+      await expect(p.locator(`#vctDong-${p3.id}`)).toHaveCount(0);
+      await dong.getByRole('button', { name: 'Chi tiết', exact: true }).click();
+      const ct = p.locator(`#vbcThem-${p1.id}`); await expect(ct).toBeVisible(); await expect(ct).toContainText('Người giao');
+      await expect(ct.getByRole('button', { name: 'Cập nhật', exact: true })).toBeVisible();
+      await p.locator('#vbcPhamVi [data-pv="toan"]').click();
+      await p.locator('#vbcTim').fill(khoa);
+      await expect(p.locator(`#vctVb-${vbId}`)).toHaveAttribute('data-mo', '1', NAP);   // toàn Văn phòng gập sẵn — đang tìm thì mở
+      await expect(p.locator(`#vctDong-${p3.id} .nhan-chi-xem`)).toBeVisible(NAP);
+      await p.locator(`#vctDong-${p3.id} .vbc-nut-ct`).click();
+      await expect(p.locator(`#vbcThem-${p3.id}`).getByRole('button', { name: 'Mở ngăn chi tiết' })).toBeVisible();
+      await expect(p.locator(`#vbcThem-${p3.id}`).getByRole('button', { name: 'Cập nhật', exact: true })).toHaveCount(0);
+      await p.locator('select[data-vbc-loc="chuTri"]').selectOption(ID.e2eOwner);
+      await expect(p.locator(`#vctDong-${p1.id}`)).toHaveCount(0); await expect(p.locator(`#vctDong-${p3.id}`)).toBeVisible();
+      await nav(p, 'navTheoVanBan');
+      await expect(p.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);
+      await expect(p.locator(`#tvbVb-${vbId} [data-truong="nguoi-giao"]`)).toContainText(tenTp);
     });
   });
 

@@ -45,6 +45,7 @@ export async function napLaiViec(id, { nemLoi = false, veLai = true, chiKhiDoi =
     const trong = row && !chiXem(row);
     if (row) datNgoaiPhamVi(id, !trong);   // 0103: màn điều hành chỉ giữ việc trong phạm vi xử lý (việc vừa ra / vào phạm vi: bỏ / thêm)
     thay(dh.rows, id, trong ? row : null);
+    thay(dh.tatCa, id, row);   // v3.23.1: Việc của tôi — Toàn Văn phòng
     thay(dh.ngoaiLe, id, trong ? ngoaiLe : null);
     dh.ngoaiLe.sort(soSanhNgoaiLe);
     dh.tuChoiCho = [...(dh.tuChoiCho || []).filter((t) => t.nhiem_vu_id !== id), ...tuChoi.filter((t) => t.trang_thai === 'CHO_DUYET')];

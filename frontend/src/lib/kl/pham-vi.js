@@ -51,3 +51,15 @@ export function nhomTheoVanBan(rows) {
   return [...m.values()].sort((a, b) => (a.khoa === 'khong') - (b.khoa === 'khong') || (b.r.ngay_ban_hanh || '').localeCompare(a.r.ngay_ban_hanh || '')
     || (a.r.so_ket_luan || '').localeCompare(b.r.so_ket_luan || '', 'vi', { numeric: true }));
 }
+// v3.23.1 (chủ dự án 13/10/2026): "Người giao" của một văn bản gốc = tài khoản đã thực hiện giao việc (tao_boi) của các việc giao thẳng từ văn
+// bản đó (không tính việc giao tiếp xuống — có nhiem_vu_cha); nhiều việc trước. ten(id) = họ tên theo danh bạ. Trả [{ id, ten, n }].
+export function nguoiGiaoVanBan(rows = [], ten = () => '') {
+  const m = new Map();
+  rows.filter((r) => !r.nhiem_vu_cha && r.tao_boi).forEach((r) => m.set(r.tao_boi, (m.get(r.tao_boi) || 0) + 1));
+  return [...m].map(([id, n]) => ({ id, ten: ten(id) || 'Tài khoản không còn trong danh bạ', n }))
+    .sort((a, b) => b.n - a.n || a.ten.localeCompare(b.ten, 'vi'));
+}
+export const nguoiGiaoText = (ds) => ds.map((x) => `${x.ten} (${x.n} việc)`).join(', ');
+// Tiến độ một văn bản trên các việc đang xem: tổng, hoàn thành, quá hạn (đang mở, Đỏ / Đỏ đặc biệt).
+export const tienDoVanBan = (rows = []) => ({ n: rows.length, xong: rows.filter((r) => r.tien_do_ma === 'HOAN_THANH').length,
+  quaHan: rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH' && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao)).length });
