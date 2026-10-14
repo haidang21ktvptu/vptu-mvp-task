@@ -6,7 +6,7 @@ import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
-import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, tenChatLuong } from '../../../lib/kl/nhan.js';
+import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, tenChatLuong, lopQuaHan } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { napDienBien } from '../dien-bien.js';
 import { timKlRow } from './danh-sach.js';
@@ -93,10 +93,10 @@ export function chiTietHtml(r, ls, dc) {
   const nguoiNhap = r.tao_boi ? findAccount(r.tao_boi)?.full_name : '';   // Đợt F v3.21: lưu vết — chỉ tài khoản thực hiện (không ghi "thay mặt")
   const dinhChinh = dc.length === 0 ? 'chưa có' : dc.map((d) => `${tenCot(d.cot)}: ${hienGiaTri(d.cot, d.gia_tri_cu)} → ${hienGiaTri(d.cot, d.gia_tri_moi)} (${d.ly_do})`).join('; ');
   const nhanViec = ls.filter((l) => l.cot === 'xac_nhan_nhan_viec');
-  const hanLop = r.nhom_dem === 'QUA_HAN' || r.nhom_dem === 'DANG_DINH_CHINH' ? ' style="color:var(--do)"' : '';
+  const hanLop = r.nhom_dem === 'QUA_HAN' || r.nhom_dem === 'DANG_DINH_CHINH' ? ` style="color:var(${r.muc_canh_bao === 'DO_DAC_BIET' ? '--ddb' : '--do'})"` : '';
   const me = state.user?.id;
   const lopTT = r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : laBenNop(r, me) ? 'tt-cho'
-    : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem) ? 'tt-qua' : 'tt-cho';
+    : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem) ? lopQuaHan(r) : 'tt-cho';
   const nhanTT = `<span class="trang-thai ${lopTT}">${nhanTrangThai(r, me)}</span>`; // nhãn đã kèm số ngày trễ; người nộp: nhãn trung tính (Mới 2)
   // v9 đợt 2: ô do cấp giao điền có bút (sửa ngay) / khoá (đề nghị sửa) — sua-tang.js.
   const o = (nhan, gt, cot = '') => { const nt = cot ? nutTangHtml(r, cot) : ''; return `<div${nt ? ' class="co-tang"' : ''}><dt>${nhan}</dt><dd>${gt}</dd>${nt}</div>`; };

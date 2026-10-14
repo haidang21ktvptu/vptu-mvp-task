@@ -49,7 +49,7 @@ function taiViecHtml() {
 function viecCuaToiHtml() {
   const ds = dh.rows.filter((r) => r.owner_tai_khoan === state.user.id && mo(r)).sort((a, b) => ((a.han_xu_ly || '9') < (b.han_xu_ly || '9') ? -1 : 1));
   if (!ds.length) return '<p class="trong">Đồng chí không trực tiếp chủ trì việc nào đang mở.</p>';
-  return ds.map((r) => `<div class="the-con ${laDo(r) ? 'do' : ''}" id="ptToi-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<br><small class="chu-phu">hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</small></p>
+  return ds.map((r) => `<div class="the-con ${{ DO: 'do', DO_DAC_BIET: 'dac-biet' }[r.muc_canh_bao] || ''}" id="ptToi-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<br><small class="chu-phu">hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</small></p>
       <div class="hanh-dong"><button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div></div>`).join('');
 }
 

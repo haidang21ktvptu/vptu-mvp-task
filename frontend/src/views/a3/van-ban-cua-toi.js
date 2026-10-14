@@ -6,7 +6,7 @@
 import { $, setText, escapeHtml } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { formatNgay, ghiChuHan, homNayVN } from '../../lib/kl/ngay.js';
-import { nhanTrangThai, boSoThuTu } from '../../lib/kl/nhan.js';
+import { nhanTrangThai, boSoThuTu, lopQuaHan, laBenNop } from '../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
 import { locRows } from '../../lib/kl/tong-hop.js';
 import { chiXem, locCanBo, tuyChonCanBo, nhomTheoVanBan, vanBanGocText, nguoiGiaoVanBan, nguoiGiaoText, tienDoVanBan } from '../../lib/kl/pham-vi.js';
@@ -29,7 +29,7 @@ const coSo = () => (toanVP() ? dh.tatCa : dh.rows);
 const daLoc = () => locCanBo(vbc.tuKhoa ? locRows(coSo(), { tuKhoa: vbc.tuKhoa }) : coSo(), vbc.loc);   // trước lọc trạng thái
 // Mặc định: phạm vi của tôi mở; toàn Văn phòng gập — trừ khi đang tìm / lọc (mở để thấy ngay việc khớp).
 const moNhom = (khoa) => { const k = `${vbc.pham}:${khoa}`; return vbc.moNhom.has(k) ? vbc.moNhom.get(k) : !toanVP() || Boolean(vbc.tuKhoa || vbc.loc.chuTri || vbc.loc.theoDoi); };
-const lopTT = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU', 'DANG_DINH_CHINH'].includes(r.nhom_dem) ? 'tt-qua' : 'tt-cho');
+const lopTT = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : laBenNop(r, state.user?.id) ? 'tt-cho' : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU', 'DANG_DINH_CHINH'].includes(r.nhom_dem) ? lopQuaHan(r) : 'tt-cho');
 const nut = (r, nhan, action, lop = '') => `<button type="button" class="nut nho ${lop}" data-action="${action}" data-id="${r.id}">${nhan}</button>`;
 
 // Đề nghị sửa: đã có đề nghị của tôi đang chờ → nút Rút (như thẻ "Cần xử lý ngay"), không gửi đề nghị thứ hai.

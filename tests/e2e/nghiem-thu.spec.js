@@ -56,7 +56,7 @@ test.describe.serial('Đợt D — nộp minh chứng là hoàn thành; trả l�
     await expect(cv.locator(`#klMinhChung-${T.id}`)).toContainText('Tệp: bao-cao-ket-qua.pdf');
     await moViec(cv, Q.id, Q.ma);
     await expect(cv.locator(`#klChiTiet-${Q.id} .ct-nhan .trang-thai`)).toHaveText('Đã nộp — chờ xác nhận', NAP);
-    await expect(cv.locator(`#klChiTiet-${Q.id} .ct-nhan .trang-thai`)).not.toHaveClass(/tt-qua/);
+    await expect(cv.locator(`#klChiTiet-${Q.id} .ct-nhan .trang-thai`)).not.toHaveClass(/tt-qua|tt-ddb/);
   });
 
   test('2. Người giao (A2) thấy ở "Kết quả nộp trong 7 ngày"; trả lại chỉ cần lý do → nhiệm vụ mở lại', async () => {

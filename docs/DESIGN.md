@@ -44,9 +44,11 @@ Màu mức cảnh báo (khớp `alert_level` của view):
 |---|---|---|---|
 | XANH | `#E6F2EF` | `#2A7365` | Dải màu 4px bên trái dòng. Chữ/viền đậm hơn ngọc một bậc vì `#2E7D6E` trên nền nhạt chỉ đạt 4.28:1 với chữ 12px |
 | VANG | `#FBF3DF` | `#8A6512` | Dải màu bên trái |
-| DO | `#FBE9E7` | `#B42318` | Dải màu bên trái |
-| DO_DAC_BIET | `#F6DCE0` | `#7A0C1E` | Dải bên trái + chữ đậm + biểu tượng ‼ |
+| DO | `#FDECEA` | `#C92A1E` | Dải màu bên trái, nhãn trạng thái đỏ |
+| DO_DAC_BIET | `#F3E8FF` | `#6B21A8` | **Tím đậm** (v3.23.2): dải bên trái, chấm, nhãn trạng thái tím có ‼ |
 | HOAN_THANH | `#E6F2EF` | `#2A7365` | Chữ mực nhạt, dải ngọc |
+
+v3.23.2 (chủ dự án 14/10/2026): Đỏ và Đỏ đặc biệt phải phân biệt được bằng mắt ngay — Đỏ đặc biệt đổi sang **tím đậm** (token `--ddb`, `--ddb-nhat`, `--nen-ddb`; biểu đồ `--f-ddb`, chữ trên nó `--f-ddb-chu`); nền tối: Đỏ `#F97A70`, Đỏ đặc biệt `#C4A1F5`. `--do-dam` (đỏ rượu) chỉ còn cho Hỏa tốc và chỉ đạo Thường trực, không dùng cho mức cảnh báo.
 
 Quy tắc: **màu là thông tin, không phải trang trí.** Mỗi màu xuất hiện vì nó nói lên trạng thái hoặc vai trò, không vì "cho đẹp".
 

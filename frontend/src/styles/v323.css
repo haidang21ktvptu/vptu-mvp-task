@@ -6,7 +6,7 @@
      việc tối giản + Chi tiết. Dùng lại .pham-vi, .tq .o-so, .kl-tim của màn Nhiệm vụ. */
   .vct-trang > .tam.vbc { margin-top: 16px; }
   .vbc-loc { margin: 0; padding: 10px 16px 12px; gap: 8px 10px; }
-  .vbc-loc .tq .o-so b { color: var(--navy); }
+  .vbc-loc .tq .o-so:not([aria-pressed="true"]) b { color: var(--navy); }   /* v3.23.2: nút đang chọn giữ số vàng trên nền đặc (nhiem-vu-v8.css) */
   .vbc-loc .kl-tim { margin-left: 0; width: 260px; }
   .vbc-chon { display: inline-flex; flex-wrap: wrap; gap: 8px; }
   .vbc-chon select { height: 32px; padding: 0 8px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px; color: var(--chu); max-width: 220px; }

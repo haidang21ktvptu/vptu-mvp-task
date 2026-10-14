@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { demTheoNhom, tongHop, sapXep, locRows, theoNganhLinhVuc, theoChuTriMo, theoHoiNghi, chatLuong, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH } from '../src/lib/kl/tong-hop.js';
 import { homNayVN, soNgay, formatNgay, congNgay, ghiChuHan, ngayTruoc, ngayTrongMinhChung } from '../src/lib/kl/ngay.js';
-import { nhanTrangThai, THU_TU_NHOM, lopMep } from '../src/lib/kl/nhan.js';
+import { nhanTrangThai, THU_TU_NHOM, lopMep, lopQuaHan } from '../src/lib/kl/nhan.js';
 
 const MOC = { HOAN_THANH: 146, THUONG_XUYEN: 16, QUA_HAN: 8, DANG_THUC_HIEN: 6, CHO_DIEU_KIEN: 6, CAN_DIEN_HAN: 3, SAP_DEN_HAN: 0 };
 
@@ -142,6 +142,10 @@ describe('PR-2b — nhóm trạng thái nghiệm thu', () => {
     assert.equal(nhanTrangThai(r, 'cv'), 'Đã nộp — chờ xác nhận'); assert.equal(lopMep(r, 'cv'), 'lam');
     assert.equal(nhanTrangThai(r, 'tp'), 'Quá hạn, chờ xác nhận minh chứng · 2 ngày'); assert.equal(lopMep(r, 'tp'), 'do');
     assert.equal(nhanTrangThai({ ...r, nhom_dem: 'CHO_NGHIEM_THU' }, 'tp'), 'Chờ xác nhận minh chứng');
+  });
+  test('v3.23.2: Đỏ đặc biệt có lớp riêng (tím) ở dải mép và nhãn trạng thái, Đỏ giữ lớp đỏ', () => {
+    assert.equal(lopMep({ nhom_dem: 'QUA_HAN', muc_canh_bao: 'DO_DAC_BIET' }), 'dac-biet');
+    assert.equal(lopQuaHan({ muc_canh_bao: 'DO_DAC_BIET' }), 'tt-ddb'); assert.equal(lopQuaHan({ muc_canh_bao: 'DO' }), 'tt-qua');
   });
 });
 

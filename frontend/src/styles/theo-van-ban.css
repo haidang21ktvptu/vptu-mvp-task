@@ -25,12 +25,13 @@
   .tvb-nut { flex: 1; min-width: 0; display: grid; grid-template-columns: 12px 64px minmax(0, 1fr) 160px 88px; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; font: inherit; text-align: left; cursor: pointer; color: var(--chu); }
   .tvb-nut:hover { background: var(--nen-phu); border-color: var(--vien); }
   .tvb-cham { width: 10px; height: 10px; border-radius: 50%; background: var(--vien); }
-  .tvb-cham.lam { background: var(--navy); } .tvb-cham.vang { background: var(--vang); } .tvb-cham.do, .tvb-cham.dac-biet { background: var(--do); } .tvb-cham.luc { background: var(--luc); } .tvb-cham.mc { background: var(--luc-nhat); border: 1px solid var(--luc); }
+  .tvb-cham.lam { background: var(--navy); } .tvb-cham.vang { background: var(--vang); } .tvb-cham.do { background: var(--do); } .tvb-cham.dac-biet { background: var(--ddb); } .tvb-cham.luc { background: var(--luc); } .tvb-cham.mc { background: var(--luc-nhat); border: 1px solid var(--luc); }
   .tvb-nut .ma { font-size: 12px; font-weight: 700; color: var(--navy); }
   .tvb-nut .nd { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tvb-nut .chu-tri { font-size: 12px; color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tvb-nut .han { font-size: 12px; color: var(--chu-phu); text-align: right; white-space: nowrap; }
   .tvb-nhanh[data-nhom="QUA_HAN"] > .tvb-hang .han, .tvb-nhanh[data-nhom="DANG_DINH_CHINH"] > .tvb-hang .han { color: var(--do); font-weight: 600; }
+  .tvb-hang .tvb-cham.dac-biet ~ .han { color: var(--ddb); font-weight: 600; }   /* v3.23.2: Đỏ đặc biệt tím cả chấm lẫn hạn */
   .tvb-la { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 4px 8px 4px 30px; font-size: 12px; color: var(--chu-phu); }
   .tvb-la b { color: var(--chu); }
   .tvb-la .tt-cho, .tvb-la .tt-xong, .tvb-la .tt-qua { padding: 0 6px; border-radius: 6px; font-weight: 600; }

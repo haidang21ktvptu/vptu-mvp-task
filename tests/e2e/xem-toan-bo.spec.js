@@ -77,6 +77,9 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
       await nav(p, 'navDieuHanh');
       await expect(p.locator('#vbcCay')).toHaveAttribute('data-nap', /./, NAP);
       await expect(p.locator('#vctTom')).toContainText('việc cần làm');
+      const chon = p.locator('#vbcSo .o-so[aria-pressed="true"]'); await expect(chon).toHaveCount(1);   // v3.23.2: số trên nút đang chọn không trùng màu nền
+      const [mau, nen] = await chon.evaluate((el) => [globalThis.getComputedStyle(el.querySelector('b')).color, globalThis.getComputedStyle(el).backgroundColor]);
+      expect(mau).not.toBe(nen);
       const khoi = p.locator(`#vctVb-${vbId}`); await expect(khoi).toBeVisible(NAP);
       await expect(khoi.locator('[data-truong="nguoi-giao"]')).toContainText(tenTp);
       const dong = p.locator(`#vctDong-${p1.id}`); await expect(dong).toBeVisible();

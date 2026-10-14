@@ -32,7 +32,7 @@
   .hang-nv .ten > span { display: block; font-size: 12px; color: var(--chu-phu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hang-nv .han { flex: none; min-width: 96px; font-size: 12px; color: var(--chu-phu); text-align: right; white-space: nowrap; }
   .hang-nv .han b { display: block; font-size: 13px; font-weight: 600; color: var(--navy); }
-  .hang-nv.do .han b, .hang-nv.dac-biet .han b { color: var(--do); } .hang-nv.vang .han b { color: var(--vang-chu); } .hang-nv.luc .han b { color: var(--luc); }
+  .hang-nv.do .han b { color: var(--do); } .hang-nv.dac-biet .han b { color: var(--ddb); } .hang-nv.vang .han b { color: var(--vang-chu); } .hang-nv.luc .han b { color: var(--luc); }
   .ds-chan { padding: 10px 16px; font-size: 12px; color: var(--chu-phu); border-top: 1px solid var(--vien-nhat); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
   .md .chi-tiet { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 0; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
