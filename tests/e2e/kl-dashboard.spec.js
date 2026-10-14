@@ -31,7 +31,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     await expect(o).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
     await expect(page.locator('#klBody [id^="klRow-"]:not([data-nhom="QUA_HAN"])')).toHaveCount(0);
-    const mauDo = [await mauToken(page, '--do'), await mauToken(page, '--do-dam')]; // Đỏ / Đỏ đặc biệt — đọc từ token, không ghi cứng
+    const mauDo = [await mauToken(page, '--do'), await mauToken(page, '--ddb')]; // Đỏ / Đỏ đặc biệt (v3.23.2: tím) — đọc từ token, không ghi cứng
     await expect.poll(() => page.locator('#klBody [id^="klRow-"] .stt').first().evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)) // v8: chấm trạng thái (viền trái đã bỏ); poll: dòng có thể vừa vẽ lại (realtime)
       .toMatch(new RegExp(`^(${mauDo.map((m) => m.replace(/[()]/g, '\\$&')).join('|')})$`));
     await page.locator('#klStats [data-nhom=""]').click();

@@ -21,7 +21,7 @@
   .muc { padding: 14px 18px; border-top: 1px solid var(--vien); border-left: 5px solid transparent; }
   .muc:first-of-type { border-top: 0; }
   .muc.vang { border-left-color: var(--vang); background: var(--nen-vang-mo); } .muc.do { border-left-color: var(--do); background: var(--nen-do-muc); }
-  .muc.dac-biet { border-left-color: var(--do-dam); background: var(--nen-do-muc); } .muc.lam { border-left-color: var(--lam); } .muc.luc { border-left-color: var(--luc); }
+  .muc.dac-biet { border-left-color: var(--ddb); background: var(--nen-ddb); } .muc.lam { border-left-color: var(--lam); } .muc.luc { border-left-color: var(--luc); }
   .muc > b { display: block; } .muc p { font-size: 13px; color: var(--chu-phu); margin-top: 2px; }
   .muc p b { color: var(--chu); } .muc .hanh-dong { margin-top: 10px; } .muc .o { margin-top: 10px; }
   .muc .the-con { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--vien); }

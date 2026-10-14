@@ -35,14 +35,14 @@
   /* ---- Nhãn trạng thái ---- */
   .trang-thai { display: inline-block; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
   .tt-cho { background: var(--vang-nhat); color: var(--vang-chu-dam); } .tt-xong { background: var(--luc-nhat); color: var(--luc); }
-  .tt-qua { background: var(--do-nhat); color: var(--do-chu); } .tt-xam { background: var(--nen-phu); color: var(--chu-phu); }
+  .tt-qua { background: var(--do-nhat); color: var(--do-chu); } .tt-ddb { background: var(--ddb-nhat); color: var(--ddb); } .tt-ddb::before { content: '‼'; margin-right: 3px; } .tt-xam { background: var(--nen-phu); color: var(--chu-phu); }
   .huy-hieu { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--ben-dem); color: var(--ben-dem-chu);
     font-size: 11px; font-weight: 700; line-height: 1; }
   .khau { display: inline-block; background: var(--cam-nhat); color: var(--cam-chu); border-radius: 6px; padding: 2px 8px; font-weight: 600; font-size: 13px; }
 
   /* ---- Thẻ việc (A0/A1): mép trái theo mức ---- */
   .the { background: var(--the); border: 1px solid var(--vien); border-left: 6px solid var(--vien); border-radius: var(--bo-the); padding: 14px 16px; margin-bottom: 12px; box-shadow: var(--bong-the); }
-  .the.dac-biet { border-left-color: var(--do-dam); background: var(--nen-do-the); } .the.do { border-left-color: var(--do); }
+  .the.dac-biet { border-left-color: var(--ddb); background: var(--nen-ddb); } .the.do { border-left-color: var(--do); }
   .the.vang { border-left-color: var(--vang); } .the.luc { border-left-color: var(--luc); } .the.lam { border-left-color: var(--lam); }
   .the-dau { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
   .the .ten b { display: block; font-size: 16px; }

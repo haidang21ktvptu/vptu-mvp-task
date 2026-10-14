@@ -36,6 +36,8 @@ const CHO_NT = ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'];
 export const laBenNop = (r, me) => Boolean(me) && CHO_NT.includes(r.nhom_dem) && (r.nguoi_nop_cho === me || r.owner_tai_khoan === me);
 // Lớp mép trái của một dòng v_nhiem_vu: hoàn thành → lục; người nộp đang chờ nghiệm thu → trung tính; còn lại theo mức.
 export const lopMep = (r, me) => (r.nhom_dem === 'HOAN_THANH' ? 'luc' : laBenNop(r, me) ? 'lam' : mucCua(r.muc_canh_bao).lop);
+// v3.23.2: lớp nhãn trạng thái (.trang-thai) của việc quá hạn — Đỏ đặc biệt (quá hạn ≥ 3 ngày) tím, còn lại đỏ (cùng màu dải mép trái).
+export const lopQuaHan = (r) => (r.muc_canh_bao === 'DO_DAC_BIET' ? 'tt-ddb' : 'tt-qua');
 
 // Bốn khâu nghẽn của việc Đỏ (v_ngoai_le.khau, thứ tự ưu tiên trong 0033); mau = màu thanh tỉ lệ ở thanh trái.
 export const KHAU = {

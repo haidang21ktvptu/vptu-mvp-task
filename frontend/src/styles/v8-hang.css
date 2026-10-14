@@ -21,7 +21,7 @@
 
   /* Chấm trạng thái, mã, nhãn, hạn */
   .stt { width: 8px; height: 8px; border-radius: 4px; flex: none; background: var(--navy); }
-  .stt.lam { background: var(--lam); } .stt.do { background: var(--do); } .stt.dac-biet { background: var(--do-dam); } .stt.vang { background: var(--vang-chu); } .stt.luc { background: var(--luc); } .stt.cam { background: var(--cam); }
+  .stt.lam { background: var(--lam); } .stt.do { background: var(--do); } .stt.dac-biet { background: var(--ddb); } .stt.vang { background: var(--vang-chu); } .stt.luc { background: var(--luc); } .stt.cam { background: var(--cam); }
   .ma { font-weight: 700; color: var(--navy); flex: none; min-width: 64px; }
   .han { flex: none; min-width: 96px; text-align: right; font-weight: 600; font-size: 13px; color: var(--navy); }
   .han.do { color: var(--do); } .han.vang { color: var(--vang-chu); } .han.luc { color: var(--luc); }
@@ -37,7 +37,7 @@
   .the.hang .ten > span { display: block; font-size: 12px; color: var(--chu-phu); max-width: none; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* một dòng, tooltip đủ */
   .the.hang .khau { font-size: 12px; padding: 1px 6px; }
   .the.hang .tre { flex: none; min-width: 64px; font-family: var(--font-tieu-de); font-size: 22px; font-weight: 700; color: var(--do); text-align: right; line-height: 1; }
-  .the.hang .tre.cam { color: var(--cam); }
+  .the.hang .tre.cam { color: var(--cam); } .the.hang.dac-biet .tre:not(.cam) { color: var(--ddb); }
   .the.hang .tre small { display: block; font-size: 11px; font-weight: 500; color: var(--chu-phu); font-family: var(--font-sans); }
   .the.hang .hanh-dong { margin: 0; flex: none; gap: 6px; }
   .the.hang .ten b { overflow: hidden; }
@@ -52,7 +52,8 @@
   .muc > p { padding: 0 16px 6px; }
   .muc .the-con, .muc .the-con:first-of-type { margin: 0; padding: 10px 16px; border-top: 1px solid var(--vien-nhat); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
   .muc .the-con::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--navy); flex: none; }
-  .muc.do .the-con::before, .muc .the-con.do::before { background: var(--do); } .muc.vang .the-con::before { background: var(--vang-chu); } .muc.luc .the-con::before { background: var(--luc); }
+  .muc.do .the-con::before { background: var(--do); } .muc.vang .the-con::before { background: var(--vang-chu); } .muc.luc .the-con::before { background: var(--luc); }
+  .muc .the-con.do::before { background: var(--do); } .muc .the-con.dac-biet::before { background: var(--ddb); }   /* v3.23.2: mức của từng việc đứng sau màu nhóm */
   .muc .the-con > p { flex: 1 1 320px; min-width: 0; margin: 0; font-size: 13px; color: var(--chu); }
   .muc .the-con > p > b:first-child { color: var(--navy); margin-right: 4px; }
   .muc .the-con .hanh-dong { margin: 0; flex: none; gap: 6px; }

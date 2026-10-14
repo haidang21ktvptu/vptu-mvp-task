@@ -830,3 +830,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Người giao = tài khoản đã giao việc (`tao_boi`) của việc giao thẳng từ văn bản (`nguoiGiaoVanBan`) — ở đầu khối văn bản của Việc của tôi và gốc cây Theo văn bản; Chi tiết thẻ cũng ghi người giao theo `tao_boi`.
 - Kiểm thử: unit `xem-toan-bo.test.mjs` (+ người giao, tiến độ); e2e `xem-toan-bo.spec.js` bài 3 viết lại; `cv-giao-viec`, `giao-viec-ma-tran` đọc dòng `#vctDong-`.
 - **Kết quả phát hành** (14/10/2026 07:34): PR #138 CI xanh (e2e 142 bài; lần đầu đỏ: ô tìm vẽ lại khi rời ô làm mất cú bấm ngay sau khi gõ — đã sửa); chủ dự án đẩy tag `v3.23.1` (`6749ce2`), duyệt — deploy-prod xanh, tag `production` = `6749ce2`; PR #138 merge. Cấu hình `xem_toan_bo` trên production vẫn 1.
+
+## 72. v3.23.2: số trên nút lọc đang chọn hiện rõ; Đỏ đặc biệt đổi sang tím (14/10/2026, chủ dự án duyệt; chỉ giao diện, không migration)
+- Việc của tôi › Nhiệm vụ theo văn bản gốc: số trên nút trạng thái đang chọn trùng màu nền (luật `.vbc-loc .tq .o-so b` đè số vàng) — chỉ áp cho nút chưa chọn.
+- Mức cảnh báo: Đỏ `#C92A1E` (sáng hơn, đạt 4.5:1 trên nền đỏ nhạt), **Đỏ đặc biệt tím đậm** `#6B21A8` (token mới `--ddb`, `--ddb-nhat`, `--nen-ddb`, `--f-ddb-chu`; nền tối `#F97A70` / `#C4A1F5`) ở dải mép, chấm (cả chấm ở Theo văn bản — trước cùng màu Đỏ), chữ hạn, số ngày trễ, biểu đồ Tổng quan; nhãn trạng thái tím có ‼ (`lopQuaHan`, `.tt-ddb`) ở Việc của tôi và ngăn chi tiết. `--do-dam` chỉ còn cho Hỏa tốc, chỉ đạo Thường trực. DESIGN.md cập nhật.
+- Kèm: chấm mức của thẻ trong nhóm "Sắp đến hạn hoặc quá hạn" đứng sau màu nhóm (trước bị màu vàng của nhóm đè); Trưởng phòng (Việc của tôi, Việc Đỏ của phòng) và cây Theo văn bản (chấm + hạn) cũng tím; nhãn của người nộp chờ xác nhận giữ trung tính.
+- Kiểm thử: unit `tong-hop.test.mjs` (lớp Đỏ đặc biệt); e2e `xem-toan-bo` bài 3 kiểm số trên nút đang chọn khác màu nền; `dieu-hanh`, `kl-dashboard` đọc token `--ddb`.

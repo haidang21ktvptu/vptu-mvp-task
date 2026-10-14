@@ -43,7 +43,7 @@
   .tai { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--nen-phu); min-width: 90px; }
   .tai > i { display: block; height: 100%; }
   .tai .t-xong { background: var(--luc); } .tai .t-mo { background: var(--navy); opacity: .45; }
-  .tai .t-vang { background: var(--vang); } .tai .t-do { background: var(--do); } .tai .t-ddb { background: var(--do-dam); }
+  .tai .t-vang { background: var(--vang); } .tai .t-do { background: var(--do); } .tai .t-ddb { background: var(--ddb); }
   .bang-kpi td.c-tai { min-width: 110px; }
 
   /* Diễn biến / lịch sử: giá trị cũ gạch ngang, giá trị mới đậm. */

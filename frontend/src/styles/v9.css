@@ -21,7 +21,7 @@
   .bc-chinh { font-family: var(--font-tieu-de); font-weight: 600; font-size: 20px; color: var(--chu); margin-top: 4px; line-height: 1.25; }
   .bc-chinh b { font-size: 30px; font-weight: 600; letter-spacing: -.02em; margin-right: 4px; }
   .bc-chinh em { font-style: normal; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; vertical-align: 6px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; }
-  .bc-chinh em.ddb { background: var(--f-ddb); color: #fff; }
+  .bc-chinh em.ddb { background: var(--f-ddb); color: var(--f-ddb-chu); }
   .bc-phu { font-size: 14px; color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   /* Số-lọc: chữ số Lexend vừa phải, nhãn mực thường */

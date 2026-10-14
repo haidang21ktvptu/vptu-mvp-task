@@ -4,7 +4,8 @@
    màu cấu trúc, --navy-dac = nền khối đặc có chữ trắng (tách riêng để nền tối giữ tương phản). --do = trạng thái Đỏ (không dùng cho nút);
    nút chính dùng --nut (đỏ son). Màu biểu đồ --f-* theo dataviz: trạng thái luôn đi kèm nhãn chữ. */
 :root {
-  --do: #B42318; --do-dam: #8E1520; --do-nhat: #FDECEA; --do-chu: #8E1520;
+  --do: #C92A1E; --do-dam: #8E1520; --do-nhat: #FDECEA; --do-chu: #8E1520;
+  --ddb: #6B21A8; --ddb-nhat: #F3E8FF; --nen-ddb: #FBF7FF;   /* v3.23.2: Đỏ đặc biệt = tím đậm, tách hẳn khỏi Đỏ; --do-dam giữ cho Hỏa tốc, chỉ đạo Thường trực */
   --nut: #C0262D; --nut-dam: #A01F25;
   --navy: #17365D; --navy-nhat: #E6EDF6; --navy-dac: #17365D;
   --vang: #E0A526; --vang-nhat: #FFF1D6; --vang-chu: #8A5300; --vang-chu-dam: #7A4A00;
@@ -28,7 +29,7 @@
 
   /* Biểu đồ */
   --du-lieu: #2A78D6; --du-lieu-2: #1BAF7A; --du-lieu-nhat: #D6E6F8;
-  --f-tot: #2E9E6A; --f-tre: #A7B4C4; --f-nt: #8DBDF0; --f-vang: #E59E2E; --f-do: #DE4A35; --f-ddb: #8E1520;
+  --f-tot: #2E9E6A; --f-tre: #A7B4C4; --f-nt: #8DBDF0; --f-vang: #E59E2E; --f-do: #DE4A35; --f-ddb: #6B21A8; --f-ddb-chu: #FFFFFF;
   --f-xs: #0E6B58; --f-dt: #2A9C80; --f-d: #8ED0BD;
 
   --font-sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -54,7 +55,8 @@
 @media screen {
   /* Nền tối: xanh đêm (Thanh lịch) — không dùng đen. */
   :root[data-theme="dark"] {
-    --do: #F48A7E; --do-dam: #D0333F; --do-nhat: #3E2129; --do-chu: #F6A2A9;
+    --do: #F97A70; --do-dam: #D0333F; --do-nhat: #3E2129; --do-chu: #F6A2A9;
+    --ddb: #C4A1F5; --ddb-nhat: #2E2245; --nen-ddb: #221E3A;
     --nut: #D23A44; --nut-dam: #B92F39;
     --navy: #C3D7F2; --navy-nhat: #1E3556; --navy-dac: #2C5A93;
     --vang: #E0A23A; --vang-nhat: #3A2E16; --vang-chu: #F5B85A; --vang-chu-dam: #F5C26F;
@@ -70,7 +72,7 @@
     --ben-nen: linear-gradient(180deg, #0C1E36 0%, #081628 100%); --ben-mau: #0C1E36; --ben-cuoi: #081628; --vach-tren: #D23A44;
     --hero-1: #0B2342; --hero-2: #123761; --hero-3: #18487D;
     --du-lieu: #4A93EA; --du-lieu-2: #2CC28E; --du-lieu-nhat: #21406A;
-    --f-tot: #3FB57E; --f-tre: #5C6E88; --f-nt: #5E8FCC; --f-vang: #E0A23A; --f-do: #EF6B55; --f-ddb: #B3202E;
+    --f-tot: #3FB57E; --f-tre: #5C6E88; --f-nt: #5E8FCC; --f-vang: #E0A23A; --f-do: #EF6B55; --f-ddb: #B48AF0; --f-ddb-chu: #1A0F2E;
     --f-xs: #6FD3B8; --f-dt: #3AA88D; --f-d: #24705F;
     color-scheme: dark;
   }

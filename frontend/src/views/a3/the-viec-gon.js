@@ -8,7 +8,7 @@ import { danhMucKl } from '../../lib/kl/du-lieu.js';
 import { formatNgay, ghiChuHan, homNayVN } from '../../lib/kl/ngay.js';
 import { TEN_LOAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
 import { nhanPhuHtml, nhanDoKhanHtml } from '../../lib/kl/do-khan.js';
-import { nhanTrangThai, boSoThuTu } from '../../lib/kl/nhan.js';
+import { nhanTrangThai, boSoThuTu, lopQuaHan, laBenNop } from '../../lib/kl/nhan.js';
 import { NHAN_TEP } from '../../lib/kl/tep-ten.js';
 import { vanBanGocText } from '../../lib/kl/pham-vi.js';
 import { cheDoTang, tenOGiao } from '../../lib/kl/sua-tang.js';
@@ -60,7 +60,7 @@ const formTuChoi = (r) => `<form class="o" id="oTc-${r.id}" data-submit="deNghiT
     <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
     <button type="submit" class="nut chinh">Gửi đề nghị</button>${huy(`oTc-${r.id}`)}</form>`;
 
-const lopTT = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU', 'DANG_DINH_CHINH'].includes(r.nhom_dem) ? 'tt-qua' : 'tt-cho');
+const lopTT = (r) => (r.nhom_dem === 'HOAN_THANH' ? 'tt-xong' : laBenNop(r, me()) ? 'tt-cho' : ['QUA_HAN', 'QUA_HAN_NGHIEM_THU', 'DANG_DINH_CHINH'].includes(r.nhom_dem) ? lopQuaHan(r) : 'tt-cho');
 // Phần luôn hiện: mã + trạng thái + nhãn phụ; nội dung (2 dòng); hạn · văn bản gốc.
 function chinhHtml(r, homNay, nhanPhu = true) {
   const han = r.nhom_dem === 'HOAN_THANH' ? (r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}` : 'đã hoàn thành')
@@ -97,7 +97,7 @@ export function theViec(r, kieu, homNay = homNayVN()) {
       : `<div class="hanh-dong">${nut('Xác nhận đã nhận việc', 'xacNhanNhanThe', `data-id="${r.id}"`, 'lam')}${moO(`oTc-${r.id}`, 'Từ chối')}${nutChiTiet(r)}</div>${formTuChoi(r)}`;
     return `<div class="the-con vct-the" id="vct-${r.id}" data-nhiem-vu="${r.id}"${dn ? ' data-de-nghi="1"' : ''}>${dau}${kqHtml}${dnsHtml(r)}${chiDaoHtml(r)}${hd}${themHtml(r, `${nutDns(r)}${xem(r)}`)}</div>`;
   }
-  const lop = kieu === 'minh-chung' && r.muc_canh_bao !== 'VANG' ? 'do' : '';
+  const lop = kieu === 'minh-chung' ? ({ DO: 'do', DO_DAC_BIET: 'dac-biet' }[r.muc_canh_bao] || '') : '';   // chấm mức (v3.23.2: Đỏ đặc biệt tím)
   const xong = kieu === 'xong';
   const coMc = !xong && r.theo_1400 && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r);
   const moSan = kieu === 'minh-chung';

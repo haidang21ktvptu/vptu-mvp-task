@@ -24,7 +24,7 @@
   .nct-viec { width: 100%; display: grid; gap: 2px; text-align: left; padding: 10px 12px 10px 14px; border: 1px solid var(--vien); border-left: 4px solid var(--vien-o);
     border-radius: 10px; background: var(--the); }
   .nct-viec:hover { background: var(--nen-mo); border-color: var(--vien-o); }
-  .nct-viec.do { border-left-color: var(--do); } .nct-viec.dac-biet { border-left-color: var(--do-dam); } .nct-viec.vang { border-left-color: var(--vang); }
+  .nct-viec.do { border-left-color: var(--do); } .nct-viec.dac-biet { border-left-color: var(--ddb); } .nct-viec.vang { border-left-color: var(--vang); }
   .nct-viec.luc { border-left-color: var(--luc); } .nct-viec.lam { border-left-color: var(--lam); } .nct-viec.cam { border-left-color: var(--cam); }
   .nct-ma { font-size: 13px; font-weight: 700; color: var(--chu-phu); }
   .nct-nd { font-size: 15px; line-height: 1.45; color: var(--chu); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

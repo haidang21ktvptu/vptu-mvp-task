@@ -29,7 +29,7 @@
   .ngan-noi dt { color: var(--chu-phu); font-size: 13px; } .ngan-noi .hanh-dong { margin-top: 10px; } .ngan-noi .o { margin-top: 8px; }
   .nv-dong { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 10px; border-left: 4px solid var(--vien); border-top: 1px solid var(--vien); }
   .nv-dong:first-of-type { border-top: 0; }
-  .nv-dong.do { border-left-color: var(--do); } .nv-dong.dac-biet { border-left-color: var(--do-dam); } .nv-dong.vang { border-left-color: var(--vang); }
+  .nv-dong.do { border-left-color: var(--do); } .nv-dong.dac-biet { border-left-color: var(--ddb); } .nv-dong.vang { border-left-color: var(--vang); }
   .nv-dong.luc { border-left-color: var(--luc); } .nv-dong.lam { border-left-color: var(--lam); }
   .nv-dong p { font-size: 14px; min-width: 0; } .nv-dong p b { font-weight: 700; } .nv-dong small { display: block; font-size: 12px; color: var(--chu-phu); }
   .nv-ds { padding: 4px 8px 8px; }
