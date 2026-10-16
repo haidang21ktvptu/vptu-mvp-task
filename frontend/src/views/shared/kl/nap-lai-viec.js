@@ -1,10 +1,11 @@
 // Nạp lại đúng MỘT việc ngay sau hành động ghi thành công (GĐ23) hoặc sự kiện realtime của việc đang có trên màn hình (PR-2a B6): đọc dòng
-// v_nhiem_vu (cột tường minh; dòng ngoại lệ dựng từ nhom_ngoai_le/khau — 0051) + tu_choi của id đó = 2 truy vấn (RLS tính cho một dòng — rẻ, không
+// v_nhiem_vu (cột tường minh; dòng ngoại lệ dựng từ nhom_ngoai_le/khau — 0051) + tu_choi của id đó + mục tiêu gắn riêng (0105) = 3 truy vấn (RLS tính cho một dòng — rẻ, không
 // chạm statement timeout như nạp cả danh sách), thay vào bộ nhớ của màn hình Nhiệm vụ (kl.rows) và Điều hành (dh.rows, dh.ngoaiLe, dh.tuChoiCho),
 // vẽ lại màn hình đang hiện. Nạp lại toàn danh sách phía sau vẫn chạy; realtime chỉ là bổ sung — không phụ thuộc vào nó.
 import { supabase } from '../../../lib/supabase.js';
 import { COT_VIEC, COT_TU_CHOI } from '../../../lib/kl/cot.js';
 import { ganCo } from '../../../lib/kl/du-lieu.js';
+import { docMucTieuViec, ganVaoDong } from '../../../lib/kl/muc-tieu-db.js';
 import { getKlRows, render, dangNapKl } from './danh-sach.js';
 import { dh, dongNgoaiLe, soSanhNgoaiLe, dangNapDh } from '../dieu-hanh/du-lieu.js';
 import { veDieuHanh } from '../dieu-hanh/man-hinh.js';
@@ -16,11 +17,12 @@ export async function docMotViec(id) {
   const [r, tc] = await Promise.all([
     supabase.from('v_nhiem_vu').select(COT_VIEC).eq('id', id).maybeSingle(),
     supabase.from('tu_choi').select(COT_TU_CHOI).eq('nhiem_vu_id', id).order('tao_luc', { ascending: false }).order('id'),
+    docMucTieuViec(id),   // v3.24 (0105): mục tiêu then chốt gắn riêng của việc (mặc định văn bản theo bộ nhớ)
   ]);
   if (r.error) throw new Error(r.error.message);
   const row = r.data;
   const tcAll = tc.data || [];
-  if (row) ganCo(row, tcAll.find((t) => t.trang_thai === 'CHO_DUYET'), tcAll[0]);
+  if (row) { ganCo(row, tcAll.find((t) => t.trang_thai === 'CHO_DUYET'), tcAll[0]); ganVaoDong(row); }
   return { row, ngoaiLe: dongNgoaiLe(row), tuChoi: tcAll };
 }
 

@@ -26,6 +26,8 @@
 @import './nhap-excel.css';
 @import './v323.css';
 @import './thong-ke.css';
+@import './tong-quan-v324.css';
+@import './muc-tieu-v324.css';
 @import './in.css';
 
 @tailwind base;

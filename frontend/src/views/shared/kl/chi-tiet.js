@@ -19,6 +19,7 @@ import { coNhapExcel, khoiDuLieuGocHtml, napDuLieuGoc } from './du-lieu-goc.js';
 import { maNguonHtml, nhanMucHtml, oLuoiNguonHtml, nutGiaoThemHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
 import { tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
+import { oMucTieuHtml, khoiMucTieuHtml, tenMucTieuViec, napMucTieu } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu', co_quan_trinh: 'donVi' };
@@ -110,8 +111,9 @@ export function chiTietHtml(r, ls, dc) {
         ${o('Hạn hoàn thành', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
         ${o('Cấp nhận', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'), 'cap_nhan_san_pham')}
-        ${oLuoiPr3Html(r, o)}${oLuoiNguonHtml(r, o)}</dl>
+        ${oLuoiPr3Html(r, o)}${oLuoiNguonHtml(r, o)}${oMucTieuHtml(r)}</dl>
       ${hanhDongHtml(r, nhanViec)}
+      ${khoiMucTieuHtml(r)}
       ${khoiDeNghiSuaHtml(r)}
       ${khoiPr3Html(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
@@ -130,6 +132,7 @@ export function chiTietHtml(r, ls, dc) {
           ${r.minh_chung ? hang('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hang('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hang('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
+          ${hang('Mục tiêu then chốt', tenMucTieuViec(r), canCu('gan_muc_tieu', ls))}
           ${hang('Nguồn dòng · Đính chính', `${nguonDong}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'} · ${dinhChinh}`, '')}
         </tbody></table>
       </details>
@@ -157,7 +160,7 @@ async function nap(id, cheDo, giuBang) {
     o.innerHTML = chiTietHtml(r, ls, dc);
     traNhap();
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
-    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napDeNghiSua(r), napDuLieuGoc(r)]);
+    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napDeNghiSua(r), napDuLieuGoc(r), napMucTieu(r)]);
     if (cheDo === 'chi-dao') focusChiDao(id);
   })();
   dangNap = p.catch((e) => { notifyError('Không đọc được lịch sử: ' + e.message); if (dangMo === id) o.innerHTML = `<p class="loi-inline">Không đọc được lịch sử: ${escapeHtml(e.message)}. Bấm lại dòng để thử lại.</p>`; });

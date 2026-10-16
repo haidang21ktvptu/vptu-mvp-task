@@ -33,6 +33,10 @@ for (const vai of ['A1', 'A2']) {
       await expect(page.locator('#navTongQuan')).toHaveAttribute('aria-selected', 'true');
       await dong();
     }
+    // v3.24: bảng theo phòng / cán bộ nằm trong khối 9 "Quản lý nội bộ" — gập sẵn với lãnh đạo Văn phòng, mở sẵn với Trưởng phòng.
+    const noiBo = page.locator('#tqNoiBoNut');
+    if ((await noiBo.getAttribute('aria-expanded')) === 'false') await noiBo.click();
+    await expect(page.locator('#tqNoiBoThan')).toBeVisible();
     if (await page.locator('#tqTheoNhom .ten-bam').count()) {   // một phòng (A1) / một cán bộ (A2): đang làm + hoàn thành trong kỳ
       await page.locator('#tqTheoNhom .ten-bam').first().click();
       await expect(ngan.locator('.nct-nhom').first()).toBeVisible();

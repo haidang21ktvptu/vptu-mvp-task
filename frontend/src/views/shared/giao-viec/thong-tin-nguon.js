@@ -5,6 +5,7 @@ import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { MUC_QUAN_TRONG } from '../../../lib/kl/ma-nguon.js';
+import { dienMucTieuGv } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt — cùng khối "Thông tin thêm"
 
 const opt = (v, t) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`;
 export function dienThongTinNguon() {
@@ -12,6 +13,7 @@ export function dienThongTinNguon() {
   $('klThCoQuanTrinh').innerHTML = opt('', 'Không ghi') + (danhMucKl().donVi || []).filter((d) => !d.trong_van_phong).map((d) => opt(d.ma, d.ten)).join('');
   $('klThTTChiDao').innerHTML = opt('', 'Không ghi') + state.accounts.filter((a) => a.role_group === 'A0' && !a.is_system)
     .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi')).map((a) => opt(a.id, a.full_name)).join('');
+  dienMucTieuGv($('klThVanBan').value);
 }
 export const docThongTinNguon = () => ({ muc_quan_trong: $('klThMucQT').value || null, co_quan_trinh: $('klThCoQuanTrinh').value || null,
   thuong_truc_chi_dao: $('klThTTChiDao').value || null });

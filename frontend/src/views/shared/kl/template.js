@@ -47,6 +47,7 @@ export const klTemplate = `
       <select id="klLocHan" aria-label="Lọc theo hạn xử lý">${opts(KY_HAN, 'Mọi hạn xử lý')}</select>
       ${oNgay('klLocHanTu', 'Hạn từ ngày')}${oNgay('klLocHanDen', 'Hạn đến ngày')}
       <select id="klLocDoKhan" aria-label="Lọc theo độ khẩn"><option value="">Mọi độ khẩn</option></select>
+      <select id="klLocMucTieu" aria-label="Lọc theo mục tiêu then chốt"><option value="">Mọi mục tiêu then chốt</option></select>
       <select id="klLocHoiNghi" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
       <select id="klLocNganh" aria-label="Lọc theo ngành"><option value="">Mọi ngành</option></select>
       <select id="klLocLinhVuc" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>

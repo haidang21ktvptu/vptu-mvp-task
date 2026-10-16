@@ -1,34 +1,40 @@
 // Màn hình Tổng quan (giao diện v9) — trang mở đầu của Thường trực (A0), lãnh đạo Văn phòng (A1), Trưởng phòng (A2): nhìn tổng thể việc theo dõi
-// thực hiện nhiệm vụ trong phạm vi của mình. Phạm vi do RLS quyết định (v_nhiem_vu, chi_dao); frontend chỉ đếm (lib/kl/tong-quan.js). Kỳ Tháng /
-// Quý / Năm đổi tại chỗ (không đọc lại); việc đang mở và cảnh báo luôn tính đến hôm nay. v9 đợt 2: bấm bất kỳ số, cột, đoạn, dòng nào →
-// danh sách đúng các việc làm nên con số đó (lib/kl/tong-quan-loc.js) mở NGAY TẠI CHỖ trong ngăn chi tiết dùng chung → bấm một việc xem chi
-// tiết, có nút quay lại; không chuyển sang mục khác. Realtime: đang xem thì nạp lại nền, gộp sự kiện 2 giây. e2e chờ #viewTongQuan[data-nap].
-// Đợt E v3.18: A0 / A1 có thêm khối "KPI theo cán bộ" (kpi-can-bo.js — từng phòng rồi từng cán bộ chủ trì; A2 đã có bảng Theo cán bộ).
-// Đợt C1 v3.19: thanh lọc (tq.loc — mọi khối tính trên dòng đã lọc, lib/kl/tong-quan-them.js), % + tổng + quy tắc trên hero, khối "Theo loại
-// văn bản", "Theo lãnh đạo VP phụ trách" (A0 / Chánh VP, phân công phu_trach_phong), thanh Tải trong KPI; chuyên viên xem cả phòng (cấu hình
-// pham_vi_chuyen_vien = 2) có "Tổng quan phòng" — như Trưởng phòng, chỉ xem.
-// v3.23 (0103): cấu hình xem toàn bộ → mọi cán bộ có Tổng quan chung toàn Văn phòng (mặc định), nút "Phạm vi của tôi" quay về số liệu như cũ;
-// toàn Văn phòng gom và đặt tiêu đề như cấp Văn phòng (theo phòng, KPI theo cán bộ, lãnh đạo VP phụ trách); việc ngoài phạm vi chỉ xem.
+// thực hiện nhiệm vụ trong phạm vi của mình. Phạm vi do RLS quyết định (v_nhiem_vu, chi_dao); frontend chỉ đếm. Kỳ đổi tại chỗ (không đọc lại); việc
+// đang mở và cảnh báo luôn tính đến hôm nay. Bấm bất kỳ số, cột, đoạn, dòng nào → danh sách đúng các việc làm nên con số đó (lib/kl/tong-quan-loc.js)
+// mở NGAY TẠI CHỖ trong ngăn chi tiết dùng chung. Realtime: đang xem thì nạp lại nền, gộp sự kiện 2 giây. e2e chờ #viewTongQuan[data-nap].
+// v3.24 (bố cục 9 khối cho lãnh đạo, duyệt 16/10/2026): dải đầu (+ kỳ Nhiệm kỳ 2025–2030) → thanh lọc bám đầu (lọc nhanh, 12 ô, chip — loc-template.js)
+// → 1 điểm nghẽn, 2 mục tiêu then chốt, 3 lĩnh vực trọng tâm (khoi-lanh-dao.js) → 4 xếp hạng (khoi-them.js), 5 theo tháng + quý → 6 văn bản, 7 chỉ
+// đạo + vướng mắc, 8 chất lượng → 9 quản lý nội bộ (KPI theo cán bộ, lãnh đạo VP phụ trách, theo phòng — gập) → ghi chú chất lượng dữ liệu.
+// Đợt E / C1 / 0103 giữ nguyên: KPI theo cán bộ, theo lãnh đạo VP phụ trách, chuyên viên xem cả phòng, "Toàn Văn phòng / Phạm vi của tôi".
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, cauHinhKl, xemToanBo, chuyenVienXemPhong } from '../../../lib/kl/du-lieu.js';
-import { locTheoViec } from '../../../lib/kl/pham-vi.js';
+import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, cauHinhKl, xemToanBo, chuyenVienXemPhong, danhMucKl } from '../../../lib/kl/du-lieu.js';
+import { loadKetQuaChiTieu } from '../../../lib/kl/muc-tieu-db.js';
+import { locTheoViec, chiXem } from '../../../lib/kl/pham-vi.js';
 import { LOC_TRONG, coLoc, locTongQuan, tuyChonLoc, theoLoaiVanBan, theoLanhDaoVP, lanhDaoPhuTrach, CHUA_LDVP } from '../../../lib/kl/tong-quan-them.js';
+import { tuyChonLocMoi, chipLoc } from '../../../lib/kl/tq-bo-loc.js';
 import { loadChiDaoTu } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
-import { khoangKy, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, theoLinhVuc, chatLuongKy, chiDaoKy, canhBaoDo, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
+import { tenDoKhan } from '../../../lib/kl/do-khan.js';
+import { khoangKy, khoangTuyChon, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, chatLuongKy, chiDaoKy, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
+import { theoKhoi, diemNghen, capNghen, theoMucTieu, coGanMucTieu, ketQuaMoiNhat, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu } from '../../../lib/kl/tong-quan-lanh-dao.js';
+import { NHOM_MUC_TIEU, mucTieuCua, timMucTieu } from '../../../lib/kl/muc-tieu.js';
 import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { moNganDanhSach } from '../ngan-chi-tiet.js';
-import { dauTrangHtml, canhBaoHtml, theThangHtml, coCauHtml, bangNhomHtml, vanBanHtml, linhVucHtml, chatLuongHtml, chiDaoHtml } from './template.js';
+import { moNganDanhSach, moNganViec, khiGhiTrongNgan } from '../ngan-chi-tiet.js';
+import { dauTrangHtml, theThangHtml, bangNhomHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY } from './template.js';
 import { kpiCanBoHtml } from './kpi-can-bo.js';
 import { thanhLocHtml, loaiVanBanHtml, lanhDaoVpHtml, tenLoai } from './loc-template.js';
+import { nghenHtml, mucTieuHtml, linhVucHtml } from './khoi-lanh-dao.js';
+import { xepHangHtml, noiBoHtml, duLieuHtml } from './khoi-them.js';
+import { taoHanhDong, docUi, viTriFocus } from './hanh-dong.js';
 
-const tq = { rows: [], tatCa: [], cds: [], phanCong: [], luc: null, ky: 'nam', loi: null, loc: { ...LOC_TRONG }, toanBo: true };
+const tq = { rows: [], tatCa: [], cds: [], phanCong: [], ketQua: [], luc: null, ky: 'nam', loi: null, loc: { ...LOC_TRONG }, toanBo: true,
+  ui: { locMo: false, cap: '', tabMt: 'DOT_PHA', lvSap: 'qh', lvMo: new Set(), xh: 'dv', vbXem: 'vb', noiBo: null, ...docUi() } };
 export const dongTongQuan = () => tq.rows;   // dòng đã nạp (Giao việc v9 liệt kê việc vừa nhập theo văn bản)
 const vai = () => state.user?.role_group;
 // 0103: đang xem toàn Văn phòng (cấu hình bật, người xem có việc ngoài phạm vi, chưa chọn "Phạm vi của tôi").
@@ -36,12 +42,13 @@ const coNutToanBo = () => xemToanBo() && tq.tatCa.length > tq.rows.length;
 const toanVP = () => coNutToanBo() && tq.toanBo;
 const coSo = () => (toanVP() ? tq.tatCa : tq.rows);
 const vaiNhom = () => (toanVP() ? 'A1' : vai() === 'A3' ? 'A2' : vai());   // chuyên viên xem cả phòng: gom, tiêu đề bảng như Trưởng phòng
-const KY = ['thang', 'quy', 'nam'];
 const laLanhDaoVP = (id) => state.accounts.find((a) => a.id === id)?.role_group === 'A1';
 const laTruongPhong = (id) => { const a = state.accounts.find((x) => x.id === id); return a?.role_group === 'A2' && a.department === state.user?.department; };
 const ctxCd = () => ({ vai: toanVP() ? 'A1' : vai(), me: state.user?.id, laLanhDaoVP, laTruongPhong });
-const laCapVanPhong = () => vai() === 'A0' || (vai() === 'A1' && Boolean(state.user?.is_chief)) || toanVP();   // khối / ô lọc "Lãnh đạo VP phụ trách"
+const laCapVanPhongThat = () => vai() === 'A0' || (vai() === 'A1' && Boolean(state.user?.is_chief));
+const laCapVanPhong = () => laCapVanPhongThat() || toanVP();   // khối / ô lọc "Lãnh đạo VP phụ trách"
 const lanhDaoVP = () => state.accounts.filter((a) => a.role_group === 'A1' && !a.is_chief && !a.is_system);
+const noiBoMo = () => (tq.ui.noiBo === null ? vaiNhom() === 'A2' : tq.ui.noiBo);   // khối 9: Trưởng phòng / chuyên viên xem phòng mở sẵn
 
 function tieuDe() {
   const u = state.user || {};
@@ -58,53 +65,69 @@ const phongCua = () => Object.fromEntries(state.accounts.map((a) => [a.id, a.dep
 const khoaCua = (c) => (c.kh === 'cb' ? khoaCanBo(phongCua()) : c.kh === 'phong' ? khoaPhongCanBo(phongCua(), DEPT_NAMES)
   : c.kh === 'ldvp' ? (r) => { const ids = lanhDaoPhuTrach(r, tq.phanCong); return [ids.includes(c.ma) ? c.ma : ids.length ? 'KHAC' : CHUA_LDVP, c.ten, null]; }
       : khoaNhom(vaiNhom(), DEPT_NAMES, state.user?.department));
-const dongDaLoc = () => locTongQuan(coSo(), tq.loc, { me: state.user?.id, phanCong: tq.phanCong });
+const ctxLoc = () => ({ me: state.user?.id, phanCong: tq.phanCong, mucTieuDm: danhMucKl().mucTieu || [], nganhDm: danhMucKl().nganh || [] });
+const dongDaLoc = () => locTongQuan(coSo(), tq.loc, ctxLoc());
 const cdsCoSo = () => (toanVP() ? tq.cds : locTheoViec(tq.cds, tq.rows));   // chỉ đạo đọc theo RLS (0103: mọi việc) → đúng tập việc đang xem
+const kyHienTai = (homNay) => (tq.loc.tu || tq.loc.den ? khoangTuyChon(tq.loc.tu, tq.loc.den, homNay) : khoangKy(tq.ky, homNay));
 const quyTac = () => `Quy tắc: Vàng = còn ≤ ${cauHinhKl('nguong_vang_ngay', 3)} ngày tới hạn mà chưa có minh chứng (Khẩn trở lên ≤ ${cauHinhKl('do_khan_KHAN_vang', 5)} ngày); Đỏ = quá hạn; Đỏ đặc biệt = quá hạn ≥ ${cauHinhKl('nguong_do_dac_biet_ngay', 3)} ngày; đúng hạn tính trên việc hoàn thành đã được đánh giá.`;
+// Nút "Chỉ đạo" ở khối 1: Thường trực, lãnh đạo Văn phòng, Trưởng phòng với việc trong phạm vi xử lý (còn lại "Xem"); quyền thật ở hàm chỉ đạo.
+const duocChiDaoViec = (r) => ['A0', 'A1', 'A2'].includes(vai()) && !chiXem(r);
 
-// Khung chờ (lần mở đầu chưa có số): dải đầu + 7 khối nhấp nháy, không hiện số 0 gây hiểu nhầm.
+// Khung chờ (lần mở đầu chưa có số): dải đầu + khối nhấp nháy, không hiện số 0 gây hiểu nhầm.
 function khungChoHtml() {
   const [td, pv] = tieuDe();
-  const khoi = ['n7', 'n5', 'n7', 'n5', 'n4', 'n4', 'n4'].map((n) => `<article class="the-bd ${n}" aria-hidden="true"><span class="xuong" style="width:46%;height:16px"></span><span class="xuong" style="width:30%;margin-top:10px"></span><span class="xuong" style="width:100%;height:150px;margin-top:20px"></span></article>`).join('');
+  const khoi = ['n12', 'n12', 'n7', 'n5', 'n4', 'n4', 'n4'].map((n) => `<article class="the-bd ${n}" aria-hidden="true"><span class="xuong" style="width:46%;height:16px"></span><span class="xuong" style="width:30%;margin-top:10px"></span><span class="xuong" style="width:100%;height:150px;margin-top:20px"></span></article>`).join('');
   return `<section class="anh-hung" aria-busy="true"><div class="hung-dau"><div><h1>${escapeHtml(td)}</h1><p>${escapeHtml(pv)}. <span class="ngay-hung">Đang nạp số liệu…</span></p></div></div>
     <div class="hung-so cho">${'<div><span class="xuong" style="width:70px;height:30px"></span></div>'.repeat(5)}</div></section><div class="luoi-tq">${khoi}</div>`;
 }
 
 function ve() {
-  const v = vai(); const vn = vaiNhom(); const homNay = homNayVN(); const k = khoangKy(tq.ky, homNay); const rows = dongDaLoc();
-  const [td, pv] = tieuDe(); const s = soLieuChinh(rows, k); const thang = theoThang(rows, homNay);
+  const v = vai(); const vn = vaiNhom(); const homNay = homNayVN(); const k = kyHienTai(homNay); const rows = dongDaLoc(); const dm = danhMucKl();
+  const [td, pv] = tieuDe(); const s = soLieuChinh(rows, k); const thang = theoThang(rows, homNay); const kyTuy = Boolean(tq.loc.tu || tq.loc.den);
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
-  const tc = tuyChonLoc(coSo(), { tenPhong: DEPT_NAMES, tenCanBo: (id) => state.accounts.find((a) => a.id === id)?.full_name, lanhDaoVP: lanhDaoVP(), tenLoai });
+  const tc = { ...tuyChonLoc(coSo(), { tenPhong: DEPT_NAMES, tenCanBo: (id) => state.accounts.find((a) => a.id === id)?.full_name, lanhDaoVP: lanhDaoVP(), tenLoai }),
+    ...tuyChonLocMoi(coSo(), { mucTieuDm: dm.mucTieu, khoiDm: dm.khoi, nganhDm: dm.nganh, linhVucDm: dm.linhVuc, nguonDm: dm.nguonNhiemVu }) };
   const hienLoc = { phong: v === 'A0' || v === 'A1' || toanVP(), ldvp: laCapVanPhong(), phamViNhan: v === 'A3' ? 'Việc của tôi (chủ trì, theo dõi, đã giao)' : 'Việc tôi theo dõi hoặc giao',
     toanBo: coNutToanBo() ? toanVP() : null };
-  $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length, quyTac: quyTac() })
-    + thanhLocHtml(tq.loc, tc, hienLoc, rows.length, coSo().length)
-    + canhBaoHtml(canhBaoDo(rows), toanVP() && !laCapVanPhongThat() ? 'VP' : v)
-    + `<div class="luoi-tq">${vn === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}`
-    + `${laCapVanPhong() ? lanhDaoVpHtml(theoLanhDaoVP(rows, k, tq.phanCong, lanhDaoVP(), DEPT_NAMES), k) : ''}`
-    + `${theThangHtml(thang, homNay.slice(0, 4))}${coCauHtml(s, k)}${bangNhomHtml(theoNhom(rows, k, khoaNhom(vn, DEPT_NAMES, state.user?.department)), vn, k)}`
-    + `${loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai)}${vanBanHtml(theoVanBan(rows))}${linhVucHtml(theoLinhVuc(rows), s.dangMo)}${chatLuongHtml(chatLuongKy(rows, k), k)}`
-    + `${chiDaoHtml(chiDaoKy(cdsCoSo(), k, ctxCd()), toanVP() ? 'A1' : v, k)}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
+  const chip = [...chipLoc(tq.loc, tc, { mucTieuDm: dm.mucTieu, phamViNhan: hienLoc.phamViNhan, tenLoai, tenDoKhan }), ...(kyTuy ? [{ k: 'ky', ten: `Kỳ: ${k.ten}` }] : [])];
+  const nghen = diemNghen(rows);
+  const theo = Object.fromEntries(NHOM_MUC_TIEU.map((n) => [n.ma, theoMucTieu(rows, dm.mucTieu, n.ma)]));
+  const hienCt = tq.ketQua.length > 0 || coSo().some((r) => mucTieuCua(r).some((ma) => timMucTieu(dm.mucTieu, ma)?.nhom === 'CHI_TIEU'));
+  const noiBo = `${vn === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}${laCapVanPhong() ? lanhDaoVpHtml(theoLanhDaoVP(rows, k, tq.phanCong, lanhDaoVP(), DEPT_NAMES), k) : ''}`
+    + bangNhomHtml(theoNhom(rows, k, khoaNhom(vn, DEPT_NAMES, state.user?.department)), vn, k);
+  const focus = viTriFocus($('viewTongQuan'));
+  $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: kyTuy ? null : tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length, quyTac: quyTac() })
+    + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
+    + `<div class="luoi-tq">${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
+    + mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua) })
+    + linhVucHtml(theoKhoi(rows, k, { khoi: dm.khoi, nganh: dm.nganh }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k)
+    + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k) + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
+    + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
+    + chiDaoHtml(chiDaoKy(cdsCoSo(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + chatLuongHtml(chatLuongKy(rows, k), k)
+    + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2')}${duLieuHtml(chatLuongDuLieu(rows))}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
+  if (focus) $('viewTongQuan').querySelector(focus)?.focus({ preventScroll: true });   // vẽ lại sau khi đổi ô lọc / bấm nút: giữ tiêu điểm đúng chỗ (bàn phím)
+  if (tq.cdTu && tuChiDao() < tq.cdTu) napTongQuan();   // kỳ sớm hơn phần chỉ đạo đã đọc → đọc lại
 }
-// Thanh lọc: ô chọn (data-loc) đổi → vẽ lại tại chỗ; chip / tên loại văn bản bấm lại = bỏ; "Bỏ lọc" về mặc định. Ngăn chi tiết đang mở không đụng.
+// Thanh lọc: ô chọn / ô ngày (data-loc) đổi → vẽ lại tại chỗ; chip, nút ở hanh-dong.js. Ngăn chi tiết đang mở không đụng.
 function onDoiLoc(e) {
-  const sel = e.target; if (!(sel instanceof HTMLSelectElement) || !sel.dataset.loc || !sel.closest('#tqLoc')) return;
-  tq.loc = { ...tq.loc, [sel.dataset.loc]: sel.value }; if (tq.luc) ve();
+  const el = e.target;
+  if (!(el instanceof HTMLSelectElement || el instanceof HTMLInputElement) || !el.dataset.loc || !el.closest('#tqLoc')) return;
+  if (el.type === 'date' && el.value && !/^(19[9]\d|2\d{3})-\d{2}-\d{2}$/.test(el.value)) return;   // đang gõ năm (0002, 0020…): chờ gõ đủ năm
+  tq.loc = { ...tq.loc, [el.dataset.loc]: el.value }; if (tq.luc) ve();
 }
-const tqLocLoai = ({ loai }) => { tq.loc = { ...tq.loc, loai: tq.loc.loai === loai ? '' : loai }; if (tq.luc) ve(); };
-const tqLocBo = () => { tq.loc = { ...LOC_TRONG }; if (tq.luc) ve(); };
-const tqToanBo = ({ tb }) => { tq.toanBo = tb === '1'; tq.loc = { ...LOC_TRONG }; if (tq.luc) ve(); };   // 0103: đổi tập dòng → bỏ lọc cũ
-const laCapVanPhongThat = () => vai() === 'A0' || (vai() === 'A1' && Boolean(state.user?.is_chief));
 
 // Một lượt nạp tại một thời điểm; lượt tới trong lúc đang nạp chạy một lần sau khi xong (realtime + mở lại màn). Lỗi (DB bận) thử lại một
 // lần sau 800 ms như "Cần xử lý"; vẫn lỗi thì chỉ báo khi đang xem Tổng quan (đã rời màn thì không đè thông báo lên màn khác).
 let dangNap = null; let canNapLai = false;
-const docSoLieu = () => Promise.all([loadDanhMucKl(), loadKlRows(), loadChiDaoTu(`${homNayVN().slice(0, 4)}-01-01`), laCapVanPhong() || xemToanBo() ? loadPhanCongHieuLuc() : []]);
+// Chỉ đạo đọc từ đầu năm, hoặc từ đầu kỳ đang xem nếu sớm hơn (Nhiệm kỳ, khoảng ngày) — ve() nạp lại khi chọn kỳ sớm hơn phần đã đọc.
+const tuChiDao = () => { const dau = `${homNayVN().slice(0, 4)}-01-01`; const tu = kyHienTai(homNayVN()).tu; return tu && tu < dau ? tu : dau; };
+const docSoLieu = (cdTu) => Promise.all([loadDanhMucKl(), loadKlRows(), loadChiDaoTu(cdTu), laCapVanPhong() || xemToanBo() ? loadPhanCongHieuLuc() : [], loadKetQuaChiTieu()]);
 async function napMotLan(lan = 0) {
   try {
-    const [, r, cds, phanCong] = await docSoLieu();
-    Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds, phanCong, luc: r.luc, loi: null });
+    const cdTu = tuChiDao();
+    const [, r, cds, phanCong, ketQua] = await docSoLieu(cdTu);
+    Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds, phanCong, ketQua, cdTu, luc: r.luc, loi: null });
     if (sectionDangHien('viewTongQuan')) ve();
   } catch (e) {
     if (lan < 1) { await new Promise((ok) => { setTimeout(ok, 800); }); return napMotLan(lan + 1); }
@@ -135,7 +158,7 @@ export function openTongQuan() {
   return napTongQuan();
 }
 
-// Gợi ý khi rê chuột / đưa tiêu điểm vào phần tử có data-goi (cột, đoạn thanh xếp chồng, thanh lĩnh vực).
+// Gợi ý khi rê chuột / đưa tiêu điểm vào phần tử có data-goi (cột, đoạn thanh xếp chồng).
 function hienGoi(e) {
   const el = e.target.closest?.('#viewTongQuan [data-goi]'); const goi = $('tqGoi');
   if (!goi) return;
@@ -149,16 +172,20 @@ function hienGoi(e) {
 // Bấm một chỉ tiêu: lọc đúng tập việc trên CÙNG dữ liệu (đã qua thanh lọc) và kỳ đang hiện (tổng danh sách = con số đã bấm), mở trong ngăn chi tiết.
 function tqMo({ ct }) {
   let c; try { c = JSON.parse(ct || '{}'); } catch { return; }
-  const homNay = homNayVN(); const k = khoangKy(tq.ky, homNay);
-  const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsCoSo(), ctxCd: ctxCd(), homNay });
-  if (coLoc(tq.loc)) kq.tieuDe = `${kq.tieuDe} (đã lọc)`;
+  const homNay = homNayVN(); const k = kyHienTai(homNay);
+  const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsCoSo(), ctxCd: ctxCd(), homNay, nganhDm: danhMucKl().nganh || [] });
+  if (coLoc(tq.loc) && c.t !== 'loc') kq.tieuDe = `${kq.tieuDe} (đã lọc)`;
   const goi = document.getElementById('tqGoi'); if (goi) goi.hidden = true;
   moNganDanhSach(kq);
 }
+// Khối 1: bấm việc → chi tiết trong ngăn; "Chỉ đạo" → ngăn mở sẵn ô chỉ đạo (cheDo 'chi-dao').
+const dongTq = (id) => coSo().find((r) => r.id === id) || tq.tatCa.find((r) => r.id === id) || null;
 
 export function registerTongQuan() {
-  registerActions({ openTongQuan, tqKy: ({ ky }) => { if (KY.includes(ky)) { tq.ky = ky; if (tq.luc) ve(); } }, tqMo, tqLocLoai, tqLocBo, tqToanBo });
+  registerActions({ openTongQuan, tqMo, ...taoHanhDong(tq, ve, noiBoMo),
+    tqMoViec: ({ id }) => moNganViec(id, { row: dongTq(id) }), tqChiDao: ({ id }) => moNganViec(id, { cheDo: 'chi-dao', row: dongTq(id) }) });
   $('viewTongQuan').addEventListener('change', onDoiLoc);
+  khiGhiTrongNgan('viewTongQuan', napTongQuan);   // v3.24: ghi trong ngăn (gắn mục tiêu không qua realtime) → số liệu mới ngay
   document.addEventListener('mouseover', hienGoi);
   document.addEventListener('focusin', hienGoi);
   window.addEventListener('scroll', () => { const g = $('tqGoi'); if (g) g.hidden = true; }, { passive: true });

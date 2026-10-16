@@ -12,6 +12,7 @@ import { THU_TU_NHOM, tenNhom, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { giaiLocThem, sapXepMoiNhap, sapXepHan, demLocThem } from '../../../lib/kl/loc-them.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
+import { tuyChonMucTieu } from '../../../lib/kl/tq-bo-loc.js';   // v3.24 (0105): ô lọc mục tiêu then chốt
 import { dongHtml } from './dong.js';
 import { veLaiChiTiet, idDangMo } from './chi-tiet.js';
 
@@ -43,7 +44,7 @@ const NHAN_CHIP = {
 const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klLocNguon: 'nguon', klTimKiem: 'tuKhoa',
   klLocChuTri: 'chuTri', klLocTheoDoi: 'theoDoi', klLocLdvp: 'ldvp',   // v3.23: lọc theo cán bộ chủ trì, người theo dõi, lãnh đạo VP phụ trách
   klLocNhap: 'nhapKy', klLocNhapTu: 'nhapTuNgay', klLocNhapDen: 'nhapDenNgay', klLocNguoiNhap: 'nguoiNhap', klLocCapGiao: 'capGiao',   // v3.24
-  klLocHan: 'hanKy', klLocHanTu: 'hanTuNgay', klLocHanDen: 'hanDenNgay', klLocDoKhan: 'doKhan' };   // ô ngày: khoá *Ngay, locRows nhận khoá đã giải
+  klLocHan: 'hanKy', klLocHanTu: 'hanTuNgay', klLocHanDen: 'hanDenNgay', klLocDoKhan: 'doKhan', klLocMucTieu: 'mucTieu' };   // ô ngày: khoá *Ngay, locRows nhận khoá đã giải
 // PR-3: danh sách ĐANG HIỆN (lọc ngữ cảnh + nhóm, đã sắp xếp) — nút Xuất Excel xuất đúng các dòng này.
 let dangHien = [];
 export const dsDangHien = () => dangHien;
@@ -120,6 +121,9 @@ function dienBoLoc() {
   const dk = new Map(); rows.forEach((r) => { const m = r.do_khan || 'THUONG'; dk.set(m, (dk.get(m) || 0) + 1); });
   $('klLocDoKhan').innerHTML = opt('', 'Mọi độ khẩn') + [...THU_TU_DO_KHAN].reverse().filter((m) => dk.has(m) || kl.loc.doKhan === m)
     .map((m) => opt(m, `${tenDoKhan(m)} (${dk.get(m) || 0})`, kl.loc.doKhan === m)).join('');
+  const mt = tuyChonMucTieu(rows, danhMucKl().mucTieu || []).map((g) => { const o = g.ds.map((x) => opt(x.ma, `${x.ten} (${x.n})`, kl.loc.mucTieu === x.ma)).join(''); return g.nhom ? `<optgroup label="${escapeHtml(g.nhom)}">${o}</optgroup>` : o; });
+  $('klLocMucTieu').innerHTML = opt('', 'Mọi mục tiêu then chốt') + mt.join('');
+  show('klLocMucTieu', (danhMucKl().mucTieu || []).length > 0);
 }
 function dienLinhVuc() {
   const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;
@@ -133,7 +137,7 @@ export function render(veLaiNgan = false) {
   const { nhom, ...nguCanh } = kl.loc;
   const goc = coSo();
   const homNay = homNayVN();
-  const trongNguCanh = locCanBo(locRows(goc, { ...nguCanh, ...giaiLocThem(kl.loc, homNay) }), kl.loc, kl.phanCong);
+  const trongNguCanh = locCanBo(locRows(goc, { ...nguCanh, ...giaiLocThem(kl.loc, homNay), mucTieuDm: danhMucKl().mucTieu }), kl.loc, kl.phanCong);
   const t = tongHop(trongNguCanh);
   setText('klSo-TONG', t.tong);
   THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });

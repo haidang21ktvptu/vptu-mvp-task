@@ -5,6 +5,7 @@
 import { NHOM, THU_TU_NHOM, nhomCua } from './nhan.js';
 import { ngayTruoc } from './ngay.js';
 import { maTheoNguon } from './ma-nguon.js';
+import { khopMucTieu } from './muc-tieu.js';
 
 export const CHUA_PHAN_LOAI = 'CHUA_PHAN_LOAI'; // lĩnh vực NULL (134 dòng production 15/9) — nhóm hiển thị, không bị lọc mất
 export const CHUA_CO_NGANH = 'CHUA_CO_NGANH';
@@ -86,6 +87,7 @@ export function locRows(rows, f = {}) {
     && (!f.nhapTuMs || Date.parse(r.created_at) >= f.nhapTuMs) && (!f.nhapDenMs || Date.parse(r.created_at) < f.nhapDenMs)
     && (!f.hanTu || (Boolean(r.han_xu_ly) && r.han_xu_ly >= f.hanTu)) && (!f.hanDen || (Boolean(r.han_xu_ly) && r.han_xu_ly <= f.hanDen))
     && (!f.hanMo || laMo(r)) && (!f.chuaCoHan || !r.han_xu_ly)
+    && (!f.mucTieu || khopMucTieu(r, f.mucTieu, f.mucTieuDm))   // v3.24 (0105): mã | 'NHOM:<nhóm>' | 'CHUA'
     && (!kw || `${r.ma} ${maTheoNguon(r)} ${r.so_ket_luan || ''} ${r.noi_dung} ${r.nguoi_theo_doi_ten || ''} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''} ${r.co_quan_trinh_ten || ''} ${r.thuong_truc_chi_dao_ten || ''}`.toLowerCase().includes(kw)));   // C2: + mã theo nguồn, số hiệu, cơ quan trình
 }
 

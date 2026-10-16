@@ -68,18 +68,23 @@ const daDoi = (e) => (e.tagName === 'SELECT' ? [...e.options].some((o) => o.sele
 export function giuONhap(vung) {
   if (!vung) return () => {};
   const ds = [...vung.querySelectorAll('form[id]')].map((f) => ({ id: f.id, mo: f.classList.contains('mo'),
-    o: [...f.elements].filter((e) => e.name && e.type !== 'radio' && daDoi(e)).map((e) => [e.name, e.type === 'checkbox' ? e.checked : e.value]) }))
+    o: [...f.elements].filter((e) => e.name && e.type !== 'radio' && daDoi(e)).map((e) => [e.name, e.type === 'checkbox' ? e.checked : e.value, e.type === 'checkbox' ? e.value : null]) }))
     .filter((x) => x.mo || x.o.length);
   const a = document.activeElement;
-  const fc = a?.form?.id && a.name && vung.contains(a) ? { f: a.form.id, n: a.name, d: a.selectionStart, c: a.selectionEnd } : null;
-  const o = (id, n) => { const e = vung.querySelector(`#${CSS.escape(id)}`)?.elements.namedItem(n); return e instanceof Element ? e : null; };
+  const fc = a?.form?.id && a.name && vung.contains(a) ? { f: a.form.id, n: a.name, d: a.selectionStart, c: a.selectionEnd, cv: a.type === 'checkbox' ? a.value : null } : null;
+  const o = (id, n, cv = null) => {
+    const f = vung.querySelector(`#${CSS.escape(id)}`);
+    if (cv !== null) return f?.querySelector(`input[type="checkbox"][name="${CSS.escape(n)}"][value="${CSS.escape(cv)}"]`) || null;
+    const e = f?.elements.namedItem(n); return e instanceof Element ? e : null;
+  };
   return () => {
     ds.forEach(({ id, mo, o: gt }) => {
       const f = vung.querySelector(`#${CSS.escape(id)}`); if (!f) return;
       if (mo) f.classList.add('mo');
-      gt.forEach(([n, v]) => { const e = o(id, n); if (e) { if (typeof v === 'boolean') e.checked = v; else e.value = v; } });
+      // ô đánh dấu tìm theo name + value (nhóm nhiều ô cùng name: namedItem trả RadioNodeList, không phải một ô)
+      gt.forEach(([n, v, cv]) => { const e = o(id, n, cv); if (e) { if (typeof v === 'boolean') e.checked = v; else e.value = v; } });
     });
-    const e = fc && o(fc.f, fc.n);
+    const e = fc && o(fc.f, fc.n, fc.cv);
     if (e) { e.focus(); try { e.setSelectionRange(fc.d, fc.c); } catch { /* ô không hỗ trợ chọn */ } }
   };
 }

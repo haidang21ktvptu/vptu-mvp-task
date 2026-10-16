@@ -2,7 +2,7 @@
 // Báo cáo, Cán bộ, Cần nghiệm thu, Chỉ đạo đã gửi; chuông, nhắn tin, tìm nhanh, việc vừa giao — mở NGAY TRÊN màn hình đang xem, không đổi mục.
 // Hai tầng: Danh sách (các việc đã lọc, đã sắp xếp) → Chi tiết việc. Chi tiết là đúng ngăn chi tiết của màn hình Nhiệm vụ: chuyển nút #klChiTiet
 // vào ngăn (không dựng bản thứ hai nên id không trùng, mọi nút thao tác giữ nguyên); đóng / quay lại / đổi mục → trả #klChiTiet về chỗ cũ.
-// Dữ liệu: mở ngay bằng dòng màn hình gọi đang có, rồi đọc lại đúng việc đó (2 truy vấn) — khác thì vẽ lại. Realtime: việc đang mở có sự kiện
+// Dữ liệu: mở ngay bằng dòng màn hình gọi đang có, rồi đọc lại đúng việc đó (3 truy vấn) — khác thì vẽ lại. Realtime: việc đang mở có sự kiện
 // → nạp lại việc đó (kl-realtime datNghePhu). Ghi xong trong ngăn (kl/index.js phát 'viec-da-ghi') → màn hình không có realtime tự nạp lại
 // (khiGhiTrongNgan), quay lại danh sách thấy trạng thái mới của việc vừa xử lý.
 import { $, escapeHtml, show, setText } from '../../lib/dom.js';
