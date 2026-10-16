@@ -1,8 +1,13 @@
 // Markup màn hình "Nhiệm vụ" (v8 đợt 3, mockup 06): hàng lọc MỘT dòng — pill đếm theo nhóm (bấm để lọc; tổng các ô = tổng dòng) + ô tìm + ô chọn
 // Đơn vị (có đếm) + Kết luận, "Thêm bộ lọc" (hội nghị, ngành, lĩnh vực) gập bên dưới; danh sách hàng bên trái, ngăn chi tiết cố định 520px bên phải.
 // Dùng chung mọi vai; phạm vi do RLS. Id giữ nguyên (e2e): #klStats .o-so[data-nhom], #klSo-*, #klTimKiem, #klLoc*, #klChipLoc, #klBody, #klChiTiet.
+// v3.24: "Thêm bộ lọc" thêm thời gian nhập, người nhập, cấp giao, hạn xử lý (kỳ hoặc khoảng ngày), độ khẩn (nhãn ghi số bộ lọc đang áp dụng),
+// nút Xoá bộ lọc; thanh Sắp xếp đầu danh sách (#klSapXep): Mới nhập trước (mặc định, như V-Office) · Hạn gần trước · Mức cảnh báo (thứ tự cũ).
 import { THU_TU_NHOM, NHOM } from '../../../lib/kl/nhan.js';
+import { KY_NHAP, KY_HAN, CAP_GIAO, SAP_XEP } from '../../../lib/kl/loc-them.js';
 
+const opts = (ds, dau) => `<option value="">${dau}</option>${ds.map(([ma, ten]) => `<option value="${ma}">${ten}</option>`).join('')}`;
+const oNgay = (id, nhan) => `<input type="date" id="${id}" class="hidden" aria-label="${nhan}" title="${nhan}">`;
 const oSo = (ma) => `<button type="button" class="o-so ${NHOM[ma].stat}" data-action="locKlNhom" data-nhom="${ma}" aria-pressed="false"><b id="klSo-${ma}">0</b> ${NHOM[ma].ten.toLowerCase()}</button>`;
 
 export const klTemplate = `
@@ -33,7 +38,15 @@ export const klTemplate = `
     <select id="klLocChuTri" aria-label="Lọc theo cán bộ chủ trì"><option value="">Cán bộ chủ trì</option></select>
     <select id="klLocTheoDoi" aria-label="Lọc theo người theo dõi"><option value="">Người theo dõi</option></select>
     <select id="klLocLdvp" aria-label="Lọc theo lãnh đạo Văn phòng phụ trách"><option value="">Lãnh đạo VP phụ trách</option></select>
-    <details class="kl-them"><summary>Thêm bộ lọc</summary><div class="them-loc">
+    <button type="button" id="klXoaLoc" class="nut nho hidden" data-action="klXoaLoc" title="Bỏ mọi bộ lọc đã chọn ở hàng này (giữ phạm vi xem)">Xoá bộ lọc</button>
+    <details class="kl-them"><summary>Thêm bộ lọc<span id="klSoLocThem" class="so-loc"></span></summary><div class="them-loc">
+      <select id="klLocNhap" aria-label="Lọc theo thời gian nhập lên hệ thống">${opts(KY_NHAP, 'Mọi thời gian nhập')}</select>
+      ${oNgay('klLocNhapTu', 'Nhập từ ngày')}${oNgay('klLocNhapDen', 'Nhập đến ngày')}
+      <select id="klLocNguoiNhap" aria-label="Lọc theo người nhập"><option value="">Mọi người nhập</option></select>
+      <select id="klLocCapGiao" aria-label="Lọc theo cấp giao">${opts(CAP_GIAO, 'Mọi cấp giao')}</select>
+      <select id="klLocHan" aria-label="Lọc theo hạn xử lý">${opts(KY_HAN, 'Mọi hạn xử lý')}</select>
+      ${oNgay('klLocHanTu', 'Hạn từ ngày')}${oNgay('klLocHanDen', 'Hạn đến ngày')}
+      <select id="klLocDoKhan" aria-label="Lọc theo độ khẩn"><option value="">Mọi độ khẩn</option></select>
       <select id="klLocHoiNghi" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
       <select id="klLocNganh" aria-label="Lọc theo ngành"><option value="">Mọi ngành</option></select>
       <select id="klLocLinhVuc" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>
@@ -44,6 +57,8 @@ export const klTemplate = `
 
   <div class="md">
     <div class="list">
+      <div class="kl-sap"><span class="chu-phu">Sắp xếp</span><div id="klSapXep" class="pham-vi" role="group" aria-label="Sắp xếp danh sách">${SAP_XEP.map(([ma, ten, goi]) =>
+    `<button type="button" data-action="klSapXep" data-sx="${ma}" aria-pressed="${ma === 'moi'}" title="${goi}">${ten}</button>`).join('')}</div></div>
       <div id="klBody"><p class="trong-nho">Đang tải dữ liệu</p></div>
       <div class="ds-chan"><span id="klSoDong"></span></div>
     </div>

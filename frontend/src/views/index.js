@@ -27,6 +27,7 @@ import { initHuyHieu } from '../features/huy-hieu.js';
 import { mountThanhHoaToc } from './shell/thanh-hoa-toc.js';
 import { mountCanXuLy } from './shared/can-xu-ly.js';
 import { onSessionEnter } from '../auth/session.js';
+import { initNhatKyDangNhap } from '../features/nhat-ky-dang-nhap.js';
 
 export function registerViews() {
   registerKlView();      // Nhiệm vụ (tổng quan → danh sách → ngăn chi tiết), mọi vai trò
@@ -56,4 +57,5 @@ export function registerViews() {
   initRealtime();
   initKlRealtime();
   initHuyHieu();         // số chưa xử lý trên menu + dải "Cần xử lý ngay" (GĐ22)
+  initNhatKyDangNhap();  // v3.24 (0104): cập nhật "hoạt động gần nhất" của phiên khi có thao tác
 }

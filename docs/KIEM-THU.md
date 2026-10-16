@@ -158,6 +158,10 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - RLS `kl-0103-xem-toan-bo.test.mjs`: cấu hình 1 như cũ; cấu hình 2 đọc mọi việc (trong_pham_vi), mọi chốt ghi không đổi; vướng mắc gửi tới; `kl_so_chua_xu_ly`, `kl_so_lieu_cac_moc` giống hệt giữa hai cấu hình.
 
 
+## e2e + RLS v3.24 — `thong-ke-su-dung.spec.js` (desktop), `kl-0104` (từ 16/10/2026)
+- `thong-ke-su-dung.spec.js` (project `desktop`, chỉ đọc, không ghi dữ liệu nghiệp vụ): Chánh VP không có tab / mục bánh răng Thống kê sử dụng; `demo_qtht` vào app (chờ lượt `ghi_nhan_dang_nhap`) → bảng đăng nhập có dòng của chính mình ≥ 1 lần, lọc "chưa đăng nhập", mở từng lần đăng nhập, xem theo thời gian; Nhiệm vụ nhập mới 14 cột ngày → 12 cột tháng, bấm cột mở danh sách của kỳ. Màn Nhiệm vụ (Chánh VP): mặc định Mới nhập trước (`data-tao` giảm dần theo phút), Hạn gần trước (đang mở có hạn → chưa có hạn → đã xong), lọc Nhập hôm nay + Xoá bộ lọc. Tự bỏ qua khi project chưa có 0104 / demo_qtht.
+- RLS `kl-0104-nhat-ky-dang-nhap.test.mjs`: một phiên một dòng (gọi lại chỉ cập nhật hoạt động gần nhất), anon bị chặn; chỉ quản trị hệ thống đọc bảng, không ai ghi trực tiếp; hai hàm thống kê chặn người thường (42501), khoảng / đơn vị sai (22023); đếm theo ngày giờ Việt Nam, tuần từ thứ Hai, ba cách nhập (lô Excel chỉ cập nhật việc có sẵn không tính nhập Excel). Mã việc mẫu `NV-Q104x` (không trùng vùng `NV-T…`). Bài 5 (phiên mới = dòng mới) chỉ cục bộ (`CHI_CUC_BO`).
+
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 
 Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAUDE.md`: **mặc định không bật**. Nơi kiểm tra migration và RLS là CI — job "Áp migration + lint schema" của `ci.yml` khởi động Supabase cục bộ trên runner, áp toàn bộ migration của PR, lint schema và chạy đủ bộ `tests/rls`; e2e chạy trên staging. Trên laptop chỉ cần Node + Supabase CLI đã `supabase login` và `supabase link` (staging).

@@ -8,6 +8,7 @@ import { hoSoHieuDung } from '../lib/toan-quyen.js';
 import { loadAccountsCache, enterApp } from './session.js';
 import { datMatKhauTam, moTrangDoiMatKhau } from './change-password.js';
 import { cauLyDoThoat } from './het-phien.js';
+import { ghiNhanDangNhap } from '../features/nhat-ky-dang-nhap.js';
 
 function loginErrorMessage(error) {
   // Giới hạn theo IP của Supabase (30 lượt/5 phút): cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm.
@@ -62,6 +63,7 @@ export async function startSession(session) {
     return;
   }
   state.user = hoSoHieuDung(profile);   // v3.22 (0100): tài khoản toàn quyền dùng giao diện Chánh Văn phòng
+  ghiNhanDangNhap();   // v3.24 (0104): nhật ký đăng nhập — không chờ, lỗi bỏ qua
   await loadAccountsCache();
   if (profile.must_change_password) {
     moTrangDoiMatKhau(true); // chặn mọi màn hình tới khi đặt mật khẩu mới (AUTH-2)

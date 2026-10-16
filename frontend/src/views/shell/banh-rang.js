@@ -31,7 +31,7 @@ export function menuBanhRang(user) {
   if (laNguoiNhap(user) && !user.quan_tri_he_thong) nhom.push([qt('Danh mục lĩnh vực', 'qtKhuDanhMuc')]);   // 0096: quyền chung (quản trị hệ thống có ở nhóm dưới)
   if (user.quan_tri_he_thong) {
     nhom.push([`<span class="br-nhom">Quản trị hệ thống</span>`, qt('Tài khoản', 'qtKhuTaiKhoan'), qt('Danh mục', 'qtKhuDanhMuc'), qt('Dọn dữ liệu', 'qtKhuDonDuLieu'),
-      qt('Nhật ký hệ thống', 'qtKhuNhatKyHeThong'), `<a role="menuitem" href="${LINK_SAO_LUU}" target="_blank" rel="noopener">Sao lưu (workflow GitHub)</a>`]);
+      qt('Nhật ký hệ thống', 'qtKhuNhatKyHeThong'), qt('Thống kê sử dụng', 'qtKhuThongKe'), `<a role="menuitem" href="${LINK_SAO_LUU}" target="_blank" rel="noopener">Sao lưu (workflow GitHub)</a>`]);
   }
   nhom.push([`<button type="button" role="menuitem" id="logoutBtn" class="br-thoat" data-action="dangXuat">Đăng xuất</button>`]);
   return nhom.map((n) => n.join('')).join('<hr>');
