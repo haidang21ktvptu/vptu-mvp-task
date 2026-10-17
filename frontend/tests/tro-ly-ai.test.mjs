@@ -63,36 +63,37 @@ test('xacMinhKetQua: ô nguyên văn được xác minh, ô viết lại không;
   assert.equal(scan.co_chu, false); assert.equal(scan.van_ban.so_hieu.xac_minh, false); assert.equal(scan.nhiem_vu[0].noi_dung.xac_minh, false);
 });
 
-// Chữ như trình duyệt ghép (lib/kl/doc-pdf.js): dòng trong trang cách nhau "\n", các trang cách nhau "\n\n". pdf.js trả dòng đầu / chân trang theo thứ
-// tự vẽ — có tệp đặt cả hai ở đầu chữ của trang (tệp hư cấu 999-TB/TU dựng bằng reportlab), có tệp đặt chân trang ở cuối.
-const DAU = 'VĂN BẢN THỬ – CHỈ DÙNG KIỂM THỬ'; const ND = 'Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này; tổng hợp kết quả, '
-  + 'báo cáo Thường trực Tỉnh ủy trước ngày 25/12/2026.';
+// Chữ như trình duyệt ghép (lib/kl/doc-pdf.js): dòng trong trang cách nhau "\n", các trang cách nhau "\n\n" (trang trống vẫn giữ thứ tự).
+const ND = 'Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này; tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước ngày 25/12/2026.';
 const trang = (...ds) => ds.join('\n'); const vb = (...tr) => tr.join('\n\n');
-test('câu vắt hai trang: bỏ số trang và dòng đầu / chân trang chạy suốt ở mép trang (cả hai kiểu thứ tự của pdf.js)', () => {
+const P1 = trang('TỈNH ỦY CAO BẰNG', '- Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này;', 'tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước');
+test('câu vắt hai trang: bỏ số trang của CHÍNH trang ở dòng ngoài cùng (đầu hoặc cuối chữ của trang)', () => {
   assert.equal(boMepTrang(VB), VB, 'một trang: giữ nguyên');
-  const kieuA = vb(trang(DAU, `${DAU} · trang 1`, 'TỈNH ỦY CAO BẰNG', '- Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này;',
-    'tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước'), trang(DAU, `${DAU} · trang 2`, 'ngày 25/12/2026.', 'Nơi nhận: các cơ quan liên quan.'));
-  const kieuB = vb(trang('TỈNH ỦY CAO BẰNG', '- Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này;',
-    'tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước', `${DAU} · trang 1`), trang('2', 'ngày 25/12/2026.', 'Nơi nhận: các cơ quan liên quan.', `${DAU} · trang 2`));
-  for (const [ten, chu] of [['đầu + chân ở đầu trang', kieuA], ['số trang ở đầu, chân ở cuối', kieuB]]) {
-    const bo = taoBo(chu);
-    assert.equal(coTrong(bo, ND, 12), 'dung', ten);
-    assert.equal(coTrong(bo, `${DAU} · trang 1`), 'dung', `${ten}: chữ gốc vẫn được so`);
-    assert.equal(coTrong(bo, 'báo cáo Thường trực Tỉnh ủy ngày 25/12/2026'), false, `${ten}: bỏ chữ giữa câu → không khớp`);
+  for (const so of ['2', '- 2 -', '(2)', 'Trang 2', '2/3', 'Trang 2/3']) {
+    const chu = vb(P1, trang(so, 'ngày 25/12/2026.', 'Nơi nhận: các cơ quan liên quan.'));
+    assert.equal(coTrong(taoBo(chu), ND, 12), 'dung', `số trang "${so}" ở đầu trang 2`);
     const kq = xacMinhKetQua({ van_ban: {}, nhiem_vu: [{ noi_dung: ND, han: '2026-12-25', trich_han: 'Thường trực Tỉnh ủy trước ngày 25/12/2026' }] }, chu, DM);
-    assert.equal(kq.nhiem_vu[0].noi_dung.xac_minh, 'dung', ten); assert.equal(kq.nhiem_vu[0].han.xac_minh, 'dung', ten);
+    assert.equal(kq.nhiem_vu[0].noi_dung.xac_minh, 'dung'); assert.equal(kq.nhiem_vu[0].han.xac_minh, 'dung');
   }
+  assert.equal(coTrong(taoBo(vb(trang(P1, '- 1 -'), trang('ngày 25/12/2026.'))), ND, 12), 'dung', 'số trang ở cuối trang 1');
+  assert.equal(coTrong(taoBo(vb('trang một', '', trang('3', 'nội dung trang ba'))), 'trang một nội dung trang ba'), 'dung', 'trang trống giữ thứ tự: "3" ở trang 3');
+  const bo = taoBo(vb(P1, trang('2', 'ngày 25/12/2026.')));
+  assert.equal(coTrong(bo, 'báo cáo Thường trực Tỉnh ủy ngày 25/12/2026'), false, 'bỏ chữ giữa câu → không khớp');
+  assert.equal(coTrong(taoBo(vb(P1, trang('VĂN BẢN THỬ', 'ngày 25/12/2026.'))), ND, 12), false, 'dòng đầu trang không phải số trang: không bỏ');
 });
-test('mép trang: dòng nội dung không bao giờ bị bỏ nhầm (số trang khác trang, dòng giữa trang, dòng ngắn, trùng ở vài trang)', () => {
-  const g = boMepTrang(vb(trang('5', 'mở đầu trang một', `${DAU} giữa trang`, '2', 'cuối trang một'), trang('5', 'mở đầu trang hai', `${DAU} giữa trang`, 'cuối trang hai')));
-  assert.equal(g.split('\n').filter((x) => x === '5').length, 2, 'số "5" ở đầu trang 1 và 2 không phải số của chính trang → giữ');
-  assert.ok(g.includes(`${DAU} giữa trang`) && g.includes('\n2\n'), 'dòng giữa trang (kể cả số, dòng lặp) → giữ');
-  const ngan = boMepTrang(vb(trang('ngày 15/10/2026.', 'nội dung một'), trang('ngày 25/12/2026.', 'nội dung hai')));
-  assert.ok(ngan.includes('ngày 15/10/2026.') && ngan.includes('ngày 25/12/2026.'), 'dòng ngắn chỉ khác chữ số ở mép cả hai trang → giữ (< 8 chữ)');
-  const ba = vb(trang('mở đầu', 'phối hợp với Ban Tổ chức Tỉnh ủy,', 'Ban Tuyên giáo Tỉnh ủy,'),
-    trang('Ban Dân vận Tỉnh ủy triển khai thực hiện', 'nội dung hai', 'Ban Tuyên giáo Tỉnh ủy,'), trang('nội dung ba', 'kết thúc'));
-  assert.equal(coTrong(taoBo(ba), 'phối hợp với Ban Tổ chức Tỉnh ủy, Ban Dân vận Tỉnh ủy triển khai thực hiện'), false,
-    'dòng trùng ở mép 2 / 3 trang (không chạy suốt từ trang 2) → giữ, câu bỏ sót đơn vị không khớp');
+test('số trang: không bao giờ bỏ nhầm dòng nội dung (số khác trang, dòng giữa trang, dòng trùng ở mép, câu sai hạn)', () => {
+  const g = boMepTrang(vb(trang('5', 'mở đầu trang một', '2', 'cuối trang một'), trang('nội dung trang hai', '2', 'cuối trang hai', '5')));
+  assert.equal(g.split('\n').filter((x) => x === '5').length, 2, '"5" ở mép trang 1, 2 không phải số của chính trang → giữ');
+  assert.equal(g.split('\n').filter((x) => x === '2').length, 2, '"2" giữa trang 1 và giữa trang 2 (không ở dòng ngoài cùng) → giữ');
+  const hai = vb(trang('mở đầu', 'phối hợp với Ban Tổ chức Tỉnh ủy,', 'Ban Tuyên giáo Tỉnh ủy,'), trang('Ban Dân vận Tỉnh ủy triển khai thực hiện', 'Ban Tuyên giáo Tỉnh ủy,'));
+  assert.equal(coTrong(taoBo(hai), 'phối hợp với Ban Tổ chức Tỉnh ủy, Ban Dân vận Tỉnh ủy triển khai thực hiện'), false, 'dòng trùng ở mép 2 trang → giữ');
+  const ba = vb(trang('mở đầu', 'Giao Văn phòng Tỉnh ủy xây dựng kế hoạch,'), trang('2', 'Thời hạn hoàn thành: trước ngày 30/11/2026.', 'Giao Ban Tổ chức Tỉnh ủy rà soát cán bộ,'),
+    trang('3', 'Thời hạn hoàn thành: trước ngày 31/12/2026.', 'kết thúc'));
+  const b3 = taoBo(ba);
+  assert.equal(coTrong(b3, 'Giao Văn phòng Tỉnh ủy xây dựng kế hoạch, Thời hạn hoàn thành: trước ngày 30/11/2026.'), 'dung');
+  assert.equal(coTrong(b3, 'Giao Văn phòng Tỉnh ủy xây dựng kế hoạch, Thời hạn hoàn thành: trước ngày 31/12/2026.'), false, 'ghép nhầm hạn của việc khác → không khớp');
+  assert.equal(coTrong(b3, 'Giao Ban Tổ chức Tỉnh ủy rà soát cán bộ, Thời hạn hoàn thành: trước ngày 31/12/2026.'), 'dung');
+  assert.equal(boMepTrang(null), ''); assert.equal(boMepTrang(vb('2', '2')), '2\n', 'trang 1 chỉ có "2" giữ, trang 2 chỉ có "2" bỏ');
 });
 
 test('yêu cầu Claude: output_config json_schema + effort cho mô hình 5.x; chuẩn OpenAI: json_schema, max_completion_tokens / max_tokens', () => {
