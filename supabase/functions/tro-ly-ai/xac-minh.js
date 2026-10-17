@@ -7,23 +7,36 @@
 export const chuanTrich = (s) => String(s || '').normalize('NFC').toLocaleLowerCase('vi').replace(/[^\p{L}\p{N}]+/gu, '');
 export const boDau = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
 // Chữ bỏ "mép trang" ở chỗ ngắt trang (chủ dự án duyệt 18/10/2026 sau kiểm tay): câu vắt qua hai trang có số trang, dòng đầu / chân trang chen giữa
-// → so nguyên văn hỏng. Trình duyệt ghép các trang bằng một dòng trống, trong trang không có dòng trống (lib/kl/doc-pdf.js). Chỉ xét tối đa MEP dòng
-// đầu và cuối mỗi trang; bỏ dòng chỉ có số trang ("2", "- 2 -", "Trang 2/28") hoặc dòng đầu / chân trang chạy suốt văn bản: (bỏ chữ số, còn ≥ 8 chữ)
-// lặp lại ở mép của mọi trang hoặc mọi trang trừ một (tối thiểu 2) — dòng nội dung tình cờ trùng ở mép vài trang, dòng ngắn chỉ khác chữ số ("ngày
-// 25/12/2026." / "ngày 30/11/2026.") không bị bỏ. Nội dung giữa trang không bao giờ bị bỏ; câu trích vẫn phải khớp nguyên văn từng chữ (coTrong so cả
-// chữ gốc lẫn chữ đã bỏ mép).
+// → so nguyên văn hỏng. Trình duyệt ghép các trang bằng một dòng trống, trong trang không có dòng trống (lib/kl/doc-pdf.js); pdf.js trả dòng đầu /
+// chân trang theo thứ tự vẽ nên chúng có thể nằm ở đầu hay cuối chữ của trang. Chỉ bỏ ở MÉP: dòng ngoài cùng (đầu hoặc cuối chữ của trang) và dòng
+// kế bên khi dòng ngoài cùng đã bỏ — tối đa MEP dòng mỗi phía — nếu dòng đó là (a) số trang của CHÍNH trang ("2", "- 2 -", "Trang 2", "2/28") hoặc
+// (b) dòng đầu / chân trang chạy suốt văn bản: bỏ chữ số còn ≥ 8 chữ, cùng phía, có ở vùng mép của cả hai trang (văn bản 2 trang) hoặc của mọi trang
+// từ trang 2 (≥ 3 trang). Dòng nội dung tình cờ trùng ở mép vài trang, dòng ngắn chỉ khác chữ số, dòng giữa trang không bao giờ bị bỏ; câu trích vẫn
+// phải khớp nguyên văn từng chữ (coTrong so cả chữ gốc lẫn chữ đã bỏ mép).
 const MEP = 2; const KHUNG_TOI_THIEU = 8;
 const khungDong = (s) => boDau(chuanTrich(s)).replace(/\d+/g, '');
-const laSoTrang = (s) => /^(trang|page)?\d{1,4}$/.test(boDau(chuanTrich(s)));
+const laSoTrang = (s, k) => {
+  const m = /^[\s\-–—(]*(?:trang|page)?\s*(\d{1,3})(?:\s*\/\s*\d{1,3})?[\s\-–—)]*$/.exec(boDau(String(s)).toLowerCase());
+  return Boolean(m) && Number(m[1]) === k;
+};
 export function boMepTrang(chu) {
-  const trang = String(chu || '').split(/\n{2,}/).map((t) => t.split('\n'));
-  if (trang.length < 2) return String(chu || '');
-  const mep = (ds) => [...ds.slice(0, MEP), ...ds.slice(-MEP)];
-  const dem = new Map();
-  trang.forEach((ds) => new Set(mep(ds).map(khungDong).filter((k) => k.length >= KHUNG_TOI_THIEU)).forEach((k) => dem.set(k, (dem.get(k) || 0) + 1)));
-  const nguong = Math.max(2, trang.length - 1);
-  const laMep = (s) => laSoTrang(s) || (dem.get(khungDong(s)) || 0) >= nguong;
-  return trang.map((ds) => ds.filter((s, i) => !((i < MEP || i >= ds.length - MEP) && laMep(s))).join('\n')).join('\n');
+  const trang = String(chu || '').split('\n\n').map((t) => (t ? t.split('\n') : []));
+  const n = trang.length;
+  if (n < 2) return String(chu || '');
+  const chay = (vung) => {   // khung chạy suốt ở một phía: số trang có khung đó trong vùng mép phía ấy
+    const dem = new Map(); const tu2 = new Map();
+    trang.forEach((ds, i) => new Set(vung(ds).map(khungDong).filter((k) => k.length >= KHUNG_TOI_THIEU)).forEach((k) => {
+      dem.set(k, (dem.get(k) || 0) + 1); if (i > 0) tu2.set(k, (tu2.get(k) || 0) + 1);
+    }));
+    return (k) => (n === 2 ? dem.get(k) === 2 : tu2.get(k) === n - 1);
+  };
+  const chayDau = chay((ds) => ds.slice(0, MEP)); const chayCuoi = chay((ds) => ds.slice(-MEP));
+  return trang.map((ds, i) => {
+    const bo = new Set(); const la = (s, ch) => laSoTrang(s, i + 1) || ch(khungDong(s));
+    for (let j = 0; j < Math.min(MEP, ds.length) && la(ds[j], chayDau); j++) bo.add(j);
+    for (let j = ds.length - 1; j >= Math.max(0, ds.length - MEP) && !bo.has(j) && la(ds[j], chayCuoi); j--) bo.add(j);
+    return ds.filter((_, j) => !bo.has(j)).join('\n');
+  }).join('\n');
 }
 export const taoBo = (chu) => {
   const c = chuanTrich(chu); const g = chuanTrich(boMepTrang(chu)); const khac = g !== c;

@@ -63,27 +63,36 @@ test('xacMinhKetQua: ô nguyên văn được xác minh, ô viết lại không;
   assert.equal(scan.co_chu, false); assert.equal(scan.van_ban.so_hieu.xac_minh, false); assert.equal(scan.nhiem_vu[0].noi_dung.xac_minh, false);
 });
 
-// Hai trang như trình duyệt ghép (lib/kl/doc-pdf.js: các trang cách nhau một dòng trống): chân / đầu trang lặp lại và số trang chen giữa câu vắt trang.
-const HAI_TRANG = ['TỈNH ỦY CAO BẰNG\nSố: 998-TB/TU\n- Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này; tổng hợp kết quả, báo cáo Thường trực'
-  + '\nTỉnh ủy trước\nVăn bản thử · trang 1/2', 'Văn bản thử · trang 2/2\n2\nngày 25/12/2026.\n- Giao Ban Tổ chức Tỉnh ủy rà soát quy hoạch cán bộ.'].join('\n\n');
-test('câu vắt hai trang: bỏ số trang, dòng đầu / chân trang lặp lại ở mép trang; nội dung giữa trang và dòng mép không lặp không bị bỏ', () => {
+// Chữ như trình duyệt ghép (lib/kl/doc-pdf.js): dòng trong trang cách nhau "\n", các trang cách nhau "\n\n". pdf.js trả dòng đầu / chân trang theo thứ
+// tự vẽ — có tệp đặt cả hai ở đầu chữ của trang (tệp hư cấu 999-TB/TU dựng bằng reportlab), có tệp đặt chân trang ở cuối.
+const DAU = 'VĂN BẢN THỬ – CHỈ DÙNG KIỂM THỬ'; const ND = 'Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này; tổng hợp kết quả, '
+  + 'báo cáo Thường trực Tỉnh ủy trước ngày 25/12/2026.';
+const trang = (...ds) => ds.join('\n'); const vb = (...tr) => tr.join('\n\n');
+test('câu vắt hai trang: bỏ số trang và dòng đầu / chân trang chạy suốt ở mép trang (cả hai kiểu thứ tự của pdf.js)', () => {
   assert.equal(boMepTrang(VB), VB, 'một trang: giữ nguyên');
-  const bon = boMepTrang([1, 2, 3, 4].map((i) => [i > 1 && i < 4 ? `ngày ${20 + i}/12/2026.` : `mở đầu ${i}`, ['một', 'hai', 'ba', 'bốn'][i - 1],
-    i < 3 ? 'báo cáo Thường trực trước' : `kết thúc ${i}`, `Văn bản thử · trang ${i}/4`].join('\n')).join('\n\n'));
-  assert.ok(!bon.includes('Văn bản thử'), 'chân trang chạy suốt 4 trang: bỏ');
-  assert.equal(bon.split('báo cáo Thường trực trước').length - 1, 2, 'dòng nội dung trùng ở mép 2 / 4 trang: giữ');
-  assert.ok(bon.includes('ngày 22/12/2026.') && bon.includes('ngày 23/12/2026.'), 'dòng mép ngắn chỉ khác chữ số: giữ');
-  const gon = boMepTrang(HAI_TRANG);
-  assert.ok(!gon.includes('Văn bản thử') && !/\n2\n/.test(gon), 'bỏ dòng lặp ở mép (khác số trang) và dòng chỉ có số trang');
-  assert.ok(gon.includes('TỈNH ỦY CAO BẰNG') && gon.includes('Tỉnh ủy trước') && gon.includes('quy hoạch cán bộ'), 'dòng mép không lặp vẫn giữ');
-  const bo = taoBo(HAI_TRANG);
-  const nd = 'Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này; tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước ngày 25/12/2026.';
-  assert.equal(coTrong(bo, nd, 12), 'dung');
-  assert.equal(coTrong(bo, 'Văn bản thử · trang 1/2'), 'dung', 'chữ gốc vẫn được so');
-  assert.equal(coTrong(bo, 'báo cáo Thường trực ngày 25/12/2026'), false, 'bỏ qua dòng nội dung ở mép (không lặp) → không khớp');
-  assert.equal(coTrong(bo, 'Giao Văn phòng Tỉnh ủy theo dõi thực hiện Thông báo này'), false, 'bỏ chữ giữa câu → không khớp');
-  const kq = xacMinhKetQua({ van_ban: {}, nhiem_vu: [{ noi_dung: nd, han: '2026-12-25', trich_han: 'Thường trực Tỉnh ủy trước ngày 25/12/2026' }] }, HAI_TRANG, DM);
-  assert.equal(kq.nhiem_vu[0].noi_dung.xac_minh, 'dung'); assert.equal(kq.nhiem_vu[0].han.xac_minh, 'dung');
+  const kieuA = vb(trang(DAU, `${DAU} · trang 1`, 'TỈNH ỦY CAO BẰNG', '- Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này;',
+    'tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước'), trang(DAU, `${DAU} · trang 2`, 'ngày 25/12/2026.', 'Nơi nhận: các cơ quan liên quan.'));
+  const kieuB = vb(trang('TỈNH ỦY CAO BẰNG', '- Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc các cơ quan thực hiện Thông báo này;',
+    'tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước', `${DAU} · trang 1`), trang('2', 'ngày 25/12/2026.', 'Nơi nhận: các cơ quan liên quan.', `${DAU} · trang 2`));
+  for (const [ten, chu] of [['đầu + chân ở đầu trang', kieuA], ['số trang ở đầu, chân ở cuối', kieuB]]) {
+    const bo = taoBo(chu);
+    assert.equal(coTrong(bo, ND, 12), 'dung', ten);
+    assert.equal(coTrong(bo, `${DAU} · trang 1`), 'dung', `${ten}: chữ gốc vẫn được so`);
+    assert.equal(coTrong(bo, 'báo cáo Thường trực Tỉnh ủy ngày 25/12/2026'), false, `${ten}: bỏ chữ giữa câu → không khớp`);
+    const kq = xacMinhKetQua({ van_ban: {}, nhiem_vu: [{ noi_dung: ND, han: '2026-12-25', trich_han: 'Thường trực Tỉnh ủy trước ngày 25/12/2026' }] }, chu, DM);
+    assert.equal(kq.nhiem_vu[0].noi_dung.xac_minh, 'dung', ten); assert.equal(kq.nhiem_vu[0].han.xac_minh, 'dung', ten);
+  }
+});
+test('mép trang: dòng nội dung không bao giờ bị bỏ nhầm (số trang khác trang, dòng giữa trang, dòng ngắn, trùng ở vài trang)', () => {
+  const g = boMepTrang(vb(trang('5', 'mở đầu trang một', `${DAU} giữa trang`, '2', 'cuối trang một'), trang('5', 'mở đầu trang hai', `${DAU} giữa trang`, 'cuối trang hai')));
+  assert.equal(g.split('\n').filter((x) => x === '5').length, 2, 'số "5" ở đầu trang 1 và 2 không phải số của chính trang → giữ');
+  assert.ok(g.includes(`${DAU} giữa trang`) && g.includes('\n2\n'), 'dòng giữa trang (kể cả số, dòng lặp) → giữ');
+  const ngan = boMepTrang(vb(trang('ngày 15/10/2026.', 'nội dung một'), trang('ngày 25/12/2026.', 'nội dung hai')));
+  assert.ok(ngan.includes('ngày 15/10/2026.') && ngan.includes('ngày 25/12/2026.'), 'dòng ngắn chỉ khác chữ số ở mép cả hai trang → giữ (< 8 chữ)');
+  const ba = vb(trang('mở đầu', 'phối hợp với Ban Tổ chức Tỉnh ủy,', 'Ban Tuyên giáo Tỉnh ủy,'),
+    trang('Ban Dân vận Tỉnh ủy triển khai thực hiện', 'nội dung hai', 'Ban Tuyên giáo Tỉnh ủy,'), trang('nội dung ba', 'kết thúc'));
+  assert.equal(coTrong(taoBo(ba), 'phối hợp với Ban Tổ chức Tỉnh ủy, Ban Dân vận Tỉnh ủy triển khai thực hiện'), false,
+    'dòng trùng ở mép 2 / 3 trang (không chạy suốt từ trang 2) → giữ, câu bỏ sót đơn vị không khớp');
 });
 
 test('yêu cầu Claude: output_config json_schema + effort cho mô hình 5.x; chuẩn OpenAI: json_schema, max_completion_tokens / max_tokens', () => {
