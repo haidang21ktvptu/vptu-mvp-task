@@ -1,5 +1,5 @@
 // Chuẩn nhập của hệ thống (v9 đợt 2 — nhập Excel toàn trình), 3 mức: mức 1 = đủ để GIAO việc; mức 2 = tiến độ (tuỳ chọn); mức 3 = đủ để
-// ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). 28 trường (mau: true — 25 cũ + 3 ô nguồn v3.20 ở cuối) là cột của "Mẫu nhập chuẩn VPTU-TASK"; trường phụ (mau: false) nhận
+// ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). 29 trường (mau: true — 25 cũ + 3 ô nguồn v3.20 + mục tiêu then chốt v3.24 ở cuối) là cột của "Mẫu nhập chuẩn VPTU-TASK"; trường phụ (mau: false) nhận
 // khi tệp khác có cột tương ứng. Mã trường khớp kl_truong_nhap() (migration 0072). ten: tiêu đề hay gặp (đã chuẩn hoá — chuanTieuDe) để tự ghép cột.
 
 export const TRUONG = [
@@ -32,6 +32,9 @@ export const TRUONG = [
   { k: 'muc_quan_trong', nhan: 'Mức quan trọng', muc: 1, mau: true, kieu: 'mucQT', ten: ['muc quan trong', 'muc do quan trong'] },
   { k: 'co_quan_trinh', nhan: 'Cơ quan trình', muc: 1, mau: true, kieu: 'coQuanTrinh', ten: ['co quan trinh'] },
   { k: 'thuong_truc_chi_dao', nhan: 'Thường trực chỉ đạo', muc: 1, mau: true, kieu: 'thuongTruc', ten: ['thuong truc chi dao', 'dong chi thuong truc chi dao'] },
+  // v3.24 (0106): mục tiêu then chốt — cuối mẫu; nhiều mục cách nhau bằng dấu chấm phẩy; chỉ áp khi lô TẠO việc (cập nhật theo mã không đổi).
+  { k: 'muc_tieu', nhan: 'Mục tiêu then chốt', muc: 1, mau: true, kieu: 'mucTieu', ten: ['muc tieu then chot', 'muc tieu', 'phuc vu muc tieu'],
+    goiY: 'Tên ngắn (sheet "Danh mục") hoặc mã; nhiều mục cách nhau bằng dấu chấm phẩy (;), tối đa 10' },
   { k: 'linh_vuc_chi_tiet', nhan: 'Lĩnh vực chi tiết', muc: 1, mau: false, ten: ['linh vuc chi tiet'] },
   { k: 'van_ban_trien_khai', nhan: 'Văn bản triển khai', muc: 2, mau: false, ten: ['van ban trien khai'] },
   { k: 'don_vi_phoi_hop', nhan: 'Đơn vị phối hợp', muc: 1, mau: false, ten: ['don vi phoi hop', 'phoi hop'] },

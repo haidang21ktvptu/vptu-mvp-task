@@ -7,6 +7,7 @@ import { vanBanTheoKhoa } from '../../../lib/kl/du-lieu.js';
 import { nhanTruong } from '../../../lib/kl/nhap/truong.js';
 import { giaTriNhom } from '../../../lib/kl/thay-mat.js';
 import { napVanBan, MOI } from './van-ban.js';
+import { datMucTieuGv } from './muc-tieu.js';
 
 let dang = null;   // dòng đang hoàn thiện: { id, so_dong, lo_ma, ten_tep, du_lieu, thieu, ghi_chu }
 // Gửi kèm dòng chờ: vướng mắc và ghi chú của tệp (biểu mẫu không có hai ô này) — giao_viec ghi cùng lúc tạo việc.
@@ -46,7 +47,8 @@ export async function apDienSan(dong, { nhanMoi }) {
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
   if (chon('klThNguon', d.nguon_nhiem_vu_ma)) phat($('klThNguon'), 'input');   // đánh dấu đã chọn: mặc định theo loại văn bản không ghi đè
   go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThGhiChu', d.linh_vuc_chi_tiet);
-  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy
+  if (Array.isArray(d.muc_tieu_ma)) datMucTieuGv(d.muc_tieu_ma);   // v3.24: mục tiêu then chốt ghi trong tệp
+  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet || d.muc_tieu_ma?.length) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy
   $('klThDoKhanWrap').querySelector(`.dk-chon button[data-gia-tri="${d.do_khan || 'THUONG'}"]`)?.click();   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
   phat($('giaoViecForm'), 'input');
   $('klThNoiDung').focus();

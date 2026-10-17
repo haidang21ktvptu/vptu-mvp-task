@@ -28,6 +28,7 @@ import { apDienSan, boHoanThien } from './dien-san.js';
 import { hienTabGiaoViec } from '../nhap-excel/tab.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, LOAI_CO_HOI_NGHI } from '../kl/them-owner.js';
 import { dienThongTinNguon } from './thong-tin-nguon.js';   // Đợt C2: mức quan trọng, cơ quan trình, Thường trực chỉ đạo
+import { ganSauGiao, apMucTieuVanBan } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt
 import { dongNganCT } from '../ngan-chi-tiet.js';
 import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
   canNganhHienTai, canNgayNhan } from './trang-thai.js';
@@ -103,7 +104,7 @@ function dienLinhVuc() {
   $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + linhVucCuaNganh($('klThNganh').value).filter((l) => !cho || cho.has(l.ma)).map((l) => opt(l.ma, l.ten, l.ma === cu)).join('');
   dienTheoDoi();
 }
-function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || getHomNay(); capNhatHienThi(); }
+function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || getHomNay(); capNhatHienThi(); apMucTieuVanBan($('klThVanBan').value); }
 // Đổi lãnh đạo được thay mặt → phạm vi của người đó; lọc lại Owner / ngành / lĩnh vực. Khoá biểu mẫu khi đọc; lỗi → trả ô Thay mặt về người cũ.
 // Vào / rời "Thường trực Tỉnh ủy" (v3.18): ẩn / hiện người theo dõi, độ khẩn mặc định Khẩn ↔ Thường (chỉ khi người dùng chưa chọn mức khác).
 let thayMatCu = '';
@@ -234,6 +235,7 @@ async function luuNhieu() {
   $('klThLuu').disabled = true;
   try {
     const kq = await giaoViecNhieu(chung, [dong1, ...docDong()]);
+    await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(chung.van_ban), ids: kq.viec.map((v) => v.id) });
     const ma = kq.viec.map((v) => v.ma);
     notifySuccess(`Đã giao ${kq.so} việc: ${ma.slice(0, 5).join(', ')}${ma.length > 5 ? '…' : ''}.`);
     const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';
@@ -251,6 +253,7 @@ async function luu(nhapTiep) {
   $('klThLuu').disabled = true;
   try {
     const kq = await giaoViec(p);
+    await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(p.van_ban), rieng: Boolean(p.dong_nhap_id), ids: [kq.id] });
     notifySuccess(`Đã giao việc ${kq.ma}.${nhuA0() ? ` Người nhận và Chánh Văn phòng có thông báo${tuNhanViec() ? '' : '; xác nhận nhận việc trong 1 ngày làm việc'}.` : ''}`);
     const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';
     if (trichYeu) { // văn bản vừa tạo (kể cả mốc "Thường trực giao …" của A0): đặt trích yếu; lỗi → báo rõ, việc đã giao vẫn còn

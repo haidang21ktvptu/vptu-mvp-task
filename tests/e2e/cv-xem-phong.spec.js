@@ -50,18 +50,26 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
     });
   });
 
-  test('2. Tổng quan phòng: thanh lọc, khối Theo loại văn bản, chip loại lọc cả màn hình, quy tắc cảnh báo', async ({ browser }, testInfo) => {
+  // v3.24: thanh lọc (lọc nhanh, bộ lọc chi tiết, chip "Đang áp dụng") thay hàng chip loại; "Loại văn bản" là chế độ xem của khối 6.
+  test('2. Tổng quan phòng: thanh lọc, khối 6 xem theo loại văn bản lọc cả màn hình, chip bỏ được, quy tắc cảnh báo', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await nav(p, 'navTongQuan');
       await expect(p.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
       await expect(p.locator('#viewTongQuan h1')).toContainText('Tổng quan');
       await expect(p.locator('#tqQuyTac')).toContainText('Quy tắc');
-      await expect(p.locator('#tqLoaiVanBan')).toBeVisible(); await expect(p.locator('#tqLocPhong')).toHaveCount(0);   // chuyên viên không có ô Phòng
-      await p.locator('#tqLoc .chip-loai button[data-loai="CONG_VAN"]').click();
+      await p.locator('#tqLocChiTietNut').click();
+      await expect(p.locator('#tqLocLuoi')).toBeVisible();
+      await expect(p.locator('#tqLocNguoi optgroup[label="Phòng, đơn vị chủ trì"]')).toHaveCount(0);   // chuyên viên không có lựa chọn theo phòng
+      await p.locator('#tqVanBan [data-action="tqVbXem"][data-xem="loai"]').click();
+      await expect(p.locator('#tqLoaiVanBan')).toBeVisible();
+      await p.locator('#tqLoaiVanBan button[data-loai="CONG_VAN"]').click();
       await expect(p.locator('#tqDangLoc')).toContainText('Đang lọc');
-      await expect(p.locator('#tqLoc .chip-loai button[data-loai="CONG_VAN"]')).toHaveAttribute('aria-pressed', 'true');
-      await p.locator('#tqLoc .tq-loc-bo').click();
+      await expect(p.locator('#tqLoaiVanBan button[data-loai="CONG_VAN"]')).toHaveAttribute('aria-pressed', 'true');
+      await expect(p.locator('#tqLoc .chip-tq')).toContainText('Văn bản: Công văn');
+      await expect(p.locator('#tqLocLoai')).toHaveValue('CONG_VAN');
+      await p.locator('#tqLocBo').click();
       await expect(p.locator('#tqDangLoc')).not.toContainText('Đang lọc');
+      await expect(p.locator('#tqLoc .chip-tq')).toHaveCount(0);
     });
   });
 

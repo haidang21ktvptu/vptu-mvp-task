@@ -92,6 +92,22 @@ function khopCanBo(v, accounts, tuDien, tenPhong) {
   return { loi: 'không khớp cán bộ nào', chon: [] };
 }
 
+// Mục tiêu then chốt (v3.24): nhiều mục cách nhau bằng ';' hoặc xuống dòng (tên ngắn có dấu phẩy); mỗi mục khớp mã → tên ngắn / tên đầy đủ → gần
+// đúng duy nhất. Không mục nào khớp → lỗi (ô tuỳ chọn: bỏ giá trị, vẫn nhập dòng); khớp một phần → giữ phần khớp, ghi phần bỏ (gần đúng: xem lại).
+export function khopMucTieuNhap(v, ds) {
+  const dung = ds.filter((m) => m.dang_dung !== false); const ma = []; const bo = []; let ganDung = false;
+  String(v).split(/[;\n]+/).map((x) => x.trim()).filter(Boolean).forEach((p) => {
+    const c = chuanChu(p); const ten = (m) => [m.ten_ngan, m.ten].map(chuanChu);
+    let kq = dung.filter((m) => m.ma.toLowerCase() === p.toLowerCase() || ten(m).includes(c));
+    if (!kq.length && c.length >= 4) { kq = dung.filter((m) => ten(m).some((t) => t.includes(c) || (t.length >= 6 && c.includes(t)))); ganDung ||= kq.length === 1; }
+    if (kq.length === 1) { if (!ma.includes(kq[0].ma)) ma.push(kq[0].ma); } else bo.push(p);
+  });
+  if (!ma.length) return { loi: 'không khớp danh mục mục tiêu then chốt', chon: [] };
+  const giu = ma.slice(0, 10); const hien = giu.map((x) => dung.find((m) => m.ma === x).ten_ngan).join('; ');
+  const ghi = [bo.length ? `bỏ: ${bo.join('; ')}` : '', ma.length > 10 ? 'tối đa 10 mục' : ''].filter(Boolean).join(', ');
+  return { ma: giu, hien: ghi ? `${hien} (${ghi})` : hien, gan: ghi || ganDung ? 'gan_dung' : 'ten' };
+}
+
 // ctx: { dm (danhMucKl), accounts, tuDien: Map<loai, Map<goc, ma>>, tenPhong(ma) }. kieu theo truong.js. → { ma, hien, gan } | { loi, chon } | null (ô trống)
 export function chuanGiaTri(kieu, v, ctx, them = {}) {
   if (v === null || v === undefined || String(v).trim() === '') return null;
@@ -117,6 +133,7 @@ export function chuanGiaTri(kieu, v, ctx, them = {}) {
     case 'mucQT': return khopDanhMuc(v, tuDs(MUC_QUAN_TRONG), null, BI_DANH.muc_quan_trong);
     case 'coQuanTrinh': return khopDanhMuc(v, (ctx.dm.donVi || []).filter((d) => !d.trong_van_phong), null);
     case 'thuongTruc': return khopCanBo(v, (ctx.accounts || []).filter((a) => a.role_group === 'A0'), null, ctx.tenPhong || ((x) => x || ''));
+    case 'mucTieu': return khopMucTieuNhap(v, ctx.dm.mucTieu || []);   // v3.24 (0106)
     default: { const s = String(v).replace(/\r\n?/g, '\n').trim(); return { ma: s, hien: s }; }
   }
 }

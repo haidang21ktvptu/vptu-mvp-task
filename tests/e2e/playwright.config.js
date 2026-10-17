@@ -41,7 +41,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/giao-viec-ma-tran.spec.js', '**/giao-viec-nhieu.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/thay-mat-nhom.spec.js', '**/cv-giao-viec.spec.js', '**/cv-xem-phong.spec.js', '**/nguon-van-ban.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/theo-van-ban-chuyen-vien.spec.js', '**/xem-toan-bo.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/giao-viec-ma-tran.spec.js', '**/giao-viec-nhieu.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/thay-mat-nhom.spec.js', '**/cv-giao-viec.spec.js', '**/cv-xem-phong.spec.js', '**/nguon-van-ban.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/theo-van-ban-chuyen-vien.spec.js', '**/xem-toan-bo.spec.js', '**/tong-quan-lanh-dao.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
     // GĐ19: chi-dao-tt ghi nhiệm vụ vào phạm vi PCVP2 (Quản trị) — chạy SAU desktop để không đua với bộ số kl-dashboard (PCVP2).
     { name: 'chi-dao-tt', use: DESKTOP, testMatch: /chi-dao-tt\.spec\.js/, dependencies: ['desktop'] },
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở project riêng bên dưới).
@@ -84,8 +84,11 @@ export default defineConfig({
     { name: 'v3221-tvb', use: DESKTOP, testMatch: /theo-van-ban-chuyen-vien\.spec\.js/, dependencies: ['v9-nhap-excel'] },
     // v3.23: cấu hình xem toàn bộ (0103, đặt tạm — chung cả hệ thống) → chạy MỘT MÌNH, nối sau v3221-tvb; Việc của tôi tối giản, vướng mắc gửi tới.
     { name: 'v323-xem-toan-bo', use: DESKTOP, testMatch: /xem-toan-bo\.spec\.js/, dependencies: ['v3221-tvb'] },
+    // v3.24: Tổng quan cho lãnh đạo (9 khối, thanh lọc nhớ theo máy) + gắn mục tiêu then chốt (Giao việc, ngăn chi tiết, lọc Nhiệm vụ) — đọc số toàn
+    // Văn phòng của Chánh VP và tạo việc của Trưởng phòng nên chạy MỘT MÌNH, nối sau v323-xem-toan-bo.
+    { name: 'v324-tong-quan', use: DESKTOP, testMatch: /tong-quan-lanh-dao\.spec\.js/, dependencies: ['v323-xem-toan-bo'] },
     // GĐ23: doi-mat-khau tạo tài khoản tạm bằng service_role và đăng nhập qua form — chạy cùng lượt cuối với dang-nhap.
-    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4', 'v9-dot2', 'v9-nhap-excel', 'v3221-tvb', 'v323-xem-toan-bo'] },
+    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4', 'v9-dot2', 'v9-nhap-excel', 'v3221-tvb', 'v323-xem-toan-bo', 'v324-tong-quan'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',

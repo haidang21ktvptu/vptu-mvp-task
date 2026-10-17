@@ -4,9 +4,14 @@
 // thanh tải chồng của bảng KPI. Thuần tổng hợp trên dòng v_nhiem_vu RLS đã trả về — không DOM, không Supabase; unit test tong-quan-them.test.mjs.
 import { soLieuChinh, laXong, laMo, mucMo } from './tong-quan.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from './do-khan.js';
+import { khopLocMoi } from './tq-bo-loc.js';
 
-export const LOC_TRONG = { phamVi: '', loai: '', phong: '', canBo: '', doKhan: '', ldvp: '' };
-export const coLoc = (loc) => Object.values(loc || {}).some(Boolean);
+// v3.24: + khoá của thanh lọc chi tiết (tq-bo-loc.js). tu / den = kỳ tuỳ chọn — đổi KỲ của số liệu, không lọc dòng (coLoc không tính; coGiaTri có).
+export const LOC_TRONG = { phamVi: '', loai: '', phong: '', canBo: '', doKhan: '', ldvp: '', nhanh: '', mucTieu: '', khoi: '', nganh: '', coQuan: '', thuongTruc: '',
+  nguoi: '', trangThai: '', mucQT: '', nguon: '', tu: '', den: '' };
+const KHOA_KY = ['tu', 'den'];
+export const coLoc = (loc) => Object.entries(loc || {}).some(([k, v]) => !KHOA_KY.includes(k) && Boolean(v));
+export const coGiaTri = (loc) => Object.values(loc || {}).some(Boolean);
 export const NGOAI_VP = 'NGOAI';      // ô Phòng: đơn vị ngoài Văn phòng chủ trì
 export const CHUA_LDVP = 'CHUA';      // ô Lãnh đạo VP: việc không thuộc phòng nào đang có lãnh đạo phụ trách
 export const KHONG_VB = 'KHONG_VB';   // việc không gắn văn bản giao việc
@@ -25,15 +30,17 @@ export function lanhDaoPhuTrach(r, phanCong = []) {
 const cuaToi = (r, me) => Boolean(me) && [r.nguoi_theo_doi, r.owner_tai_khoan, r.tao_boi, r.giao_thay_mat_cho].includes(me);
 export const loaiCua = (r) => r.van_ban_loai || KHONG_VB;
 
-export function locTongQuan(rows, loc, { me = null, phanCong = [] } = {}) {
+export function locTongQuan(rows, loc, { me = null, phanCong = [], mucTieuDm = [], nganhDm = [] } = {}) {
   const l = { ...LOC_TRONG, ...(loc || {}) };
   if (!coLoc(l)) return rows;
-  return rows.filter((r) => (!l.phamVi || cuaToi(r, me))
+  const laLdvp = (r, id) => (id === CHUA_LDVP ? lanhDaoPhuTrach(r, phanCong).length === 0 : lanhDaoPhuTrach(r, phanCong).includes(id));
+  const c = { mucTieuDm, nganhDm, laLdvp };
+  return rows.filter((r) => khopLocMoi(r, l, c) && (!l.phamVi || cuaToi(r, me))
     && (!l.loai || loaiCua(r) === l.loai)
     && (!l.phong || (l.phong === NGOAI_VP ? !r.owner_trong_van_phong : r.owner_trong_van_phong && r.owner_phong === l.phong))
     && (!l.canBo || r.owner_tai_khoan === l.canBo)
     && (!l.doKhan || (r.do_khan || 'THUONG') === l.doKhan)
-    && (!l.ldvp || (l.ldvp === CHUA_LDVP ? lanhDaoPhuTrach(r, phanCong).length === 0 : lanhDaoPhuTrach(r, phanCong).includes(l.ldvp))));
+    && (!l.ldvp || laLdvp(r, l.ldvp)));
 }
 
 // Lựa chọn của từng ô, đếm trên TOÀN BỘ dòng (không theo bộ lọc đang chọn) để người xem thấy đủ; chỉ giá trị có trong dữ liệu.

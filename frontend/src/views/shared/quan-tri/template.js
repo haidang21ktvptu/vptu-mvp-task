@@ -3,9 +3,10 @@
 // khu danh mục với mọi tài khoản trừ Thường trực (Đợt F v3.21 — quyền chung, lưu vết ở nhật ký danh mục); mọi thao tác gọi hàm SQL admin_* hoặc đi qua RLS (frontend chỉ ẩn/hiện, không phải nơi chặn).
 import { quanTriDanhMucTemplate, quanTriNhatKyDanhMucTemplate } from './template-linh-vuc.js';
 import { quanTriHeThongTemplate } from './template-he-thong.js';
+import { quanTriThongKeTemplate } from './template-thong-ke.js';
 
 export const quanTriTemplate = `
-  <div class="dau"><h1>Quản trị</h1><span>phân công lãnh đạo phụ trách phòng và lĩnh vực, tài khoản, danh mục, nhật ký</span>
+  <div class="dau"><h1>Quản trị</h1><span>phân công lãnh đạo phụ trách phòng và lĩnh vực, tài khoản, danh mục, nhật ký, thống kê sử dụng</span>
     <div class="phai-dau"><button type="button" data-action="loadQuanTri" class="nut nho">Tải lại</button></div></div>
   <div class="tab-hang" id="qtTabs" role="tablist">
     <button type="button" id="qtTabPhuTrach" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuPhuTrach" aria-selected="true">Phân công phụ trách</button>
@@ -16,6 +17,7 @@ export const quanTriTemplate = `
     <button type="button" id="qtTabNhatKy" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKy" aria-selected="false">Nhật ký</button>
     <button type="button" id="qtTabDonDuLieu" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDonDuLieu" aria-selected="false">Dọn dữ liệu</button>
     <button type="button" id="qtTabNhatKyHeThong" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKyHeThong" aria-selected="false">Nhật ký hệ thống</button>
+    <button type="button" id="qtTabThongKe" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuThongKe" aria-selected="false">Thống kê sử dụng</button>
   </div>
 
   <div id="qtKhuPhuTrach" class="qt-khu">
@@ -49,6 +51,7 @@ export const quanTriTemplate = `
     <div id="qtKhuNhatKyDanhMuc">${quanTriNhatKyDanhMucTemplate}</div>
   </div>
   ${quanTriHeThongTemplate}
+  ${quanTriThongKeTemplate}
 `;
 
 // Hộp xác nhận bắt gõ lý do (dùng chung cho cấp/thu cờ và phân công phụ trách).

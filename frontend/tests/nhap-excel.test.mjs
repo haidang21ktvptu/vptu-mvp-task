@@ -116,6 +116,11 @@ const DM = {
   loaiThoiHan: [{ ma: 'CO_HAN_CU_THE', ten: 'Có hạn cụ thể', cho_phep_tao_moi: true }, { ma: 'KY_BAN_HANH', ten: 'Ký ban hành (trong 10 ngày)', cho_phep_tao_moi: true },
     { ma: 'THUONG_XUYEN', ten: 'Nhiệm vụ thường xuyên', cho_phep_tao_moi: false }],
   nguonNhiemVu: [{ ma: 'VAN_BAN_CAN_THEO_DOI', ten: 'Văn bản cần theo dõi', dang_dung: true }, { ma: 'NHIEM_VU_PHAT_SINH', ten: 'Nhiệm vụ phát sinh', dang_dung: true }],
+  mucTieu: [{ ma: 'DP_CAN_BO', nhom: 'DOT_PHA', ten: 'Nâng cao chất lượng đội ngũ cán bộ', ten_ngan: 'Đột phá cán bộ, nguồn nhân lực', dang_dung: true },
+    { ma: 'CTR_DU_LICH', nhom: 'CHUONG_TRINH', ten: 'Phát triển du lịch bền vững', ten_ngan: 'Du lịch bền vững', dang_dung: true },
+    { ma: 'NQ_57', nhom: 'NQ_TW', ten: 'Nghị quyết số 57-NQ/TW', ten_ngan: 'Nghị quyết 57-NQ/TW', dang_dung: true },
+    { ma: 'NQ_59', nhom: 'NQ_TW', ten: 'Nghị quyết số 59-NQ/TW', ten_ngan: 'Nghị quyết 59-NQ/TW', dang_dung: true },
+    { ma: 'CHT_CU', nhom: 'CHI_TIEU', ten: 'Chỉ tiêu cũ', ten_ngan: 'Chỉ tiêu cũ', dang_dung: false }],   // v3.24 (0105)
 };
 const ACC = [
   { id: 'cvp', full_name: 'Hoàng Văn Bình', role_group: 'A1', is_chief: true, department: 'LANH_DAO_VAN_PHONG', username: 'binh.cvp' },
@@ -235,26 +240,48 @@ test('Đánh giá: mã đã có → CAP_NHAT chỉ ô có trong tệp (không m�
   assert.equal(moi.ket_qua, 'GIAO'); assert.ok(moi.canhBao[0].includes('chưa có trên hệ thống'));
 });
 
-test('Mẫu nhập chuẩn: 3 sheet, 28 cột đúng thứ tự (v3.20: + 3 ô nguồn ở cuối), danh sách chọn trỏ sheet Danh mục, tiêu đề tô theo mức; đọc lại tự nhận hồ sơ mẫu', async () => {
+test('Mẫu nhập chuẩn: 3 sheet, 29 cột đúng thứ tự (v3.20: + 3 ô nguồn; v3.24: + mục tiêu then chốt ở cuối), danh sách chọn trỏ sheet Danh mục, tiêu đề tô theo mức; đọc lại tự nhận hồ sơ mẫu', async () => {
   const b = taoMauNhap({ ...CTX, findAccount: (id) => ACC.find((a) => a.id === id) },
     [{ ma: 'NV-9', van_ban_loai: 'KL_BTV', so_hoi_nghi: 45, so_ket_luan: '45-KL/TU', ngay_ban_hanh: '2026-08-01', noi_dung: 'Báo cáo quý', owner_tai_khoan: 'cv1',
-      nguoi_theo_doi: 'tp', tao_boi: 'tp', do_khan: 'KHAN', tien_do_ma: 'DANG_THUC_HIEN', han_xu_ly: '2026-12-31', muc_quan_trong: 'A', co_quan_trinh_ten: 'Ban Tổ chức Tỉnh ủy' }]);
+      nguoi_theo_doi: 'tp', tao_boi: 'tp', do_khan: 'KHAN', tien_do_ma: 'DANG_THUC_HIEN', han_xu_ly: '2026-12-31', muc_quan_trong: 'A', co_quan_trinh_ten: 'Ban Tổ chức Tỉnh ủy',
+      muc_tieu: ['DP_CAN_BO', 'NQ_57'] }]);
   const ds = await docXlsx(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
   assert.deepEqual(ds.map((x) => x.ten), ['Nhập liệu', 'Danh mục', 'Hướng dẫn']);
-  assert.equal(TRUONG_MAU.length, 28); assert.deepEqual(ds[0].dong[0], TRUONG_MAU.map((t) => t.nhan));
+  assert.equal(TRUONG_MAU.length, 29); assert.deepEqual(ds[0].dong[0], TRUONG_MAU.map((t) => t.nhan)); assert.equal(TRUONG_MAU[28].k, 'muc_tieu');
   const r = ds[0].dong[1];
   assert.equal(r[0], 'NV-9'); assert.equal(r[1], 'Kết luận Hội nghị Ban Thường vụ'); assert.equal(r[7], 'Lý Văn Phúc — Phòng Tổng hợp');
   assert.equal(r[9], 'Nông Thị Lan — Phòng Tổng hợp', 'lãnh đạo giao = người tạo A2'); assert.equal(r[14], 'Khẩn'); assert.equal(r[11], '2026-12-31');
-  assert.equal(r[25], 'A — rất quan trọng'); assert.equal(r[26], 'Ban Tổ chức Tỉnh ủy');
+  assert.equal(r[25], 'A — rất quan trọng'); assert.equal(r[26], 'Ban Tổ chức Tỉnh ủy'); assert.equal(r[28], 'Đột phá cán bộ, nguồn nhân lực; Nghị quyết 57-NQ/TW');
+  assert.ok(ds[1].dong[0].includes('Mục tiêu then chốt')); assert.ok(ds[1].dong.some((d) => d.includes('Du lịch bền vững')) && !ds[1].dong.some((d) => d.includes('Chỉ tiêu cũ')));
   assert.ok(ds[1].dong[0].includes('Lĩnh vực')); assert.ok(ds[1].dong.some((d) => d[2] === 'Đàm Văn Sơn — Phòng Quản trị'));
   assert.ok(!ds[1].dong.some((d) => (d[2] || '').startsWith('Hệ thống')), 'không đưa tài khoản hệ thống');
   const xml = new TextDecoder().decode(b); assert.match(xml, /<dataValidation type="list"[^>]*sqref="B2:B1001"><formula1>&apos;Danh mục&apos;!\$A\$2:\$A\$8<\/formula1>/);   // 0087: 7 loại văn bản (+ KL / NQ Ban Chấp hành)
+  assert.doesNotMatch(xml, /sqref="AC2:AC/, 'cột mục tiêu nhiều giá trị: không gắn danh sách chọn');
   assert.match(xml, /<fgColor rgb="FFFFF6D6"\/>/);
   const sTieuDe = (c) => new RegExp(`<c r="${c}1" t="inlineStr" s="(\\d+)"`).exec(xml)?.[1];
   assert.deepEqual(['A', 'B', 'R', 'S', 'T', 'U', 'Y', 'Z', 'AB'].map(sTieuDe), ['7', '4', '4', '5', '5', '6', '6', '4', '4'], 'tiêu đề tô theo mức: mã xám, mức 1 vàng, mức 2 lam, mức 3 lục; 3 ô nguồn mức 1');
   const t = timTieuDe(ds); assert.equal(t.hoSo?.mau, 'CHUAN'); assert.equal(t.anhXa[0], 'ma'); assert.equal(t.anhXa[24], 'chat_luong');
   const kq = danhGia(chuanDong(layDong(ds[0], 0, t.anhXa)[0], CTX), { ...DG, maDaCo: new Set(['NV-9']) });
   assert.equal(kq.ket_qua, 'CAP_NHAT'); assert.equal(kq.du_lieu.owner_tai_khoan, 'cv1'); assert.equal(kq.du_lieu.do_khan, 'KHAN');
+});
+
+test('v3.24 (0106): mục tiêu then chốt — nhiều mục cách nhau bằng dấu chấm phẩy (tên ngắn có dấu phẩy), mã / tên ngắn / tên đầy đủ / gần đúng; bỏ mục ngừng dùng; gửi muc_tieu_ma', () => {
+  const a = chuanGiaTri('mucTieu', 'Đột phá cán bộ, nguồn nhân lực; 57-NQ/TW\nctr_du_lich', CTX);
+  assert.deepEqual(a.ma, ['DP_CAN_BO', 'NQ_57', 'CTR_DU_LICH']); assert.equal(a.gan, 'gan_dung', '"57-NQ/TW" khớp gần đúng → người nhập xem lại');
+  assert.equal(chuanGiaTri('mucTieu', 'Du lịch bền vững; NQ_59', CTX).gan, 'ten', 'đúng tên / đúng mã');
+  const b = chuanGiaTri('mucTieu', 'Du lịch; Nghị quyết; Chỉ tiêu cũ', CTX);
+  assert.deepEqual(b.ma, ['CTR_DU_LICH']); assert.equal(b.gan, 'gan_dung'); assert.match(b.hien, /bỏ: Nghị quyết; Chỉ tiêu cũ/);
+  assert.ok(chuanGiaTri('mucTieu', 'Không có trong danh mục', CTX).loi); assert.equal(chuanGiaTri('mucTieu', '  ', CTX), null);
+  assert.equal(doanTruong('Mục tiêu then chốt'), 'muc_tieu');
+  const kq = danhGia(dong({ ...DU, muc_tieu: 'Du lịch bền vững; Nghị quyết 59-NQ/TW' }), DG);
+  assert.equal(kq.ket_qua, 'GIAO'); assert.deepEqual(kq.du_lieu.muc_tieu_ma, ['CTR_DU_LICH', 'NQ_59']);
+  assert.equal(danhGia(dong(DU), DG).du_lieu.muc_tieu_ma, null);
+  const loi = danhGia(dong({ ...DU, muc_tieu: 'xyz' }), DG);
+  assert.equal(loi.ket_qua, 'GIAO', 'ô tuỳ chọn không khớp: vẫn giao'); assert.ok(loi.canhBao.some((c) => c.includes('Mục tiêu then chốt')));
+  const mot = danhGia(dong({ ...DU, muc_tieu: 'Du lịch bền vững; Nghị quyết' }), DG);
+  assert.deepEqual(mot.du_lieu.muc_tieu_ma, ['CTR_DU_LICH']); assert.ok(mot.canhBao.some((c) => c.includes('bỏ: Nghị quyết')), 'bỏ bớt mục → ghi chú dòng');
+  const cn = danhGia(dong({ ma: 'NV-9', muc_tieu: 'Du lịch bền vững' }), DG);
+  assert.equal(cn.ket_qua, 'CAP_NHAT'); assert.ok(cn.canhBao.some((c) => c.includes('chỉ gắn khi tạo việc mới')));
 });
 
 test('v3.20 (0093): ba ô nguồn — Mức quan trọng (A/B/C, chữ "quan trọng"), Cơ quan trình chỉ đơn vị ngoài Văn phòng; không khớp → lỗi ô tuỳ chọn', () => {

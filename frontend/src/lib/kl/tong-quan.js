@@ -17,7 +17,17 @@ export function khoangKy(ky, homNay) {
     const q = Math.ceil(m / 3); const m1 = q * 3 - 2; const m3 = q * 3;
     return { ky, tu: `${y}-${pad(m1)}-01`, den: `${y}-${pad(m3)}-${pad(cuoiThang(y, m3))}`, ten: `Quý ${SO_LA_MA[q - 1]}`, trong: `trong quý ${SO_LA_MA[q - 1]}` };
   }
+  // v3.24: nhiệm kỳ Đại hội XX Đảng bộ tỉnh (khai mạc 15/9/2025) — "giao / hoàn thành trong kỳ" tính từ đầu nhiệm kỳ.
+  if (ky === 'nhiem-ky') return { ky, tu: '2025-09-15', den: '2030-12-31', ten: 'Nhiệm kỳ 2025–2030', trong: 'từ đầu nhiệm kỳ 2025–2030' };
   return { ky: 'nam', tu: `${y}-01-01`, den: `${y}-12-31`, ten: `Năm ${y}`, trong: `từ đầu năm ${y}` };
+}
+// v3.24: kỳ tuỳ chọn ở bộ lọc chi tiết (từ / đến; để trống một đầu = từ đầu dữ liệu / đến hôm nay; đảo ngược thì đổi chỗ).
+const ngayVb = (s) => { const [y, m, d] = s.split('-'); return `${Number(d)}/${Number(m)}/${y}`; };
+export function khoangTuyChon(tu, den, homNay) {
+  let a = tu || '2000-01-01'; let b = den || homNay;
+  if (a > b) [a, b] = [b, a];
+  const ten = tu ? `${ngayVb(a)} – ${ngayVb(b)}` : `đến ${ngayVb(b)}`;
+  return { ky: 'tuy-chon', tu: a, den: b, ten, trong: tu ? `từ ${ngayVb(a)} đến ${ngayVb(b)}` : `đến ${ngayVb(b)}` };
 }
 
 const ngayCua = (ts) => (ts ? homNayVN(new Date(ts)) : null);

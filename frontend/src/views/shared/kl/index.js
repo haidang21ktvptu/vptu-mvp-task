@@ -12,7 +12,7 @@ import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien, doiKlToanBo } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien, doiKlToanBo, doiKlSapXep, xoaKlLoc } from './danh-sach.js';
 import { mountXuatKy } from './xuat-ky.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
@@ -20,6 +20,7 @@ import { mountChiDao } from './chi-dao.js';
 import { mountMinhChung } from './minh-chung.js';
 import { mountThongTinGiao } from './thong-tin-giao.js';
 import { mountSuaTang } from './sua-tang.js';
+import { mountMucTieu } from './muc-tieu.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { moNganViec } from '../ngan-chi-tiet.js';
 import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
@@ -130,11 +131,12 @@ export function registerKlView() {
   mountMinhChung(registerActions, napLaiSauHanhDong);
   mountThongTinGiao(registerActions, napLaiSauHanhDong);
   mountSuaTang(registerActions, napLaiSauHanhDong);   // v9 đợt 2: sửa thông tin giao / đề nghị sửa (0070–0071)
+  mountMucTieu(registerActions, napLaiSauHanhDong);   // v3.24 (0105): gắn mục tiêu then chốt
   mountXuatKy();   // v3.16: xuất Excel theo tuần / tháng / quý / năm
   ganBoLoc();
   // PR-3 G: Xuất Excel nạp động lib/kl/xuat.js + lib/xlsx.js (không tăng bundle lúc mở app); In / lưu PDF dùng in.css.
   const klXuatExcel = async () => {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
-  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
 }

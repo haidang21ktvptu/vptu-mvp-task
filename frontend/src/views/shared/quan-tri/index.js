@@ -1,6 +1,6 @@
 // Màn hình "Quản trị" (thiết kế KL BTVTU Phần 5; GĐ23 mở rộng): khu theo quyền — Phân công phụ trách (quan_tri_he_thong, Chánh VP), Tài khoản
 // (quan_tri_he_thong), Danh mục (mọi tài khoản trừ Thường trực — Đợt F v3.21, 0096), Nhật ký cấp quyền, Ngưỡng cảnh báo (A1: CVP sửa, PCVP xem),
-// Dọn dữ liệu + Nhật ký hệ thống (quan_tri_he_thong). Vào từ pill "Quản trị" (cờ) hoặc menu bánh răng (data-tab). Quyền thật ở hàm SQL / RLS /
+// Dọn dữ liệu + Nhật ký hệ thống + Thống kê sử dụng (quan_tri_he_thong). Vào từ pill "Quản trị" (cờ) hoặc menu bánh răng (data-tab). Quyền thật ở hàm SQL / RLS /
 // Edge Function; ở đây chỉ ẩn/hiện tab và khu.
 import { $, show, filterRowsByKeyword } from '../../../lib/dom.js';
 import { state, isChief } from '../../../lib/state.js';
@@ -24,6 +24,7 @@ import { renderCauHinh, luuCauHinh } from './cau-hinh.js';
 import { renderDonDuLieu, mountDonDuLieu } from './don-du-lieu.js';
 import { renderNhatKyHeThong } from './nhat-ky-he-thong.js';
 import { renderNgayNghi, themNgayNghi, boNgayNghi } from './ngay-nghi.js';
+import { renderThongKe, mountThongKe } from './thong-ke.js';
 
 // Khu nào mở cho ai (thứ tự = thứ tự tab). Hàm quyền đọc state.user (cờ mới nhất sau loadQuanTri).
 const KHU = {
@@ -35,13 +36,16 @@ const KHU = {
   qtKhuNhatKy: { tab: 'qtTabNhatKy', cho: (u) => u.quan_tri_he_thong || laNguoiNhap(u), ve: renderNhatKy },
   qtKhuDonDuLieu: { tab: 'qtTabDonDuLieu', cho: (u) => u.quan_tri_he_thong, ve: renderDonDuLieu },
   qtKhuNhatKyHeThong: { tab: 'qtTabNhatKyHeThong', cho: (u) => u.quan_tri_he_thong, ve: renderNhatKyHeThong },
+  qtKhuThongKe: { tab: 'qtTabThongKe', cho: (u) => u.quan_tri_he_thong, ve: renderThongKe, khiMo: true },   // v3.24 (0104); khiMo: chỉ nạp khi đang mở tab
 };
 export const coQuyenQuanTri = (u) => Boolean(u) && Object.values(KHU).some((k) => k.cho(u));
 let tabDangChon = null;
 
-function chonTabQuanTri({ tab }) {
+// veKhiMo = false khi loadQuanTri tự vẽ sau đó; bấm tab (handler nhận dataset, phần tử) thì khu "khiMo" (truy vấn nặng) nạp ngay lúc mở.
+function chonTabQuanTri({ tab }, veKhiMo = true) {
   tabDangChon = tab;
   Object.entries(KHU).forEach(([k, d]) => { show(k, k === tab); $(d.tab).setAttribute('aria-selected', String(k === tab)); });
+  if (veKhiMo && KHU[tab]?.khiMo) KHU[tab].ve();
 }
 
 // Nạp lại danh bạ (cờ mới nhất) + danh mục rồi vẽ các khu theo quyền của chính người đang đăng nhập.
@@ -54,8 +58,8 @@ export async function loadQuanTri() {
   const hopLe = Object.keys(KHU).filter((k) => KHU[k].cho(u));
   Object.entries(KHU).forEach(([k, d]) => show(d.tab, hopLe.includes(k)));
   show('qtKhuNhatKyQuyen', Boolean(u.quan_tri_he_thong)); show('qtKhuNhatKyDanhMuc', laNguoiNhap(u) || Boolean(u.quan_tri_he_thong));
-  chonTabQuanTri({ tab: hopLe.includes(tabDangChon) ? tabDangChon : hopLe[0] });
-  await Promise.all(hopLe.map((k) => KHU[k].ve()));
+  chonTabQuanTri({ tab: hopLe.includes(tabDangChon) ? tabDangChon : hopLe[0] }, false);
+  await Promise.all(hopLe.filter((k) => !KHU[k].khiMo || k === tabDangChon).map((k) => KHU[k].ve()));
 }
 
 // Mở màn hình; data-tab (bánh răng) chọn thẳng khu nếu người dùng có quyền vào khu đó.
@@ -77,6 +81,7 @@ export function registerQuanTriView() {
   mountSuaTaiKhoan(loadQuanTri);
   mountChuyenTheoDoi(loadQuanTri);   // J-6 (0092)
   mountDonDuLieu();
+  mountThongKe();   // v3.24 (0104)
   $('qtTimTaiKhoan').addEventListener('input', (e) => filterRowsByKeyword('qtTaiKhoanBody', e.target.value));
   registerActions({
     openQuanTri, loadQuanTri, chonTabQuanTri,

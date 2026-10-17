@@ -58,10 +58,3 @@ export const chuGiaiHtml = (phan, them = '') => `<ul class="chu-giai-doc ${them}
   const noi = `<i style="background:var(${mau})"></i><span>${escapeHtml(ten)}</span><b>${so}</b>`;
   return `<li>${hd && so > 0 ? `<button type="button" class="muc-cg" ${hd}>${noi}</button>` : noi}</li>`;
 }).join('')}</ul>`;
-
-// Thanh ngang theo nhóm (lĩnh vực): tên, thanh tỉ lệ theo nhóm lớn nhất, số; dòng bấm được nếu có hành động.
-export function thanhNgangHtml(ds, hanhDong) {
-  const mx = Math.max(1, ...ds.map((d) => d.so));
-  return ds.map((d) => `<button type="button" class="lv-hang" ${hanhDong ? hanhDong(d) : 'disabled'} ${goi(`${d.ten}: ${d.so} việc đang mở`)}>
-    <span class="ten-lv">${escapeHtml(d.ten)}</span><span class="ray-lv"><i style="width:${(d.so / mx) * 100}%"></i></span><b>${d.so}</b></button>`).join('');
-}

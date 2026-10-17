@@ -15,7 +15,7 @@ import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
 
 let sauHanhDong = async () => {};
-const BUT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+export const BUT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const KHOA = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const DM = { sanPham: 'sanPham', cap: 'cap', nganh: 'nganh', linhVuc: 'linhVuc', nguonNhiemVu: 'nguonNhiemVu' };
 const kieuCua = (cot) => O_GIAO.find(([c]) => c === cot)?.[2] || 'chu';

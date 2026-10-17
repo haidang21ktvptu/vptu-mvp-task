@@ -111,6 +111,8 @@ export const giaoViecTemplate = `
           ${truong('klThCoQuanTrinh', 'Cơ quan trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
           ${truong('klThTTChiDao', 'Thường trực chỉ đạo', sel('klThTTChiDao'), '', 'đồng chí Thường trực Tỉnh ủy chỉ đạo nội dung này')}
         </div>
+        <div class="gv-mt" id="gvMucTieuWrap"><span class="nhan" id="gvMucTieuNhan">Mục tiêu then chốt <small class="gv-chu-thich">— việc phục vụ nội dung đột phá, chương trình, nghị quyết hay chỉ tiêu nào (tối đa 10)</small></span>
+          <div class="mt-chon" id="gvMucTieu" role="group" aria-labelledby="gvMucTieuNhan"></div><small class="gv-chu-thich" id="gvMucTieuGhiChu"></small></div>
       </details>
     </fieldset>
 

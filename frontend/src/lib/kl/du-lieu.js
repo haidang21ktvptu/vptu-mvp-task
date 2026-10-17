@@ -5,6 +5,8 @@ import { state } from '../state.js';
 import { COT_VIEC, COT_TU_CHOI, taiTheoTrang } from './cot.js';
 import { homNayVN } from './ngay.js';
 import { trongPhamVi, ghiNgoaiPhamVi } from './pham-vi.js';
+import { loadGanMucTieu } from './muc-tieu-db.js';
+import { ganMucTieuVaoDong } from './muc-tieu.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -13,7 +15,7 @@ const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.mess
 
 // Danh mục + cấu hình (B6): MỘT RPC kl_danh_muc() (SECURITY INVOKER — đúng dữ liệu RLS cho người gọi đọc), nhớ sessionStorage 30 phút
 // (chỉ danh mục, không phải tài khoản); màn Quản trị ghi danh mục / ngưỡng thì gọi xoaDanhMucDaNho(). Lượt đọc đang bay dùng chung.
-const KHOA_NHO = 'vptu.kl_danh_muc';
+const KHOA_NHO = 'vptu.kl_danh_muc.v324';   // v3.24 (0105): + mucTieu, khoi, nganh.khoi_ma — khoá mới để không dùng bản nhớ cũ
 const HAN_NHO_MS = 30 * 60_000;
 let dangDocDanhMuc = null;
 function docNho() {
@@ -44,7 +46,7 @@ async function docDanhMuc() {
   try { sessionStorage.setItem(KHOA_NHO, JSON.stringify({ uid: state.user?.id, luc: Date.now(), dm })); } catch { /* không lưu được: vẫn dùng bản trong bộ nhớ */ }
   return danhMuc;
 }
-export const danhMucKl = () => danhMuc || { nganh: [], linhVuc: [], donVi: [], sanPham: [], cap: [], loaiThoiHan: [], tienDo: [] };
+export const danhMucKl = () => danhMuc || { nganh: [], linhVuc: [], donVi: [], sanPham: [], cap: [], loaiThoiHan: [], tienDo: [], mucTieu: [], khoi: [] };
 export const tenTrongDanhMuc = (bang, ma) => danhMucKl()[bang]?.find((x) => x.ma === ma)?.ten || ma || '';
 export const linhVucCuaNganh = (nganhMa) => danhMucKl().linhVuc.filter((l) => l.nganh_ma === nganhMa);
 
@@ -73,14 +75,16 @@ async function docKlRows() {
   // B6: da_xac_nhan_nhan / nguoi_da_nhan lấy từ v_nhiem_vu (0051, cùng giá trị với lich_su 'xac_nhan_nhan_viec') — bỏ truy vấn lich_su toàn phạm vi.
   // Đề nghị từ chối (0034): RLS chỉ trả dòng người đề nghị / cấp duyệt / cấp trên đọc được; mọi trạng thái, mới nhất trước — dòng đầu mỗi việc
   // là đề nghị mới nhất (GĐ22: người đề nghị thấy "đã đồng ý" / "không đồng ý" ngay trên thẻ).
-  const [rows, tcAll] = await Promise.all([
+  // v3.24 (0105): mục tiêu then chốt gắn riêng / theo văn bản — ghép vào dòng (muc_tieu); lỗi đọc không chặn danh sách (muc-tieu-db.js).
+  const [rows, tcAll, gan] = await Promise.all([
     taiTheoTrang(() => supabase.from('v_nhiem_vu').select(COT_VIEC).order('ma').order('id'), 'đọc nhiệm vụ'),
     taiTheoTrang(() => supabase.from('tu_choi').select(COT_TU_CHOI).order('tao_luc', { ascending: false }).order('id'), 'đọc đề nghị từ chối'),
+    loadGanMucTieu(),
   ]);
   const tcCho = tcAll.filter((t) => t.trang_thai === 'CHO_DUYET');
   const tcTheoViec = new Map(); tcAll.forEach((t) => { if (!tcTheoViec.has(t.nhiem_vu_id)) tcTheoViec.set(t.nhiem_vu_id, t); });
   const choTheoViec = new Map(); tcCho.forEach((t) => { if (!choTheoViec.has(t.nhiem_vu_id)) choTheoViec.set(t.nhiem_vu_id, t); });
-  rows.forEach((r) => ganCo(r, choTheoViec.get(r.id), tcTheoViec.get(r.id)));
+  rows.forEach((r) => { ganCo(r, choTheoViec.get(r.id), tcTheoViec.get(r.id)); ganMucTieuVaoDong(r, gan); });
   ghiNgoaiPhamVi(rows);
   return { rows: trongPhamVi(rows), tatCa: rows, luc: new Date(), tuChoiCho: tcCho, tuChoi: tcAll };
 }

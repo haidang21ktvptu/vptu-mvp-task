@@ -108,6 +108,9 @@ export function danhGia(dong, ctx) {
   let ketQua = capNhat ? 'CAP_NHAT' : thieu.length ? 'CHO_HOAN_THIEN' : daXong ? 'DA_XONG' : xong && ctx.cheDoXong === 'CHO_NGHIEM_THU' && du4YeuTo(gt) ? 'CHO_NGHIEM_THU' : 'GIAO';
   if (ketQua === 'GIAO' && xong) canhBao.push('Hoàn thành nhưng chưa đủ 4 yếu tố minh chứng — giao như việc đang làm');
   if (capNhat && loi.length) canhBao.push(`bỏ qua ô không khớp: ${loi.map(nhanTruong).join(', ')}`);
+  // v3.24: mục tiêu then chốt — khớp gần đúng / bỏ bớt thì ghi rõ đã nhận gì; dòng cập nhật theo mã không đổi mục tiêu (sửa ở ngăn chi tiết).
+  if (capNhat && gt.muc_tieu) canhBao.push('mục tiêu then chốt chỉ gắn khi tạo việc mới — việc đã có sửa ở ngăn chi tiết');
+  else if (dong.o.muc_tieu?.gan === 'gan_dung') canhBao.push(`mục tiêu then chốt nhận: ${dong.o.muc_tieu.hien}`);
   return { ket_qua: ketQua, thieu, loi, macDinh, dienHL, canhBao, gt, du_lieu: duLieuGui(dong, gt, ketQua, thieu, me) };
 }
 
@@ -120,6 +123,7 @@ function duLieuGui(dong, g, ketQua, thieu, me) {
     van_ban_trien_khai: g.van_ban_trien_khai, don_vi_phoi_hop: g.don_vi_phoi_hop, ghi_chu: g.ghi_chu, tien_do_ma: g.tien_do, vuong_mac: g.vuong_mac,
     kq_so_hieu: g.kq_so_hieu, kq_ngay: g.kq_ngay, kq_trich_yeu: g.kq_trich_yeu, kq_mo_ta: g.kq_mo_ta, chat_luong: g.chat_luong,
     muc_quan_trong: g.muc_quan_trong, co_quan_trinh: g.co_quan_trinh, thuong_truc_chi_dao: g.thuong_truc_chi_dao,   // 0093
+    muc_tieu_ma: Array.isArray(g.muc_tieu) && g.muc_tieu.length ? g.muc_tieu : null,   // 0106: trigger gắn vào việc do lô tạo
     thieu: ketQua === 'CHO_HOAN_THIEN' ? thieu : [], du_lieu_goc: dong.goc, cap_nhat: ketQua === 'CAP_NHAT' };   // cap_nhat: DB chỉ cập nhật việc có sẵn khi xem trước cũng thấy mã
   Object.keys(d).forEach((k) => { if (d[k] === undefined || d[k] === '') d[k] = null; });
   return d;
