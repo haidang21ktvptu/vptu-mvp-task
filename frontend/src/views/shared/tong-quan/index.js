@@ -21,7 +21,8 @@ import { homNayVN } from '../../../lib/kl/ngay.js';
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { khoangKy, khoangTuyChon, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, chatLuongKy, chiDaoKy, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
 import { theoKhoi, diemNghen, capNghen, theoMucTieu, coGanMucTieu, ketQuaMoiNhat, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu } from '../../../lib/kl/tong-quan-lanh-dao.js';
-import { NHOM_MUC_TIEU, mucTieuCua, timMucTieu } from '../../../lib/kl/muc-tieu.js';
+import { dsNhom, mucTieuCua, timMucTieu, laTuDong } from '../../../lib/kl/muc-tieu.js';
+import { coRaSoat } from '../ra-soat-muc-tieu/index.js';   // v3.25: lối vào Rà soát mục tiêu then chốt
 import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
@@ -65,7 +66,7 @@ const phongCua = () => Object.fromEntries(state.accounts.map((a) => [a.id, a.dep
 const khoaCua = (c) => (c.kh === 'cb' ? khoaCanBo(phongCua()) : c.kh === 'phong' ? khoaPhongCanBo(phongCua(), DEPT_NAMES)
   : c.kh === 'ldvp' ? (r) => { const ids = lanhDaoPhuTrach(r, tq.phanCong); return [ids.includes(c.ma) ? c.ma : ids.length ? 'KHAC' : CHUA_LDVP, c.ten, null]; }
       : khoaNhom(vaiNhom(), DEPT_NAMES, state.user?.department));
-const ctxLoc = () => ({ me: state.user?.id, phanCong: tq.phanCong, mucTieuDm: danhMucKl().mucTieu || [], nganhDm: danhMucKl().nganh || [] });
+const ctxLoc = () => ({ me: state.user?.id, phanCong: tq.phanCong, mucTieuDm: danhMucKl().mucTieu || [], nganhDm: danhMucKl().nganh || [], linhVucDm: danhMucKl().linhVuc || [] });
 const dongDaLoc = () => locTongQuan(coSo(), tq.loc, ctxLoc());
 const cdsCoSo = () => (toanVP() ? tq.cds : locTheoViec(tq.cds, tq.rows));   // chỉ đạo đọc theo RLS (0103: mọi việc) → đúng tập việc đang xem
 const kyHienTai = (homNay) => (tq.loc.tu || tq.loc.den ? khoangTuyChon(tq.loc.tu, tq.loc.den, homNay) : khoangKy(tq.ky, homNay));
@@ -86,12 +87,12 @@ function ve() {
   const [td, pv] = tieuDe(); const s = soLieuChinh(rows, k); const thang = theoThang(rows, homNay); const kyTuy = Boolean(tq.loc.tu || tq.loc.den);
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
   const tc = { ...tuyChonLoc(coSo(), { tenPhong: DEPT_NAMES, tenCanBo: (id) => state.accounts.find((a) => a.id === id)?.full_name, lanhDaoVP: lanhDaoVP(), tenLoai }),
-    ...tuyChonLocMoi(coSo(), { mucTieuDm: dm.mucTieu, khoiDm: dm.khoi, nganhDm: dm.nganh, linhVucDm: dm.linhVuc, nguonDm: dm.nguonNhiemVu }) };
+    ...tuyChonLocMoi(coSo(), { mucTieuDm: dm.mucTieu, nhomDm: dm.nhomMucTieu, khoiDm: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganhDm: dm.nganh, linhVucDm: dm.linhVuc, nguonDm: dm.nguonNhiemVu }) };
   const hienLoc = { phong: v === 'A0' || v === 'A1' || toanVP(), ldvp: laCapVanPhong(), phamViNhan: v === 'A3' ? 'Việc của tôi (chủ trì, theo dõi, đã giao)' : 'Việc tôi theo dõi hoặc giao',
     toanBo: coNutToanBo() ? toanVP() : null };
-  const chip = [...chipLoc(tq.loc, tc, { mucTieuDm: dm.mucTieu, phamViNhan: hienLoc.phamViNhan, tenLoai, tenDoKhan }), ...(kyTuy ? [{ k: 'ky', ten: `Kỳ: ${k.ten}` }] : [])];
+  const chip = [...chipLoc(tq.loc, tc, { mucTieuDm: dm.mucTieu, nhomDm: dm.nhomMucTieu, phamViNhan: hienLoc.phamViNhan, tenLoai, tenDoKhan }), ...(kyTuy ? [{ k: 'ky', ten: `Kỳ: ${k.ten}` }] : [])];
   const nghen = diemNghen(rows);
-  const theo = Object.fromEntries(NHOM_MUC_TIEU.map((n) => [n.ma, theoMucTieu(rows, dm.mucTieu, n.ma)]));
+  const nhomMt = dsNhom(dm.nhomMucTieu, dm.mucTieu); const theo = Object.fromEntries(nhomMt.map((n) => [n.ma, theoMucTieu(rows, dm.mucTieu, n.ma)]));
   const hienCt = tq.ketQua.length > 0 || coSo().some((r) => mucTieuCua(r).some((ma) => timMucTieu(dm.mucTieu, ma)?.nhom === 'CHI_TIEU'));
   const noiBo = `${vn === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}${laCapVanPhong() ? lanhDaoVpHtml(theoLanhDaoVP(rows, k, tq.phanCong, lanhDaoVP(), DEPT_NAMES), k) : ''}`
     + bangNhomHtml(theoNhom(rows, k, khoaNhom(vn, DEPT_NAMES, state.user?.department)), vn, k);
@@ -99,8 +100,8 @@ function ve() {
   $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: kyTuy ? null : tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length, quyTac: quyTac() })
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
     + `<div class="luoi-tq">${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
-    + mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua) })
-    + linhVucHtml(theoKhoi(rows, k, { khoi: dm.khoi, nganh: dm.nganh }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k)
+    + mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua), nhom: nhomMt, tuDong: rows.filter(laTuDong).length, raSoat: coRaSoat() })
+    + linhVucHtml(theoKhoi(rows, k, { khoi: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganh: dm.nganh, linhVuc: dm.linhVuc }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k)
     + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k) + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
     + chiDaoHtml(chiDaoKy(cdsCoSo(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + chatLuongHtml(chatLuongKy(rows, k), k)
@@ -173,7 +174,7 @@ function hienGoi(e) {
 function tqMo({ ct }) {
   let c; try { c = JSON.parse(ct || '{}'); } catch { return; }
   const homNay = homNayVN(); const k = kyHienTai(homNay);
-  const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsCoSo(), ctxCd: ctxCd(), homNay, nganhDm: danhMucKl().nganh || [] });
+  const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsCoSo(), ctxCd: ctxCd(), homNay, nganhDm: danhMucKl().nganh || [], linhVucDm: danhMucKl().linhVuc || [] });
   if (coLoc(tq.loc) && c.t !== 'loc') kq.tieuDe = `${kq.tieuDe} (đã lọc)`;
   const goi = document.getElementById('tqGoi'); if (goi) goi.hidden = true;
   moNganDanhSach(kq);

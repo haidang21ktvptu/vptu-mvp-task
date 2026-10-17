@@ -158,6 +158,12 @@ jobs:
         run: npm ci && npm run lint
       - name: Không file nào trên 300 dòng
         run: node scripts/check-line-limit.mjs
+      # v3.25: Edge Function trợ lý AI (không phụ thuộc gói ngoài) — kiểm kiểu bằng Deno trước khi deploy-staging / deploy-prod triển khai.
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.5.x
+      - name: Kiểm kiểu Edge Function tro-ly-ai (deno check)
+        run: deno check supabase/functions/tro-ly-ai/index.ts
 
   # v3.18: e2e của PR chạy trên Supabase CỤC BỘ của runner (như RLS ở `supabase-db`): staging gói nhỏ dùng chung với kiểm tay nên e2e cả bộ
   # hay chạm statement timeout / danh sách không kịp làm mới (#117 đỏ 3 lần ở 3 spec khác nhau). Cục bộ: ~3 phút, không phụ thuộc staging,

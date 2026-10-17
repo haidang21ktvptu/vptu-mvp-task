@@ -143,7 +143,9 @@ jobs:
           supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --dry-run 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
           supabase db push --linked -p "$SUPABASE_DB_PASSWORD" --yes
       - name: supabase functions deploy (production)
-        run: supabase functions deploy quan-tri-tai-khoan --project-ref "$PROD_REF" --use-api
+        run: |
+          supabase functions deploy quan-tri-tai-khoan --project-ref "$PROD_REF" --use-api
+          supabase functions deploy tro-ly-ai --project-ref "$PROD_REF" --use-api   # v3.25: khoá AI đặt tay ở Edge Function Secrets
 
       - uses: ./.github/actions/build-pages-site
         with:

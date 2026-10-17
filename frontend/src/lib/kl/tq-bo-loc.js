@@ -4,7 +4,7 @@
 // lựa chọn từng ô (đếm trên toàn bộ dòng), chip "Đang áp dụng". Khoá ghép: nganh 'N:<ngành>' | 'L:<lĩnh vực>' | 'CHUA'; nguoi 'LD:<id>' | 'LD:CHUA' |
 // 'P:<phòng>' | 'P:NGOAI' | 'CB:<id>'.
 import { laXong, laMo, mucMo } from './tong-quan.js';
-import { khopMucTieu, nhanLocMucTieu, mucTieuCua, NHOM_MUC_TIEU, CHUA_GAN, khoiCuaNganh } from './muc-tieu.js';
+import { khopMucTieu, nhanLocMucTieu, mucTieuCua, dsNhom, CHUA_GAN, khoiCuaDong, cachGanCua, CACH_GAN } from './muc-tieu.js';
 import { khoaXepHang } from './tong-quan-lanh-dao.js';
 import { boSoThuTu } from './nhan.js';
 
@@ -32,7 +32,8 @@ export const MUC_QT = [['A', 'Mức A'], ['B', 'Mức B'], ['C', 'Mức C'], ['C
 export function khopLocMoi(r, l, c = {}) {
   if (dsNhanh(l).some((k) => !KHOP_NHANH[k](r, c))) return false;
   if (l.mucTieu && !khopMucTieu(r, l.mucTieu, c.mucTieuDm)) return false;
-  if (l.khoi && (khoiCuaNganh(c.nganhDm, r.nganh_ma) || 'CHUA') !== l.khoi) return false;
+  if (l.khoi && ((r.nganh_ma && khoiCuaDong(r, c.nganhDm, c.linhVucDm)) || 'CHUA') !== l.khoi) return false;
+  if (l.cachGan && !cachGanCua(r).includes(l.cachGan)) return false;
   if (l.nganh && !(l.nganh === 'CHUA' ? !r.nganh_ma : l.nganh.startsWith('N:') ? r.nganh_ma === l.nganh.slice(2) : r.linh_vuc_ma === l.nganh.slice(2))) return false;
   if (l.coQuan && khoaXepHang('dv')(r)[0] !== l.coQuan) return false;
   if (l.thuongTruc && khoaXepHang('tt')(r)[0] !== l.thuongTruc) return false;
@@ -51,17 +52,18 @@ export function khopLocMoi(r, l, c = {}) {
 // Lựa chọn của các ô mới, đếm trên TOÀN BỘ dòng (người xem thấy đủ); chỉ giá trị có trong dữ liệu (mục tiêu: nhóm + từng mục tiêu có việc).
 const dem = (rows, khoa) => { const m = new Map(); rows.forEach((r) => [].concat(khoa(r)).forEach((k) => { if (k) m.set(k, (m.get(k) || 0) + 1); })); return m; };
 // Mục tiêu then chốt: theo nhóm (dòng "Mọi … " của nhóm + từng mục tiêu có việc) và "Chưa gắn" — dùng chung với danh sách Nhiệm vụ.
-export function tuyChonMucTieu(rows, mucTieuDm = []) {
+export function tuyChonMucTieu(rows, mucTieuDm = [], nhomDm = null) {
   const mt = dem(rows, mucTieuCua); const chuaMt = rows.filter((r) => !mucTieuCua(r).length).length;
-  return NHOM_MUC_TIEU.map((n) => {
+  return dsNhom(nhomDm, mucTieuDm).map((n) => {
     const ds = mucTieuDm.filter((m) => m.nhom === n.ma && mt.has(m.ma)).map((m) => ({ ma: m.ma, ten: m.ten_ngan, n: mt.get(m.ma) }));
     const tong = rows.filter((r) => khopMucTieu(r, `NHOM:${n.ma}`, mucTieuDm)).length;
     return { nhom: n.ten, ds: ds.length ? [{ ma: `NHOM:${n.ma}`, ten: n.moi, n: tong }, ...ds] : [] };
   }).filter((g) => g.ds.length).concat(chuaMt ? [{ nhom: '', ds: [{ ma: CHUA_GAN, ten: 'Chưa gắn mục tiêu then chốt', n: chuaMt }] }] : []);
 }
-export function tuyChonLocMoi(rows, { mucTieuDm = [], khoiDm = [], nganhDm = [], linhVucDm = [], nguonDm = [] } = {}) {
-  const mucTieu = tuyChonMucTieu(rows, mucTieuDm);
-  const kh = dem(rows, (r) => khoiCuaNganh(nganhDm, r.nganh_ma) || 'CHUA');
+export function tuyChonLocMoi(rows, { mucTieuDm = [], nhomDm = null, khoiDm = [], nganhDm = [], linhVucDm = [], nguonDm = [] } = {}) {
+  const mucTieu = tuyChonMucTieu(rows, mucTieuDm, nhomDm);
+  const kh = dem(rows, (r) => (r.nganh_ma && khoiCuaDong(r, nganhDm, linhVucDm)) || 'CHUA');
+  const cg = dem(rows, cachGanCua);
   const khoi = [...khoiDm.filter((k) => kh.has(k.ma)).map((k) => ({ ma: k.ma, ten: k.ten, n: kh.get(k.ma) })), ...(kh.has('CHUA') ? [{ ma: 'CHUA', ten: 'Chưa phân ngành', n: kh.get('CHUA') }] : [])];
   const ng = dem(rows, (r) => r.nganh_ma); const lv = dem(rows, (r) => r.linh_vuc_ma);
   const nganh = nganhDm.filter((n) => ng.has(n.ma)).map((n) => ({ nhom: n.ten, ds: [{ ma: `N:${n.ma}`, ten: `Cả ngành (${boSoThuTu(n.ten)})`, n: ng.get(n.ma) },
@@ -73,6 +75,7 @@ export function tuyChonLocMoi(rows, { mucTieuDm = [], khoiDm = [], nganhDm = [],
   const tt = dem(rows, trangThaiCua); const qt = dem(rows, (r) => r.muc_quan_trong || 'CHUA'); const ngu = dem(rows, (r) => r.nguon_nhiem_vu_ma || 'CHUA');
   return {
     mucTieu, khoi, nganh, coQuan, thuongTruc,
+    cachGan: [...CACH_GAN, [CHUA_GAN, 'Chưa gắn mục tiêu']].filter(([ma]) => cg.has(ma)).map(([ma, ten]) => ({ ma, ten, n: cg.get(ma) })),
     trangThai: TRANG_THAI.filter(([ma]) => tt.has(ma)).map(([ma, ten]) => ({ ma, ten, n: tt.get(ma) })),
     mucQT: MUC_QT.filter(([ma]) => qt.has(ma)).map(([ma, ten]) => ({ ma, ten, n: qt.get(ma) })),
     nguon: [...ngu.keys()].map((ma) => ({ ma, ten: ma === 'CHUA' ? 'Chưa xác định nguồn' : nguonDm.find((x) => x.ma === ma)?.ten || rows.find((r) => r.nguon_nhiem_vu_ma === ma)?.nguon_nhiem_vu_ten || ma, n: ngu.get(ma) }))
@@ -81,14 +84,14 @@ export function tuyChonLocMoi(rows, { mucTieuDm = [], khoiDm = [], nganhDm = [],
 }
 
 // Chip "Đang áp dụng": { k, v?, ten } — bấm ✕ bỏ đúng điều kiện đó. tc: tuyChonLoc (cũ + mới), dm: { mucTieuDm }, nhan: { phamVi, loai(ma) }.
-export function chipLoc(loc, tc, { mucTieuDm = [], phamViNhan = 'Việc tôi theo dõi hoặc giao', tenLoai = (m) => m, tenDoKhan = (m) => m } = {}) {
+export function chipLoc(loc, tc, { mucTieuDm = [], nhomDm = null, phamViNhan = 'Việc tôi theo dõi hoặc giao', tenLoai = (m) => m, tenDoKhan = (m) => m } = {}) {
   const ten = (ds, ma) => (ds || []).flatMap((x) => x.ds || [x]).find((o) => o.ma === ma)?.ten || ma;
   const nguoi = () => { const [p, ...v] = loc.nguoi.split(':'); const ma = v.join(':'); return p === 'LD' ? (ma === 'CHUA' ? 'Chưa có lãnh đạo phụ trách' : ten(tc.ldvp, ma)) : p === 'P' ? ten(tc.phong, ma) : ten(tc.canBo, ma); };
   const c = [];
   if (loc.phamVi) c.push({ k: 'phamVi', ten: phamViNhan });
   dsNhanh(loc).forEach((k) => c.push({ k: 'nhanh', v: k, ten: NHANH.find(([x]) => x === k)[1] }));
   const them = (k, nhan, gt) => { if (loc[k]) c.push({ k, ten: `${nhan}: ${gt}` }); };
-  them('mucTieu', 'Mục tiêu', nhanLocMucTieu(loc.mucTieu, mucTieuDm)); them('khoi', 'Khối', ten(tc.khoi, loc.khoi));
+  them('mucTieu', 'Mục tiêu', nhanLocMucTieu(loc.mucTieu, mucTieuDm, nhomDm)); them('cachGan', 'Cách gắn', ten(tc.cachGan, loc.cachGan)); them('khoi', 'Khối', ten(tc.khoi, loc.khoi));
   them('nganh', 'Ngành, lĩnh vực', ten(tc.nganh, loc.nganh)); them('loai', 'Văn bản', tenLoai(loc.loai));
   them('coQuan', 'Đơn vị', ten(tc.coQuan, loc.coQuan)); them('thuongTruc', 'Thường trực chỉ đạo', ten(tc.thuongTruc, loc.thuongTruc));
   if (loc.nguoi) c.push({ k: 'nguoi', ten: nguoi() });

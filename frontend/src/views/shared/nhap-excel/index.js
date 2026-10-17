@@ -17,11 +17,15 @@ import { docTuDien, docHoSo, luuHoSo, luuTuDien, maDaCo, nhapLo, loDoCuaTep } fr
 import { khungNhapHtml, ghepHtml, xemTruocHtml, ketQuaHtml } from './ve.js';
 import { napCho, hoanTacLoAction } from './cho.js';
 import { dsDangHien } from '../kl/danh-sach.js';
+import { goiYMucTieuDs } from '../../../lib/kl/muc-tieu-db.js';
+import { tenMucTieu } from '../../../lib/kl/muc-tieu.js';
+import { canTuGan, dauVaoGoiY, khoaGoiY, duKienTuGoiY, chuDuKien, duLieuCoCo } from '../../../lib/kl/nhap/muc-tieu-du-kien.js';   // v3.25
 
 const TOI_DA_DONG = 2000;   // mỗi lô (CHECK của lo_nhap)
 // loDo: lô của lần bấm Nhập trước bị lỗi giữa chừng (bấm lại = gửi tiếp vào lô đó); khongLuu: lựa chọn chỉ dùng cho tệp này (trùng tên người).
 const nx = { sheets: [], tenTep: '', sheet: 0, dongTieuDe: 0, anhXa: {}, hoSoTen: '', mau: 'TU_GHEP', nhanDien: '', hangLoat: {}, hlTruong: '', loc: '', soHien: 100,
-  cheDoXong: '', tuDien: new Map(), tuDienMoi: new Map(), khongLuu: new Set(), hoSoDs: [], ma: new Set(), maKhoa: '', loiMa: '', dong: [], dg: [], dangNhap: false, loDo: null };
+  cheDoXong: '', tuDien: new Map(), tuDienMoi: new Map(), khongLuu: new Set(), hoSoDs: [], ma: new Set(), maKhoa: '', loiMa: '', dong: [], dg: [], dangNhap: false, loDo: null,
+  tuGanMt: true, duKien: new Map() };   // v3.25: tự gắn mục tiêu then chốt (mặc định bật) + dự kiến theo nội dung dòng (nhớ trong phiên)
 const tenPhong = (m) => DEPT_NAMES[m] || m || '';
 const ctx = () => { const td = new Map([...nx.tuDien].map(([k, m]) => [k, new Map(m)])); nx.tuDienMoi.forEach((m, k) => { if (!td.has(k)) td.set(k, new Map()); m.forEach((v, g) => td.get(k).set(g, v)); });
   return { dm: danhMucKl(), accounts: state.accounts || [], tenPhong, tuDien: td }; };
@@ -75,11 +79,42 @@ async function tinhLai() {
       : nx.loiMa || (xong && !nx.cheDoXong ? 'Chọn cách xử lý việc đã hoàn thành trước khi nhập.'
         : nx.loDo ? `Lô ${nx.loDo.ma} nhập dở — bấm "Nhập tiếp" để gửi tiếp; dòng đã nhập không bị tạo lại.` : 'Chưa ghi gì cho tới khi bấm Nhập.') };
   nx.chuaKhop = s.chuaKhop;
+  Object.assign(s, { coTuGan: coMucTieu() && nx.dg.some(canTuGan), duKien: chuDong, tuGanTom: tomTuGan() });
   $('nxBuoc').innerHTML = ghepHtml(s) + xemTruocHtml(s, ctx());
+  napDuKien();
   if (tieuDiem) { document.querySelector(tieuDiem)?.focus(); tieuDiem = ''; }   // vẽ lại sau mỗi lựa chọn: tiêu điểm về ô vừa đổi / ô kế tiếp
 }
 let tieuDiem = '';
 const ve = (chon) => { tieuDiem = chon; tinhLai(); };
+
+// v3.25: dự kiến mục tiêu tự gắn (goi_y_muc_tieu_ds — 200 dòng mỗi lượt, nhớ theo nội dung dòng); về tới thì chỉ điền chữ vào ô ghi chú của từng dòng
+// (không vẽ lại cả bảng — đang chọn ô khác không bị mất). Lỗi đọc: bỏ phần dự kiến, cờ vẫn gửi (DB tự nhận diện khi nhập).
+const coMucTieu = () => (danhMucKl().mucTieu || []).length > 0;
+const duKienCua = (x) => (nx.tuGanMt && canTuGan(x) ? nx.duKien.get(khoaGoiY(dauVaoGoiY(x))) : null);
+const chuDong = (x) => { const d = duKienCua(x); return d && d !== 'loi' ? chuDuKien(d, (m) => tenMucTieu(danhMucKl().mucTieu, m)) : ''; };
+function tomTuGan() {
+  const ds = nx.dg.filter(canTuGan); const xong = ds.filter((x) => nx.duKien.has(khoaGoiY(dauVaoGoiY(x))));
+  if (!nx.tuGanMt || !ds.length) return nx.tuGanMt ? '' : 'Đã tắt: dòng không ghi mục tiêu sẽ không được gắn (gắn sau ở trang Rà soát mục tiêu then chốt).';
+  const co = xong.filter((x) => chuDong(x)).length;
+  return `${ds.length} dòng tạo việc chưa ghi mục tiêu — ${xong.length < ds.length ? `đang nhận diện ${xong.length}/${ds.length}…` : `dự kiến ${co} dòng được gắn`}; hệ thống nhận diện lại khi nhập (có thêm mục tiêu của văn bản), dòng không khớp quy tắc thì để trống.`;
+}
+let luotDk = 0;
+async function napDuKien() {
+  if (!nx.tuGanMt || !coMucTieu()) return;
+  const lan = ++luotDk;
+  const can = [...new Map(nx.dg.filter(canTuGan).map((x) => dauVaoGoiY(x)).map((p) => [khoaGoiY(p), p])).values()].filter((p) => !nx.duKien.has(khoaGoiY(p)));
+  for (let i = 0; i < can.length; i += 200) {
+    const phan = can.slice(i, i + 200);
+    try { const kq = await goiYMucTieuDs(phan); phan.forEach((p, j) => nx.duKien.set(khoaGoiY(p), duKienTuGoiY(kq[j]))); } catch { phan.forEach((p) => nx.duKien.set(khoaGoiY(p), 'loi')); }
+    if (lan !== luotDk) return;   // đã chọn tệp / vẽ lại: lượt mới lo phần còn lại
+    dienDuKien();
+  }
+}
+function dienDuKien() {
+  const theoDong = new Map(nx.dg.map((x, i) => [nx.dong[i]?.soDong, x]));
+  document.querySelectorAll('#nxXem [data-dk]').forEach((el) => { el.textContent = chuDong(theoDong.get(Number(el.dataset.dk)) || {}); });
+  if ($('nxTuGanTom')) $('nxTuGanTom').textContent = tomTuGan();
+}
 
 // Lựa chọn giá trị chưa khớp → từ điển dùng chung (trừ lựa chọn chỉ cho tệp này, giá trị gốc quá dài); lỗi lưu không chặn việc nhập.
 async function luuTuDienMoi() {
@@ -90,7 +125,7 @@ async function luuTuDienMoi() {
 async function nhap() {
   if (nx.dangNhap) return;
   nx.dangNhap = true; $('nxNhap').disabled = true; $('nxTep').disabled = true;
-  const dong = nx.dg.map((x) => x.du_lieu); const tenTep = nx.tenTep;
+  const dong = nx.dg.map((x) => duLieuCoCo(x, nx.tuGanMt && coMucTieu())); const tenTep = nx.tenTep;
   try {
     if (!nx.loDo) await luuTuDienMoi();
     const kq = await nhapLo({ tenTep, mau: nx.mau, cheDoXong: nx.cheDoXong || 'CHO_NGHIEM_THU', dong, loCu: nx.loDo },
@@ -111,6 +146,7 @@ async function nhap() {
 function doiO(e) {
   const t = e.target;
   if (t.id === 'nxTep') { chonTep(t.files?.[0]); t.value = ''; return; }
+  if (t.id === 'nxTuGanMt') { nx.tuGanMt = t.checked; ve('#nxTuGanMt'); return; }
   if (t.dataset.nxCot !== undefined) {
     const i = Number(t.dataset.nxCot); Object.keys(nx.anhXa).forEach((j) => { if (t.value && nx.anhXa[j] === t.value) delete nx.anhXa[j]; });
     if (t.value) nx.anhXa[i] = t.value; else delete nx.anhXa[i];

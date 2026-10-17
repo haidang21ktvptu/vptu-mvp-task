@@ -13,6 +13,7 @@ import { ganTimChon } from '../../../lib/tim-chon.js';
 import { nguoiTheoDoiOptionsHtml, goiYTheoDoi, parseOwner } from '../kl/them-owner.js';
 import { locTheoDoi, lanhDaoLoc, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi } from './pham-vi.js';
 import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, canNganhHienTai, getHomNay } from './trang-thai.js';
+import { ganTheMucTieu } from './muc-tieu.js';   // v3.25: ô mục tiêu then chốt có gợi ý của thẻ
 
 const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
 const opt = (v, t) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`;
@@ -55,6 +56,7 @@ export function theHtml(k, i) {
       ${truong('linh_vuc', 'Lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('linh_vuc', 'Lĩnh vực'), 'theo ngành đã chọn')}
       <div></div>
     </div>
+    <div class="gv-mtg-cho" data-mtg-cho="gv-${k}"></div>
   </article>`;
 }
 
@@ -118,7 +120,7 @@ export function taoThe(container, i) {
   [['san_pham', 'klThSanPham'], ['cap_nhan', 'klThCapNhan'], ['loai', 'klThLoai']].forEach(([cot, goc]) => { o(the, cot).innerHTML = $(goc).innerHTML; });
   o(the, 'loai').value = 'CO_HAN_CU_THE';
   tim.set(the, { owner: ganTimChon(o(the, 'owner_tim'), o(the, 'owner')), theoDoi: ganTimChon(o(the, 'theo_doi_tim'), o(the, 'theo_doi')) });
-  lamMoiThe(the);
+  lamMoiThe(the); ganTheMucTieu(the);
   return the;
 }
 // Sự kiện change / input nổi lên từ ô của thẻ (gắn một lần ở vùng chứa, trước khi tới form): chuỗi phụ thuộc Owner → ngành → lĩnh vực → người theo dõi, hạn theo loại.

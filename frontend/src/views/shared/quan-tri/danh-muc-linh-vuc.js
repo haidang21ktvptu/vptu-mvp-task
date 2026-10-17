@@ -4,13 +4,13 @@
 // PCVP kiêm nhiệm: lĩnh vực mới sẽ thuộc PCVP phụ trách phòng cho tới khi được phân công thêm (chủ dự án 15/9/2026).
 import { supabase } from '../../../lib/supabase.js';
 import { xoaDanhMucDaNho } from '../../../lib/kl/du-lieu.js';
-import { $, show, escapeHtml, formatDateTime } from '../../../lib/dom.js';
+import { $, show, escapeHtml } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
-import { findAccount } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { askLyDo } from './ly-do-modal.js';
 import { danhSachNganh, linhVucCuaNganh, timLinhVuc, tenNganhNgan } from './danh-muc.js';
 import { loadActive, getActive, tenNguoi } from './phu-trach-o.js';
+import { renderNhatKyDanhMuc } from './nhat-ky-danh-muc.js';   // v3.25: mọi bảng danh mục (mục tiêu, quy tắc, nhóm, khối)
 
 let onDone = null;
 
@@ -40,29 +40,6 @@ function renderCanhBaoNganh() {
   const box = $('qtLvCanhBao');
   box.innerText = msgs.join(' ');
   show(box, msgs.length > 0);
-}
-
-// "Thay đổi": thêm → tên; sửa → từng cột cũ → mới.
-function moTaThayDoi(r) {
-  if (r.hanh_dong === 'them') return `Thêm "${r.gia_tri_moi?.ten ?? ''}" vào ${tenNganhNgan(r.gia_tri_moi?.nganh_ma)}`;
-  return Object.keys(r.gia_tri_moi || {}).map((k) => `${k === 'ten' ? 'tên' : 'thứ tự'}: "${r.gia_tri_cu?.[k] ?? ''}" → "${r.gia_tri_moi[k]}"`).join('; ');
-}
-
-async function renderNhatKyDanhMuc() {
-  const { data, error } = await supabase.from('dm_lich_su')
-    .select('luc, nguoi, nguoi_ghi_chu, ma, hanh_dong, gia_tri_cu, gia_tri_moi, ly_do').order('id', { ascending: false }).limit(20);
-  if (error) { notifyError('Không đọc được nhật ký danh mục: ' + error.message); return; }
-  $('qtLvNhatKyBody').innerHTML = data.length === 0
-    ? '<tr><td colspan="6" class="trong">Chưa có thay đổi danh mục nào.</td></tr>'
-    : data.map((r) => `
-      <tr>
-        <td class="whitespace-nowrap">${formatDateTime(r.luc)}</td>
-        <td data-nhan="Người thực hiện">${escapeHtml(r.nguoi ? findAccount(r.nguoi)?.full_name || r.nguoi : (r.nguoi_ghi_chu || 'Hệ thống'))}</td>
-        <td data-nhan="Hành động"><span class="trang-thai ${r.hanh_dong === 'them' ? 'tt-xong' : 'tt-cho'}">${r.hanh_dong === 'them' ? 'Thêm' : 'Sửa'}</span></td>
-        <td data-nhan="Mã"><code class="text-xs">${escapeHtml(r.ma)}</code></td>
-        <td data-nhan="Thay đổi">${escapeHtml(moTaThayDoi(r))}</td>
-        <td data-nhan="Lý do">${escapeHtml(r.ly_do)}</td>
-      </tr>`).join('');
 }
 
 export async function renderDanhMucLinhVuc() {

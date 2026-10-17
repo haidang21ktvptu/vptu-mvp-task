@@ -76,20 +76,23 @@ export function xemTruocHtml(s, ctx) {
       s.loDo ? ` <span class="chu-phu">(theo lô ${escapeHtml(s.loDo.ma)} đang nhập dở)</span>` : ''}</legend>
       <label><input type="radio" name="nxCheDo" value="DA_XONG_NGOAI"${s.cheDoXong === 'DA_XONG_NGOAI' ? ' checked' : ''}> Đã xong ngoài hệ thống — đóng ngay, không tính tỷ lệ đúng hạn (dữ liệu cũ)</label>
       <label><input type="radio" name="nxCheDo" value="CHO_NGHIEM_THU"${s.cheDoXong === 'CHO_NGHIEM_THU' ? ' checked' : ''}> Ghi minh chứng — giao như thường kèm minh chứng, việc hoàn thành theo ngày văn bản (lãnh đạo xem, đánh giá chất lượng khi muốn)</label></fieldset>` : ''}
-    ${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
+    ${s.coTuGan ? tuGanHtml(s) : ''}${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
     <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung</th><th scope="col">Chủ trì</th><th scope="col">Hạn</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
-      <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d)).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>
+      <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d, s.duKien?.(x) || '')).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>
     ${hien.length > s.soHien ? `<button type="button" class="nut nho" data-action="nxXemThem">Xem thêm ${Math.min(100, hien.length - s.soHien)} dòng (còn ${hien.length - s.soHien})</button>` : ''}</section>
     <div class="nx-chan"><span id="nxThongBao" class="chu-phu" aria-live="polite">${escapeHtml(s.thongBao || '')}</span>
       <button type="button" class="nut chinh" id="nxNhap" data-action="nxNhap"${s.choNhap ? '' : ' disabled'}>${s.loDo ? `Nhập tiếp lô ${escapeHtml(s.loDo.ma)}` : `Nhập ${s.dg.length} dòng`}</button></div>`;
 }
+// v3.25: ô "Tự gắn mục tiêu then chốt" (mặc định bật) — dòng tạo việc không ghi mục tiêu được hệ thống gắn mục tích sẵn khi nhập (trigger 0110).
+const tuGanHtml = (s) => `<div class="nx-tu-gan"><label><input type="checkbox" id="nxTuGanMt"${s.tuGanMt ? ' checked' : ''}> Tự gắn mục tiêu then chốt theo quy tắc tích sẵn cho dòng không ghi mục tiêu</label>
+  <small class="chu-phu" id="nxTuGanTom" aria-live="polite">${escapeHtml(s.tuGanTom || '')}</small></div>`;
 const hienO = (d, k) => (d.o[k] && !d.o[k].loi ? d.o[k].hien : '');
-function dongXemHtml(x, d) {
+function dongXemHtml(x, d, duKien = '') {
   const chuTri = hienO(d, 'can_bo') || hienO(d, 'don_vi') || (x.gt.don_vi ? '(theo cán bộ)' : '');
   const ghi = [...x.thieu.map((k) => `thiếu ${nhanTruong(k).toLowerCase()}${d.o[k]?.loi ? ` (${d.o[k].loi})` : ''}`), ...x.canhBao];
   return `<tr data-dong="${d.soDong}"><td>${d.soDong}</td><td>${chipKq(x.ket_qua)}</td><td class="nx-nd">${escapeHtml(String(x.gt.noi_dung || x.gt.ma || '').slice(0, 140))}</td>
     <td>${escapeHtml(chuTri)}</td><td>${escapeHtml(hienO(d, 'han_xu_ly') || (x.gt.loai_thoi_han === 'KY_BAN_HANH' ? 'ký ban hành' : ''))}</td>
-    <td class="chu-phu">${escapeHtml(ghi.join('; '))}</td></tr>`;
+    <td class="chu-phu">${escapeHtml(ghi.join('; '))}<span class="nx-dk" data-dk="${d.soDong}">${escapeHtml(duKien)}</span></td></tr>`;
 }
 
 // Giá trị cần chọn đúng mục, gom theo (trường, giá trị): chưa khớp (chọn → áp cho mọi dòng cùng giá trị) và khớp gần đúng (đã chọn sẵn mục khớp,

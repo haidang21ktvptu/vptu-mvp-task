@@ -28,10 +28,10 @@ import { apDienSan, boHoanThien } from './dien-san.js';
 import { hienTabGiaoViec } from '../nhap-excel/tab.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, LOAI_CO_HOI_NGHI } from '../kl/them-owner.js';
 import { dienThongTinNguon } from './thong-tin-nguon.js';   // Đợt C2: mức quan trọng, cơ quan trình, Thường trực chỉ đạo
-import { ganSauGiao, apMucTieuVanBan } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt
+import { ganSauGiao, vanBanDoiMucTieu, datLaiMucTieuGv, datLaiTheMot, ganSuKienMucTieu, khoaCacThe } from './muc-tieu.js';   // v3.25: mục tiêu then chốt theo thẻ
 import { dongNganCT } from '../ngan-chi-tiet.js';
-import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan,
-  canNganhHienTai, canNgayNhan } from './trang-thai.js';
+import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan, canNganhHienTai, canNgayNhan } from './trang-thai.js';
+import { datLaiDocAi, mountDocAi } from './doc-ai.js';   // v3.25: đọc văn bản gốc (PDF) bằng trợ lý AI
 import { kiemTra, docForm, tachDong } from './doc-form.js';
 import { datLaiNhieu, anHienNhieu, lamMoiLuaChonLuoi, ganSuKienNhieu, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, soThe, coThem, doiDoKhanMacDinhNhieu } from './nhieu.js';
 
@@ -104,7 +104,7 @@ function dienLinhVuc() {
   $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + linhVucCuaNganh($('klThNganh').value).filter((l) => !cho || cho.has(l.ma)).map((l) => opt(l.ma, l.ten, l.ma === cu)).join('');
   dienTheoDoi();
 }
-function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || getHomNay(); capNhatHienThi(); apMucTieuVanBan($('klThVanBan').value); }
+function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || getHomNay(); capNhatHienThi(); vanBanDoiMucTieu(); }
 // Đổi lãnh đạo được thay mặt → phạm vi của người đó; lọc lại Owner / ngành / lĩnh vực. Khoá biểu mẫu khi đọc; lỗi → trả ô Thay mặt về người cũ.
 // Vào / rời "Thường trực Tỉnh ủy" (v3.18): ẩn / hiện người theo dõi, độ khẩn mặc định Khẩn ↔ Thường (chỉ khi người dùng chưa chọn mức khác).
 let thayMatCu = '';
@@ -216,11 +216,11 @@ export async function openGiaoViec(opts = {}) {
   ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThTrichYeu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
   $('klThNgayNhan').value = homNay;
   datDoKhanChinh(a0 ? 'KHAN' : 'THUONG');
-  datLaiNhieu();
+  datLaiNhieu(); datLaiMucTieuGv();
   dienNganh();
   khoaBieuMau(false);
   capNhatHienThi();
-  $('klThNoiDung').focus();
+  $('klThNoiDung').focus(); datLaiDocAi({ an: Boolean(cha || opts.dienSan) });
   if (opts.dienSan) await apDienSan(opts.dienSan, { nhanMoi: nhanMoi() });   // hoàn thiện một dòng chờ của lô nhập Excel
   $('giaoViecForm').dataset.sanSang = '1'; // mặc định theo vai (A0 = Khẩn) đã đặt sau khi phiên và danh mục sẵn sàng
 }
@@ -231,15 +231,15 @@ async function luuNhieu() {
   const p = docForm(cha);
   const loiForm = kiemTra(p) || loiNhieu();
   if (loiForm) { notifyError(loiForm); return; }
-  const { chung, dong1 } = tachDong(p);
+  const { chung, dong1 } = tachDong(p); const khoa = khoaCacThe();
   $('klThLuu').disabled = true;
   try {
     const kq = await giaoViecNhieu(chung, [dong1, ...docDong()]);
-    await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(chung.van_ban), ids: kq.viec.map((v) => v.id) });
+    const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';   // trước khi gắn mục tiêu: bộ tự học đối chiếu trên trích yếu đã lưu
+    if (trichYeu) { try { await datTrichYeuVanBan(kq.van_ban_id, trichYeu); } catch (e) { notifyError(`Đã giao ${kq.so} việc nhưng chưa lưu được trích yếu văn bản: ${e.message}`); } }
+    await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(chung.van_ban), viec: kq.viec.map((v) => ({ id: v.id, ma: v.ma, khoa: khoa[(v.dong || 1) - 1] })) });
     const ma = kq.viec.map((v) => v.ma);
     notifySuccess(`Đã giao ${kq.so} việc: ${ma.slice(0, 5).join(', ')}${ma.length > 5 ? '…' : ''}.`);
-    const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';
-    if (trichYeu) { try { await datTrichYeuVanBan(kq.van_ban_id, trichYeu); } catch (e) { notifyError(`Đã giao ${kq.so} việc nhưng chưa lưu được trích yếu văn bản: ${e.message}`); } }
     if (chung.van_ban) themVanBanMoi({ id: kq.van_ban_id, ...chung.van_ban, trich_yeu: trichYeu || null }, nhanMoi());
     await openGiaoViec(); await moNhiemVu(kq.viec[0].id, kq.viec[0].ma);
   } catch (e) { notifyError('Không giao được: ' + loiDeHieu(e)); capNhatTomTat(); }
@@ -253,18 +253,18 @@ async function luu(nhapTiep) {
   $('klThLuu').disabled = true;
   try {
     const kq = await giaoViec(p);
-    await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(p.van_ban), rieng: Boolean(p.dong_nhap_id), ids: [kq.id] });
-    notifySuccess(`Đã giao việc ${kq.ma}.${nhuA0() ? ` Người nhận và Chánh Văn phòng có thông báo${tuNhanViec() ? '' : '; xác nhận nhận việc trong 1 ngày làm việc'}.` : ''}`);
     const trichYeu = laMoi() ? $('klThTrichYeu').value.trim() : '';
-    if (trichYeu) { // văn bản vừa tạo (kể cả mốc "Thường trực giao …" của A0): đặt trích yếu; lỗi → báo rõ, việc đã giao vẫn còn
+    if (trichYeu) { // văn bản vừa tạo (kể cả mốc "Thường trực giao …" của A0): đặt trích yếu trước khi gắn mục tiêu; lỗi → báo rõ, việc đã giao vẫn còn
       try { await datTrichYeuVanBan(kq.van_ban_id, trichYeu); } catch (e) { notifyError(`Đã giao việc ${kq.ma} nhưng chưa lưu được trích yếu văn bản: ${e.message}`); }
     }
+    await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(p.van_ban), viec: [{ id: kq.id, ma: kq.ma, khoa: khoaCacThe()[0] }] });
+    notifySuccess(`Đã giao việc ${kq.ma}.${nhuA0() ? ` Người nhận và Chánh Văn phòng có thông báo${tuNhanViec() ? '' : '; xác nhận nhận việc trong 1 ngày làm việc'}.` : ''}`);
     if (p.van_ban) themVanBanMoi({ id: kq.van_ban_id, ...p.van_ban, trich_yeu: trichYeu || null }, nhanMoi());
     if (p.dong_nhap_id) { boHoanThien(); await openGiaoViec({ tab: 'cho' }); await moNhiemVu(kq.id, kq.ma); return; }   // dòng chờ đã thành việc
     if (!nhapTiep) { await openGiaoViec(); await moNhiemVu(kq.id, kq.ma); return; } // v9 đợt 2: ở lại Giao việc (biểu mẫu mở lại sạch), việc vừa giao hiện trong ngăn chi tiết
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
     ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSanPhamMoTa', 'klThPhoiHop'].forEach((id) => { $(id).value = ''; });
-    $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; dienNganh();
+    $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; dienNganh(); datLaiTheMot();
     capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus(); $('giaoViecForm').dispatchEvent(new Event('gv-da-giao'));   // v9.js: số đã nhập
   } catch (e) {
     notifyError('Không giao được việc: ' + loiDeHieu(e));
@@ -283,7 +283,7 @@ export function registerGiaoViec() {
   $('klThLinhVuc').addEventListener('change', dienTheoDoi); $('klThNguon').addEventListener('input', nguonDoi);   // 'input' tới ô trước khi nổi lên form (capNhatTomTat)
   $('klThOwner').addEventListener('change', ownerDoi);
   tim.owner = ganTimChon($('klThOwnerTim'), $('klThOwner')); tim.theoDoi = ganTimChon($('klThNguoiTheoDoiTim'), $('klThNguoiTheoDoi')); tim.thayMat = ganTimChon($('klThThayMatTim'), $('klThThayMat'));
-  ganSuKienNhieu();   // ô trong thẻ nhiệm vụ: chuỗi Owner → ngành → lĩnh vực → người theo dõi, hạn theo loại — trước khi nổi lên form
+  ganSuKienNhieu(); ganSuKienMucTieu(); mountDocAi();   // ô trong thẻ: chuỗi Owner → ngành → lĩnh vực → người theo dõi, hạn theo loại; bộ nhận diện mục tiêu (v3.25)
   $('giaoViecForm').addEventListener('input', capNhatTomTat);
   $('giaoViecForm').addEventListener('change', capNhatTomTat);
   registerActions({ openGiaoViec: () => openGiaoViec(), giaoTiepXuong: ({ id }) => openGiaoViec({ cha: timKlRow(id) }),

@@ -1,0 +1,42 @@
+/* Rà soát mục tiêu then chốt (v3.25): trang rà soát (views/shared/ra-soat-muc-tieu) và ô "Tự gắn mục tiêu then chốt" của bản xem trước nhập Excel.
+   Chỉ token của docs/DESIGN.md; trạng thái luôn kèm chữ (không dựa vào màu). Tên lớp viết nguyên văn trong JS. */
+@layer components {
+  .rs-loc .pham-vi button b { margin-left: 4px; font-weight: 700; }
+  .rs-thanh { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 14px 0 10px; }
+  .rs-thanh .chu-phu { font-size: 13px; }
+  .rs-xac-nhan { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; margin: 0 0 12px; padding: 12px 14px;
+    border: 1px solid var(--vien-vang); border-radius: 12px; background: var(--nen-vang-mo); color: var(--chu); }
+  .rs-xac-nhan p { flex: 1 1 360px; margin: 0; font-size: 13.5px; line-height: 1.5; }
+  .rs-xac-nhan > div { display: flex; gap: 8px; }
+  .rs-ds { display: flex; flex-direction: column; gap: 12px; }
+  .rs-dong { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "viec chan" "mt mt"; gap: 4px 16px; padding: 14px 16px;
+    border: 1px solid var(--vien-nhat); border-left: 4px solid var(--vien); border-radius: var(--bo-the); background: var(--the); box-shadow: var(--bong-the); }
+  .rs-dong.da-luu { border-left-color: var(--luc); }
+  .rs-viec { grid-area: viec; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .rs-viec .ten-bam { display: block; padding: 0; background: none; border: 0; cursor: pointer; }
+  .rs-viec .ten-bam b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; line-height: 1.4; color: var(--chu); }
+  .rs-viec .ten-bam:hover b, .rs-viec .ten-bam:focus-visible b { color: var(--lam); text-decoration: underline; text-underline-offset: 3px; }
+  .rs-viec small { font-size: 12.5px; line-height: 1.45; }
+  .rs-hien { color: var(--navy); font-weight: 600; }
+  .rs-chan { grid-area: chan; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
+  .rs-chan .chu-phu { font-size: 12.5px; max-width: 220px; }
+  .rs-mt { grid-area: mt; min-width: 0; }
+  .rs-mt .mtg { margin-top: 8px; padding-top: 10px; }
+  .rs-trang { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 16px 0 4px; }
+
+  /* Nhập Excel: ô tự gắn mục tiêu + dòng "mục tiêu tự gắn (dự kiến)" ở cột ghi chú */
+  .nx-tu-gan { display: flex; flex-direction: column; gap: 4px; margin: 12px 0; padding: 10px 12px; border: 1px solid var(--vien-nhat); border-radius: 12px; background: var(--nen-mo); }
+  .nx-tu-gan label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--chu); cursor: pointer; }
+  .nx-tu-gan input { width: 16px; height: 16px; accent-color: var(--lam); }
+  .nx-tu-gan small { font-size: 12.5px; line-height: 1.45; }
+  .nx-dk { display: block; margin-top: 2px; color: var(--lam); }
+  .nx-dk:empty { display: none; }
+
+  @media (max-width: 640px) {
+    .rs-dong { grid-template-columns: minmax(0, 1fr); grid-template-areas: "viec" "mt" "chan"; padding: 12px; }
+    .rs-chan { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; text-align: left; }
+    .rs-chan .chu-phu { max-width: none; }
+    .rs-loc .pham-vi { flex-wrap: wrap; border-radius: 14px; max-width: 100%; }
+    .rs-xac-nhan > div { width: 100%; }
+  }
+}

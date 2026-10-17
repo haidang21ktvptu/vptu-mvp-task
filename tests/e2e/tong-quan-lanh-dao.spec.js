@@ -1,8 +1,9 @@
 // v3.24 — Tổng quan cho lãnh đạo (bố cục 9 khối, chủ dự án duyệt 16/10/2026) và mục tiêu then chốt (0105–0106). (1) Chánh VP: 9 khối đúng thứ tự
 // và số khối; lọc nhanh → chip "Đang áp dụng" → "Mở danh sách theo bộ lọc này" ra đúng số đang lọc → bỏ chip; bộ lọc chi tiết mở / gập, nhớ theo
 // máy sau tải lại (điều kiện lọc không nhớ); khối 3 mở một khối ra các ngành, số "Toàn bộ" = danh sách; khối 9 gập sẵn, mở được, nhớ sau tải lại.
-// (2) Trưởng phòng giao việc từ văn bản mới có mục tiêu ở "Thông tin thêm" → văn bản mang mục tiêu, việc tính theo văn bản; ngăn chi tiết: chip
-// "theo văn bản", bút → gắn riêng cho việc (DB + lịch sử) → "Lưu cho cả văn bản" (mặc định văn bản đổi, việc bỏ gắn riêng); danh sách Nhiệm vụ lọc
+// (2) Trưởng phòng giao việc từ văn bản mới, chọn mục tiêu của văn bản ở khối 1 (v3.25: ô chọn có gợi ý, "Chọn thêm từ danh mục") → văn bản mang
+// mục tiêu, việc tính theo văn bản; ngăn chi tiết: chip "theo văn bản", bút → gắn riêng cho việc (DB + lịch sử) → "Lưu cho cả văn bản" (mặc định
+// văn bản đổi, việc bỏ gắn riêng); danh sách Nhiệm vụ lọc
 // theo mục tiêu; khối 2 của Tổng quan mở đúng việc. (3) Chuyên viên chủ trì thấy mục tiêu, không có bút. Dữ liệu theo khoá riêng, tự dọn.
 import { test, expect } from '@playwright/test';
 import { pageAs, moGiaoViec, moViec, nav, NAP } from './lib/app.js';
@@ -102,10 +103,13 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
       await p.locator('#klThSoKL').fill(soVb()); await p.locator('#klThNgayBH').fill(cong(homNay(), -1));
       await p.locator('#klThNoiDung').fill(`${khoa} việc 1`); await p.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await p.locator('#klThSanPham').selectOption('BAO_CAO'); await p.locator('#klThHan').fill(cong(homNay(), 20));
-      await p.locator('#gvThemWrap summary').click();
-      await expect(p.locator('#gvMucTieuWrap')).toBeVisible();
-      await p.locator('#gvMucTieu input[value="CTR_DU_LICH"]').check();
-      await expect(p.locator('#gvMucTieuGhiChu')).toContainText('văn bản mới');
+      // v3.25: mục tiêu của văn bản mới ở khối 1 — chọn từ danh mục; thẻ 1 hiện mục đó "theo văn bản".
+      const oVb = p.locator('#gvMtVb .mtg');
+      await expect(oVb).toBeVisible(NAP);
+      await oVb.locator('[data-action="mtgMoDm"]').click();
+      await oVb.locator('input[data-mtg-chon][value="CTR_DU_LICH"]').check();
+      await expect(oVb.locator('.mtg-chip')).toContainText('Du lịch bền vững');
+      await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="VAN_BAN"]')).toContainText('Du lịch bền vững', NAP);
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao việc', NAP);
@@ -120,19 +124,24 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
       await o.locator('.nut-tang').click();
       const form = p.locator(`#oMt-${nv.id}`);
       await expect(form).toBeVisible();
-      await expect(form.locator('input[value="CTR_DU_LICH"]')).toBeChecked();
-      await form.locator('input[value="NQ_57"]').check();
+      await expect(form.locator('.mtg-chip')).toContainText('Du lịch bền vững');
+      await form.locator('[data-action="mtgMoDm"]').click();
+      await expect(form.locator('input[data-mtg-chon][value="CTR_DU_LICH"]')).toBeChecked();
+      await form.locator('input[data-mtg-chon][value="NQ_57"]').check();
       await form.getByRole('button', { name: 'Lưu cho việc này' }).click();
       await expect(p.locator('#toastContainer')).toContainText('Đã gắn 2 mục tiêu then chốt', NAP);
       await expect(o).toContainText('Nghị quyết 57-NQ/TW', NAP); await expect(o).not.toContainText('theo văn bản');
       expect(maCua((await db.from('nhiem_vu_muc_tieu').select('muc_tieu_ma').eq('nhiem_vu_id', nv.id).order('muc_tieu_ma')).data)).toEqual(['CTR_DU_LICH', 'NQ_57']);
       const ls = (await db.from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', nv.id).eq('cot', 'gan_muc_tieu').order('luc')).data;
       expect(ls.map((x) => x.gia_tri_moi).join(' | ')).toContain('Gắn mục tiêu then chốt:');
+      const ng = (await db.from('nhiem_vu_muc_tieu').select('muc_tieu_ma, nguon').eq('nhiem_vu_id', nv.id)).data;
+      expect(ng.find((x) => x.muc_tieu_ma === 'NQ_57')?.nguon, 'v3.25: chọn từ danh mục → nguồn người chọn').toBe('CHON');
 
       // Lưu cho cả văn bản: mặc định văn bản = lựa chọn mới, việc bỏ gắn riêng → tính theo văn bản.
       await o.locator('.nut-tang').click();
       await expect(form).toBeVisible();
-      await form.locator('input[value="DP_CAN_BO"]').check();
+      await form.locator('[data-action="mtgMoDm"]').click();
+      await form.locator('input[data-mtg-chon][value="DP_CAN_BO"]').check();
       await form.getByRole('button', { name: 'Lưu cho cả văn bản' }).click();
       await expect(p.locator('#toastContainer')).toContainText('tính theo văn bản', NAP);
       await expect(o).toContainText('Đột phá cán bộ', NAP); await expect(o).toContainText('theo văn bản');

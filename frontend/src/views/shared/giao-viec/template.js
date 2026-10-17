@@ -7,6 +7,8 @@
 // Chấm 1-2 sáng khi khối điền đủ; chân tấm: "Còn thiếu: …" cạnh nút Giao việc / Giao N việc + Huỷ + Giao, nhập tiếp (chỉ khi một thẻ). Cột phụ 340px:
 // xem trước thẻ việc + ba bước sau khi giao. Dùng chung A0 (bản rút gọn = ẩn phần không áp dụng), A1, A2, A3 giao thay mặt. id ô giữ tiền tố klTh*,
 // #gvCham1..2, .gv-the, .gv-phan (e2e). Độ khẩn: lib/kl/do-khan.js. Quyền và 1-1-1 kiểm trong hàm giao_viec (0035).
+// v3.25: khối 1 có "Đọc văn bản gốc (PDF)" (#gvDoc — doc-ai.js: trợ lý AI tách văn bản và nhiệm vụ, điền sẵn có trích dẫn) và mục tiêu then chốt
+// của văn bản (#gvMtVb); mỗi thẻ nhiệm vụ có ô mục tiêu then chốt có gợi ý (#gvMtg1, thẻ thêm [data-mtg-cho] — muc-tieu.js); bỏ khối mục tiêu ở "Thông tin thêm".
 import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { luoiTemplate } from './nhieu.js';
 
@@ -34,6 +36,7 @@ export const giaoViecTemplate = `
     <fieldset class="gv-noi" id="gvKhoa" disabled aria-busy="true">
       <section class="gv-phan" id="gvPhan1"><h2><i id="gvCham1" class="gv-so">1</i>Văn bản và mốc giao</h2>
         <p class="chu-phu hidden gv-cha" id="gvCha"></p>
+        <div class="gv-doc hidden" id="gvDoc"></div>
         <div class="gv-ke-thua hidden" id="gvKeThua"></div>
         <div class="gv-truong" id="klThVanBanWrap"><label for="klThVanBanTim" class="nhan">Chọn văn bản có sẵn</label>
           <div class="cot-2 gv-vb"><input type="search" id="klThVanBanTim" class="o-nhap" placeholder="Gõ số hiệu hoặc trích yếu để tìm" autocomplete="off" aria-controls="klThVanBan">
@@ -61,6 +64,7 @@ export const giaoViecTemplate = `
           ${truong('klThNgayNhan', `Ngày giao nhiệm vụ${BB}`, inp('klThNgayNhan', 'date'), '', 'mốc bắt đầu tính hạn (ngày Văn phòng nhận văn bản / giao việc) — chung cho mọi nhiệm vụ của lượt này')}
           ${truong('klThThayMat', 'Thay mặt', selTim('klThThayMat'), ' class="gv-truong hidden"', 'để trống = giao thẳng cho chuyên viên; chọn lãnh đạo / nhóm lãnh đạo khi nhập việc thay mặt (đề nghị từ chối về người nhập)')}
         </div>
+        <div class="gv-mt-vb" id="gvMtVb"></div>
       </section>
 
       <section class="gv-phan" id="gvPhan2"><h2><i id="gvCham2" class="gv-so">2</i>Nhiệm vụ</h2>
@@ -95,6 +99,7 @@ export const giaoViecTemplate = `
             ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
             <div></div>
           </div>
+          <div class="gv-mtg-cho" id="gvMtg1" data-mtg-cho="gv1"></div>
         </article>
         ${luoiTemplate}
       </section>
@@ -111,8 +116,6 @@ export const giaoViecTemplate = `
           ${truong('klThCoQuanTrinh', 'Cơ quan trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
           ${truong('klThTTChiDao', 'Thường trực chỉ đạo', sel('klThTTChiDao'), '', 'đồng chí Thường trực Tỉnh ủy chỉ đạo nội dung này')}
         </div>
-        <div class="gv-mt" id="gvMucTieuWrap"><span class="nhan" id="gvMucTieuNhan">Mục tiêu then chốt <small class="gv-chu-thich">— việc phục vụ nội dung đột phá, chương trình, nghị quyết hay chỉ tiêu nào (tối đa 10)</small></span>
-          <div class="mt-chon" id="gvMucTieu" role="group" aria-labelledby="gvMucTieuNhan"></div><small class="gv-chu-thich" id="gvMucTieuGhiChu"></small></div>
       </details>
     </fieldset>
 

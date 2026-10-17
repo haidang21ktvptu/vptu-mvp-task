@@ -7,7 +7,7 @@ import { THU_TU_DO_KHAN, tenDoKhan } from './do-khan.js';
 import { khopLocMoi } from './tq-bo-loc.js';
 
 // v3.24: + khoá của thanh lọc chi tiết (tq-bo-loc.js). tu / den = kỳ tuỳ chọn — đổi KỲ của số liệu, không lọc dòng (coLoc không tính; coGiaTri có).
-export const LOC_TRONG = { phamVi: '', loai: '', phong: '', canBo: '', doKhan: '', ldvp: '', nhanh: '', mucTieu: '', khoi: '', nganh: '', coQuan: '', thuongTruc: '',
+export const LOC_TRONG = { phamVi: '', loai: '', phong: '', canBo: '', doKhan: '', ldvp: '', nhanh: '', mucTieu: '', cachGan: '', khoi: '', nganh: '', coQuan: '', thuongTruc: '',
   nguoi: '', trangThai: '', mucQT: '', nguon: '', tu: '', den: '' };
 const KHOA_KY = ['tu', 'den'];
 export const coLoc = (loc) => Object.entries(loc || {}).some(([k, v]) => !KHOA_KY.includes(k) && Boolean(v));
@@ -30,11 +30,11 @@ export function lanhDaoPhuTrach(r, phanCong = []) {
 const cuaToi = (r, me) => Boolean(me) && [r.nguoi_theo_doi, r.owner_tai_khoan, r.tao_boi, r.giao_thay_mat_cho].includes(me);
 export const loaiCua = (r) => r.van_ban_loai || KHONG_VB;
 
-export function locTongQuan(rows, loc, { me = null, phanCong = [], mucTieuDm = [], nganhDm = [] } = {}) {
+export function locTongQuan(rows, loc, { me = null, phanCong = [], mucTieuDm = [], nganhDm = [], linhVucDm = [] } = {}) {
   const l = { ...LOC_TRONG, ...(loc || {}) };
   if (!coLoc(l)) return rows;
   const laLdvp = (r, id) => (id === CHUA_LDVP ? lanhDaoPhuTrach(r, phanCong).length === 0 : lanhDaoPhuTrach(r, phanCong).includes(id));
-  const c = { mucTieuDm, nganhDm, laLdvp };
+  const c = { mucTieuDm, nganhDm, linhVucDm, laLdvp };
   return rows.filter((r) => khopLocMoi(r, l, c) && (!l.phamVi || cuaToi(r, me))
     && (!l.loai || loaiCua(r) === l.loai)
     && (!l.phong || (l.phong === NGOAI_VP ? !r.owner_trong_van_phong : r.owner_trong_van_phong && r.owner_phong === l.phong))

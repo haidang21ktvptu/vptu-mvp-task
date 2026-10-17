@@ -1,6 +1,7 @@
 // Màn hình "Quản trị" (thiết kế KL BTVTU Phần 5; GĐ23 mở rộng): khu theo quyền — Phân công phụ trách (quan_tri_he_thong, Chánh VP), Tài khoản
 // (quan_tri_he_thong), Danh mục (mọi tài khoản trừ Thường trực — Đợt F v3.21, 0096), Nhật ký cấp quyền, Ngưỡng cảnh báo (A1: CVP sửa, PCVP xem),
-// Dọn dữ liệu + Nhật ký hệ thống + Thống kê sử dụng (quan_tri_he_thong). Vào từ pill "Quản trị" (cờ) hoặc menu bánh răng (data-tab). Quyền thật ở hàm SQL / RLS /
+// Dọn dữ liệu + Nhật ký hệ thống + Thống kê sử dụng (quan_tri_he_thong); v3.25: Danh mục mục tiêu (cán bộ nhập liệu xem, thêm; quản trị hệ thống sửa, khoá,
+// gộp, quy tắc nhận diện), Cấu hình AI (quản trị hệ thống / toàn quyền). Vào từ pill "Quản trị" (cờ) hoặc menu bánh răng (data-tab). Quyền thật ở hàm SQL / RLS /
 // Edge Function; ở đây chỉ ẩn/hiện tab và khu.
 import { $, show, filterRowsByKeyword } from '../../../lib/dom.js';
 import { state, isChief } from '../../../lib/state.js';
@@ -25,13 +26,18 @@ import { renderDonDuLieu, mountDonDuLieu } from './don-du-lieu.js';
 import { renderNhatKyHeThong } from './nhat-ky-he-thong.js';
 import { renderNgayNghi, themNgayNghi, boNgayNghi } from './ngay-nghi.js';
 import { renderThongKe, mountThongKe } from './thong-ke.js';
+import { renderMucTieu, mountMucTieu } from './muc-tieu-dm.js';   // v3.25 (0107–0111): danh mục mục tiêu then chốt, quy tắc nhận diện
+import { renderCauHinhAi, mountCauHinhAi } from './cau-hinh-ai.js';   // v3.25 (0112): trợ lý AI
+import { laQuanTriMt } from './muc-tieu-thuan.js';
 
 // Khu nào mở cho ai (thứ tự = thứ tự tab). Hàm quyền đọc state.user (cờ mới nhất sau loadQuanTri).
 const KHU = {
   qtKhuPhuTrach: { tab: 'qtTabPhuTrach', cho: (u) => u.quan_tri_he_thong || (u.role_group === 'A1' && isChief()), ve: renderPhuTrach },
   qtKhuTaiKhoan: { tab: 'qtTabTaiKhoan', cho: (u) => u.quan_tri_he_thong, ve: renderTaiKhoan },
   qtKhuDanhMuc: { tab: 'qtTabDanhMuc', cho: (u) => laNguoiNhap(u), ve: renderDanhMucLinhVuc },   // 0096: quyền chung (kl_kiem_tra_quan_tri_kl)
+  qtKhuMucTieu: { tab: 'qtTabMucTieu', cho: (u) => laNguoiNhap(u) || Boolean(u.quan_tri_he_thong), ve: renderMucTieu, khiMo: true },   // v3.25: thêm nhanh — sửa có kiểm soát
   qtKhuCauHinh: { tab: 'qtTabCauHinh', cho: (u) => u.quan_tri_he_thong || u.role_group === 'A1', ve: renderCauHinh },
+  qtKhuAi: { tab: 'qtTabAi', cho: (u) => laQuanTriMt(u), ve: renderCauHinhAi, khiMo: true },   // v3.25 (0112): quản trị hệ thống / toàn quyền
   qtKhuNgayNghi: { tab: 'qtTabNgayNghi', cho: (u) => u.quan_tri_he_thong || (u.role_group === 'A1' && isChief()), ve: renderNgayNghi },   // PR-2b
   qtKhuNhatKy: { tab: 'qtTabNhatKy', cho: (u) => u.quan_tri_he_thong || laNguoiNhap(u), ve: renderNhatKy },
   qtKhuDonDuLieu: { tab: 'qtTabDonDuLieu', cho: (u) => u.quan_tri_he_thong, ve: renderDonDuLieu },
@@ -82,6 +88,7 @@ export function registerQuanTriView() {
   mountChuyenTheoDoi(loadQuanTri);   // J-6 (0092)
   mountDonDuLieu();
   mountThongKe();   // v3.24 (0104)
+  mountMucTieu(); mountCauHinhAi();   // v3.25
   $('qtTimTaiKhoan').addEventListener('input', (e) => filterRowsByKeyword('qtTaiKhoanBody', e.target.value));
   registerActions({
     openQuanTri, loadQuanTri, chonTabQuanTri,
