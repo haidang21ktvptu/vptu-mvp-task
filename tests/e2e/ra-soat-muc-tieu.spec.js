@@ -13,7 +13,7 @@ test.describe.serial('Rà soát mục tiêu then chốt (v3.25)', () => {
   test.beforeAll(async () => {
     db = dbAdmin(); khoa = khoaRieng('RSMT', test.info());
     test.skip(Boolean((await db.rpc('goi_y_muc_tieu', { p: {} })).error), 'Project chưa có migration 0110 (goi_y_muc_tieu).');
-    const vbId = await taoVanBanRieng(db, khoa);
+    const vbId = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN' });   // KL_BTV (mặc định) bắt buộc số hội nghị
     v1 = await taoViec(db, vbId, `${khoa} thực hiện Nghị quyết số 57-NQ/TW của Bộ Chính trị`);
     v2 = await taoViec(db, vbId, `${khoa} việc đối chứng không khớp quy tắc nào`);
     await kiemThayViec('E2E_TP', v1.id, 'việc có số hiệu');
