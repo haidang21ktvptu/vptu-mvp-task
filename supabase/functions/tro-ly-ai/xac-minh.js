@@ -1,19 +1,42 @@
 // Xác minh kết quả đọc văn bản của AI ở MÁY CHỦ (v3.25 — "vẫn phải đảm bảo chính xác nội dung"): mỗi giá trị lấy từ văn bản phải có câu trích
 // (trich) tìm thấy NGUYÊN VĂN trong chữ của tệp PDF (so khớp bỏ dấu câu, khoảng trắng, xuống dòng, hoa thường; chữ PDF mất dấu thì so không dấu —
-// 'khong_dau') và giá trị phải khớp câu trích (số hiệu nằm trong câu, ngày đúng ngày / tháng / năm của câu, hạn đúng mốc / cuối quý / tháng / năm).
+// 'khong_dau'; câu vắt hai trang: bỏ qua số trang, dòng đầu / chân trang chạy suốt văn bản — boMepTrang) và giá trị phải khớp câu trích (số hiệu nằm trong câu, ngày đúng ngày / tháng / năm của câu, hạn đúng mốc / cuối quý / tháng / năm).
 // Mã danh mục (loại văn bản, sản phẩm, loại thời hạn, ngành, lĩnh vực, mục tiêu) phải có trong danh mục — sai thì bỏ. Văn bản dạng ảnh (PDF scan) không
 // có chữ để đối chiếu → mọi giá trị chỉ là gợi ý. Giao diện chỉ tự điền ô xac_minh ≠ false. Thuần — unit test frontend/tests/tro-ly-ai.test.mjs.
 
 export const chuanTrich = (s) => String(s || '').normalize('NFC').toLocaleLowerCase('vi').replace(/[^\p{L}\p{N}]+/gu, '');
 export const boDau = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
-export const taoBo = (chu) => { const c = chuanTrich(chu); return { chuan: c, khongDau: boDau(c), co: c.length > 0 }; };
+// Chữ bỏ "mép trang" ở chỗ ngắt trang (chủ dự án duyệt 18/10/2026 sau kiểm tay): câu vắt qua hai trang có số trang, dòng đầu / chân trang chen giữa
+// → so nguyên văn hỏng. Trình duyệt ghép các trang bằng một dòng trống, trong trang không có dòng trống (lib/kl/doc-pdf.js). Chỉ xét tối đa MEP dòng
+// đầu và cuối mỗi trang; bỏ dòng chỉ có số trang ("2", "- 2 -", "Trang 2/28") hoặc dòng đầu / chân trang chạy suốt văn bản: (bỏ chữ số, còn ≥ 8 chữ)
+// lặp lại ở mép của mọi trang hoặc mọi trang trừ một (tối thiểu 2) — dòng nội dung tình cờ trùng ở mép vài trang, dòng ngắn chỉ khác chữ số ("ngày
+// 25/12/2026." / "ngày 30/11/2026.") không bị bỏ. Nội dung giữa trang không bao giờ bị bỏ; câu trích vẫn phải khớp nguyên văn từng chữ (coTrong so cả
+// chữ gốc lẫn chữ đã bỏ mép).
+const MEP = 2; const KHUNG_TOI_THIEU = 8;
+const khungDong = (s) => boDau(chuanTrich(s)).replace(/\d+/g, '');
+const laSoTrang = (s) => /^(trang|page)?\d{1,4}$/.test(boDau(chuanTrich(s)));
+export function boMepTrang(chu) {
+  const trang = String(chu || '').split(/\n{2,}/).map((t) => t.split('\n'));
+  if (trang.length < 2) return String(chu || '');
+  const mep = (ds) => [...ds.slice(0, MEP), ...ds.slice(-MEP)];
+  const dem = new Map();
+  trang.forEach((ds) => new Set(mep(ds).map(khungDong).filter((k) => k.length >= KHUNG_TOI_THIEU)).forEach((k) => dem.set(k, (dem.get(k) || 0) + 1)));
+  const nguong = Math.max(2, trang.length - 1);
+  const laMep = (s) => laSoTrang(s) || (dem.get(khungDong(s)) || 0) >= nguong;
+  return trang.map((ds) => ds.filter((s, i) => !((i < MEP || i >= ds.length - MEP) && laMep(s))).join('\n')).join('\n');
+}
+export const taoBo = (chu) => {
+  const c = chuanTrich(chu); const g = chuanTrich(boMepTrang(chu)); const khac = g !== c;
+  return { chuan: c, khongDau: boDau(c), gon: khac ? g : '', gonKhongDau: khac ? boDau(g) : '', co: c.length > 0 };
+};
 
-// 'dung' | 'khong_dau' | false — câu trích có trong văn bản không.
+// 'dung' | 'khong_dau' | false — câu trích có trong văn bản không (chữ gốc hoặc chữ đã bỏ mép trang).
 export function coTrong(bo, trich, toiThieu = 4) {
   const t = chuanTrich(trich);
   if (!bo?.co || t.length < toiThieu) return false;
-  if (bo.chuan.includes(t)) return 'dung';
-  return bo.khongDau.includes(boDau(t)) ? 'khong_dau' : false;
+  if (bo.chuan.includes(t) || (bo.gon && bo.gon.includes(t))) return 'dung';
+  const k = boDau(t);
+  return bo.khongDau.includes(k) || (bo.gonKhongDau && bo.gonKhongDau.includes(k)) ? 'khong_dau' : false;
 }
 
 const NGAY = /^(\d{4})-(\d{2})-(\d{2})$/;
