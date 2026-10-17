@@ -10,6 +10,9 @@
 //     của giới hạn 150 giây (mỗi lượt có hạn riêng), phần còn lại học đêm sau.
 // Giới hạn lượt / ngày theo cau_hinh_ai: ai_giu_luot giữ lượt TRƯỚC khi gọi AI (khoá tư vấn — yêu cầu đồng thời không vượt), ai_xong_luot ghi kết quả.
 // Giả lập (gia_lap) chỉ khi secret AI_CHO_PHEP_GIA_LAP = 1 (Supabase cục bộ, CI).
+// Trần độ dài kết quả (max_tokens) để rộng: Claude 5.x suy nghĩ thích ứng (Opus 5.5 luôn bật), phần suy nghĩ tính vào trần — trần hẹp làm văn bản nhiều
+// nhiệm vụ bị cắt. Thời gian chờ đọc văn bản: 135 giây (gói Free giới hạn 150 giây); project gói trả phí (giới hạn 400 giây) đặt secret AI_HET_GIO_GIAY
+// (60–390) để chờ lâu hơn khi dùng mô hình / mức suy nghĩ cao.
 // Deploy: supabase functions deploy tro-ly-ai --project-ref <ref> (deploy-staging.yml / deploy-prod.yml).
 import { taoCsdl, napDanhMuc } from './csdl.js';
 import { NHA_CUNG_CAP, goiAi, LoiAi } from './nha-cung-cap.js';
@@ -29,6 +32,7 @@ const anon = Deno.env.get('SUPABASE_ANON_KEY') || '';
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const csdl = taoCsdl({ url, anon, service });
 const choGiaLap = Deno.env.get('AI_CHO_PHEP_GIA_LAP') === '1';
+const hetGioDoc = Math.min(390, Math.max(60, Number(Deno.env.get('AI_HET_GIO_GIAY')) || 135)) * 1000;
 
 const giuLuot = (nguoi: string | null, hanhDong: string, p: Record<string, unknown> = {}) => csdl.rpc('ai_giu_luot', { p_nguoi: nguoi, p_hanh_dong: hanhDong, p });
 function xongLuot(id: number | null | undefined, p: Record<string, unknown>) {
@@ -42,14 +46,14 @@ async function docVanBan(body: any, ch: CauHinh, khoa: string | null) {
   if (!chu.trim() && !anh.length) throw new LoiAi('Không đọc được chữ hay ảnh nào từ tệp.', { status: 400, ma: 'TRONG' });
   const dm = await napDanhMuc(csdl, LOAI_VAN_BAN);
   const r = await goiAi(ch, khoa, { heThong: HE_THONG_DOC, noiDung: noiDungDoc(dm.day, chu, String(body.ten_tep || 'van-ban.pdf').slice(0, 120), anh.length > 0),
-    anh: chu.trim() ? [] : anh, schema: luocDoDocVanBan(dm.ma), tenSchema: 'doc_van_ban', toiDa: 16000 }, { giaLap: choGiaLap ? giaLap : null });
+    anh: chu.trim() ? [] : anh, schema: luocDoDocVanBan(dm.ma), tenSchema: 'doc_van_ban', toiDa: 32000 }, { giaLap: choGiaLap ? giaLap : null, hetGio: hetGioDoc });
   return { ket_qua: xacMinhKetQua(r.json, chu, dm.xacMinh), vao: r.vao, ra: r.ra };
 }
 
 async function soanQuyTac(ma: string, ch: CauHinh, khoa: string | null, hetGio = 60000) {
   if (!MA_MT.test(ma)) throw new LoiAi('Mã mục tiêu không hợp lệ.', { status: 400, ma: 'MA' });
   const dl = await csdl.rpc('ai_du_lieu_hoc', { p_ma: ma, p_gioi_han: 30 });
-  const r = await goiAi(ch, khoa, { heThong: HE_THONG_QUY_TAC, noiDung: noiDungQuyTac(dl), schema: luocDoQuyTac(), tenSchema: 'quy_tac', toiDa: 4000, mucSuyNghi: 'low' },
+  const r = await goiAi(ch, khoa, { heThong: HE_THONG_QUY_TAC, noiDung: noiDungQuyTac(dl), schema: luocDoQuyTac(), tenSchema: 'quy_tac', toiDa: 8000, mucSuyNghi: 'low' },
     { giaLap: choGiaLap ? giaLap : null, hetGio });
   const ghi = await csdl.rpc('ai_ghi_quy_tac', { p_ma: ma, p_ds: dsQuyTac(r.json) });
   return { ket_qua: ghi, vao: r.vao, ra: r.ra };
@@ -120,7 +124,7 @@ Deno.serve(async (req) => {
       else if (hd === 'soan_quy_tac') kq = await soanQuyTac(String(body.ma || ''), ch, khoa);
       else {
         const r = await goiAi(ch, khoa, { heThong: 'Trả lời bằng tiếng Việt, rất ngắn.', noiDung: 'Kiểm tra kết nối: chào một câu.', schema: { type: 'object', additionalProperties: false,
-          required: ['tra_loi'], properties: { tra_loi: { type: 'string' } } }, tenSchema: 'kiem_tra', toiDa: 300, mucSuyNghi: 'low' }, { giaLap: choGiaLap ? giaLap : null, hetGio: 30000 });
+          required: ['tra_loi'], properties: { tra_loi: { type: 'string' } } }, tenSchema: 'kiem_tra', toiDa: 2000, mucSuyNghi: 'low' }, { giaLap: choGiaLap ? giaLap : null, hetGio: 30000 });
         kq = { ket_qua: { tra_loi: String(r.json?.tra_loi || '').slice(0, 200) }, vao: r.vao, ra: r.ra };
       }
       await xongLuot(luot.id, { ket_qua: 'OK', token_vao: kq.vao, token_ra: kq.ra, thoi_gian_ms: Date.now() - bd });
