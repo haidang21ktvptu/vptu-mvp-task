@@ -9,11 +9,11 @@ import { dbAdmin, taoViec } from './lib/pr2b.mjs';
 
 test.describe.serial('Rà soát mục tiêu then chốt (v3.25)', () => {
   test.describe.configure({ timeout: 120_000 });
-  let db; let khoa; let v1; let v2;
+  let db; let khoa; let vbId; let v1; let v2;
   test.beforeAll(async () => {
     db = dbAdmin(); khoa = khoaRieng('RSMT', test.info());
     test.skip(Boolean((await db.rpc('goi_y_muc_tieu', { p: {} })).error), 'Project chưa có migration 0110 (goi_y_muc_tieu).');
-    const vbId = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN' });   // KL_BTV (mặc định) bắt buộc số hội nghị
+    vbId = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN' });   // KL_BTV (mặc định) bắt buộc số hội nghị
     v1 = await taoViec(db, vbId, `${khoa} thực hiện Nghị quyết số 57-NQ/TW của Bộ Chính trị`);
     v2 = await taoViec(db, vbId, `${khoa} việc đối chứng không khớp quy tắc nào`);
     await kiemThayViec('E2E_TP', v1.id, 'việc có số hiệu');
@@ -27,7 +27,9 @@ test.describe.serial('Rà soát mục tiêu then chốt (v3.25)', () => {
     await page.locator('#klRaSoatMt').click();
     await expect(page.locator('#viewRaSoatMucTieu')).toBeVisible();
     await expect(page.locator('#rsDs')).toHaveAttribute('data-nap', /./, NAP);
-    await page.locator('#rsTim').fill(khoa);
+    // Lọc theo văn bản (vẽ lại ngay khi chọn) thay vì ô tìm: ô tìm vẽ lại sau 250 ms — nếu lượt vẽ đó tới sau khi Chấp nhận, việc vừa gắn rời
+    // danh sách "Chưa gắn mục tiêu" và dòng biến mất giữa chừng (CI PR #145).
+    await page.locator('#rsVanBan').selectOption(vbId);
     const d1 = page.locator(`#rsDong-${v1.id}`); const d2 = page.locator(`#rsDong-${v2.id}`);
     await expect(d1).toBeVisible(NAP); await expect(d2).toBeVisible();
     await expect(d1.locator('.mtg-chip[data-nguon="QUY_TAC"]'), 'số hiệu nghị quyết trong nội dung → tích sẵn').toContainText('Nghị quyết 57-NQ/TW', NAP);

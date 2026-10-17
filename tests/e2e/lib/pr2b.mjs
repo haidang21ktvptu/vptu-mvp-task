@@ -54,6 +54,9 @@ export async function voiPhien(browser, role, testInfo, fn) {
 // Đánh giá chất lượng → chọn mức (nút Lưu mờ tới khi chọn) → Lưu đánh giá; Trả lại → lý do → Trả lại minh chứng; minh chứng nộp trước v3.20 còn
 // chờ: Xác nhận hợp lệ.
 export async function danhGiaMc(page, mc, chatLuong = 'DAT') {
+  // Câu báo của lượt đánh giá trước còn hiện (4 giây) thì chờ tắt hẳn: câu báo chờ ở cuối hàm phải là của chính lượt này — nếu không, hàm trả về
+  // trước khi lưu xong và bài kiểm đọc CSDL ngay sau đó thấy chat_luong rỗng (CI PR #145, hanh-trinh-5-loai-van-ban bước 3).
+  await expect(page.locator('#toastContainer')).not.toContainText('Đã lưu đánh giá chất lượng hoàn thành', NAP);
   await page.locator(`#mc-${mc}`).getByRole('button', { name: /^(Đánh giá chất lượng|Sửa đánh giá)$/ }).click();
   const f = page.locator(`#mcDg-${mc}`); const nut = f.getByRole('button', { name: 'Lưu đánh giá' });
   await expect(nut).toBeDisabled();

@@ -108,6 +108,11 @@ describe('RLS-11 giới hạn 2 phòng "cả phòng" mỗi PCVP', { skip: SKIP }
 describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính chính linh_vuc_ma (0020)', { skip: SKIP_0020 }, () => {
   const LY = 'RLS-TEST LV danh mục';
   let maMoi = null;
+  // Một lượt chạy bị ngắt giữa chừng (staging, khoảng 13/10/2026) để lại lĩnh vực thử → đếm 33 / ngành 8 có 5, mã mới thêm hậu tố _2: dọn trước.
+  before(async () => {
+    await adminClient().from('dm_linh_vuc').delete().like('ma', 'LV08_RLS_TEST%');
+    await adminClient().from('dm_lich_su').delete().like('ly_do', `${LY}%`);
+  });
   after(async () => {
     if (maMoi) await adminClient().from('dm_linh_vuc').delete().eq('ma', maMoi);
     await adminClient().from('dm_lich_su').delete().like('ly_do', `${LY}%`);
