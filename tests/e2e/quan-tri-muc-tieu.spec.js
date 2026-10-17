@@ -89,7 +89,7 @@ test.describe.serial('Quản trị: danh mục mục tiêu then chốt, cấu h�
     const { data } = await dbAdmin().from('dm_muc_tieu').select('ma, trang_thai, nguon_them').eq('so_hieu', SO_HIEU).single();
     expect(data).toMatchObject({ trang_thai: 'MOI', nguon_them: 'NGUOI_DUNG' });
     await page.locator('#qtMtLocTT').selectOption('MOI');
-    const dong = page.locator('#qtMtBody > tr', { hasText: SO_HIEU });
+    const dong = page.locator('#qtMtBody > tr:not(.qt-mt-con)', { hasText: SO_HIEU });
     await expect(dong).toContainText('Mới');
     await expect(dong).toContainText('Cán bộ bổ sung');
 
@@ -100,7 +100,7 @@ test.describe.serial('Quản trị: danh mục mục tiêu then chốt, cấu h�
     await lyDo(page, `${E2E_TAG} đã đối chiếu ${testInfo.project.name}`);
     await expect(page.locator('#toastContainer')).toContainText('Khoá', NAP);
     await page.locator('#qtMtLocTT').selectOption('DA_DOI_CHIEU');
-    await expect(page.locator('#qtMtBody > tr', { hasText: SO_HIEU })).toContainText('Đã đối chiếu');
+    await expect(page.locator('#qtMtBody > tr:not(.qt-mt-con)', { hasText: SO_HIEU })).toContainText('Đã đối chiếu');   // dòng chính (dòng mở rộng cũng chứa số hiệu)
     await page.locator(`#qtMtBody button[data-action="qtMtMoCon"][data-phan="ls"][data-ma="${data.ma}"]`).click();
     await expect(page.locator('#qtMtBody .qt-mt-ls')).toContainText('Khoá (đã đối chiếu)', NAP);
     await expect(page.locator('#qtMtBody .qt-mt-ls')).toContainText('Thêm');

@@ -54,14 +54,16 @@ describe('0022 — danh mục, tham số và ngày nhận văn bản', { skip: S
     assertOk(ok, 'đủ sản phẩm + cấp'); assert.equal(ok.data.theo_1400, false, 'mặc định chưa theo 1400');
   });
 
-  test('3. dm_loai_thoi_han.cho_phep_tao_moi đúng 2 loại; kl_cau_hinh có 3 khoá mới (3/3/30), 4 khoá cũ, 1 khoá 0029, 1 khoá 0032, 1 khoá 0034 và 1 khoá 0085', async () => {
+  test('3. dm_loai_thoi_han.cho_phep_tao_moi đúng 2 loại; kl_cau_hinh có 3 khoá mới (3/3/30), 4 khoá cũ, 1 khoá 0029, 1 khoá 0032, 1 khoá 0034, 1 khoá 0085 và 4 khoá 0111', async () => {
     const cv1 = await userClient('demo_cv1');
     const lt = await cv1.from('dm_loai_thoi_han').select('ma, cho_phep_tao_moi');
     assert.deepEqual(lt.data.filter((x) => x.cho_phep_tao_moi).map((x) => x.ma).sort(), ['CO_HAN_CU_THE', 'KY_BAN_HANH']);
     const ch = await cv1.from('kl_cau_hinh').select('khoa, gia_tri');
     const m = Object.fromEntries(ch.data.map((x) => [x.khoa, x.gia_tri]));
     assert.equal(m.nguong_vang_ngay, '3'); assert.equal(m.nguong_do_dac_biet_ngay, '3'); assert.equal(m.ngay_ra_soat_toi_da, '30');
-    assert.equal(m.nguong_sap_den_han_ngay, '7'); assert.equal(m.canh_bao_nhac_lai_ngay, '3'); assert.equal(m.chi_dao_tt_han_phan_hoi_ngay, '2'); assert.equal(m.tu_choi_han_duyet_ngay, '2'); assert.equal(m.hoa_toc_da_nhan_gio, '2'); assert.equal(m.xac_nhan_nhan_viec, '1'); assert.equal(m.pham_vi_chuyen_vien, '1'); assert.equal(m.minh_chung_bat_buoc_tep, '1'); assert.equal(m.xem_toan_bo, '1'); assert.equal(Object.keys(m).length, 25); // GĐ22: + 11 khoá do_khan_* / hoa_toc / thuong_truc; 0085: + xac_nhan_nhan_viec; 0086: + pham_vi_chuyen_vien; 0089: + minh_chung_bat_buoc_tep; 0103: + xem_toan_bo
+    assert.equal(m.nguong_sap_den_han_ngay, '7'); assert.equal(m.canh_bao_nhac_lai_ngay, '3'); assert.equal(m.chi_dao_tt_han_phan_hoi_ngay, '2'); assert.equal(m.tu_choi_han_duyet_ngay, '2'); assert.equal(m.hoa_toc_da_nhan_gio, '2'); assert.equal(m.xac_nhan_nhan_viec, '1'); assert.equal(m.pham_vi_chuyen_vien, '1'); assert.equal(m.minh_chung_bat_buoc_tep, '1'); assert.equal(m.xem_toan_bo, '1');
+    assert.deepEqual([m.goi_y_so_lan_xet, m.goi_y_nang_phan_tram, m.goi_y_ha_phan_tram, m.goi_y_tat_phan_tram], ['20', '90', '80', '5']);
+    assert.equal(Object.keys(m).length, 29); // GĐ22: + 11 khoá do_khan_* / hoa_toc / thuong_truc; 0085: + xac_nhan_nhan_viec; 0086: + pham_vi_chuyen_vien; 0089: + minh_chung_bat_buoc_tep; 0103: + xem_toan_bo; 0111: + 4 khoá goi_y_*
   });
 
   test('4. văn bản: loai mặc định KL_BTV, loai lạ bị chặn; ngày nhận < ngày ban hành hoặc > hôm nay bị chặn; hợp lệ được', async () => {
