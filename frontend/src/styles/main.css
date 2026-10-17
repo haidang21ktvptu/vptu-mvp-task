@@ -28,6 +28,9 @@
 @import './thong-ke.css';
 @import './tong-quan-v324.css';
 @import './muc-tieu-v324.css';
+@import './muc-tieu-v325.css';
+@import './ra-soat-muc-tieu.css';
+@import './quan-tri-muc-tieu.css';
 @import './in.css';
 
 @tailwind base;

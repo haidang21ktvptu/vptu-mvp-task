@@ -3,7 +3,7 @@
 // mở và cảnh báo tính đến hôm nay. Khối 1 điểm nghẽn (bốn thông tin Công văn 1400), 2 mục tiêu then chốt, 3 lĩnh vực trọng tâm (5 khối → 12 ngành),
 // 4 xếp hạng (đơn vị chịu trách nhiệm / đồng chí Thường trực chỉ đạo), 5 tỷ lệ đúng hạn theo quý, vướng mắc chờ ý kiến, chất lượng dữ liệu.
 import { laXong, laMo, mucMo, xongTrongKy, soLieuChinh } from './tong-quan.js';
-import { mucTieuCua, mucTieuTheoNhom, khoiCuaNganh } from './muc-tieu.js';
+import { mucTieuCua, mucTieuTheoNhom, khoiCuaDong } from './muc-tieu.js';
 import { boSoThuTu } from './nhan.js';
 
 const tyLe = (a, b) => (b ? Math.round((a / b) * 100) : null);
@@ -30,27 +30,32 @@ function demDoan(rows, k) {
 
 // Khối 3: 5 khối (danh mục khoi, thứ tự) → các ngành có việc; việc không có ngành gom "Chưa phân ngành". sap: 'qh' (nhiều quá hạn trước, rồi đúng
 // hạn thấp trước) | 'dm' (theo danh mục). Trả { toan: số liệu chung, khoi: [...], chuaNganh }.
-export function theoKhoi(rows, k, { khoi = [], nganh = [] } = {}, sap = 'qh') {
-  const theoNganh = new Map(); const chua = [];
-  rows.forEach((r) => { if (!r.nganh_ma) { chua.push(r); return; } if (!theoNganh.has(r.nganh_ma)) theoNganh.set(r.nganh_ma, []); theoNganh.get(r.nganh_ma).push(r); });
-  const ds = khoi.map((kh) => {
-    const ng = nganh.filter((n) => n.khoi_ma === kh.ma).map((n) => ({ ma: n.ma, ten: n.ten, thuTu: n.thu_tu, ...demDoan(theoNganh.get(n.ma) || [], k) })).filter((n) => n.tong > 0);
-    const cua = nganh.filter((n) => n.khoi_ma === kh.ma).flatMap((n) => theoNganh.get(n.ma) || []);
-    return { ma: kh.ma, ten: kh.ten, thuTu: kh.thu_tu, ...demDoan(cua, k), nganh: ng };
+export function theoKhoi(rows, k, { khoi = [], nganh = [], linhVuc = [] } = {}, sap = 'qh') {
+  const coKhoi = new Set(khoi.map((x) => x.ma)); const theo = new Map(); const chua = [];   // khối → ngành → dòng (0107: khối theo lĩnh vực nếu lĩnh vực có khối riêng)
+  rows.forEach((r) => {
+    const kh = r.nganh_ma ? khoiCuaDong(r, nganh, linhVuc) : null;
+    if (!kh || !coKhoi.has(kh)) { chua.push(r); return; }
+    if (!theo.has(kh)) theo.set(kh, new Map());
+    const m = theo.get(kh); if (!m.has(r.nganh_ma)) m.set(r.nganh_ma, []); m.get(r.nganh_ma).push(r);
   });
-  const laKhac = nganh.filter((n) => !khoi.some((kh) => kh.ma === n.khoi_ma)).flatMap((n) => theoNganh.get(n.ma) || []);   // ngành chưa xếp khối
+  const ds = khoi.map((kh) => {
+    const m = theo.get(kh.ma) || new Map();
+    const ng = nganh.filter((n) => m.has(n.ma)).map((n) => ({ ma: n.ma, ten: n.ten, thuTu: n.thu_tu, ...demDoan(m.get(n.ma), k) })).filter((n) => n.tong > 0);
+    return { ma: kh.ma, ten: kh.ten, thuTu: kh.thu_tu, ...demDoan([...m.values()].flat(), k), nganh: ng };
+  });
   const so = (a, b) => (a.tyLe ?? 101) - (b.tyLe ?? 101);
   const xep = sap === 'dm' ? (a, b) => a.thuTu - b.thuTu : (a, b) => b.qh - a.qh || so(a, b) || a.thuTu - b.thuTu;
   ds.sort(xep); ds.forEach((d) => d.nganh.sort(xep));
-  const chuaNganh = demDoan([...chua, ...laKhac], k);
+  const chuaNganh = demDoan(chua, k);
   return { toan: demDoan(rows, k), khoi: ds, chuaNganh: chuaNganh.tong ? chuaNganh : null };
 }
-// Dòng của một khối / ngành / "chưa phân ngành" (bấm xem).
-export function dongCuaKhoi(rows, ma, { nganh = [] } = {}, loai = 'khoi') {
+// Dòng của một khối / ngành (trong khối khoiCha) / "chưa phân ngành" (bấm xem).
+export function dongCuaKhoi(rows, ma, { nganh = [], linhVuc = [] } = {}, loai = 'khoi', khoiCha = null) {
   if (ma === 'TAT') return rows;   // dòng "Toàn bộ" đầu khối
-  if (loai === 'nganh') return rows.filter((r) => r.nganh_ma === ma);
-  if (ma === 'CHUA') return rows.filter((r) => !khoiCuaNganh(nganh, r.nganh_ma));
-  return rows.filter((r) => khoiCuaNganh(nganh, r.nganh_ma) === ma);
+  const kh = (r) => (r.nganh_ma ? khoiCuaDong(r, nganh, linhVuc) : null);
+  if (loai === 'nganh') return rows.filter((r) => r.nganh_ma === ma && (!khoiCha || kh(r) === khoiCha));
+  if (ma === 'CHUA') return rows.filter((r) => !kh(r));
+  return rows.filter((r) => kh(r) === ma);
 }
 
 // Khối 1: việc Đỏ / Đỏ đặc biệt đang mở — Đỏ đặc biệt trước, rồi trễ nhiều ngày trước, độ khẩn cao trước.

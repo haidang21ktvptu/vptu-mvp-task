@@ -11,6 +11,7 @@ import { parseOwner } from '../kl/them-owner.js';
 import { thongBaoPhamVi, theoDoiHopLe } from './pham-vi.js';
 import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, laA3GiaoThang, canNganhHienTai } from './trang-thai.js';
 import { o, taoThe, lamMoiThe, anHienThe, suKienThe } from './nhieu-the.js';
+import { boTheMucTieu } from './muc-tieu.js';
 
 export const TOI_DA = 20;   // kể cả thẻ 1
 
@@ -42,7 +43,8 @@ export function themDong() {
   danhSoLai(); o(the, 'noi_dung').focus();
 }
 export function xoaDong({ dong }) {
-  dongs().find((the) => the.dataset.dong === String(dong))?.remove();
+  const the = dongs().find((x) => x.dataset.dong === String(dong));
+  if (the) { boTheMucTieu(the); the.remove(); }
   danhSoLai();
   $('giaoViecForm').dispatchEvent(new Event('input', { bubbles: true }));
 }

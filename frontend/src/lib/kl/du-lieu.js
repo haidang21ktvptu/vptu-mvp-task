@@ -15,7 +15,7 @@ const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.mess
 
 // Danh mục + cấu hình (B6): MỘT RPC kl_danh_muc() (SECURITY INVOKER — đúng dữ liệu RLS cho người gọi đọc), nhớ sessionStorage 30 phút
 // (chỉ danh mục, không phải tài khoản); màn Quản trị ghi danh mục / ngưỡng thì gọi xoaDanhMucDaNho(). Lượt đọc đang bay dùng chung.
-const KHOA_NHO = 'vptu.kl_danh_muc.v324';   // v3.24 (0105): + mucTieu, khoi, nganh.khoi_ma — khoá mới để không dùng bản nhớ cũ
+const KHOA_NHO = 'vptu.kl_danh_muc.v325';   // v3.25 (0107–0110): + nhomMucTieu, mục tiêu có số hiệu / trạng thái, linhVuc.khoi_ma — khoá mới, không dùng bản nhớ cũ
 const HAN_NHO_MS = 30 * 60_000;
 let dangDocDanhMuc = null;
 function docNho() {
@@ -45,6 +45,15 @@ async function docDanhMuc() {
   dat(dm);
   try { sessionStorage.setItem(KHOA_NHO, JSON.stringify({ uid: state.user?.id, luc: Date.now(), dm })); } catch { /* không lưu được: vẫn dùng bản trong bộ nhớ */ }
   return danhMuc;
+}
+// v3.25: danh mục mục tiêu mở rộng được (người nhập liệu thêm, hệ thống tự thêm khi gặp số hiệu) — gặp mã chưa có trong bản đang nhớ thì đọc lại
+// (tối đa một lần mỗi phút; không xoá bản cũ trước — màn hình đang vẽ vẫn có danh mục). → true nếu đã đọc lại.
+let lanDocLaiMt = 0;
+export async function damBaoMucTieu(ma = []) {
+  const co = new Set((danhMuc?.mucTieu || []).map((m) => m.ma));
+  if (!ma.some((x) => x && !co.has(x)) || Date.now() - lanDocLaiMt < 60_000) return false;
+  lanDocLaiMt = Date.now();
+  try { await loadDanhMucKl(true); return true; } catch { return false; }
 }
 export const danhMucKl = () => danhMuc || { nganh: [], linhVuc: [], donVi: [], sanPham: [], cap: [], loaiThoiHan: [], tienDo: [], mucTieu: [], khoi: [] };
 export const tenTrongDanhMuc = (bang, ma) => danhMucKl()[bang]?.find((x) => x.ma === ma)?.ten || ma || '';

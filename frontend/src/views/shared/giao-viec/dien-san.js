@@ -47,8 +47,8 @@ export async function apDienSan(dong, { nhanMoi }) {
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
   if (chon('klThNguon', d.nguon_nhiem_vu_ma)) phat($('klThNguon'), 'input');   // đánh dấu đã chọn: mặc định theo loại văn bản không ghi đè
   go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThGhiChu', d.linh_vuc_chi_tiet);
-  if (Array.isArray(d.muc_tieu_ma)) datMucTieuGv(d.muc_tieu_ma);   // v3.24: mục tiêu then chốt ghi trong tệp
-  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet || d.muc_tieu_ma?.length) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy
+  if (Array.isArray(d.muc_tieu_ma)) datMucTieuGv(d.muc_tieu_ma);   // v3.24: mục tiêu then chốt ghi trong tệp (v3.25: ô của thẻ 1, người nhập đã chọn)
+  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy (v3.25: mục tiêu ở thẻ 1)
   $('klThDoKhanWrap').querySelector(`.dk-chon button[data-gia-tri="${d.do_khan || 'THUONG'}"]`)?.click();   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
   phat($('giaoViecForm'), 'input');
   $('klThNoiDung').focus();

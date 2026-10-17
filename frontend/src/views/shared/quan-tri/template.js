@@ -4,15 +4,18 @@
 import { quanTriDanhMucTemplate, quanTriNhatKyDanhMucTemplate } from './template-linh-vuc.js';
 import { quanTriHeThongTemplate } from './template-he-thong.js';
 import { quanTriThongKeTemplate } from './template-thong-ke.js';
+import { quanTriMucTieuTemplate } from './template-muc-tieu.js';   // v3.25: Danh mục mục tiêu, Cấu hình AI
 
 export const quanTriTemplate = `
-  <div class="dau"><h1>Quản trị</h1><span>phân công lãnh đạo phụ trách phòng và lĩnh vực, tài khoản, danh mục, nhật ký, thống kê sử dụng</span>
+  <div class="dau"><h1>Quản trị</h1><span>phân công lãnh đạo phụ trách phòng và lĩnh vực, tài khoản, danh mục lĩnh vực và mục tiêu then chốt, trợ lý AI, nhật ký, thống kê sử dụng</span>
     <div class="phai-dau"><button type="button" data-action="loadQuanTri" class="nut nho">Tải lại</button></div></div>
   <div class="tab-hang" id="qtTabs" role="tablist">
     <button type="button" id="qtTabPhuTrach" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuPhuTrach" aria-selected="true">Phân công phụ trách</button>
     <button type="button" id="qtTabTaiKhoan" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuTaiKhoan" aria-selected="false">Tài khoản và cờ</button>
     <button type="button" id="qtTabDanhMuc" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDanhMuc" aria-selected="false">Danh mục lĩnh vực</button>
+    <button type="button" id="qtTabMucTieu" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuMucTieu" aria-selected="false">Danh mục mục tiêu</button>
     <button type="button" id="qtTabCauHinh" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuCauHinh" aria-selected="false">Ngưỡng cảnh báo</button>
+    <button type="button" id="qtTabAi" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuAi" aria-selected="false">Cấu hình AI</button>
     <button type="button" id="qtTabNgayNghi" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNgayNghi" aria-selected="false">Ngày nghỉ</button>
     <button type="button" id="qtTabNhatKy" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuNhatKy" aria-selected="false">Nhật ký</button>
     <button type="button" id="qtTabDonDuLieu" role="tab" data-action="chonTabQuanTri" data-tab="qtKhuDonDuLieu" aria-selected="false">Dọn dữ liệu</button>
@@ -50,6 +53,7 @@ export const quanTriTemplate = `
     </div>
     <div id="qtKhuNhatKyDanhMuc">${quanTriNhatKyDanhMucTemplate}</div>
   </div>
+  ${quanTriMucTieuTemplate}
   ${quanTriHeThongTemplate}
   ${quanTriThongKeTemplate}
 `;

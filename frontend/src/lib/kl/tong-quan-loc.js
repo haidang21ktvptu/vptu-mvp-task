@@ -23,7 +23,7 @@ const moVaXong = (ds, k) => [{ ten: 'Đang thực hiện', rows: ds.filter(laMo)
 
 // khoa: hàm gom nhóm của bảng theo phòng / đơn vị / cán bộ (khoaNhom); cds + ctxCd: chỉ đạo và vai (chiDaoPhan); homNay 'YYYY-MM-DD' (năm của
 // biểu đồ tháng, mốc "quá hạn phản hồi") — màn hình truyền homNayVN().
-export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, homNay = k.tu, nganhDm = [] } = {}) {
+export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, homNay = k.tu, nganhDm = [], linhVucDm = [] } = {}) {
   const xong = () => rows.filter((r) => xongTrongKy(r, k));
   switch (ct.t) {
     case 'giao': return { tieuDe: `Nhiệm vụ giao ${k.trong}`, rows: rows.filter((r) => trongKy(ngayGiao(r), k)) };
@@ -85,7 +85,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
       return { tieuDe: `${ct.ten || 'Mục tiêu'} — ${ct.m === 'qh' ? 'Quá hạn (Đỏ, Đỏ đặc biệt)' : TEN_MUC[ct.m] || ''}`, rows: rows.filter((r) => mucTieuCua(r).includes(ct.ma) && laMo(r) && muc.includes(mucMo(r))) };
     }
     case 'khoi': {   // khối / ngành của khối 3: tách theo đoạn trạng thái (cùng cách đếm thanh xếp chồng)
-      const cua = dongCuaKhoi(rows, ct.ma, { nganh: nganhDm }, ct.loai);
+      const cua = dongCuaKhoi(rows, ct.ma, { nganh: nganhDm, linhVuc: linhVucDm }, ct.loai, ct.kh || null);
       const ds = DOAN.filter(([ma]) => !ct.d || ma === ct.d).map(([ma, ten]) => ({ ten, rows: cua.filter((r) => doanCua(r, k) === ma) }));
       return { tieuDe: `${ct.ten || 'Lĩnh vực'}${ct.d ? ` — ${DOAN.find(([ma]) => ma === ct.d)?.[1] || ''}` : ''}`, nhom: ds };
     }

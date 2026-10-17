@@ -15,6 +15,7 @@ import { mountNhapExcel } from './shared/nhap-excel/index.js';
 import { mountChoHoanThien } from './shared/nhap-excel/cho.js';
 import { mountGiaoViecV9 } from './shared/giao-viec/v9.js';
 import { registerTheoVanBan } from './shared/theo-van-ban/index.js';
+import { registerRaSoatMucTieu } from './shared/ra-soat-muc-tieu/index.js';
 import { registerChiDaoTTThuKy } from './shared/chi-dao-tt-thu-ky/index.js';
 import { mountDieuHanh } from './shared/dieu-hanh/man-hinh.js';
 import { registerTongQuan } from './shared/tong-quan/index.js';
@@ -35,6 +36,7 @@ export function registerViews() {
   mountGiaoViecV9();     // v9: dải 1-1-1-1-3, chọn nhanh, kế thừa, văn bản đang nhập
   mountTabGiaoViec(openGiaoViec); mountNhapExcel(); mountChoHoanThien();   // v9 đợt 2: Nhập từ Excel, Chờ hoàn thiện (người nhập)
   registerTheoVanBan();  // Cây "Theo văn bản" (v8 đợt 4; mọi vai từ v3.22.1 — phạm vi RLS)
+  registerRaSoatMucTieu();   // v3.25: rà soát mục tiêu then chốt (gợi ý của hệ thống, chấp nhận từng việc / hàng loạt)
   registerChiDaoTTThuKy(); // "Chỉ đạo Thường trực" của thư ký Thường trực (0047)
   mountDieuHanh();       // hành động dùng chung của các màn hình điều hành (A0/A1)
   registerTongQuan();    // v9: Tổng quan — trang mở đầu của A0/A1/A2

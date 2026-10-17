@@ -12,7 +12,7 @@
 # cũng bỏ qua: job kiem-tra của deploy-prod chấp nhận job rỗng cùng tên, v3.6.0/v3.6.1 đã chứng minh).
 # Biến vào: GH_TOKEN, REPO, EVENT (pull_request | push), SO_PR (PR), BEFORE + SHA (push). Ghi GITHUB_OUTPUT và GITHUB_STEP_SUMMARY.
 set -u
-KHONG_ANH_HUONG='^docs/|\.md$|^\.github/workflows/(backup-dinh-ky|canh-bao)\.yml$'
+KHONG_ANH_HUONG='^docs/|\.md$|^\.github/workflows/(backup-dinh-ky|canh-bao|hoc-quy-tac)\.yml$'
 CHAM_RLS='^supabase/|^tests/rls/'
 CHAM_FUNCTION='^supabase/functions/'
 CHAM_MIGRATION='^supabase/migrations/'

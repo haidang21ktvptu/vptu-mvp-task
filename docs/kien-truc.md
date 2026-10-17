@@ -73,6 +73,9 @@ Hai nguyên tắc cố định: (1) **migration luôn chạy trước deploy fro
 ### `kiem-thu-dem.yml` — cron `0 20 * * *` (03:00 giờ VN) + `workflow_dispatch` (v3.18)
 Bộ e2e **đủ** trên staging (`E2E_STAGING=1`, 2 worker, `retries: 1`) rồi RLS token thật — lưới an toàn cho khác biệt môi trường hosted (Auth, Edge Function, realtime, dữ liệu staging tích luỹ) sau khi PR đã chuyển sang Supabase cục bộ. Cùng nhóm `concurrency: kiem-thu-staging`. Đỏ: xem annotation / artifact `playwright-report-staging-dem`; chạy lại bằng tay khi staging rảnh. Trước mỗi lần phát hành nên bấm chạy một lượt.
 
+### `hoc-quy-tac.yml` — cron `0 19 * * *` (02:00 giờ VN) + `workflow_dispatch` (v3.25)
+Gọi Edge Function `tro-ly-ai` (hành động `hoc_dem`) bằng service_role (`SUPABASE_SERVICE_ROLE_KEY` / `STAGING_SERVICE_ROLE_KEY`): trợ lý AI soạn thêm từ khoá / từ loại trừ cho các mục tiêu cần học (`ai_can_hoc`), quy tắc vào Đề xuất rồi tự kiểm trên việc đã có (0111–0112) — không gắn việc, không sửa danh mục. Function không bắt đầu lượt mới khi còn dưới 35 giây của giới hạn 150 giây; AI tắt / chưa có khoá / function chưa triển khai → chỉ ghi Summary (không đỏ); POST không tự gửi lại. Mỗi lượt học tính vào giới hạn lượt / ngày toàn hệ thống.
+
 ### `backup-dinh-ky.yml` — cron `0 20 */3 * *` (03:00 giờ VN, ngày 1, 4, …, 31) + `workflow_dispatch`
 Job `sao-luu`: `scripts/backup-db.sh --project-ref <prod> --nhan dinh-ky` → artifact `prod-<ngày>-dinh-ky` 90 ngày. Dùng repository secret `BACKUP_PASSPHRASE` (không dùng environment `production` vì có required reviewer). Hạn chế cron và cách tải về máy (`scripts/tai-backup.sh`, Task Scheduler): `docs/sao-luu-khoi-phuc.md` mục 3. GitHub tự tắt schedule sau 60 ngày repo không có commit.
 
@@ -105,6 +108,8 @@ Nếu sau này cần preview theo PR, chuyển sang B hoặc C; hiện tại A �
 | `STAGING_SUPABASE_SERVICE_ROLE_KEY` | cùng trang, `service_role` — **chỉ staging**, dùng dọn dữ liệu test | ci (e2e), deploy-staging (RLS token thật) |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | *đã có* (production, chỉ anon key) | build bản production (ở cả hai workflow deploy) |
 | `SMOKE_USERNAME`, `SMOKE_PASSWORD` | `smoke_test` — tài khoản hệ thống (`accounts.is_system = true`, A3, phòng CDS_CY, ẩn khỏi mọi danh sách cán bộ) tạo bằng `scripts/create-system-account.mjs --project-ref <ref>`; script in mật khẩu ngẫu nhiên đúng một lần | deploy-prod job smoke |
+
+**Edge Function Secrets — trợ lý AI (v3.25, đặt trên Supabase, không phải GitHub):** Dashboard của từng project (staging, production) → Edge Functions → Secrets → thêm **đúng một** secret theo nhà cung cấp đang chọn ở Quản trị › Cấu hình AI: `AI_KEY_ANTHROPIC` (Claude — console.anthropic.com → API Keys), `AI_KEY_OPENAI`, `AI_KEY_GEMINI` hoặc `AI_KEY_KHAC` (dịch vụ theo chuẩn OpenAI, địa chỉ https nhập ở Cấu hình AI). Tên secret cố định theo nhà cung cấp (không cấu hình được — tránh trỏ sang secret khác của function như service_role); khoá không bao giờ vào CSDL, workflow hay trình duyệt. Đổi nhà cung cấp: thêm secret của nhà cung cấp mới → Cấu hình AI chọn nhà cung cấp, mô hình (có lý do) → "Kiểm tra kết nối"; secret cũ xoá khi không dùng. `AI_CHO_PHEP_GIA_LAP` chỉ đặt trên Supabase cục bộ (kiểm thử) — không bao giờ trên staging / production. `deploy-staging.yml` / `deploy-prod.yml` triển khai mã function (`supabase functions deploy tro-ly-ai`), không đụng secret.
 
 **Environment `production`** (Settings → Environments → New environment): Required reviewers = `haidang21ktvptu`; Deployment branches and tags → *Selected* → thêm tag pattern `v*`. Secrets của environment:
 

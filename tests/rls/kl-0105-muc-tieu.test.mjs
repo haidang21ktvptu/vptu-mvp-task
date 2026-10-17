@@ -44,13 +44,13 @@ describe('0105–0106 — mục tiêu then chốt, khối lĩnh vực, kết qu�
   let t1; let t2; let vbTh; let vbHai;
 
   test('1. Danh mục: 5 khối, 12 ngành có khối, 25 mục tiêu theo 4 nhóm; kl_danh_muc trả mucTieu, khoi; anon không đọc', async () => {
-    const [k, n, m] = await Promise.all([db().from('dm_khoi_linh_vuc').select('ma'), db().from('dm_nganh').select('ma, khoi_ma'), db().from('dm_muc_tieu').select('nhom')]);
-    assert.equal(k.data.length, 5);
+    const [k, n, m] = await Promise.all([db().from('dm_khoi_linh_vuc').select('ma'), db().from('dm_nganh').select('ma, khoi_ma'), db().from('dm_muc_tieu').select('nhom').eq('nguon_them', 'KHOI_TAO')]);   // 0107: danh mục mở rộng được — chỉ đếm mục khởi tạo
+    assert.ok(k.data.length >= 5, 'ít nhất 5 khối (0107: quản trị thêm được)');
     assert.equal(n.data.length, 12); assert.ok(n.data.every((x) => x.khoi_ma), 'mọi ngành có khối');
     const theo = m.data.reduce((s, x) => ({ ...s, [x.nhom]: (s[x.nhom] || 0) + 1 }), {});
     assert.deepEqual(theo, { DOT_PHA: 3, CHUONG_TRINH: 3, NQ_TW: 10, CHI_TIEU: 9 });
     const dm = await goi('demo_cv1', 'kl_danh_muc', {}); assertOk(dm, 'kl_danh_muc');
-    assert.equal(dm.data.mucTieu.length, 25); assert.equal(dm.data.khoi.length, 5); assert.ok(dm.data.nganh.every((x) => x.khoi_ma));
+    assert.equal(dm.data.mucTieu.filter((m) => m.nguon_them === 'KHOI_TAO').length, 25); assert.ok(dm.data.khoi.length >= 5); assert.ok(dm.data.nganh.every((x) => x.khoi_ma));
     assert.ok((await anonClient().from('dm_muc_tieu').select('ma')).error, 'anon không đọc danh mục');
   });
 

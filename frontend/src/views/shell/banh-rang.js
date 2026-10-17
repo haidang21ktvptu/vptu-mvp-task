@@ -1,6 +1,7 @@
 // Menu bánh răng trên dải (GĐ23): mục chung (Hồ sơ, Đổi mật khẩu, Thông báo, Trợ giúp) → Kiểu giao diện (v9: Thanh lịch / Trang nghiêm, Nền tối;
 // shell/kieu-giao-dien.js, nhớ theo máy) → mục theo vai (A0 Bản gọn; A1 Phân công phụ trách,
-// Ngưỡng cảnh báo; Danh mục lĩnh vực cho mọi vai trừ A0 — Đợt F v3.21) → nhóm Quản trị hệ thống (chỉ cờ quan_tri_he_thong) → Đăng xuất (đỏ, cuối). Gạch ngăn giữa nhóm.
+// Ngưỡng cảnh báo; Danh mục lĩnh vực cho mọi vai trừ A0 — Đợt F v3.21; v3.25: Danh mục mục tiêu cùng nhóm đó, Cấu hình AI trong nhóm quản trị hệ thống) → nhóm
+// Quản trị hệ thống (chỉ cờ quan_tri_he_thong) → Đăng xuất (đỏ, cuối). Gạch ngăn giữa nhóm.
 // Frontend chỉ ẩn/hiện; quyền thật ở hàm SQL / RLS / Edge Function.
 import { $, show, escapeHtml } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
@@ -28,9 +29,9 @@ export function menuBanhRang(user) {
   ]];
   if (user.role_group === 'A0') nhom.push([muc('Bản gọn', 'toggleBanGon', {}, ['menuitemcheckbox', user.tuy_chon?.ban_gon === true])]);
   if (user.role_group === 'A1') nhom.push([qt('Phân công phụ trách', 'qtKhuPhuTrach'), qt('Ngưỡng cảnh báo', 'qtKhuCauHinh')]);
-  if (laNguoiNhap(user) && !user.quan_tri_he_thong) nhom.push([qt('Danh mục lĩnh vực', 'qtKhuDanhMuc')]);   // 0096: quyền chung (quản trị hệ thống có ở nhóm dưới)
+  if (laNguoiNhap(user) && !user.quan_tri_he_thong) nhom.push([qt('Danh mục lĩnh vực', 'qtKhuDanhMuc'), qt('Danh mục mục tiêu', 'qtKhuMucTieu')]);   // 0096: quyền chung; v3.25: mục tiêu (thêm nhanh)
   if (user.quan_tri_he_thong) {
-    nhom.push([`<span class="br-nhom">Quản trị hệ thống</span>`, qt('Tài khoản', 'qtKhuTaiKhoan'), qt('Danh mục', 'qtKhuDanhMuc'), qt('Dọn dữ liệu', 'qtKhuDonDuLieu'),
+    nhom.push([`<span class="br-nhom">Quản trị hệ thống</span>`, qt('Tài khoản', 'qtKhuTaiKhoan'), qt('Danh mục', 'qtKhuDanhMuc'), qt('Danh mục mục tiêu', 'qtKhuMucTieu'), qt('Cấu hình AI', 'qtKhuAi'), qt('Dọn dữ liệu', 'qtKhuDonDuLieu'),
       qt('Nhật ký hệ thống', 'qtKhuNhatKyHeThong'), qt('Thống kê sử dụng', 'qtKhuThongKe'), `<a role="menuitem" href="${LINK_SAO_LUU}" target="_blank" rel="noopener">Sao lưu (workflow GitHub)</a>`]);
   }
   nhom.push([`<button type="button" role="menuitem" id="logoutBtn" class="br-thoat" data-action="dangXuat">Đăng xuất</button>`]);

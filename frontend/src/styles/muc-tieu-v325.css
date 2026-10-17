@@ -1,0 +1,92 @@
+/* Mục tiêu then chốt có gợi ý (v3.25): ô chọn dùng chung (views/shared/kl/chon-muc-tieu.js — thẻ nhiệm vụ ở Giao việc, mục tiêu văn bản ở khối 1,
+   ngăn chi tiết, rà soát) và khối đọc văn bản gốc ở khối 1 của Giao việc. Chỉ token của docs/DESIGN.md; màu nguồn gắn đi kèm nhãn chữ (không dựa
+   vào màu). Tên lớp viết nguyên văn trong JS. */
+@layer components {
+  .mtg { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--vien); }
+  .mtg-dau { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .mtg-dau .nhan { margin: 0; }
+  .mtg-hang { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-height: 28px; }
+  .mtg-hang[hidden] { display: none; }
+  .mtg-trong { font-size: 13px; }
+  .mtg-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 28px; padding: 2px 4px 2px 10px; border-radius: 999px;
+    border: 1px solid transparent; background: var(--navy-nhat); color: var(--navy); font-size: 13px; font-weight: 600; line-height: 1.3; }
+  .mtg-chip .mtg-ten { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 34ch; }
+  .mtg-nguon { font-size: 11.5px; font-weight: 500; color: var(--chu-phu); white-space: nowrap; }
+  .mtg-chip[data-nguon="VAN_BAN"] { background: var(--nen-mo); border-color: var(--vien); color: var(--chu); }
+  .mtg-chip[data-nguon="QUY_TAC"] { background: var(--lam-nhat); color: var(--lam); }
+  .mtg-chip[data-nguon="AI"] { background: var(--vang-nhat); color: var(--vang-chu); }
+  .mtg-chip[data-nguon="MOI"] { background: var(--luc-nhat); border: 1px dashed var(--luc); color: var(--luc); }
+  .mtg-bo { display: inline-grid; place-items: center; width: 22px; height: 22px; min-height: 0; padding: 0; border: 0; border-radius: 999px; background: transparent;
+    color: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
+  .mtg-bo:hover, .mtg-bo:focus-visible { background: var(--the); }
+  .mtg-gy-hang { gap: 6px; }
+  .mtg-gy-nhan { font-size: 12.5px; font-weight: 700; color: var(--chu-phu); }
+  .mtg-gy { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 2px 10px; border: 1px solid var(--vien-o); border-radius: 999px;
+    background: var(--the); color: var(--chu); font-size: 13px; font-weight: 500; cursor: pointer; }
+  .mtg-gy:hover, .mtg-gy:focus-visible { border-color: var(--lam); background: var(--lam-nhat); color: var(--lam); }
+  .mtg-ai { padding: 0 6px; border-radius: 999px; background: var(--vang-nhat); color: var(--vang-chu); font-size: 11px; font-weight: 700; }
+  .mtg-nut { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .mtg-tt { font-size: 12.5px; }
+  .mtg-dm, .mtg-them { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--vien-nhat); border-radius: 12px; background: var(--nen-mo); }
+  .mtg-dm[hidden], .mtg-them[hidden] { display: none; }
+  .mtg-dm .mt-nhom { background: var(--the); }
+  .mtg-tim { max-width: 420px; }
+  .mtg-chip, .mtg-gy { flex: none; }   /* xuống dòng thay vì co tên lại */
+  .mtg .mtg-tim, .mtg .mtg-them input, .mtg .mtg-them select { flex: none; width: 100%; min-height: 38px; }   /* thắng .o input (biểu mẫu ngăn chi tiết) */
+  .o .mtg .mtg-tim, .o .mtg .mtg-them input, .o .mtg .mtg-them select { background: var(--the); }
+  .mtg-them-chan { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .mtg-them-chan small { flex-basis: 100%; font-size: 12.5px; }
+
+  /* Khối 1: mục tiêu của văn bản (văn bản có sẵn: một dòng chỉ xem) */
+  .gv-mt-vb .mtg { margin-top: 10px; }
+  .gv-mt-vb-xem { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 10px 0 0; font-size: 13.5px; }
+
+  /* Ngăn chi tiết: ô chọn trong biểu mẫu .o-mt (toàn chiều ngang, không gạch trên) */
+  .o-mt .o-mt-cho { flex-basis: 100%; min-width: 0; }
+  .o-mt .mtg { margin-top: 0; padding-top: 0; border-top: 0; }
+  .o-mt .mtg small { flex-basis: auto; }   /* .o-mt small (v3.24) chiếm cả dòng — không áp cho chữ trong chip */
+  .o-mt .mtg .mtg-them-chan small { flex-basis: 100%; }
+  .ct-mt .chip-mt[data-nguon="QUY_TAC"], .ct-mt .chip-mt[data-nguon="RA_SOAT"] { background: var(--lam-nhat); color: var(--lam); }
+  .ct-mt .chip-mt[data-nguon="AI"] { background: var(--vang-nhat); color: var(--vang-chu); }
+
+  /* Khối 1: đọc văn bản gốc (PDF) — kết quả có nhãn đối chiếu; ghi chú đầu thẻ sau khi điền */
+  .gv-doc { margin: 0 0 14px; padding: 12px 14px; border: 1px dashed var(--vien-o); border-radius: 12px; background: var(--nen-mo); }
+  .gv-doc.hidden, .gv-doc-tt.hidden, .gv-doc-kq.hidden { display: none; }
+  .gv-doc-dau { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .gv-doc-dau .nut { display: inline-flex; align-items: center; gap: 6px; }
+  .gv-doc-dau small { flex: 1 1 320px; }
+  .gv-doc-tt { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: var(--lam); }
+  .gv-doc-kq { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--vien-nhat); }
+  .gv-doc-kq-dau { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 12px; }
+  .gv-doc-kq-dau > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .gv-doc-kq-dau small { font-size: 12.5px; }
+  .gv-doc-vbco { margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--luc-nhat); color: var(--chu); font-size: 13.5px; }
+  .gv-doc-vb { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; margin: 0; }
+  .gv-doc-vb > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .gv-doc-vb dt { font-size: 12px; font-weight: 700; color: var(--chu-phu); }
+  .gv-doc-vb dd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: 13.5px; }
+  .gv-doc-gt { font-weight: 600; color: var(--chu); overflow-wrap: anywhere; }
+  .gv-xm { padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; line-height: 20px; white-space: nowrap; }
+  .gv-xm.dung { background: var(--luc-nhat); color: var(--luc); }
+  .gv-xm.kiem { background: var(--vang-nhat); color: var(--vang-chu); }
+  .gv-doc-da { font-size: 12px; font-weight: 600; color: var(--luc); }
+  .gv-doc-nv-dau { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+  .gv-doc-ds { display: flex; flex-direction: column; gap: 6px; max-height: 360px; margin: 0; padding: 0 4px 0 0; overflow: auto; list-style: none; counter-reset: nv; }
+  .gv-doc-nv { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 8px 10px; border: 1px solid var(--vien-nhat); border-radius: 10px; background: var(--the); }
+  .gv-doc-nv.xong { opacity: .7; }
+  .gv-doc-nd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
+  .gv-doc-nd p { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--chu); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .gv-doc-nv > small { grid-column: 1; font-size: 12.5px; line-height: 1.45; }
+  .gv-doc-nv-nut { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .gv-doc-chan { font-size: 12.5px; line-height: 1.5; }
+  .gv-ai-ghi { margin: 0 0 8px; padding: 6px 10px; border-left: 3px solid var(--vang); border-radius: 6px; background: var(--nen-vang-mo); color: var(--chu); font-size: 12.5px; line-height: 1.5; }
+  .gv-ai-ghi .nut { margin-left: 6px; }
+
+  @media (max-width: 640px) {
+    .mtg-chip .mtg-ten { max-width: 22ch; }
+    .mtg-nguon { display: none; }
+    .gv-doc-vb { grid-template-columns: minmax(0, 1fr); }
+    .gv-doc-nv { grid-template-columns: minmax(0, 1fr); }
+    .gv-doc-nv-nut { grid-column: 1; grid-row: auto; }
+  }
+}

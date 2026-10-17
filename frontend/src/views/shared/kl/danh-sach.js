@@ -121,9 +121,10 @@ function dienBoLoc() {
   const dk = new Map(); rows.forEach((r) => { const m = r.do_khan || 'THUONG'; dk.set(m, (dk.get(m) || 0) + 1); });
   $('klLocDoKhan').innerHTML = opt('', 'Mọi độ khẩn') + [...THU_TU_DO_KHAN].reverse().filter((m) => dk.has(m) || kl.loc.doKhan === m)
     .map((m) => opt(m, `${tenDoKhan(m)} (${dk.get(m) || 0})`, kl.loc.doKhan === m)).join('');
-  const mt = tuyChonMucTieu(rows, danhMucKl().mucTieu || []).map((g) => { const o = g.ds.map((x) => opt(x.ma, `${x.ten} (${x.n})`, kl.loc.mucTieu === x.ma)).join(''); return g.nhom ? `<optgroup label="${escapeHtml(g.nhom)}">${o}</optgroup>` : o; });
+  const mt = tuyChonMucTieu(rows, danhMucKl().mucTieu || [], danhMucKl().nhomMucTieu).map((g) => { const o = g.ds.map((x) => opt(x.ma, `${x.ten} (${x.n})`, kl.loc.mucTieu === x.ma)).join(''); return g.nhom ? `<optgroup label="${escapeHtml(g.nhom)}">${o}</optgroup>` : o; });
   $('klLocMucTieu').innerHTML = opt('', 'Mọi mục tiêu then chốt') + mt.join('');
   show('klLocMucTieu', (danhMucKl().mucTieu || []).length > 0);
+  show('klRaSoatMt', (danhMucKl().mucTieu || []).length > 0 && state.user?.role_group !== 'A0' && !state.user?.bi_khoa);   // v3.25: lối vào Rà soát mục tiêu (gan_muc_tieu là chốt)
 }
 function dienLinhVuc() {
   const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;

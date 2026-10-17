@@ -1,0 +1,61 @@
+# Học quy tắc nhận diện mục tiêu then chốt mỗi đêm (v3.25, migration 0111–0112): gọi Edge Function tro-ly-ai (hành động hoc_dem) bằng service_role —
+# trợ lý AI soạn thêm từ khoá / từ loại trừ cho các mục tiêu cần học (ai_can_hoc: mục mới thêm, mục có nhiều gợi ý bị bỏ…); quy tắc AI soạn tự kiểm
+# trên dữ liệu đã có và chỉ bắt đầu ở mức gợi ý (0111), không gắn việc, không sửa danh mục. Function không bắt đầu lượt mới khi còn dưới 35 giây của
+# giới hạn 150 giây; phần còn lại học đêm sau. Không tự gửi lại (POST dài — gửi lại có thể chạy học hai lần song song).
+# Không pg_cron (gói Free) — cùng cách canh-bao.yml. Trợ lý AI tắt / chưa có khoá / function chưa triển khai → chỉ ghi Summary, không đỏ.
+# Secrets (repository): SUPABASE_SERVICE_ROLE_KEY (production), STAGING_SERVICE_ROLE_KEY (staging) — key chỉ đi trong header, không in ra log.
+name: Học quy tắc mục tiêu
+
+on:
+  schedule:
+    - cron: '0 19 * * *'   # 02:00 giờ Việt Nam
+  workflow_dispatch:
+    inputs:
+      moi_truong:
+        description: 'Môi trường gọi trợ lý AI'
+        type: choice
+        options: [production, staging]
+        default: production
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: hoc-quy-tac-${{ inputs.moi_truong || 'production' }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  hoc:
+    name: Học quy tắc (${{ inputs.moi_truong || 'production' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MOI_TRUONG: ${{ inputs.moi_truong || 'production' }}
+      PROD_URL: https://frwyxcmbonjaimziiuqr.supabase.co
+      STAGING_URL: https://vojmrjezspdftovzinek.supabase.co
+      PROD_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      STAGING_KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Chọn môi trường và kiểm tra secret
+        run: |
+          if [ "$MOI_TRUONG" = staging ]; then URL="$STAGING_URL"; KEY="$STAGING_KEY"; TEN=STAGING_SERVICE_ROLE_KEY
+          else URL="$PROD_URL"; KEY="$PROD_KEY"; TEN=SUPABASE_SERVICE_ROLE_KEY; fi
+          if [ -z "$KEY" ]; then echo "::error::Thiếu repository secret $TEN (docs/TRANG-THAI.md mục 3)."; exit 1; fi
+          echo "::add-mask::$KEY"
+          { echo "URL=$URL"; echo "KEY=$KEY"; } >> "$GITHUB_ENV"
+      - name: Gọi tro-ly-ai (hoc_dem)
+        run: |
+          HTTP=$(curl --silent --show-error --output kq.json --write-out '%{http_code}' \
+            --max-time 170 -X POST "$URL/functions/v1/tro-ly-ai" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{"hanh_dong":"hoc_dem"}') || HTTP=000
+          echo "### Học quy tắc mục tiêu — $MOI_TRUONG (HTTP $HTTP)" >> "$GITHUB_STEP_SUMMARY"
+          case "$HTTP" in
+            200) jq -r 'if .bo_qua then "Bỏ qua: \(.bo_qua)" else "Đã học \(.da_hoc | length) mục tiêu (lỗi: \([.da_hoc[] | select(.loi)] | length)); còn lại \(.con_lai)." end' kq.json >> "$GITHUB_STEP_SUMMARY" ;;
+            404) echo "::warning::Edge Function tro-ly-ai chưa triển khai trên $MOI_TRUONG — bỏ qua."; echo "Chưa triển khai function." >> "$GITHUB_STEP_SUMMARY" ;;
+            *) MSG=$(jq -r '.error // .message // "không đọc được phản hồi"' kq.json 2>/dev/null || echo 'không đọc được phản hồi')
+               echo "::warning::tro-ly-ai trả HTTP $HTTP trên $MOI_TRUONG: $MSG"; echo "Lỗi: $MSG" >> "$GITHUB_STEP_SUMMARY" ;;
+          esac
