@@ -41,7 +41,7 @@ const KHU = {
   qtKhuNgayNghi: { tab: 'qtTabNgayNghi', cho: (u) => u.quan_tri_he_thong || (u.role_group === 'A1' && isChief()), ve: renderNgayNghi },   // PR-2b
   qtKhuNhatKy: { tab: 'qtTabNhatKy', cho: (u) => u.quan_tri_he_thong || laNguoiNhap(u), ve: renderNhatKy },
   qtKhuDonDuLieu: { tab: 'qtTabDonDuLieu', cho: (u) => u.quan_tri_he_thong, ve: renderDonDuLieu },
-  qtKhuNhatKyHeThong: { tab: 'qtTabNhatKyHeThong', cho: (u) => u.quan_tri_he_thong, ve: renderNhatKyHeThong },
+  qtKhuNhatKyHeThong: { tab: 'qtTabNhatKyHeThong', cho: (u) => u.quan_tri_he_thong, ve: renderNhatKyHeThong, khiMo: true },   // v3.25: đọc lại mỗi lần mở (thấy ngay thao tác vừa làm)
   qtKhuThongKe: { tab: 'qtTabThongKe', cho: (u) => u.quan_tri_he_thong, ve: renderThongKe, khiMo: true },   // v3.24 (0104); khiMo: chỉ nạp khi đang mở tab
 };
 export const coQuyenQuanTri = (u) => Boolean(u) && Object.values(KHU).some((k) => k.cho(u));
