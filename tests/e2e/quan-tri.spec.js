@@ -28,6 +28,8 @@ test.describe.serial('Quản trị: cấp/thu quyền thư ký Thường trực 
   let coLinhVuc = false;
   test.beforeAll(async () => {
     coLinhVuc = !(await dbAdmin().from('dm_linh_vuc').select('ma').limit(1)).error;
+    // Lĩnh vực thử RLS-11 còn sót (lượt RLS bị ngắt giữa chừng) làm ngành 8 hiện 5 ô thay vì 4 — dọn trước (bộ đêm chạy e2e trước RLS).
+    if (coLinhVuc) await dbAdmin().from('dm_linh_vuc').delete().like('ma', 'LV08_RLS_TEST%');
   });
   test.beforeEach(() => {
     test.skip(!existsSync(storageStatePath('QTHT')), 'Chưa có demo_qtht trên project này (chạy sau khi merge 0013 + nạp seed).');

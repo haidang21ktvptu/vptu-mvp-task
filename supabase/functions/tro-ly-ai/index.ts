@@ -11,8 +11,8 @@
 // Giới hạn lượt / ngày theo cau_hinh_ai: ai_giu_luot giữ lượt TRƯỚC khi gọi AI (khoá tư vấn — yêu cầu đồng thời không vượt), ai_xong_luot ghi kết quả.
 // Giả lập (gia_lap) chỉ khi secret AI_CHO_PHEP_GIA_LAP = 1 (Supabase cục bộ, CI).
 // Trần độ dài kết quả (max_tokens) để rộng: Claude 5.x suy nghĩ thích ứng (Opus 5.5 luôn bật), phần suy nghĩ tính vào trần — trần hẹp làm văn bản nhiều
-// nhiệm vụ bị cắt. Thời gian chờ đọc văn bản: 135 giây (gói Free giới hạn 150 giây); project gói trả phí (giới hạn 400 giây) đặt secret AI_HET_GIO_GIAY
-// (60–390) để chờ lâu hơn khi dùng mô hình / mức suy nghĩ cao.
+// nhiệm vụ bị cắt. Hạn đọc văn bản 140 giây tính từ lúc nhận yêu cầu: Supabase trả 504 khi function chưa trả lời sau 150 giây (request idle timeout — mọi gói,
+// kể cả gói trả phí cho function chạy tới 400 giây), nên chờ lâu hơn không có ích. Đo trên staging 17/10/2026: Opus 5.5 mức cao đọc 28 trang hết 87 giây.
 // Deploy: supabase functions deploy tro-ly-ai --project-ref <ref> (deploy-staging.yml / deploy-prod.yml).
 import { taoCsdl, napDanhMuc } from './csdl.js';
 import { NHA_CUNG_CAP, goiAi, LoiAi } from './nha-cung-cap.js';
@@ -32,21 +32,22 @@ const anon = Deno.env.get('SUPABASE_ANON_KEY') || '';
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const csdl = taoCsdl({ url, anon, service });
 const choGiaLap = Deno.env.get('AI_CHO_PHEP_GIA_LAP') === '1';
-const hetGioDoc = Math.min(390, Math.max(60, Number(Deno.env.get('AI_HET_GIO_GIAY')) || 135)) * 1000;
+// Hạn đọc văn bản tính từ lúc nhận yêu cầu (gồm tải tệp ảnh lên, đọc CSDL): 140 giây — còn chỗ ghi nhật ký lượt và trả lỗi tiếng Việt trước mốc 150 giây.
+const hetGioDoc = (batDau: number) => Math.max(5000, 140000 - (Date.now() - batDau));
 
 const giuLuot = (nguoi: string | null, hanhDong: string, p: Record<string, unknown> = {}) => csdl.rpc('ai_giu_luot', { p_nguoi: nguoi, p_hanh_dong: hanhDong, p });
 function xongLuot(id: number | null | undefined, p: Record<string, unknown>) {
   return id ? csdl.rpc('ai_xong_luot', { p_id: id, p }).catch(() => null) : Promise.resolve(null);   // nhật ký lỗi không làm hỏng kết quả
 }
 
-async function docVanBan(body: any, ch: CauHinh, khoa: string | null) {
+async function docVanBan(body: any, ch: CauHinh, khoa: string | null, batDau: number) {
   if (!ch.gui_noi_dung) throw new LoiAi('Cấu hình hiện không cho gửi nội dung văn bản tới dịch vụ AI.', { status: 403, ma: 'KHONG_GUI' });
   const chu = String(body.chu || '').slice(0, TOI_DA_KY_TU);
   const anh = Array.isArray(body.anh) ? body.anh.slice(0, 12).filter((a: any) => /^image\/(jpeg|png|webp)$/.test(a?.media) && typeof a?.data === 'string' && a.data.length < 3_000_000) : [];
   if (!chu.trim() && !anh.length) throw new LoiAi('Không đọc được chữ hay ảnh nào từ tệp.', { status: 400, ma: 'TRONG' });
   const dm = await napDanhMuc(csdl, LOAI_VAN_BAN);
   const r = await goiAi(ch, khoa, { heThong: HE_THONG_DOC, noiDung: noiDungDoc(dm.day, chu, String(body.ten_tep || 'van-ban.pdf').slice(0, 120), anh.length > 0),
-    anh: chu.trim() ? [] : anh, schema: luocDoDocVanBan(dm.ma), tenSchema: 'doc_van_ban', toiDa: 32000 }, { giaLap: choGiaLap ? giaLap : null, hetGio: hetGioDoc });
+    anh: chu.trim() ? [] : anh, schema: luocDoDocVanBan(dm.ma), tenSchema: 'doc_van_ban', toiDa: 32000 }, { giaLap: choGiaLap ? giaLap : null, hetGio: hetGioDoc(batDau) });
   return { ket_qua: xacMinhKetQua(r.json, chu, dm.xacMinh), vao: r.vao, ra: r.ra };
 }
 
@@ -83,6 +84,7 @@ async function hocDem(ch: CauHinh, khoa: string | null) {
 }
 
 Deno.serve(async (req) => {
+  const batDau = Date.now();
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return loi('Chỉ nhận POST.', 405);
   const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
@@ -120,7 +122,7 @@ Deno.serve(async (req) => {
     const bd = Date.now();
     try {
       let kq: any;
-      if (hd === 'doc_van_ban') kq = await docVanBan(body, ch, khoa);
+      if (hd === 'doc_van_ban') kq = await docVanBan(body, ch, khoa, batDau);
       else if (hd === 'soan_quy_tac') kq = await soanQuyTac(String(body.ma || ''), ch, khoa);
       else {
         const r = await goiAi(ch, khoa, { heThong: 'Trả lời bằng tiếng Việt, rất ngắn.', noiDung: 'Kiểm tra kết nối: chào một câu.', schema: { type: 'object', additionalProperties: false,
