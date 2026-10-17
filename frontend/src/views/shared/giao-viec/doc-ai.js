@@ -112,7 +112,7 @@ async function docTep(f) {
     let anh = [];
     if (banChup) { tt('Tệp là bản chụp — đang chuẩn bị ảnh các trang…'); anh = await anhCacTrang(f, { toiDa: 8 }); if (!anh.length) throw new Error('không đọc được trang nào của tệp'); }
     if (cu()) return;
-    tt(`Trợ lý AI đang đọc ${doc.soTrang} trang — thường mất 20–90 giây, đồng chí chờ trong giây lát…`);
+    tt(`Trợ lý AI đang đọc ${doc.soTrang} trang — thường mất từ 20 giây đến 2 phút, đồng chí vui lòng chờ…`);
     const r = await docVanBanAi({ ten_tep: f.name, chu: banChup ? '' : doc.chu, anh, so_trang: doc.soTrang }); if (cu()) return;
     Object.assign(da, { kq: r.ket_qua, tep: f.name, soTrang: doc.soTrang, moHinh: r.mo_hinh || '', ncc: r.nha_cung_cap || '', banChup, vbCo: null,
       vbDaDien: new Set(), the: new Map(), daGiao: new Set(), vbId: null });

@@ -11,8 +11,8 @@
 // Giới hạn lượt / ngày theo cau_hinh_ai: ai_giu_luot giữ lượt TRƯỚC khi gọi AI (khoá tư vấn — yêu cầu đồng thời không vượt), ai_xong_luot ghi kết quả.
 // Giả lập (gia_lap) chỉ khi secret AI_CHO_PHEP_GIA_LAP = 1 (Supabase cục bộ, CI).
 // Trần độ dài kết quả (max_tokens) để rộng: Claude 5.x suy nghĩ thích ứng (Opus 5.5 luôn bật), phần suy nghĩ tính vào trần — trần hẹp làm văn bản nhiều
-// nhiệm vụ bị cắt. Thời gian chờ đọc văn bản: 135 giây (gói Free giới hạn 150 giây); project gói trả phí (giới hạn 400 giây) đặt secret AI_HET_GIO_GIAY
-// (60–390) để chờ lâu hơn khi dùng mô hình / mức suy nghĩ cao.
+// nhiệm vụ bị cắt. Thời gian chờ đọc văn bản cố định 135 giây: Supabase trả 504 khi function chưa trả lời sau 150 giây (request idle timeout — mọi gói,
+// kể cả gói trả phí cho function chạy tới 400 giây), nên chờ lâu hơn không có ích. Đo trên staging 17/10/2026: Opus 5.5 mức cao đọc 28 trang hết 87 giây.
 // Deploy: supabase functions deploy tro-ly-ai --project-ref <ref> (deploy-staging.yml / deploy-prod.yml).
 import { taoCsdl, napDanhMuc } from './csdl.js';
 import { NHA_CUNG_CAP, goiAi, LoiAi } from './nha-cung-cap.js';
@@ -32,7 +32,7 @@ const anon = Deno.env.get('SUPABASE_ANON_KEY') || '';
 const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const csdl = taoCsdl({ url, anon, service });
 const choGiaLap = Deno.env.get('AI_CHO_PHEP_GIA_LAP') === '1';
-const hetGioDoc = Math.min(390, Math.max(60, Number(Deno.env.get('AI_HET_GIO_GIAY')) || 135)) * 1000;
+const hetGioDoc = 135000;   // dưới 150 giây chờ của Supabase — còn chỗ trả lỗi tiếng Việt và ghi nhật ký lượt
 
 const giuLuot = (nguoi: string | null, hanhDong: string, p: Record<string, unknown> = {}) => csdl.rpc('ai_giu_luot', { p_nguoi: nguoi, p_hanh_dong: hanhDong, p });
 function xongLuot(id: number | null | undefined, p: Record<string, unknown>) {
