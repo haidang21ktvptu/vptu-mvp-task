@@ -100,9 +100,11 @@ export const kiemSoHoiNghi = (giaTri, trich) => {
 
 const cat = (s, n) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 const cungSo = (a, b) => Boolean(a) && chuanTrich(boDau(a)) === chuanTrich(boDau(b));
-// Giá trị khác của chính nhiệm vụ (chủ trì, từng đơn vị phối hợp, mô tả sản phẩm, câu thời hạn) — dòng sau mở đầu bằng chúng là ô khác của dòng bảng.
-const ranhCua = (n) => [cat(n?.don_vi_chu_tri, 200), ...cat(n?.don_vi_phoi_hop, 300).split(';'), cat(n?.mo_ta_san_pham, 200)].map(chuanTrich)
-  .filter((x) => x.length >= 4).map((dau) => ({ dau })).concat(chuanTrich(n?.trich_han).length >= 6 ? [{ dau: chuanTrich(n.trich_han), han: true }] : []);
+// Dấu hiệu "ô khác của dòng bảng" (van-ban-goc.js noiDong): tên cơ quan chủ trì / phối hợp của MỌI nhiệm vụ AI tách (rà soát độc lập lần 4: ô chủ trì gồm
+// hai cơ quan, mỗi nhiệm vụ một cơ quan) + câu thời hạn của chính nhiệm vụ. Không dùng mô tả sản phẩm (AI thường lấy từ chính nội dung).
+const coQuanCua = (ds) => [...new Set(ds.flatMap((n) => [cat(n?.don_vi_chu_tri, 200), ...cat(n?.don_vi_phoi_hop, 300).split(';')]).map(chuanTrich))]
+  .filter((x) => x.length >= 4).map((dau) => ({ dau }));
+const ranhCua = (n, coQuan) => coQuan.concat(chuanTrich(n?.trich_han).length >= 6 ? [{ dau: chuanTrich(n.trich_han), han: true }] : []);
 // Giá trị phải nằm trong khoảng của nhiệm vụ (nhieu: danh sách cách nhau bằng ";" — từng mục); điền chữ của tệp (trừ khi tệp mất dấu).
 function trongNhiemVu(goc, ks, g, nhieu = false) {
   if (!g || !ks) return { gia_tri: g, xac_minh: false };
@@ -145,7 +147,7 @@ export function xacMinhKetQua(kq, chu, dm) {
     .filter((m) => m.ma).map((m) => ({ ...m, xac_minh: coTrong(bo, m.trich) })).slice(0, 10);
   // Nhiệm vụ: định vị theo thứ tự văn bản (nhiệm vụ sau tìm từ chỗ nhiệm vụ trước kết thúc); khoảng của mỗi việc dừng ở việc kế tiếp.
   const vao = (Array.isArray(kq?.nhiem_vu) ? kq.nhiem_vu : []).slice(0, 60).filter((n) => cat(n?.noi_dung, 3000));
-  let tu = 0;
+  let tu = 0; const coQuan = coQuanCua(vao);
   const tim = vao.map((n) => { const k = goc.co ? timNhiemVu(goc, cat(n.noi_dung, 3000), tu) : null; if (k) tu = k.phan.at(-1).e; return k; });
   const dauChinh = tim.map((k) => (k ? k.phan.at(-1).s : null));
   const ke = tim.map((k, j) => {
@@ -156,7 +158,7 @@ export function xacMinhKetQua(kq, chu, dm) {
   });
   const nhiemVu = vao.map((n, j) => {
     const nd = cat(n.noi_dung, 3000); const k = tim[j]; const ks = ke[j];
-    const v = k ? giaTriDien(goc, k, nd) : null; const tiep = k ? conTiep(goc, k.phan.at(-1), ranhCua(n)) : null;
+    const v = k ? giaTriDien(goc, k, nd) : null; const tiep = k ? conTiep(goc, k.phan.at(-1), ranhCua(n, coQuan)) : null;
     const han = ngayHopLe(n?.han) ? n.han : ''; const tHan = cat(n?.trich_han, 400);
     const viTriHan = han && ks ? trongKhoang(goc, ks, tHan) : null;   // câu thời hạn trong chính nhiệm vụ → kiểm ngày trên CHỮ CỦA TỆP ở chỗ đó
     const hanTk = viTriHan && kiemHan(han, chuDoan(goc, viTriHan.s, viTriHan.e)) ? viTriHan : null;

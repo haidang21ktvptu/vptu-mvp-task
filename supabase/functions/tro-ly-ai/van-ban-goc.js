@@ -14,7 +14,7 @@ export const HET_DONG = /[.;:!?][)\]”"’»]*$/;
 // I); "Sở / Ban / Văn phòng / Thường vụ…" khi dòng sau viết hoa. Ký hiệu đầu ý (laMucDong) chỉ xét giới từ, từ chỉ lượng, "số / năm…", "Sở / Ban…".
 // Giới từ, động từ chỉ tính chữ thường ("Cao Bằng" không phải giới từ "bằng", ô "Báo cáo" không treo).
 const TREO_TU = /(?:^|[\s(“"])(?:của|cho|tại|về|trong|với|theo|đến|tới|từ|trên|dưới|vào|ở|qua|sau|trước|và|hoặc|hay|cùng|nhưng|mà|để|nhằm|các|những|mọi|mỗi|từng|một|là|có|được|bị|sẽ|đã|đang|cần|phải|đối với|bảo đảm|đảm bảo|gồm|như|thuộc|giữa|bằng|do|nếu|khi|thì|rằng)$/u;
-const TREO_DT = /(?:^|[\s(“"])(?:phối hợp|chủ trì|tham mưu|báo cáo|(?<!(?:chương|quy|công|tờ|lộ|hành) )trình|gửi|hướng dẫn|xin ý kiến)$/u;
+const TREO_DT = /(?:^|[\s(“"])(?:phối hợp|chủ trì|tham mưu|báo cáo|(?<!(?:chương|quy|công|tờ|lộ|hành) )trình|gửi|hướng dẫn|xin ý kiến|hoàn thành)$/u;
 const TREO_SO = /(?:^|[\s(])(?:số|năm|ngày|tháng|quý|giai đoạn|lần thứ|khoản|điểm|mục|điều|khóa|khoá|nhiệm kỳ|đợt)$/iu;
 const TREO_CQ = /(?:^|\s)(?:Sở|Ban|Bộ|Cục|Ủy ban|Uỷ ban|Văn phòng|Thường vụ|Thường trực|Chấp hành)$/u;
 export const treo = (dong, sau = '', { phay = true, dongTu = true } = {}) => { const d = dong.trimEnd();
@@ -160,25 +160,25 @@ const THUOC_TINH = /^(?:Thời hạn|Thời gian|Hạn hoàn thành|Hoàn thành
 const dongTruoc = (t, k) => t.slice(dauDong(t, k), k);
 const laYMoi = (goc, p) => goc.dauMuc.has(p) || (CAU_MOI.test(goc.text.slice(p, p + 16))
   && !(goc.text[p - 1] === '\n' && treo(dongTruoc(goc.text, p - 1), goc.text.slice(p, p + 16), { dongTu: false })));
-// Dòng sau là ô khác / chỗ khác, không nối câu: khớp đầu giá trị chủ trì / phối hợp / mô tả của chính nhiệm vụ hoặc nằm trong câu thời hạn của nó (ranh:
-// [{ dau: chuỗi chuẩn hoá, han }] — xac-minh.js), ô thời gian ("Quý I/2027", "Tháng 12/2026", "Thường xuyên", ngày), số thứ tự dòng bảng mới ("2 Tổ chức…"),
-// dòng viết hoa toàn bộ (tiêu đề, chữ ký), câu giao việc mới ("Giao Sở …").
+// Dòng sau là ô khác của dòng bảng (chỉ xét khi dòng trước NGẮN — ô bảng; văn xuôi xuống dòng ở dòng dài): khớp đầu tên cơ quan chủ trì / phối hợp của các
+// nhiệm vụ hoặc nằm trong câu thời hạn của chính nhiệm vụ (ranh: [{ dau: chuỗi chuẩn hoá, han }] — xac-minh.js), ô thời gian ("Quý I/2027", "Tháng
+// 12/2026", "Thường xuyên", ngày), số thứ tự dòng bảng mới ("2 Tổ chức…"). Mọi dòng: viết hoa toàn bộ (tiêu đề, chữ ký), câu giao việc mới ("Giao Sở …").
 const O_HAN = /^(?:Thường xuyên|Hằng (?:năm|quý|tháng|tuần)|Hàng (?:năm|quý|tháng|tuần)|Định kỳ|Trước ngày|Trong (?:tháng|quý|năm)|Tháng \d|Quý (?:[IVX]+|\d)|Năm \d{4}|\d{1,2}[/.-]\d{1,2}[/.-]\d{4})/u;
 const CHU_HOA = /^[^\p{Ll}]*\p{Lu}[^\p{Ll}]*\p{Lu}[^\p{Ll}]*$/u;
 const laRanh = (sau, ranh) => { const s = chuanTrich(sau);
   return s.length >= 3 && ranh.some(({ dau, han }) => (han ? s.length >= 6 && dau.includes(s.slice(0, 16)) : dau.startsWith(s.slice(0, 12)) || s.startsWith(dau.slice(0, 12)))); };
 // Xuống dòng ở k (t[k] = "\n") còn nối câu / ô bảng? Không: ý mới, dòng trước hết câu / là câu dẫn, dấu ; cuối dòng (trừ khi dòng sau viết thường), dòng
-// sau là ô khác / chỗ khác (laRanh, O_HAN…). Có: dòng trước treo; còn lại (không có dấu hiệu hết câu, hết ô) cũng coi là còn tiếp — không tự điền, người giao
-// xem phần còn tiếp (rà soát độc lập lần 3: ô bảng bị cắt trước dòng viết hoa không còn bị tự điền).
+// sau là ô khác (o). Có: dòng trước treo; còn lại (không có dấu hiệu hết câu, hết ô) cũng coi là còn tiếp — không tự điền, người giao xem phần còn tiếp
+// (rà soát độc lập lần 3: ô bảng bị cắt trước dòng viết hoa không còn bị tự điền; lần 4: dấu hiệu "ô khác" không áp cho văn xuôi).
 export function noiDong(goc, k, ranh = []) {
   const t = goc.text; const dong = dongTruoc(t, k).trimEnd(); const e = t.indexOf('\n', k + 1); const sau = t.slice(k + 1, e < 0 ? t.length : e);
   let j = k - 1; while (j >= 0 && /[)\]”"’»\s]/.test(t[j])) j -= 1;
   if (!sau || goc.dauMuc.has(k + 1) || t[j] === ':' || hetCauTai(goc, j)) return false;
-  const r = laRanh(sau, ranh);
-  if (/;[)\]”"’»]*$/.test(dong)) return /^\p{Ll}/u.test(sau) && !r;
+  const o = dong.length < 55 && (laRanh(sau, ranh) || O_HAN.test(sau) || /^[1-9]\d{0,2} \p{Lu}/u.test(sau));
+  if (/;[)\]”"’»]*$/.test(dong)) return /^\p{Ll}/u.test(sau) && !o;
   if (CHU_HOA.test(sau)) return false;
   if (treo(dong, sau)) return true;
-  return !(r || CAU_MOI.test(sau) || O_HAN.test(sau) || /^\d{1,3} \p{Lu}/u.test(sau));
+  return !(o || CAU_MOI.test(sau));
 }
 // Hết câu ở k: dấu . ! ? (rồi các ngoặc đóng) rồi khoảng trắng → vị trí ngay sau đó; không phải hết câu → 0 ("1.500", dấu chấm của ký hiệu "2.1.", của chữ
 // viết tắt "TP. Cao Bằng", "TX.", "ThS.").
@@ -202,7 +202,7 @@ export function hetCau(goc, i, theoDong = false, ranh = []) {
 }
 // Câu trong văn bản còn tiếp sau đoạn khớp? → null | { chu: phần còn tiếp đến hết câu, dan: đoạn khớp là câu dẫn (sau là dấu hai chấm + các ý) }.
 // Dấu phẩy, dấu ; giữa dòng: còn tiếp (", báo cáo … trước ngày …", "; hoàn thành trong quý IV" — người giao chọn "Dùng trọn câu" hoặc "Dùng phần trợ lý AI
-// tách"); xuống dòng: theo noiDong (ranh: các giá trị khác của chính nhiệm vụ — xem laRanh).
+// tách"); xuống dòng: theo noiDong (ranh: tên cơ quan chủ trì / phối hợp của các nhiệm vụ, câu thời hạn của chính nhiệm vụ — xem laRanh).
 export function conTiep(goc, d, ranh = []) {
   const t = goc.text; let i = d.b;
   while (i < t.length && /[)\]”"’»]/.test(t[i])) i += 1;

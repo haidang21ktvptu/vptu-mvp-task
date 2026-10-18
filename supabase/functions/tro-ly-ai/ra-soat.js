@@ -6,10 +6,10 @@ import { boDau, chuanTrich } from './chuan-hoa.js';
 import { trangCua, viTriChuan, capCua, treo, hetCauTai, HET_DONG } from './van-ban-goc.js';
 
 // Dấu hiệu mạnh: "Giao <cơ quan>" (không tính "Tuyên giáo", "được giao", "bàn giao", "giao thông"…), "đề nghị / yêu cầu <cơ quan>", "chủ trì", "tham mưu",
-// "chịu trách nhiệm" (không tính "đã / được chủ trì tham mưu" — câu đánh giá). Dấu hiệu yếu (thời hạn) chỉ tính khi không nằm ngay sau một nhiệm vụ đã tách.
+// "chịu trách nhiệm" (không tính "đã / được / tích cực chủ trì, tham mưu" — câu đánh giá). Dấu hiệu yếu (thời hạn) chỉ tính khi không nằm ngay sau một nhiệm vụ đã tách.
 const MANH = [/(?:^|[^\p{L}])(?<!(?:[Tt]uyen|[Tt]on|[Nn]goai|[Bb]an|[Cc]huyen|[Dd]uoc|[Dd]a|[Vv]ua|[Tt]ung|[Mm]oi) )[Gg]iao\s+(?:cho\s+)?(?:\p{Lu}|cac\s)/u,
   /(?:^|[^\p{L}])(?:[Dd]e nghi|[Yy]eu cau)\s+(?:\p{Lu}|cac\s)/u,
-  /(?:^|[^\p{L}])(?<!(?:[Dd]a|[Dd]uoc|[Tt]ung)(?: \p{L}+){0,2} )(?:chu tri|tham muu|chiu trach nhiem)(?![\p{L}])/u];
+  /(?:^|[^\p{L}])(?<!(?:[Dd]a|[Dd]uoc|[Tt]ung|[Tt]ich cuc)(?: \p{L}+){0,2} )(?:chu tri|tham muu|chiu trach nhiem)(?![\p{L}])/u];
 const YEU = /(?:^|[^\p{L}])(?:[Tt]ruoc ngay|[Tt]hoi han|[Hh]oan thanh (?:truoc|trong|xong))(?![\p{L}])/u;
 const DAN_GIAO = /(?:de nghi|yeu cau|giao|chi dao|thuc hien|trien khai|tap trung|nhiem vu|chu tri|tham muu)[^.;:]{0,80}:$/i;
 // Câu kết chung: "… yêu cầu / đề nghị các cơ quan, đơn vị (nghiêm túc / quan tâm, phối hợp / biết,) thực hiện (kết luận này)." — giữa chỉ có từ chung chung.
@@ -22,16 +22,20 @@ const laCauKet = (bd) => {
 const giao = (a, b, c, d) => Math.max(0, Math.min(b, d) - Math.max(a, c));
 // Ý không ký hiệu mở bằng tên cơ quan (người được giao) — không tính Ban Thường vụ, Ban Chấp hành, Thường trực (cơ quan ban hành).
 const CQ_DAU = /^(?!Ban (?:Thường vụ|Chấp hành))(?:Ban|Sở|Bộ|Cục|Ủy ban|Uỷ ban|Văn phòng|Đảng ủy|Đảng uỷ|Đảng đoàn|Công an|Huyện ủy|Thành ủy|Tỉnh đoàn|Hội|Liên đoàn|Mặt trận|Kho bạc|Ngân hàng|Trường|Báo|Đài|Tòa án|Viện|Hội đồng|Các (?:cơ quan|sở|ban|đơn vị|cấp ủy|huyện ủy|địa phương|tổ chức)) /u;
+// Câu đánh giá (nhận xét kết quả, không giao việc) — "đã …", "cơ bản hoàn thành", "tuy nhiên", "còn chậm / hạn chế" (rà soát độc lập lần 4).
+const DANH_GIA = /(?:^|[\s,])(?:đã|tuy nhiên|cơ bản hoàn thành|còn chậm|còn hạn chế|còn khó khăn|còn tồn tại|có chuyển biến|đạt kết quả|được đánh giá|nhìn chung)(?=[\s,.;]|$)/iu;
 const tuCua = (s) => new Set(boDau(String(s || '')).toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 2));
 const soCua = (s) => new Set((String(s || '').match(/\d+/g) || []).map((x) => x.replace(/^0+(?=\d)/, '')));
 
 // Đơn vị rà: một câu, hoặc một ý liệt kê — cắt sau . ! ? (không tính dấu chấm của ký hiệu "2.1.", "TP."), sau ":" / ";" cuối dòng, trước mỗi ý mới, trước
-// dòng câu dẫn mở bằng chữ hoa ("Ban Thường vụ Tỉnh ủy đề nghị:", "Nơi nhận:") khi dòng trước thiếu dấu câu mà không treo (ý cuối không có dấu chấm).
+// dòng câu dẫn mở đầu câu mới ("Ban Thường vụ Tỉnh ủy đề nghị:", "Đề nghị các cơ quan:") khi dòng trước thiếu dấu câu mà không treo (ý cuối không có dấu
+// chấm) — không cắt câu dẫn bị xuống dòng trước tên riêng ("… Dân vận\nTỉnh ủy lãnh đạo, chỉ đạo …:" — rà soát độc lập lần 4).
+const DAU_CAU = '(?:Ban Thường vụ|Ban Chấp hành|Thường trực|Giao|Đề nghị|Yêu cầu|Các|Để|Thực hiện|Căn cứ|Sau khi|Đối với|Ngoài ra|Đồng thời)';
 function cacCau(goc) {
   const t = goc.text; const cat = new Set(goc.muc.map(([x]) => x));
   for (const m of t.matchAll(/[.!?]/g)) { const h = hetCauTai(goc, m.index); if (h) cat.add(h); }
   for (const m of t.matchAll(/[:;](?=\n)/g)) cat.add(m.index + 1);
-  for (const m of t.matchAll(/\n(?=\p{Lu}[^\n]*:\n)/gu)) {
+  for (const m of t.matchAll(new RegExp(`\\n(?=${DAU_CAU} [^\\n]*:\\n)`, 'gu'))) {
     const p = t.lastIndexOf('\n', m.index - 1) + 1; const dong = t.slice(p, m.index);
     if (!HET_DONG.test(dong) && !treo(dong, t.slice(m.index + 1, m.index + 17))) cat.add(m.index + 1);
   }
@@ -71,7 +75,7 @@ export function raSoat(goc, tim, ke, nv, dauVb) {
         dg = danGiao(dan); chuoi = null;
       } else if (laDan) dan.length = 0;
       else if (chuoi && (a + lech === 0 || t[a + lech - 1] === '\n')) {   // ý không ký hiệu (mở đầu dòng): danh sách "…;" hoặc đoạn mở bằng tên cơ quan
-        const y = chu.endsWith(';'); const cq = CQ_DAU.test(chu) && !/(?:^|\s)đã\s/u.test(chu);   // không phải câu đánh giá "… đã …"
+        const y = chu.endsWith(';'); const cq = CQ_DAU.test(chu) && !DANH_GIA.test(chu);   // không phải câu đánh giá
         if (y || chuoi.ds || cq) dg = chuoi.x.giao ? chuoi.x : null;
         chuoi = y || cq ? { x: chuoi.x, ds: y } : null;
       }
@@ -94,20 +98,21 @@ export function raSoat(goc, tim, ke, nv, dauVb) {
         && !MANH.some((r) => r.test(boDau(td[1])))) tho = tho.slice(td[0].length);
       const y = tho.replace(/\s+/g, ' ').trim().replace(/\s*[;,]$/, '');
       const noi = (dg && dg.chu.length <= 300 ? `${dg.chu} ${y}` : y).slice(0, 1500);
-      ung.push({ trang: trangCua(goc, a), chu: noi, tu: tuCua(noi), so: soCua(noi), a, b });
+      ung.push({ trang: trangCua(goc, a), chu: noi, tu: tuCua(noi), tuY: tuCua(y), so: soCua(noi), a, b });
     }
   }
-  // Nhiệm vụ AI đã tách nhưng chép khác văn bản (không định vị được) che câu giống nhất (cùng các số, có tên đơn vị chủ trì, trùng ≥ 60% từ hoặc ≥ 85% từ của
-  // câu nằm trong nhiệm vụ) và các ý liền kề nằm gọn trong nhiệm vụ (nhiệm vụ gồm câu dẫn + nhiều ý). Không che câu ở chỗ khác chỉ giống phần chữ chung chung
-  // (rà soát độc lập lần 2: một nhiệm vụ chép khác làm mất cảnh báo nhiệm vụ bị sót; lần 3: nhiệm vụ nhiều ý chép khác vẫn báo sót các ý của nó).
+  // Nhiệm vụ AI đã tách nhưng chép khác văn bản (không định vị được) che câu giống nhất (cùng các số, có tên đơn vị chủ trì, trùng ≥ 60% từ hoặc ≥ 85% từ
+  // của chính ý — không tính câu dẫn ghép vào — nằm trong nhiệm vụ) và các ý liền kề nằm gọn trong nhiệm vụ (nhiệm vụ gồm câu dẫn + nhiều ý). Không che câu ở
+  // chỗ khác chỉ giống phần chữ chung chung (rà soát độc lập lần 2, 3, 4).
   const che = new Set();
   nv.forEach((n, j) => {
     const w = tuCua(n.noi_dung?.gia_tri);
     if (tim[j] || w.size < 6) return;
     const so = soCua(n.noi_dung?.gia_tri); const ct = tuCua(n.don_vi_chu_tri?.gia_tri);
+    const ky = String(n.noi_dung?.gia_tri || ''); const wY = tuCua(ky.includes(':') ? ky.slice(ky.indexOf(':') + 1) : ky);   // phần ý của nhiệm vụ (sau câu dẫn)
     const con = (x, y) => [...x].every((v) => y.has(v));
     const hop = (u) => (con(u.so, so) || con(so, u.so)) && con(ct, u.tu);
-    const chua = (u) => [...u.tu].filter((x) => w.has(x)).length / Math.max(1, u.tu.size);
+    const chua = (u) => [...u.tuY].filter((x) => wY.has(x)).length / Math.max(1, u.tuY.size);   // chữ của chính ý nằm trong phần ý của nhiệm vụ
     const jac = (u) => { const c = [...w].filter((x) => u.tu.has(x)).length; return c / (w.size + u.tu.size - c); };
     let tot = -1; let diem = 0;
     ung.forEach((u, k) => { if (!che.has(k) && hop(u) && (jac(u) >= 0.6 || chua(u) >= 0.85) && jac(u) > diem) { diem = jac(u); tot = k; } });

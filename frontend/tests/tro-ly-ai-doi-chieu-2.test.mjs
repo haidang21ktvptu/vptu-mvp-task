@@ -123,3 +123,40 @@ test('danh sách thiếu dấu câu: ý mở bằng số sau dòng dài vẫn l�
   assert.deepEqual(sot(xm(tb, [viec('Ban Tổ chức Tỉnh ủy rà soát quy hoạch cán bộ, báo cáo trước ngày 30/11/2026.')])).map((x) => x.slice(41, 60)), ['Ủy ban Kiểm tra Tỉn', 'Văn phòng Tỉnh ủy t']);
   assert.deepEqual([kiemHan('2026-12-31', 'triển khai trên địa bàn tỉnh đến hết ngày 31/12/2026'), kiemHan('2026-12-31', 'báo cáo Ủy ban nhân dân tỉnh tới ngày 31/12/2026')], [true, true]);
 });
+
+// Rà soát độc lập lần 4 (18/10/2026).
+test('văn xuôi (dòng dài): dòng sau trùng phối hợp / mô tả / câu thời hạn / "03 Đề án" vẫn là câu còn tiếp — không tự điền; ô chủ trì hai cơ quan không làm ô trọn thành "chưa trọn câu"', () => {
+  const P = 'Giao Sở Tài chính chủ trì rà soát, thẩm định toàn bộ danh mục các dự án đầu tư công giai đoạn 2026 – 2030, phối hợp chặt';
+  const chu = `${HD}\n- ${P}\nSở Xây dựng thẩm định các dự án, báo cáo Thường trực Tỉnh ủy trước ngày 30/11/2026.\n- Giao Văn phòng Tỉnh ủy theo dõi.`;
+  for (const them of [{ don_vi_phoi_hop: 'Sở Xây dựng' }, { mo_ta_san_pham: 'Sở Xây dựng thẩm định' }, { han: '2026-11-30', trich_han: 'Sở Xây dựng thẩm định các dự án' }]) {
+    const x = xm(chu, [viec(P, them)]).nhiem_vu[0];
+    assert.deepEqual([x.noi_dung.con_tiep, keHoachThe(x, {}).dien.noi_dung], ['Sở Xây dựng thẩm định các dự án, báo cáo Thường trực Tỉnh ủy trước ngày 30/11/2026.', undefined]);
+  }
+  const Q = 'Giao Ban cán sự đảng Ủy ban nhân dân tỉnh lãnh đạo, chỉ đạo các sở, ngành, địa phương xây dựng và trình ban hành';
+  const x = xm(`${HD}\n- ${Q}\n03 Đề án phát triển kinh tế cửa khẩu trong quý IV/2026.\n- Giao Văn phòng Tỉnh ủy theo dõi.`, [viec(Q)]).nhiem_vu[0];
+  assert.equal(x.noi_dung.con_tiep, '03 Đề án phát triển kinh tế cửa khẩu trong quý IV/2026.');
+  const D = 'THÔNG BÁO\ný kiến chỉ đạo của Thường trực Tỉnh ủy\nSTT Nội dung nhiệm vụ Cơ quan chủ trì Cơ quan phối hợp Thời gian\n1 Rà soát quy hoạch các khu\ndu lịch trọng điểm\n'
+    + 'Sở Văn hóa, Thể thao\nvà Du lịch; Sở Xây dựng\nỦy ban nhân dân\ncác huyện\nQuý I/2027\nNơi nhận:\n- Như trên.';
+  const f = (ct) => ({ don_vi_chu_tri: ct, don_vi_phoi_hop: 'Ủy ban nhân dân các huyện', han: '2027-03-31', trich_han: 'Quý I/2027' });
+  const kq = xm(D, [viec('Rà soát quy hoạch các khu du lịch trọng điểm', f('Sở Văn hóa, Thể thao và Du lịch')), viec('Rà soát quy hoạch các khu du lịch trọng điểm', f('Sở Xây dựng'))]);
+  assert.deepEqual(kq.nhiem_vu.map((n) => [n.noi_dung.con_tiep, n.han.xac_minh]), [[undefined, 'dung'], [undefined, 'dung']]);
+});
+
+test('rà sót: câu dẫn xuống dòng trước tên riêng không bị tách (giữ người được giao); câu đánh giá sau câu dẫn giao việc không báo; câu dẫn dài + ý a) chép khác vẫn báo ý b), c)', () => {
+  const L1 = 'Giao Ban cán sự đảng Ủy ban nhân dân tỉnh phối hợp với Ban Tuyên giáo và Dân vận';
+  const chu = `${HD}\n${L1}\nTỉnh ủy lãnh đạo, chỉ đạo thực hiện các nội dung sau:\na) Rà soát, điều chỉnh quy hoạch các khu du lịch trọng điểm của tỉnh;\n`
+    + 'b) Kiểm tra công tác bảo tồn di sản văn hóa các dân tộc, báo cáo trước ngày 30/11/2026.\nNơi nhận:\n- Như trên.';
+  const LEAD = `${L1} Tỉnh ủy lãnh đạo, chỉ đạo thực hiện các nội dung sau:`;
+  assert.deepEqual(sot(xm(chu, [viec(`${LEAD} Rà soát, điều chỉnh quy hoạch các khu du lịch trọng điểm của tỉnh;`)])),
+    [`${LEAD} Kiểm tra công tác bảo tồn di sản văn hóa các dân tộc, báo cáo trước ngày 30/11/2026.`]);
+  const tb = 'TỈNH ỦY CAO BẰNG\nSố 999-TB/TU\nCao Bằng, ngày 16 tháng 10 năm 2026\nTHÔNG BÁO\nkết luận của Thường trực Tỉnh ủy tại buổi làm việc với các cơ quan\n'
+    + 'Ngày 15/10/2026, Thường trực Tỉnh ủy làm việc với các cơ quan về tình hình thực hiện nhiệm vụ.\nSau khi nghe báo cáo, Thường trực Tỉnh ủy kết luận và giao nhiệm vụ như sau:\n'
+    + 'Sở Tài chính cơ bản hoàn thành các chỉ tiêu thu ngân sách 9 tháng năm 2026, tuy nhiên tiến độ giải ngân vốn đầu tư công còn chậm.\n'
+    + 'Sở Nội vụ tích cực tham mưu sắp xếp tổ chức bộ máy, bảo đảm tiến độ theo kế hoạch.\nGiao Sở Tài chính chủ trì đẩy nhanh tiến độ giải ngân, báo cáo trước ngày 30/11/2026.\nNơi nhận:\n- Như trên.';
+  assert.deepEqual(sot(xm(tb, [viec('Giao Sở Tài chính chủ trì đẩy nhanh tiến độ giải ngân, báo cáo trước ngày 30/11/2026.', { don_vi_chu_tri: 'Sở Tài chính' })])), []);
+  const LD = 'Giao Ban cán sự đảng Ủy ban nhân dân tỉnh lãnh đạo, chỉ đạo các sở, ngành, địa phương liên quan khẩn trương triển khai thực hiện có hiệu quả các nội dung trọng tâm sau đây:';
+  const c2 = `${HD}\n${LD}\na) Rà soát, điều chỉnh quy hoạch các khu, điểm du lịch trọng điểm của tỉnh;\nb) Chỉ đạo các địa phương rà soát, triển khai thực hiện có hiệu quả các nội dung trọng tâm về du lịch;\n`
+    + 'c) Kiểm tra an toàn thực phẩm dịp Tết Nguyên đán năm 2027.\nNơi nhận:\n- Như trên.';
+  const r = xm(c2, [viec(`${LD} Rà soát, điều chỉnh lại quy hoạch các khu và điểm du lịch trọng điểm trên địa bàn tỉnh;`, { don_vi_chu_tri: 'Ban cán sự đảng Ủy ban nhân dân tỉnh' })]);
+  assert.deepEqual(sot(r).map((x) => x.slice(LD.length + 1, LD.length + 15)), ['Chỉ đạo các đị', 'Kiểm tra an to']);
+});
