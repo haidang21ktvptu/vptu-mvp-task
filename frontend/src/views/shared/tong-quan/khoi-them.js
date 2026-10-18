@@ -32,10 +32,12 @@ export function noiBoHtml(than, moKhoi, phong = false) {
 
 // c: chatLuongDuLieu(rows). Không thiếu gì → không vẽ.
 export function duLieuHtml(c) {
-  const a = c.chuaMucTieu.length; const b = c.chuaNganh.length;
-  if (!a && !b) return '';
-  const phan = [a ? `${a} nhiệm vụ chưa gắn mục tiêu then chốt (gắn khi việc phục vụ một mục tiêu)` : '', b ? `${b} nhiệm vụ chưa có ngành, lĩnh vực` : ''].filter(Boolean).join('; ');
+  const a = c.chuaMucTieu.length; const b = c.chuaNganh.length; const x = (c.xongChuaNgay || []).length;
+  if (!a && !b && !x) return '';
+  const phan = [a ? `${a} nhiệm vụ chưa gắn mục tiêu then chốt (gắn khi việc phục vụ một mục tiêu)` : '', b ? `${b} nhiệm vụ chưa có ngành, lĩnh vực` : '',
+    x ? `${x} nhiệm vụ hoàn thành chưa có ngày hoàn thành (tính theo ngày giao, chưa xét được đúng hạn)` : ''].filter(Boolean).join('; ');
+  const khoi = [a ? 'khối 2' : '', b ? 'khối 3' : '', x ? 'tỷ lệ đúng hạn' : ''].filter(Boolean).join(', ');
   return `<div class="dl-tq n12" role="note" id="tqDuLieu"><svg class="dl-bieu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-    <span><b>Chất lượng dữ liệu:</b> ${phan} — số liệu khối ${[a ? 2 : 0, b ? 3 : 0].filter(Boolean).join(', ')} chưa đầy đủ.</span><span class="tq-day"></span>
+    <span><b>Chất lượng dữ liệu:</b> ${phan} — số liệu ${khoi} chưa đầy đủ.</span><span class="tq-day"></span>
     <button type="button" class="nut nho" ${mo({ t: 'cldl' })}>Xem các việc này</button></div>`;
 }

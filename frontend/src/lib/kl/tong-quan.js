@@ -1,8 +1,10 @@
 // Số liệu màn hình Tổng quan (giao diện v9, A0/A1/A2) — thuần tổng hợp trên các dòng v_nhiem_vu mà RLS đã trả về (DB-5: trạng thái từng dòng
 // do DB tính; ở đây chỉ lọc theo kỳ, đếm và nhóm). Không DOM, không Supabase; unit test ở frontend/tests/tong-quan.test.mjs.
-// Quy ước kỳ: "giao trong kỳ" theo ngày nhận văn bản (hoặc ngày ban hành, ngày tạo); "hoàn thành trong kỳ" theo ngày hoàn thành; việc đang mở
-// và cảnh báo luôn là hiện tại. Tỷ lệ đúng hạn = việc hoàn thành trong kỳ có kết quả Đúng hạn / việc hoàn thành trong kỳ đã được đánh giá.
-import { nhomCua, boSoThuTu } from './nhan.js';
+// Quy ước kỳ: "giao trong kỳ" theo ngày nhận văn bản (hoặc ngày ban hành, ngày tạo); "hoàn thành trong kỳ" theo ngày hoàn thành — việc hoàn
+// thành CHƯA RÕ NGÀY (nhập Excel "đã xong ngoài hệ thống") tính theo ngày giao (chủ dự án chọn 18/10/2026); việc đang mở (mọi việc chưa hoàn
+// thành, kể cả thường xuyên) và cảnh báo luôn là hiện tại → mỗi việc thuộc đúng một nhóm: hoàn thành hoặc đang thực hiện. Tỷ lệ đúng hạn = việc
+// hoàn thành trong kỳ có kết quả Đúng hạn / việc hoàn thành trong kỳ xét được đúng hạn (có hạn và ngày hoàn thành — ket_qua DUNG_HAN | TRE).
+import { boSoThuTu } from './nhan.js';
 import { homNayVN, soNgay } from './ngay.js';
 
 const SO_LA_MA = ['I', 'II', 'III', 'IV'];
@@ -34,14 +36,20 @@ const ngayCua = (ts) => (ts ? homNayVN(new Date(ts)) : null);
 export const ngayGiao = (r) => r.ngay_nhan_van_ban || r.ngay_ban_hanh || ngayCua(r.created_at);
 const trong = (d, k) => Boolean(d) && d >= k.tu && d <= k.den;
 export const laXong = (r) => r.nhom_dem === 'HOAN_THANH';
-export const laMo = (r) => !laXong(r) && nhomCua(r.nhom_dem).mo;
-export const xongTrongKy = (r, k) => laXong(r) && trong(r.ngay_hoan_thanh, k);
+// Kiểm tay 18/10: việc thường xuyên trước đây không vào "đang thực hiện" cũng không vào "hoàn thành" (40 việc mà 4 + 31) — nay mọi việc chưa
+// hoàn thành là đang thực hiện (như cây Theo văn bản); khối 3 vẫn tách "chưa có hạn, thường xuyên, chờ điều kiện" (mucMo 'khac').
+export const laMo = (r) => !laXong(r);
+export const ngayXong = (r) => r.ngay_hoan_thanh || ngayGiao(r);   // hoàn thành chưa rõ ngày → theo ngày giao (không tính đúng / trễ hạn)
+export const chuaRoNgayXong = (r) => laXong(r) && !r.ngay_hoan_thanh;
+export const xongTrongKy = (r, k) => laXong(r) && trong(ngayXong(r), k);
 const coDanhGia = (r) => r.ket_qua === 'DUNG_HAN' || r.ket_qua === 'TRE';
 const tyLe = (a, b) => (b ? Math.round((a / b) * 100) : null);
 
 // Mức của một việc ĐANG MỞ (một nhóm duy nhất, để các phần cộng đủ tổng): Đỏ đặc biệt → Đỏ → Vàng → chờ nghiệm thu → trong hạn (Xanh);
-// còn lại là "khác" — DB không áp mức cảnh báo (KHONG_AP_DUNG: cần điền hạn, chờ điều kiện, đang đính chính), không tính là trong hạn.
+// còn lại là "khác" — không áp mức cảnh báo (KHONG_AP_DUNG: cần điền hạn, chờ điều kiện, thường xuyên) và việc ĐANG ĐÍNH CHÍNH: DB (0077) vẫn
+// ghi mức Đỏ cho việc này nhưng màn Cần xử lý không tính là việc Đỏ (khâu "đang tra soát") — Tổng quan theo cùng quy tắc (rà soát 18/10).
 export function mucMo(r) {
+  if (r.nhom_dem === 'DANG_DINH_CHINH') return 'khac';
   if (r.muc_canh_bao === 'DO_DAC_BIET') return 'ddb';
   if (r.muc_canh_bao === 'DO') return 'do';
   if (r.muc_canh_bao === 'VANG') return 'vang';
@@ -49,6 +57,7 @@ export function mucMo(r) {
   return r.muc_canh_bao === 'XANH' ? 'trongHan' : 'khac';
 }
 const demMo = (mo) => mo.reduce((d, r) => { d[mucMo(r)]++; return d; }, { trongHan: 0, nt: 0, khac: 0, vang: 0, do: 0, ddb: 0 });
+export const laDoMo = (r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r));
 
 // Dải đầu trang + cơ cấu trạng thái.
 export function soLieuChinh(rows, k) {
@@ -57,7 +66,7 @@ export function soLieuChinh(rows, k) {
   const mo = rows.filter(laMo); const m = demMo(mo);
   return {
     giao: rows.filter((r) => trong(ngayGiao(r), k)).length, xong: xong.length, dungHan: dung, tre: dg.length - dung, chuaDanhGia: xong.length - dg.length,
-    tyLeDungHan: tyLe(dung, dg.length), dangMo: mo.length, mo: m, canhBao: m.vang + m.do + m.ddb,
+    chuaRoNgay: xong.filter(chuaRoNgayXong).length, tyLeDungHan: tyLe(dung, dg.length), dangMo: mo.length, mo: m, canhBao: m.vang + m.do + m.ddb,
   };
 }
 
@@ -93,9 +102,9 @@ export function theoNhom(rows, k, khoa) {
     if (!m.has(ma)) m.set(ma, { ma, ten, donVi, rows: [] });
     m.get(ma).rows.push(r);
   });
-  return [...m.values()].map((g) => {
+  return [...m.values()].map((g) => {   // tong = hoàn thành trong kỳ + đang làm — đúng bằng danh sách khi bấm tên (rà soát 18/10: trước là mọi kỳ)
     const s = soLieuChinh(g.rows, k);
-    return { ma: g.ma, ten: g.ten, donVi: g.donVi, tong: g.rows.length, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
+    return { ma: g.ma, ten: g.ten, donVi: g.donVi, tong: s.xong + s.dangMo, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
   }).filter((g) => g.dangMo + g.xong > 0)
     .sort((a, b) => b.ddb - a.ddb || b.do - a.do || b.vang - a.vang || (b.dangMo + b.xong) - (a.dangMo + a.xong) || a.ten.localeCompare(b.ten, 'vi'));
 }
@@ -115,21 +124,23 @@ export function theoCanBo(rows, k, phongCua = {}, tenPhong = {}) {
   cb.forEach((d) => m.get(d.donVi || '')?.canBo.push(d));
   return [...m.values()].map((p) => {
     const s = soLieuChinh(p.rows, k); const soCanBo = p.canBo.filter((d) => !String(d.ma).startsWith('PHONG:')).length;   // không tính dòng "Phòng, chưa giao cán bộ"
-    return { ma: p.ma, ten: p.ten, canBo: p.canBo, soCanBo, tong: p.rows.length, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
+    return { ma: p.ma, ten: p.ten, canBo: p.canBo, soCanBo, tong: s.xong + s.dangMo, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
   })
     .filter((p) => p.canBo.length)
     .sort((a, b) => { const ia = thuTu.indexOf(a.ma); const ib = thuTu.indexOf(b.ma); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.ten.localeCompare(b.ten, 'vi'); });
 }
 
-// Tiến độ theo văn bản giao việc: đã hoàn thành / tổng, số việc Đỏ đang mở; văn bản có việc Đỏ lên trước, rồi mới ban hành trước.
+// Tiến độ theo văn bản giao việc: đã hoàn thành / tổng, số việc Đỏ đang mở; văn bản có việc Đỏ lên trước, rồi mới ban hành trước. Chỉ việc GỐC
+// (giao từ văn bản — như "đã nhập" của cây Theo văn bản, kl_van_ban_so_viec 0065); việc giao tiếp xuống không tính thêm lần nữa.
+export const laViecGoc = (r) => !r.nhiem_vu_cha;
 export function theoVanBan(rows, n = 5) {
   const m = new Map();
   rows.forEach((r) => {
-    if (!r.van_ban_id) return;
+    if (!r.van_ban_id || !laViecGoc(r)) return;
     if (!m.has(r.van_ban_id)) m.set(r.van_ban_id, { id: r.van_ban_id, soHieu: r.so_ket_luan || '', loai: r.van_ban_loai, ngay: r.ngay_ban_hanh, tong: 0, xong: 0, do: 0 });
     const v = m.get(r.van_ban_id); v.tong++;
     if (laXong(r)) v.xong++;
-    else if (laMo(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao)) v.do++;
+    else if (laDoMo(r)) v.do++;
   });
   return [...m.values()].sort((a, b) => b.do - a.do || (b.ngay || '').localeCompare(a.ngay || '') || b.tong - a.tong).slice(0, n);
 }
@@ -151,7 +162,8 @@ export function chatLuongKy(rows, k) {
   const dem = (c) => xong.filter((r) => r.chat_luong === c).length;
   const d = { xuatSac: dem('DAT_XUAT_SAC'), tot: dem('DAT_TOT'), dat: dem('DAT'), khongDat: dem('KHONG_DAT') };
   const coDg = d.xuatSac + d.tot + d.dat + d.khongDat;
-  return { ...d, coDanhGia: coDg, chuaDanhGia: xong.length - coDg, tyLeTot: tyLe(d.xuatSac + d.tot, coDg), traLai: xong.reduce((s, r) => s + (r.so_lan_tra_lai || 0), 0) };
+  return { ...d, coDanhGia: coDg, chuaDanhGia: xong.length - coDg, tyLeTot: tyLe(d.xuatSac + d.tot, coDg), traLai: xong.reduce((s, r) => s + (r.so_lan_tra_lai || 0), 0),
+    viecTraLai: xong.filter((r) => (r.so_lan_tra_lai || 0) > 0).length };
 }
 
 // Chỉ đạo gốc (không tính phản hồi) gửi trong kỳ, của người gửi thuộc phạm vi vai: A0 = chỉ đạo Thường trực; A1 = lãnh đạo Văn phòng;
@@ -177,11 +189,12 @@ export function chiDaoKy(cds, k, ctx, now = new Date()) {
   };
 }
 
-// Dải cảnh báo: việc Đỏ / Đỏ đặc biệt đang mở và tối đa 3 người / đơn vị chủ trì (nhiều việc Đỏ trước).
+// Dải cảnh báo: việc Đỏ / Đỏ đặc biệt đang mở và tối đa 3 người / đơn vị chủ trì (nhiều việc Đỏ trước). Đỏ theo mucMo (việc đang đính chính không tính
+// Đỏ — như ô đầu, khối 3, điểm nghẽn; rà soát độc lập 18/10).
 export function canhBaoDo(rows) {
-  const ds = rows.filter((r) => laMo(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao));
+  const ds = rows.filter(laDoMo);
   const dem = new Map();
   ds.forEach((r) => { const ten = r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'Chưa xác định'; dem.set(ten, (dem.get(ten) || 0) + 1); });
-  return { ddb: ds.filter((r) => r.muc_canh_bao === 'DO_DAC_BIET').length, do: ds.filter((r) => r.muc_canh_bao === 'DO').length,
+  return { ddb: ds.filter((r) => mucMo(r) === 'ddb').length, do: ds.filter((r) => mucMo(r) === 'do').length,
     nguoi: [...dem.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'vi')).slice(0, 3).map(([ten]) => ten) };
 }

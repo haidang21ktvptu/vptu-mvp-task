@@ -115,6 +115,9 @@ test('yêu cầu Claude: output_config json_schema + effort cho mô hình 5.x; c
 test('đọc kết quả, lỗi HTTP, thử lại json_object, thiếu khoá — fetch giả', async () => {
   assert.deepEqual(docKetQuaAnthropic({ content: [{ type: 'thinking', thinking: 'x' }, { type: 'text', text: '{"a":1}' }], usage: { input_tokens: 3, output_tokens: 4 } }), { json: { a: 1 }, vao: 3, ra: 4 });
   assert.throws(() => docKetQuaAnthropic({ stop_reason: 'max_tokens', content: [] }), (e) => e.ma === 'QUA_DAI');
+  const u = { input_tokens: 9000, output_tokens: 32000 };   // lượt lỗi vẫn mang token đã tính phí (nhật ký AI)
+  assert.throws(() => docKetQuaAnthropic({ stop_reason: 'max_tokens', content: [], usage: u }), (e) => e.vao === 9000 && e.ra === 32000);
+  assert.throws(() => docKetQuaAnthropic({ content: [{ type: 'text', text: 'không phải JSON' }], usage: u }), (e) => e instanceof LoiAi && e.vao === 9000 && e.ra === 32000);
   const tra = (status, j) => async () => ({ ok: status < 400, status, json: async () => j });
   const ch = { nha_cung_cap: 'anthropic', mo_hinh: 'claude-sonnet-5-5' };
   const ok = await goiAi(ch, 'k', { noiDung: 'x', schema: {} }, { fetchFn: tra(200, { content: [{ type: 'text', text: 'trước {"b":2} sau' }] }) });

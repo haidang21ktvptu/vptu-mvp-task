@@ -15,7 +15,7 @@ import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, tuNhanViec, homNa
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { ganTimChon } from '../../../lib/tim-chon.js';
 import { laThayMatThuongTruc } from '../../../lib/kl/thay-mat.js';
-import { vb, timTrongDs, napVanBan, datLaiVanBan, themVanBanMoi, timKhiGo } from './van-ban.js';
+import { timTrongDs, napVanBan, datLaiVanBan, themVanBanMoi, timKhiGo } from './van-ban.js';
 import { napPhamVi, locOwner, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi, theoDoiHopLe, locTheoDoi, lanhDaoLoc } from './pham-vi.js';
 import { datLaiNguon, apMacDinhNguon, nguonDoi, thieuNguon } from './nguon.js';   // PR-3
 import { formatNgay, ghiChuHan, congNgay } from '../../../lib/kl/ngay.js';
@@ -195,9 +195,9 @@ export async function openGiaoViec(opts = {}) {
   if (lan !== luotMo) return;   // đã mở lại biểu mẫu: lượt mới khởi tạo
   const dm = danhMucKl(); const a0 = laA0(); const homNay = getHomNay();
   AN_A0.forEach((id) => show(id, !a0)); anHienTheoDoi();
-  setText('gvBuoc1', tuNhanViec() ? 'Người chịu trách nhiệm được báo ngay và việc tính là đã nhận, không cần xác nhận; cần đổi người thì người giao giao lại.' : 'Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.');
+  setText('gvBuoc1', tuNhanViec() ? 'Người chịu trách nhiệm được báo ngay và việc tính là đã nhận, không cần xác nhận; cần đổi người thì người giao giao lại.' : 'Chuyên viên nhận việc tự xác nhận đã nhận trong 1 ngày làm việc (lãnh đạo, người tự giao cho chính mình được tính đã nhận ngay); từ chối cần lý do, cấp trên duyệt.');
   show('klThThayMatWrap', canThayMat());
-  if (vb.ds.length && !a0) $('klThVanBan').value = vb.ds[0].id;
+  // Kiểm tay 18/10: mở biểu mẫu luôn ở "Văn bản mới" (trước đây chọn sẵn văn bản mới nhất của người khác — nhập tay dễ giao nhầm văn bản).
   const vbGiu = cha?.van_ban_id || opts.vanBan; if (vbGiu && timTrongDs(vbGiu)) $('klThVanBan').value = vbGiu; // giao tiếp xuống / giao thêm từ văn bản: đúng văn bản đó
   setText('gvCha', cha ? `Giao tiếp xuống từ ${cha.ma}: ${cha.noi_dung}` : ''); show('gvCha', Boolean(cha)); $('gvCha').dataset.id = cha?.id || '';
   show('gvLuoiWrap', !cha && !opts.dienSan);   // giao tiếp xuống / hoàn thiện dòng chờ nhập Excel: một việc, không thêm thẻ
@@ -258,7 +258,7 @@ async function luu(nhapTiep) {
       try { await datTrichYeuVanBan(kq.van_ban_id, trichYeu); } catch (e) { notifyError(`Đã giao việc ${kq.ma} nhưng chưa lưu được trích yếu văn bản: ${e.message}`); }
     }
     await ganSauGiao({ vbId: kq.van_ban_id, vbMoi: Boolean(p.van_ban), viec: [{ id: kq.id, ma: kq.ma, khoa: khoaCacThe()[0] }] });
-    notifySuccess(`Đã giao việc ${kq.ma}.${nhuA0() ? ` Người nhận và Chánh Văn phòng có thông báo${tuNhanViec() ? '' : '; xác nhận nhận việc trong 1 ngày làm việc'}.` : ''}`);
+    notifySuccess(`Đã giao việc ${kq.ma}.${nhuA0() ? ' Người nhận và Chánh Văn phòng có thông báo; lãnh đạo nhận việc được tính đã nhận ngay.' : ''}`);   // GV-18 (0090)
     if (p.van_ban) themVanBanMoi({ id: kq.van_ban_id, ...p.van_ban, trich_yeu: trichYeu || null }, nhanMoi());
     if (p.dong_nhap_id) { boHoanThien(); await openGiaoViec({ tab: 'cho' }); await moNhiemVu(kq.id, kq.ma); return; }   // dòng chờ đã thành việc
     if (!nhapTiep) { await openGiaoViec(); await moNhiemVu(kq.id, kq.ma); return; } // v9 đợt 2: ở lại Giao việc (biểu mẫu mở lại sạch), việc vừa giao hiện trong ngăn chi tiết

@@ -21,28 +21,36 @@ export const nhanXacMinh = (xm) => (xm === 'dung' ? ['dung', 'Đã đối chiế
 const trong = (v) => v === undefined || v === null || String(v).trim() === '';
 // Văn bản: [{ k, o, ten, gia_tri, trich, xac_minh, dien }] — dien = được tự điền. hienTai: giá trị đang có của các ô (id → giá trị); moi = các ô văn bản
 // mới còn trống cả số hiệu lẫn ngày (người dùng chưa nhập gì) — khi đó loại văn bản (ô chọn, luôn có giá trị mặc định) cũng được đặt theo văn bản.
+// Loại văn bản là MÃ DANH MỤC (như sản phẩm, ngành): đặt theo trợ lý AI cả khi câu trích chưa đối chiếu được — vẫn hiện nhãn "Cần kiểm tra" (chủ dự án
+// duyệt 18/10/2026: giữ mặc định Kết luận BTV khi AI đọc ra Thông báo / Công văn thì người giao phải tự đổi và dễ bỏ sót).
 const O_VB = [['loai', 'klThLoaiVB', 'Loại văn bản'], ['so_hieu', 'klThSoKL', 'Số hiệu'], ['ngay_ban_hanh', 'klThNgayBH', 'Ngày ban hành'],
   ['trich_yeu', 'klThTrichYeu', 'Trích yếu'], ['so_hoi_nghi', 'klThSoHN', 'Số hội nghị']];
 export function keHoachVanBan(vb, hienTai = {}, { homNay = '9999-12-31' } = {}) {
   const moi = trong(hienTai.klThSoKL) && trong(hienTai.klThNgayBH);
   return O_VB.map(([k, o, ten]) => {
     const x = vb?.[k] || {}; const gt = x.gia_tri ?? '';
-    const coThe = !trong(gt) && Boolean(x.xac_minh) && (k === 'loai' ? moi : trong(hienTai[o])) && (k !== 'ngay_ban_hanh' || gt <= homNay);
+    const coThe = !trong(gt) && (k === 'loai' ? moi : Boolean(x.xac_minh) && trong(hienTai[o])) && (k !== 'ngay_ban_hanh' || gt <= homNay);
     return { k, o, ten, gia_tri: String(gt), trich: x.trich || '', xac_minh: x.xac_minh || false, dien: coThe };
   }).filter((x) => !trong(x.gia_tri));
 }
 
 // Một nhiệm vụ → kế hoạch cho một thẻ. hienTai: { noi_dung, san_pham, san_pham_mo_ta, han, loai, nganh, linh_vuc, phoi_hop } của thẻ. Trả:
-//  dien: { cột → giá trị } (chỉ ô trống), deXuat: cột được điền là đề xuất của AI (mã danh mục), canhBao: [chữ], goiY: { han?, noiDung?, chuTri? } để
-//  hiện ghi chú (nút "dùng"). banChup: tệp là bản chụp (không có chữ để đối chiếu nội dung).
+//  dien: { cột → giá trị } (chỉ ô trống), deXuat: cột được điền là đề xuất của AI (mã danh mục), canhBao: [chữ], goiY: { han?, noiDung?, conTiep?, tronCau?,
+//  chuTri? } để hiện ghi chú (nút "dùng"). banChup: tệp là bản chụp (không có chữ để đối chiếu nội dung).
+// Đợt sửa gộp 18/10/2026: nội dung khớp nguyên văn nhưng câu trong văn bản CÒN TIẾP (máy chủ — con_tiep) → không tự điền: gợi ý "Dùng trọn câu" (nguyên
+// văn câu của tệp) hoặc phần trợ lý AI tách; trợ lý AI chỉ lấy câu dẫn (cau_dan) → không có "trọn câu", người giao xem các ý liệt kê.
+export const tronCau = (nd, tiep) => (tiep ? `${nd}${/^[,;:)\]]/.test(tiep) ? '' : ' '}${tiep}` : nd);
 export function keHoachThe(n, hienTai = {}, { banChup = false } = {}) {
   const dien = {}; const deXuat = []; const canhBao = []; const goiY = {};
-  const nd = n?.noi_dung?.gia_tri || '';
+  const nd = n?.noi_dung?.gia_tri || ''; const tiep = n?.noi_dung?.con_tiep || '';
   if (nd && trong(hienTai.noi_dung)) {
-    if (n.noi_dung.xac_minh) dien.noi_dung = nd;
+    if (n.noi_dung.xac_minh && !tiep) dien.noi_dung = nd;
+    else if (n.noi_dung.xac_minh) { goiY.noiDung = nd; goiY.conTiep = tiep; if (!n.noi_dung.cau_dan) goiY.tronCau = tronCau(nd, tiep); }
     else if (banChup) { dien.noi_dung = nd; canhBao.push('nội dung đọc từ bản chụp, chưa đối chiếu được nguyên văn — đồng chí đối chiếu văn bản gốc'); }
     else goiY.noiDung = nd;
   }
+  if (Number.isInteger(n?.trung_voi)) canhBao.push(`trùng với nhiệm vụ ${n.trung_voi + 1} của văn bản — đồng chí xem có cần giao riêng không`);
+  if (n?.tu_ra_soat) canhBao.push('đoạn do hệ thống rà thấy (trợ lý AI chưa tách) — đồng chí kiểm tra nội dung, chọn người chịu trách nhiệm, hạn, sản phẩm');
   const han = n?.han?.gia_tri || '';
   if (han && trong(hienTai.han)) { if (n.han.xac_minh) dien.han = han; else goiY.han = { gia_tri: han, trich: n.han.trich || '' }; }
   if (n?.loai_thoi_han?.gia_tri === 'KY_BAN_HANH' && (trong(hienTai.loai) || hienTai.loai === 'CO_HAN_CU_THE') && trong(hienTai.han) && !dien.han) { dien.loai = 'KY_BAN_HANH'; deXuat.push('loai'); }
@@ -55,6 +63,12 @@ export function keHoachThe(n, hienTai = {}, { banChup = false } = {}) {
   if (n?.don_vi_chu_tri?.gia_tri) goiY.chuTri = n.don_vi_chu_tri.gia_tri;
   return { dien, deXuat, canhBao, goiY };
 }
+// Đoạn "có thể còn sót" (máy chủ rà — nghi_bo_sot: nguyên văn chữ của tệp) → nhiệm vụ để người giao thêm vào danh sách rồi điền như các nhiệm vụ khác.
+export const nhiemVuTuDoan = (d) => ({ noi_dung: { gia_tri: String(d?.chu || ''), xac_minh: 'dung' }, trich: String(d?.chu || ''), trang: d?.trang ?? null,
+  don_vi_chu_tri: { gia_tri: '' }, don_vi_phoi_hop: { gia_tri: '', xac_minh: false }, han: { gia_tri: '', trich: '', xac_minh: false }, loai_thoi_han: { gia_tri: '' },
+  san_pham: { gia_tri: '' }, mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: '' }, linh_vuc: { gia_tri: '' }, muc_tieu: [], tu_ra_soat: true });
+// Nhiệm vụ "Điền tất cả" bỏ qua: trùng với một nhiệm vụ khác của văn bản (người giao vẫn bấm điền riêng được).
+export const laTrung = (n) => Number.isInteger(n?.trung_voi);
 
 // Số hiệu văn bản nhắc tới → { coSan: [{ ma, so_hieu, trich }] (đã có trong danh mục — gợi ý AI; mục đã gộp → mục giữ lại; mục ngừng dùng không gợi
 // ý), moi: [{ so_hieu, nhom, ve }] (đúng dạng một nhóm, chưa có, máy chủ đã đối chiếu được câu trích trong tệp — gợi ý thêm vào danh mục) }.

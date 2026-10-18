@@ -18,7 +18,8 @@
   .kl-them { flex-basis: 100%; font-size: 13px; }
   .kl-them summary { cursor: pointer; color: var(--do); }
   .kl-them .them-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .kl-them .them-loc select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px; }
+  .kl-them .them-loc select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px;
+    max-width: 100%; min-width: 0; text-overflow: ellipsis; }   /* kiểm tay 18/10: tên ngành / mục tiêu dài làm ô tràn mép phải trên điện thoại 390px */
 
   /* ---- Danh sách + ngăn ---- */
   .md { display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 16px; margin-top: 14px; align-items: start; }

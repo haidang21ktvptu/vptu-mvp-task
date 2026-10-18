@@ -2,7 +2,7 @@
 // tong-quan-lanh-dao.test.mjs). Cùng quy ước với lib/kl/tong-quan.js: trạng thái từng dòng do DB tính; "trong kỳ" = hoàn thành trong kỳ; việc đang
 // mở và cảnh báo tính đến hôm nay. Khối 1 điểm nghẽn (bốn thông tin Công văn 1400), 2 mục tiêu then chốt, 3 lĩnh vực trọng tâm (5 khối → 12 ngành),
 // 4 xếp hạng (đơn vị chịu trách nhiệm / đồng chí Thường trực chỉ đạo), 5 tỷ lệ đúng hạn theo quý, vướng mắc chờ ý kiến, chất lượng dữ liệu.
-import { laXong, laMo, mucMo, xongTrongKy, soLieuChinh } from './tong-quan.js';
+import { laXong, laMo, mucMo, xongTrongKy, soLieuChinh, chuaRoNgayXong } from './tong-quan.js';
 import { mucTieuCua, mucTieuTheoNhom, khoiCuaDong } from './muc-tieu.js';
 import { boSoThuTu } from './nhan.js';
 
@@ -119,6 +119,8 @@ export function dungHanQuy(rows, homNay) {
   });
 }
 
-// Khối 7: việc đang mở có vướng mắc / đề nghị lãnh đạo quyết định. Ghi chú chất lượng dữ liệu: việc chưa gắn mục tiêu, việc chưa có ngành / lĩnh vực.
+// Khối 7: việc đang mở có vướng mắc / đề nghị lãnh đạo quyết định. Ghi chú chất lượng dữ liệu: việc chưa gắn mục tiêu, việc chưa có ngành / lĩnh vực,
+// việc hoàn thành chưa có ngày hoàn thành (tính theo ngày giao, không xét được đúng hạn — kiểm tay 18/10).
 export const vuongMacCho = (rows) => rows.filter((r) => laMo(r) && r.vuong_mac);
-export const chatLuongDuLieu = (rows) => ({ chuaMucTieu: rows.filter((r) => mucTieuCua(r).length === 0), chuaNganh: rows.filter((r) => !r.nganh_ma || !r.linh_vuc_ma) });
+export const chatLuongDuLieu = (rows) => ({ chuaMucTieu: rows.filter((r) => mucTieuCua(r).length === 0), chuaNganh: rows.filter((r) => !r.nganh_ma || !r.linh_vuc_ma),
+  xongChuaNgay: rows.filter(chuaRoNgayXong) });

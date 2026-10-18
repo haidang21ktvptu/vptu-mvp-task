@@ -27,9 +27,9 @@ export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, thang, co
       <div class="hung-phai"><div class="ky" role="group" aria-label="Kỳ số liệu" id="tqKy">${KY.map((ky) => `<button type="button" data-action="tqKy" data-ky="${ky}" aria-pressed="${String(kyChon === ky)}">${escapeHtml(ten[ky])}</button>`).join('')}</div>
         ${coGiaoViec ? `<button type="button" class="nut chinh" data-action="openGiaoViec" aria-label="Giao việc">${ICON_GIAO}<span class="chu-nut">Giao việc</span></button>` : ''}</div></div>
     <div class="hung-so" id="tqSo">
-      <button type="button" class="o-hung o-vong" ${mo({ t: 'dg' })}>${vongHtml(s.tyLeDungHan)}<span class="xh-tq"><span class="nhan-so">Hoàn thành đúng hạn</span><span class="phu-h">${s.xong ? `${s.dungHan} trên ${s.dungHan + s.tre} việc được đánh giá` : 'chưa có việc hoàn thành'}</span>${duongHtml(thang)}</span></button>
+      <button type="button" class="o-hung o-vong" ${mo({ t: 'dg' })}>${vongHtml(s.tyLeDungHan)}<span class="xh-tq"><span class="nhan-so">Hoàn thành đúng hạn</span><span class="phu-h">${s.xong ? `${s.dungHan} trên ${s.dungHan + s.tre} việc xét được đúng hạn` : 'chưa có việc hoàn thành'}</span>${duongHtml(thang)}</span></button>
       ${o('giao', s.giao, 'nhiệm vụ giao', k.trong, `tổng ${tong} nhiệm vụ trong phạm vi`)}
-      ${o('xong', s.xong, 'đã hoàn thành', `${s.dungHan} đúng hạn${s.tre ? `, ${s.tre} trễ` : ''}`, `${pct(s.xong, tong)}% tổng số`)}
+      ${o('xong', s.xong, 'đã hoàn thành', `${s.dungHan} đúng hạn${s.tre ? `, ${s.tre} trễ` : ''}${s.chuaRoNgay ? `, ${s.chuaRoNgay} chưa rõ ngày hoàn thành` : ''}`, `${pct(s.xong, tong)}% tổng số`)}
       ${o('mo', s.dangMo, 'đang thực hiện', `${s.mo.trongHan + s.mo.nt} việc trong hạn`, `${pct(s.dangMo, tong)}% tổng số`)}
       ${o('canh', s.canhBao, 'cảnh báo', s.canhBao ? `${s.mo.vang} Vàng, ${s.mo.do} Đỏ, ${s.mo.ddb} Đỏ đặc biệt` : 'không có việc chậm', `${pct(s.canhBao, s.dangMo)}% việc đang làm`)}
     </div>${quyTac ? `<p class="hung-quy-tac" id="tqQuyTac">${escapeHtml(quyTac)}</p>` : ''}</section>`;
@@ -77,9 +77,9 @@ export function vanBanHtml(ds, xem = 'vb', loaiHtml = '') {
 export function chatLuongHtml(c, k) {
   const phan = [['Xuất sắc', c.xuatSac, '--f-xs', mo({ t: 'cl', cl: 'DAT_XUAT_SAC' })], ['Đạt tốt', c.tot, '--f-dt', mo({ t: 'cl', cl: 'DAT_TOT' })],
     ['Đạt', c.dat, '--f-d', mo({ t: 'cl', cl: 'DAT' })], ['Không đạt', c.khongDat, '--f-do', mo({ t: 'cl', cl: 'KHONG_DAT' })]];
-  return `<article class="the-bd n4" id="tqChatLuong">${dauKhoi(8, 'Chất lượng hoàn thành', `${c.coDanhGia} việc được đánh giá ${k.trong}${c.chuaDanhGia ? `, ${c.chuaDanhGia} việc chưa đánh giá (không bắt buộc)` : ''}`)}
+  return `<article class="the-bd n4" id="tqChatLuong">${dauKhoi(8, 'Chất lượng hoàn thành', `${c.coDanhGia} việc được xếp loại chất lượng ${k.trong}${c.chuaDanhGia ? `, ${c.chuaDanhGia} việc chưa xếp loại (không bắt buộc)` : ''}`)}
     <div class="so-dau"><b>${c.tyLeTot === null ? '—' : `${c.tyLeTot}%`}</b><span>đạt tốt trở lên</span></div>${xepHtml(phan, c.coDanhGia)}${chuGiaiHtml(phan, 'sat')}
-    <button type="button" class="cuoi-the" ${mo({ t: 'traLai' })}><span>Trả lại để bổ sung</span><b>${c.traLai} lượt</b></button></article>`;
+    <button type="button" class="cuoi-the" ${mo({ t: 'traLai' })}><span>Trả lại để bổ sung</span><b>${c.traLai} lượt${c.viecTraLai ? ` · ${c.viecTraLai} việc` : ''}</b></button></article>`;
 }
 
 // Khối 7: chỉ đạo và phản hồi + số việc có vướng mắc chờ lãnh đạo cho ý kiến (soVm).

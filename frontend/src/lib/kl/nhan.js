@@ -17,6 +17,8 @@ export const NHOM = {
   HOAN_THANH:     { ten: 'Hoàn thành',                  lop: 'luc',  stat: 's-luc',  thuTu: 9, mo: false },
 };
 export const THU_TU_NHOM = Object.keys(NHOM); // thứ tự hiển thị ô số / bộ lọc
+// Nhóm có hạn là MỐC RÀ SOÁT (DB không tính quá hạn, không áp mức cảnh báo) — dòng việc ghi "thường xuyên · mốc rà soát …" thay cho "trễ N ngày".
+export const MOC_RA_SOAT = { THUONG_XUYEN: 'thường xuyên', CHO_DIEU_KIEN: 'chờ điều kiện' };
 
 export const nhomCua = (ma) => NHOM[ma] || { ten: ma, lop: '', stat: '', thuTu: 99, mo: true };
 export const tenNhom = (ma) => nhomCua(ma).ten;
@@ -90,6 +92,7 @@ export const TEN_COT = {
   muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
   tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển người theo dõi',   // 0090, 0092
   gan_muc_tieu: 'Mục tiêu then chốt',   // 0105
+  van_ban_trich_yeu: 'Trích yếu văn bản',   // 0046 dat_trich_yeu_van_ban — trước đây diễn biến hiện tên cột thô (kiểm tay 18/10)
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 

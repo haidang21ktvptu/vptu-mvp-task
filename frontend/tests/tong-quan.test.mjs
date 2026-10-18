@@ -37,8 +37,8 @@ describe('soLieuChinh', () => {
     assert.equal(s.giao, 9);          // trừ việc 8 nhận 2025
     assert.equal(s.xong, 2);          // việc 6, 7 (việc 8 xong 2025)
     assert.equal(s.tyLeDungHan, 50);
-    assert.equal(s.dangMo, 6);        // 1–5, 10 (Thường xuyên không tính mở)
-    assert.deepEqual(s.mo, { trongHan: 2, nt: 1, khac: 0, vang: 1, do: 1, ddb: 1 });
+    assert.equal(s.dangMo, 7);        // 1–5, 9, 10 — kiểm tay 18/10: việc thường xuyên là đang thực hiện (trước đây không vào nhóm nào)
+    assert.deepEqual(s.mo, { trongHan: 2, nt: 1, khac: 1, vang: 1, do: 1, ddb: 1 });
     assert.equal(s.canhBao, 3);
     assert.equal(Object.values(s.mo).reduce((a, b) => a + b, 0), s.dangMo, 'các mức cộng đủ số đang mở');
   });
@@ -52,9 +52,25 @@ describe('soLieuChinh', () => {
     assert.equal(mucMo({ muc_canh_bao: 'XANH', nhom_dem: 'QUA_HAN_NGHIEM_THU' }), 'nt');
   });
   test('mucMo: việc DB không áp mức cảnh báo (cần điền hạn, chờ điều kiện, đang đính chính) không tính là trong hạn', () => {
-    ['CAN_DIEN_HAN', 'CHO_DIEU_KIEN', 'DANG_DINH_CHINH'].forEach((n) => assert.equal(mucMo({ muc_canh_bao: 'KHONG_AP_DUNG', nhom_dem: n }), 'khac'));
+    ['CAN_DIEN_HAN', 'CHO_DIEU_KIEN', 'DANG_DINH_CHINH', 'THUONG_XUYEN'].forEach((n) => assert.equal(mucMo({ muc_canh_bao: 'KHONG_AP_DUNG', nhom_dem: n }), 'khac'));
     const s = soLieuChinh([...MAU, viec({ id: 11, nhom_dem: 'CAN_DIEN_HAN', muc_canh_bao: 'KHONG_AP_DUNG' })], khoangKy('nam', HOM_NAY));
-    assert.deepEqual([s.dangMo, s.mo.trongHan, s.mo.khac], [7, 2, 1]);
+    assert.deepEqual([s.dangMo, s.mo.trongHan, s.mo.khac], [8, 2, 2]);
+  });
+  test('mucMo: việc đang đính chính DB ghi Đỏ vẫn là "khác" — như màn Cần xử lý (rà soát 18/10)', () => {
+    ['DO', 'DO_DAC_BIET'].forEach((m) => assert.equal(mucMo({ muc_canh_bao: m, nhom_dem: 'DANG_DINH_CHINH' }), 'khac'));
+    const s = soLieuChinh([viec({ id: 1, nhom_dem: 'DANG_DINH_CHINH', muc_canh_bao: 'DO_DAC_BIET' })], khoangKy('nam', HOM_NAY));
+    assert.deepEqual([s.dangMo, s.canhBao, s.mo.khac], [1, 0, 1]);
+  });
+  test('việc hoàn thành chưa rõ ngày (Excel "đã xong ngoài hệ thống") tính theo ngày giao, không vào đúng / trễ hạn; mỗi việc đúng một nhóm', () => {
+    const rows = [...MAU, viec({ id: 12, nhom_dem: 'HOAN_THANH', muc_canh_bao: 'KHONG_AP_DUNG', ngay_hoan_thanh: null, ket_qua: null, ngay_nhan_van_ban: '2026-09-05' }),
+      viec({ id: 13, nhom_dem: 'HOAN_THANH', muc_canh_bao: 'KHONG_AP_DUNG', ngay_hoan_thanh: null, ket_qua: null, ngay_nhan_van_ban: '2025-06-01' })];
+    const nam = khoangKy('nam', HOM_NAY); const s = soLieuChinh(rows, nam);
+    assert.deepEqual([s.xong, s.chuaRoNgay, s.dungHan, s.tre, s.tyLeDungHan], [3, 1, 1, 1, 50]);   // 6, 7 + 12 (giao 9/2026); 13 giao 2025 → ngoài kỳ
+    assert.equal(locChiTieu(rows, { t: 'xong' }, nam).rows.length, s.xong);
+    assert.equal(locChiTieu(rows, { t: 'thang', th: 9 }, nam, { homNay: HOM_NAY }).nhom[1].rows.length, 2);   // 6 (xong 20/9) + 12 (giao 5/9)
+    // giao trong năm = hoàn thành trong năm + đang thực hiện (mọi việc giao trong năm đều thuộc đúng một nhóm)
+    const giaoNam = rows.filter((r) => ngayGiao(r) >= nam.tu && ngayGiao(r) <= nam.den);
+    assert.equal(giaoNam.length, soLieuChinh(giaoNam, nam).xong + soLieuChinh(giaoNam, nam).dangMo);
   });
   test('ngày giao: ngày nhận văn bản → ngày ban hành → ngày tạo (giờ Việt Nam)', () => {
     assert.equal(ngayGiao({ ngay_nhan_van_ban: null, ngay_ban_hanh: null, created_at: '2026-09-30T18:30:00Z' }), '2026-10-01');
@@ -75,19 +91,21 @@ describe('theoNhom', () => {
   const nam = khoangKy('nam', HOM_NAY);
   test('A1 theo phòng: phòng có việc Đỏ lên đầu, đơn vị ngoài gom theo mã', () => {
     const ds = theoNhom(MAU, nam, khoaNhom('A1', { TONG_HOP: 'Phòng Tổng hợp', QUAN_TRI: 'Phòng Quản trị' }));
-    assert.deepEqual(ds.map((d) => d.ten), ['Phòng Tổng hợp', 'Phòng Quản trị', 'Sở Tài chính']);
+    assert.deepEqual(ds.map((d) => d.ten), ['Phòng Tổng hợp', 'Sở Tài chính', 'Phòng Quản trị']);   // Sở Tài chính: 2 việc đang làm (kể cả thường xuyên)
     assert.deepEqual([ds[0].xong, ds[0].dangMo, ds[0].do, ds[0].ddb, ds[0].tyLe], [2, 4, 1, 1, 50]);
-    assert.equal(ds[2].donVi, 'SO_TC');
+    assert.equal(ds[1].donVi, 'SO_TC');
   });
-  test('A0 gộp mọi đơn vị trong Văn phòng một dòng', () => {
+  test('A0 gộp mọi đơn vị trong Văn phòng một dòng; tổng = hoàn thành trong kỳ + đang làm (bằng danh sách khi bấm)', () => {
     const ds = theoNhom(MAU, nam, khoaNhom('A0'));
     assert.deepEqual(ds.map((d) => d.ten), ['Văn phòng Tỉnh ủy', 'Sở Tài chính']);
-    assert.equal(ds[0].tong, 8);
+    assert.equal(ds[0].tong, 7);   // 1–5 đang làm + 6, 7 xong trong năm (việc 8 xong năm trước không tính)
+    const kq = locChiTieu(MAU, { t: 'nhom', ma: ds[0].ma, ten: ds[0].ten }, nam, { khoa: khoaNhom('A0') });
+    assert.equal(kq.nhom[0].rows.length + kq.nhom[1].rows.length, ds[0].tong);
   });
   test('A2 theo cán bộ; việc phòng chủ trì chưa giao cán bộ gom một dòng, việc đơn vị khác chủ trì gom theo đơn vị', () => {
     const ds = theoNhom(MAU, nam, khoaNhom('A2', {}, 'TONG_HOP'));
     assert.ok(ds.some((d) => d.ten === 'Lý Văn Phúc' && d.ddb === 1));
-    assert.deepEqual(ds.map((d) => [d.ten, d.tong]).sort(), [['Lý Văn Phúc', 2], ['Phòng Quản trị', 1], ['Phòng, chưa giao cán bộ', 5], ['Sở Tài chính', 2]]);
+    assert.deepEqual(ds.map((d) => [d.ten, d.tong]).sort(), [['Lý Văn Phúc', 2], ['Phòng Quản trị', 1], ['Phòng, chưa giao cán bộ', 4], ['Sở Tài chính', 2]]);
   });
 });
 
@@ -124,8 +142,14 @@ describe('văn bản, lĩnh vực, chất lượng, cảnh báo', () => {
     assert.equal(ds[0].soHieu, '102-KL/TU');
     assert.deepEqual([ds[0].tong, ds[0].xong, ds[0].do], [9, 3, 2]);
   });
+  test('theoVanBan + danh sách văn bản: chỉ việc gốc (việc giao tiếp xuống không tính thêm) — như "đã nhập" ở Theo văn bản', () => {
+    const rows = [...MAU, viec({ id: 20, nhiem_vu_cha: 1, muc_canh_bao: 'DO', nhom_dem: 'QUA_HAN' })];
+    assert.deepEqual([theoVanBan(rows)[0].tong, theoVanBan(rows)[0].do], [9, 2]);
+    const kq = locChiTieu(rows, { t: 'vb', id: 'vb1', ten: '102-KL/TU' }, khoangKy('nam', HOM_NAY));
+    assert.equal(kq.nhom[0].rows.length + kq.nhom[1].rows.length, 9);
+  });
   test('theoLinhVuc: chỉ việc đang mở, lĩnh vực trống = Chưa phân loại', () => {
-    assert.deepEqual(theoLinhVuc(MAU).map((d) => [d.ten, d.so]), [['Chưa phân loại', 5], ['Kinh tế', 1]]);
+    assert.deepEqual(theoLinhVuc(MAU).map((d) => [d.ten, d.so]), [['Chưa phân loại', 6], ['Kinh tế', 1]]);
   });
   test('chatLuongKy: tỷ lệ đạt tốt trở lên trên việc đã đánh giá, cộng lượt trả lại', () => {
     const c = chatLuongKy(MAU, khoangKy('nam', HOM_NAY));
@@ -133,6 +157,11 @@ describe('văn bản, lĩnh vực, chất lượng, cảnh báo', () => {
   });
   test('canhBaoDo: người chủ trì nhiều việc Đỏ trước', () => {
     assert.deepEqual(canhBaoDo(MAU), { ddb: 1, do: 1, nguoi: ['Lý Văn Phúc'] });
+  });
+  test('việc đang đính chính (DB vẫn ghi Đỏ) không tính Đỏ ở dải cảnh báo, khối 6 — như ô đầu, khối 3', () => {
+    const rows = [...MAU, viec({ id: 21, muc_canh_bao: 'DO', nhom_dem: 'DANG_DINH_CHINH' })];
+    assert.deepEqual(canhBaoDo(rows), canhBaoDo(MAU));
+    assert.equal(theoVanBan(rows)[0].do, theoVanBan(MAU)[0].do);
   });
 });
 

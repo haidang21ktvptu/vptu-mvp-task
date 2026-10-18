@@ -15,9 +15,12 @@ export const NHA_CUNG_CAP = {
   gia_lap: { ten: 'Giả lập (chỉ kiểm thử cục bộ)', khoa: null, dia_chi: null, kieu: 'gia_lap' },
 };
 
+// vao / ra: token đã tính phí của lượt lỗi (kết quả bị cắt, từ chối, không đọc được JSON) — nhật ký AI ghi cả lượt lỗi (đợt sửa gộp 18/10/2026).
 export class LoiAi extends Error {
-  constructor(message, { status = 502, ma = 'AI_LOI' } = {}) { super(message); this.status = status; this.ma = ma; }
+  /** @param {string} message @param {{ status?: number, ma?: string, vao?: number | null, ra?: number | null }} [o] */
+  constructor(message, { status = 502, ma = 'AI_LOI', vao = null, ra = null } = {}) { super(message); this.status = status; this.ma = ma; this.vao = vao; this.ra = ra; }
 }
+const kemToken = (docFn, vao, ra) => { try { return docFn(); } catch (e) { if (e instanceof LoiAi) Object.assign(e, { vao, ra }); throw e; } };
 
 const coEffort = (moHinh) => /^claude-(opus|sonnet|haiku|fable|mythos)-(4-[6-9]|[5-9])/.test(String(moHinh || ''));
 const boCheo = (s) => String(s || '').replace(/\/+$/, '');
@@ -57,16 +60,17 @@ export function docJson(chu) {
   throw new LoiAi('Dịch vụ AI trả kết quả không đọc được (không phải JSON).');
 }
 export function docKetQuaAnthropic(j) {
-  if (j?.stop_reason === 'max_tokens') throw new LoiAi('Kết quả của AI bị cắt vì văn bản quá dài — hãy chọn ít trang hơn.', { status: 413, ma: 'QUA_DAI' });
-  if (j?.stop_reason === 'refusal') throw new LoiAi('Dịch vụ AI từ chối xử lý nội dung này.', { status: 422, ma: 'TU_CHOI' });
+  const vao = j?.usage?.input_tokens ?? null; const ra = j?.usage?.output_tokens ?? null;
+  if (j?.stop_reason === 'max_tokens') throw new LoiAi('Kết quả của AI bị cắt vì văn bản quá dài — hãy chọn ít trang hơn.', { status: 413, ma: 'QUA_DAI', vao, ra });
+  if (j?.stop_reason === 'refusal') throw new LoiAi('Dịch vụ AI từ chối xử lý nội dung này.', { status: 422, ma: 'TU_CHOI', vao, ra });
   const chu = (j?.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
-  return { json: docJson(chu), vao: j?.usage?.input_tokens ?? null, ra: j?.usage?.output_tokens ?? null };
+  return { json: kemToken(() => docJson(chu), vao, ra), vao, ra };
 }
 export function docKetQuaOpenAI(j) {
-  const c = j?.choices?.[0];
-  if (c?.finish_reason === 'length') throw new LoiAi('Kết quả của AI bị cắt vì văn bản quá dài — hãy chọn ít trang hơn.', { status: 413, ma: 'QUA_DAI' });
-  if (c?.message?.refusal) throw new LoiAi('Dịch vụ AI từ chối xử lý nội dung này.', { status: 422, ma: 'TU_CHOI' });
-  return { json: docJson(c?.message?.content), vao: j?.usage?.prompt_tokens ?? null, ra: j?.usage?.completion_tokens ?? null };
+  const c = j?.choices?.[0]; const vao = j?.usage?.prompt_tokens ?? null; const ra = j?.usage?.completion_tokens ?? null;
+  if (c?.finish_reason === 'length') throw new LoiAi('Kết quả của AI bị cắt vì văn bản quá dài — hãy chọn ít trang hơn.', { status: 413, ma: 'QUA_DAI', vao, ra });
+  if (c?.message?.refusal) throw new LoiAi('Dịch vụ AI từ chối xử lý nội dung này.', { status: 422, ma: 'TU_CHOI', vao, ra });
+  return { json: kemToken(() => docJson(c?.message?.content), vao, ra), vao, ra };
 }
 
 // Lỗi HTTP của nhà cung cấp → câu tiếng Việt (không chép nguyên thông báo dài, không lộ khoá).

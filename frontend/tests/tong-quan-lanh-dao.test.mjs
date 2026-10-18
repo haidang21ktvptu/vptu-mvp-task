@@ -133,7 +133,7 @@ describe('bộ lọc chi tiết', () => {
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'nghen', cap: 'THUONG_TRUC' }, K, o).rows), [1]);
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'quy', tu: '2026-07-01', den: '2026-09-30' }, K, o).nhom[0].rows), [4]);
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'vm' }, K, o).rows), [1]);
-    assert.deepEqual(locChiTieu(ROWS, { t: 'cldl' }, K, o).nhom.map((p) => p.rows.length), [2, 2]);
+    assert.deepEqual(locChiTieu(ROWS, { t: 'cldl' }, K, o).nhom.map((p) => p.rows.length), [2, 2, 0]);   // + hoàn thành chưa có ngày (18/10)
     assert.equal(locChiTieu(ROWS, { t: 'loc' }, K, o).nhom.reduce((s, p) => s + p.rows.length, 0), 6);
   });
 });

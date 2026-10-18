@@ -124,9 +124,10 @@ export function ketQua(tt, maMoi = new Map()) {
 export const khoaSoHieu = khoaSh;
 
 // Phản hồi cho bộ tự học (ghi_phan_hoi_goi_y, 0111): mỗi gợi ý theo quy tắc đã hiện → GIU (tích sẵn, giữ) | BO (tích sẵn, bỏ) | THEM (gợi ý, bấm thêm) |
-// BO_QUA (gợi ý, không bấm). Mục đã có từ trước (tt.ban) không tính.
+// BO_QUA (gợi ý, không bấm). Mục đã có từ trước (tt.ban) giữ lại thì không tính; BỎ mục đã có mà quy tắc tích sẵn → ghi BO (kiểm tay 18/10: không ghi
+// thì lần mở sau ở ngăn chi tiết / Rà soát tự tích lại mục vừa bỏ — goi_y_muc_tieu_viec chỉ hạ thành gợi ý khi quy tắc căn cứ đã bị bỏ ở việc đó).
 export function phanHoi(tt, maCuoi) {
   const cuoi = new Set(maCuoi || hieuLuc(tt));
-  return tt.goiY.filter((g) => (g.quy_tac || []).length && !tt.ban.includes(g.ma))
+  return tt.goiY.filter((g) => (g.quy_tac || []).length && (!tt.ban.includes(g.ma) || (g.muc === 'TU_TICH' && !cuoi.has(g.ma))))
     .map((g) => ({ quy_tac: g.quy_tac, ket_qua: g.muc === 'TU_TICH' ? (cuoi.has(g.ma) ? 'GIU' : 'BO') : (cuoi.has(g.ma) ? 'THEM' : 'BO_QUA') }));
 }
