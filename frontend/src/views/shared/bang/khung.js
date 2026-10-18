@@ -10,19 +10,27 @@ export const dauBangHtml = (cot) => cot.map(([ten, lop]) => `<span${lop ? ` clas
 export const CHU_GIAI_MUC = '<span><i class="dac-biet"></i>Đỏ đặc biệt: quá hạn từ 3 ngày</span><span><i class="do"></i>Đỏ: quá hạn</span>'
   + '<span><i class="vang"></i>Vàng: còn không quá 3 ngày</span><span><i class="lam"></i>Trong hạn</span><span><i class="luc"></i>Hoàn thành</span>';
 
-// Nút trang (chỉ khi nhiều hơn một trang): ‹ Trang trước · Trang x/y · Trang sau ›.
+// Nút trang (chỉ khi nhiều hơn một trang): ‹ Trang trước · Trang x/y · Trang sau › (data-huong để giữ con trỏ bàn phím khi sang trang).
 export function nutTrangHtml(p, action) {
   if (p.soTrang <= 1) return '';
-  const nut = (t, chu, tat) => `<button type="button" class="nut nho" data-action="${action}" data-trang="${t}"${tat ? ' disabled' : ''}>${chu}</button>`;
-  return `${nut(p.trang - 1, '‹ Trang trước', p.trang <= 1)}<span class="bnv-so-trang">Trang ${p.trang}/${p.soTrang}</span>${nut(p.trang + 1, 'Trang sau ›', p.trang >= p.soTrang)}`;
+  const nut = (t, chu, tat, huong) => `<button type="button" class="nut nho" data-action="${action}" data-trang="${t}" data-huong="${huong}"${tat ? ' disabled' : ''}>${chu}</button>`;
+  return `${nut(p.trang - 1, '‹ Trang trước', p.trang <= 1, 'truoc')}<span class="bnv-so-trang">Trang ${p.trang}/${p.soTrang}</span>${nut(p.trang + 1, 'Trang sau ›', p.trang >= p.soTrang, 'sau')}`;
 }
 
-// Giữ nút đang focus (cùng data-action và data-id / loc / kieu / trang / pv / vai) qua lần vẽ lại innerHTML của vùng; ô trong biểu mẫu do
-// giuONhap (lib/dom.js) giữ.
-const KHOA = ['action', 'id', 'loc', 'kieu', 'trang', 'pv', 'vai', 'qh'];
+// Giữ nút đang focus qua lần vẽ lại innerHTML của vùng (ô trong biểu mẫu do giuONhap — lib/dom.js — giữ). Nút của một việc: data-action + id
+// (+ kieu) — bỏ thuộc tính đổi theo trạng thái (mức, nhóm); nút khác: mọi thuộc tính định danh có mặt (ô số, phạm vi, vai trò, quan hệ, văn bản,
+// biểu mẫu, mục dải Cần xử lý, chiều trang). Nút trang tới trang cuối / đầu bị tắt → sang nút trang còn lại.
+const KHOA = ['action', 'loc', 'kieu', 'pv', 'vai', 'qh', 'khoa', 'vb', 'o', 'muc', 'nv', 'tb', 'sx', 'huong'];
+const tenThuocTinh = (k) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 export function giuTieuDiem(vung) {
   const a = document.activeElement;
   if (!vung || !a || !vung.contains(a) || !a.dataset?.action || a.form) return () => {};
-  const sel = KHOA.filter((k) => a.dataset[k] !== undefined).map((k) => `[data-${k}="${CSS.escape(a.dataset[k])}"]`).join('');
-  return () => { const e = vung.querySelector(sel); if (e && e !== document.activeElement && !e.disabled) e.focus({ preventScroll: true }); };
+  const khoa = a.dataset.id !== undefined ? ['action', 'id', 'kieu'] : KHOA;
+  const sel = khoa.filter((k) => a.dataset[k] !== undefined).map((k) => `[data-${tenThuocTinh(k)}="${CSS.escape(a.dataset[k])}"]`).join('');
+  const { action, huong } = a.dataset;
+  return () => {
+    let e = vung.querySelector(sel);
+    if ((!e || e.disabled) && huong) e = vung.querySelector(`[data-action="${CSS.escape(action)}"][data-huong]:not([disabled])`);
+    if (e && e !== document.activeElement && !e.disabled) e.focus({ preventScroll: true });
+  };
 }

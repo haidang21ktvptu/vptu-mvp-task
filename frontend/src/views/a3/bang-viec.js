@@ -4,7 +4,7 @@
 // (đổi ô số / tìm / lọc / sắp xếp → trang 1; nạp lại giữ trang). Dữ liệu: dh.rows lọc việc tôi chủ trì / theo dõi; Toàn Văn phòng: dh.tatCa (việc
 // ngoài phạm vi chỉ xem; chuyển sang thì ô "việc của tôi" — Cần xử lý / Chưa nhận / Chỉ đạo — đổi thành Tất cả). Ô số và bảng tính trên cùng mảng.
 // Quyền thật ở DB.
-import { $, setText, escapeHtml, show, formatDateTime } from '../../lib/dom.js';
+import { $, setText, escapeHtml, show, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { homNayVN } from '../../lib/kl/ngay.js';
 import { locRows } from '../../lib/kl/tong-hop.js';
@@ -12,11 +12,11 @@ import { locCanBo, tuyChonCanBo } from '../../lib/kl/pham-vi.js';
 import { O_SO, locO, demO, laCuaToi, sapXepViec, nhomGiuThuTu, vaiCua } from '../../lib/kl/viec-toi.js';
 import { phanTrang, chuHienThi } from '../../lib/kl/bang-o.js';
 import { dh, deNghiCuaToi } from '../shared/dieu-hanh/du-lieu.js';
-import { oSoHtml, nutTrangHtml } from '../shared/bang/khung.js';
+import { oSoHtml, nutTrangHtml, giuTieuDiem } from '../shared/bang/khung.js';
 import { chiDaoCua, nhomViecCuaToi } from './viec-cua-toi.js';
 import { dongViecHtml, nhomHtml } from './dong-viec.js';
 
-const macDinh = () => ({ loc: 'can', vai: 'tat', sx: 'moi', nhomVb: false, tuKhoa: '', pham: 'toi', canBo: { chuTri: '', theoDoi: '' }, khoi: null, vanBan: new Map(), dangHien: [], trang: 1 });
+const macDinh = () => ({ loc: 'can', vai: 'tat', sx: 'moi', nhomVb: false, tuKhoa: '', pham: 'toi', canBo: { chuTri: '', theoDoi: '' }, khoi: null, vanBan: new Map(), dangHien: [], trang: 1, canBoHtml: '' });
 export const vct = macDinh();
 export const datLaiVct = () => Object.assign(vct, macDinh());
 const O_CUA_TOI = ['can', 'nhan', 'chiDao'];   // ô chỉ đếm việc của tôi — vào Toàn Văn phòng thì chuyển sang Tất cả
@@ -50,15 +50,20 @@ function veLoc() {
   show('vctPhamVi', coToanVP());
   $('vctVai').innerHTML = VAI.map(([k, t]) => `<button type="button" data-action="vctVai" data-vai="${k}" aria-pressed="${String(vct.vai === k)}">${t}</button>`).join('');
   show('vctVai', !toanVP());
+  // Ô chọn cán bộ chỉ dựng lại khi danh sách đổi (chọn bằng phím mũi tên không mất ô đang chọn); giá trị đặt sau.
   const tc = toanVP() ? tuyChonCanBo(dh.tatCa, { ten }) : null;
-  $('vctCanBo').innerHTML = tc ? [['chuTri', 'Cán bộ chủ trì'], ['theoDoi', 'Người theo dõi']].map(([k, nhan]) => `<select data-vct-loc="${k}" aria-label="Lọc theo ${nhan.toLowerCase()}"><option value="">${nhan} (${tc[k].length})</option>${tc[k].map((o) =>
-    `<option value="${escapeHtml(o.ma)}"${vct.canBo[k] === o.ma ? ' selected' : ''}>${escapeHtml(o.ten)} (${o.n})</option>`).join('')}</select>`).join('') : '';
+  const html = tc ? [['chuTri', 'Cán bộ chủ trì'], ['theoDoi', 'Người theo dõi']].map(([k, nhan]) => `<select data-vct-loc="${k}" aria-label="Lọc theo ${nhan.toLowerCase()}"><option value="">${nhan} (${tc[k].length})</option>${tc[k].map((o) =>
+    `<option value="${escapeHtml(o.ma)}">${escapeHtml(o.ten)} (${o.n})</option>`).join('')}</select>`).join('') : '';
+  if (html !== vct.canBoHtml) { $('vctCanBo').innerHTML = html; vct.canBoHtml = html; }
+  $('vctCanBo').querySelectorAll('select[data-vct-loc]').forEach((o) => { o.value = vct.canBo[o.dataset.vctLoc] || ''; });
   show('vctCanBo', Boolean(tc));
 }
 
-// Vẽ ô số, thanh lọc, bảng, chân bảng, dòng tóm tắt. Khối đang mở không còn áp dụng cho dòng (đã nhận / đã nộp…) → bỏ.
+// Vẽ ô số, thanh lọc, bảng, chân bảng, dòng tóm tắt; chữ đang gõ trong khối dưới dòng và nút đang focus giữ qua lần vẽ. Khối đang mở không còn áp
+// dụng cho dòng (đã nhận / đã nộp…) hoặc dòng không còn hiện → bỏ. Nhóm theo văn bản: xếp nhóm trên cả danh sách rồi mới chia trang.
 export function veBangViec() {
   if (!$('vctBang')) return;
+  const vung = document.querySelector('#viewDieuHanh .vct-trang'); const traNhap = giuONhap(vung); const traTd = giuTieuDiem(vung);
   if (vct.pham === 'toan' && !coToanVP()) vct.pham = 'toi';
   const c = ctx(); const homNay = homNayVN(); const now = Date.now();
   const tom = demO(cuaToi(), c);
@@ -66,19 +71,23 @@ export function veBangViec() {
   const goc = daLoc(); const so = demO(goc, c);
   $('vctSo').innerHTML = oSoHtml(O_SO, so, vct.loc, 'vctLoc', MAU);
   veLoc();
-  const ds = sapXepViec(locO(goc, vct.loc, c), vct.sx);
-  vct.dangHien = ds;   // Xuất Excel: đủ danh sách đang lọc (mọi trang)
+  const sx = sapXepViec(locO(goc, vct.loc, c), vct.sx);
+  const nhom = vct.nhomVb ? nhomGiuThuTu(sx) : null;
+  const ds = nhom ? nhom.flatMap((g) => g.rows) : sx;
+  vct.dangHien = ds;   // Xuất Excel: đủ danh sách đang lọc (mọi trang), đúng thứ tự đang hiện
   const p = phanTrang(ds.length, vct.trang); vct.trang = p.trang;
   const trang = ds.slice(p.tu, p.den);
   const kieu = kieuCua(); let stt = p.tu;
   const dong = (r) => dongViecHtml(r, { stt: ++stt, homNay, now, ctx: c, kieu: kieu.get(r.id) || 'xem', khoi: vct.khoi });
-  const html = vct.nhomVb ? nhomGiuThuTu(trang).map((g) => nhomHtml(g, vct.vanBan.get(g.khoa)?.trich_yeu) + g.rows.map(dong).join('')).join('') : trang.map(dong).join('');
+  const soNhom = new Map((nhom || []).map((g) => [g.khoa, g.rows.length]));   // số việc của cả nhóm (nhóm vắt sang trang sau vẫn đúng số)
+  const html = nhom ? nhomGiuThuTu(trang).map((g) => nhomHtml(g, vct.vanBan.get(g.khoa)?.trich_yeu, soNhom.get(g.khoa)) + g.rows.map(dong).join('')).join('') : trang.map(dong).join('');
   $('vctBang').innerHTML = html || `<p class="bnv-trong">${goc.length ? 'Không có việc nào ở ô đang chọn. Chọn ô Tất cả để xem mọi việc của đồng chí.' : 'Không có việc nào phù hợp điều kiện lọc.'}</p>`;
   if (vct.khoi && !document.getElementById(`vctKhoi-${vct.khoi.id}`)?.classList.contains('mo')) vct.khoi = null;
   const tong = toanVP() ? dh.tatCa.length : cuaToi().length;
   setText('vctChan', `${chuHienThi(p, ds.length, tong, 'việc')}${toanVP() ? ' · toàn Văn phòng (việc ngoài phạm vi chỉ xem)' : ''}${dh.luc ? ` · số liệu tính đến ${formatDateTime(dh.luc)}` : ''}`);
   $('vctTrang').innerHTML = nutTrangHtml(p, 'vctTrang');
   $('vctBang').dataset.nap = String(Date.now());
+  traNhap(); traTd();
 }
 
 // Mở / đóng khối dưới dòng tại chỗ (không vẽ lại): mỗi lúc một khối; mở → con trỏ vào ô đầu, cuộn tới; Huỷ → về nút đã mở.

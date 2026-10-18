@@ -16,7 +16,7 @@ import { giaiLocThem, sapXepMoiNhap, sapXepHan, demLocThem } from '../../../lib/
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tuyChonMucTieu } from '../../../lib/kl/tq-bo-loc.js';   // v3.24 (0105): ô lọc mục tiêu then chốt
 import { phanTrang, chuHienThi } from '../../../lib/kl/bang-o.js';
-import { dauBangHtml, nutTrangHtml } from '../bang/khung.js';
+import { dauBangHtml, nutTrangHtml, giuTieuDiem } from '../bang/khung.js';
 import { dongHtml } from './dong.js';
 import { veLaiChiTiet, idDangMo, dongBoNgan } from './chi-tiet.js';
 import { td, laTheoDoi, locTheoDoi, veTheoDoi } from './theo-doi.js';
@@ -143,6 +143,7 @@ function dienLinhVuc() {
 // Vẽ dải số (theo lọc ngữ cảnh) và danh sách (theo lọc ngữ cảnh + nhóm). veLaiNgan: chỉ khi dữ liệu vừa nạp lại (không nạp lại căn cứ
 // của ngăn đang mở mỗi lần gõ ô tìm / đổi bộ lọc).
 export function render(veLaiNgan = false) {
+  const traTd = giuTieuDiem($('viewKl'));   // ô số, nút trang, nút quan hệ, dòng đang chọn giữ con trỏ bàn phím qua lần vẽ lại
   const { nhom, ...nguCanh } = kl.loc;
   const goc = coSo();
   const homNay = homNayVN();
@@ -158,7 +159,7 @@ export function render(veLaiNgan = false) {
   const list = (SAP_XEP_HAM[kl.sx] || sapXep)(theoDoi ? tdLoc.list : locRows(trongNguCanh, { nhom }));
   dangHien = list;
   const p = kl.inDayDu ? { trang: 1, soTrang: 1, tu: 0, den: list.length } : phanTrang(list.length, kl.trang);
-  kl.trang = p.trang;
+  if (!kl.inDayDu) kl.trang = p.trang;   // in xong trở lại đúng trang đang xem
   $('klBang').className = theoDoi ? 'list bnv cot-td' : 'list bnv cot-nv';
   $('klDauBang').innerHTML = dauBangHtml(theoDoi ? COT_TD : COT_NV);
   const dangMo = idDangMo(); const tuyChon = { now: Date.now(), cot: theoDoi ? 'td' : 'nv' };
@@ -169,15 +170,18 @@ export function render(veLaiNgan = false) {
   if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
   setText('klSoDong', `${chuHienThi(p, list.length, goc.length)}${nhom && !theoDoi ? ` · ${tenNhom(nhom)}` : ''}`);
   $('klTrang').innerHTML = kl.inDayDu ? '' : nutTrangHtml(p, 'klTrang');
+  const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi theo dõi' : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
   setText('klPhuDe', theoDoi ? 'việc đồng chí theo dõi hoặc đã giao, do cán bộ, cơ quan khác chủ trì — cột Tình hình cho biết việc cần đôn đốc'
     : kl.loc.toanBo ? 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết'
       : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
   dongBoNgan();
+  if (kl.inDayDu) document.querySelector('#viewKl .md')?.classList.remove('co-ct');   // in: bảng đủ khổ giấy (ngăn chi tiết không in)
   // Dấu hiệu "đã nạp xong" cho mọi màn / vai (e2e chờ thuộc tính này, không dựa vào "có dòng đầu"): đặt ở đây để cả danh sách rỗng cũng có.
   if (kl.luc) $('klBody').dataset.nap = kl.luc.toISOString(); else $('klBody').removeAttribute('data-nap');
   if (kl.luc) setText('klTinhDen', `Số liệu tính đến ${formatDateTime(kl.luc)}:${String(kl.luc.getSeconds()).padStart(2, '0')}`);
   veChip();
   veTrangThaiLoc();
+  traTd();
 }
 
 // v3.24: ô ngày của "khoảng ngày…" chỉ hiện khi chọn; nhãn "Thêm bộ lọc" ghi số bộ lọc đang áp dụng; nút Xoá bộ lọc; nút sắp xếp đang chọn.

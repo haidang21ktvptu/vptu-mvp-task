@@ -57,6 +57,7 @@ const moVb = (id, timThay) => (tvb.moVb.has(id) ? tvb.moVb.get(id) : tvb.moHet |
 
 function render() {
   const o = $('tvbCay'); if (!o) return;
+  const traTd = giuTieuDiem($('viewTheoVanBan'));   // nút đang focus (ô số, văn bản, nhánh) giữ qua lần vẽ lại
   const kw = $('tvbTim').value.trim().toLowerCase(); const loai = $('tvbLoai').value; const homNay = homNayVN();
   const { goc, con } = dungCay();
   const ds = goc.filter((g) => !loai || g.vb.van_ban_loai === loai).map((g) => {
@@ -68,7 +69,7 @@ function render() {
   }).filter((d) => d.html);
   $('tvbSo').innerHTML = oSoHtml(O_SO_VB, demOVb(ds), tvb.loc, 'tvbLocVb', MAU);
   const hien = sapXepVanBan(locOVb(ds, tvb.loc), $('tvbSapXep').value);
-  const traNhap = giuONhap(o); const traTd = giuTieuDiem(o);   // ô sửa rà soát đang mở, nút đang focus giữ qua lần vẽ lại (realtime)
+  const traNhap = giuONhap(o);   // ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
   o.innerHTML = hien.length ? hien.map((d, i) => vanBanHtml(d, { stt: i + 1, lop: lopVanBan(d.t), mo: moVb(d.vb.van_ban_id, Boolean(kw)), nhanh: d.html, sua: duocSua(d.h, d.tatCa) })).join('')
     : `<p class="bnv-trong">${ds.length ? 'Không có văn bản nào ở ô đang chọn.' : 'Không có văn bản nào khớp bộ lọc.'}</p>`;
   traNhap(); traTd();
@@ -117,7 +118,10 @@ function tvbGap({ khoa }) {
 }
 function tvbGapTatCa({ mo }) {
   tvb.moVb.clear(); tvb.gap.clear(); tvb.moHet = mo === '1';
-  if (!tvb.moHet) rows.forEach((r) => tvb.gap.add(`nv-${r.id}`));
+  if (!tvb.moHet) {   // thu gọn cả văn bản đang mở vì khớp ô tìm
+    rows.forEach((r) => tvb.gap.add(`nv-${r.id}`));
+    document.querySelectorAll('#tvbCay .tvb-goc').forEach((el) => tvb.moVb.set(el.id.slice(6), false));
+  }
   render();
 }
 

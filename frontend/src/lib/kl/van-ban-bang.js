@@ -1,4 +1,4 @@
-// "Theo văn bản" dạng bảng (v3.25, mẫu TheoVanBan 16/10/2026) — phần THUẦN (unit test frontend/tests/van-ban-bang.test.mjs): tổng hợp một văn bản
+// "Theo văn bản" dạng bảng (v3.25, mẫu TheoVanBan 16/10/2026) — phần THUẦN (unit test trong frontend/tests/tinh-hinh.test.mjs): tổng hợp một văn bản
 // trên mọi việc của nó trong phạm vi đang xem (số việc, hoàn thành, quá hạn, Đỏ đặc biệt, sắp đến hạn, còn mở), lớp mức của dòng văn bản, cờ
 // "chưa nhập đủ / chưa rà soát" (đã nhập x / dự kiến y — x là tổng thật của văn bản, kl_van_ban_so_viec), sáu ô số đếm VĂN BẢN, hai cách sắp xếp.
 export const NHOM_QUA = ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'];

@@ -47,7 +47,7 @@
   .tvb-la .tt-cho, .tvb-la .tt-xong, .tvb-la .tt-qua { padding: 0 6px; border-radius: 6px; font-weight: 600; }
   .bnv-con-chan { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 10px; border-top: 1px solid var(--vien-nhat); }
   .tvb-ra-soat-dong { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0; }
-  .tvb-ra-soat { font-size: 12.5px; }
+  .tvb-ra-soat { font-size: 12.5px; white-space: normal; }   /* câu rà soát dài xuống dòng (360px) */
   .bnv-con-chan > .o { flex-basis: 100%; margin-top: 0; }
 
   @media (max-width: 1023px) {

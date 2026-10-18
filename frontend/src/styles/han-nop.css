@@ -4,7 +4,7 @@
   .tt-cam { background: var(--cam-nhat); color: var(--cam-chu); }
   .the.cam, .nv-dong.cam, .muc.cam { border-left-color: var(--cam); }
   .hang-nv.cam .han b, .han.cam { color: var(--cam-chu); }
-  .stt.cam, .tvb-cham.cam { background: var(--cam); }
+  .stt.cam { background: var(--cam); }
   .tq .s-cam b { color: var(--cam-chu); } .s-cam { color: var(--cam-chu); }
   .muc.cam .the-con::before, .muc .the-con.cam::before { background: var(--cam); }
   /* Người nộp: "Đã nộp — chờ nghiệm thu" — trung tính (Mới 2), không đỏ dù việc đã quá hạn ở bước nghiệm thu */

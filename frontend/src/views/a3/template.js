@@ -5,7 +5,7 @@
 import { CHU_GIAI_MUC, dauBangHtml } from '../shared/bang/khung.js';
 import { SAP_XEP_VIEC } from '../../lib/kl/viec-toi.js';
 
-const COT = [['STT', 'bnv-c-stt'], ['Nhiệm vụ'], ['Văn bản giao'], ['Thời gian giao', 'bnv-c-tg'], ['Hạn xử lý'], ['Trạng thái'], ['Việc cần làm']];
+const COT = [['STT', 'bnv-c-stt'], ['Nhiệm vụ'], ['Văn bản giao'], ['Thời gian giao', 'bnv-c-tg'], ['Hạn xử lý'], ['Trạng thái'], ['Việc cần làm', 'bnv-c-viec']];
 const TIM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
 
 export const vctTemplate = (ngay, giao) => `
@@ -29,7 +29,7 @@ export const vctTemplate = (ngay, giao) => `
       <select id="vctSapXep" aria-label="Sắp xếp">${SAP_XEP_VIEC.map(([k, t]) => `<option value="${k}">Sắp xếp: ${t}</option>`).join('')}</select>
       <label class="bnv-gat"><input type="checkbox" id="vctNhomVb"> Nhóm theo văn bản giao</label></div>
     <div class="bnv-chu-giai">${CHU_GIAI_MUC}<span><b>Chữ đậm</b>: chưa xác nhận nhận việc</span><span><span class="bnv-nhan moi">Mới</span> giao trong 24 giờ</span></div>
-    <div class="bnv cot-vct" role="table" aria-label="Danh sách việc của tôi">
+    <div class="bnv cot-vct" role="region" aria-label="Danh sách việc của tôi">
       <div class="bnv-dau" aria-hidden="true">${dauBangHtml(COT)}</div>
-      <div id="vctBang" class="bnv-than" role="rowgroup"><p class="bnv-trong">Đang nạp việc của đồng chí…</p></div>
+      <div id="vctBang" class="bnv-than"><p class="bnv-trong">Đang nạp việc của đồng chí…</p></div>
       <div class="bnv-chan"><span id="vctChan"></span><span id="vctTrang" class="bnv-trang"></span></div></div></div>`;

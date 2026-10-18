@@ -1,7 +1,8 @@
 /* Bảng nhiệm vụ theo cột — màn hẹp, thẻ, in (v3.25; cùng lớp với bang-nhiem-vu.css). Ba bậc: từ 1366px đủ cột; 1024–1365px gộp cột thời gian
    vào dòng phụ (.bnv-chi-gon); dưới 1024px — và khi ngăn chi tiết màn Nhiệm vụ đang mở trên màn hình dưới 1600px (.md.co-ct) — mỗi dòng thành thẻ:
    nội dung trước, các ô sau xếp dòng có nhãn ngắn (data-nhan), nút thao tác rộng; điện thoại (≤ 600px) như mẫu DienThoai: nội dung 3 dòng, ô số
-   2 cột, nút 44px; 360px không cuộn ngang. Tên lớp viết nguyên văn trong JS. */
+   2 cột, nút 44px; 360px không cuộn ngang. Thẻ chỉ cho màn hình (screen) — bản in giữ dạng bảng (cột gộp như 1024–1365px, nội dung đủ dòng).
+   Tên lớp viết nguyên văn trong JS. */
 @layer components {
   @media (max-width: 1365px) {
     .bnv-dau, .bnv-hang { column-gap: 12px; }
@@ -14,7 +15,7 @@
   }
 
   /* Thẻ: dưới 1024px, hoặc ngăn chi tiết đang mở cạnh bảng trên màn hình dưới 1600px. */
-  @media (max-width: 1023px) {
+  @media screen and (max-width: 1023px) {
     .bnv .bnv-dau { display: none; }
     .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
     .bnv .bnv-c-stt, .bnv .bnv-c-tg { display: none; }
@@ -28,7 +29,7 @@
     .bnv-khoi { margin: 0 12px 12px 18px; padding: 12px; }
     .bnv-khoi .mc-inline { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   }
-  @media (max-width: 1599px) {
+  @media screen and (max-width: 1599px) {
     .md.co-ct .bnv .bnv-dau { display: none; }
     .md.co-ct .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
     .md.co-ct .bnv .bnv-c-stt, .md.co-ct .bnv .bnv-c-tg { display: none; }
@@ -61,7 +62,9 @@
 
   @media print {
     .bnv-so, .bnv-chu-giai, .bnv-trang, .bnv-khoi, .bnv-c-viec { display: none !important; }
-    .bnv { box-shadow: none; border-color: #999; }
+    .bnv { box-shadow: none; border-color: #999; overflow: visible; }
     .bnv-hang, .bnv-dong, .tvb-goc { break-inside: avoid; }
+    .bnv .bnv-nd, .tvb-trich-yeu, .tvb-nut .nd { display: block; -webkit-line-clamp: unset; overflow: visible; }   /* in đủ nội dung */
+    .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.3fr) 112px 144px; }   /* không in cột Việc cần làm */
   }
 }

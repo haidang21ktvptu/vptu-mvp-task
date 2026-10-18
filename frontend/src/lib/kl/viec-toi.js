@@ -5,7 +5,7 @@
 import { sapXepMoiNhap, sapXepHan } from './loc-them.js';
 
 export const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
-const GAP = ['VANG', 'DO', 'DO_DAC_BIET'];
+export const GAP = ['VANG', 'DO', 'DO_DAC_BIET'];   // Vàng / Đỏ / Đỏ đặc biệt
 export const laCuaToi = (r, me) => Boolean(me) && (r.owner_tai_khoan === me || r.nguoi_theo_doi === me);
 export const choNghiemThu = (r) => ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem);
 // Chính tôi chưa xác nhận nhận việc (chủ trì và người theo dõi mỗi người tự nhận; chỉ việc theo Công văn 1400).

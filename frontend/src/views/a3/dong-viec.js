@@ -42,18 +42,18 @@ export function dongViecHtml(r, o) {
     : `<span class="trang-thai ${tt.lop}">${escapeHtml(tt.chu)}</span>`;
   const sp = [r.san_pham_ten, r.san_pham_mo_ta].filter(Boolean).join(': ');
   return `<div class="bnv-dong ${lop}" id="vct-${r.id}" data-nhiem-vu="${r.id}" data-viec="${v.ma}" data-kieu="${escapeHtml(o.kieu || '')}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-nhom="${escapeHtml(r.nhom_dem || '')}"${deNghiCuaToi(r.id) ? ' data-de-nghi="1"' : ''}${ro ? ' data-chi-xem="1"' : ''}>
-    <div class="bnv-hang" role="row">
-      <span class="bnv-c bnv-c-stt" role="cell">${o.stt}</span>
-      <div class="bnv-c bnv-c-nv" role="cell"><span class="bnv-dong1">${dau}</span>
+    <div class="bnv-hang">
+      <span class="bnv-c bnv-c-stt">${o.stt}</span>
+      <div class="bnv-c bnv-c-nv"><span class="bnv-dong1">${dau}</span>
         <button type="button" class="bnv-nd${chuaNhan(r, me) ? ' dam' : ''}" data-action="nganMoViec" data-id="${r.id}" title="Bấm để xem chi tiết">${escapeHtml(r.noi_dung)}</button>
         ${sp ? `<span class="bnv-phu">Sản phẩm: ${escapeHtml(sp)}</span>` : ''}<span class="bnv-phu bnv-chi-gon">Giao ${g.gio} ${g.ngay}</span></div>
-      <div class="bnv-c" role="cell" data-nhan="Văn bản giao"><span class="bnv-vb">${escapeHtml(vb.ten)}</span>${nguoiGiao ? `<span class="bnv-phu">${escapeHtml(nguoiGiao)} giao</span>` : ''}</div>
-      <div class="bnv-c bnv-c-tg" role="cell" data-nhan="Thời gian giao"><span>${g.ngay}</span><span class="bnv-phu">${g.gio}</span></div>
-      <div class="bnv-c han" role="cell" data-nhan="Hạn xử lý"><b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span></div>
-      <div class="bnv-c bnv-c-tt" role="cell" data-nhan="Trạng thái">${trangThai}${ghiChuHtml(r)}</div>
-      <div class="bnv-c bnv-c-viec" role="cell" data-nhan="Việc cần làm">${viecHtml(r, v, mo, ro)}</div>
+      <div class="bnv-c" data-nhan="Văn bản giao"><span class="bnv-vb">${escapeHtml(vb.ten)}</span>${nguoiGiao ? `<span class="bnv-phu">${escapeHtml(nguoiGiao)} giao</span>` : ''}</div>
+      <div class="bnv-c bnv-c-tg" data-nhan="Thời gian giao"><span>${g.ngay}</span><span class="bnv-phu">${g.gio}</span></div>
+      <div class="bnv-c han" data-nhan="Hạn xử lý"><b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span></div>
+      <div class="bnv-c bnv-c-tt" data-nhan="Trạng thái">${trangThai}${ghiChuHtml(r)}</div>
+      <div class="bnv-c bnv-c-viec" data-nhan="Việc cần làm">${viecHtml(r, v, mo, ro)}</div>
     </div>${kieuKhoi ? khoiHtml(r, kieuKhoi, o.homNay, mo) : ''}</div>`;
 }
 
-// Hàng nhóm "Nhóm theo văn bản giao": văn bản · trích yếu · số việc.
-export const nhomHtml = (g, trichYeu) => `<div class="bnv-nhom" role="row"><span role="cell"><b>${escapeHtml(vanBanNgan(g.r).ten)}</b>${trichYeu ? `<span>${escapeHtml(trichYeu)}</span>` : ''}<span class="bnv-phu">${g.rows.length} việc</span></span></div>`;
+// Hàng nhóm "Nhóm theo văn bản giao": văn bản · trích yếu · số việc của cả nhóm (tong — nhóm vắt sang trang sau).
+export const nhomHtml = (g, trichYeu, tong = g.rows.length) => `<div class="bnv-nhom"><span><b>${escapeHtml(vanBanNgan(g.r).ten)}</b>${trichYeu ? `<span>${escapeHtml(trichYeu)}</span>` : ''}<span class="bnv-phu">${tong} việc</span></span></div>`;

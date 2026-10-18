@@ -55,16 +55,16 @@ export function vanBanHtml(d, o) {
   const ng = nguoiGiaoVanBan(d.tatCa, (x) => findAccount(x)?.full_name); const y = d.h.so_nhiem_vu_du_kien;
   const nhap = gioVN(d.h.created_at).ngay;
   return `<section class="tvb-goc bnv-dong ${o.lop}" id="tvbVb-${id}" data-mo="${o.mo ? '1' : '0'}" data-so="${t.n}" data-xong="${t.xong}" data-qua="${t.qua}" data-sap="${t.sap}">
-    <div class="bnv-hang" role="row">
-      <span class="bnv-c bnv-c-stt" role="cell">${o.stt}</span>
-      <span class="bnv-c bnv-c-nv" role="cell"><button type="button" class="tvb-mo-vb" data-action="tvbGap" data-khoa="vb-${id}" aria-expanded="${o.mo}"><span class="tvb-vb"><b>${escapeHtml(vb.ten)}</b></span></button>
+    <div class="bnv-hang">
+      <span class="bnv-c bnv-c-stt">${o.stt}</span>
+      <span class="bnv-c bnv-c-nv"><button type="button" class="tvb-mo-vb" data-action="tvbGap" data-khoa="vb-${id}" aria-expanded="${o.mo}"><span class="tvb-vb"><b>${escapeHtml(vb.ten)}</b></span></button>
         ${d.h.trich_yeu ? `<span class="tvb-trich-yeu">${escapeHtml(d.h.trich_yeu)}</span>` : ''}<span class="bnv-phu">${escapeHtml([vb.phu, nhap ? `nhập lên hệ thống ${nhap}` : ''].filter(Boolean).join(' · '))}</span></span>
-      <span class="bnv-c" role="cell" data-nhan="Ngày nhận">${d.h.ngay_nhan ? formatNgay(d.h.ngay_nhan) : '—'}</span>
-      <span class="bnv-c" role="cell" data-nhan="Người giao"><span data-truong="nguoi-giao">${ng.length ? escapeHtml(nguoiGiaoText(ng)) : 'chưa xác định'}</span></span>
-      <span class="bnv-c" role="cell" data-nhan="Nhiệm vụ"><span><b>${d.x}</b>${y !== null && y !== undefined ? ` / dự kiến ${y}` : ''}</span>${d.rs.chu ? `<span class="bnv-nhan canh">${escapeHtml(d.rs.chu)}</span>` : ''}</span>
-      <span class="bnv-c" role="cell" data-nhan="Tiến độ"><span class="tvb-thanh" role="img" aria-label="${t.xong} trên ${t.n} hoàn thành"><i class="luc" style="width:${pc(t.xong)}%"></i><i class="do" style="width:${pc(t.qua)}%"></i><i class="vang" style="width:${pc(t.sap)}%"></i></span>
+      <span class="bnv-c" data-nhan="Ngày nhận">${d.h.ngay_nhan ? formatNgay(d.h.ngay_nhan) : '—'}</span>
+      <span class="bnv-c" data-nhan="Người giao"><span data-truong="nguoi-giao">${ng.length ? escapeHtml(nguoiGiaoText(ng)) : 'chưa xác định'}</span></span>
+      <span class="bnv-c" data-nhan="Nhiệm vụ"><span><b>${d.x}</b>${y !== null && y !== undefined ? ` / dự kiến ${y}` : ''}</span>${d.rs.chu ? `<span class="bnv-nhan canh">${escapeHtml(d.rs.chu)}</span>` : ''}</span>
+      <span class="bnv-c" data-nhan="Tiến độ"><span class="tvb-thanh" role="img" aria-label="${t.xong} trên ${t.n} hoàn thành"><i class="luc" style="width:${pc(t.xong)}%"></i><i class="do" style="width:${pc(t.qua)}%"></i><i class="vang" style="width:${pc(t.sap)}%"></i></span>
         <span class="tvb-tien-chu">${t.xong}/${t.n} hoàn thành</span></span>
-      <span class="bnv-c" role="cell" data-nhan="Cảnh báo">${canhBaoHtml(t)}</span>
+      <span class="bnv-c" data-nhan="Cảnh báo">${canhBaoHtml(t)}</span>
     </div>
     <div class="tvb-con bnv-con"><div class="bnv-con-dau" aria-hidden="true"><span>Nhiệm vụ của văn bản</span><span>Chủ trì</span><span>Hạn xử lý</span><span>Trạng thái</span></div>
       ${o.nhanh}${chanConHtml(d, o.sua)}</div></section>`;

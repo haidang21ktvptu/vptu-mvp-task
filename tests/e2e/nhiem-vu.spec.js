@@ -27,7 +27,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên d�
     hnKhoa = khoaRieng('KL994', testInfo);
     const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: cu, error: e2 } = await db.from('nhiem_vu').insert({ van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} việc cũ ${Date.now()}`,
-      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND' }).select('id, ma').single();
+      loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: congNgay(homNayVN(), 60), nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'DANG_UY_UBND' }).select('id, ma').single();   // v3.25: hạn tương đối — luôn trong hạn (không vào ô Cần xử lý)
     if (e2) throw new Error(`Tạo việc cũ thất bại: ${e2.message}`);
     cuId = cu.id; cuMa = cu.ma;
     // Việc mẫu phải nằm trong phạm vi vai sẽ xem — kiểm ngay bằng token của vai, lỗi rõ ở beforeAll (không chờ 10 giây ở #klRow).

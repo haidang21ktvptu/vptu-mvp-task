@@ -2,11 +2,9 @@
 // hình" (việc cần đôn đốc gì), tám ô số, quan hệ của tôi với việc (tôi đã giao / tôi theo dõi). Dòng là việc tôi theo dõi hoặc đã giao mà người
 // khác chủ trì (locRows theoDoiCuaToi, tong-hop.js). Lớp th-* viết nguyên văn (Tailwind giữ lớp).
 import { ngayNgan, gioVN } from './bang-o.js';
+import { mo, GAP, choNghiemThu } from './viec-toi.js';   // một định nghĩa dùng chung với "Việc của tôi"
 
-const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
-const GAP = ['VANG', 'DO', 'DO_DAC_BIET'];
-const choNghiemThu = (r) => ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem);
-const chuaNhan = (r) => mo(r) && Boolean(r.theo_1400) && !r.da_xac_nhan_nhan && !r.bi_tu_choi;   // chủ trì chưa xác nhận nhận việc
+const chuaNhan = (r) => mo(r) && Boolean(r.theo_1400) && !r.da_xac_nhan_nhan && !r.bi_tu_choi;   // CHỦ TRÌ chưa xác nhận nhận việc (khác chuaNhan của tôi)
 const chuaSanPham = (r) => mo(r) && GAP.includes(r.muc_canh_bao) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r);
 const rutGon = (s, n = 90) => (s && s.length > n ? `${s.slice(0, n - 1)}…` : s || '');
 

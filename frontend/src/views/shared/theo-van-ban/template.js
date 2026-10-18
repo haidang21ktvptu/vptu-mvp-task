@@ -33,7 +33,7 @@ export const theoVanBanTemplate = `
   </div>
   <p class="chu-phu tvb-ket-noi"><span id="tvbKetNoi" class="ket-noi" role="status"></span></p>
   <div class="bnv-chu-giai">${CHU_GIAI}</div>
-  <div class="bnv cot-vb" role="table" aria-label="Danh sách văn bản giao việc">
+  <div class="bnv cot-vb" role="region" aria-label="Danh sách văn bản giao việc">
     <div class="bnv-dau" aria-hidden="true">${dauBangHtml(COT)}</div>
     <div id="tvbCay" class="bnv-than" aria-live="polite"><p class="bnv-trong">Đang nạp văn bản…</p></div>
   </div>

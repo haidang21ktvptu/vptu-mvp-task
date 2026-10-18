@@ -41,8 +41,10 @@ export function openKl(loc, phong = false) {
   setActiveNav(chiViecCuaToi() && !phong ? 'navDieuHanh' : 'navKl');   // chuyên viên xem "việc của tôi" (0086: navKl là Nhiệm vụ của phòng)
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
-  $('klTieuDe').textContent = loc?.theoDoiCuaToi ? 'Việc tôi theo dõi' : loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
+  const thuong = loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
     : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
+  $('klTieuDe').dataset.thuong = thuong;   // render() đổi về tên này khi rời chế độ "Việc tôi theo dõi" (bỏ chip, Toàn Văn phòng)
+  $('klTieuDe').textContent = loc?.theoDoiCuaToi ? 'Việc tôi theo dõi' : thuong;
   if (loc?.theoDoiCuaToi) datLaiTheoDoi();   // v3.25: mở "Việc tôi theo dõi" từ menu → ô Cần đôn đốc, Mọi việc
   show('klPhamVi', phong);
   const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : {});
