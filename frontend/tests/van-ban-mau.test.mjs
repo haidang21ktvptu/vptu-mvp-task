@@ -80,6 +80,10 @@ test('5 · thông báo 9002-TB/TU có bảng: nội dung, chủ trì / phối h�
   ] }, chu('5-thong-bao-9002-TB-TU-bang'), DM);
   assert.deepEqual(tom(kq), { vb: true, nv: [D, D, D, D], sot: 0 });
   assert.deepEqual(kq.nhiem_vu.slice(0, 3).map((n) => n.don_vi_phoi_hop.xac_minh), ['dung', 'dung', 'dung']);
+  // Rà soát độc lập lần 2: trợ lý AI bỏ dòng cuối của ô (dòng ngắn) → còn tiếp đúng phần còn lại của ô, không tự điền.
+  const cat = xacMinhKetQua({ van_ban: {}, nhiem_vu: ['Xây dựng kế hoạch chuyển đổi số trong các cơ quan đảng năm', 'Tổ chức hội nghị sơ kết 5 năm thực hiện Nghị quyết số',
+    'Rà soát, bổ sung quy hoạch cán bộ diện Ban Thường vụ Tỉnh ủy'].map((x) => v(x)) }, chu('5-thong-bao-9002-TB-TU-bang'), DM).nhiem_vu;
+  assert.deepEqual(cat.map((n) => n.noi_dung.con_tiep), ['2027', '15-NQ/TU về phát triển du lịch', 'quản lý']);
 });
 
 test('chép sai kiểu thường gặp: cắt cụt trước tên cơ quan xuống dòng, trích yếu thiếu dòng sau, số hiệu sai dạng, hạn của việc khác', () => {

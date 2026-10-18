@@ -8,7 +8,7 @@
 //    cuối quý / tháng / năm, "6 tháng đầu năm" → 30/6 ("trước tháng / quý / năm …", "đầu năm" không xác minh — có hai cách hiểu).
 // Mã danh mục (loại văn bản, sản phẩm, loại thời hạn, ngành, lĩnh vực, mục tiêu) phải có trong danh mục — sai thì bỏ. Văn bản dạng ảnh (PDF scan) không
 // có chữ để đối chiếu → mọi giá trị chỉ là gợi ý. Giao diện chỉ tự điền ô xac_minh ≠ false. Thuần — unit test frontend/tests/tro-ly-ai.test.mjs.
-import { chuanTrich, boDau, boMepTrang, coDau } from './chuan-hoa.js';
+import { chuanTrich, boDau, boMepTrang, coDau, khongDauDeu } from './chuan-hoa.js';
 import { taoGoc, timDoan, timNhiemVu, giaTriDien, conTiep, khoang, trongKhoang, chuDoan, trangCua } from './van-ban-goc.js';
 import { docDau, hetTrichYeu, coQuanDau } from './dau-van-ban.js';
 import { raSoat } from './ra-soat.js';
@@ -43,12 +43,17 @@ export function kiemNgay(giaTri, trich) {
 const CO_NGAY = /(?:^|\D)\d{1,2}\s*[/.-]\s*\d{1,2}\s*[/.-]\s*\d{4}(?!\d)|ngay\s*\d{1,2}\s*thang\s*\d{1,2}\s*nam\s*\d{4}/;
 // Mốc mơ hồ — không xác minh: đầu / giữa tháng, quý; tuần; "10 ngày đầu", "trong 30 ngày"; nửa năm, giữa năm, đầu năm.
 const MO_HO = /(?:dau|giua) (?:thang|quy)|tuan|ngay dau|\d+ ngay|thang (?:dau|cuoi|giua) nam|nua (?:dau|cuoi) nam|giua nam|dau nam/;
+// Mốc số liệu "tính đến (hết) ngày …", "tính từ ngày … đến ngày …" không phải hạn (rà soát độc lập lần 2, 18/10).
+const NGAY_SO = '(?:\\d{1,2}\\s*[/.-]\\s*\\d{1,2}\\s*[/.-]\\s*\\d{4}|\\d{1,2}\\s*thang\\s*\\d{1,2}\\s*nam\\s*\\d{4})';
+const MOC_SO_LIEU = new RegExp(`\\btinh (?:tu (?:ngay )?${NGAY_SO} )?(?:den|toi) (?:het )?(?:ngay )?${NGAY_SO}`, 'g');
+const TU_DEN = /(?:^|[^\p{L}\p{N}])từ(?![\p{L}\p{N}])(?:[^.;]|\.(?=\d)){0,80}?[^\p{L}\p{N}](?:đến|tới)(?![\p{L}\p{N}])/u;   // "từ … đến …" (chữ có dấu: "đầu tư" không phải "từ")
 // Hạn: câu nêu ngày cụ thể → phải đúng ngày đó; không thì cuối quý / tháng / năm, "N tháng đầu năm" → cuối tháng N, "N tháng cuối năm" → 31/12;
 // "từ … đến …": hạn là mốc sau "đến". Đợt sửa gộp: máy chủ kiểm trên CHỮ CỦA TỆP ở chỗ khớp (không trên câu AI chép — "11/1" khác "1/11").
 export function kiemHan(giaTri, trich) {
   if (!ngayHopLe(giaTri)) return false;
-  let t = boDau(String(trich || '')).toLowerCase().replace(/\s+/g, ' ');
-  const den = t.split(/\b(?:den|toi)\b/); if (den.length > 1) t = den[den.length - 1];
+  const thuong = String(trich || '').normalize('NFC').toLocaleLowerCase('vi').replace(/\s+/g, ' ');
+  let t = khongDauDeu(thuong).replace(MOC_SO_LIEU, (m) => ' '.repeat(m.length));   // giữ độ dài: vị trí trùng chữ có dấu
+  const tuDen = TU_DEN.exec(thuong); if (tuDen) t = t.slice(tuDen.index + tuDen[0].length);
   if (CO_NGAY.test(t)) return kiemNgay(giaTri, t);
   if (/truoc (?:thang|quy|nam|\d{1,2} thang)/.test(t)) return false;   // "trước tháng 6/2026": hai cách hiểu — không xác minh
   const nt = /(\d{1,2}) thang (dau|cuoi) nam (\d{4})/.exec(t);

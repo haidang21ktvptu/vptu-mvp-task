@@ -6,15 +6,30 @@
 import { chuanTrich, khongDauDeu, coDau, laChuSo, cacTrang, banDo } from './chuan-hoa.js';
 
 export const MUC = '(?:[-+•*–—]|\\(?\\d{1,3}(?:\\.\\d{1,3})*[.)]|\\(?[a-zđ][.)]|[IVX]{1,5}\\.)';
-const MUC_DONG = new RegExp(`^(${MUC}) (?=[\\p{L}(“"])`, 'u');
-const MUC_GIUA = new RegExp(`[:;] (${MUC}) (?=[\\p{L}(“"])`, 'gu');
-// Ký hiệu đầu ý THẬT (a), 1., 2.1., -, +): đầu dòng mà dòng trước đã hết câu (. ; : ! ?) hoặc là dòng ngắn (tiêu đề mục), hoặc sau ": " / "; " cùng dòng;
-// sau ký hiệu là chữ. Không tính "điểm\nb) khoản 2", "giai đoạn 2026\n- 2030", "1.500 tỷ" (rà soát độc lập 18/10).
+const MUC_DONG = new RegExp(`^(${MUC}) (?=[\\p{L}\\p{N}(“"])`, 'u');
+const MUC_GIUA = new RegExp(`[:;] (${MUC}) (?=[\\p{L}\\p{N}(“"])`, 'gu');
+export const HET_DONG = /[.;:!?][)\]”"’»]*$/;
+// Cuối dòng "treo" — câu chắc chắn còn tiếp ở dòng sau (rà soát độc lập lần 2, 18/10): dấu phẩy / gạch nối; giới từ, liên từ, từ chỉ lượng ("của", "và",
+// "các", "phối hợp"…); "số / năm / ngày / quý / điểm…" khi dòng sau mở đầu bằng số (hoặc a), I); "Sở / Ban / Văn phòng / Thường vụ…" khi dòng sau viết hoa.
+const TREO_TU = /(?:^|[\s(“"])(?:của|cho|tại|về|trong|với|theo|đến|tới|từ|trên|dưới|vào|ở|qua|sau|trước|và|hoặc|hay|cùng|nhưng|mà|để|nhằm|các|những|mọi|mỗi|từng|một|là|có|được|bị|sẽ|đã|đang|cần|phải|đối với|bảo đảm|đảm bảo|gồm|như|thuộc|giữa|bằng|do|nếu|khi|thì|rằng|phối hợp|chủ trì|tham mưu)$/iu;
+const TREO_SO = /(?:^|[\s(])(?:số|năm|ngày|tháng|quý|giai đoạn|lần thứ|khoản|điểm|mục|điều|khóa|khoá|nhiệm kỳ|đợt)$/iu;
+const TREO_CQ = /(?:^|\s)(?:Sở|Ban|Bộ|Cục|Ủy ban|Uỷ ban|Văn phòng|Thường vụ|Thường trực|Chấp hành)$/u;
+export const treo = (dong, sau = '') => { const d = dong.trimEnd(); return /[,–—-]$/.test(d) || TREO_TU.test(d)
+  || (TREO_SO.test(d) && /^(?:\p{N}|[IVX]{1,4}\b|[a-zđ]\))/u.test(sau)) || (TREO_CQ.test(d) && /^\p{Lu}/u.test(sau)); };
+// Ký hiệu đầu ý THẬT (a), 1., 2.1., -, +), sau ký hiệu là chữ hoặc số ("- 100% xã…", "a) 95% …"): đầu dòng mà dòng trước đã hết câu (. ; : ! ?), hoặc
+// dòng trước không treo và là dòng ngắn (tiêu đề mục) hay dòng dài mà ý mở bằng chữ hoa (ý trước thiếu dấu câu); hoặc sau ": " / "; " cùng dòng. Không
+// tính "điểm\nb) khoản 2", "giai đoạn 2026\n- 2030", "đạt\n- 5%", "1.500 tỷ".
+const laMucDong = (dong, mk, truoc) => {
+  if (truoc === null || HET_DONG.test(truoc)) return true;
+  const sau = dong.slice(mk.length + 1);
+  if (treo(truoc, dong) || (/^[-–—]$/.test(mk) && /^\d/.test(sau) && (truoc.length > 60 || (/\d{4}$/.test(truoc) && /^\d{4}(?!\d)/.test(sau))))) return false;
+  return truoc.length <= 60 || /^\p{Lu}/u.test(sau);
+};
 function cacMuc(text) {
   const ds = []; let o = 0; let truocDong = null;
   for (const dong of text.split('\n')) {
     const m = MUC_DONG.exec(dong);
-    if (m && (truocDong === null || /[.;:!?][)\]”"’»]*$/.test(truocDong) || truocDong.length <= 60)) ds.push([o, o + m[1].length]);
+    if (m && laMucDong(dong, m[1], truocDong)) ds.push([o, o + m[1].length]);
     for (const g of dong.matchAll(MUC_GIUA)) { const a = o + g.index + 2; ds.push([a, a + g[1].length]); }
     o += dong.length + 1; truocDong = dong;
   }
@@ -26,10 +41,11 @@ export function taoGoc(chu) {
   const text = trang.join('\n'); const dauTrang = []; let o = 0;
   trang.forEach((t) => { dauTrang.push(o); o += t.length + 1; });
   const { chuan, viTri } = banDo(text);
-  const muc = cacMuc(text); const bo = new Set(); muc.forEach(([a, b]) => { for (let k = a; k < b; k++) bo.add(k); });
+  const muc = cacMuc(text); const trongMuc = new Uint8Array(text.length + 1); muc.forEach(([a, b]) => trongMuc.fill(1, a, b));
   let kc = ''; const kv = [];   // bản bỏ ký hiệu đầu ý: AI chép nội dung gồm nhiều ý thường bỏ các ký hiệu ở giữa
-  for (let i = 0; i < chuan.length; i++) if (!bo.has(viTri[i])) { kc += chuan[i]; kv.push(viTri[i]); }
-  return { text, dauTrang, trang1: trang[0] || '', chuan, viTri, khongDau: khongDauDeu(chuan), co: chuan.length > 0, muc, dauMuc: new Set(muc.map(([a]) => a)),
+  for (let i = 0; i < chuan.length; i++) if (!trongMuc[viTri[i]]) { kc += chuan[i]; kv.push(viTri[i]); }
+  return { text, dauTrang, trang1: trang[0] || '', chuan, viTri, khongDau: khongDauDeu(chuan), co: chuan.length > 0, muc, trongMuc,
+    dauMuc: new Set(muc.map(([a]) => a)), mucTai: new Map(muc.map(([a, b]) => [a, text.slice(a, b)])), mucCuoi: new Map(muc.map(([a, b]) => [b, a])),
     km: { chuan: kc, viTri: kv, khongDau: khongDauDeu(kc) }, nho: new Map() };
 }
 export const trangCua = (goc, a) => { let p = 0; while (p + 1 < goc.dauTrang.length && goc.dauTrang[p + 1] <= a) p += 1; return p + 1; };
@@ -68,14 +84,34 @@ const LAI_Y = new RegExp(`(?:^|\\n|[:;.])\\s*${MUC}?\\s*$`, 'u');
 // Cấp của ký hiệu đầu ý: I. > 1. > 1.1. > a) > - > + (số nhỏ = cấp cao).
 const KIEU = [[0, /^[IVX]{1,5}\.$/], [2, /^\(?\d{1,3}\.\d{1,3}(?:\.\d{1,3})*[.)]?$/], [1, /^\(?\d{1,3}[.)]$/], [3, /^\(?[a-zđ][.)]$/], [4, /^[-–—•*]$/], [5, /^\+$/]];
 export const capCua = (mk) => { for (const [c, r] of KIEU) if (r.test(mk)) return c; return 4; };
-const mucDauDong = (goc, a) => { const d = goc.text.lastIndexOf('\n', a - 1) + 1; const m = goc.muc.find(([x]) => x === d); return m ? goc.text.slice(m[0], m[1]) : null; };
-const mucTruoc = (goc, a) => { const m = goc.muc.find(([, y]) => y <= a && a - y <= 2); return m ? goc.text.slice(m[0], m[1]) : null; };
-// Câu dẫn hợp lệ của ý d2: kết thúc trước ý, liền sau có dấu hai chấm, giữa câu dẫn và ý không có câu dẫn khác (dòng kết thúc bằng ":"), ý ở cấp sâu hơn câu dẫn.
+const dauDong = (t, a) => t.lastIndexOf('\n', a - 1) + 1;
+const mucDauDong = (goc, a) => goc.mucTai.get(dauDong(goc.text, a)) ?? null;
+// Ký hiệu đứng ngay trước vị trí a (cách tối đa 2 ký tự) → [đầu, cuối] | null.
+const mucTruoc = (goc, a) => { for (const y of [a, a - 1, a - 2]) if (goc.mucCuoi.has(y)) return [goc.mucCuoi.get(y), y]; return null; };
+const mucSau = (goc, p) => { let l = 0; let h = goc.muc.length; while (l < h) { const m = (l + h) >> 1; if (goc.muc[m][0] <= p) l = m + 1; else h = m; } return l; };
+// Đầu đoạn chứa vị trí k: lùi qua các dòng mà dòng trước chưa hết câu (dòng bị ngắt giữa câu), dừng ở dòng mở bằng ký hiệu đầu ý.
+function dauDoan(goc, k) {
+  const t = goc.text; let d = dauDong(t, k);
+  for (let n = 0; n < 12 && d > 0 && !goc.dauMuc.has(d); n++) { const p = dauDong(t, d - 1); if (HET_DONG.test(t.slice(p, d - 1))) break; d = p; }
+  return d;
+}
+// Câu dẫn hợp lệ của ý d2 (rà soát độc lập lần 2): kết thúc trước ý, liền sau có dấu hai chấm; ý ở cấp NGAY DƯỚI câu dẫn (cấp của ký hiệu đầu tiên sau dấu
+// hai chấm) và sâu hơn ký hiệu của chính câu dẫn; giữa câu dẫn và ý không có ký hiệu cấp cao hơn (danh sách đã hết — "2." của mục khác) và không có câu
+// dẫn của đoạn khác (dòng kết thúc bằng ":" không thuộc một ý cùng cấp / sâu hơn — ý a) có danh sách con của nó vẫn được).
 function laDanCua(goc, x, d2) {
-  if (x.e > d2.s || d2.s - x.e > 6000 || !/^[)\]”"’»]*:/.test(goc.text.slice(x.b, x.b + 4))) return false;
-  if (goc.text.slice(goc.text.indexOf(':', x.b) + 1, d2.a).includes(':\n')) return false;
-  const m1 = mucDauDong(goc, x.a); const m2 = mucTruoc(goc, d2.a);
-  return !(m1 && m2 && capCua(m2) <= capCua(m1));
+  const t = goc.text;
+  if (x.e > d2.s || d2.s - x.e > 6000 || !/^[)\]”"’»]*:/.test(t.slice(x.b, x.b + 4))) return false;
+  const p = t.indexOf(':', x.b); const m2 = mucTruoc(goc, d2.a); const c2 = m2 ? capCua(t.slice(m2[0], m2[1])) : null;
+  const giua = [];
+  for (let j = mucSau(goc, p); j < goc.muc.length && goc.muc[j][0] < (m2 ? m2[0] : d2.a); j++) giua.push(capCua(t.slice(goc.muc[j][0], goc.muc[j][1])));
+  const m1 = mucDauDong(goc, x.a); const c1 = m1 === null ? null : capCua(m1); const L = giua.length ? giua[0] : c2;
+  if (c1 !== null && [...giua, c2].some((c) => c !== null && c <= c1)) return false;
+  if (giua.length && (c2 !== L || giua.some((c) => c < L))) return false;
+  for (let k = t.indexOf(':\n', p + 1); k >= 0 && k < d2.a; k = t.indexOf(':\n', k + 1)) {
+    const mk = goc.mucTai.get(dauDoan(goc, k));
+    if (mk === undefined || L === null || capCua(mk) < L) return false;
+  }
+  return true;
 }
 // Nhiệm vụ = câu dẫn kết thúc bằng dấu hai chấm + ý liệt kê (đề bài quy tắc 4c; tối đa 3 tầng, thử tối đa 4 dấu hai chấm): tìm Ý trước (từ vị trí tu), rồi
 // câu dẫn là lần khớp GẦN NHẤT trước ý thoả laDanCua (câu dẫn có thể lặp lại ở chỗ khác trong văn bản — rà soát độc lập 18/10).
@@ -98,11 +134,12 @@ export function timNhiemVu(goc, chuoi, tu = 0, tang = 0) {
 // Nguyên văn một đoạn (gộp khoảng trắng; bỏ ký hiệu đầu ý ở đầu; ký hiệu ở giữa chỉ bỏ khi AI đã bỏ chúng — khớp ở bản bỏ ký hiệu); giữ ngoặc đóng và
 // dấu chấm liền sau — câu dẫn: giữ dấu hai chấm.
 export function nguyenVan(goc, d, { dan = false } = {}) {
-  const them = /^[)\]”"’»]*/.exec(goc.text.slice(d.b, d.b + 4))[0];
-  const dau = dan ? ':' : /^[)\]”"’»]*(\.?)/.exec(goc.text.slice(d.b, d.b + 4))[1];
+  let j = d.b; while (j < goc.text.length && /[)\]”"’»]/.test(goc.text[j])) j += 1;
+  const h = goc.text[j] === '.' ? hetCauTai(goc, j) : 0;   // dấu chấm hết câu (không lấy dấu chấm của "TP.", "1.500") + ngoặc đóng sau nó
+  const duoi = dan ? `${goc.text.slice(d.b, j)}:` : goc.text.slice(d.b, h || j);
   let t = ''; let k = d.a;
   if (d.km) for (const [x, y] of goc.muc) { if (y <= d.a || x >= d.b) continue; t += goc.text.slice(k, Math.max(k, x)); k = Math.max(k, y); }
-  return (t + goc.text.slice(k, d.b) + them + dau).replace(/\s+/g, ' ').replace(DAU_Y, '').trim();
+  return (t + goc.text.slice(k, d.b) + duoi).replace(/\s+/g, ' ').replace(DAU_Y, '').trim();
 }
 // Giá trị điền: chữ AI khi chỉ khác chữ hoa / khoảng trắng; ngược lại chữ của tệp — trừ khi tệp mất dấu (chữ AI có dấu, khớp không dấu).
 export function giaTriDien(goc, ket, chuoi) {
@@ -113,36 +150,57 @@ export function giaTriDien(goc, ket, chuoi) {
   return { gia_tri: tep, xm: 'dung' };
 }
 
-const CAU_MOI = /^(?:Giao|Đề nghị|Yêu cầu) /u;
+// Câu giao việc mới ở đầu dòng / sau "; " — "Giao Sở …", "Đề nghị các …" (không tính "Giao thông vận tải", "Giao ban" ở dòng bị ngắt giữa câu).
+const CAU_MOI = /^(?:Giao|Đề nghị|Yêu cầu) (?:cho |các |\p{Lu})/u;
 const THUOC_TINH = /^(?:Thời hạn|Thời gian|Hạn hoàn thành|Hoàn thành|Sản phẩm|Cơ quan phối hợp|Đơn vị phối hợp|Phối hợp|Kết quả)\b/iu;
-const laYMoi = (goc, p) => goc.dauMuc.has(p) || CAU_MOI.test(goc.text.slice(p, p + 12));
-// Hết câu / hết ý tính từ vị trí i (≤ 1500 ký tự): dấu . ! ? rồi khoảng trắng (không tính "1.500"), xuống dòng sang ý mới, dấu ; trước ý mới.
-export function hetCau(goc, i) {
+const dongTruoc = (t, k) => t.slice(dauDong(t, k), k);
+const laYMoi = (goc, p) => goc.dauMuc.has(p) || (CAU_MOI.test(goc.text.slice(p, p + 16))
+  && !(goc.text[p - 1] === '\n' && treo(dongTruoc(goc.text, p - 1), goc.text.slice(p, p + 16))));
+// Xuống dòng ở k (t[k] = "\n") còn nối câu / ô bảng? Không: ý mới, dòng trước hết câu / là câu dẫn, dấu ; cuối dòng (trừ khi dòng sau viết thường).
+// Có: dòng trước treo; dòng sau viết thường hoặc là số hiệu văn bản ("15-NQ/TU"); dòng trước dài (≥ 55 ký tự — văn xuôi bị ngắt giữa câu, tên riêng ở đầu
+// dòng sau: "trình Ban Thường vụ\nTỉnh ủy"). Dòng ngắn không treo + dòng sau viết hoa / là số → hết ô bảng, hết đoạn (rà soát độc lập lần 2: ô bảng bị cắt).
+export function noiDong(goc, k) {
+  const t = goc.text; const dong = dongTruoc(t, k).trimEnd(); const sau = t.slice(k + 1, k + 16);
+  let j = k - 1; while (j >= 0 && /[)\]”"’»\s]/.test(t[j])) j -= 1;
+  if (goc.dauMuc.has(k + 1) || t[j] === ':' || hetCauTai(goc, j)) return false;
+  if (/;[)\]”"’»]*$/.test(dong)) return /^\p{Ll}/u.test(sau);
+  if (treo(dong, sau)) return true;
+  if (CAU_MOI.test(sau)) return false;
+  if (/^\p{Ll}/u.test(sau) || /^\d{1,5}[-/]\p{Lu}/u.test(sau)) return true;
+  return /^[\p{L}\p{N}(“"]/u.test(sau) && dong.length >= 55;
+}
+// Hết câu ở k: dấu . ! ? (rồi các ngoặc đóng) rồi khoảng trắng → vị trí ngay sau đó; không phải hết câu → 0 ("1.500", dấu chấm của ký hiệu "2.1.", của chữ
+// viết tắt "TP. Cao Bằng", "TX.", "ThS.").
+const VIET_TAT = /(?:^|[^\p{L}])(?:TP|Tp|TX|Tx|TT|ThS|TS|PGS|GS)$/u;
+export const hetCauTai = (goc, k) => {
+  const t = goc.text; if (!'.!?'.includes(t[k]) || goc.trongMuc[k] || (t[k] === '.' && VIET_TAT.test(t.slice(Math.max(0, k - 4), k)))) return 0;
+  let j = k + 1; while (j < t.length && /[)\]”"’»]/.test(t[j])) j += 1;
+  return j >= t.length || /\s/.test(t[j]) ? j : 0;
+};
+// Hết câu / hết ý tính từ vị trí i (≤ 1500 ký tự): hết câu, xuống dòng sang ý mới, dấu ; trước ý mới. theoDong: dừng cả ở chỗ xuống dòng không nối câu
+// (noiDong — phần còn tiếp của một ô bảng chỉ tới hết ô).
+export function hetCau(goc, i, theoDong = false) {
   const t = goc.text; const max = Math.min(t.length, i + 1500);
   for (let k = i; k < max; k++) {
-    const c = t[k];
-    if ('.!?'.includes(c) && (k + 1 >= t.length || /\s/.test(t[k + 1])) && !goc.muc.some(([x, y]) => k >= x && k < y)) return k + 1;
-    if (c === '\n' && laYMoi(goc, k + 1)) return k;
-    if (c === ';' && laYMoi(goc, k + 2)) return k + 1;
+    const c = t[k]; const h = hetCauTai(goc, k);
+    if (h) return h;
+    if (c === '\n' && (laYMoi(goc, k + 1) || (theoDong && k > i && !noiDong(goc, k)))) return k;
+    if (c === ';' && (laYMoi(goc, k + 2) || (t[k + 1] === '\n' && !/^\p{Ll}/u.test(t.slice(k + 2, k + 3))))) return k + 1;   // ";" cuối dòng: hết ý
   }
   return max;
 }
 // Câu trong văn bản còn tiếp sau đoạn khớp? → null | { chu: phần còn tiếp đến hết câu, dan: đoạn khớp là câu dẫn (sau là dấu hai chấm + các ý) }.
-// Xuống dòng: dòng chứa chỗ kết thúc dài (≥ 55 ký tự — dòng bị ngắt giữa câu) và dòng sau không mở ý mới → còn tiếp, kể cả khi dòng sau viết hoa (tên cơ quan:
-// "trình Ban Thường vụ\nTỉnh ủy trong quý I"); dòng ngắn (hết đoạn, ô bảng) → đã trọn.
+// Dấu phẩy, dấu ; giữa dòng: còn tiếp (", báo cáo … trước ngày …", "; hoàn thành trong quý IV" — người giao chọn "Dùng trọn câu" hoặc "Dùng phần trợ lý AI
+// tách"); xuống dòng: theo noiDong.
 export function conTiep(goc, d) {
   const t = goc.text; let i = d.b;
   while (i < t.length && /[)\]”"’»]/.test(t[i])) i += 1;
   const c = t[i];
-  if (c === undefined || '.!?'.includes(c)) return null;
-  if (c === ';' && laYMoi(goc, i + 2)) return null;
-  if (c === '\n') {
-    const dong = t.slice(t.lastIndexOf('\n', d.b - 1) + 1, d.b);
-    if (laYMoi(goc, i + 1) || dong.length < 55 || !/^[\p{L}\p{N}]/u.test(t.slice(i + 1, i + 2))) return null;
-  }
-  // Dấu phẩy: luôn coi là còn tiếp (", báo cáo … trước ngày …" hay ", Sở Tài chính …" — người giao chọn "Dùng trọn câu" hoặc "Dùng phần trợ lý AI tách").
+  if (c === undefined || hetCauTai(goc, i)) return null;
+  if (c === ';' && (laYMoi(goc, i + 2) || (t[i + 1] === '\n' && !noiDong(goc, i + 1)))) return null;
+  if (c === '\n' && !noiDong(goc, i)) return null;
   const dan = c === ':';
-  const het = dan ? Math.min(t.length, i + 300) : hetCau(goc, i);
+  const het = dan ? Math.min(t.length, i + 300) : hetCau(goc, i, true);
   const chu = t.slice(i, het).replace(/\s+/g, ' ').trim();
   return chu ? { chu, dan } : null;
 }
@@ -158,11 +216,15 @@ export function khoang(goc, ket, ke = Infinity) {
   }
   return [...p.map((x) => [x.s, x.e]), [d.e, Math.min(d.e + 600, ke, viTriChuan(goc, het))]];
 }
+// Giá trị (hạn, đơn vị phối hợp, mô tả) nằm trong một khoảng của nhiệm vụ, ở ranh giới từ ("5/12/2026" không khớp trong "15/12/2026").
 export function trongKhoang(goc, ks, chuoi, toiThieu = 4) {
   const n = chuanTrich(chuoi);
   if (!goc.co || n.length < toiThieu) return null;
+  const bien = (i, l) => { const a = goc.viTri[i]; const b = cuoi(goc, i + l - 1); return !giuaTu(truoc(goc.text, a), tai(goc.text, a)) && !giuaTu(truoc(goc.text, b), tai(goc.text, b)); };
   for (const [hay, kim, xm] of [[goc.chuan, n, 'dung'], [goc.khongDau, khongDauDeu(n), 'khong_dau']]) {
-    for (const [s, e] of ks) { const i = hay.indexOf(kim, s); if (i >= 0 && i + kim.length <= e) return { xm, s: i, e: i + kim.length }; }
+    for (const [s, e] of ks) {
+      for (let i = hay.indexOf(kim, s); i >= 0 && i + kim.length <= e; i = hay.indexOf(kim, i + 1)) if (bien(i, kim.length)) return { xm, s: i, e: i + kim.length };
+    }
   }
   return null;
 }

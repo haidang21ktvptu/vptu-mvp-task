@@ -8,7 +8,11 @@
 //  - hetDau: hết phần đầu (số, ngày, tên loại + 2 dòng, V/v, "Kính gửi" tới hết câu) — rà soát sót bỏ qua; dauTy: chỗ trích yếu có thể bắt đầu.
 // Thuần — unit test frontend/tests/tro-ly-ai-doi-chieu.test.mjs.
 import { boDau } from './chuan-hoa.js';
+import { MUC } from './van-ban-goc.js';
 
+// Dòng của phần nội dung — không thuộc trích yếu (rà soát độc lập lần 2: câu dẫn ngay sau trích yếu một dòng bị tính vào phần đầu): câu dẫn (kết thúc
+// bằng ":"), dòng mở ý ("1. …", "- …"), câu giao việc ("Giao Sở …", "Đề nghị các …").
+const THAN = new RegExp(`:\\s*$|^(?:${MUC}) [\\p{L}\\p{N}]|^(?:Giao|Đề nghị|Yêu cầu) (?:cho |các |\\p{Lu})`, 'u');
 export const DIA_DANH = /\p{Lu}\p{Ll}+(?:\s+\p{Lu}\p{Ll}+){0,3}\s*,\s*[Nn]gay\s*(\d{1,2})\s*thang\s*(\d{1,2})\s*nam\s*(\d{4})/u;
 const SO = /(?:^|[^\p{Ll}\p{N}])S[oO]\s*[:.]?\s*(\d{1,5}(?:\s*[-–—/.]\s*[A-Za-z0-9]{1,16}){1,3})/du;
 const TEN_LOAI = /^(KETLUAN|THONGBAO|NGHIQUYET|CHITHI|QUYETDINH|KEHOACH|CHUONGTRINH|BAOCAO|TOTRINH|HUONGDAN|QUYDINH|CONGVAN)/;
@@ -45,7 +49,8 @@ export function docDau(goc) {
   if (i >= 0) {
     const khoi = bd.slice(i, i + 4).join(' ').toLowerCase();
     kq.tieuDe = { tu: TEN_LOAI.exec(bd[i].replace(/\s+/g, ''))[1], chu: ds.slice(i, i + 4).join('\n'), khoi, coQuan: coQuanDau(khoi) };
-    cuoiDau = Math.max(cuoiDau, i + 2); kq.dauTy = dauDong(i);
+    let k = i; while (k < i + 2 && k + 1 < ds.length && !THAN.test(ds[k + 1])) k += 1;   // tên loại + tối đa 2 dòng trích yếu
+    cuoiDau = Math.max(cuoiDau, k); kq.dauTy = dauDong(i);
   }
   const vv = bd.findIndex((d) => /^\s*V\/v\b/i.test(d));
   if (vv >= 0) { cuoiDau = Math.max(cuoiDau, vv); if (kq.dauTy === null) kq.dauTy = dauDong(vv); }

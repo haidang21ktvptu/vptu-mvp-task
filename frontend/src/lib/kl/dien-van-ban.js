@@ -39,7 +39,7 @@ export function keHoachVanBan(vb, hienTai = {}, { homNay = '9999-12-31' } = {}) 
 //  chuTri? } để hiện ghi chú (nút "dùng"). banChup: tệp là bản chụp (không có chữ để đối chiếu nội dung).
 // Đợt sửa gộp 18/10/2026: nội dung khớp nguyên văn nhưng câu trong văn bản CÒN TIẾP (máy chủ — con_tiep) → không tự điền: gợi ý "Dùng trọn câu" (nguyên
 // văn câu của tệp) hoặc phần trợ lý AI tách; trợ lý AI chỉ lấy câu dẫn (cau_dan) → không có "trọn câu", người giao xem các ý liệt kê.
-export const tronCau = (nd, tiep) => (tiep ? `${nd}${/^[,;:)\]]/.test(tiep) ? '' : ' '}${tiep}` : nd);
+export const tronCau = (nd, tiep) => (tiep ? `${nd}${/^[,;:.)\]]/.test(tiep) ? '' : ' '}${tiep}` : nd);
 export function keHoachThe(n, hienTai = {}, { banChup = false } = {}) {
   const dien = {}; const deXuat = []; const canhBao = []; const goiY = {};
   const nd = n?.noi_dung?.gia_tri || ''; const tiep = n?.noi_dung?.con_tiep || '';
