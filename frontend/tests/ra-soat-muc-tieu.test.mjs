@@ -67,6 +67,13 @@ test('phản hồi: lưu hàng loạt chưa thao tác chỉ tính mục tích s�
   assert.equal(tenTap(['NQ_57', 'KHONG_CO'], DM), 'Nghị quyết 57-NQ/TW; KHONG_CO');
 });
 
+test('chờ xử lý: việc chưa gắn mục nào chỉ còn gợi ý "đã bỏ ở việc này" (da_bo — 0115) thì không tính chờ', () => {
+  const r = viec(); const daBo = { ...KQ.goi_y[0], muc: 'GOI_Y', da_bo: true };
+  const tt = apGoiY(taoTrangThai(r), { goi_y: [daBo], so_hieu_moi: [] });
+  assert.equal(coTichSan(tt), false); assert.equal(choXuLy(r, tt), false);
+  assert.equal(choXuLy(r, apGoiY(taoTrangThai(r), { goi_y: [daBo, KQ.goi_y[1]], so_hieu_moi: [] })), true, 'còn gợi ý khác → vẫn chờ');
+});
+
 test('coThayDoi: số hiệu mới đang tích tính là có thay đổi trước khi có mã', async () => {
   const { coThayDoi } = await import('../src/views/shared/ra-soat-muc-tieu/ke-hoach.js');
   const r = viec(); const tt = apGoiY(taoTrangThai(r), { goi_y: [], so_hieu_moi: [{ so_hieu: '81-NQ/TW', nhom: 'NQ_TW' }] });

@@ -63,7 +63,12 @@ export function khoiMucTieuHtml(r) {
     <button type="button" class="nut" data-action="dongO" data-o="oMt-${r.id}">Huỷ</button></form>`;
 }
 
-// Mở / đóng biểu mẫu; mở: ô chọn theo phần gắn hiện có (gắn riêng, không thì theo văn bản) rồi chạy bộ nhận diện cho việc này.
+// Nhận diện chưa về sau 10 giây (mạng treo) → thôi chờ, cho lưu (chọn từ danh mục vẫn được).
+const HET_GIO_GOI_Y = 10000;
+const coHan = (p, ms) => Promise.race([p, new Promise((_, loi) => { setTimeout(() => loi(new Error('Hết thời gian chờ nhận diện')), ms); })]);
+
+// Mở / đóng biểu mẫu; mở: ô chọn theo phần gắn hiện có (gắn riêng, không thì theo văn bản) rồi chạy bộ nhận diện cho việc này. Nút lưu chỉ sáng khi
+// nhận diện xong (hoặc lỗi / quá hạn chờ): phản hồi "bỏ" cần danh sách gợi ý — lưu sớm hơn thì lần mở sau tự tích lại mục vừa bỏ (kiểm tay 18/10).
 async function moMucTieu({ o, id }) {
   const f = document.getElementById(o); const r = timKlRow(id);
   if (!f || !r) return;
@@ -75,12 +80,15 @@ async function moMucTieu({ o, id }) {
   f.querySelector('[data-mtg-cho]').innerHTML = khungHtml(k, { nhan: `Mục tiêu then chốt của ${r.ma}` });
   veO(k); datTrangThai(k, 'Đang nhận diện gợi ý…');
   f.querySelector('.mtg-gy, [data-action="mtgMoDm"]')?.focus({ preventScroll: true });
+  const nut = [...f.querySelectorAll('button[type="submit"]')]; nut.forEach((b) => { b.disabled = true; });
   try {
-    const kq = (await goiYMucTieuViec([id]))?.[id];
+    const kq = (await coHan(goiYMucTieuViec([id]), HET_GIO_GOI_Y))?.[id];
     if (layO(k)?.tt !== tt) return;
     if (kq) apGoiY(tt, kq, { moTa: lyDoChu });
     datTrangThai(k, ''); veO(k);
-  } catch { if (layO(k)?.tt === tt) datTrangThai(k, 'Chưa nhận diện được gợi ý — có thể chọn từ danh mục.'); }
+  } catch { if (layO(k)?.tt === tt) datTrangThai(k, 'Chưa nhận diện được gợi ý — có thể chọn từ danh mục.'); } finally {
+    if (layO(k)?.tt === tt) nut.forEach((b) => { b.disabled = false; });   // lần mở mới hơn (ô đã thay) tự bật nút của nó
+  }
 }
 
 // Sau khi vẽ ngăn: kiểm quyền gắn cho cả văn bản (người nhập văn bản / lãnh đạo xử lý được mọi việc gốc) rồi mới hiện nút; lỗi đọc → giữ ẩn.
@@ -131,9 +139,11 @@ async function luuMucTieu({ id, vb }, form, ev) {
   try {
     const k = ketQua(x.tt, await themSoHieuMoi(x.tt));
     const tb = ev?.submitter?.value === 'vb' && vb ? await luuVanBan(r, vb, k) : await luuViec(r, k);
-    ghiPhanHoiGoiY(id, phanHoi(x.tt, k.ma));   // tự học theo tập đồng chí để lại (kể cả khi lưu thành "theo văn bản") — lỗi bỏ qua
     notifySuccess(tb);
     form.classList.remove('mo'); boO(khoaCt(id));
+    // Tự học + trí nhớ "đã bỏ" (0115) theo tập đồng chí để lại (kể cả khi lưu thành "theo văn bản"); ghi xong mới nạp lại — Rà soát (nghe 'viec-da-ghi')
+    // nhận diện lại dòng này theo dữ liệu mới. Lỗi bỏ qua (ghiPhanHoiGoiY không ném lỗi).
+    await ghiPhanHoiGoiY(id, phanHoi(x.tt, k.ma));
     await sauHanhDong(id);
   } catch (e) {
     notifyError('Không gắn được mục tiêu then chốt: ' + loiDeHieu(e));

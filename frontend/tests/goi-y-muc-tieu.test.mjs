@@ -102,6 +102,17 @@ test('bỏ mục đã gắn từ trước mà quy tắc tích sẵn → ghi BO; 
   assert.deepEqual(phanHoi(vb, ketQua(vb).ma).find((x) => x.quy_tac[0] === 'q57'), { quy_tac: ['q57'], ket_qua: 'BO' });
 });
 
+test('gợi ý "đã bỏ ở việc này" (da_bo — 0115): không tích sẵn, không gửi "không bấm"; chọn lại → THEM', () => {
+  const ktr = { ma: 'CTR_KINH_TE_RUNG', muc: 'GOI_Y', da_bo: true, quy_tac: ['qktr', 'qbvr'],
+    ly_do: [{ loai: 'TU_KHOA', gia_tri: 'kinh tế rừng', o: 'noi_dung' }, { loai: 'TU_KHOA', gia_tri: 'bảo vệ rừng', o: 'noi_dung' }] };
+  const tt = apGoiY(taoBoChon({ vb: ['NQ_57'] }), { goi_y: [ktr, kq1.goi_y[1]], so_hieu_moi: [] });
+  assert.deepEqual(hieuLuc(tt), ['NQ_57']);
+  assert.deepEqual(dsHien(tt).goiY.map((g) => [g.ma, g.da_bo]), [['CTR_KINH_TE_RUNG', true], ['DP_KHCN_CDS', false]]);
+  assert.deepEqual(phanHoi(tt), [{ quy_tac: ['qdm'], ket_qua: 'BO_QUA' }], 'không ghi đè trí nhớ BO của máy chủ');
+  bat(tt, 'CTR_KINH_TE_RUNG', { nguon: 'GOI_Y' });
+  assert.deepEqual(phanHoi(tt)[0], { quy_tac: ['qktr', 'qbvr'], ket_qua: 'THEM' });
+});
+
 test('tối đa 10 mục; đổi văn bản bỏ lựa chọn bỏ cũ', () => {
   const tt = taoBoChon();
   for (let i = 0; i < TOI_DA; i++) assert.equal(bat(tt, `M${i}`), true);

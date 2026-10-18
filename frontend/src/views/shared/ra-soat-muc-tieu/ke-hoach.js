@@ -15,8 +15,8 @@ export function taoTrangThai(r) {
 }
 // Có mục hệ thống tích sẵn (người dùng chưa đụng) hoặc số hiệu mới được tích — "Chấp nhận" mới có việc để làm.
 export const coTichSan = (tt) => [...tt.chon.values()].some((x) => x.tu === 'tich') || tt.moi.some((m) => m.chon);
-// Chờ xử lý: còn mục tích sẵn chưa chấp nhận, hoặc việc chưa gắn mục tiêu nào mà có gợi ý.
-export const choXuLy = (r, tt) => coTichSan(tt) || (mucTieuCua(r).length === 0 && dsHien(tt).goiY.length > 0);
+// Chờ xử lý: còn mục tích sẵn chưa chấp nhận, hoặc việc chưa gắn mục tiêu nào mà có gợi ý (trừ gợi ý người dùng đã bỏ ở việc này — da_bo, 0115).
+export const choXuLy = (r, tt) => coTichSan(tt) || (mucTieuCua(r).length === 0 && dsHien(tt).goiY.some((g) => !g.da_bo));
 // Nhóm mục tiêu có trong gợi ý / mục tích sẵn của việc (lọc "nhóm mục tiêu gợi ý"); số hiệu mới theo nhóm máy chủ báo.
 export function nhomGoiY(tt, dm) {
   const h = dsHien(tt); const ma = [...h.daChon.filter((x) => x.tu === 'tich').map((x) => x.ma), ...h.goiY.map((g) => g.ma)];

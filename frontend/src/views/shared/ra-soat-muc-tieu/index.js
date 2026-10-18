@@ -18,6 +18,7 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { boDau } from '../../../lib/tim-chon.js';
 import { dangKyO, boO, veO, lyDoChu } from '../kl/chon-muc-tieu.js';
 import { moNhiemVu } from '../kl/index.js';
+import { timKlRow } from '../kl/danh-sach.js';
 import { raSoatTemplate } from './template.js';
 import { dongHtml, capNhatDong, khoaO } from './dong.js';
 import { taoTrangThai, choXuLy, nhomGoiY, coThayDoi } from './ke-hoach.js';
@@ -130,6 +131,15 @@ function khiDoi(id) {
   const r = timDong(id); if (r) capNhatDong(r, xDong(r));
   veHangLoat();
 }
+// Ghi trong ngăn chi tiết mở từ một dòng (gắn / bỏ mục tiêu, sửa nội dung…): dòng đó theo dữ liệu mới (napLaiViec đã thay dòng vào danh sách Nhiệm vụ
+// trước khi phát 'viec-da-ghi') và nhận diện lại — mục vừa bỏ trong ngăn không còn tích sẵn trên dòng (kiểm tay 18/10); lựa chọn chưa lưu ở dòng khác giữ.
+function lamMoiDong(id) {
+  const i = rs.rows.findIndex((r) => r.id === id); const moi = timKlRow(id);
+  if (i < 0 || !moi) return;
+  const tt = taoTrangThai(moi); tt.bo = new Set(rs.tt.get(id)?.bo || []);   // mục đồng chí đã bỏ trên dòng: không tích lại
+  rs.rows[i] = moi; rs.tt.set(id, tt); rs.kq.delete(id); rs.thaoTac.delete(id); rs.daLuu.delete(id);
+  ve();
+}
 
 async function nap() {
   const lan = ++rs.luot;
@@ -180,6 +190,7 @@ export function registerRaSoatMucTieu() {
   $('viewRaSoatMucTieu').innerHTML = raSoatTemplate;
   [['rsPhong', 'phong'], ['rsVanBan', 'vb'], ['rsNhom', 'nhom']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { rs.loc[k] = e.target.value; rs.trang = 0; an(); ve(); }));
   $('rsTim').addEventListener('input', (e) => { clearTimeout(henTim); henTim = setTimeout(() => { rs.loc.tim = e.target.value; rs.trang = 0; ve(); }, 250); });
+  document.addEventListener('viec-da-ghi', (e) => { if (sectionDangHien('viewRaSoatMucTieu')) lamMoiDong(e.detail); });
   registerActions({
     moRaSoatMucTieu: (ds) => moRaSoatMucTieu(ds), rsNapLai: () => nap(),
     rsChe: ({ che }) => { rs.loc.che = che; rs.trang = 0; an(); ve(); },
