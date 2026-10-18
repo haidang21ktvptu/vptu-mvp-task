@@ -118,8 +118,16 @@ test('sauKhiLuu: mục tích sẵn không nằm trong tập đã lưu thành g�
   const kq = sauKhiLuu({ goi_y: [...kq1.goi_y, vb], so_hieu_moi: [] }, ['DP_HA_TANG']);
   assert.deepEqual(kq.goi_y.map((g) => [g.ma, g.muc, Boolean(g.da_bo)]), [['NQ_57', 'GOI_Y', true], ['DP_KHCN_CDS', 'GOI_Y', false], ['DP_HA_TANG', 'TU_TICH', false]]);
   assert.deepEqual(sauKhiLuu(kq1, ['NQ_57']).goi_y[0], kq1.goi_y[0], 'mục đã lưu giữ tích sẵn');
+  assert.equal(sauKhiLuu(kq1, ['NQ_57']).so_hieu_moi.length, 1);
+  assert.deepEqual(sauKhiLuu(kq1, ['NQ_57', 'NQ_81'], new Map([['SH:81-NQ/TW', 'NQ_81']])).so_hieu_moi, [], 'số hiệu vừa thêm vào danh mục không còn là số hiệu mới');
   const tt = apGoiY(taoBoChon(), kq);
   assert.deepEqual(hieuLuc(tt), []); assert.deepEqual(phanHoi(tt), [{ quy_tac: ['qdm'], ket_qua: 'BO_QUA' }]);
+});
+
+test('đủ 10 mục: mục tích sẵn không được tích (người dùng chưa thấy) không bị tính "bỏ"', () => {
+  const tt = apGoiY(taoBoChon({ rieng: Array.from({ length: TOI_DA }, (_, i) => `M${i}`) }), kq1);
+  assert.equal(tt.chon.has('NQ_57'), false, 'đã đủ 10 mục');
+  assert.deepEqual(phanHoi(tt), [{ quy_tac: ['qdm'], ket_qua: 'BO_QUA' }]);
 });
 
 test('tối đa 10 mục; đổi văn bản bỏ lựa chọn bỏ cũ', () => {

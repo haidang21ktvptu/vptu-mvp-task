@@ -10,7 +10,8 @@ import { keHoachLuu, phanHoiLuu, coBoTichSan } from './ke-hoach.js';
 
 const PHAN = 200;
 
-// ds: [{ r, tt, daThaoTac }] → { ok: [dòng đã lưu — kể cả dòng chỉ ghi "bỏ"], loi: [{ id, ma, loi }], loiSoHieu: [chuỗi], soKe, soBo }. tienDo(đã gửi, tổng).
+// ds: [{ r, tt, daThaoTac }] → { ok: [dòng đã lưu — kể cả dòng chỉ ghi "bỏ"], loi: [{ id, ma, loi }], loiSoHieu: [chuỗi], soKe, soBo, maMoi (số hiệu
+// vừa thêm vào danh mục → mã) }. tienDo(đã gửi, tổng).
 export async function luuViec(ds, { tienDo = () => {} } = {}) {
   const moi = new Map();
   ds.forEach(({ tt }) => tt.moi.filter((m) => m.chon).forEach((m) => { const k = khoaSoHieu(m.so_hieu); if (!moi.has(k)) moi.set(k, m); }));
@@ -35,7 +36,7 @@ export async function luuViec(ds, { tienDo = () => {} } = {}) {
   const xong = [...ok, ...chiBo];
   const ph = xong.map((x) => [x.r.id, phanHoiLuu(x.tt, maMoi, x.daThaoTac)]).filter(([, p]) => p.length);
   (async () => { for (const [id, p] of ph) await ghiPhanHoiGoiY(id, p); })();
-  return { ok: xong.map((x) => x.r), loi, loiSoHieu, soKe: ke.length, soBo: chiBo.length };
+  return { ok: xong.map((x) => x.r), loi, loiSoHieu, soKe: ke.length, soBo: chiBo.length, maMoi };
 }
 
 // Câu báo sau khi lưu.

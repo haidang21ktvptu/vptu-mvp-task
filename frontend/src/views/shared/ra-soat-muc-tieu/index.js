@@ -182,7 +182,7 @@ async function luu(ds) {
     const kq = await luuViec(ds.map((r) => ({ r, tt: rs.tt.get(r.id), daThaoTac: rs.thaoTac.has(r.id) })), { tienDo: (a, b) => setText('rsTrangThai', `Đang lưu ${a}/${b} việc…`) });
     kq.ok.forEach((r) => {
       const cu = rs.tt.get(r.id); const tt = taoTrangThai(r); tt.bo = new Set(cu?.bo || []);   // mục người dùng đã bỏ: không tích lại
-      if (coGoiY(r.id)) { const x = sauKhiLuu(rs.kq.get(r.id), mucTieuCua(r)); rs.kq.set(r.id, x); apGoiY(tt, x, { moTa: lyDoChu }); }   // như máy chủ trả sau "bỏ" (0115)
+      if (coGoiY(r.id)) { const x = sauKhiLuu(rs.kq.get(r.id), mucTieuCua(r), kq.maMoi); rs.kq.set(r.id, x); apGoiY(tt, x, { moTa: lyDoChu }); }   // như máy chủ trả sau "bỏ" (0115)
       rs.tt.set(r.id, tt); rs.daLuu.add(r.id); rs.thaoTac.delete(r.id);
       if (rs.dangVe.includes(khoaO(r.id))) { dangKyO(khoaO(r.id), tt, { khiDoi: () => khiDoi(r.id) }); veO(khoaO(r.id)); }
     });
