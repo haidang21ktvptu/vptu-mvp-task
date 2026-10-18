@@ -89,12 +89,13 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
     for (const u of [ID.cvp, ID.pcvp]) expect(tin.map((t) => t.receiver_id), `tin giao tới ${u}`).toContain(u);   // 0083: nhóm trong phạm vi việc (Tổng hợp) — PCVP2 (Quản trị) không
   });
 
-  test('2. Chuyên viên đề nghị từ chối việc thay mặt nhóm → thẻ ghi chờ người nhập việc (0091) duyệt', async ({ browser }, testInfo) => {
+  test('2. Chuyên viên đề nghị từ chối việc thay mặt nhóm → dòng ghi chờ người nhập việc (0091) duyệt', async ({ browser }, testInfo) => {
     const tenNhap = (await db.from('accounts').select('full_name').eq('id', QTHT).single()).data.full_name;
     const page = await pageAs(browser, 'A3', testInfo);
-    const the = page.locator(`#vctMuc-moi #vct-${nvLdvp}`);
+    const the = page.locator(`#vct-${nvLdvp}`);   // v3.25: dòng bảng "Việc của tôi" — việc mới giao, chờ xác nhận
     await expect(the).toBeVisible(NAP);
-    await expect(the).not.toContainText('Thay mặt');   // v3.21 (0098): thẻ việc không ghi "Thay mặt … giao"
+    await expect(the).toHaveAttribute('data-viec', 'nhan');
+    await expect(the).not.toContainText('Thay mặt');   // v3.21 (0098): dòng việc không ghi "Thay mặt … giao"
     await the.getByRole('button', { name: 'Từ chối' }).click();
     const o = page.locator(`#oTc-${nvLdvp}`);
     await o.locator('input[name=noi_dung]').fill('Không đúng chức năng (e2e thay mặt nhóm)');

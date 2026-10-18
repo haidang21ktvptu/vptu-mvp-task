@@ -1,6 +1,7 @@
 // Dữ liệu "Việc của tôi" (A3): nhóm theo thứ tự ưu tiên, mỗi việc ở một nhóm — bị từ chối chờ giao lại → mới giao chưa xác nhận → có chỉ đạo chờ
-// trả lời → sắp đến hạn / quá hạn chưa có minh chứng hợp lệ → đang thực hiện (tôi chủ trì). v3.23.1: phần "Cần xử lý ngay" chỉ vẽ bốn nhóm đầu;
-// mọi việc (kể cả đang thực hiện, theo dõi, đã xong) xem ở phần theo văn bản gốc (van-ban-cua-toi.js). Thẻ vẽ ở the-viec-gon.js. Quyền thật ở DB.
+// trả lời → sắp đến hạn / quá hạn chưa có minh chứng hợp lệ → đang thực hiện (tôi chủ trì). v3.25 (bảng theo cột): nhóm ghi vào data-kieu của
+// dòng (bang-viec.js); ô số và "Việc cần làm" ở lib/kl/viec-toi.js; chỉ đạo chờ tôi trả lời, kết quả từ chối, đề nghị sửa đang chờ dùng cho khối
+// dưới dòng và ghi chú (khoi-viec.js). Quyền thật ở DB.
 import { escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { deNghiToiGuiDangCho } from '../../lib/kl/sua-tang.js';

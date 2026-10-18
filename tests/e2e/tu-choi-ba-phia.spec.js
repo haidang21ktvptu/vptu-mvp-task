@@ -1,5 +1,5 @@
-// GĐ22 — từ chối hiện rõ ba phía: A3 (demo_e2e_nv) đề nghị từ chối trên thẻ "Việc mới giao" → thẻ ghi "Đã đề nghị từ chối, chờ Demo Trưởng phòng
-// duyệt"; A2 (người giao, cấp duyệt) thấy đề nghị ở khối cần duyệt và việc mình giao trong khối "đang đề nghị từ chối" → Đồng ý → khối "Việc đồng
+// GĐ22 — từ chối hiện rõ ba phía: A3 (demo_e2e_nv) đề nghị từ chối trên dòng việc mới giao của "Việc của tôi" (v3.25 bảng) → dòng ghi "Đã đề
+// nghị từ chối, chờ Demo Trưởng phòng duyệt"; A2 (người giao, cấp duyệt) thấy đề nghị ở khối cần duyệt và việc mình giao trong khối "đang đề nghị từ chối" → Đồng ý → khối "Việc đồng
 // chí giao bị từ chối" có nút Giao lại; A3 quay lại thấy "Đã đồng ý từ chối, chờ giao lại", chuông (tin duyệt = tin hệ thống chưa đọc) có số và
 // danh sách thông báo có tin duyệt (v3.23: bỏ Nhắn tin). Dữ liệu tạo bằng service_role, tự dọn.
 import { test, expect } from '@playwright/test';
@@ -36,10 +36,11 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
   });
   test.afterAll(async () => { if (db) await don(db, duAn); });
 
-  test('A3: thẻ việc mới có nhãn Khẩn → Từ chối với lý do → thẻ ghi chờ Trưởng phòng duyệt', async ({ browser }, testInfo) => {
+  test('A3: dòng việc mới có nhãn Khẩn → Từ chối với lý do → dòng ghi chờ Trưởng phòng duyệt', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
-    const the = page.locator(`#vctMuc-moi #vct-${id}`);
+    const the = page.locator(`#vct-${id}`);
     await expect(the).toBeVisible({ timeout: 15_000 });
+    await expect(the).toHaveAttribute('data-kieu', 'moi');   // v3.25: nhóm "việc mới giao" ghi ở data-kieu của dòng
     await expect(the.locator('.dk-khan')).toContainText('Khẩn');
     await the.getByRole('button', { name: 'Từ chối' }).click();
     const o = page.locator(`#oTc-${id}`);
@@ -91,7 +92,7 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     await expect(page.locator('#vctThanhTuChoi')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator(`#vctThanhTuChoi p[data-nhiem-vu="${id}"]`)).toContainText('Đã đồng ý từ chối, chờ giao lại', NAP);
-    await expect(page.locator(`#vctMuc-tu-choi #vct-${id}`)).toContainText('Đã đồng ý từ chối', NAP);
+    await expect(page.locator(`#vct-${id}[data-kieu="tu-choi"]`)).toContainText('Đã đồng ý từ chối', NAP);
     await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);   // v3.23: không còn mục Nhắn tin
     await expect(page.locator('#chuongBadge')).toHaveText(/^[1-9]\d*$/, NAP);
     await page.locator('#chuongBtn').click();

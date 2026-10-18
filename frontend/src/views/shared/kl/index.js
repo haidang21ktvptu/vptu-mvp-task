@@ -12,7 +12,9 @@ import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
-import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien, doiKlToanBo, doiKlSapXep, xoaKlLoc } from './danh-sach.js';
+import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien, doiKlToanBo, doiKlSapXep, xoaKlLoc,
+  doiKlTrang, locKlTd, doiKlQh, inKlDayDu } from './danh-sach.js';
+import { datLaiTheoDoi } from './theo-doi.js';
 import { mountXuatKy } from './xuat-ky.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
 import { toggleKlChiTiet, chonKlRow, dongKlChiTiet, idDangMo } from './chi-tiet.js';
@@ -39,8 +41,9 @@ export function openKl(loc, phong = false) {
   setActiveNav(chiViecCuaToi() && !phong ? 'navDieuHanh' : 'navKl');   // chuyên viên xem "việc của tôi" (0086: navKl là Nhiệm vụ của phòng)
   datKlChuaNap(); // đang nạp lại: render() bỏ dấu hiệu data-nap cũ
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
-  $('klTieuDe').textContent = loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
+  $('klTieuDe').textContent = loc?.theoDoiCuaToi ? 'Việc tôi theo dõi' : loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
     : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
+  if (loc?.theoDoiCuaToi) datLaiTheoDoi();   // v3.25: mở "Việc tôi theo dõi" từ menu → ô Cần đôn đốc, Mọi việc
   show('klPhamVi', phong);
   const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
@@ -138,5 +141,9 @@ export function registerKlView() {
   const klXuatExcel = async () => {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
-  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec });
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
+    klTrang: doiKlTrang, klTdLoc: locKlTd, klTdQh: doiKlQh });
+  // v3.25: In / lưu PDF (nút hoặc Ctrl+P) in đủ danh sách đang lọc, không chỉ trang 50 dòng đang xem.
+  window.addEventListener('beforeprint', () => { if (sectionDangHien('viewKl')) inKlDayDu(true); });
+  window.addEventListener('afterprint', () => inKlDayDu(false));
 }

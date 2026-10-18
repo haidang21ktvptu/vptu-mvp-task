@@ -3,7 +3,7 @@
 // thì lưu, dòng đổi nhóm, ô số đổi theo; ngăn chi tiết ghi "nhập bởi" chính chuyên viên. Nhiệm vụ mẫu ở hội nghị 997 (E2E), tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, nav, NAP } from './lib/app.js';
+import { pageAs, nav, soDongKl, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
@@ -52,12 +52,12 @@ test.describe.serial('Nhiệm vụ — màn hình chuyên viên', () => {
     await expect(row).toHaveAttribute('data-nhom', 'DANG_THUC_HIEN');
     await expect(row).toHaveClass(/\blam\b/); // mép trái lam: Xanh
     const tong = Number(await page.locator('#klSo-TONG').innerText());
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(tong);
+    await soDongKl(page, tong);   // v3.25: 50 dòng mỗi trang
     await expect(page.locator('#klTinhDen')).toContainText('Số liệu tính đến');
     await expect(page.locator('#klNutThem')).toBeVisible(); // 0085: mọi chuyên viên giao thẳng được cho chuyên viên → có nút Giao việc
     await page.locator('#klStats [data-nhom="DANG_THUC_HIEN"]').click();
     const dth = Number(await page.locator('#klSo-DANG_THUC_HIEN').innerText());
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(dth);
+    await soDongKl(page, dth);
     await expect(row).toBeVisible(NAP);
     await page.locator('#klStats [data-nhom=""]').click();
   });

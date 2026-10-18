@@ -135,7 +135,7 @@ export async function capNhatNhiemVu(id, thayDoi) {
 }
 
 // Văn bản giao việc (GV-1): danh sách để chọn trên form; văn bản mới tạo trong hàm giao_viec.
-const COT_VAN_BAN = 'id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu, tao_boi, so_nhiem_vu_du_kien, da_ra_soat_toan_van, ra_soat_boi, ra_soat_luc';
+const COT_VAN_BAN = 'id, loai, so_hoi_nghi, so_ket_luan, ngay_ban_hanh, ngay_nhan, trich_yeu, tao_boi, so_nhiem_vu_du_kien, da_ra_soat_toan_van, ra_soat_boi, ra_soat_luc, created_at';   // v3.25: created_at — Theo văn bản "mới nhập trước"
 const vanBanTheoThuTu = () => supabase.from('van_ban_giao_viec').select(COT_VAN_BAN).order('ngay_ban_hanh', { ascending: false }).order('so_ket_luan').order('id');
 // Đủ mọi văn bản trong phạm vi (cây Theo văn bản ghép theo id) — theo trang.
 export const loadVanBan = () => taiTheoTrang(vanBanTheoThuTu, 'đọc văn bản');

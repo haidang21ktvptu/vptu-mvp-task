@@ -1,8 +1,9 @@
 // Đợt E v3.18 (0085): chuyên viên chủ trì văn bản gốc X nhập từng nhiệm vụ trên văn bản và giao thẳng cho chuyên viên khác / chính mình — ô
 // Thay mặt để trống (Đợt F v3.21: mọi chuyên viên có ô, tuỳ chọn), không ô Người theo dõi (theo dõi = người giao); cấu hình xac_nhan_nhan_viec = 2 (đặt tạm bằng service_role, khôi phục) → việc coi như đã
 // nhận ngay khi giao. demo_e2e_cv (A3, phòng E2E_RT) giao 2 việc một lượt (thẻ 1 cho demo_e2e_nv phòng Tổng hợp — khác phòng; thẻ 2 cho chính mình)
-// → việc 1 ở "Việc tôi theo dõi", việc 2 ở "Việc của tôi"; demo_e2e_nv (không bị spec nào đăng xuất — bo-cuc đăng xuất demo_e2e_kl) thấy việc 1 ở "Việc của tôi" mục đang làm (không chờ xác nhận, không nút
-// Xác nhận), có tin giao, menu có Giao việc (Đợt D: không còn Cần nghiệm thu). Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
+// → việc 1 ở "Việc tôi theo dõi", việc 2 ở "Việc của tôi"; demo_e2e_nv (không bị spec nào đăng xuất — bo-cuc đăng xuất demo_e2e_kl) thấy việc 1 ở "Việc của tôi" nhóm đang làm (không chờ xác nhận, không nút
+// Xác nhận), có tin giao, menu có Giao việc (Đợt D: không còn Cần nghiệm thu). v3.25 (bảng): việc đã nhận, còn hạn không ở ô mặc định (Cần xử lý /
+// Cần đôn đốc) — chọn ô Tất cả. Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
 import { NAP, moGiaoViec, nav } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
@@ -65,10 +66,15 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
 
   test('2. demo_e2e_cv: việc 1 ở "Việc tôi theo dõi" (có Giao tiếp xuống), việc 2 ở "Việc của tôi" — không chờ xác nhận', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
-      await expect(p.locator(`#vctDong-${viec[1].id}`)).toBeVisible(NAP);   // v3.23.1: việc đang làm ở phần "Nhiệm vụ theo văn bản gốc"
-      await expect(p.locator(`#vctMuc-moi #vct-${viec[1].id}`)).toHaveCount(0);
+      await expect(p.locator('#vctBang')).toHaveAttribute('data-nap', /./, NAP);
+      await p.locator('#vctSo [data-loc="tat"]').click();   // v3.25: việc đang làm, đã nhận, còn hạn — ở ô Tất cả của bảng
+      const dong = p.locator(`#vct-${viec[1].id}`); await expect(dong).toBeVisible(NAP);
+      await expect(dong).toHaveAttribute('data-kieu', 'dang-lam');
+      await expect(dong.locator('[data-action="xacNhanNhanThe"]')).toHaveCount(0);   // không chờ xác nhận
       await nav(p, 'navTheoDoi');
       await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+      await p.locator('#klTdSo [data-loc="tat"]').click();   // v3.25: ô mặc định "Cần đôn đốc" — việc đã nhận, còn hạn ở ô Tất cả
+      await expect(p.locator('#klTdSo [data-loc="tat"]')).toHaveAttribute('aria-pressed', 'true');
       const row = p.locator(`#klRow-${viec[0].id}`); await expect(row).toBeVisible(NAP); await row.click();
       await expect(p.locator(`#klChiTiet-${viec[0].id}`)).toBeVisible(NAP);
       await expect(p.locator(`#klChiTiet-${viec[0].id}`)).toContainText('đã nhận việc');
@@ -79,10 +85,13 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
 
   test('3. demo_e2e_nv (Owner, phòng khác): việc ở "Việc của tôi" mục đang làm, không nút Xác nhận, có tin giao', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_NV', testInfo, async (p) => {
-      const the1 = p.locator(`#vctDong-${viec[0].id}`);   // v3.23.1: dòng ở phần theo văn bản gốc
+      await expect(p.locator('#vctBang')).toHaveAttribute('data-nap', /./, NAP);
+      await expect(p.locator(`#vct-${viec[0].id}`)).toHaveCount(0);   // v3.25: đã nhận, còn hạn → không ở ô "Cần xử lý" (mặc định)
+      await p.locator('#vctSo [data-loc="tat"]').click();
+      const the1 = p.locator(`#vct-${viec[0].id}`);
       await expect(the1).toBeVisible(NAP);
-      await expect(p.locator(`#vctMuc-moi #vct-${viec[0].id}`)).toHaveCount(0);
-      await expect(p.locator(`#vct-${viec[0].id}`)).toHaveCount(0);   // không có thẻ hành động (không chờ xác nhận / từ chối)
+      await expect(the1).toHaveAttribute('data-kieu', 'dang-lam');   // nhóm đang làm (chủ trì)
+      await expect(the1.locator('[data-action="xacNhanNhanThe"], [data-action="vctMoKhoi"][data-kieu="tu-choi"]')).toHaveCount(0);   // không chờ xác nhận / từ chối
       await expect(p.locator('#navGiaoViec')).toHaveCount(1);
     });
   });

@@ -1,6 +1,6 @@
 // Nhập theo tầng + Đề nghị sửa (giao diện v9 đợt 2, 0070–0071). Một việc phòng thử E2E_RT do Trưởng phòng (demo_e2e_tp) giao cho chuyên viên
-// (demo_e2e_cv): (1) A3 — thẻ "Việc của tôi" → Đề nghị sửa sản phẩm (lý do bắt buộc) → thẻ ghi "chờ … duyệt", nút Rút thay nút Đề nghị sửa;
-// ngăn chi tiết có KHOÁ (không có bút) ở ô do cấp giao điền, khối "đang chờ" chỉ có Rút; (2) A2 — dải Cần xử lý ngay có mục "đề nghị sửa chờ
+// (demo_e2e_cv): (1) A3 — dòng "Việc của tôi" (v3.25 bảng) → bấm nội dung mở ngăn chi tiết → Đề nghị sửa sản phẩm (lý do bắt buộc) → dòng ghi
+// "chờ … duyệt" kèm nút Rút; ngăn chi tiết có KHOÁ (không có bút) ở ô do cấp giao điền, khối "đang chờ" chỉ có Rút; (2) A2 — dải Cần xử lý ngay có mục "đề nghị sửa chờ
 // duyệt" → Chấp nhận → sản phẩm đổi; (3) A2 — đề nghị thứ hai (gửi bằng token A3) → ngăn chi tiết có BÚT, khối đang chờ → Giữ nguyên (ý kiến
 // bắt buộc); Sửa thông tin giao (độ khẩn): thiếu lý do bị chặn, có lý do áp ngay, lịch sử ghi lý do. Project chưa áp 0071 → skip cả spec.
 // Chạy ở project riêng SAU chuỗi pr4 (playwright.config.js): hàm DB gửi tin hệ thống cho demo_e2e_cv — realtime.spec đếm huy hiệu tin của tài
@@ -26,12 +26,14 @@ test.describe.serial('Nhập theo tầng — khoá / bút, Đề nghị sửa v�
   });
   test.afterAll(async () => { if (db && khoa) await donVanBan(db, khoa); });
 
-  test('A3: thẻ Việc của tôi → Đề nghị sửa (lý do bắt buộc) → thẻ ghi chờ duyệt, có Rút; ngăn chi tiết có khoá, không có bút', async ({ browser }, testInfo) => {
+  test('A3: dòng Việc của tôi → ngăn chi tiết → Đề nghị sửa (lý do bắt buộc) → dòng ghi chờ duyệt, có Rút; ngăn chi tiết có khoá, không có bút', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_CV', testInfo);
     const the = page.locator(`#vct-${nv.id}`);
     await expect(the).toBeVisible(NAP);
-    await the.getByRole('button', { name: 'Chi tiết', exact: true }).click();   // v3.23: thẻ tối giản — thao tác phụ trong "Chi tiết"
-    await the.getByRole('button', { name: 'Đề nghị sửa', exact: true }).click();
+    await the.locator('[data-action="nganMoViec"]').click();   // v3.25: bấm nội dung việc → ngăn chi tiết dùng chung; Đề nghị sửa ở hàng nút của ngăn
+    const nganCt = page.locator(`#nganCT #klChiTiet-${nv.id}`);
+    await expect(nganCt).toBeVisible(NAP);
+    await nganCt.getByRole('button', { name: 'Đề nghị sửa', exact: true }).click();
     const hop = page.locator('#stModal');
     await expect(hop).toBeVisible();
     await expect(page.locator('#stTieuDe')).toHaveText(`Đề nghị sửa · ${nv.ma}`);
@@ -45,10 +47,10 @@ test.describe.serial('Nhập theo tầng — khoá / bút, Đề nghị sửa v�
     await page.locator('#stLuu').click();
     await expect(toast(page)).toContainText('Đã gửi đề nghị sửa');
     await expect(hop).toBeHidden();
+    await page.locator('#nganCTDong').click(); await expect(page.locator('#nganCT')).toBeHidden();
     await expect(the).toContainText('Đã đề nghị sửa sản phẩm', NAP);
     await expect(the).toContainText('chờ Demo E2E Trưởng phòng RT duyệt');
     await expect(the.getByRole('button', { name: 'Rút đề nghị sửa' })).toBeVisible();
-    await expect(the.getByRole('button', { name: 'Đề nghị sửa', exact: true })).toHaveCount(0);
 
     const d = (await db.from('de_nghi_sua').select('id, cap_duyet, thay_doi, gia_tri_cu, ly_do, trang_thai').eq('nhiem_vu_id', nv.id).single()).data;
     expect(d).toMatchObject({ cap_duyet: ID.e2eTp, thay_doi: { san_pham_loai: 'TO_TRINH' }, gia_tri_cu: { san_pham_loai: 'BAO_CAO' }, ly_do: LY_DO, trang_thai: 'CHO_DUYET' });

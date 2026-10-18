@@ -1,6 +1,7 @@
-// GĐ21 (0034): từ chối nhận việc có duyệt — A3 (demo_e2e_cv, phòng E2E_RT) mở "Việc của tôi" → việc mới giao có nút Từ chối → lý do
-// bắt buộc → gửi → dòng chuyển "chờ duyệt"; A2 cùng phòng (demo_e2e_tp = lãnh đạo trực tiếp) mở "Phòng tôi hôm nay" → khối "Đề nghị từ chối"
-// hiện lý do → Đồng ý → A3 tải lại: việc nằm ở nhóm "Bị từ chối, chờ lãnh đạo giao lại" với nhãn. Nhiệm vụ mẫu ở hội nghị 991, tự dọn.
+// GĐ21 (0034): từ chối nhận việc có duyệt — A3 (demo_e2e_cv, phòng E2E_RT) mở "Việc của tôi" → việc mới giao có nút Từ chối (v3.25: cột Việc
+// cần làm, biểu mẫu mở dưới dòng) → lý do bắt buộc → gửi → dòng chuyển "chờ duyệt"; A2 cùng phòng (demo_e2e_tp = lãnh đạo trực tiếp) mở "Phòng
+// tôi hôm nay" → khối "Đề nghị từ chối" hiện lý do → Đồng ý → A3 tải lại: dòng thuộc nhóm "Bị từ chối, chờ lãnh đạo giao lại" (data-kieu) với
+// nhãn. Nhiệm vụ mẫu ở hội nghị 991, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs, NAP } from './lib/app.js';
@@ -43,7 +44,7 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
     const dong = cv.locator(`#vct-${nvId}`);
     await expect(dong).toBeVisible(NAP);
     await expect(dong.locator('[data-action=xacNhanNhanThe]')).toBeVisible();
-    await dong.locator('[data-action=moO]').click();
+    await dong.locator('[data-action="vctMoKhoi"][data-kieu="tu-choi"]').click();   // v3.25: nút Từ chối cạnh Xác nhận → biểu mẫu mở dưới dòng
     const form = cv.locator(`#oTc-${nvId}`);
     await expect(form).toBeVisible();
     await form.locator('button[type=submit]').click(); // input required → trình duyệt chặn, chưa gửi
@@ -70,12 +71,13 @@ test.describe.serial('Từ chối nhận việc — A3 đề nghị, Trưởng p
     expect(data.bi_tu_choi).toBe(true);
   });
 
-  test('A3 tải lại: việc ở nhóm "Bị từ chối, chờ lãnh đạo giao lại" với nhãn; không còn ở nhóm việc mới', async () => {
+  test('A3 tải lại: việc ở nhóm "Bị từ chối, chờ lãnh đạo giao lại" với nhãn; không còn là việc mới chờ nhận', async () => {
     await cv.locator('[data-action=loadDieuHanh]').click();
-    const muc = cv.locator('#vctMuc-tu-choi');
-    await expect(muc).toBeVisible(NAP);
-    await expect(muc.locator(`#vct-${nvId} .nhan-tu-choi`)).toHaveText('Đã đồng ý từ chối, chờ giao lại', NAP);
-    await expect(cv.locator(`#vctMuc-moi #vct-${nvId}`)).toHaveCount(0);
+    const dong = cv.locator(`#vct-${nvId}`);
+    await expect(dong).toHaveAttribute('data-kieu', 'tu-choi', NAP);   // v3.25: nhóm ưu tiên của dòng
+    await expect(dong.locator('.nhan-tu-choi')).toHaveText('Đã đồng ý từ chối, chờ giao lại', NAP);
+    await expect(dong).toHaveAttribute('data-viec', 'cho-giao-lai');
+    await expect(dong.locator('[data-action=xacNhanNhanThe]')).toHaveCount(0);
   });
 });
 

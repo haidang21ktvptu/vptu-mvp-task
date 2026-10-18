@@ -1,4 +1,4 @@
-/* Điểm vào CSS (v8 đợt 3; v9: tong-quan.css, v9.css — tinh chỉnh chung theo hai kiểu giao diện; v9 đợt 2: ngan-chi-tiet.css — ngăn chi tiết dùng chung): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
+/* Điểm vào CSS (v8 đợt 3; v9: tong-quan.css, v9.css — tinh chỉnh chung theo hai kiểu giao diện; v9 đợt 2: ngan-chi-tiet.css — ngăn chi tiết dùng chung; v3.25: bang-nhiem-vu.css + bang-man-hinh.css — bảng nhiệm vụ theo cột, theo-van-ban.css đứng sau để ghi đè): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
@@ -15,7 +15,6 @@
 @import './gd23.css';
 @import './v8-hang.css';
 @import './nhiem-vu-v8.css';
-@import './theo-van-ban.css';
 @import './han-nop.css';
 @import './pr3.css';
 @import './tong-quan.css';
@@ -31,6 +30,9 @@
 @import './muc-tieu-v325.css';
 @import './ra-soat-muc-tieu.css';
 @import './quan-tri-muc-tieu.css';
+@import './bang-nhiem-vu.css';
+@import './bang-man-hinh.css';
+@import './theo-van-ban.css';
 @import './in.css';
 
 @tailwind base;

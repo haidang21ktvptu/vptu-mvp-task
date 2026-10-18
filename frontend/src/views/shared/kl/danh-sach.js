@@ -2,6 +2,8 @@
 // số dòng; bấm ô = lọc đúng mảng đó). Bộ lọc "ngữ cảnh" (kết luận/hội nghị/ngành/lĩnh vực/tìm kiếm/chip đơn vị và các khoá màn hình
 // điều hành truyền sang) áp cho cả dải số lẫn danh sách; bộ lọc "nhóm" chỉ áp cho danh sách. Ngăn chi tiết đang mở giữ nguyên qua vẽ lại.
 // v3.24: bộ lọc chi tiết (thời gian nhập, người nhập, cấp giao, hạn xử lý, độ khẩn — loc-them.js) và ba cách sắp xếp (kl.sx; mặc định mới nhập trước).
+// v3.25 (bảng theo cột, mẫu NhiemVu 16/10/2026): 50 dòng mỗi trang (kl.trang; đổi lọc / tìm / sắp xếp / ô số → trang 1; nạp lại, realtime giữ
+// trang; In / Xuất Excel lấy đủ danh sách), hàng tiêu đề theo bộ cột; chế độ "Việc tôi theo dõi" (theo-doi.js) khi có khoá theoDoiCuaToi.
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
@@ -13,12 +15,17 @@ import { homNayVN } from '../../../lib/kl/ngay.js';
 import { giaiLocThem, sapXepMoiNhap, sapXepHan, demLocThem } from '../../../lib/kl/loc-them.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tuyChonMucTieu } from '../../../lib/kl/tq-bo-loc.js';   // v3.24 (0105): ô lọc mục tiêu then chốt
+import { phanTrang, chuHienThi } from '../../../lib/kl/bang-o.js';
+import { dauBangHtml, nutTrangHtml } from '../bang/khung.js';
 import { dongHtml } from './dong.js';
-import { veLaiChiTiet, idDangMo } from './chi-tiet.js';
+import { veLaiChiTiet, idDangMo, dongBoNgan } from './chi-tiet.js';
+import { td, laTheoDoi, locTheoDoi, veTheoDoi } from './theo-doi.js';
 
 // v3.23 (0103): kl.rows = mọi dòng đọc được (cấu hình xem toàn bộ: cả việc chỉ xem); danh sách mặc định chỉ việc trong phạm vi xử lý, nút
 // "Toàn Văn phòng" (kl.loc.toanBo) mở cả việc chỉ xem. Ngăn chi tiết tìm dòng trong kl.rows nên mở được mọi việc đọc được (ngoài phạm vi: chỉ xem).
-const kl = { rows: [], luc: null, loc: {}, phanCong: [], sx: 'moi' };
+const kl = { rows: [], luc: null, loc: {}, phanCong: [], sx: 'moi', trang: 1, inDayDu: false };
+const COT_NV = [['STT', 'bnv-c-stt'], ['Thời gian nhập', 'bnv-c-tg'], ['Nhiệm vụ'], ['Văn bản giao'], ['Chủ trì'], ['Hạn xử lý'], ['Trạng thái']];
+const COT_TD = [['STT', 'bnv-c-stt'], ['Nhiệm vụ'], ['Chủ trì'], ['Văn bản giao'], ['Hạn xử lý'], ['Trạng thái'], ['Tình hình']];
 const SAP_XEP_HAM = { moi: sapXepMoiNhap, han: sapXepHan, 'canh-bao': sapXep };
 let sauKhiNap = null;
 export const setKlSauKhiNap = (fn) => { sauKhiNap = fn; };
@@ -51,6 +58,7 @@ export const dsDangHien = () => dangHien;
 
 export function setKlLoc(loc, thayThe = false) {
   kl.loc = thayThe ? { ...loc } : { ...kl.loc, ...loc };
+  kl.trang = 1;
   if (thayThe) Object.entries(MAP_O).forEach(([id, khoa]) => { if ($(id)) $(id).value = kl.loc[khoa] || ''; });
   render();
 }
@@ -143,16 +151,28 @@ export function render(veLaiNgan = false) {
   setText('klSo-TONG', t.tong);
   THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
   document.querySelectorAll('#klStats .o-so').forEach((el) => el.setAttribute('aria-pressed', String((el.dataset.nhom || '') === (nhom || ''))));
-  const list = (SAP_XEP_HAM[kl.sx] || sapXep)(locRows(trongNguCanh, { nhom }));
+  // Việc tôi theo dõi (theo-doi.js): ô số riêng + quan hệ thay dải trạng thái; sắp xếp "Mức cảnh báo" không dùng ở chế độ này.
+  const theoDoi = laTheoDoi(kl.loc); const tdLoc = theoDoi ? locTheoDoi(trongNguCanh) : null;
+  veTheoDoi(theoDoi, tdLoc?.so);
+  if (theoDoi && kl.sx === 'canh-bao') kl.sx = 'moi';
+  const list = (SAP_XEP_HAM[kl.sx] || sapXep)(theoDoi ? tdLoc.list : locRows(trongNguCanh, { nhom }));
   dangHien = list;
-  const dangMo = idDangMo(); const tuyChon = { hienNhap: kl.sx === 'moi', now: Date.now() };
+  const p = kl.inDayDu ? { trang: 1, soTrang: 1, tu: 0, den: list.length } : phanTrang(list.length, kl.trang);
+  kl.trang = p.trang;
+  $('klBang').className = theoDoi ? 'list bnv cot-td' : 'list bnv cot-nv';
+  $('klDauBang').innerHTML = dauBangHtml(theoDoi ? COT_TD : COT_NV);
+  const dangMo = idDangMo(); const tuyChon = { now: Date.now(), cot: theoDoi ? 'td' : 'nv' };
   $('klBody').innerHTML = list.length === 0
     ? `<p class="trong-nho">${goc.length === 0 ? 'Không có nhiệm vụ nào trong phạm vi của đồng chí.' : 'Không có nhiệm vụ nào phù hợp điều kiện lọc.'}</p>`
-    : list.map((r) => dongHtml(r, homNay, r.id === dangMo, tuyChon)).join('');
+    : list.slice(p.tu, p.den).map((r, i) => dongHtml(r, homNay, r.id === dangMo, { ...tuyChon, stt: p.tu + i + 1 })).join('');
+  $('klBody').dataset.soLoc = String(list.length); $('klBody').dataset.soHien = String(p.den - p.tu);   // e2e: số dòng đang lọc / đang hiện
   if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
-  setText('klSoDong', `${list.length} / ${goc.length} nhiệm vụ${nhom ? ` · ${tenNhom(nhom)}` : ''}`);
-  setText('klPhuDe', kl.loc.toanBo ? 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết'
-    : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
+  setText('klSoDong', `${chuHienThi(p, list.length, goc.length)}${nhom && !theoDoi ? ` · ${tenNhom(nhom)}` : ''}`);
+  $('klTrang').innerHTML = kl.inDayDu ? '' : nutTrangHtml(p, 'klTrang');
+  setText('klPhuDe', theoDoi ? 'việc đồng chí theo dõi hoặc đã giao, do cán bộ, cơ quan khác chủ trì — cột Tình hình cho biết việc cần đôn đốc'
+    : kl.loc.toanBo ? 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết'
+      : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
+  dongBoNgan();
   // Dấu hiệu "đã nạp xong" cho mọi màn / vai (e2e chờ thuộc tính này, không dựa vào "có dòng đầu"): đặt ở đây để cả danh sách rỗng cũng có.
   if (kl.luc) $('klBody').dataset.nap = kl.luc.toISOString(); else $('klBody').removeAttribute('data-nap');
   if (kl.luc) setText('klTinhDen', `Số liệu tính đến ${formatDateTime(kl.luc)}:${String(kl.luc.getSeconds()).padStart(2, '0')}`);
@@ -190,18 +210,23 @@ export function ganBoLoc() {
       const [o1, o2] = khoa === 'nhapKy' ? ['klLocNhapTu', 'klLocNhapDen'] : ['klLocHanTu', 'klLocHanDen'];
       [o1, o2].forEach((id) => { delete kl.loc[MAP_O[id]]; $(id).value = ''; });
     }
-    render();
+    kl.trang = 1; render();
   }));
 }
-export const locKlNhom = ({ nhom }) => { kl.loc.nhom = nhom || ''; render(); };
+export const locKlNhom = ({ nhom }) => { kl.loc.nhom = nhom || ''; kl.trang = 1; render(); };
 // v3.23: đổi phạm vi danh sách (Phạm vi của tôi / Toàn Văn phòng) — bỏ khoá "việc của tôi"; ô chọn vẽ lại theo dòng của phạm vi mới.
-export const doiKlToanBo = (toanBo) => { kl.loc = { ...kl.loc, toanBo, ...(toanBo ? { cuaToi: null, theoDoiCuaToi: null } : {}) }; dienBoLoc(); render(); };
-export const boKlLoc = ({ khoa }) => { delete kl.loc[khoa]; render(); };
+export const doiKlToanBo = (toanBo) => { kl.loc = { ...kl.loc, toanBo, ...(toanBo ? { cuaToi: null, theoDoiCuaToi: null } : {}) }; kl.trang = 1; dienBoLoc(); render(); };
+export const boKlLoc = ({ khoa }) => { delete kl.loc[khoa]; kl.trang = 1; render(); };
 // v3.24: cách sắp xếp (giữ trong phiên làm việc, không đổi khi màn khác truyền bộ lọc sang); Xoá bộ lọc = bỏ mọi ô lọc + ô số đang chọn,
 // giữ khoá ngữ cảnh (việc của tôi, phạm vi, chip từ màn điều hành — bỏ bằng nút ✕ của chip).
-export const doiKlSapXep = ({ sx }) => { if (SAP_XEP_HAM[sx]) { kl.sx = sx; render(); } };
+export const doiKlSapXep = ({ sx }) => { if (SAP_XEP_HAM[sx]) { kl.sx = sx; kl.trang = 1; render(); } };
 export function xoaKlLoc() {
   Object.entries(MAP_O).forEach(([id, khoa]) => { delete kl.loc[khoa]; if ($(id)) $(id).value = ''; });
   delete kl.loc.nhom;
-  dienLinhVuc(); render();
+  kl.trang = 1; dienLinhVuc(); render();
 }
+// v3.25: trang (‹ / ›, cuộn về đầu bảng); ô số và quan hệ của "Việc tôi theo dõi"; In / lưu PDF vẽ tạm mọi dòng đang lọc (beforeprint / afterprint).
+export function doiKlTrang({ trang }) { kl.trang = Number(trang) || 1; render(); $('klBang')?.scrollIntoView({ block: 'start' }); }
+export const locKlTd = ({ loc }) => { td.loc = loc || 'tat'; kl.trang = 1; render(); };
+export const doiKlQh = ({ qh }) => { td.qh = qh || ''; kl.trang = 1; render(); };
+export function inKlDayDu(bat) { if (kl.inDayDu === bat) return; kl.inDayDu = bat; render(); }

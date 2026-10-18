@@ -1,7 +1,7 @@
-// Kịch bản 4–5 (viết lại GĐ14; giao diện v7 GĐ20): A2 giao việc trên trang ba bước (Owner = chuyên viên phòng mình, sản phẩm, hạn) → A3 thấy
-// thẻ "Việc mới giao — cần xác nhận đã nhận" ở đầu "Việc của tôi" (chỉ việc theo 1400; thay modal bắt buộc), xác nhận không đổi hạn/trạng
-// thái → việc theo 1400 không chọn Hoàn thành ở Cập nhật, nút Đóng mờ khi chưa có minh chứng. Kèm: việc cũ (theo_1400 = false) không hiện thẻ
-// cần xác nhận, chỉ có nút xác nhận tuỳ chọn ở ngăn chi tiết.
+// Kịch bản 4–5 (viết lại GĐ14; giao diện v7 GĐ20; v3.25 bảng theo cột): A2 giao việc trên trang ba bước (Owner = chuyên viên phòng mình, sản
+// phẩm, hạn) → A3 thấy dòng việc ở ô "Cần xử lý" (mặc định) của bảng "Việc của tôi", cột Việc cần làm "Xác nhận đã nhận việc" (chỉ việc theo
+// 1400), xác nhận không đổi hạn/trạng thái → việc cần làm chuyển sang Nộp minh chứng (khối mở dưới dòng) → việc theo 1400 không chọn Hoàn thành
+// ở Cập nhật, không có nút Đóng. Kèm: việc cũ (theo_1400 = false) không có nút xác nhận trên dòng, chỉ có nút xác nhận tuỳ chọn ở ngăn chi tiết.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs, moViec, moGiaoViec, NAP } from './lib/app.js';
@@ -14,7 +14,7 @@ const SO_HOI_NGHI = 994;
 const homNayVN = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 const congNgay = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
-test.describe.serial('Luồng giao việc → xác nhận nhận việc trên thẻ → hoàn thành', () => {
+test.describe.serial('Luồng giao việc → xác nhận nhận việc trên dòng Việc của tôi → hoàn thành', () => {
   let db; let title; let cuId; let cuMa; let moiId; let moiMa; let hnKhoa; let duAn;
 
   test.beforeAll(async ({}, testInfo) => { // eslint-disable-line no-empty-pattern
@@ -35,10 +35,16 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
   });
   test.afterAll(async () => { if (db) { await don(db, duAn); await donVanBan(db, hnKhoa); } });
 
-  test('Kịch bản 4a: A3 có việc cũ chưa xác nhận → KHÔNG có thẻ cần xác nhận, chỉ nút xác nhận tuỳ chọn ở ngăn chi tiết', async ({ browser }, testInfo) => {
+  test('Kịch bản 4a: A3 có việc cũ chưa xác nhận → dòng KHÔNG có nút xác nhận, chỉ nút xác nhận tuỳ chọn ở ngăn chi tiết', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     await expect(page.locator('#vctTom')).toContainText('việc cần làm', NAP);
-    await expect(page.locator('#vctMuc-moi')).toHaveCount(0);
+    await expect(page.locator('#vctBang')).toHaveAttribute('data-nap', /./, NAP);
+    await expect(page.locator(`#vct-${cuId}`)).toHaveCount(0);   // v3.25: việc cũ còn hạn, không cần xác nhận → không ở ô "Cần xử lý" (mặc định)
+    await page.locator('#vctSo [data-loc="tat"]').click();
+    const dong = page.locator(`#vct-${cuId}`);
+    await expect(dong).toBeVisible(NAP);
+    await expect(dong).not.toHaveAttribute('data-viec', 'nhan');
+    await expect(dong.locator('[data-action="xacNhanNhanThe"]')).toHaveCount(0);
     await moViec(page, cuId, cuMa);
     await expect(page.locator('#klChipLoc')).toContainText('Việc của tôi');
     const ngan = page.locator(`#klChiTiet-${cuId}`);
@@ -76,20 +82,22 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên th
     await page.context().close();
   });
 
-  test('Kịch bản 5: A3 xác nhận đã nhận việc trên thẻ (hạn, trạng thái không đổi); việc theo 1400 không chọn Hoàn thành ở Cập nhật, không có nút Đóng (Q2)', async ({ browser }, testInfo) => {
+  test('Kịch bản 5: A3 xác nhận đã nhận việc trên dòng (hạn, trạng thái không đổi); việc theo 1400 không chọn Hoàn thành ở Cập nhật, không có nút Đóng (Q2)', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
-    const muc = page.locator('#vctMuc-moi');
-    await expect(muc).toBeVisible(NAP);
-    await expect(muc).toContainText('Việc mới giao — cần xác nhận đã nhận');
-    const the = page.locator(`#vct-${moiId}`);
-    await expect(the).toContainText(title, NAP);
+    const dong = page.locator(`#vct-${moiId}`);   // v3.25: dòng của bảng — ô "Cần xử lý" (mặc định) có việc mới giao chưa nhận
+    await expect(dong).toContainText(title, NAP);
+    await expect(dong).toHaveAttribute('data-kieu', 'moi');
+    await expect(dong).toHaveAttribute('data-viec', 'nhan');
     const truoc = (await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma').eq('id', moiId).single()).data;
-    await the.getByRole('button', { name: 'Xác nhận đã nhận việc' }).click();
+    await dong.getByRole('button', { name: 'Xác nhận đã nhận việc' }).click();
     await expect(page.locator('#toastContainer')).toContainText('Đã xác nhận nhận việc');
-    await expect(page.locator('#vctMuc-moi')).toHaveCount(0);
+    // Việc Vàng chưa có minh chứng → vẫn ở ô Cần xử lý, việc cần làm tiếp theo: Nộp minh chứng (khối mở ngay dưới dòng).
+    await expect(dong).toHaveAttribute('data-viec', 'nop', NAP);
+    await expect(dong).toHaveAttribute('data-kieu', 'minh-chung');
+    await expect(dong.locator('[data-action="xacNhanNhanThe"]')).toHaveCount(0);
     expect((await db.from('nhiem_vu').select('han_xu_ly, tien_do_ma').eq('id', moiId).single()).data).toEqual(truoc);
-    // Việc Vàng chưa có minh chứng → thẻ "Sắp đến hạn" có ô nộp 3 trường ngay trên thẻ.
-    await expect(page.locator(`#vctMuc-minh-chung #vct-${moiId} form.mc-inline`)).toBeVisible(NAP);
+    await dong.locator('[data-action="vctMoKhoi"][data-kieu="nop"]').click();
+    await expect(page.locator(`#vctKhoi-${moiId} form.mc-inline`)).toBeVisible(NAP);
 
     // GĐ16 (16B): modal Cập nhật không có Hoàn thành. Đợt D (0090): hoàn thành khi nộp minh chứng hợp lệ ⇒ không có nút Đóng.
     await moViec(page, moiId, moiMa); // GĐ22: nút Xem trên thẻ mở diễn biến tại chỗ; ngăn chi tiết mở từ màn hình Nhiệm vụ

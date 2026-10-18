@@ -116,7 +116,9 @@ test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (kh
     expect((await db.from('nhiem_vu').select('han_nop_minh_chung').eq('id', K.id).single()).data.han_nop_minh_chung).toBeNull();
     await voiPhien(browser, 'E2E_CV', testInfo, async (a3) => {
       await expect(a3.locator('#navGiaoViec')).toHaveCount(1);
-      const the = a3.locator(`#vctDong-${K.id}`);   // v3.23.1: dòng ở phần "Nhiệm vụ theo văn bản gốc"
+      await expect(a3.locator('#vctBang')).toHaveAttribute('data-nap', /./, NAP);
+      await a3.locator('#vctSo [data-loc="tat"]').click();   // v3.25: việc đã nhận, còn hạn — ô Tất cả của bảng "Việc của tôi"
+      const the = a3.locator(`#vct-${K.id}`);
       await expect(the).toBeVisible(NAP);
       await expect(the).not.toContainText('Chậm nộp minh chứng');
     });

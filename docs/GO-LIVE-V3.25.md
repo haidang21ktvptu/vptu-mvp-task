@@ -1,6 +1,6 @@
-# Phát hành v3.25.0 — gộp v3.24 + v3.25: Tổng quan cho lãnh đạo, thống kê sử dụng, mục tiêu then chốt tự nhận diện, trợ lý AI
+# Phát hành v3.25.0 — gộp v3.24 + v3.25: Tổng quan cho lãnh đạo, thống kê sử dụng, mục tiêu then chốt tự nhận diện, trợ lý AI, bảng nhiệm vụ theo cột
 
-Bản phát hành **v3.25.0** = v3.24.0 (PR #142, migration **0104–0106**) + v3.25.0 (PR #143, **0107–0113**; PR #144, #145 chỉnh trợ lý AI) + đợt sửa gộp sau kiểm tay 18/10/2026 (nhánh `fix/v3.25-dot-sua-gop`, **0114**, CHANGELOG 76) + sửa "mục tiêu đã bỏ bị tích lại" (nhánh `fix/v3.25-khong-tich-lai`, **0115**, CHANGELOG 77) + PR phát hành `release/v3.25.0`. Production đang chạy `v3.23.2` (0001–0103); staging đã áp tới 0114 (0115 sau khi PR sửa mục tiêu đã bỏ được merge); trợ lý AI trên staging chạy Claude `claude-opus-5-5` mức Cao.
+Bản phát hành **v3.25.0** = v3.24.0 (PR #142, migration **0104–0106**) + v3.25.0 (PR #143, **0107–0113**; PR #144, #145 chỉnh trợ lý AI) + đợt sửa gộp sau kiểm tay 18/10/2026 (nhánh `fix/v3.25-dot-sua-gop`, **0114**, CHANGELOG 76) + sửa "mục tiêu đã bỏ bị tích lại" (nhánh `fix/v3.25-khong-tich-lai`, **0115**, CHANGELOG 77) + bảng nhiệm vụ theo cột (nhánh `feature/v3.25-bang-cot`, chỉ giao diện, CHANGELOG 78) + PR phát hành `release/v3.25.0`. Production đang chạy `v3.23.2` (0001–0103); staging đã áp tới 0115; trợ lý AI trên staging chạy Claude `claude-opus-5-5` mức Cao.
 
 Mỗi bước do **chủ dự án** làm (hoặc làm cùng Claude trong phiên). Claude không tự thao tác trên production, không dùng mật khẩu, khoá service hay khoá AI. Làm **lần lượt**, xong bước này mới sang bước sau.
 
@@ -12,10 +12,14 @@ Mỗi bước do **chủ dự án** làm (hoặc làm cùng Claude trong phiên)
 - **0114**: người giao tự giao cho chính mình được ghi "đã nhận" ngay (chỉ đổi hàm trigger `nhiem_vu_tu_nhan_viec`; không sửa dữ liệu có sẵn).
 - **0115**: mục tiêu người dùng đã bỏ ở một việc không tự tích lại ở việc đó; việc đã gắn riêng không tích sẵn theo mục tiêu của văn bản (chỉ thay hàm `goi_y_muc_tieu_viec`; không sửa dữ liệu có sẵn).
 - Không migration nào sửa hay gắn mục tiêu cho việc / văn bản đang có. Việc cũ chưa gắn mục tiêu — gắn dần khi giao mới, nhập Excel, hoặc ở màn Rà soát mục tiêu then chốt.
+- Giao diện bảng theo cột (không migration, không đổi quyền): Nhiệm vụ 50 dòng mỗi trang, Việc tôi theo dõi có ô số và cột Tình hình, Việc của tôi một bảng có cột Việc cần làm (biểu mẫu mở dưới dòng), Theo văn bản mỗi văn bản một dòng — cán bộ đang quen thẻ cũ cần được báo trước (Bước 4).
 - Edge Function `tro-ly-ai` triển khai cùng lượt. Chưa có secret `AI_KEY_ANTHROPIC` thì nút đọc văn bản chỉ đọc số hiệu / ngày / trích yếu ở trang đầu (không gửi đi đâu); workflow *Học quy tắc mục tiêu* (02:00) tự bỏ qua.
 
 ## Bước 1 — Kiểm bản cuối trên staging (`https://haidang21ktvptu.github.io/vptu-mvp-task/staging/`)
-Claude tự kiểm trong khung trình duyệt (chủ dự án chỉ đăng nhập tài khoản Claude nêu tên, không gõ mật khẩu hộ) và báo kết quả; chủ dự án xem lại bản cuối rồi báo **đồng ý** mới sang Bước 2.
+Claude tự kiểm trong khung trình duyệt (chủ dự án chỉ đăng nhập tài khoản Claude nêu tên, không gõ mật khẩu hộ) và báo kết quả; chủ dự án xem lại bản cuối rồi báo **đồng ý** mới sang Bước 2. Phần bảng theo cột kiểm thêm:
+- `demo_cvp` — Nhiệm vụ: ô Tổng = chân bảng "Hiển thị … trong N nhiệm vụ"; Trang sau / Trang trước; đổi ô số, tìm → về trang 1; bấm dòng → ngăn chi tiết cạnh bảng, Đóng ngăn → bảng đủ cột; In / lưu PDF in đủ danh sách đang lọc; Xuất Excel đủ số dòng.
+- Chuyên viên (`demo_cv1` hoặc tài khoản thử e2e): Việc của tôi — ô Cần xử lý mặc định, mỗi ô số = số dòng khi bấm; Xác nhận đã nhận việc, Từ chối (biểu mẫu dưới dòng), Nộp minh chứng có tệp, Trả lời chỉ đạo; gõ dở rồi bấm Tải lại vẫn giữ chữ; Toàn Văn phòng (nếu cấu hình bật) — việc ngoài phạm vi ghi "Chỉ xem". Việc tôi theo dõi — ô Cần đôn đốc, cột Tình hình, Tôi đã giao / Tôi theo dõi. Theo văn bản — mở / gập văn bản, Mở rộng tất cả, ô Hoàn thành toàn bộ.
+- Điện thoại (≤ 600px) và cửa sổ hẹp 1024px: dòng thành thẻ, không cuộn ngang; bốn chế độ màu (Thanh lịch / Trang nghiêm × sáng / tối).
 
 ## Bước 2 — Phát hành (quy tắc 12 + `docs/kien-truc.md` mục 7)
 1. Chủ dự án gửi trong phiên: **"Đồng ý áp migration 0104–0115 lên production"**.
@@ -34,4 +38,4 @@ Claude tự kiểm trong khung trình duyệt (chủ dự án chỉ đăng nhậ
 - Theo dõi *Học quy tắc mục tiêu* (02:00) và Nhật ký AI (lượt, token — chi phí API).
 - Thử mô hình rẻ hơn (Sonnet 5.5 / Haiku 5.5) trên staging bằng 10–15 văn bản đã công khai, so số giá trị đối chiếu được và số nhiệm vụ tách đúng với Opus — chỉ đổi khi không kém chính xác (chủ dự án quyết).
 - Còn chờ chủ dự án: văn bản gốc Nghị quyết Đại hội XX (sửa danh mục bằng migration mới), số liệu chỉ tiêu chủ yếu.
-- Hướng dẫn sử dụng: bổ sung Tổng quan 9 khối, Thống kê sử dụng, mục tiêu then chốt, Đọc văn bản gốc (PDF) (nhãn "chưa trọn câu", "Có thể còn sót"), Cấu hình AI.
+- Hướng dẫn sử dụng: bổ sung Tổng quan 9 khối, Thống kê sử dụng, mục tiêu then chốt, Đọc văn bản gốc (PDF) (nhãn "chưa trọn câu", "Có thể còn sót"), Cấu hình AI, bảng nhiệm vụ theo cột (Việc của tôi: ô Cần xử lý, cột Việc cần làm; Việc tôi theo dõi: cột Tình hình); báo cán bộ trước khi phát hành vì bố cục Việc của tôi thay đổi.
