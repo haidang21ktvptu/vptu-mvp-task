@@ -45,15 +45,18 @@ test.describe.serial('Theo văn bản — cây văn bản → nhiệm vụ → v
     if (db && khoa) await donVanBan(db, khoa);
   });
 
-  test('gốc văn bản có số hiệu, trích yếu, thanh tiến độ 0/2; nhánh cấp 1 chứa nhánh cấp 2; thu gọn / mở rộng; lọc Hoàn thành ẩn văn bản', async () => {
+  test('dòng văn bản có số hiệu, trích yếu, tiến độ 0/2; mở văn bản → bảng con: việc cấp 1 chứa việc cấp 2; thu gọn / mở rộng; ô Hoàn thành toàn bộ ẩn văn bản', async () => {
     await nav(page, 'navTheoVanBan');
     await expect(page.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);
     const goc = page.locator(`#tvbVb-${vbId}`);
     await expect(goc).toBeVisible();
     await expect(goc.locator('.tvb-vb')).toContainText(khoa);
     await expect(goc.locator('.tvb-trich-yeu')).toHaveText(TRICH_YEU);
-    await expect(goc.locator('.tvb-tien-chu')).toHaveText('0/2 hoàn thành · 0 quá hạn · 0 sắp đến hạn');
+    await expect(goc.locator('.tvb-tien-chu')).toHaveText('0/2 hoàn thành');   // v3.25: quá hạn / sắp đến hạn ở cột Cảnh báo
     await expect(goc).toHaveAttribute('data-so', '2');
+    await expect(goc).toHaveAttribute('data-mo', '0');   // v3.25 (bảng theo văn bản): văn bản gập sẵn — bấm tên văn bản mở bảng con
+    await goc.locator(`[data-action="tvbGap"][data-khoa="vb-${vbId}"]`).click();
+    await expect(goc).toHaveAttribute('data-mo', '1');
     const nhanhCha = page.locator(`#tvbNv-${cha.id}`); const nhanhCon = page.locator(`#tvbNv-${con.id}`);
     await expect(nhanhCha).toHaveAttribute('data-cap', '1');
     await expect(nhanhCon).toHaveAttribute('data-cap', '2');
@@ -64,9 +67,9 @@ test.describe.serial('Theo văn bản — cây văn bản → nhiệm vụ → v
     await expect(nhanhCon).toBeHidden();
     await page.locator('[data-action="tvbGapTatCa"][data-mo="1"]').click();
     await expect(nhanhCon).toBeVisible();
-    await page.locator('#tvbLoc').selectOption('HOAN_THANH'); // cả hai việc đang thực hiện → văn bản này biến mất khỏi cây
+    await page.locator('#tvbSo [data-loc="xong"]').click(); // ô "Hoàn thành toàn bộ": cả hai việc đang thực hiện → văn bản này không hiện
     await expect(goc).toHaveCount(0);
-    await page.locator('#tvbLoc').selectOption('DANG_THUC_HIEN');
+    await page.locator('#tvbSo [data-loc="mo"]').click();   // ô "Còn việc đang thực hiện"
     await expect(page.locator(`#tvbVb-${vbId}`)).toBeVisible();
   });
 

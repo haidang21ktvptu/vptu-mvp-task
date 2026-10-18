@@ -1,20 +1,18 @@
 // Dữ liệu "Việc của tôi" (A3): nhóm theo thứ tự ưu tiên, mỗi việc ở một nhóm — bị từ chối chờ giao lại → mới giao chưa xác nhận → có chỉ đạo chờ
-// trả lời → sắp đến hạn / quá hạn chưa có minh chứng hợp lệ → đang thực hiện (tôi chủ trì). v3.23.1: phần "Cần xử lý ngay" chỉ vẽ bốn nhóm đầu;
-// mọi việc (kể cả đang thực hiện, theo dõi, đã xong) xem ở phần theo văn bản gốc (van-ban-cua-toi.js). Thẻ vẽ ở the-viec-gon.js. Quyền thật ở DB.
+// trả lời → sắp đến hạn / quá hạn chưa có minh chứng hợp lệ → đang thực hiện (tôi chủ trì). v3.25 (bảng theo cột): nhóm ghi vào data-kieu của
+// dòng (bang-viec.js); ô số và "Việc cần làm" ở lib/kl/viec-toi.js; chỉ đạo chờ tôi trả lời, kết quả từ chối, đề nghị sửa đang chờ dùng cho khối
+// dưới dòng và ghi chú (khoi-viec.js). Quyền thật ở DB.
 import { escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { deNghiToiGuiDangCho } from '../../lib/kl/sua-tang.js';
 import { dh } from '../shared/dieu-hanh/du-lieu.js';
+import { mo, GAP, choNghiemThu, chuaNhan, laCuaToi as laCuaToiCua } from '../../lib/kl/viec-toi.js';   // vị từ dùng chung (một định nghĩa)
 
-export const me = () => state.user?.id;
-export const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
-export const laCuaToi = (r) => r.owner_tai_khoan === me() || r.nguoi_theo_doi === me();
-const canNhan = (r) => r.theo_1400 && mo(r) && !r.toi_da_xac_nhan && laCuaToi(r) && !r.bi_tu_choi; // chính tôi chưa nhận (owner / người theo dõi mỗi người tự nhận)
-export const choNghiemThu = (r) => ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem);
+const me = () => state.user?.id;
+const laCuaToi = (r) => laCuaToiCua(r, me());
+const canNhan = (r) => chuaNhan(r, me());   // chính tôi chưa nhận (owner / người theo dõi mỗi người tự nhận)
 // Chỉ đạo (không phải Thường trực) đang chờ TÔI trả lời trên một việc.
 export const chiDaoCua = (id) => dh.chiDaoCho.filter((c) => c.nhiem_vu_id === id && c.nguoi_gui !== me() && c.loai !== 'CHI_DAO_TT');
-// Quá hạn (mở, Đỏ / Đỏ đặc biệt — gồm quá hạn ở bước xác nhận minh chứng cũ, đang đính chính).
-export const quaHan = (r) => mo(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao);
 
 // Kết quả đề nghị từ chối của TÔI (GĐ22, mục 5b): đã đồng ý → chờ giao lại; không đồng ý → phải nhận việc (kèm ý kiến) cho tới khi xác nhận.
 export const ketQuaTuChoi = (r) => {
@@ -38,7 +36,7 @@ export function nhomViecCuaToi(rows = dh.rows.filter(laCuaToi)) {
   const tuChoi = lay(rows.filter((r) => r.bi_tu_choi && mo(r))); // đề nghị từ chối đã được đồng ý (0034), chờ lãnh đạo giao lại
   const moi = lay(rows.filter(canNhan));
   const chiDao = lay(rows.filter((r) => mo(r) && chiDaoCua(r.id).length));
-  const canMinhChung = lay(rows.filter((r) => mo(r) && ['VANG', 'DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r)));
+  const canMinhChung = lay(rows.filter((r) => mo(r) && GAP.includes(r.muc_canh_bao) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r)));
   const dangLam = lay(rows.filter((r) => mo(r) && r.owner_tai_khoan === me()));
   const theoDoi = rows.filter((r) => mo(r) && !daXep.has(r.id));   // tôi theo dõi (không chủ trì), không cần làm gì ngay
   const xong = rows.filter((r) => !mo(r));

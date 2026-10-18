@@ -29,6 +29,7 @@ test.describe.serial('Theo văn bản cho Trưởng phòng, chuyên viên (v3.22
       await expect(p.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);
       const goc = p.locator(`#tvbVb-${vbId}`);
       await expect(goc).toBeVisible();
+      await goc.locator(`[data-action="tvbGap"][data-khoa="vb-${vbId}"]`).click();   // v3.25: văn bản gập sẵn — mở bảng con
       await expect(p.locator(`#tvbNv-${p1.id}`)).toBeVisible();
       await expect(p.locator(`#tvbNv-${p2.id}`)).toHaveCount(0);
       await expect(p.locator(`#tvbNv-${p3.id}`)).toHaveCount(0);
@@ -44,6 +45,7 @@ test.describe.serial('Theo văn bản cho Trưởng phòng, chuyên viên (v3.22
     await voiPhien(browser, 'E2E_TP', testInfo, async (p) => {
       await nav(p, 'navTheoVanBan');
       await expect(p.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);
+      await p.locator(`#tvbVb-${vbId} [data-action="tvbGap"][data-khoa="vb-${vbId}"]`).click();   // v3.25: mở bảng con của văn bản
       await expect(p.locator(`#tvbNv-${p1.id}`)).toBeVisible();
       await expect(p.locator(`#tvbNv-${p2.id}`)).toBeVisible();
       await expect(p.locator(`#tvbNv-${p3.id}`)).toHaveCount(0);

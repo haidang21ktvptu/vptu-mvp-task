@@ -1,41 +1,37 @@
-// Màn hình cây "Theo văn bản" (v8 đợt 4; menu nhóm Theo dõi của A0 và A1; v3.22.1: cả A2, A3). Dữ liệu: v_nhiem_vu (đã có văn bản, nhiem_vu_cha, nhom_dem — DB tính)
-// + v_minh_chung (0046); phạm vi do RLS (A0 toàn bộ, A1/A2/A3 theo kl_pham_vi). Gốc = văn bản + thanh tiến độ "x/n hoàn thành · y quá hạn · z sắp đến
-// hạn"; nhánh cấp 1 = việc giao từ văn bản, cấp 2+ = việc giao tiếp xuống (nhiem_vu_cha), lá = minh chứng + người xác nhận. Thu gọn/mở rộng
-// từng nhánh (nhớ theo khoá trong phiên), lọc trạng thái (giữ nhánh có con khớp), bấm nhánh → moNhiemVu() mở #klChiTiet sẵn có ở màn Nhiệm vụ.
-// PR-3 F: gốc hiện "đã nhập x / dự kiến y" (x = kl_van_ban_so_viec — tổng thật việc gốc của văn bản, kể cả ngoài phạm vi xem) + cờ rà soát toàn văn;
-// nhãn vàng khi x < y hoặc chưa rà soát; người tạo văn bản / A1 / quan_tri_kl sửa tại chỗ (van_ban_dat_ra_soat là chốt).
-import { $, escapeHtml, giuONhap, show } from '../../../lib/dom.js';
+// Màn hình "Theo văn bản" (v8 đợt 4; mọi vai từ v3.22.1 — phạm vi RLS của người xem). v3.25 (bảng theo cột, mẫu TheoVanBan 16/10/2026; chủ dự
+// án duyệt 18/10): mỗi văn bản một dòng (dong.js), sáu ô số đếm văn bản (lib/kl/van-ban-bang.js), tìm, loại văn bản, phạm vi, sắp xếp mới nhập /
+// ngày nhận; bấm tên văn bản mở bảng con nhiệm vụ (việc giao tiếp xuống lồng theo nhiem_vu_cha, minh chứng dưới trạng thái); văn bản mặc định
+// gập (tìm thì mở văn bản khớp; Mở rộng / Thu gọn tất cả). Bấm việc → moNhiemVu() (ngăn chi tiết dùng chung). Dữ liệu: v_nhiem_vu + v_minh_chung
+// + van_ban_giao_viec + kl_van_ban_so_viec ("đã nhập x / dự kiến y" — tổng thật của văn bản); sửa rà soát tại chỗ (van_ban_dat_ra_soat là chốt).
+import { $, giuONhap, show } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
-import { state, findAccount } from '../../../lib/state.js';
+import { state } from '../../../lib/state.js';
 import { notifyError, notifySuccess } from '../../../components/toast.js';
 import { loadKlRows, loadVanBan, soViecTheoVanBan, datRaSoatVanBan, chuyenVienXemPhong, xemToanBo } from '../../../lib/kl/du-lieu.js';
-import { chiXem, nguoiGiaoVanBan, nguoiGiaoText } from '../../../lib/kl/pham-vi.js';
+import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
+import { homNayVN } from '../../../lib/kl/ngay.js';
+import { tongHopVanBan, lopVanBan, raSoatVanBan, O_SO_VB, locOVb, demOVb, sapXepVanBan } from '../../../lib/kl/van-ban-bang.js';
 import { laQtklConHan } from '../kl/thong-tin-giao.js';
 import { soNguyenKhongAm } from '../giao-viec/nguon.js';
 import { loadMinhChungTatCa } from '../../../lib/kl/minh-chung.js';
-import { formatNgay } from '../../../lib/kl/ngay.js';
-import { lopMep, nhanTrangThai } from '../../../lib/kl/nhan.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNhiemVu } from '../kl/index.js';
-import { ownerText, NHAN_CHI_XEM } from '../kl/dong.js';
-import { tenLoaiVanBan } from '../kl/them-owner.js';
+import { ownerText } from '../kl/dong.js';
+import { oSoHtml, giuTieuDiem } from '../bang/khung.js';
 import { theoVanBanTemplate, nhanPhamViTvb } from './template.js';
+import { nhanhHtml, vanBanHtml } from './dong.js';
 
 const DO_SAU_TOI_DA = 10;
-// Bộ lọc → tập nhom_dem (QUA_HAN gồm đang đính chính; ĐANG THỰC HIỆN gồm cần điền hạn, chờ điều kiện, thường xuyên).
-// PR-2b: quá hạn ở bước nghiệm thu (Đỏ) vào Quá hạn; chờ nghiệm thu (Xanh) vào Đang thực hiện.
-const NHOM_LOC = { QUA_HAN: ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'], SAP_DEN_HAN: ['SAP_DEN_HAN'], DANG_THUC_HIEN: ['DANG_THUC_HIEN', 'CAN_DIEN_HAN', 'CHO_DIEU_KIEN', 'THUONG_XUYEN', 'CHO_NGHIEM_THU'], HOAN_THANH: ['HOAN_THANH'] };
-const gap = new Set(); // khoá nhánh đang thu gọn ('vb-<id>' | 'nv-<id>'); mặc định mở
-let rows = []; let mc = []; let vanBan = new Map(); let soViec = new Map(); // văn bản theo id (loadVanBan: có trích yếu 0046); số việc đã nhập (PR-3)
-// v3.23 (0103): cấu hình xem toàn bộ → mặc định cây toàn Văn phòng (việc ngoài phạm vi ghi "Chỉ xem"), nút "Phạm vi của tôi" quay về như cũ.
+const tvb = { loc: 'tat', moHet: false, moVb: new Map(), gap: new Set() };   // ô số; văn bản mở / gập (khoá van_ban_id); nhánh việc đang gập ('nv-<id>')
+let rows = []; let mc = []; let vanBan = new Map(); let soViec = new Map();
+// v3.23 (0103): cấu hình xem toàn bộ → mặc định toàn Văn phòng (việc ngoài phạm vi ghi "Chỉ xem"), nút "Phạm vi của tôi" quay về như cũ.
 let trong = []; let tatCa = []; let toanBo = true;
 const coNutToanBo = () => xemToanBo() && tatCa.length > trong.length;
 const datRows = () => { rows = coNutToanBo() && toanBo ? tatCa : trong; };
-
-const khop = (r) => !$('tvbLoc').value || NHOM_LOC[$('tvbLoc').value].includes(r.nhom_dem);
-const chuaTuKhoa = (s, kw) => (s || '').toLowerCase().includes(kw);
+const chua = (s, kw) => (s || '').toLowerCase().includes(kw);
+const MAU = { qua: 'do', sap: 'vang', thieu: 'canh', xong: 'luc' };
 
 // Cây theo văn bản: con theo nhiem_vu_cha; việc có cha ngoài phạm vi (không đọc được) coi như cấp 1 của văn bản của nó.
 function dungCay() {
@@ -46,64 +42,45 @@ function dungCay() {
     if (!goc.has(r.van_ban_id)) goc.set(r.van_ban_id, { vb: r, viec: [] });
     goc.get(r.van_ban_id).viec.push(r);
   });
-  return { goc: [...goc.values()].sort((a, b) => (b.vb.ngay_ban_hanh || '').localeCompare(a.vb.ngay_ban_hanh || '') || (a.vb.so_ket_luan || '').localeCompare(b.vb.so_ket_luan || '')), con };
+  return { goc: [...goc.values()], con };
 }
-const laHtml = (m) => {
-  const xn = m.hop_le === null ? '<span class="tt-cho">chưa xác nhận</span>' : m.hop_le ? `<span class="tt-xong">hợp lệ — ${escapeHtml(m.xac_nhan_boi_ten || '')}</span>` : `<span class="tt-qua">không hợp lệ — ${escapeHtml(m.xac_nhan_boi_ten || '')}</span>`;
-  return `<div class="tvb-la" data-id="${m.id}"><i class="tvb-cham mc"></i><span class="mc-loai${m.loai === 'chu_cu' ? ' mc-loai-cu' : ''}">${m.loai === 'chu_cu' ? 'Minh chứng cũ' : 'Minh chứng'}</span>
-    <b>${escapeHtml(m.so_hieu || 'không có số')}</b>${m.ngay_van_ban ? ` · ${formatNgay(m.ngay_van_ban)}` : ''}${m.trich_yeu ? ` · ${escapeHtml(m.trich_yeu)}` : ''} · ${xn}</div>`;
-};
-// Nhánh nhiệm vụ (đệ quy); trả '' khi cả nhánh không khớp bộ lọc / từ khoá.
-function nhanhHtml(r, con, kw, cap) {
-  const cacCon = cap < DO_SAU_TOI_DA ? (con.get(r.id) || []).map((c) => nhanhHtml(c, con, kw, cap + 1)).filter(Boolean) : [];
-  const toiKhop = khop(r) && (!kw || chuaTuKhoa(r.ma, kw) || chuaTuKhoa(r.noi_dung, kw) || chuaTuKhoa(ownerText(r), kw));
-  if (!toiKhop && cacCon.length === 0) return '';
-  const la = mc.filter((m) => m.nhiem_vu_id === r.id).map(laHtml).join('');
-  const khoa = `nv-${r.id}`; const coCon = cacCon.length > 0 || la; const mo = !gap.has(khoa);
-  return `<div class="tvb-nhanh" id="tvbNv-${r.id}" data-id="${r.id}" data-cap="${cap}" data-nhom="${escapeHtml(r.nhom_dem || '')}" data-mo="${mo ? '1' : '0'}">
-    <div class="tvb-hang">
-      ${coCon ? `<button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} ${escapeHtml(r.ma)}"></button>` : '<i class="tvb-gap trong"></i>'}
-      <button type="button" class="tvb-nut" data-action="tvbMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" title="${escapeHtml(nhanTrangThai(r, state.user?.id))}">
-        <i class="tvb-cham ${lopMep(r, state.user?.id) || 'xam'}"></i><span class="ma">${escapeHtml(r.ma)}${r.stt_van_ban ? `<small class="tvb-stt" title="Số thứ tự trong văn bản">·${String(r.stt_van_ban).padStart(2, '0')}</small>` : ''}</span><span class="nd">${escapeHtml(r.noi_dung)}${chiXem(r) ? NHAN_CHI_XEM : ''}</span>
-        <span class="chu-tri">${escapeHtml(ownerText(r))}</span><span class="han">${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có hạn'}</span></button>
-    </div>
-    <div class="tvb-con">${cacCon.join('')}${la}</div></div>`;
+// Nhánh (đệ quy): '' khi cả nhánh không khớp từ khoá. kw rỗng = mọi nhánh.
+function nhanh(r, con, kw, cap, homNay) {
+  const cacCon = cap < DO_SAU_TOI_DA ? (con.get(r.id) || []).map((c) => nhanh(c, con, kw, cap + 1, homNay)).filter(Boolean) : [];
+  const khop = !kw || chua(r.ma, kw) || chua(r.noi_dung, kw) || chua(ownerText(r), kw);
+  if (!khop && cacCon.length === 0) return '';
+  return nhanhHtml(r, cap, { con: cacCon.join(''), mc: mc.filter((m) => m.nhiem_vu_id === r.id), mo: !tvb.gap.has(`nv-${r.id}`), homNay });
 }
-function gocHtml({ vb, viec }, con, kw, tatCa) {
-  const trichYeu = vanBan.get(vb.van_ban_id)?.trich_yeu || '';
-  const vbKhop = Boolean(kw) && (chuaTuKhoa(vb.so_ket_luan, kw) || chuaTuKhoa(trichYeu, kw));
-  const nhanh = viec.map((r) => nhanhHtml(r, con, vbKhop ? '' : kw, 1)).filter(Boolean); // từ khoá khớp văn bản → hiện mọi nhánh (vẫn lọc trạng thái)
-  if (nhanh.length === 0) return '';
-  const n = tatCa.length; const x = tatCa.filter((r) => r.nhom_dem === 'HOAN_THANH').length;
-  const y = tatCa.filter((r) => NHOM_LOC.QUA_HAN.includes(r.nhom_dem)).length; const z = tatCa.filter((r) => NHOM_LOC.SAP_DEN_HAN.includes(r.nhom_dem)).length;
-  const pc = (k) => (n ? Math.round((k / n) * 100) : 0);
-  const khoa = `vb-${vb.van_ban_id}`; const mo = !gap.has(khoa);
-  return `<section class="tam tvb-goc" id="tvbVb-${vb.van_ban_id}" data-mo="${mo ? '1' : '0'}" data-so="${n}" data-xong="${x}" data-qua="${y}" data-sap="${z}">
-    <div class="tvb-goc-dau">
-      <button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="${khoa}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} văn bản ${escapeHtml(vb.so_ket_luan || '')}"></button>
-      <div class="tvb-vb"><b>${escapeHtml(tenLoaiVanBan(vb.van_ban_loai))} · ${escapeHtml(vb.so_ket_luan || '(không số)')}</b><span class="chu-phu"> · ban hành ${formatNgay(vb.ngay_ban_hanh)}</span>
-        ${trichYeu ? `<p class="tvb-trich-yeu">${escapeHtml(trichYeu)}</p>` : ''}${nguoiGiaoHtml(tatCa)}${raSoatHtml(vb.van_ban_id, viec.length, tatCa.every(chiXem))}
-        ${state.user?.role_group && !state.user?.bi_khoa ? `<button type="button" class="nut nho tvb-giao-them" data-action="giaoThemTuVanBan" data-vb="${escapeHtml(vb.van_ban_id)}">+ Giao thêm nhiệm vụ từ văn bản này</button>` : ''}</div>
-      <div class="tvb-tien"><div class="tvb-thanh" role="img" aria-label="${x} trên ${n} hoàn thành"><i class="luc" style="width:${pc(x)}%"></i><i class="do" style="width:${pc(y)}%"></i><i class="vang" style="width:${pc(z)}%"></i></div>
-        <span class="tvb-tien-chu">${x}/${n} hoàn thành · ${y} quá hạn · ${z} sắp đến hạn</span></div>
-    </div>
-    <div class="tvb-con">${nhanh.join('')}</div></section>`;
+// Quyền hiện nút Sửa rà soát như van_ban_dat_ra_soat: người tạo văn bản, A1, quan_tri_kl; văn bản chỉ có việc ngoài phạm vi — chỉ xem.
+const duocSua = (h, tatCaVb) => Boolean(state.user) && !tatCaVb.every(chiXem) && (h.tao_boi === state.user.id || state.user.role_group === 'A1' || laQtklConHan());
+const moVb = (id, timThay) => (tvb.moVb.has(id) ? tvb.moVb.get(id) : tvb.moHet || timThay);
+
+function render() {
+  const o = $('tvbCay'); if (!o) return;
+  const traTd = giuTieuDiem($('viewTheoVanBan'));   // nút đang focus (ô số, văn bản, nhánh) giữ qua lần vẽ lại
+  const kw = $('tvbTim').value.trim().toLowerCase(); const loai = $('tvbLoai').value; const homNay = homNayVN();
+  const { goc, con } = dungCay();
+  const ds = goc.filter((g) => !loai || g.vb.van_ban_loai === loai).map((g) => {
+    const tatCaVb = rows.filter((r) => r.van_ban_id === g.vb.van_ban_id); const h = vanBan.get(g.vb.van_ban_id) || {};
+    const x = soViec.get(g.vb.van_ban_id) ?? g.viec.length;
+    const vbKhop = Boolean(kw) && (chua(g.vb.so_ket_luan, kw) || chua(h.trich_yeu, kw));   // từ khoá khớp văn bản → hiện mọi nhánh
+    const html = g.viec.map((r) => nhanh(r, con, vbKhop ? '' : kw, 1, homNay)).filter(Boolean).join('');
+    return { ...g, tatCa: tatCaVb, h, x, t: tongHopVanBan(tatCaVb), rs: raSoatVanBan(x, h.so_nhiem_vu_du_kien, h.da_ra_soat_toan_van), html };
+  }).filter((d) => d.html);
+  $('tvbSo').innerHTML = oSoHtml(O_SO_VB, demOVb(ds), tvb.loc, 'tvbLocVb', MAU);
+  const hien = sapXepVanBan(locOVb(ds, tvb.loc), $('tvbSapXep').value);
+  const traNhap = giuONhap(o);   // ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
+  o.innerHTML = hien.length ? hien.map((d, i) => vanBanHtml(d, { stt: i + 1, lop: lopVanBan(d.t), mo: moVb(d.vb.van_ban_id, Boolean(kw)), nhanh: d.html, sua: duocSua(d.h, d.tatCa) })).join('')
+    : `<p class="bnv-trong">${ds.length ? 'Không có văn bản nào ở ô đang chọn.' : 'Không có văn bản nào khớp bộ lọc.'}</p>`;
+  traNhap(); traTd();
+  const pv = nhanPhamViTvb(state.user, chuyenVienXemPhong());   // v3.22.1: Trưởng phòng / chuyên viên — ghi rõ phạm vi
+  const tb = coNutToanBo() && toanBo;
+  $('tvbTomTat').textContent = `${hien.length}/${goc.length} văn bản · ${rows.length} nhiệm vụ ${tb ? 'toàn Văn phòng (việc ngoài phạm vi của đồng chí chỉ xem)' : `trong phạm vi${pv ? ` (${pv})` : ''}`}`;
+  show('tvbToanBo', coNutToanBo());
+  document.querySelectorAll('#tvbToanBo button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.tb === '1') === tb)));
+  o.dataset.nap = String(Date.now());
 }
 
-// v3.23.1 (chủ dự án 13/10/2026): người giao = tài khoản đã giao việc (tao_boi) từ văn bản này — việc giao thẳng từ văn bản, trong phạm vi đang xem.
-const nguoiGiaoHtml = (ds) => { const ng = nguoiGiaoVanBan(ds, (id) => findAccount(id)?.full_name);
-  return `<p class="tvb-giao" data-truong="nguoi-giao">Người giao: ${ng.length ? escapeHtml(nguoiGiaoText(ng)) : 'chưa xác định'}</p>`; };
-// PR-3 F: nhãn rà soát + ô sửa tại chỗ. Quyền hiện nút như van_ban_dat_ra_soat: người tạo văn bản, A1, quan_tri_kl.
-function raSoatHtml(id, soGocThay, chiXemCa = false) {
-  const h = vanBan.get(id) || {}; const x = soViec.get(id) ?? soGocThay; const y = h.so_nhiem_vu_du_kien;
-  const canhBao = (y !== null && y !== undefined && x < y) || !h.da_ra_soat_toan_van;
-  const sua = Boolean(state.user) && !chiXemCa && (h.tao_boi === state.user.id || state.user.role_group === 'A1' || laQtklConHan());   // 0103: văn bản chỉ có việc ngoài phạm vi — chỉ xem
-  return `<p class="tvb-ra-soat-dong"><span class="trang-thai ${canhBao ? 'tt-cho' : 'tt-xong'} tvb-ra-soat" data-canh-bao="${canhBao ? '1' : '0'}">đã nhập ${x}${y !== null && y !== undefined ? ` / dự kiến ${y}` : ' · chưa khai số dự kiến'} · ${h.da_ra_soat_toan_van ? 'đã rà soát toàn văn' : 'chưa rà soát toàn văn'}</span>
-    ${sua ? `<button type="button" class="nut nho" data-action="moO" data-o="oRs-${id}">Sửa</button></p>
-    <form class="o" id="oRs-${id}" data-submit="tvbRaSoat" data-id="${id}"><input type="number" name="so" min="0" step="1" value="${y ?? ''}" placeholder="Số nhiệm vụ dự kiến" aria-label="Số nhiệm vụ dự kiến">
-      <label class="gv-chon"><input type="checkbox" name="ra_soat"${h.da_ra_soat_toan_van ? ' checked' : ''}> Đã rà soát toàn văn</label>
-      <button type="submit" class="nut chinh">Lưu</button><button type="button" class="nut" data-action="dongO" data-o="oRs-${id}">Huỷ</button></form>` : '</p>'}`;
-}
 async function tvbRaSoat({ id }, form) {
   const fd = new FormData(form); const so = String(fd.get('so') ?? '').trim();
   try {
@@ -111,23 +88,6 @@ async function tvbRaSoat({ id }, form) {
     form.classList.remove('mo');
     notifySuccess('Đã lưu số nhiệm vụ dự kiến và rà soát văn bản.'); await loadTheoVanBan();
   } catch (e) { notifyError('Không lưu được: ' + loiDeHieu(e)); }
-}
-
-function render() {
-  const o = $('tvbCay'); if (!o) return;
-  const kw = $('tvbTim').value.trim().toLowerCase();
-  const { goc, con } = dungCay();
-  const tatCaCua = (vbId) => rows.filter((r) => r.van_ban_id === vbId);
-  const html = goc.map((g) => gocHtml(g, con, kw, tatCaCua(g.vb.van_ban_id))).filter(Boolean);
-  const traNhap = giuONhap(o);   // PR-3: ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
-  o.innerHTML = html.length ? html.join('') : '<p class="trong">Không có văn bản nào khớp bộ lọc.</p>';
-  traNhap();
-  const pv = nhanPhamViTvb(state.user, chuyenVienXemPhong());   // v3.22.1: Trưởng phòng / chuyên viên — ghi rõ phạm vi
-  const tb = coNutToanBo() && toanBo;
-  $('tvbTomTat').textContent = `${html.length}/${goc.length} văn bản · ${rows.length} nhiệm vụ ${tb ? 'toàn Văn phòng (việc ngoài phạm vi của đồng chí chỉ xem)' : `trong phạm vi${pv ? ` (${pv})` : ''}`}`;
-  show('tvbToanBo', coNutToanBo());
-  document.querySelectorAll('#tvbToanBo button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.tb === '1') === tb)));
-  o.dataset.nap = String(Date.now());
 }
 
 let luotTvb = 0;
@@ -139,7 +99,7 @@ export async function loadTheoVanBan() {
     if (lan !== luotTvb) return;   // đã có lượt nạp mới hơn
     trong = r.rows; tatCa = r.tatCa; datRows(); mc = m; vanBan = new Map(vb.map((h) => [h.id, h])); soViec = sv;
     render();
-  } catch (e) { notifyError('Không nạp được cây văn bản: ' + e.message); }
+  } catch (e) { notifyError('Không nạp được bảng văn bản: ' + e.message); }
 }
 export function openTheoVanBan() {
   showSection('viewTheoVanBan');
@@ -147,21 +107,29 @@ export function openTheoVanBan() {
   batKlRealtime(() => { if (sectionDangHien('viewTheoVanBan')) loadTheoVanBan(); }, (m) => hienKetNoi('tvbKetNoi', m));
   return loadTheoVanBan();
 }
+// Gập / mở một văn bản ('vb-<id>') hoặc một nhánh việc ('nv-<id>') tại chỗ (không vẽ lại).
 function tvbGap({ khoa }) {
-  if (gap.has(khoa)) gap.delete(khoa); else gap.add(khoa);
-  const el = $(khoa.startsWith('vb-') ? `tvbVb-${khoa.slice(3)}` : `tvbNv-${khoa.slice(3)}`);
-  if (el) { const mo = !gap.has(khoa); el.dataset.mo = mo ? '1' : '0'; el.querySelector('.tvb-gap[data-khoa]')?.setAttribute('aria-expanded', String(mo)); }
+  const laVb = khoa.startsWith('vb-'); const id = khoa.slice(3);
+  const el = $(laVb ? `tvbVb-${id}` : `tvbNv-${id}`); if (!el) return;
+  const mo = el.dataset.mo !== '1';
+  if (laVb) tvb.moVb.set(id, mo); else if (mo) tvb.gap.delete(khoa); else tvb.gap.add(khoa);
+  el.dataset.mo = mo ? '1' : '0';
+  el.querySelector(`[data-action="tvbGap"][data-khoa="${CSS.escape(khoa)}"]`)?.setAttribute('aria-expanded', String(mo));
 }
 function tvbGapTatCa({ mo }) {
-  gap.clear();
-  if (mo === '0') { rows.forEach((r) => { gap.add(`nv-${r.id}`); gap.add(`vb-${r.van_ban_id}`); }); }
+  tvb.moVb.clear(); tvb.gap.clear(); tvb.moHet = mo === '1';
+  if (!tvb.moHet) {   // thu gọn cả văn bản đang mở vì khớp ô tìm
+    rows.forEach((r) => tvb.gap.add(`nv-${r.id}`));
+    document.querySelectorAll('#tvbCay .tvb-goc').forEach((el) => tvb.moVb.set(el.id.slice(6), false));
+  }
   render();
 }
 
 export function registerTheoVanBan() {
   $('viewTheoVanBan').innerHTML = theoVanBanTemplate;
   $('tvbTim').addEventListener('input', render);
-  $('tvbLoc').addEventListener('change', render);
+  ['tvbLoai', 'tvbSapXep'].forEach((id) => $(id).addEventListener('change', render));
   const tvbToanBo = ({ tb }) => { toanBo = tb === '1'; datRows(); render(); };
-  registerActions({ openTheoVanBan: () => openTheoVanBan(), tvbGap, tvbGapTatCa, tvbRaSoat, tvbToanBo, tvbMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
+  const tvbLocVb = ({ loc }) => { tvb.loc = O_SO_VB.some(([k]) => k === loc) ? loc : 'tat'; render(); };
+  registerActions({ openTheoVanBan: () => openTheoVanBan(), tvbGap, tvbGapTatCa, tvbRaSoat, tvbToanBo, tvbLocVb, tvbMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
 }

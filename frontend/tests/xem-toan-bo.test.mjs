@@ -1,8 +1,8 @@
 // v3.23 (0103, chủ dự án duyệt 13/10/2026): mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem ngoài phạm vi), lọc theo cán bộ chủ trì / người theo dõi /
-// lãnh đạo VP phụ trách, nhóm theo văn bản gốc, menu theo cấu hình, bỏ Nhắn tin. Chạy `npm test` trong frontend/.
+// lãnh đạo VP phụ trách, người giao của văn bản, menu theo cấu hình, bỏ Nhắn tin. Chạy `npm test` trong frontend/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chiXem, trongPhamVi, locTheoViec, locCanBo, tuyChonCanBo, vanBanGocText, nhomTheoVanBan, ghiNgoaiPhamVi, laNgoaiPhamVi, datNgoaiPhamVi, coLocCanBo } from '../src/lib/kl/pham-vi.js';
+import { chiXem, trongPhamVi, locTheoViec, locCanBo, tuyChonCanBo, ghiNgoaiPhamVi, laNgoaiPhamVi, datNgoaiPhamVi, coLocCanBo } from '../src/lib/kl/pham-vi.js';
 import { CHUA_LDVP } from '../src/lib/kl/tong-quan-them.js';
 import { menuCuaVai } from '../src/views/shell/menu.js';
 
@@ -43,14 +43,6 @@ test('Lựa chọn ô lọc có đếm; tên theo danh bạ, thiếu thì theo d
   assert.deepEqual(tc.ldvp.map((o) => [o.ma, o.n]), [['pc1', 2], [CHUA_LDVP, 1]]);   // pc3 không có việc: bỏ
 });
 
-test('Văn bản gốc một dòng; nhóm theo văn bản: mới nhất trước, việc không gắn văn bản cuối', () => {
-  const ten = (m) => (m === 'KL_BTV' ? 'Kết luận Hội nghị Ban Thường vụ' : m);
-  assert.equal(vanBanGocText({ van_ban_id: 'v', van_ban_loai: 'KL_BTV', so_ket_luan: '12-KL/TU', ngay_ban_hanh: '2026-09-01' }, ten, (d) => d.split('-').reverse().join('/')),
-    'Kết luận Hội nghị Ban Thường vụ số 12-KL/TU, ban hành 01/09/2026');
-  assert.equal(vanBanGocText({ van_ban_id: null }), 'Không gắn văn bản giao việc');
-  assert.deepEqual(nhomTheoVanBan(ROWS).map((g) => [g.khoa, g.rows.map((x) => x.id).join('')]), [['vb2', 'b'], ['vb1', 'ac'], ['khong', 'd']]);
-});
-
 test('Menu: không còn Nhắn tin ở mọi vai; cấu hình xem toàn bộ → chuyên viên có Tổng quan + Toàn bộ nhiệm vụ, Trưởng phòng "Tổng quan"', () => {
   const tk = (role_group, o = {}) => ({ id: 'x', role_group, department: 'TONG_HOP', ...o });
   for (const u of [tk('A0'), tk('A1', { is_chief: true }), tk('A1'), tk('A2'), tk('A3'), tk('A3', { quan_tri_he_thong: true })]) {
@@ -68,12 +60,11 @@ test('Menu: không còn Nhắn tin ở mọi vai; cấu hình xem toàn bộ →
   assert.equal(menuCuaVai(tk('A2')).find((m) => m.id === 'navTongQuan').label, 'Tổng quan phòng');
 });
 
-test('v3.23.1: người giao của văn bản = tài khoản tao_boi của việc giao thẳng (không tính việc giao tiếp xuống), nhiều việc trước; tiến độ văn bản', async () => {
-  const { nguoiGiaoVanBan, nguoiGiaoText, tienDoVanBan } = await import('../src/lib/kl/pham-vi.js');
+test('v3.23.1: người giao của văn bản = tài khoản tao_boi của việc giao thẳng (không tính việc giao tiếp xuống), nhiều việc trước', async () => {
+  const { nguoiGiaoVanBan, nguoiGiaoText } = await import('../src/lib/kl/pham-vi.js');
   const ds = [{ tao_boi: 'u1' }, { tao_boi: 'u2' }, { tao_boi: 'u2' }, { tao_boi: 'u3', nhiem_vu_cha: 'x' }, { tao_boi: null }];
   const ng = nguoiGiaoVanBan(ds, (id) => ({ u1: 'Một', u2: 'Hai' })[id]);
   assert.deepEqual(ng.map((x) => [x.id, x.n]), [['u2', 2], ['u1', 1]]);
   assert.equal(nguoiGiaoText(ng), 'Hai (2 việc), Một (1 việc)');
   assert.equal(nguoiGiaoVanBan([{ tao_boi: 'u9' }])[0].ten, 'Tài khoản không còn trong danh bạ');
-  assert.deepEqual(tienDoVanBan([{ tien_do_ma: 'HOAN_THANH' }, { tien_do_ma: 'DANG_THUC_HIEN', muc_canh_bao: 'DO' }, { tien_do_ma: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH' }]), { n: 3, xong: 1, quaHan: 1 });
 });

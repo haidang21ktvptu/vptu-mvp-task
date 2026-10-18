@@ -2,7 +2,7 @@
 // Tổng; ô Quá hạn → chỉ dòng quá hạn; Báo cáo: mỗi con số bấm ra đúng danh sách có chip "Chịu trách nhiệm"; mục menu Nhiệm vụ đặt lại bộ lọc;
 // Cán bộ thuộc quyền: bức tranh tải việc theo phòng. Không tạo dữ liệu (bộ vàng trên staging); bỏ qua khi project chưa có module KL.
 import { test, expect } from '@playwright/test';
-import { pageAs, nav, mauToken, NAP } from './lib/app.js';
+import { pageAs, nav, mauToken, soDongKl, NAP } from './lib/app.js';
 
 test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn phòng', () => {
   let page;
@@ -17,7 +17,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
 
   test('dải tổng quan: tổng các ô nhóm = ô Tổng = số dòng danh sách', async () => {
     const tong = await so(page.locator('#klSo-TONG'));
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(tong);
+    await soDongKl(page, tong);   // v3.25: 50 dòng mỗi trang — số đang lọc ghi ở #klBody[data-so-loc]
     let cong = 0;
     for (const o of await page.locator('#klStats .o-so[data-nhom]:not([data-nhom=""])').all()) cong += await so(o.locator('b'));
     expect(cong).toBe(tong);
@@ -29,7 +29,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     const n = await so(o.locator('b'));
     await o.click();
     await expect(o).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
+    await soDongKl(page, n);
     await expect(page.locator('#klBody [id^="klRow-"]:not([data-nhom="QUA_HAN"])')).toHaveCount(0);
     const mauDo = [await mauToken(page, '--do'), await mauToken(page, '--ddb')]; // Đỏ / Đỏ đặc biệt (v3.23.2: tím) — đọc từ token, không ghi cứng
     await expect.poll(() => page.locator('#klBody [id^="klRow-"] .stt').first().evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)) // v8: chấm trạng thái (viền trái đã bỏ); poll: dòng có thể vừa vẽ lại (realtime)
@@ -93,7 +93,7 @@ test.describe.serial('Nhiệm vụ, Báo cáo, Cán bộ — Phó Chánh Văn ph
     const opt = chon.locator('option').nth(1);
     const n = Number((await opt.innerText()).match(/\((\d+)\)\s*$/)?.[1] || 0); // "Phòng X (n)"
     await chon.selectOption({ index: 1 });
-    await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(n);
+    await soDongKl(page, n);
     await chon.selectOption('');
   });
 });

@@ -46,7 +46,7 @@ test.describe.serial('Việc mới chờ xác nhận — mỗi người tự nh�
     expect(so).toBeGreaterThanOrEqual(1);
     const rpc = await clientCuaVai('E2E_DH').rpc('kl_so_chua_xu_ly', {});
     expect(Number(rpc.data?.viec_moi)).toBe(so);                              // dải vẽ đúng số của hàm DB
-    await expect(page.locator(`#vctMuc-moi #vct-${id}`)).toBeVisible(NAP);   // thẻ "Việc mới giao" của A3 cũng theo chính tôi
+    await expect(page.locator(`#vct-${id}`)).toHaveAttribute('data-viec', 'nhan', NAP);   // dòng "Việc của tôi" (v3.25 bảng) cũng theo chính tôi: còn nút Xác nhận
     await nut.click();
     const ds = page.locator('#cxChiTiet [id^="cx-moi-"]');
     await expect(page.locator(`#cx-moi-${id}`)).toBeVisible(NAP);
@@ -54,7 +54,7 @@ test.describe.serial('Việc mới chờ xác nhận — mỗi người tự nh�
     await page.locator(`#cx-moi-${id}`).getByRole('button', { name: 'Xác nhận đã nhận' }).click();
     await expect(page.locator('#toastContainer')).toContainText(`Đã xác nhận nhận việc ${ma}`);
     await expect(page.locator(`#cx-moi-${id}`)).toHaveCount(0, NAP);
-    await expect(page.locator(`#vct-${id}`)).toHaveCount(0, NAP);
+    await expect(page.locator(`#vct-${id}`)).toHaveCount(0, NAP);   // đã nhận, còn hạn → rời ô "Cần xử lý" (mặc định) của bảng
     if (so - 1 === 0) await expect(page.locator('#canXuLy [data-muc="moi"]')).toHaveCount(0, NAP);
     else { await expect(page.locator('#canXuLy [data-muc="moi"] b')).toHaveText(String(so - 1), NAP); await expect(ds).toHaveCount(so - 1); }
     const ls = await db.from('lich_su').select('nguoi_sua').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec');

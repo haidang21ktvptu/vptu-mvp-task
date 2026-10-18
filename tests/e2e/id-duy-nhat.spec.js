@@ -1,5 +1,6 @@
 // PR-2a lỗi (3): không có id trùng trên trang và mọi ô số hiệu / ngày văn bản / cấp nhận có <label for> trỏ đúng ô — kiểm trên "Việc của tôi"
-// (A3 có ≥ 2 thẻ với ô nộp minh chứng tại chỗ), khi ngăn chi tiết đang mở (biểu mẫu minh chứng của ngăn) và trên biểu mẫu Giao việc (Chánh VP).
+// (A3 có ≥ 2 dòng, mỗi dòng một khối nộp minh chứng dưới dòng — v3.25: khối nằm sẵn trong DOM, mở một khối một lúc), khi ngăn chi tiết đang mở
+// (biểu mẫu minh chứng của ngăn) và trên biểu mẫu Giao việc (Chánh VP).
 // Dữ liệu riêng: 2 việc quá hạn của demo_e2e_mc (đã xác nhận nhận, chưa có minh chứng) theo khoá E2E-TEST-IDD-<project>; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
@@ -39,9 +40,12 @@ test.describe.serial('Id duy nhất và nhãn ô minh chứng (PR-2a lỗi 3)', 
   });
   test.afterAll(async () => { if (db) await donVanBan(db, khoa); });
 
-  test('Việc của tôi (≥ 2 ô nộp tại chỗ) và ngăn chi tiết đang mở: không id trùng, ô minh chứng có nhãn', async ({ browser }, testInfo) => {
+  test('Việc của tôi (≥ 2 khối nộp dưới dòng) và ngăn chi tiết đang mở: không id trùng, ô minh chứng có nhãn', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_MC', testInfo);
-    for (const v of ids) await expect(page.locator(`#vct-${v.id} form.mc-inline`)).toBeVisible(NAP);
+    for (const v of ids) await expect(page.locator(`#vct-${v.id}`)).toHaveAttribute('data-viec', 'nop', NAP);   // quá hạn, đã nhận, chưa có minh chứng
+    for (const v of ids) await expect(page.locator(`#vct-${v.id} form.mc-inline`)).toHaveCount(1);
+    await page.locator(`#vct-${ids[0].id} [data-action="vctMoKhoi"][data-kieu="nop"]`).click();
+    await expect(page.locator(`#vct-${ids[0].id} form.mc-inline`)).toBeVisible();
     for (const v of ids) await expect(page.locator(`label[for="mc-${v.id}-so-hieu"]`)).toHaveCount(1);
     let kq = await kiemId(page);
     expect(kq.trung, 'id trùng trên Việc của tôi').toEqual([]);

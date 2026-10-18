@@ -8,7 +8,7 @@
     .than { background: none; } .dai::before { display: none; } .dai .ten { color: var(--chu); }   /* v9: dải màu thanh bên không in */
     .max { max-width: none; padding: 0; }
     .trang { padding: 0; }
-    .md { grid-template-columns: 1fr; }
+    .md, .md.co-ct { grid-template-columns: 1fr; }   /* v3.25: ngăn chi tiết không in — bảng đủ khổ giấy */
     .md .chi-tiet { position: static; max-height: none; }
     .dieu-hanh { grid-template-columns: 1fr; }
     .the, .bang, .bc-khoi, .khung { break-inside: avoid; border-color: #999; }

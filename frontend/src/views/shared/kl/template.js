@@ -3,8 +3,12 @@
 // Dùng chung mọi vai; phạm vi do RLS. Id giữ nguyên (e2e): #klStats .o-so[data-nhom], #klSo-*, #klTimKiem, #klLoc*, #klChipLoc, #klBody, #klChiTiet.
 // v3.24: "Thêm bộ lọc" thêm thời gian nhập, người nhập, cấp giao, hạn xử lý (kỳ hoặc khoảng ngày), độ khẩn (nhãn ghi số bộ lọc đang áp dụng),
 // nút Xoá bộ lọc; thanh Sắp xếp đầu danh sách (#klSapXep): Mới nhập trước (mặc định, như V-Office) · Hạn gần trước · Mức cảnh báo (thứ tự cũ).
+// v3.25 (bảng theo cột, mẫu NhiemVu / ViecTheoDoi 16/10/2026): danh sách là bảng (#klBang — bộ cột cot-nv / cot-td, hàng tiêu đề #klDauBang,
+// chân #klSoDong + nút trang #klTrang), chú giải màu mức; ngăn chi tiết chỉ chiếm chỗ khi đang mở một việc (.md.co-ct — chi-tiet.js). Chế độ
+// "Việc tôi theo dõi": ô số #klTdSo và nút quan hệ #klTdQh (theo-doi.js).
 import { THU_TU_NHOM, NHOM } from '../../../lib/kl/nhan.js';
 import { KY_NHAP, KY_HAN, CAP_GIAO, SAP_XEP } from '../../../lib/kl/loc-them.js';
+import { CHU_GIAI_MUC } from '../bang/khung.js';
 
 const opts = (ds, dau) => `<option value="">${dau}</option>${ds.map(([ma, ten]) => `<option value="${ma}">${ten}</option>`).join('')}`;
 const oNgay = (id, nhan) => `<input type="date" id="${id}" class="hidden" aria-label="${nhan}" title="${nhan}">`;
@@ -21,7 +25,9 @@ export const klTemplate = `
       <button type="button" id="klRaSoatMt" class="nut nho hidden" data-action="moRaSoatMucTieu" title="Hệ thống tự nhận diện mục tiêu then chốt cho các việc đã giao — đồng chí kiểm tra rồi chấp nhận">Rà soát mục tiêu then chốt</button>
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 
+  <div id="klTdSo" class="bnv-so so-8 hidden" role="group" aria-label="Lọc việc theo dõi theo tình hình"></div>
   <div class="kl-loc">
+    <div id="klTdQh" class="pham-vi hidden" role="group" aria-label="Quan hệ của đồng chí với việc"></div>
     <div id="klPhamVi" class="pham-vi hidden" role="group" aria-label="Phạm vi xem" title="Cấu hình của Văn phòng cho phép chuyên viên xem mọi việc của phòng mình (chỉ xem)">
       <button type="button" data-action="klPhamVi" data-pv="toi" aria-pressed="false">Việc của tôi</button>
       <button type="button" data-action="klPhamVi" data-pv="phong" aria-pressed="true">Cả phòng</button></div>
@@ -56,13 +62,15 @@ export const klTemplate = `
     </div></details>
   </div>
   <div id="klChipLoc" class="chip-loc hidden" role="status"></div>
+  <div class="bnv-chu-giai">${CHU_GIAI_MUC}<span><span class="nhan-trung-tinh nhan-moi">Mới</span> nhập trong 24 giờ</span></div>
 
   <div class="md">
-    <div class="list">
+    <div class="list bnv cot-nv" id="klBang">
       <div class="kl-sap"><span class="chu-phu">Sắp xếp</span><div id="klSapXep" class="pham-vi" role="group" aria-label="Sắp xếp danh sách">${SAP_XEP.map(([ma, ten, goi]) =>
     `<button type="button" data-action="klSapXep" data-sx="${ma}" aria-pressed="${ma === 'moi'}" title="${goi}">${ten}</button>`).join('')}</div></div>
+      <div class="bnv-dau" id="klDauBang" aria-hidden="true"></div>
       <div id="klBody"><p class="trong-nho">Đang tải dữ liệu</p></div>
-      <div class="ds-chan"><span id="klSoDong"></span></div>
+      <div class="ds-chan bnv-chan"><span id="klSoDong"></span><span id="klTrang" class="bnv-trang"></span></div>
     </div>
     <aside class="chi-tiet" id="klChiTiet" aria-label="Chi tiết nhiệm vụ đang chọn"><p class="trong-nho">Chọn một dòng để xem chỉ đạo, minh chứng và lịch sử.</p></aside>
   </div>

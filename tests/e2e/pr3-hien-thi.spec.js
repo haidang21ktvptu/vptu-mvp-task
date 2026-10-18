@@ -37,7 +37,7 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
       await moViec(p, T2.id, T2.ma);
       await expect(p.locator(`#klChiTiet-${T2.id} [data-truong="chat-luong"]`)).toHaveText('Đạt tốt');
       await moViec(p, T1.id, T1.ma);
-      await expect(p.locator(`#klRow-${T1.id} .han`)).toContainText('Trước hạn 3 ngày');
+      await expect(p.locator(`#klRow-${T1.id} .han`)).toContainText(/trước hạn 3 ngày/i);   // v3.25: ô hạn "xong 12/10 · trước hạn 3 ngày"
       await expect(p.locator(`#klRow-${T1.id} [data-truong="chat-luong"]`)).toHaveText('Đạt tốt');
       // Xuất Excel: danh sách đang lọc theo khoá (2 việc của spec)
       await p.locator('#klTimKiem').fill(khoa);

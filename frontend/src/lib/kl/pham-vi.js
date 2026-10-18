@@ -38,19 +38,6 @@ export function tuyChonCanBo(rows, { ten = () => '', lanhDaoVP = [], phanCong = 
   return { chuTri: dem('owner_tai_khoan', 'owner_tai_khoan_ten'), theoDoi: dem('nguoi_theo_doi', 'nguoi_theo_doi_ten'), ldvp };
 }
 
-// Văn bản gốc của một việc (một dòng): "Kết luận Hội nghị Ban Thường vụ số 12-KL/TU, ban hành 01/09/2026"; tenLoai, ngay: hàm định dạng.
-export function vanBanGocText(r, tenLoai = (m) => m, ngay = (d) => d) {
-  if (!r.van_ban_id) return 'Không gắn văn bản giao việc';
-  const so = r.so_ket_luan ? ` số ${r.so_ket_luan}` : ' (không số)';
-  return `${tenLoai(r.van_ban_loai)}${so}${r.ngay_ban_hanh ? `, ban hành ${ngay(r.ngay_ban_hanh)}` : ''}`;
-}
-// Nhóm dòng theo văn bản gốc (mới nhất trước; việc không gắn văn bản cuối cùng): [{ khoa, r (dòng đại diện), rows }].
-export function nhomTheoVanBan(rows) {
-  const m = new Map();
-  rows.forEach((r) => { const k = r.van_ban_id || 'khong'; if (!m.has(k)) m.set(k, { khoa: k, r, rows: [] }); m.get(k).rows.push(r); });
-  return [...m.values()].sort((a, b) => (a.khoa === 'khong') - (b.khoa === 'khong') || (b.r.ngay_ban_hanh || '').localeCompare(a.r.ngay_ban_hanh || '')
-    || (a.r.so_ket_luan || '').localeCompare(b.r.so_ket_luan || '', 'vi', { numeric: true }));
-}
 // v3.23.1 (chủ dự án 13/10/2026): "Người giao" của một văn bản gốc = tài khoản đã thực hiện giao việc (tao_boi) của các việc giao thẳng từ văn
 // bản đó (không tính việc giao tiếp xuống — có nhiem_vu_cha); nhiều việc trước. ten(id) = họ tên theo danh bạ. Trả [{ id, ten, n }].
 export function nguoiGiaoVanBan(rows = [], ten = () => '') {
@@ -60,6 +47,3 @@ export function nguoiGiaoVanBan(rows = [], ten = () => '') {
     .sort((a, b) => b.n - a.n || a.ten.localeCompare(b.ten, 'vi'));
 }
 export const nguoiGiaoText = (ds) => ds.map((x) => `${x.ten} (${x.n} việc)`).join(', ');
-// Tiến độ một văn bản trên các việc đang xem: tổng, hoàn thành, quá hạn (đang mở, Đỏ / Đỏ đặc biệt).
-export const tienDoVanBan = (rows = []) => ({ n: rows.length, xong: rows.filter((r) => r.tien_do_ma === 'HOAN_THANH').length,
-  quaHan: rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH' && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao)).length });

@@ -1,0 +1,70 @@
+/* Bảng nhiệm vụ theo cột — màn hẹp, thẻ, in (v3.25; cùng lớp với bang-nhiem-vu.css). Ba bậc: từ 1366px đủ cột; 1024–1365px gộp cột thời gian
+   vào dòng phụ (.bnv-chi-gon); dưới 1024px — và khi ngăn chi tiết màn Nhiệm vụ đang mở trên màn hình dưới 1600px (.md.co-ct) — mỗi dòng thành thẻ:
+   nội dung trước, các ô sau xếp dòng có nhãn ngắn (data-nhan), nút thao tác rộng; điện thoại (≤ 600px) như mẫu DienThoai: nội dung 3 dòng, ô số
+   2 cột, nút 44px; 360px không cuộn ngang. Thẻ chỉ cho màn hình (screen) — bản in giữ dạng bảng (cột gộp như 1024–1365px, nội dung đủ dòng).
+   Tên lớp viết nguyên văn trong JS. */
+@layer components {
+  @media (max-width: 1365px) {
+    .bnv-dau, .bnv-hang { column-gap: 12px; }
+    .bnv .bnv-c-tg { display: none; }
+    .bnv .bnv-chi-gon { display: block; }
+    .cot-nv .bnv-dau, .cot-nv .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.15fr) minmax(0, 1.25fr) 112px 140px; }
+    .cot-td .bnv-dau, .cot-td .bnv-hang { grid-template-columns: 36px minmax(0, 2.5fr) minmax(0, 1.25fr) minmax(0, 1.1fr) 112px 140px minmax(0, 1.5fr); }
+    .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.3fr) 112px 144px 160px; }
+    .cot-vb .bnv-dau, .cot-vb .bnv-hang { grid-template-columns: 36px minmax(0, 2.8fr) 92px minmax(0, 1.1fr) 108px minmax(0, 1.3fr) minmax(0, 1.3fr); }
+  }
+
+  /* Thẻ: dưới 1024px, hoặc ngăn chi tiết đang mở cạnh bảng trên màn hình dưới 1600px. */
+  @media screen and (max-width: 1023px) {
+    .bnv .bnv-dau { display: none; }
+    .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
+    .bnv .bnv-c-stt, .bnv .bnv-c-tg { display: none; }
+    .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 13.5px; }
+    .bnv .bnv-c-nv { flex-direction: column; align-items: flex-start; gap: 3px; }
+    .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: 12.5px; font-weight: 600; color: var(--chu-phu); }
+    .bnv .bnv-c.han, .bnv .bnv-c-tt { flex: 0 1 auto; }
+    .bnv .bnv-c-tt::before, .bnv .bnv-c-viec::before { display: none; }
+    .bnv .bnv-c-viec { gap: 8px; } .bnv .bnv-c-viec .nut { flex: 1 1 auto; min-height: 44px; }
+    .bnv .bnv-chi-gon { display: block; }
+    .bnv-khoi { margin: 0 12px 12px 18px; padding: 12px; }
+    .bnv-khoi .mc-inline { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
+  @media screen and (max-width: 1599px) {
+    .md.co-ct .bnv .bnv-dau { display: none; }
+    .md.co-ct .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
+    .md.co-ct .bnv .bnv-c-stt, .md.co-ct .bnv .bnv-c-tg { display: none; }
+    .md.co-ct .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 13.5px; }
+    .md.co-ct .bnv .bnv-c-nv { flex-direction: column; align-items: flex-start; gap: 3px; }
+    .md.co-ct .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: 12.5px; font-weight: 600; color: var(--chu-phu); }
+    .md.co-ct .bnv .bnv-c.han, .md.co-ct .bnv .bnv-c-tt { flex: 0 1 auto; }
+    .md.co-ct .bnv .bnv-c-tt::before { display: none; }
+    .md.co-ct .bnv .bnv-chi-gon { display: block; }
+  }
+
+  @media (min-width: 861px) and (max-width: 1199px) {
+    .bnv-so.so-8 .o-so { flex-basis: calc(25% - 1px); }   /* tám ô (Việc của tôi, Việc tôi theo dõi): hai hàng 4 + 4, không ô lẻ kéo dài */
+  }
+  @media (max-width: 860px) {
+    .bnv-so .o-so { flex: 1 1 40%; padding: 10px 12px; }
+    .bnv-so .o-so b { font-size: 21px; }
+    .bnv-loc .kl-tim, .bnv-loc > select { width: 100%; max-width: 100%; flex: 1 1 100%; }
+    .bnv-chu-giai { gap: 4px 12px; }
+  }
+  @media (max-width: 600px) {
+    .bnv { border-radius: 12px; }
+    .bnv .bnv-nd { font-size: 15px; -webkit-line-clamp: 3; }
+    .bnv .bnv-c-viec .nut { flex: 1 1 100%; }
+    .bnv-khoi { margin: 0 10px 12px 14px; }
+    .bnv-khoi .mc-inline { grid-template-columns: minmax(0, 1fr); }
+    .bnv-chan { padding: 10px 14px; }
+    .bnv-trang { flex-wrap: wrap; }
+  }
+
+  @media print {
+    .bnv-so, .bnv-chu-giai, .bnv-trang, .bnv-khoi, .bnv-c-viec { display: none !important; }
+    .bnv { box-shadow: none; border-color: #999; overflow: visible; }
+    .bnv-hang, .bnv-dong, .tvb-goc { break-inside: avoid; }
+    .bnv .bnv-nd, .tvb-trich-yeu, .tvb-nut .nd { display: block; -webkit-line-clamp: unset; overflow: visible; }   /* in đủ nội dung */
+    .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.3fr) 112px 144px; }   /* không in cột Việc cần làm */
+  }
+}

@@ -1,7 +1,8 @@
 // v3.23 (0103, chủ dự án 13/10/2026): cấu hình xem_toan_bo = 2 (đặt tạm bằng service_role, khôi phục) → mọi cán bộ xem toàn bộ nhiệm vụ, chỉ xem việc
 // ngoài phạm vi xử lý. Văn bản mẫu: P1 demo_e2e_cv chủ trì (phòng E2E_RT, người giao demo_e2e_tp), P3 phòng Tổng hợp (ngoài phạm vi của cả
 // chuyên viên lẫn Trưởng phòng E2E_RT). Kiểm: menu không còn Nhắn tin, chuyên viên có Tổng quan (Toàn Văn phòng mặc định) + Toàn bộ nhiệm vụ; P3
-// ghi "Chỉ xem", ngăn chi tiết không nút ghi (cả với Trưởng phòng — không ô gửi chỉ đạo); Việc của tôi theo văn bản gốc (v3.23.1: người giao, dòng + Chi tiết, Toàn VP);
+// ghi "Chỉ xem", ngăn chi tiết không nút ghi (cả với Trưởng phòng — không ô gửi chỉ đạo); bảng Việc của tôi (v3.25: người giao trên dòng, ngăn chi
+// tiết, Toàn VP — P3 chỉ xem);
 // vướng mắc gửi tới người được chọn (một tin cho đúng người); hộp Cập nhật có ô gửi tới; Giao việc có hướng dẫn hạn. Project riêng nối sau
 // v3221-tvb (cấu hình chung — chạy một mình). Dữ liệu theo khoá riêng, tự dọn.
 import { test, expect } from '@playwright/test';
@@ -72,30 +73,35 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
     });
   });
 
-  test('3. Việc của tôi theo văn bản gốc (v3.23.1): người giao, dòng tối giản + Chi tiết, Toàn Văn phòng (P3 chỉ xem), lọc chủ trì; Theo văn bản ghi người giao', async ({ browser }, testInfo) => {
+  test('3. Việc của tôi (v3.25 bảng): số ô đang chọn rõ, người giao trên dòng, ngăn chi tiết; Toàn Văn phòng (P3 chỉ xem, ngăn không nút ghi), lọc chủ trì; Theo văn bản ghi người giao', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await nav(p, 'navDieuHanh');
-      await expect(p.locator('#vbcCay')).toHaveAttribute('data-nap', /./, NAP);
+      await expect(p.locator('#vctBang')).toHaveAttribute('data-nap', /./, NAP);
       await expect(p.locator('#vctTom')).toContainText('việc cần làm');
-      const chon = p.locator('#vbcSo .o-so[aria-pressed="true"]'); await expect(chon).toHaveCount(1);   // v3.23.2: số trên nút đang chọn không trùng màu nền
+      const chon = p.locator('#vctSo .o-so[aria-pressed="true"]'); await expect(chon).toHaveCount(1);   // v3.23.2: số trên nút đang chọn không trùng màu nền
       const [mau, nen] = await chon.evaluate((el) => [globalThis.getComputedStyle(el.querySelector('b')).color, globalThis.getComputedStyle(el).backgroundColor]);
       expect(mau).not.toBe(nen);
-      const khoi = p.locator(`#vctVb-${vbId}`); await expect(khoi).toBeVisible(NAP);
-      await expect(khoi.locator('[data-truong="nguoi-giao"]')).toContainText(tenTp);
-      const dong = p.locator(`#vctDong-${p1.id}`); await expect(dong).toBeVisible();
-      await expect(p.locator(`#vctDong-${p3.id}`)).toHaveCount(0);
-      await dong.getByRole('button', { name: 'Chi tiết', exact: true }).click();
-      const ct = p.locator(`#vbcThem-${p1.id}`); await expect(ct).toBeVisible(); await expect(ct).toContainText('Người giao');
+      await p.locator('#vctTim').fill(khoa);
+      const dong = p.locator(`#vct-${p1.id}`); await expect(dong).toBeVisible(NAP);   // P1 mới giao, chưa nhận → ô Cần xử lý (mặc định)
+      await expect(dong).toContainText(`${tenTp} giao`);   // người giao ở cột Văn bản giao
+      await expect(p.locator(`#vct-${p3.id}`)).toHaveCount(0);   // Phạm vi của tôi: không có P3 (phòng Tổng hợp)
+      await dong.locator('[data-action="nganMoViec"]').click();
+      const ct = p.locator(`#nganCT #klChiTiet-${p1.id}`); await expect(ct).toBeVisible(NAP);
       await expect(ct.getByRole('button', { name: 'Cập nhật', exact: true })).toBeVisible();
-      await p.locator('#vbcPhamVi [data-pv="toan"]').click();
-      await p.locator('#vbcTim').fill(khoa);
-      await expect(p.locator(`#vctVb-${vbId}`)).toHaveAttribute('data-mo', '1', NAP);   // toàn Văn phòng gập sẵn — đang tìm thì mở
-      await expect(p.locator(`#vctDong-${p3.id} .nhan-chi-xem`)).toBeVisible(NAP);
-      await p.locator(`#vctDong-${p3.id} .vbc-nut-ct`).click();
-      await expect(p.locator(`#vbcThem-${p3.id}`).getByRole('button', { name: 'Mở ngăn chi tiết' })).toBeVisible();
-      await expect(p.locator(`#vbcThem-${p3.id}`).getByRole('button', { name: 'Cập nhật', exact: true })).toHaveCount(0);
-      await p.locator('select[data-vbc-loc="chuTri"]').selectOption(ID.e2eOwner);
-      await expect(p.locator(`#vctDong-${p1.id}`)).toHaveCount(0); await expect(p.locator(`#vctDong-${p3.id}`)).toBeVisible();
+      await p.locator('#nganCTDong').click(); await expect(p.locator('#nganCT')).toBeHidden();
+      await p.locator('#vctPhamVi [data-pv="toan"]').click();
+      await expect(p.locator('#vctSo [data-loc="tat"]')).toHaveAttribute('aria-pressed', 'true');   // vào Toàn Văn phòng: ô Cần xử lý (việc của tôi) → Tất cả
+      const dong3 = p.locator(`#vct-${p3.id}`);
+      await expect(dong3.locator('.nhan-chi-xem')).toBeVisible(NAP);
+      await expect(dong3).toHaveAttribute('data-chi-xem', '1');
+      await expect(dong3.locator('.bnv-c-viec button')).toHaveCount(0);   // việc ngoài phạm vi: cột Việc cần làm không có nút
+      await dong3.locator('[data-action="nganMoViec"]').click();
+      const ct3 = p.locator(`#nganCT #klChiTiet-${p3.id}`); await expect(ct3).toBeVisible(NAP);
+      await expect(ct3.locator('[data-chi-xem]')).toBeVisible();
+      await expect(ct3.getByRole('button', { name: 'Cập nhật', exact: true })).toHaveCount(0);
+      await p.locator('#nganCTDong').click(); await expect(p.locator('#nganCT')).toBeHidden();
+      await p.locator('select[data-vct-loc="chuTri"]').selectOption(ID.e2eOwner);
+      await expect(p.locator(`#vct-${p1.id}`)).toHaveCount(0); await expect(dong3).toBeVisible();
       await nav(p, 'navTheoVanBan');
       await expect(p.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);
       await expect(p.locator(`#tvbVb-${vbId} [data-truong="nguoi-giao"]`)).toContainText(tenTp);

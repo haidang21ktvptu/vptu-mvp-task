@@ -141,6 +141,12 @@ export function chiTietHtml(r, ls, dc) {
 
 let dangMo = null; let dangNap = null;
 export const idDangMo = () => dangMo;
+// v3.25 (bảng theo cột): màn Nhiệm vụ chỉ dành chỗ cho ngăn khi đang mở một việc NGAY TRONG màn (không phải trong ngăn dùng chung #nganCT) —
+// .md.co-ct = bảng + ngăn; còn lại bảng rộng hết màn hình. Gọi sau mỗi lần mở / đóng / vẽ lại danh sách.
+export function dongBoNgan() {
+  const md = document.querySelector('#viewKl .md');
+  if (md) md.classList.toggle('co-ct', Boolean(dangMo) && Boolean($('klChiTiet')?.closest('#viewKl')));
+}
 
 // Đọc lỗi tạm → thử lại một lần; vẫn lỗi → ghi ngay trong ngăn (toast tự đóng sau 4 giây, người dùng vẫn thấy lý do).
 async function docCanCu(id, lanThu = 0) {
@@ -177,6 +183,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
   dangMo = id;
   document.querySelectorAll('#klBody .hang-nv').forEach((el) => { const on = el.dataset.id === id; el.classList.toggle('dang', on); el.setAttribute('aria-pressed', String(on)); });
   $('klChiTiet').innerHTML = '<p class="trong-nho">Đang tải căn cứ…</p>';
+  dongBoNgan();
   if (window.matchMedia('(max-width: 860px)').matches && !$('klChiTiet').closest('#nganCT')) $('klChiTiet').scrollIntoView({ block: 'start', behavior: 'smooth' });
   await nap(id, cheDo, false);
 }
@@ -190,5 +197,6 @@ export function dongKlChiTiet() {
   dangMo = null;
   $('klChiTiet').innerHTML = '<p class="trong-nho">Chọn một dòng để xem chỉ đạo, minh chứng và lịch sử.</p>';
   document.querySelectorAll('#klBody .hang-nv.dang').forEach((el) => { el.classList.remove('dang'); el.setAttribute('aria-pressed', 'false'); });
+  dongBoNgan();
 }
 export const chonKlRow = ({ id }) => toggleKlChiTiet({ id });

@@ -88,7 +88,7 @@ export async function expectLoggedIn(page, role) {
 
 // Bấm một mục menu theo id (navKl, navDieuHanh, dmBubbleLauncher, navQuanTri…): pill trên máy tính, nút thanh dưới hoặc "Khác" trên điện thoại.
 // Chuyên viên (A3) không có mục Nhiệm vụ trên menu (mockup: Việc của tôi · Việc tôi theo dõi · Nhắn tin) — mở toàn bộ việc bằng nút
-// "Xem toàn bộ việc của tôi" trên màn hình Việc của tôi.
+// [data-action=openKl] trên màn hình Việc của tôi (v3.25: "Lọc chi tiết, in").
 // Mở biểu mẫu Giao việc rồi CHỜ khởi tạo xong ([data-san-sang="1"]) trước thao tác đầu tiên — quy tắc 17/9: "phần tử đã hiện" không phải
 // tín hiệu nạp xong (lỗi đua CI #96: chọn "Văn bản mới" trong lúc biểu mẫu còn nạp rồi bị bước khởi tạo ghi đè). mo: cách mở (mặc định menu).
 export async function moGiaoViec(page, mo = () => nav(page, 'navGiaoViec')) {
@@ -124,6 +124,12 @@ export async function moViec(page, id, ma, { boCuaToi = false } = {}) {
   await row.click();
   await expect(page.locator(`#klChiTiet-${id}`)).toBeVisible(NAP);
   return row;
+}
+
+// v3.25 (bảng theo cột): màn Nhiệm vụ 50 dòng mỗi trang — n việc đang lọc ⇒ #klBody ghi data-so-loc = n, trang 1 hiện min(n, 50) dòng.
+export async function soDongKl(page, n) {
+  await expect(page.locator('#klBody')).toHaveAttribute('data-so-loc', String(n));
+  await expect(page.locator('#klBody [id^="klRow-"]')).toHaveCount(Math.min(n, 50));
 }
 
 // Đăng xuất qua nút — supabase-js huỷ phiên ở mọi thiết bị của tài khoản, nên chỉ gọi trong kịch bản đăng nhập (chạy sau cùng).

@@ -63,12 +63,18 @@ export function filterRowsByKeyword(tbodyId, keyword) {
 
 // Giữ ô nhập người dùng đang dùng qua một lần vẽ lại innerHTML (nạp lại nền / realtime — PR-2a, lỗi đua): với mỗi form có id trong vùng — trạng
 // thái mở (.mo) và giá trị các ô đã đổi so với mặc định — cùng ô đang focus. Gọi trước khi vẽ; gọi hàm trả về sau khi vẽ (form không còn thì bỏ).
+// Ô tệp: giữ tệp đã chọn (gán lại FileList — trình duyệt không cho gán value) và nhãn tên tệp đi kèm #<id ô>-ten (v3.25).
 const daDoi = (e) => (e.tagName === 'SELECT' ? [...e.options].some((o) => o.selected !== o.defaultSelected)
-  : e.type === 'checkbox' ? e.checked !== e.defaultChecked : e.value !== e.defaultValue);
+  : e.type === 'checkbox' ? e.checked !== e.defaultChecked : e.type === 'file' ? e.files?.length > 0 : e.value !== e.defaultValue);
+function ganTep(e, ds) {
+  if (!ds?.length) return;
+  try { e.files = ds; } catch { return; }   // FileList của ô cũ vẫn dùng được
+  const ten = e.id && document.getElementById(`${e.id}-ten`); if (ten) ten.textContent = ds[0].name;
+}
 export function giuONhap(vung) {
   if (!vung) return () => {};
   const ds = [...vung.querySelectorAll('form[id]')].map((f) => ({ id: f.id, mo: f.classList.contains('mo'),
-    o: [...f.elements].filter((e) => e.name && e.type !== 'radio' && daDoi(e)).map((e) => [e.name, e.type === 'checkbox' ? e.checked : e.value, e.type === 'checkbox' ? e.value : null]) }))
+    o: [...f.elements].filter((e) => e.name && e.type !== 'radio' && daDoi(e)).map((e) => [e.name, e.type === 'checkbox' ? e.checked : e.type === 'file' ? e.files : e.value, e.type === 'checkbox' ? e.value : null]) }))
     .filter((x) => x.mo || x.o.length);
   const a = document.activeElement;
   const fc = a?.form?.id && a.name && vung.contains(a) ? { f: a.form.id, n: a.name, d: a.selectionStart, c: a.selectionEnd, cv: a.type === 'checkbox' ? a.value : null } : null;
@@ -82,7 +88,7 @@ export function giuONhap(vung) {
       const f = vung.querySelector(`#${CSS.escape(id)}`); if (!f) return;
       if (mo) f.classList.add('mo');
       // ô đánh dấu tìm theo name + value (nhóm nhiều ô cùng name: namedItem trả RadioNodeList, không phải một ô)
-      gt.forEach(([n, v, cv]) => { const e = o(id, n, cv); if (e) { if (typeof v === 'boolean') e.checked = v; else e.value = v; } });
+      gt.forEach(([n, v, cv]) => { const e = o(id, n, cv); if (e) { if (typeof v === 'boolean') e.checked = v; else if (e.type === 'file') ganTep(e, v); else e.value = v; } });
     });
     const e = fc && o(fc.f, fc.n, fc.cv);
     if (e) { e.focus(); try { e.setSelectionRange(fc.d, fc.c); } catch { /* ô không hỗ trợ chọn */ } }
