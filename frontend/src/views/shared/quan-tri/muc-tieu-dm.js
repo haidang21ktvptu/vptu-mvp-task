@@ -72,7 +72,8 @@ function gopHtml(m) {
 function dongHtml(m, u) {
   const nguoi = m.tao_boi ? findAccount(m.tao_boi)?.full_name : ''; const qt = quyTacCua(m.ma); const dang = mo.get(m.ma);
   const con = dang?.size ? `<tr class="qt-mt-con"><td colspan="7">${dang.has('qt') ? quyTacHtml(m) : ''}${dang.has('ql') && laQuanTriMt(u) && !m.gop_vao ? quanLyHtml(m) : ''}${dang.has('ls') ? lichSuHtml(m) : ''}</td></tr>` : '';
-  const phu = [m.ten !== m.ten_ngan ? m.ten : '', m.mo_ta].filter(Boolean).join(' — ');
+  const ten = m.ten !== m.ten_ngan ? m.ten : '';   // mục hệ thống tự thêm: tên đã gồm phần "về…" của nội dung → không lặp (kiểm tay 18/10)
+  const phu = [ten, m.mo_ta && !ten.toLowerCase().includes(m.mo_ta.trim().toLowerCase()) ? m.mo_ta : ''].filter(Boolean).join(' — ');
   const canCu = [m.can_cu, m.chi_tieu ? `chỉ tiêu: ${m.chi_tieu}` : ''].filter(Boolean).join(' · ');
   return `<tr class="${m.dang_dung === false || m.gop_vao ? 'qt-mt-ngung' : ''}"><td data-nhan="Mục tiêu" class="tieude"><span class="qt-mt-ten">${esc(m.ten_ngan)}</span>${phu ? `<small>${esc(phu)}</small>` : ''}
       ${canCu ? `<small>${esc(canCu)}</small>` : ''}<small class="qt-mt-ma">${esc(m.ma)}</small></td>

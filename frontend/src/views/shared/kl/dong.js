@@ -5,7 +5,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { formatNgay, soNgay } from '../../../lib/kl/ngay.js';
-import { lopMep, boSoThuTu, tenTienDoHoanThanh, nhanChatLuongHtml } from '../../../lib/kl/nhan.js';
+import { lopMep, boSoThuTu, tenTienDoHoanThanh, nhanChatLuongHtml, MOC_RA_SOAT } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { duocChiDao } from './chi-dao.js';
 import { maNguonHtml, nhanMucHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
@@ -31,6 +31,8 @@ function hanHtml(r, homNay) {
     return `<b>xong</b>${phu}`;
   }
   if (!r.han_xu_ly) return `<b>chưa có hạn</b>${r.nhom_dem === 'CAN_DIEN_HAN' ? 'cần điền hạn' : escapeHtml(boSoThuTu(r.loai_thoi_han_ten))}`;
+  // Thường xuyên / chờ điều kiện: hạn là mốc rà soát, DB không tính quá hạn → không ghi "trễ" (rà soát 18/10: danh sách ghi "trễ 64 ngày").
+  if (MOC_RA_SOAT[r.nhom_dem]) return `<b>${MOC_RA_SOAT[r.nhom_dem]}</b>mốc rà soát ${formatNgay(r.han_xu_ly)}`;
   const n = soNgay(homNay, r.han_xu_ly);
   const chu = n < 0 ? `trễ ${-n} ngày` : n === 0 ? 'đến hạn hôm nay' : `còn ${n} ngày`;
   return `<b>${chu}</b>hạn ${formatNgay(r.han_xu_ly)}`;

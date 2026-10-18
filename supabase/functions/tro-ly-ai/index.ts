@@ -8,7 +8,8 @@
 //   - kiem_tra: quản trị hệ thống — một lời gọi rất ngắn để thử khoá, mô hình, địa chỉ.
 //   - hoc_dem: chỉ service_role (workflow hoc-quy-tac.yml mỗi đêm) — học lại các mục tiêu ai_can_hoc; không bắt đầu lượt mới khi còn dưới 35 giây
 //     của giới hạn 150 giây (mỗi lượt có hạn riêng), phần còn lại học đêm sau.
-// Giới hạn lượt / ngày theo cau_hinh_ai: ai_giu_luot giữ lượt TRƯỚC khi gọi AI (khoá tư vấn — yêu cầu đồng thời không vượt), ai_xong_luot ghi kết quả.
+// Giới hạn lượt / ngày theo cau_hinh_ai: ai_giu_luot giữ lượt TRƯỚC khi gọi AI (khoá tư vấn — yêu cầu đồng thời không vượt), ai_xong_luot ghi kết quả
+// (cả token của lượt lỗi đã tính phí — kết quả bị cắt, bị từ chối, không đọc được, lỗi đối chiếu; đợt sửa gộp 18/10/2026).
 // Giả lập (gia_lap) chỉ khi secret AI_CHO_PHEP_GIA_LAP = 1 (Supabase cục bộ, CI).
 // Trần độ dài kết quả (max_tokens) để rộng: Claude 5.x suy nghĩ thích ứng (Opus 5.5 luôn bật), phần suy nghĩ tính vào trần — trần hẹp làm văn bản nhiều
 // nhiệm vụ bị cắt. Hạn đọc văn bản 140 giây tính từ lúc nhận yêu cầu: Supabase trả 504 khi function chưa trả lời sau 150 giây (request idle timeout — mọi gói,
@@ -48,7 +49,12 @@ async function docVanBan(body: any, ch: CauHinh, khoa: string | null, batDau: nu
   const dm = await napDanhMuc(csdl, LOAI_VAN_BAN);
   const r = await goiAi(ch, khoa, { heThong: HE_THONG_DOC, noiDung: noiDungDoc(dm.day, chu, String(body.ten_tep || 'van-ban.pdf').slice(0, 120), anh.length > 0),
     anh: chu.trim() ? [] : anh, schema: luocDoDocVanBan(dm.ma), tenSchema: 'doc_van_ban', toiDa: 32000 }, { giaLap: choGiaLap ? giaLap : null, hetGio: hetGioDoc(batDau) });
-  return { ket_qua: xacMinhKetQua(r.json, chu, dm.xacMinh), vao: r.vao, ra: r.ra };
+  try {
+    return { ket_qua: xacMinhKetQua(r.json, chu, dm.xacMinh), vao: r.vao, ra: r.ra };
+  } catch (e) {   // lỗi đối chiếu ở máy chủ: lượt AI đã tính phí — vẫn ghi token vào nhật ký; nhật ký function ghi ngăn xếp lỗi (không ghi nội dung văn bản)
+    console.error('tro-ly-ai doi_chieu:', (e as Error)?.stack || String(e));
+    throw new LoiAi('Chưa đối chiếu được kết quả của trợ lý AI với văn bản — đồng chí thử lại hoặc nhập tay.', { status: 500, ma: 'DOI_CHIEU', vao: r.vao, ra: r.ra });
+  }
 }
 
 async function soanQuyTac(ma: string, ch: CauHinh, khoa: string | null, hetGio = 60000) {
@@ -76,7 +82,7 @@ async function hocDem(ch: CauHinh, khoa: string | null) {
     } catch (e) {
       const m = String((e as Error).message).slice(0, 300);
       xong.push({ ma, loi: m.slice(0, 120) });
-      await xongLuot(luot.id, { ket_qua: 'LOI', thoi_gian_ms: Date.now() - t, loi: m });
+      await xongLuot(luot.id, { ket_qua: 'LOI', token_vao: (e as any)?.vao ?? null, token_ra: (e as any)?.ra ?? null, thoi_gian_ms: Date.now() - t, loi: m });
       if (e instanceof LoiAi && ['CHUA_KHOA', 'KHOA', 'CAU_HINH'].includes(e.ma)) break;
     }
   }
@@ -133,7 +139,7 @@ Deno.serve(async (req) => {
       return json({ ok: true, ket_qua: kq.ket_qua, mo_hinh: ch.mo_hinh, nha_cung_cap: ncc?.ten, thoi_gian_ms: Date.now() - bd });
     } catch (e) {
       const m = e instanceof LoiAi ? e.message : 'Lỗi khi xử lý yêu cầu trợ lý AI.';
-      await xongLuot(luot.id, { ket_qua: 'LOI', thoi_gian_ms: Date.now() - bd, loi: m.slice(0, 300) });
+      await xongLuot(luot.id, { ket_qua: 'LOI', token_vao: (e as any)?.vao ?? null, token_ra: (e as any)?.ra ?? null, thoi_gian_ms: Date.now() - bd, loi: m.slice(0, 300) });
       return loi(m, e instanceof LoiAi ? e.status : 500, e instanceof LoiAi ? e.ma : 'LOI');
     }
   } catch (e) {

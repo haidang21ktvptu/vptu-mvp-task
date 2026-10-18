@@ -86,6 +86,22 @@ test('phản hồi: tích sẵn giữ / bỏ, gợi ý bấm / không bấm; m�
   assert.deepEqual(phanHoi(cu).map((x) => x.quy_tac[0]), ['qdm']);
 });
 
+test('bỏ mục đã gắn từ trước mà quy tắc tích sẵn → ghi BO; mở lại (quy tắc đã bị bỏ → gợi ý) không tự tích lại', () => {
+  const cu = apGoiY(taoBoChon({ rieng: ['NQ_57'], nguonRieng: { NQ_57: { nguon: 'QUY_TAC' } } }), kq1);
+  tat(cu, 'NQ_57');
+  const k = ketQua(cu);
+  assert.deepEqual(k.ma, []);
+  assert.deepEqual(phanHoi(cu, k.ma), [{ quy_tac: ['q57'], ket_qua: 'BO' }, { quy_tac: ['qdm'], ket_qua: 'BO_QUA' }]);
+  // máy chủ (goi_y_muc_tieu_viec) hạ mục có quy tắc đã bị bỏ thành GOI_Y → lần mở sau chỉ hiện ở dòng gợi ý
+  const moLai = apGoiY(taoBoChon(), { goi_y: [{ ...kq1.goi_y[0], muc: 'GOI_Y' }], so_hieu_moi: [] });
+  assert.deepEqual(hieuLuc(moLai), []);
+  assert.deepEqual(dsHien(moLai).goiY.map((x) => x.ma), ['NQ_57']);
+  // vùng mục đã có của văn bản (theo văn bản) cũng vậy
+  const vb = apGoiY(taoBoChon({ vb: ['NQ_57'] }), kq1);
+  tat(vb, 'NQ_57');
+  assert.deepEqual(phanHoi(vb, ketQua(vb).ma).find((x) => x.quy_tac[0] === 'q57'), { quy_tac: ['q57'], ket_qua: 'BO' });
+});
+
 test('tối đa 10 mục; đổi văn bản bỏ lựa chọn bỏ cũ', () => {
   const tt = taoBoChon();
   for (let i = 0; i < TOI_DA; i++) assert.equal(bat(tt, `M${i}`), true);

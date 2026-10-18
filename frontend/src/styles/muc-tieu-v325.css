@@ -81,6 +81,10 @@
   .gv-doc-chan { font-size: 12.5px; line-height: 1.5; }
   .gv-ai-ghi { margin: 0 0 8px; padding: 6px 10px; border-left: 3px solid var(--vang); border-radius: 6px; background: var(--nen-vang-mo); color: var(--chu); font-size: 12.5px; line-height: 1.5; }
   .gv-ai-ghi .nut { margin-left: 6px; }
+  .gv-doc-sot { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; border-left: 3px solid var(--vang); border-radius: 8px; background: var(--nen-vang-mo); }
+  .gv-doc-sot ul { display: flex; flex-direction: column; gap: 6px; max-height: 260px; margin: 0; padding: 0 4px 0 0; overflow: auto; list-style: none; }
+  .gv-doc-sot li { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 4px 12px; font-size: 13px; line-height: 1.45; color: var(--chu); }
+  .gv-doc-sot li > span { flex: 1 1 320px; min-width: 0; overflow-wrap: anywhere; }
 
   @media (max-width: 640px) {
     .mtg-chip .mtg-ten { max-width: 22ch; }

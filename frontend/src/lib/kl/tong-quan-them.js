@@ -2,7 +2,7 @@
 // khối "Theo loại văn bản", khối "Theo lãnh đạo VP phụ trách" (phân công phu_trach_phong hiệu lực — cùng quy tắc pcvp_phu_trach: kiêm nhiệm
 // đúng phòng + ngành + lĩnh vực thắng "cả phòng"; phòng của việc = phòng người theo dõi và phòng chủ trì trong Văn phòng, như kl_pham_vi) và
 // thanh tải chồng của bảng KPI. Thuần tổng hợp trên dòng v_nhiem_vu RLS đã trả về — không DOM, không Supabase; unit test tong-quan-them.test.mjs.
-import { soLieuChinh, laXong, laMo, mucMo } from './tong-quan.js';
+import { soLieuChinh, laXong, laMo, mucMo, laViecGoc } from './tong-quan.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from './do-khan.js';
 import { khopLocMoi } from './tq-bo-loc.js';
 
@@ -59,13 +59,21 @@ export function tuyChonLoc(rows, { tenPhong = {}, tenCanBo = () => '', lanhDaoVP
 
 // Khối "Theo loại văn bản": mỗi loại có trong dữ liệu — tổng, hoàn thành (mọi kỳ), đang làm, cảnh báo; tỷ lệ trên tổng; nhiều việc trước.
 export function theoLoaiVanBan(rows) {
-  const m = new Map();
-  rows.forEach((r) => { const ma = loaiCua(r); if (!m.has(ma)) m.set(ma, []); m.get(ma).push(r); });
-  const tong = rows.length;
-  return [...m.entries()].map(([ma, ds]) => {
+  const m = new Map();   // việc gốc — như theoVanBan (khối 6 hai thẻ cùng một cách đếm; rà soát độc lập 18/10)
+  rows.filter(laViecGoc).forEach((r) => { const ma = loaiCua(r); if (!m.has(ma)) m.set(ma, []); m.get(ma).push(r); });
+  const nhom = [...m.entries()]; const pt = phanTramTron(nhom.map(([, ds]) => ds.length));
+  return nhom.map(([ma, ds], i) => {
     const mo = ds.filter(laMo);
-    return { ma, tong: ds.length, xong: ds.filter(laXong).length, dangMo: mo.length, canhBao: mo.filter((r) => ['vang', 'do', 'ddb'].includes(mucMo(r))).length, tyLe: tong ? Math.round((ds.length / tong) * 100) : 0 };
+    return { ma, tong: ds.length, xong: ds.filter(laXong).length, dangMo: mo.length, canhBao: mo.filter((r) => ['vang', 'do', 'ddb'].includes(mucMo(r))).length, tyLe: pt[i] };
   }).sort((a, b) => b.tong - a.tong || a.ma.localeCompare(b.ma, 'vi'));
+}
+// Phần trăm nguyên cộng đúng 100 (phần dư lớn nhất được làm tròn lên — rà soát 18/10: ba loại bằng nhau hiện 33 + 33 + 33 = 99).
+export function phanTramTron(ns) {
+  const tong = ns.reduce((s, n) => s + n, 0); if (!tong) return ns.map(() => 0);
+  const tho = ns.map((n) => (n * 100) / tong); const kq = tho.map(Math.floor);
+  let du = 100 - kq.reduce((s, n) => s + n, 0);
+  tho.map((x, i) => [x - Math.floor(x), i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).forEach(([, i]) => { if (du > 0) { kq[i] += 1; du -= 1; } });
+  return kq;
 }
 
 // Khối "Theo lãnh đạo VP phụ trách" (A0, Chánh VP): mỗi Phó Chánh VP một dòng (việc thuộc phòng / ngành-lĩnh vực đang phụ trách; một việc có thể
@@ -74,7 +82,7 @@ export function theoLanhDaoVP(rows, k, phanCong = [], lanhDaoVP = [], tenPhong =
   const cua = rows.map((r) => [r, lanhDaoPhuTrach(r, phanCong)]);
   const dong = (ma, ten, ds, phong) => {
     const s = soLieuChinh(ds, k);
-    return { ma, ten, phong, tong: ds.length, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
+    return { ma, ten, phong, tong: s.xong + s.dangMo, xong: s.xong, dangMo: s.dangMo, vang: s.mo.vang, do: s.mo.do, ddb: s.mo.ddb, tyLe: s.tyLeDungHan };
   };
   const ds = lanhDaoVP.map((a) => dong(a.id, a.full_name, cua.filter(([, ids]) => ids.includes(a.id)).map(([r]) => r),
     phanCong.filter((p) => p.lanh_dao_id === a.id && p.nganh_ma == null).map((p) => tenPhong[p.phong] || p.phong)));

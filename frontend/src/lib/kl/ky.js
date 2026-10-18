@@ -1,8 +1,8 @@
 // Xuất Excel theo kỳ (v3.16): khoảng ngày của tuần ISO / tháng / quý / năm do người dùng chọn, phân loại việc theo kỳ và bảng tổng hợp
 // theo phòng / đơn vị. Cùng quy ước với màn Tổng quan (lib/kl/tong-quan.js): giao = ngày nhận văn bản (hoặc ngày ban hành, ngày tạo);
-// hoàn thành = ngày hoàn thành; đến hạn = hạn hoàn thành; còn mở cuối kỳ = giao không sau ngày cuối kỳ và chưa xong (hoặc xong sau kỳ).
-// Thuần, không DOM — unit test frontend/tests/ky.test.mjs.
-import { ngayGiao, laXong } from './tong-quan.js';
+// hoàn thành = ngày hoàn thành (chưa rõ ngày → ngày giao, như Tổng quan); đến hạn = hạn hoàn thành; còn mở cuối kỳ = giao không sau ngày cuối kỳ
+// và chưa xong (hoặc xong sau kỳ). Thuần, không DOM — unit test frontend/tests/ky.test.mjs.
+import { ngayGiao, ngayXong, laXong } from './tong-quan.js';
 import { congNgay, formatNgay } from './ngay.js';
 import { DEPT_NAMES } from '../constants.js';
 import { boSoThuTu } from './nhan.js';
@@ -41,7 +41,7 @@ export function khoangKyChon({ ky, ngay, nam, thang, quy }) {
 
 const trong = (d, k) => Boolean(d) && d >= k.tu && d <= k.den;
 export const giaoTrongKy = (r, k) => trong(ngayGiao(r), k);
-export const xongTrongKy = (r, k) => laXong(r) && trong(r.ngay_hoan_thanh, k);
+export const xongTrongKy = (r, k) => laXong(r) && trong(ngayXong(r), k);
 export const denHanTrongKy = (r, k) => trong(r.han_xu_ly, k);
 // Còn mở tại ngày cuối kỳ: đã giao không sau cuối kỳ, và chưa xong hoặc xong sau cuối kỳ (việc xong không ghi ngày hoàn thành coi là đã xong).
 export function moCuoiKy(r, k) {

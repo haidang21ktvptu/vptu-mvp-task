@@ -2,7 +2,7 @@
 // chỉ tự điền khi đã đối chiếu, mã danh mục là đề xuất, nhận diện bản chụp, phân loại số hiệu văn bản nhắc tới. Dữ liệu hư cấu.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { kiemTep, laBanChup, nhanXacMinh, keHoachVanBan, keHoachThe, phanLoaiNhacToi, chuThongKe, TOI_DA_MB } from '../src/lib/kl/dien-van-ban.js';
+import { kiemTep, laBanChup, nhanXacMinh, keHoachVanBan, keHoachThe, phanLoaiNhacToi, chuThongKe, TOI_DA_MB, tronCau, nhiemVuTuDoan, laTrung } from '../src/lib/kl/dien-van-ban.js';
 
 test('kiểm tệp: chỉ PDF, giới hạn dung lượng', () => {
   assert.equal(kiemTep(null), 'Chưa chọn tệp.');
@@ -21,6 +21,13 @@ const vb = { loai: { gia_tri: 'KL_BTV', trich: 'KẾT LUẬN của Ban Thường
 test('văn bản mới còn trống: tự điền giá trị đã đối chiếu (kể cả loại), giá trị cần kiểm tra để người dùng bấm', () => {
   const kh = keHoachVanBan(vb, { klThSoKL: '', klThNgayBH: '', klThTrichYeu: '' }, { homNay: '2026-10-17' });
   assert.deepEqual(kh.map((x) => [x.o, x.dien]), [['klThLoaiVB', true], ['klThSoKL', true], ['klThNgayBH', true], ['klThTrichYeu', false]]);
+});
+
+test('loại văn bản chưa đối chiếu được vẫn đặt theo trợ lý AI khi văn bản mới còn trống (mã danh mục — nhãn "Cần kiểm tra")', () => {
+  const kh = keHoachVanBan({ ...vb, loai: { gia_tri: 'TB_THUONG_TRUC', trich: 'THÔNG BÁO', xac_minh: false } }, { klThSoKL: '', klThNgayBH: '' }, { homNay: '2026-10-17' });
+  const loai = kh.find((x) => x.o === 'klThLoaiVB');
+  assert.deepEqual([loai.gia_tri, loai.dien, loai.xac_minh], ['TB_THUONG_TRUC', true, false]);
+  assert.equal(keHoachVanBan({ loai: { gia_tri: 'TB_THUONG_TRUC', xac_minh: false } }, { klThSoKL: '9-TB/TU', klThNgayBH: '' })[0].dien, false, 'người dùng đã nhập số hiệu');
 });
 
 test('không ghi đè: ô đã nhập giữ nguyên; loại văn bản không đổi khi người dùng đã nhập số hiệu; ngày ở tương lai không điền', () => {
@@ -52,6 +59,21 @@ test('hạn chưa đối chiếu → chỉ gợi ý; nội dung chưa khớp ngu
   assert.equal(k.dien.san_pham, undefined);
   const ky = keHoachThe({ ...nv, han: { gia_tri: '' }, loai_thoi_han: { gia_tri: 'KY_BAN_HANH' } }, { loai: 'CO_HAN_CU_THE' });
   assert.equal(ky.dien.loai, 'KY_BAN_HANH');
+});
+
+test('nội dung chưa trọn câu → không tự điền, gợi ý "trọn câu"; chỉ câu dẫn → không có trọn câu; việc trùng, đoạn rà thấy → cảnh báo', () => {
+  const tiep = { ...nv, noi_dung: { gia_tri: 'Giao Văn phòng Tỉnh ủy tổng hợp kết quả', xac_minh: 'dung', con_tiep: ', báo cáo Thường trực Tỉnh ủy.' } };
+  const k = keHoachThe(tiep, {});
+  assert.equal(k.dien.noi_dung, undefined); assert.equal(k.goiY.tronCau, 'Giao Văn phòng Tỉnh ủy tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy.');
+  assert.equal(k.dien.han, '2026-11-30', 'các ô khác vẫn điền');
+  assert.equal(tronCau('Giao A rà soát', 'các dự án.'), 'Giao A rà soát các dự án.');
+  const dan = keHoachThe({ ...nv, noi_dung: { gia_tri: 'Giao Sở A chỉ đạo', xac_minh: 'dung', con_tiep: ': a) Rà soát;', cau_dan: true } }, {});
+  assert.deepEqual([dan.goiY.noiDung, dan.goiY.tronCau], ['Giao Sở A chỉ đạo', undefined]);
+  const trung = keHoachThe({ ...nv, trung_voi: 0 }, {}); assert.ok(laTrung({ trung_voi: 0 }) && !laTrung({}));
+  assert.match(trung.canhBao[0], /trùng với nhiệm vụ 1/);
+  const doan = nhiemVuTuDoan({ trang: 2, chu: 'Giao Sở Nội vụ rà soát biên chế.' });
+  const kd = keHoachThe(doan, {});
+  assert.deepEqual([kd.dien.noi_dung, doan.trang, doan.tu_ra_soat], ['Giao Sở Nội vụ rà soát biên chế.', 2, true]); assert.match(kd.canhBao[0], /hệ thống rà thấy/);
 });
 
 test('số hiệu nhắc tới: có trong danh mục → gợi ý AI (đã gộp → mục giữ lại, ngừng dùng → bỏ); đúng dạng nhóm chưa có, đã đối chiếu → mới; dạng lạ, trùng, chưa đối chiếu → bỏ', () => {

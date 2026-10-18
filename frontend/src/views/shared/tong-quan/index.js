@@ -69,8 +69,9 @@ const khoaCua = (c) => (c.kh === 'cb' ? khoaCanBo(phongCua()) : c.kh === 'phong'
 const ctxLoc = () => ({ me: state.user?.id, phanCong: tq.phanCong, mucTieuDm: danhMucKl().mucTieu || [], nganhDm: danhMucKl().nganh || [], linhVucDm: danhMucKl().linhVuc || [] });
 const dongDaLoc = () => locTongQuan(coSo(), tq.loc, ctxLoc());
 const cdsCoSo = () => (toanVP() ? tq.cds : locTheoViec(tq.cds, tq.rows));   // chỉ đạo đọc theo RLS (0103: mọi việc) → đúng tập việc đang xem
+const cdsLoc = () => locTheoViec(cdsCoSo(), dongDaLoc());   // khối 7 theo thanh lọc như mọi khối (rà soát 18/10: số đếm trước đây bỏ qua bộ lọc)
 const kyHienTai = (homNay) => (tq.loc.tu || tq.loc.den ? khoangTuyChon(tq.loc.tu, tq.loc.den, homNay) : khoangKy(tq.ky, homNay));
-const quyTac = () => `Quy tắc: Vàng = còn ≤ ${cauHinhKl('nguong_vang_ngay', 3)} ngày tới hạn mà chưa có minh chứng (Khẩn trở lên ≤ ${cauHinhKl('do_khan_KHAN_vang', 5)} ngày); Đỏ = quá hạn; Đỏ đặc biệt = quá hạn ≥ ${cauHinhKl('nguong_do_dac_biet_ngay', 3)} ngày; đúng hạn tính trên việc hoàn thành đã được đánh giá.`;
+const quyTac = () => `Quy tắc: Vàng = còn ≤ ${cauHinhKl('nguong_vang_ngay', 3)} ngày tới hạn mà chưa có minh chứng (Khẩn trở lên ≤ ${cauHinhKl('do_khan_KHAN_vang', 5)} ngày); Đỏ = quá hạn; Đỏ đặc biệt = quá hạn ≥ ${cauHinhKl('nguong_do_dac_biet_ngay', 3)} ngày; đúng hạn tính trên việc hoàn thành có hạn và ngày hoàn thành; việc hoàn thành chưa rõ ngày tính theo ngày giao.`;
 // Nút "Chỉ đạo" ở khối 1: Thường trực, lãnh đạo Văn phòng, Trưởng phòng với việc trong phạm vi xử lý (còn lại "Xem"); quyền thật ở hàm chỉ đạo.
 const duocChiDaoViec = (r) => ['A0', 'A1', 'A2'].includes(vai()) && !chiXem(r);
 
@@ -104,7 +105,7 @@ function ve() {
     + linhVucHtml(theoKhoi(rows, k, { khoi: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganh: dm.nganh, linhVuc: dm.linhVuc }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k)
     + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k) + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
-    + chiDaoHtml(chiDaoKy(cdsCoSo(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + chatLuongHtml(chatLuongKy(rows, k), k)
+    + chiDaoHtml(chiDaoKy(cdsLoc(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + chatLuongHtml(chatLuongKy(rows, k), k)
     + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2')}${duLieuHtml(chatLuongDuLieu(rows))}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
   if (focus) $('viewTongQuan').querySelector(focus)?.focus({ preventScroll: true });   // vẽ lại sau khi đổi ô lọc / bấm nút: giữ tiêu điểm đúng chỗ (bàn phím)
@@ -174,7 +175,7 @@ function hienGoi(e) {
 function tqMo({ ct }) {
   let c; try { c = JSON.parse(ct || '{}'); } catch { return; }
   const homNay = homNayVN(); const k = kyHienTai(homNay);
-  const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsCoSo(), ctxCd: ctxCd(), homNay, nganhDm: danhMucKl().nganh || [], linhVucDm: danhMucKl().linhVuc || [] });
+  const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsLoc(), ctxCd: ctxCd(), homNay, nganhDm: danhMucKl().nganh || [], linhVucDm: danhMucKl().linhVuc || [] });
   if (coLoc(tq.loc) && c.t !== 'loc') kq.tieuDe = `${kq.tieuDe} (đã lọc)`;
   const goi = document.getElementById('tqGoi'); if (goi) goi.hidden = true;
   moNganDanhSach(kq);

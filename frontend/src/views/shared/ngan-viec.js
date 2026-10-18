@@ -6,7 +6,7 @@ import { $, escapeHtml, show } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
-import { lopMep, boSoThuTu } from '../../lib/kl/nhan.js';
+import { lopMep, boSoThuTu, MOC_RA_SOAT } from '../../lib/kl/nhan.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 
@@ -18,6 +18,7 @@ const ownerText = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) 
 export function hanNgan(r, homNay = homNayVN()) {
   if (r.nhom_dem === 'HOAN_THANH') return r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}` : 'xong';
   if (!r.han_xu_ly) return 'chưa có hạn';
+  if (MOC_RA_SOAT[r.nhom_dem]) return `${MOC_RA_SOAT[r.nhom_dem]} · mốc rà soát ${formatNgay(r.han_xu_ly)}`;   // không tính quá hạn (như DB)
   const n = soNgay(homNay, r.han_xu_ly);
   return `${n < 0 ? `trễ ${-n} ngày` : n === 0 ? 'đến hạn hôm nay' : `còn ${n} ngày`} · hạn ${formatNgay(r.han_xu_ly)}`;
 }

@@ -53,8 +53,9 @@ describe('khối mới', () => {
     const ds = theoLoaiVanBan(ROWS);
     assert.deepEqual(ds.map((d) => [d.ma, d.tong, d.xong, d.dangMo, d.canhBao, d.tyLe]), [['KL_BTV', 3, 0, 3, 1, 60], ['CONG_VAN', 1, 0, 1, 1, 20], [KHONG_VB, 1, 1, 0, 0, 20]]);
   });
-  test('bấm số của một loại văn bản: danh sách (ba phần) cộng đúng bằng tổng của loại, kể cả việc thường xuyên', () => {
-    const rows = [...ROWS, viec({ id: 6, nhom_dem: 'THUONG_XUYEN', muc_canh_bao: 'KHONG_AP_DUNG' })];
+  test('bấm số của một loại văn bản: danh sách (ba phần) cộng đúng bằng tổng của loại, kể cả việc thường xuyên; việc giao tiếp xuống không tính', () => {
+    const rows = [...ROWS, viec({ id: 6, nhom_dem: 'THUONG_XUYEN', muc_canh_bao: 'KHONG_AP_DUNG' }), { ...ROWS[0], id: 7, nhiem_vu_cha: ROWS[0].id }];
+    assert.deepEqual(theoLoaiVanBan(rows).map((d) => d.tong), theoLoaiVanBan(rows.filter((r) => r.id !== 7)).map((d) => d.tong), 'việc con không cộng thêm');
     theoLoaiVanBan(rows).forEach((d) => {
       const kq = locChiTieu(rows, { t: 'loai', ma: d.ma, ten: d.ma }, K);
       assert.equal(kq.nhom.reduce((s, n) => s + n.rows.length, 0), d.tong, d.ma);
