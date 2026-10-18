@@ -37,8 +37,14 @@ export function keHoachLuu(r, tt, maMoi = new Map()) {
   });
   return { id: r.id, ma: k.ma, nguon };
 }
+// Bỏ mục hệ thống tích sẵn trên dòng mà tập mục tiêu vẫn như DB (việc chưa gắn gì, hoặc chỉ theo văn bản): vẫn có việc để lưu — phản hồi "bỏ" để lần
+// sau không tích lại ở việc này (0115). maMoi như keHoachLuu.
+export const coBoTichSan = (tt, maMoi = new Map()) => phanHoi(tt, ketQua(tt, maMoi).ma).some((x) => x.ket_qua === 'BO');
 // Có gì để lưu (bật nút, đếm hàng loạt) trước khi số hiệu mới có mã thật: số hiệu mới đang tích nhận mã tạm.
-export const coThayDoi = (r, tt) => Boolean(keHoachLuu(r, tt, new Map(tt.moi.filter((m) => m.chon).map((m) => [khoaSoHieu(m.so_hieu), `SH:${m.so_hieu}`]))));
+export const coThayDoi = (r, tt) => {
+  const maMoi = new Map(tt.moi.filter((m) => m.chon).map((m) => [khoaSoHieu(m.so_hieu), `SH:${m.so_hieu}`]));
+  return Boolean(keHoachLuu(r, tt, maMoi)) || coBoTichSan(tt, maMoi);
+};
 // Mục hiệu lực sau khi lưu (để vẽ lại chữ "Hiện tính" trước khi đọc lại DB).
 export const maSauLuu = (r, ke) => (ke ? (ke.ma.length ? ke.ma : r?.muc_tieu_vb || []) : mucTieuCua(r));
 // Phản hồi: lưu hàng loạt mà người dùng chưa mở / chưa thao tác ở việc đó → chỉ tính mục tích sẵn (giữ / bỏ), không tính gợi ý "không bấm" (người

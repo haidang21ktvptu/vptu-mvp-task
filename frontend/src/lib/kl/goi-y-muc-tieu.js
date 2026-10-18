@@ -133,3 +133,7 @@ export function phanHoi(tt, maCuoi) {
   return tt.goiY.filter((g) => (g.quy_tac || []).length && !(g.da_bo && !cuoi.has(g.ma)) && (!tt.ban.includes(g.ma) || (g.muc === 'TU_TICH' && !cuoi.has(g.ma))))
     .map((g) => ({ quy_tac: g.quy_tac, ket_qua: g.muc === 'TU_TICH' ? (cuoi.has(g.ma) ? 'GIU' : 'BO') : (cuoi.has(g.ma) ? 'THEM' : 'BO_QUA') }));
 }
+// Kết quả nhận diện của việc sau khi lưu, như máy chủ sẽ trả (0115): mục tích sẵn có quy tắc mà không nằm trong tập đã lưu (đã gửi phản hồi "bỏ") thành
+// gợi ý "đã bỏ ở việc này" — màn Rà soát dùng lại kết quả cũ mà không tích lại, không coi là còn phải lưu.
+export const sauKhiLuu = (kq, maCuoi = []) => ({ ...kq, goi_y: (kq?.goi_y || []).map((g) => (g?.muc === 'TU_TICH' && (g.quy_tac || []).length && !maCuoi.includes(g.ma)
+  ? { ...g, muc: 'GOI_Y', da_bo: true } : g)) });

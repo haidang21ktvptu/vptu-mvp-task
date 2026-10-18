@@ -74,6 +74,16 @@ test('chờ xử lý: việc chưa gắn mục nào chỉ còn gợi ý "đã b�
   assert.equal(choXuLy(r, apGoiY(taoTrangThai(r), { goi_y: [daBo, KQ.goi_y[1]], so_hieu_moi: [] })), true, 'còn gợi ý khác → vẫn chờ');
 });
 
+test('bỏ mục tích sẵn mà tập mục tiêu không đổi (việc chưa gắn gì): vẫn có việc để lưu — phản hồi "bỏ" (0115)', async () => {
+  const { coThayDoi, coBoTichSan } = await import('../src/views/shared/ra-soat-muc-tieu/ke-hoach.js');
+  const r = viec(); const tt = apGoiY(taoTrangThai(r), KQ);
+  assert.equal(coBoTichSan(tt), false);
+  tat(tt, 'NQ_57');
+  assert.equal(keHoachLuu(r, tt), null, 'không có mục tiêu nào để ghi');
+  assert.equal(coBoTichSan(tt), true); assert.equal(coThayDoi(r, tt), true, 'nút Chấp nhận sáng để ghi "bỏ"');
+  assert.deepEqual(phanHoiLuu(tt, new Map(), true), [{ quy_tac: ['q1'], ket_qua: 'BO' }, { quy_tac: ['q2'], ket_qua: 'BO_QUA' }]);
+});
+
 test('coThayDoi: số hiệu mới đang tích tính là có thay đổi trước khi có mã', async () => {
   const { coThayDoi } = await import('../src/views/shared/ra-soat-muc-tieu/ke-hoach.js');
   const r = viec(); const tt = apGoiY(taoTrangThai(r), { goi_y: [], so_hieu_moi: [{ so_hieu: '81-NQ/TW', nhom: 'NQ_TW' }] });
