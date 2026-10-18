@@ -43,16 +43,18 @@ export function kiemNgay(giaTri, trich) {
 const CO_NGAY = /(?:^|\D)\d{1,2}\s*[/.-]\s*\d{1,2}\s*[/.-]\s*\d{4}(?!\d)|ngay\s*\d{1,2}\s*thang\s*\d{1,2}\s*nam\s*\d{4}/;
 // Mốc mơ hồ — không xác minh: đầu / giữa tháng, quý; tuần; "10 ngày đầu", "trong 30 ngày"; nửa năm, giữa năm, đầu năm.
 const MO_HO = /(?:dau|giua) (?:thang|quy)|tuan|ngay dau|\d+ ngay|thang (?:dau|cuoi|giua) nam|nua (?:dau|cuoi) nam|giua nam|dau nam/;
-// Mốc số liệu "tính đến (hết) ngày …", "tính từ ngày … đến ngày …" không phải hạn (rà soát độc lập lần 2, 18/10).
-const NGAY_SO = '(?:\\d{1,2}\\s*[/.-]\\s*\\d{1,2}\\s*[/.-]\\s*\\d{4}|\\d{1,2}\\s*thang\\s*\\d{1,2}\\s*nam\\s*\\d{4})';
-const MOC_SO_LIEU = new RegExp(`\\btinh (?:tu (?:ngay )?${NGAY_SO} )?(?:den|toi) (?:het )?(?:ngay )?${NGAY_SO}`, 'g');
+// Mốc số liệu "tính đến (hết) ngày …", "tính từ ngày … đến ngày …" không phải hạn (rà soát độc lập lần 2, 18/10) — so trên chữ CÓ DẤU ("tỉnh đến hết
+// ngày 31/12" là hạn, lần 3).
+const NGAY_SO = '(?:\\d{1,2}\\s*[/.-]\\s*\\d{1,2}\\s*[/.-]\\s*\\d{4}|\\d{1,2}\\s*tháng\\s*\\d{1,2}\\s*năm\\s*\\d{4})';
+const MOC_SO_LIEU = new RegExp(`(?:^|[^\\p{L}\\p{N}])tính (?:từ (?:ngày )?${NGAY_SO} )?(?:đến|tới) (?:hết )?(?:ngày )?${NGAY_SO}`, 'gu');
 const TU_DEN = /(?:^|[^\p{L}\p{N}])từ(?![\p{L}\p{N}])(?:[^.;]|\.(?=\d)){0,80}?[^\p{L}\p{N}](?:đến|tới)(?![\p{L}\p{N}])/u;   // "từ … đến …" (chữ có dấu: "đầu tư" không phải "từ")
 // Hạn: câu nêu ngày cụ thể → phải đúng ngày đó; không thì cuối quý / tháng / năm, "N tháng đầu năm" → cuối tháng N, "N tháng cuối năm" → 31/12;
 // "từ … đến …": hạn là mốc sau "đến". Đợt sửa gộp: máy chủ kiểm trên CHỮ CỦA TỆP ở chỗ khớp (không trên câu AI chép — "11/1" khác "1/11").
 export function kiemHan(giaTri, trich) {
   if (!ngayHopLe(giaTri)) return false;
-  const thuong = String(trich || '').normalize('NFC').toLocaleLowerCase('vi').replace(/\s+/g, ' ');
-  let t = khongDauDeu(thuong).replace(MOC_SO_LIEU, (m) => ' '.repeat(m.length));   // giữ độ dài: vị trí trùng chữ có dấu
+  const thuong = String(trich || '').normalize('NFC').toLocaleLowerCase('vi').replace(/\s+/g, ' ')
+    .replace(MOC_SO_LIEU, (m) => ' '.repeat(m.length));   // giữ độ dài: vị trí trong chữ không dấu trùng chữ có dấu
+  let t = khongDauDeu(thuong);
   const tuDen = TU_DEN.exec(thuong); if (tuDen) t = t.slice(tuDen.index + tuDen[0].length);
   if (CO_NGAY.test(t)) return kiemNgay(giaTri, t);
   if (/truoc (?:thang|quy|nam|\d{1,2} thang)/.test(t)) return false;   // "trước tháng 6/2026": hai cách hiểu — không xác minh
@@ -98,6 +100,9 @@ export const kiemSoHoiNghi = (giaTri, trich) => {
 
 const cat = (s, n) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 const cungSo = (a, b) => Boolean(a) && chuanTrich(boDau(a)) === chuanTrich(boDau(b));
+// Giá trị khác của chính nhiệm vụ (chủ trì, từng đơn vị phối hợp, mô tả sản phẩm, câu thời hạn) — dòng sau mở đầu bằng chúng là ô khác của dòng bảng.
+const ranhCua = (n) => [cat(n?.don_vi_chu_tri, 200), ...cat(n?.don_vi_phoi_hop, 300).split(';'), cat(n?.mo_ta_san_pham, 200)].map(chuanTrich)
+  .filter((x) => x.length >= 4).map((dau) => ({ dau })).concat(chuanTrich(n?.trich_han).length >= 6 ? [{ dau: chuanTrich(n.trich_han), han: true }] : []);
 // Giá trị phải nằm trong khoảng của nhiệm vụ (nhieu: danh sách cách nhau bằng ";" — từng mục); điền chữ của tệp (trừ khi tệp mất dấu).
 function trongNhiemVu(goc, ks, g, nhieu = false) {
   if (!g || !ks) return { gia_tri: g, xac_minh: false };
@@ -151,7 +156,7 @@ export function xacMinhKetQua(kq, chu, dm) {
   });
   const nhiemVu = vao.map((n, j) => {
     const nd = cat(n.noi_dung, 3000); const k = tim[j]; const ks = ke[j];
-    const v = k ? giaTriDien(goc, k, nd) : null; const tiep = k ? conTiep(goc, k.phan.at(-1)) : null;
+    const v = k ? giaTriDien(goc, k, nd) : null; const tiep = k ? conTiep(goc, k.phan.at(-1), ranhCua(n)) : null;
     const han = ngayHopLe(n?.han) ? n.han : ''; const tHan = cat(n?.trich_han, 400);
     const viTriHan = han && ks ? trongKhoang(goc, ks, tHan) : null;   // câu thời hạn trong chính nhiệm vụ → kiểm ngày trên CHỮ CỦA TỆP ở chỗ đó
     const hanTk = viTriHan && kiemHan(han, chuDoan(goc, viTriHan.s, viTriHan.e)) ? viTriHan : null;

@@ -92,3 +92,34 @@ test('câu dẫn ngay sau trích yếu một dòng vẫn là câu dẫn; tiêu �
   assert.deepEqual([kq.nhiem_vu[0].han.xac_minh, kq.nhiem_vu[0].noi_dung.con_tiep], [false, undefined], 'hạn của ý sau');
   assert.deepEqual(sot(kq), ['Ban Thường vụ Tỉnh ủy giao: Sở Tài chính bảo đảm kinh phí, hoàn thành trước ngày 30/11/2026.']);
 });
+
+// Rà soát độc lập lần 3 (18/10/2026).
+const BANG = (o, sau) => `THÔNG BÁO\ný kiến chỉ đạo của Thường trực Tỉnh ủy\nThường trực Tỉnh ủy giao các cơ quan thực hiện các nhiệm vụ tại bảng\ndưới đây:\nST\nT\nNội dung nhiệm vụ Cơ quan chủ\ntrì\n`
+  + `Cơ quan phối\nhợp\nThời gian\nhoàn thành\n1 ${o}\n${sau}\n2 Tổ chức hội nghị sơ kết công tác\nnăm 2026\nBan Tổ chức\nTỉnh ủy\nSở Nội vụ\nTháng\n12/2026\nNơi nhận:\n- Như trên.`;
+test('ô bảng: cắt trước dòng viết hoa → còn tiếp (không tự điền); ô trọn mà ô sau là chủ trì / thời gian của chính nhiệm vụ (kể cả viết thường) → điền', () => {
+  const F = { don_vi_chu_tri: 'Văn phòng Tỉnh ủy', don_vi_phoi_hop: 'Sở Nội vụ', han: '2027-03-31', trich_han: 'Quý I/2027' };
+  const n = (o, sau, nd, them = F) => xm(BANG(o, sau), [viec(nd, them)]).nhiem_vu[0];
+  for (const [o, nd] of [['Rà soát quy hoạch cán bộ, báo cáo\nThường trực Tỉnh ủy', 'Rà soát quy hoạch cán bộ, báo cáo'], ['Xây dựng đề án vị trí việc làm, trình\nBan Thường vụ Tỉnh ủy', 'Xây dựng đề án vị trí việc làm, trình'],
+    ['Kiểm tra việc thực hiện tại\nỦy ban nhân dân các huyện', 'Kiểm tra việc thực hiện tại'], ['Tổng kết Đề án phát triển du lịch\nNon nước Cao Bằng', 'Tổng kết Đề án phát triển du lịch']]) {
+    const x = n(o, 'Văn phòng\nTỉnh ủy\nSở Nội vụ\nQuý I/2027', nd);
+    assert.equal(keHoachThe(x, {}).dien.noi_dung, undefined, `không tự điền "${nd}"`); assert.equal(x.noi_dung.con_tiep, o.split('\n')[1]);
+  }
+  assert.equal(n('Rà soát quy hoạch cán bộ, báo cáo\nThường trực Tỉnh ủy', 'Văn phòng\nTỉnh ủy', 'Rà soát quy hoạch cán bộ, báo cáo', { don_vi_chu_tri: 'Thường trực Tỉnh ủy' }).noi_dung.con_tiep
+    .startsWith('Thường trực Tỉnh ủy'), true, 'trợ lý AI lấy nhầm dòng của ô làm chủ trì — vẫn không tự điền');
+  const tron = [n('Rà soát quy hoạch cán bộ năm 2027', 'các sở, ngành\nSở Nội vụ\nQuý I/2027', 'Rà soát quy hoạch cán bộ năm 2027', { ...F, don_vi_chu_tri: 'các sở, ngành' }),
+    n('Rà soát quy hoạch cán bộ năm 2027', 'quý I/2027\nBan Tổ chức Tỉnh ủy', 'Rà soát quy hoạch cán bộ năm 2027', { don_vi_chu_tri: 'Ban Tổ chức Tỉnh ủy', han: '2027-03-31', trich_han: 'quý I/2027' })];
+  assert.deepEqual(tron.map((x) => [x.noi_dung.con_tiep, keHoachThe(x, {}).dien.noi_dung, x.han.xac_minh]),
+    [[undefined, 'Rà soát quy hoạch cán bộ năm 2027', 'dung'], [undefined, 'Rà soát quy hoạch cán bộ năm 2027', 'dung']]);
+});
+
+test('danh sách thiếu dấu câu: ý mở bằng số sau dòng dài vẫn là ý (kể cả ý cuối dính "Nơi nhận:"); ý không ký hiệu kết thúc bằng "." mở bằng tên cơ quan; "tỉnh đến hết ngày" là hạn', () => {
+  const A = `${HD}\nBan Thường vụ Tỉnh ủy yêu cầu:\n- Giao Sở Nội vụ chủ trì rà soát biên chế các cơ quan, đơn vị trong hệ thống chính trị\n- 100% cơ quan, đơn vị hoàn thành số hóa hồ sơ, báo cáo trước ngày 30/11/2026\n`
+    + '- 03 đề án trọng điểm được Ban Thường vụ Tỉnh ủy thông qua trong quý IV/2026\nNơi nhận:\n- Như trên.';
+  const kq = xm(A, [viec('Giao Sở Nội vụ chủ trì rà soát biên chế các cơ quan, đơn vị trong hệ thống chính trị', { han: '2026-11-30', trich_han: 'báo cáo trước ngày 30/11/2026' })]);
+  assert.deepEqual([kq.nhiem_vu[0].han.xac_minh, kq.nhiem_vu[0].noi_dung.con_tiep, kq.tong_bo_sot], [false, undefined, 2]);
+  const tb = 'TỈNH ỦY CAO BẰNG\nSố 999-TB/TU\nCao Bằng, ngày 16 tháng 10 năm 2026\nTHÔNG BÁO\nkết luận của Thường trực Tỉnh ủy về công tác cán bộ\nNgày 15/10/2026, Thường trực Tỉnh ủy họp nghe báo cáo.\n'
+    + 'Thường trực Tỉnh ủy đề nghị các cơ quan:\nBan Tổ chức Tỉnh ủy rà soát quy hoạch cán bộ, báo cáo trước ngày 30/11/2026.\nỦy ban Kiểm tra Tỉnh ủy kiểm tra việc kê khai tài sản, thu nhập năm 2026.\n'
+    + 'Văn phòng Tỉnh ủy tổng hợp kết quả thực hiện các nội dung trên.\nNơi nhận:\n- Như trên.';
+  assert.deepEqual(sot(xm(tb, [viec('Ban Tổ chức Tỉnh ủy rà soát quy hoạch cán bộ, báo cáo trước ngày 30/11/2026.')])).map((x) => x.slice(41, 60)), ['Ủy ban Kiểm tra Tỉn', 'Văn phòng Tỉnh ủy t']);
+  assert.deepEqual([kiemHan('2026-12-31', 'triển khai trên địa bàn tỉnh đến hết ngày 31/12/2026'), kiemHan('2026-12-31', 'báo cáo Ủy ban nhân dân tỉnh tới ngày 31/12/2026')], [true, true]);
+});

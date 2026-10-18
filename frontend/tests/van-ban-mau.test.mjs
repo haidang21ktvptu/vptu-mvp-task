@@ -71,18 +71,19 @@ test('4 · kết luận 991-KL/TU: câu dẫn + ý a) b) c), việc gồm nhiề
 });
 
 test('5 · thông báo 9002-TB/TU có bảng: nội dung, chủ trì / phối hợp / thời gian ở cột vẫn đối chiếu được trong dòng của bảng', () => {
-  const r = (noi, ph, han, trich) => v(noi, { don_vi_phoi_hop: ph, han, trich_han: trich });
+  const r = (noi, ct, ph, han, trich) => v(noi, { don_vi_chu_tri: ct, don_vi_phoi_hop: ph, han, trich_han: trich });
+  const DONG = [['Xây dựng kế hoạch chuyển đổi số trong các cơ quan đảng năm 2027', 'Văn phòng Tỉnh ủy', 'Sở Khoa học và Công nghệ', '2026-12-31', 'Tháng 12/2026'],
+    ['Tổ chức hội nghị sơ kết 5 năm thực hiện Nghị quyết số 15-NQ/TU về phát triển du lịch', 'Ban Tuyên giáo và Dân vận Tỉnh ủy', 'Sở Văn hóa, Thể thao và Du lịch', '2027-03-31', 'Quý I/2027'],
+    ['Rà soát, bổ sung quy hoạch cán bộ diện Ban Thường vụ Tỉnh ủy quản lý', 'Ban Tổ chức Tỉnh ủy', 'Ủy ban Kiểm tra Tỉnh ủy', '2026-11-30', 'Trước ngày 30/11/2026']];
   const kq = xacMinhKetQua({ van_ban: vb('TB_THUONG_TRUC', '9002-TB/TU', '2026-10-22', 'ý kiến chỉ đạo của Thường trực Tỉnh ủy về một số nhiệm vụ trọng tâm (hư cấu)'), nhiem_vu: [
-    r('Xây dựng kế hoạch chuyển đổi số trong các cơ quan đảng năm 2027', 'Sở Khoa học và Công nghệ', '2026-12-31', 'Tháng 12/2026'),
-    r('Tổ chức hội nghị sơ kết 5 năm thực hiện Nghị quyết số 15-NQ/TU về phát triển du lịch', 'Sở Văn hóa, Thể thao và Du lịch', '2027-03-31', 'Quý I/2027'),
-    r('Rà soát, bổ sung quy hoạch cán bộ diện Ban Thường vụ Tỉnh ủy quản lý', 'Ủy ban Kiểm tra Tỉnh ủy', '2026-11-30', 'Trước ngày 30/11/2026'),
+    ...DONG.map((x) => r(...x)),
     v('Giao Văn phòng Tỉnh ủy theo dõi, đôn đốc, tổng hợp kết quả, báo cáo Thường trực Tỉnh ủy trước ngày 25/12/2026.', { han: '2026-12-25', trich_han: 'trước ngày 25/12/2026' }),
   ] }, chu('5-thong-bao-9002-TB-TU-bang'), DM);
   assert.deepEqual(tom(kq), { vb: true, nv: [D, D, D, D], sot: 0 });
   assert.deepEqual(kq.nhiem_vu.slice(0, 3).map((n) => n.don_vi_phoi_hop.xac_minh), ['dung', 'dung', 'dung']);
-  // Rà soát độc lập lần 2: trợ lý AI bỏ dòng cuối của ô (dòng ngắn) → còn tiếp đúng phần còn lại của ô, không tự điền.
-  const cat = xacMinhKetQua({ van_ban: {}, nhiem_vu: ['Xây dựng kế hoạch chuyển đổi số trong các cơ quan đảng năm', 'Tổ chức hội nghị sơ kết 5 năm thực hiện Nghị quyết số',
-    'Rà soát, bổ sung quy hoạch cán bộ diện Ban Thường vụ Tỉnh ủy'].map((x) => v(x)) }, chu('5-thong-bao-9002-TB-TU-bang'), DM).nhiem_vu;
+  // Rà soát độc lập lần 2, 3: trợ lý AI bỏ dòng cuối của ô → còn tiếp đúng phần còn lại của ô (tới ô chủ trì), không tự điền.
+  const cat = xacMinhKetQua({ van_ban: {}, nhiem_vu: [['Xây dựng kế hoạch chuyển đổi số trong các cơ quan đảng năm', 0], ['Tổ chức hội nghị sơ kết 5 năm thực hiện Nghị quyết số', 1],
+    ['Rà soát, bổ sung quy hoạch cán bộ diện Ban Thường vụ Tỉnh ủy', 2]].map(([x, i]) => r(x, ...DONG[i].slice(1))) }, chu('5-thong-bao-9002-TB-TU-bang'), DM).nhiem_vu;
   assert.deepEqual(cat.map((n) => n.noi_dung.con_tiep), ['2027', '15-NQ/TU về phát triển du lịch', 'quản lý']);
 });
 
@@ -96,4 +97,12 @@ test('chép sai kiểu thường gặp: cắt cụt trước tên cơ quan xuố
   assert.equal(kq.nhiem_vu[1].han.xac_minh, false, 'hạn 15/12 là của nhiệm vụ 1');
   assert.deepEqual([kq.van_ban.so_hieu.gia_tri, kq.van_ban.so_hieu.xac_minh], ['998-KL/TU', 'dung'], 'điền số hiệu theo chữ của tệp');
   assert.equal(kq.van_ban.trich_yeu.gia_tri, 'của Ban Thường vụ Tỉnh ủy tại Hội nghị lần thứ 12 về một số nhiệm vụ trọng tâm cuối năm 2026', 'trích yếu lấy trọn');
+});
+
+test('4b · nhiệm vụ gồm câu dẫn + nhiều ý chép khác văn bản (không định vị được) che cả các ý của nó — không báo sót trùng', () => {
+  const c = chu('4-ket-luan-991-KL-TU');
+  const nd = 'Giao Ban Tổ chức Tỉnh ủy xây dựng đề án vị trí việc làm của các cơ quan đảng, trong đó tập trung: rà soát số biên chế được giao của từng cơ quan; Đề xuất phương án sắp xếp, bố trí cán bộ; báo cáo Ban Thường vụ Tỉnh ủy trước ngày 30/11/2026.';
+  const kq = xacMinhKetQua({ van_ban: {}, nhiem_vu: [v(nd, { don_vi_chu_tri: 'Ban Tổ chức Tỉnh ủy' })] }, c, DM);
+  assert.equal(kq.nhiem_vu[0].noi_dung.xac_minh, false);
+  assert.ok(kq.nghi_bo_sot.every((x) => !x.chu.includes('vị trí việc làm')), 'các ý của nhiệm vụ 2.2 không bị báo sót');
 });
