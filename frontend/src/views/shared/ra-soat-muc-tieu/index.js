@@ -8,9 +8,9 @@ import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { loadDanhMucKl, loadKlRows, danhMucKl } from '../../../lib/kl/du-lieu.js';
-import { goiYMucTieuViec } from '../../../lib/kl/muc-tieu-db.js';
+import { goiYMucTieuViec, ganVaoDong } from '../../../lib/kl/muc-tieu-db.js';
 import { dsNhom, mucTieuCua } from '../../../lib/kl/muc-tieu.js';
-import { apGoiY } from '../../../lib/kl/goi-y-muc-tieu.js';
+import { apGoiY, sauKhiLuu } from '../../../lib/kl/goi-y-muc-tieu.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { laTangGiao } from '../../../lib/kl/sua-tang.js';
 import { boSoThuTu } from '../../../lib/kl/nhan.js';
@@ -18,6 +18,7 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { boDau } from '../../../lib/tim-chon.js';
 import { dangKyO, boO, veO, lyDoChu } from '../kl/chon-muc-tieu.js';
 import { moNhiemVu } from '../kl/index.js';
+import { timKlRow } from '../kl/danh-sach.js';
 import { raSoatTemplate } from './template.js';
 import { dongHtml, capNhatDong, khoaO } from './dong.js';
 import { taoTrangThai, choXuLy, nhomGoiY, coThayDoi } from './ke-hoach.js';
@@ -25,7 +26,7 @@ import { luuViec, chuKetQua } from './luu.js';
 
 const MOI_TRANG = 50; const PHAN = 200; const PHONG_KHAC = '__khac__';
 const rs = { rows: [], tt: new Map(), kq: new Map(), thaoTac: new Set(), daLuu: new Set(), loc: { che: 'chua', phong: '', vb: '', nhom: '', tim: '' },
-  trang: 0, luot: 0, dangVe: [], dangLuu: false, luc: null, chayGoiY: false, uuTien: [] };
+  trang: 0, luot: 0, dangVe: [], dangLuu: false, luc: null, chayGoiY: false, uuTien: [], lanDoc: new Map() };   // lanDoc: dòng được đọc lại (lamMoiDong)
 const vai = () => state.user?.role_group;
 const dm = () => danhMucKl().mucTieu || [];
 // Nút / lối vào chỉ ẩn hiện cho đẹp: không phải Thường trực, tài khoản đang hoạt động, có danh mục mục tiêu. DB (gan_muc_tieu) là chốt.
@@ -109,10 +110,14 @@ async function napGoiY(uuTien) {
       const thieu = (ids) => ids.filter((id) => !rs.kq.has(id));
       const phan = [...new Set([...thieu(rs.uuTien), ...thieu(rs.rows.map((r) => r.id))])].slice(0, PHAN);
       if (!phan.length) break;
+      const lanCu = new Map(phan.map((id) => [id, rs.lanDoc.get(id) || 0]));
       let kq = null;
       try { kq = await goiYMucTieuViec(phan); } catch { kq = null; }
       if (lan !== rs.luot) break;
-      phan.forEach((id) => { const x = kq?.[id]; rs.kq.set(id, x || 'loi'); if (x) apGoiY(rs.tt.get(id), x, { moTa: lyDoChu }); });
+      phan.forEach((id) => {
+        if ((rs.lanDoc.get(id) || 0) !== lanCu.get(id)) return;   // dòng vừa đọc lại trong lúc chờ (ghi trong ngăn): kết quả cũ bỏ, lượt sau nhận diện lại
+        const x = kq?.[id]; rs.kq.set(id, x || 'loi'); if (x) apGoiY(rs.tt.get(id), x, { moTa: lyDoChu });
+      });
       sauGoiY(phan);
     }
   } finally { rs.chayGoiY = false; }
@@ -130,6 +135,24 @@ function khiDoi(id) {
   const r = timDong(id); if (r) capNhatDong(r, xDong(r));
   veHangLoat();
 }
+// Ghi trong ngăn chi tiết mở từ một dòng (gắn / bỏ mục tiêu, "Lưu cho cả văn bản", sửa nội dung…): dòng của việc đó (napLaiViec đã thay dòng mới vào
+// danh sách Nhiệm vụ trước khi phát 'viec-da-ghi') và các dòng cùng văn bản có phần gắn đổi (theo bộ nhớ gắn mục tiêu vừa cập nhật) đọc lại, nhận diện
+// lại — mục vừa bỏ trong ngăn không còn tích sẵn trên dòng (kiểm tay 18/10). Dòng đồng chí đang chọn dở mà phần gắn không đổi: giữ lựa chọn.
+const giongGan = (a, b) => ['muc_tieu_rieng', 'muc_tieu_vb'].every((k) => (a?.[k] || []).join('|') === (b?.[k] || []).join('|'));
+function lamMoiDong(id) {
+  const moi = timKlRow(id); if (!moi) return;
+  let doi = false;
+  rs.rows.forEach((r, i) => {
+    const day = r.id === id; if (!day && (!moi.van_ban_id || r.van_ban_id !== moi.van_ban_id)) return;
+    const dong = day ? moi : ganVaoDong({ ...r }); const giu = giongGan(r, dong);
+    if (!day && giu) return;
+    rs.rows[i] = dong; rs.kq.delete(r.id); rs.daLuu.delete(r.id); rs.lanDoc.set(r.id, (rs.lanDoc.get(r.id) || 0) + 1); doi = true;
+    if (giu && rs.thaoTac.has(r.id)) return;   // gợi ý nhận diện lại áp vào lựa chọn đang có
+    const tt = taoTrangThai(dong); tt.bo = new Set(rs.tt.get(r.id)?.bo || []);   // mục đồng chí đã bỏ trên dòng: không tích lại
+    rs.tt.set(r.id, tt); rs.thaoTac.delete(r.id);
+  });
+  if (doi) ve();
+}
 
 async function nap() {
   const lan = ++rs.luot;
@@ -139,7 +162,7 @@ async function nap() {
     const { rows } = await loadKlRows();
     if (lan !== rs.luot) return;
     rs.rows = rows.filter(duocRaSoat).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '') || (b.ma || '').localeCompare(a.ma || ''));
-    rs.tt = new Map(rs.rows.map((r) => [r.id, taoTrangThai(r)])); rs.kq = new Map(); rs.thaoTac = new Set(); rs.daLuu = new Set(); rs.luc = new Date();
+    rs.tt = new Map(rs.rows.map((r) => [r.id, taoTrangThai(r)])); rs.kq = new Map(); rs.thaoTac = new Set(); rs.daLuu = new Set(); rs.lanDoc = new Map(); rs.luc = new Date();
     veLoc(); ve();
   } catch (e) { if (lan === rs.luot) { notifyError(`Không đọc được danh sách nhiệm vụ: ${e.message}`); $('rsDs').innerHTML = '<p class="trong-nho">Chưa đọc được dữ liệu — bấm Tải lại.</p>'; } }
 }
@@ -159,7 +182,7 @@ async function luu(ds) {
     const kq = await luuViec(ds.map((r) => ({ r, tt: rs.tt.get(r.id), daThaoTac: rs.thaoTac.has(r.id) })), { tienDo: (a, b) => setText('rsTrangThai', `Đang lưu ${a}/${b} việc…`) });
     kq.ok.forEach((r) => {
       const cu = rs.tt.get(r.id); const tt = taoTrangThai(r); tt.bo = new Set(cu?.bo || []);   // mục người dùng đã bỏ: không tích lại
-      if (coGoiY(r.id)) apGoiY(tt, rs.kq.get(r.id), { moTa: lyDoChu });
+      if (coGoiY(r.id)) { const x = sauKhiLuu(rs.kq.get(r.id), mucTieuCua(r), kq.maMoi); rs.kq.set(r.id, x); apGoiY(tt, x, { moTa: lyDoChu }); }   // như máy chủ trả sau "bỏ" (0115)
       rs.tt.set(r.id, tt); rs.daLuu.add(r.id); rs.thaoTac.delete(r.id);
       if (rs.dangVe.includes(khoaO(r.id))) { dangKyO(khoaO(r.id), tt, { khiDoi: () => khiDoi(r.id) }); veO(khoaO(r.id)); }
     });
@@ -180,6 +203,7 @@ export function registerRaSoatMucTieu() {
   $('viewRaSoatMucTieu').innerHTML = raSoatTemplate;
   [['rsPhong', 'phong'], ['rsVanBan', 'vb'], ['rsNhom', 'nhom']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { rs.loc[k] = e.target.value; rs.trang = 0; an(); ve(); }));
   $('rsTim').addEventListener('input', (e) => { clearTimeout(henTim); henTim = setTimeout(() => { rs.loc.tim = e.target.value; rs.trang = 0; ve(); }, 250); });
+  document.addEventListener('viec-da-ghi', (e) => { if (sectionDangHien('viewRaSoatMucTieu')) lamMoiDong(e.detail); });
   registerActions({
     moRaSoatMucTieu: (ds) => moRaSoatMucTieu(ds), rsNapLai: () => nap(),
     rsChe: ({ che }) => { rs.loc.che = che; rs.trang = 0; an(); ve(); },

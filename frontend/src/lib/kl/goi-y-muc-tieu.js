@@ -5,7 +5,8 @@
 //    bỏ / thêm theo); 'nguoi' = người dùng chọn, bấm gợi ý, hoặc đã gắn từ trước (giữ khi gợi ý đổi).
 //  - vb: mục tiêu của văn bản (việc không gắn riêng thì tính theo) — hiện như đã tích, nguồn "theo văn bản"; boVb: mục của văn bản người dùng bỏ;
 //    nguonVb: nguồn khai thay cho mục của văn bản khi văn bản CHƯA lưu được các mục đó (thường trống — gắn riêng thì máy chủ chép nguồn của văn bản).
-//  - goiY: kết quả goi_y_muc_tieu (máy chủ, 0110) gần nhất; ai: gợi ý của trợ lý AI khi đọc văn bản (chỉ gợi ý, không tự tích).
+//  - goiY: kết quả goi_y_muc_tieu (máy chủ, 0110) gần nhất — việc đã có: mục người dùng đã bỏ ở việc đó là gợi ý, cờ da_bo (0115); ai: gợi ý của trợ lý
+//    AI khi đọc văn bản (chỉ gợi ý, không tự tích).
 //  - moi: số hiệu chưa có trong danh mục — { so_hieu, nhom, ve, chon, nguon } (tích sẵn khi nhắc trong trích yếu / nội dung; khi lưu, hệ thống tự thêm
 //    vào danh mục — them_muc_tieu_tu_dong 0108); bo: mã / 'SH:<số hiệu>' người dùng đã bỏ tích (lần gợi ý sau không tích lại).
 //  - ban: tập mã hiệu lực lúc mở (ngăn chi tiết, rà soát) — gợi ý trùng mục đã có không tính là phản hồi cho quy tắc.
@@ -103,7 +104,7 @@ export function batMoi(tt, soHieu, chon = true) {
 export function dsHien(tt) {
   const daChon = hieuLuc(tt).map((ma) => { const x = tt.chon.get(ma); return x ? { ma, ...x, theoVb: false } : { ma, nguon: 'VAN_BAN', ly_do: 'mục tiêu của văn bản', tu: 'vb', theoVb: true }; });
   const co = new Set(daChon.map((x) => x.ma));
-  const goiY = tt.goiY.filter((g) => !co.has(g.ma)).map((g) => ({ ma: g.ma, nguon: 'GOI_Y', muc: g.muc, ly_do: g.ly_do, quy_tac: g.quy_tac || [] }));
+  const goiY = tt.goiY.filter((g) => !co.has(g.ma)).map((g) => ({ ma: g.ma, nguon: 'GOI_Y', muc: g.muc, ly_do: g.ly_do, quy_tac: g.quy_tac || [], da_bo: Boolean(g.da_bo) }));
   const ai = tt.ai.filter((g) => !co.has(g.ma) && !goiY.some((x) => x.ma === g.ma)).map((g) => ({ ma: g.ma, nguon: 'AI', ly_do: g.ly_do, trich: g.trich, xac_minh: g.xac_minh }));
   return { daChon, moi: tt.moi, goiY: [...goiY, ...ai] };
 }
@@ -126,8 +127,18 @@ export const khoaSoHieu = khoaSh;
 // Phản hồi cho bộ tự học (ghi_phan_hoi_goi_y, 0111): mỗi gợi ý theo quy tắc đã hiện → GIU (tích sẵn, giữ) | BO (tích sẵn, bỏ) | THEM (gợi ý, bấm thêm) |
 // BO_QUA (gợi ý, không bấm). Mục đã có từ trước (tt.ban) giữ lại thì không tính; BỎ mục đã có mà quy tắc tích sẵn → ghi BO (kiểm tay 18/10: không ghi
 // thì lần mở sau ở ngăn chi tiết / Rà soát tự tích lại mục vừa bỏ — goi_y_muc_tieu_viec chỉ hạ thành gợi ý khi quy tắc căn cứ đã bị bỏ ở việc đó).
+// Gợi ý "đã bỏ ở việc này" (da_bo — 0115) vẫn không chọn → không gửi (BO_QUA ghi đè trí nhớ BO của máy chủ khi quy tắc đã đổi mức); chọn lại → THEM.
+// BO chỉ khi người dùng bỏ (tt.bo): mục tích sẵn không được tích vì đã đủ TOI_DA mục thì không tính (người dùng chưa thấy nó được tích).
 export function phanHoi(tt, maCuoi) {
   const cuoi = new Set(maCuoi || hieuLuc(tt));
-  return tt.goiY.filter((g) => (g.quy_tac || []).length && (!tt.ban.includes(g.ma) || (g.muc === 'TU_TICH' && !cuoi.has(g.ma))))
+  const khongGiu = (g) => g.muc === 'TU_TICH' && !cuoi.has(g.ma);
+  return tt.goiY.filter((g) => (g.quy_tac || []).length && !(g.da_bo && !cuoi.has(g.ma)) && !(khongGiu(g) && !tt.bo.has(g.ma))
+      && (!tt.ban.includes(g.ma) || khongGiu(g)))
     .map((g) => ({ quy_tac: g.quy_tac, ket_qua: g.muc === 'TU_TICH' ? (cuoi.has(g.ma) ? 'GIU' : 'BO') : (cuoi.has(g.ma) ? 'THEM' : 'BO_QUA') }));
 }
+// Kết quả nhận diện của việc sau khi lưu, như máy chủ sẽ trả (0115): mục tích sẵn có quy tắc mà không nằm trong tập đã lưu (đã gửi phản hồi "bỏ") thành
+// gợi ý "đã bỏ ở việc này"; số hiệu mới vừa được thêm vào danh mục (daThem: Map khoá số hiệu → mã) không còn là "số hiệu mới" — màn Rà soát dùng lại kết
+// quả cũ mà không tích lại, không coi là còn phải lưu.
+export const sauKhiLuu = (kq, maCuoi = [], daThem = new Map()) => ({ ...kq,
+  goi_y: (kq?.goi_y || []).map((g) => (g?.muc === 'TU_TICH' && (g.quy_tac || []).length && !maCuoi.includes(g.ma) ? { ...g, muc: 'GOI_Y', da_bo: true } : g)),
+  so_hieu_moi: (kq?.so_hieu_moi || []).filter((x) => !daThem.has(khoaSh(x?.so_hieu))) });
