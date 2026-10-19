@@ -3,6 +3,7 @@
 // phòng, chuyên viên xem phòng) và ghi chú chất lượng dữ liệu (việc chưa gắn mục tiêu, chưa có ngành / lĩnh vực). Chỉ dựng HTML từ số đã tính.
 import { escapeHtml } from '../../../lib/dom.js';
 import { mo, dauKhoi, nhomNut, thuoc } from './template.js';
+import { thieuNganh, chuThieuNganh } from '../../../lib/kl/tong-quan-lanh-dao.js';   // v3.26: cùng câu với khối 3
 
 const pillsXh = (d, cach) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do', 'Đỏ']].filter(([n]) => n)
   .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} việc ${ten}" ${mo({ t: 'xh', cach, ma: d.ma, ten: d.ten, m: lop })}>${n}<span class="sr"> việc ${ten}</span></button>`).join('')
@@ -34,7 +35,7 @@ export function noiBoHtml(than, moKhoi, phong = false) {
 export function duLieuHtml(c) {
   const a = c.chuaMucTieu.length; const b = c.chuaNganh.length; const x = (c.xongChuaNgay || []).length;
   if (!a && !b && !x) return '';
-  const phan = [a ? `${a} nhiệm vụ chưa phân loại mục tiêu then chốt (gắn mục tiêu, hoặc chọn "Không thuộc")` : '', b ? `${b} nhiệm vụ chưa có ngành, lĩnh vực` : '',
+  const phan = [a ? `${a} nhiệm vụ chưa phân loại mục tiêu then chốt (gắn mục tiêu, hoặc chọn "Không thuộc")` : '', b ? chuThieuNganh(thieuNganh(c.chuaNganh)) : '',
     x ? `${x} nhiệm vụ hoàn thành chưa có ngày hoàn thành (tính theo ngày giao, chưa xét được đúng hạn)` : ''].filter(Boolean).join('; ');
   const khoi = [a ? 'khối 2' : '', b ? 'khối 3' : '', x ? 'tỷ lệ đúng hạn' : ''].filter(Boolean).join(', ');
   return `<div class="dl-tq n12" role="note" id="tqDuLieu"><svg class="dl-bieu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>

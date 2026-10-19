@@ -130,3 +130,11 @@ export function dungHanQuy(rows, homNay) {
 export const vuongMacCho = (rows) => rows.filter((r) => laMo(r) && r.vuong_mac);
 export const chatLuongDuLieu = (rows) => ({ chuaMucTieu: rows.filter(chuaGanMucTieu), chuaNganh: rows.filter((r) => !r.nganh_ma || !r.linh_vuc_ma),
   xongChuaNgay: rows.filter(chuaRoNgayXong) });
+// v3.26 (kiểm staging 19/10): việc chưa đủ ngành, lĩnh vực = chưa có ngành (dòng "Chưa phân loại" của khối 3 — chưa xếp được vào khối) + có ngành nhưng
+// chưa có lĩnh vực (vẫn tính theo ngành). Một câu chung cho khối 3, Chất lượng dữ liệu (cùng số với ô "Chưa có ngành, lĩnh vực" của màn Rà soát).
+export const thieuNganh = (rows) => {
+  const khongNganh = rows.filter((r) => !r.nganh_ma).length; const thieuLv = rows.filter((r) => r.nganh_ma && !r.linh_vuc_ma).length;
+  return { tong: khongNganh + thieuLv, khongNganh, thieuLv };
+};
+export const chuThieuNganh = ({ tong, khongNganh, thieuLv }) => (!thieuLv ? `${tong} nhiệm vụ chưa có ngành, lĩnh vực`
+  : !khongNganh ? `${tong} nhiệm vụ đã có ngành nhưng chưa có lĩnh vực` : `${tong} nhiệm vụ chưa có ngành, lĩnh vực (${khongNganh} chưa có ngành, ${thieuLv} chưa có lĩnh vực)`);
