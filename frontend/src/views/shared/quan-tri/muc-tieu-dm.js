@@ -20,7 +20,7 @@ const esc = escapeHtml;
 const mo = new Map();   // mã → Set('qt' | 'ql' | 'ls') — phần chi tiết đang mở (quy tắc, quản lý + gộp, lịch sử)
 const lichSu = new Map();   // mã → dòng dm_lich_su (null = đang đọc)
 let dangSua = null;   // mã đang sửa ở biểu mẫu (null = thêm mới)
-const dm = () => danhMucKl().mucTieu || [];
+const dm = () => (danhMucKl().mucTieu || []).filter((m) => m.ma !== 'KHONG_THUOC');   // v3.26: mục cố định "Không thuộc" không sửa / gộp ở đây (0116)
 const nhomDs = () => dsNhom(danhMucKl().nhomMucTieu, dm());
 const tenNhom = (ma) => nhomDs().find((n) => n.ma === ma)?.ten || ma;
 const tim = (ma) => dm().find((m) => m.ma === ma) || null;

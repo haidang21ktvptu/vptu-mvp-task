@@ -5,7 +5,7 @@
 // Xác nhận), có tin giao, menu có Giao việc (Đợt D: không còn Cần nghiệm thu). v3.25 (bảng): việc đã nhận, còn hạn không ở ô mặc định (Cần xử lý /
 // Cần đôn đốc) — chọn ô Tất cả. Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec, nav } from './lib/app.js';
+import { NAP, moGiaoViec, nav, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
@@ -48,6 +48,7 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
       await expect(the(p, 2).locator('[data-wrap="theo_doi"]')).toBeHidden();
       await o(p, 2, 'noi_dung').fill(`${khoa} việc 2 tự làm`); await o(p, 2, 'owner').selectOption(`tk:${ID.e2eCv}`);
       await o(p, 2, 'san_pham').selectOption('TO_TRINH'); await o(p, 2, 'han').fill(cong(H, 2));
+      await chonPhanLoai(p); await chonPhanLoai(p, { the: 2 });   // v3.26: phân loại bắt buộc mọi thẻ
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP); await expect(p.locator('#klThLuu')).toHaveText('Giao 2 việc'); await expect(p.locator('#klThLuu')).toBeEnabled();
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao 2 việc', NAP);

@@ -10,6 +10,7 @@ import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tenCapDuyet } from '../../../lib/kl/thay-mat.js';
 import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
+import { KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
@@ -113,7 +114,8 @@ function oMoiHtml(cot, r) {
   const k = kieuCua(cot); const v = r[cot] ?? ''; const nhan = `<label for="stMoi" class="nhan">Giá trị mới</label>`;
   // Đổi ngành kéo theo chọn lại lĩnh vực trong ngành mới (DB kiểm lĩnh vực thuộc ngành; việc từ kết luận phải có cả hai).
   if (k === 'nganh') {
-    return `${nhan}<select id="stMoi" class="o-nhap">${opt('', '(để trống)', !v)}${(danhMucKl().nganh || []).map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>
+    const kl = ['KL_BTV', 'TB_THUONG_TRUC'].includes(r.van_ban_loai);   // v3.26: kết luận / thông báo không chọn "Không thuộc" (DB chặn — 0116)
+    return `${nhan}<select id="stMoi" class="o-nhap">${opt('', '(để trống)', !v)}${(danhMucKl().nganh || []).filter((d) => !kl || d.ma !== KHONG_THUOC).map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>
       <label for="stMoi2" class="nhan mt-3">Lĩnh vực trong ngành</label><select id="stMoi2" class="o-nhap">${linhVucOpts(v, r.linh_vuc_ma)}</select>`;
   }
   if (k === 'linhVuc') return `${nhan}<select id="stMoi" class="o-nhap">${linhVucOpts(r.nganh_ma, v)}</select>`;
@@ -133,7 +135,7 @@ function veO() {
   if (!r) return;
   $('stCu').textContent = giaTriO(cot, r[cot]) + (cot === 'nganh_ma' ? ` · lĩnh vực ${giaTriO('linh_vuc_ma', r.linh_vuc_ma)}` : '');
   $('stMoiWrap').innerHTML = oMoiHtml(cot, r);
-  if (cot === 'nganh_ma') $('stMoi').addEventListener('change', () => { $('stMoi2').innerHTML = linhVucOpts($('stMoi').value, ''); });
+  if (cot === 'nganh_ma') $('stMoi').addEventListener('change', () => { $('stMoi2').innerHTML = linhVucOpts($('stMoi').value, ''); if ($('stMoi').value && $('stMoi2').options.length === 2) $('stMoi2').selectedIndex = 1; });
 }
 function moHop(cheDo, { id, cot }) {
   const r = dongViec(id);

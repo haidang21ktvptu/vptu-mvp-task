@@ -6,6 +6,7 @@
 // hiệu mới tự thêm vào danh mục (TU_DONG) và gắn cho thẻ 2.
 // Đợt sửa gộp 18/10/2026: việc thứ ba trùng việc 1 (trung_voi) → "Điền tất cả" bỏ qua; việc 2 chưa trọn câu (con_tiep) → không tự điền nội dung, bấm
 // "Dùng trọn câu"; đoạn "có thể còn sót" (nghi_bo_sot) → "Thêm vào danh sách" thêm thành nhiệm vụ thứ tư (không điền, không giao).
+// v3.26 (0116): trợ lý AI đề xuất ngành, lĩnh vực của từng nhiệm vụ → thẻ được điền sẵn (phân loại bắt buộc), DB nhận đúng ngành, lĩnh vực.
 // Dữ liệu theo khoá riêng, tự dọn (việc, văn bản, mục tiêu tự thêm). Tự bỏ qua khi project chưa có 0107–0112.
 import { test, expect } from '@playwright/test';
 import { contextAs, moGiaoViec, expectLoggedIn, NAP } from './lib/app.js';
@@ -49,13 +50,14 @@ test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, mục 
     const han = cong(homNay(), 20); const ngay = cong(homNay(), -1);
     const nd1 = `${khoa} viec AI 1: Giao Van phong Tinh uy tham muu trien khai Nghi quyet so 57-NQ/TW ve chuyen doi so`;
     const nd2 = `${khoa} viec AI 2: Thuc hien Nghi quyet so ${SO_TU} ve phat trien du lich`; const tiep2 = ', bao cao ket qua (e2e).';
-    const viecAi = (nd, them = {}) => ({ noi_dung: { gia_tri: nd, xac_minh: 'dung', ...them }, trich: nd, don_vi_chu_tri: { gia_tri: 'Van phong Tinh uy' },
+    const viecAi = (nd, them = {}, pl = {}) => ({ noi_dung: { gia_tri: nd, xac_minh: 'dung', ...them }, trich: nd, don_vi_chu_tri: { gia_tri: 'Van phong Tinh uy' },
       don_vi_phoi_hop: { gia_tri: '', xac_minh: false }, han: gt(han, 'han hoan thanh'), loai_thoi_han: { gia_tri: 'CO_HAN_CU_THE' }, san_pham: { gia_tri: 'BAO_CAO' },
-      mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: '' }, linh_vuc: { gia_tri: '' }, muc_tieu: [] });
+      mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: pl.nganh || '' }, linh_vuc: { gia_tri: pl.lv || '' }, muc_tieu: [] });
+    const PL1 = { nganh: 'VAN_HOA_XA_HOI', lv: 'LV10_CHUYEN_DOI_SO' }; const PL2 = { nganh: 'VAN_HOA_XA_HOI', lv: 'LV10_VAN_HOA' };   // v3.26
     const ketQua = {
       van_ban: { loai: gt('CONG_VAN', 'V/v trien khai'), so_hieu: gt(soVb(), `So: ${soVb()}`), ngay_ban_hanh: gt(ngay, 'ngay hom qua'),
         trich_yeu: gt('V/v trien khai nhiem vu (e2e)'), so_hoi_nghi: gt('', '', false), co_quan_ban_hanh: gt('Tinh uy Cao Bang') },
-      nhiem_vu: [viecAi(nd1), viecAi(nd2, { con_tiep: tiep2 }), { ...viecAi(nd1), trung_voi: 0 }],
+      nhiem_vu: [viecAi(nd1, {}, PL1), viecAi(nd2, { con_tiep: tiep2 }, PL2), { ...viecAi(nd1, {}, PL1), trung_voi: 0 }],
       nghi_bo_sot: [{ trang: 1, chu: `${khoa} doan con sot: Giao Van phong Tinh uy tong hop ket qua (e2e)` }], tong_bo_sot: 1,
       muc_tieu_van_ban: [{ ma: 'DP_CAN_BO', trich: 'can bo', ly_do: 'Văn bản phục vụ đột phá cán bộ (e2e)', xac_minh: 'dung' }],
       van_ban_nhac_toi: [], co_chu: true, thong_ke: { co_gia_tri: 8, da_xac_minh: 8, so_nhiem_vu: 3 } };
@@ -101,9 +103,11 @@ test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, mục 
     await expect(p.locator('#klThNoiDung')).toHaveValue(nd1);
     await expect(p.locator('#klThHan')).toHaveValue(han);
     await expect(p.locator('#klThSanPham')).toHaveValue('BAO_CAO');
+    await expect(p.locator('#klThNganh')).toHaveValue(PL1.nganh); await expect(p.locator('#klThLinhVuc')).toHaveValue(PL1.lv);   // v3.26: AI đề xuất ngành, lĩnh vực
     const the2 = p.locator('#gvLuoiThan .gv-nv').first();
     await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(1);
     await expect(the2.locator('[data-cot="noi_dung"]')).toHaveValue('');
+    await expect(the2.locator('[data-cot="nganh"]')).toHaveValue(PL2.nganh); await expect(the2.locator('[data-cot="linh_vuc"]')).toHaveValue(PL2.lv);
     await the2.locator('[data-action="gvDocDungTron"]').click();
     await expect(the2.locator('[data-cot="noi_dung"]')).toHaveValue(`${nd2}${tiep2}`);
     await kq.locator('[data-action="gvDocThemDoan"]').click();
@@ -124,9 +128,10 @@ test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, mục 
     const vb = (await db.from('van_ban_giao_viec').select('id').eq('so_ket_luan', soVb()).single()).data;
     await expect.poll(async () => (await db.from('van_ban_muc_tieu').select('muc_tieu_ma, nguon').eq('van_ban_id', vb.id)).data, NAP)
       .toEqual([{ muc_tieu_ma: 'DP_CAN_BO', nguon: 'AI' }]);
-    const viec = (await db.from('nhiem_vu').select('id, noi_dung').eq('van_ban_id', vb.id)).data;
+    const viec = (await db.from('nhiem_vu').select('id, noi_dung, nganh_ma, linh_vuc_ma').eq('van_ban_id', vb.id)).data;
     expect(viec, 'việc trùng và đoạn còn sót không được giao').toHaveLength(2);
     const v1 = viec.find((x) => x.noi_dung === nd1); const v2 = viec.find((x) => x.noi_dung === `${nd2}${tiep2}`);
+    expect([v1.nganh_ma, v1.linh_vuc_ma, v2.nganh_ma, v2.linh_vuc_ma], 'ngành, lĩnh vực theo đề xuất của AI').toEqual([PL1.nganh, PL1.lv, PL2.nganh, PL2.lv]);
     const mt = async (id) => (await db.from('nhiem_vu_muc_tieu').select('muc_tieu_ma, nguon').eq('nhiem_vu_id', id)).data;
     await expect.poll(async () => (await mt(v1.id)).find((x) => x.muc_tieu_ma === 'NQ_57')?.nguon, NAP).toBe('QUY_TAC');
     expect((await mt(v1.id)).find((x) => x.muc_tieu_ma === 'DP_CAN_BO')?.nguon, 'mục của văn bản trong phần gắn riêng giữ nguồn của văn bản').toBe('AI');

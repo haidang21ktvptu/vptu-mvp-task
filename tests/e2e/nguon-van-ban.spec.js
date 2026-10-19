@@ -3,7 +3,7 @@
 // ngăn chi tiết hiện mã theo nguồn KL-BCH·HN7·…·01 và nhãn Mức A; "Giao thêm nhiệm vụ từ văn bản này" mở Giao việc đúng văn bản → việc thứ 3 có
 // STT 3; "Sửa thông tin giao" đổi Mức quan trọng (ô tầng giao mới). Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec, nav } from './lib/app.js';
+import { NAP, moGiaoViec, nav, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
@@ -38,6 +38,7 @@ test.describe.serial('Thông tin nguồn của nhiệm vụ, mã theo nguồn, g
       await p.locator('#gvThemDong').click();
       await o(p, 'noi_dung').fill(`${khoa} việc 2`); await o(p, 'owner').selectOption(`tk:${ID.cv1}`);
       await o(p, 'san_pham').selectOption('TO_TRINH'); await o(p, 'han').fill(cong(H, 1));
+      await chonPhanLoai(p); await chonPhanLoai(p, { the: 2 });   // v3.26: phân loại bắt buộc mọi thẻ ("Không thuộc")
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao 2 việc', NAP);
@@ -53,6 +54,7 @@ test.describe.serial('Thông tin nguồn của nhiệm vụ, mã theo nguồn, g
       await expect(p.locator('#klThMucQT')).toHaveValue('');   // ô nguồn theo từng lượt, không mang sang
       await p.locator('#klThNoiDung').fill(`${khoa} việc 3`); await p.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await p.locator('#klThSanPham').selectOption('BAO_CAO'); await p.locator('#klThHan').fill(cong(H, 2));
+      await chonPhanLoai(p);
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao việc', NAP);
       await expect(p.locator('#nganCT .ma-nguon').first()).toHaveText('KL-BCH·HN7·03', NAP);

@@ -20,14 +20,15 @@ export function taoCsdl({ url, anon, service }) {
   };
 }
 
-// Danh mục cho đề bài đọc văn bản: bản đầy đủ (gửi AI chọn mã) và danh sách mã (lược đồ enum + xác minh).
+// Danh mục cho đề bài đọc văn bản: bản đầy đủ (gửi AI chọn mã) và danh sách mã (lược đồ enum + xác minh). v3.26 (0116): bỏ các mục cố định "Không
+// thuộc" — AI giữ nguyên cách chọn; AI không đề xuất mục tiêu nào thì giao diện mới đề xuất "Không thuộc" (người giao kiểm tra).
 export async function napDanhMuc(csdl, LOAI_VAN_BAN) {
   const [sp, lth, ng, lv, mt] = await Promise.all([
     csdl.chon('dm_san_pham', 'select=ma,ten&order=thu_tu'),
     csdl.chon('dm_loai_thoi_han', 'select=ma,ten&cho_phep_tao_moi=eq.true&order=thu_tu'),
-    csdl.chon('dm_nganh', 'select=ma,ten&order=thu_tu'),
-    csdl.chon('dm_linh_vuc', 'select=ma,ten,nganh_ma&order=thu_tu'),
-    csdl.chon('dm_muc_tieu', 'select=ma,nhom,ten,mo_ta&dang_dung=eq.true&order=thu_tu'),
+    csdl.chon('dm_nganh', 'select=ma,ten&ma=neq.KHONG_THUOC&order=thu_tu'),
+    csdl.chon('dm_linh_vuc', 'select=ma,ten,nganh_ma&ma=neq.LV99_KHONG_THUOC&order=thu_tu'),
+    csdl.chon('dm_muc_tieu', 'select=ma,nhom,ten,mo_ta&dang_dung=eq.true&nhom=neq.KHONG_THUOC&order=thu_tu'),
   ]);
   const day = { loai: LOAI_VAN_BAN, sanPham: sp || [], loaiThoiHan: lth || [], nganh: ng || [], linhVuc: lv || [], mucTieu: mt || [] };
   const ma = { loai: LOAI_VAN_BAN.map(([m]) => m), sanPham: day.sanPham.map((x) => x.ma), loaiThoiHan: day.loaiThoiHan.map((x) => x.ma),

@@ -4,6 +4,7 @@
 import { chuanChu } from './truong.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../thay-mat.js';
 import { MUC_QUAN_TRONG } from '../ma-nguon.js';
+import { KHONG_THUOC } from '../muc-tieu.js';
 
 export const LOAI_VB = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'], ['NQ_TW', 'Nghị quyết Trung ương'],
   ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác'], ['KL_BCH', 'Kết luận Ban Chấp hành Đảng bộ tỉnh'], ['NQ_BCH', 'Nghị quyết Ban Chấp hành Đảng bộ tỉnh']];   // 0087: thêm cuối (mẫu nhập giữ thứ tự cũ)
@@ -102,6 +103,7 @@ export function khopMucTieuNhap(v, ds) {
     if (!kq.length && c.length >= 4) { kq = dung.filter((m) => ten(m).some((t) => t.includes(c) || (t.length >= 6 && c.includes(t)))); ganDung ||= kq.length === 1; }
     if (kq.length === 1) { if (!ma.includes(kq[0].ma)) ma.push(kq[0].ma); } else bo.push(p);
   });
+  if (ma.length > 1 && ma.includes(KHONG_THUOC)) { ma.splice(ma.indexOf(KHONG_THUOC), 1); bo.push('"Không thuộc" ghi cùng mục khác'); }   // 0116: đứng riêng
   if (!ma.length) return { loi: 'không khớp danh mục mục tiêu then chốt', chon: [] };
   const giu = ma.slice(0, 10); const hien = giu.map((x) => dung.find((m) => m.ma === x).ten_ngan).join('; ');
   const ghi = [bo.length ? `bỏ: ${bo.join('; ')}` : '', ma.length > 10 ? 'tối đa 10 mục' : ''].filter(Boolean).join(', ');

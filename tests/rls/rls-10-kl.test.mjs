@@ -72,7 +72,7 @@ describe('RLS-10 phạm vi đọc nhiem_vu (quyết định 7)', { skip: SKIP },
     const hn0 = await qtht.from('van_ban_giao_viec').select('id').eq('id', fx.hn);
     assertOk(hn0, 'qtht hội nghị'); assert.equal(hn0.data.length, 0);
     const dm = await qtht.from('dm_nganh').select('ma');
-    assertOk(dm, 'danh mục'); assert.equal(dm.data.length, 12);
+    assertOk(dm, 'danh mục'); assert.equal(dm.data.length, 13, '12 ngành + "Không thuộc" (0116)');
     const ch = await qtht.from('kl_cau_hinh').select('khoa, gia_tri').eq('khoa', 'nguong_sap_den_han_ngay').single();
     assertOk(ch, 'cấu hình'); assert.equal(ch.data.gia_tri, '7');
     const v = await cv1.from('v_nhiem_vu').select('ma, trang_thai, nhom_dem, nguoi_theo_doi_ten').like('noi_dung', 'RLS-TEST%');

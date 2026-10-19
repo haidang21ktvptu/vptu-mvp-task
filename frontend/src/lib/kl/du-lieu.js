@@ -15,7 +15,7 @@ const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.mess
 
 // Danh mục + cấu hình (B6): MỘT RPC kl_danh_muc() (SECURITY INVOKER — đúng dữ liệu RLS cho người gọi đọc), nhớ sessionStorage 30 phút
 // (chỉ danh mục, không phải tài khoản); màn Quản trị ghi danh mục / ngưỡng thì gọi xoaDanhMucDaNho(). Lượt đọc đang bay dùng chung.
-const KHOA_NHO = 'vptu.kl_danh_muc.v325';   // v3.25 (0107–0110): + nhomMucTieu, mục tiêu có số hiệu / trạng thái, linhVuc.khoi_ma — khoá mới, không dùng bản nhớ cũ
+const KHOA_NHO = 'vptu.kl_danh_muc.v326';   // v3.26 (0116): + mục cố định "Không thuộc" (khối, ngành, lĩnh vực, nhóm, mục tiêu) — khoá mới, không dùng bản nhớ cũ
 const HAN_NHO_MS = 30 * 60_000;
 let dangDocDanhMuc = null;
 function docNho() {

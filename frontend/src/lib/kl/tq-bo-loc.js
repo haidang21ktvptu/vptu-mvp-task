@@ -4,7 +4,7 @@
 // lựa chọn từng ô (đếm trên toàn bộ dòng), chip "Đang áp dụng". Khoá ghép: nganh 'N:<ngành>' | 'L:<lĩnh vực>' | 'CHUA'; nguoi 'LD:<id>' | 'LD:CHUA' |
 // 'P:<phòng>' | 'P:NGOAI' | 'CB:<id>'.
 import { laXong, laMo, mucMo } from './tong-quan.js';
-import { khopMucTieu, nhanLocMucTieu, mucTieuCua, dsNhom, CHUA_GAN, khoiCuaDong, cachGanCua, CACH_GAN } from './muc-tieu.js';
+import { khopMucTieu, nhanLocMucTieu, mucTieuCua, dsNhom, CHUA_GAN, KHONG_THUOC, khongThuocMucTieu, chuaGanMucTieu, khoiCuaDong, cachGanCua, CACH_GAN } from './muc-tieu.js';
 import { khoaXepHang } from './tong-quan-lanh-dao.js';
 import { boSoThuTu } from './nhan.js';
 
@@ -51,31 +51,32 @@ export function khopLocMoi(r, l, c = {}) {
 
 // Lựa chọn của các ô mới, đếm trên TOÀN BỘ dòng (người xem thấy đủ); chỉ giá trị có trong dữ liệu (mục tiêu: nhóm + từng mục tiêu có việc).
 const dem = (rows, khoa) => { const m = new Map(); rows.forEach((r) => [].concat(khoa(r)).forEach((k) => { if (k) m.set(k, (m.get(k) || 0) + 1); })); return m; };
-// Mục tiêu then chốt: theo nhóm (dòng "Mọi … " của nhóm + từng mục tiêu có việc) và "Chưa gắn" — dùng chung với danh sách Nhiệm vụ.
+// Mục tiêu then chốt: theo nhóm (dòng "Mọi … " của nhóm + từng mục tiêu có việc), "Không thuộc" (0116) và "Chưa phân loại" — dùng chung với Nhiệm vụ.
 export function tuyChonMucTieu(rows, mucTieuDm = [], nhomDm = null) {
-  const mt = dem(rows, mucTieuCua); const chuaMt = rows.filter((r) => !mucTieuCua(r).length).length;
+  const mt = dem(rows, mucTieuCua); const chuaMt = rows.filter(chuaGanMucTieu).length; const khongMt = rows.filter(khongThuocMucTieu).length;
+  const cuoi = [...(khongMt ? [{ ma: KHONG_THUOC, ten: 'Không thuộc mục tiêu then chốt', n: khongMt }] : []), ...(chuaMt ? [{ ma: CHUA_GAN, ten: 'Chưa phân loại mục tiêu then chốt', n: chuaMt }] : [])];
   return dsNhom(nhomDm, mucTieuDm).map((n) => {
     const ds = mucTieuDm.filter((m) => m.nhom === n.ma && mt.has(m.ma)).map((m) => ({ ma: m.ma, ten: m.ten_ngan, n: mt.get(m.ma) }));
     const tong = rows.filter((r) => khopMucTieu(r, `NHOM:${n.ma}`, mucTieuDm)).length;
     return { nhom: n.ten, ds: ds.length ? [{ ma: `NHOM:${n.ma}`, ten: n.moi, n: tong }, ...ds] : [] };
-  }).filter((g) => g.ds.length).concat(chuaMt ? [{ nhom: '', ds: [{ ma: CHUA_GAN, ten: 'Chưa gắn mục tiêu then chốt', n: chuaMt }] }] : []);
+  }).filter((g) => g.ds.length).concat(cuoi.length ? [{ nhom: '', ds: cuoi }] : []);
 }
 export function tuyChonLocMoi(rows, { mucTieuDm = [], nhomDm = null, khoiDm = [], nganhDm = [], linhVucDm = [], nguonDm = [] } = {}) {
   const mucTieu = tuyChonMucTieu(rows, mucTieuDm, nhomDm);
   const kh = dem(rows, (r) => (r.nganh_ma && khoiCuaDong(r, nganhDm, linhVucDm)) || 'CHUA');
   const cg = dem(rows, cachGanCua);
-  const khoi = [...khoiDm.filter((k) => kh.has(k.ma)).map((k) => ({ ma: k.ma, ten: k.ten, n: kh.get(k.ma) })), ...(kh.has('CHUA') ? [{ ma: 'CHUA', ten: 'Chưa phân ngành', n: kh.get('CHUA') }] : [])];
+  const khoi = [...khoiDm.filter((k) => kh.has(k.ma)).map((k) => ({ ma: k.ma, ten: k.ten, n: kh.get(k.ma) })), ...(kh.has('CHUA') ? [{ ma: 'CHUA', ten: 'Chưa phân loại', n: kh.get('CHUA') }] : [])];
   const ng = dem(rows, (r) => r.nganh_ma); const lv = dem(rows, (r) => r.linh_vuc_ma);
   const nganh = nganhDm.filter((n) => ng.has(n.ma)).map((n) => ({ nhom: n.ten, ds: [{ ma: `N:${n.ma}`, ten: `Cả ngành (${boSoThuTu(n.ten)})`, n: ng.get(n.ma) },
     ...linhVucDm.filter((l) => l.nganh_ma === n.ma && lv.has(l.ma)).map((l) => ({ ma: `L:${l.ma}`, ten: l.ten, n: lv.get(l.ma) }))] }));
-  if (rows.some((r) => !r.nganh_ma)) nganh.push({ nhom: '', ds: [{ ma: 'CHUA', ten: 'Chưa có ngành', n: rows.filter((r) => !r.nganh_ma).length }] });
+  if (rows.some((r) => !r.nganh_ma)) nganh.push({ nhom: '', ds: [{ ma: 'CHUA', ten: 'Chưa phân loại ngành', n: rows.filter((r) => !r.nganh_ma).length }] });
   const nhom = (cach) => { const m = new Map(); rows.forEach((r) => { const [ma, ten] = khoaXepHang(cach)(r); if (!m.has(ma)) m.set(ma, { ma, ten, n: 0 }); m.get(ma).n++; }); return [...m.values()]; };
   const coQuan = nhom('dv').sort((a, b) => (a.ma === 'VP') - (b.ma === 'VP') || a.ten.localeCompare(b.ten, 'vi'));
   const thuongTruc = nhom('tt').sort((a, b) => (a.ma === 'KHONG') - (b.ma === 'KHONG') || a.ten.localeCompare(b.ten, 'vi'));
   const tt = dem(rows, trangThaiCua); const qt = dem(rows, (r) => r.muc_quan_trong || 'CHUA'); const ngu = dem(rows, (r) => r.nguon_nhiem_vu_ma || 'CHUA');
   return {
     mucTieu, khoi, nganh, coQuan, thuongTruc,
-    cachGan: [...CACH_GAN, [CHUA_GAN, 'Chưa gắn mục tiêu']].filter(([ma]) => cg.has(ma)).map(([ma, ten]) => ({ ma, ten, n: cg.get(ma) })),
+    cachGan: [...CACH_GAN, [CHUA_GAN, 'Chưa phân loại mục tiêu']].filter(([ma]) => cg.has(ma)).map(([ma, ten]) => ({ ma, ten, n: cg.get(ma) })),
     trangThai: TRANG_THAI.filter(([ma]) => tt.has(ma)).map(([ma, ten]) => ({ ma, ten, n: tt.get(ma) })),
     mucQT: MUC_QT.filter(([ma]) => qt.has(ma)).map(([ma, ten]) => ({ ma, ten, n: qt.get(ma) })),
     nguon: [...ngu.keys()].map((ma) => ({ ma, ten: ma === 'CHUA' ? 'Chưa xác định nguồn' : nguonDm.find((x) => x.ma === ma)?.ten || rows.find((r) => r.nguon_nhiem_vu_ma === ma)?.nguon_nhiem_vu_ten || ma, n: ngu.get(ma) }))

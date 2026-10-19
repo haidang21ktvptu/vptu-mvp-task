@@ -7,6 +7,7 @@
 // Thuần (không DOM, không mạng): dữ liệu vào là dòng đã chuẩn hoá { k: {ma, hien, gan} | {loi} | null } (chuan-hoa.js).
 import { nhanTruong } from './truong.js';
 import { tachThayMat } from '../thay-mat.js';
+import { KHONG_THUOC } from '../muc-tieu.js';
 
 const NGUON_THEO_LOAI = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', KL_BCH: 'VAN_BAN_CAN_THEO_DOI',
   NQ_BCH: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };   // 0087: hai loại Ban Chấp hành
@@ -98,6 +99,9 @@ export function danhGia(dong, ctx) {
       can('han_xu_ly', gt.loai_thoi_han === 'CO_HAN_CU_THE');
       can('nganh', CAN_NGANH.has(gt.loai_van_ban)); can('linh_vuc', CAN_NGANH.has(gt.loai_van_ban));
       if (gt.loai_thoi_han && !LOAI_HAN_MOI.has(gt.loai_thoi_han)) { thieu.push('loai_thoi_han'); canhBao.push('việc mới chỉ nhận "Có hạn cụ thể" hoặc "Ký ban hành"'); }
+    }
+    if (CAN_NGANH.has(gt.loai_van_ban) && gt.nganh === KHONG_THUOC) {   // 0116: DB chặn (trigger) — báo ngay ở bản xem trước
+      thieu.push('nganh'); canhBao.push('kết luận / thông báo phải có ngành, lĩnh vực cụ thể — không chọn "Không thuộc"');
     }
     if (loi.includes('can_bo') && !thieu.includes('can_bo')) thieu.push('can_bo');
     const boQua = loi.filter((k) => !thieu.includes(k));   // ô tuỳ chọn không khớp: bỏ giá trị, vẫn nhập dòng

@@ -2,11 +2,13 @@
 // Vai: PCVP2 kiêm nhiệm (Tổng hợp, Kinh tế tổng hợp, Tài chính — phân công tạm do spec tạo), PCVP phụ trách cả Tổng hợp, Chánh VP, Trưởng phòng.
 // Mỗi vai MỘT phiên; đổi 7 loại ngay trên biểu mẫu để kiểm ô ngành/lĩnh vực bắt buộc, lựa chọn Owner / lĩnh vực và dòng "Còn thiếu"; chỉ bấm
 // Giao thật ở ô đại diện (mỗi vai ≥ 1 ô được; ô bị chặn = không có lựa chọn / nút mờ kèm lý do). Chỉ máy tính (logic, không bố cục).
+// v3.26 (0116): mọi vai ở đây (không phải Thường trực) bắt buộc ngành + lĩnh vực với MỌI loại văn bản; loại không phải kết luận / thông báo có thêm
+// lựa chọn "Không thuộc" (ô "Còn thiếu" ghi 'ngành (hoặc "Không thuộc")'); ô mục tiêu then chốt chọn "Không thuộc" bằng chonPhanLoai.
 // Dữ liệu: văn bản so_ket_luan = E2E-TEST-GVKN-<project>-<vai>; phân công ly_do = khoá; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
-import { contextAs, moGiaoViec, NAP } from './lib/app.js';
+import { contextAs, moGiaoViec, chonPhanLoai, NAP } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 
 const LOAI = ['KL_BTV', 'TB_THUONG_TRUC', 'KL_BCH', 'NQ_BCH', 'NQ_TW', 'CONG_VAN', 'KHAC'];   // 0087: + KL / NQ Ban Chấp hành
@@ -27,7 +29,7 @@ const conThieu = (page) => page.locator('#gvConThieu');
 async function chonLoai(page, loai) {
   await page.locator('#klThVanBan').selectOption('__moi__');
   await page.locator('#klThLoaiVB').selectOption(loai);
-  await expect(page.locator('#klThNganhBatBuoc')).toBeVisible({ visible: BAT_BUOC.has(loai) });
+  await expect(page.locator('#klThNganhBatBuoc')).toBeVisible();   // v3.26: bắt buộc với mọi loại (vai không phải Thường trực)
   await expect(page.locator('#klThSoHNWrap')).toBeVisible({ visible: ['KL_BTV', 'KL_BCH', 'NQ_BCH'].includes(loai) });   // 0087: KL / NQ BCH hiện, không bắt buộc
   await expect(page.locator('#klThSoHNBatBuoc')).toBeVisible({ visible: loai === 'KL_BTV' });
 }
@@ -43,6 +45,7 @@ async function giaoThat(page, vai, loai, { owner, nganh, lv }) {
   if (lv) await page.locator('#klThLinhVuc').selectOption(lv);
   await page.locator('#klThSanPham').selectOption('BAO_CAO');
   await page.locator('#klThHan').fill('2026-12-31');
+  await chonPhanLoai(page);   // v3.26: ngành trống → "Không thuộc"; mục tiêu → "Không thuộc"
   await expect(conThieu(page)).toHaveText('');
   await expect(page.locator('#klThLuu')).toBeEnabled();
   await page.locator('#klThLuu').click();
@@ -107,11 +110,10 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
       expect(lv).not.toContain(KN.lv);
       await expect(page.locator('#gvPhamViGhiChu')).toContainText('do lãnh đạo khác kiêm nhiệm');
       await page.locator('#klThNganh').selectOption('');
-      if (BAT_BUOC.has(loai)) await expect(conThieu(page)).toContainText('ngành');
-      else await expect(conThieu(page)).not.toContainText('lĩnh vực');   // việc không có lĩnh vực: quy tắc cả phòng
+      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành, lĩnh vực' : 'ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
     }
     const v = await giaoThat(page, 'PCVP', 'CONG_VAN', { owner: 'dv:TONG_HOP' });
-    expect([v.owner_don_vi_ma, v.linh_vuc_ma]).toEqual(['TONG_HOP', null]);
+    expect([v.owner_don_vi_ma, v.linh_vuc_ma]).toEqual(['TONG_HOP', 'LV99_KHONG_THUOC']);   // v3.26: Công văn không thuộc ngành nào → "Không thuộc"
     await page.context().close();
   });
 
@@ -124,8 +126,8 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
       await page.locator('#klThNganh').selectOption(KN.nganh);
       expect(await giaTri(page, '#klThLinhVuc')).toEqual(expect.arrayContaining([KN.lv, KN.lvKhac]));
       await page.locator('#klThNganh').selectOption('');
-      if (BAT_BUOC.has(loai)) { await expect(conThieu(page)).toContainText('ngành, lĩnh vực'); await expect(page.locator('#klThLuu')).toBeDisabled(); }
-      else await expect(conThieu(page)).not.toContainText('ngành');
+      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành, lĩnh vực' : 'ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
+      await expect(page.locator('#klThLuu')).toBeDisabled();
     }
     const v = await giaoThat(page, 'A1', 'NQ_TW', { owner: 'dv:QUAN_TRI' });
     expect(v.owner_don_vi_ma).toBe('QUAN_TRI');
@@ -141,8 +143,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
     for (const loai of LOAI) {
       await chonLoai(page, loai);
       await page.locator('#klThOwner').selectOption(`tk:${id.demo_cv1}`);
-      if (BAT_BUOC.has(loai)) await expect(conThieu(page)).toContainText('ngành, lĩnh vực');
-      else await expect(conThieu(page)).not.toContainText('ngành');
+      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành, lĩnh vực' : 'ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26
     }
     const v = await giaoThat(page, 'A2', 'KHAC', { owner: `tk:${id.demo_cv1}` });
     expect(v.owner_don_vi_ma).toBe('TONG_HOP');

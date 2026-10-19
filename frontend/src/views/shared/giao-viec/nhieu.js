@@ -11,7 +11,8 @@ import { parseOwner } from '../kl/them-owner.js';
 import { thongBaoPhamVi, theoDoiHopLe } from './pham-vi.js';
 import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, laA3GiaoThang, canNganhHienTai } from './trang-thai.js';
 import { o, taoThe, lamMoiThe, anHienThe, suKienThe } from './nhieu-the.js';
-import { boTheMucTieu } from './muc-tieu.js';
+import { boTheMucTieu, khoaThe } from './muc-tieu.js';
+import { canNganhBatBuoc, thieuMucTieu, mucThieuNganh, MUC_THIEU_MT } from './phan-loai.js';   // v3.26
 
 export const TOI_DA = 20;   // kể cả thẻ 1
 
@@ -66,13 +67,14 @@ export function anHienNhieu() {
 
 // Thiếu gì ở từng thẻ thêm (theo thứ tự) — dòng "Còn thiếu"; hợp lệ khi không thiếu gì. Cùng quy tắc với conThieu() của thẻ 1 (index.js).
 export function thieuNhieu() {
-  const bh = ngayBH(); const dm = danhMucKl(); const a0 = anTheoDoi(); const cn = canNganhHienTai(); const tm = $('klThThayMat').value;   // a0: không ô người theo dõi (Thường trực giao / chuyên viên giao thẳng)
+  const bh = ngayBH(); const dm = danhMucKl(); const a0 = anTheoDoi(); const cn = canNganhBatBuoc(); const tm = $('klThThayMat').value;   // a0: không ô người theo dõi (Thường trực giao / chuyên viên giao thẳng)
   return dongs().flatMap((the) => {
     const i = the.dataset.dong; const v = (c) => o(the, c).value;
     const owner = v('owner'); const han = v('han'); const kyBH = v('loai') === 'KY_BAN_HANH'; const nganh = v('nganh'); const lv = v('linh_vuc');
     const pv = owner ? thongBaoPhamVi(phongCuaGiaTri(owner), nganh, lv, dm.linhVuc) : { thieu: null };
     return [[!v('noi_dung').trim(), 'nội dung'], [!owner, 'người chịu trách nhiệm'], [!a0 && !v('theo_doi'), 'người theo dõi'], [!v('san_pham'), 'sản phẩm'],
-      [!kyBH && !han, 'hạn hoàn thành'], [Boolean(han && bh) && han < bh, 'hạn sau ngày ban hành'], [cn && !nganh, 'ngành'], [cn && !lv, 'lĩnh vực'],
+      [!kyBH && !han, 'hạn hoàn thành'], [Boolean(han && bh) && han < bh, 'hạn sau ngày ban hành'], [cn && !nganh, mucThieuNganh()], [cn && !lv, 'lĩnh vực'],
+      [thieuMucTieu(khoaThe(the)), MUC_THIEU_MT],
       [Boolean(pv.thieu), pv.thieu], [!a0 && !theoDoiHopLe(v('theo_doi'), tm, nganh, lv), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']]
       .filter(([t]) => t).map(([, n]) => `nhiệm vụ ${i}: ${n}`);
   });

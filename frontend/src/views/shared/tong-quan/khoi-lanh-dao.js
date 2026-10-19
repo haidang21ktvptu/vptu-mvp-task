@@ -82,18 +82,22 @@ const bangCt = (ds, kq) => `<div class="cuon-ngang"><table class="bang-tq"><thea
   <p class="chu-phu tq-chu-nho">Kết quả do Văn phòng nhập theo báo cáo định kỳ; hệ thống ghép với các nhiệm vụ đã gắn chỉ tiêu.</p></div>`;
 
 // theo: { [mã nhóm]: theoMucTieu }; tab đang chọn; nhom: dsNhom (thứ tự, nhãn tab, mau_so_hieu); hienCt: có thẻ chỉ tiêu; coGan: có việc nào gắn mục
-// tiêu; kq: ketQuaMoiNhat; tuDong: số việc gắn nhờ gợi ý của hệ thống (quy tắc, trợ lý AI, rà soát — cán bộ đã giữ khi lưu).
-export function mucTieuHtml(theo, tab, { hienCt = false, coGan = true, kq = new Map(), nhom = NHOM_MUC_TIEU, tuDong = 0, raSoat = false } = {}) {
+// tiêu; kq: ketQuaMoiNhat; tuDong: số việc gắn nhờ gợi ý của hệ thống (quy tắc, trợ lý AI, rà soát — cán bộ đã giữ khi lưu); pl: phanLoaiMucTieu
+// (v3.26 — số việc gắn mục tiêu / "Không thuộc" / chưa phân loại).
+export function mucTieuHtml(theo, tab, { hienCt = false, coGan = true, kq = new Map(), nhom = NHOM_MUC_TIEU, tuDong = 0, raSoat = false, pl = null } = {}) {
   const tabs = nhom.filter((n) => n.ma !== 'CHI_TIEU' || hienCt);
   const n = tabs.find((x) => x.ma === tab) || tabs[0]; const t = n?.ma;
   const than = !n ? '' : t === 'CHI_TIEU' ? bangCt(theo.CHI_TIEU || [], kq) : n.mau_so_hieu ? bangNq(theo[t] || [], n)
     : `<div class="luoi-mt">${(theo[t] || []).map((m, i) => theMt(m, i, n)).join('') || '<p class="trong">Chưa có mục tiêu trong danh mục.</p>'}</div>`;
-  // raSoat: người xem gắn được mục tiêu (không phải Thường trực) → lối vào trang Rà soát mục tiêu then chốt (lãnh đạo chỉ xem, không phải bấm).
-  const nutRs = raSoat ? ' <button type="button" class="ten-bam lien-ket" data-action="moRaSoatMucTieu">Rà soát mục tiêu then chốt</button>' : '';
-  const goiY = coGan ? (tuDong || nutRs ? `<p class="chu-phu tq-chu-nho">${tuDong ? `${tuDong} nhiệm vụ gắn mục tiêu nhờ gợi ý của hệ thống (theo quy tắc, trợ lý AI hoặc rà soát) — cán bộ đã giữ lại khi lưu.` : ''}${nutRs}</p>` : '')
-    : `<p class="goi-y-mt" role="note">Chưa có nhiệm vụ nào gắn mục tiêu then chốt. Khi giao việc, hệ thống tự gợi ý mục tiêu theo văn bản, nội dung, ngành, lĩnh vực; việc đã giao gắn ở ngăn chi tiết hoặc trang Rà soát mục tiêu then chốt; gắn cho văn bản thì mọi việc của văn bản tính theo.${nutRs}</p>`;
+  // raSoat: người xem gắn được mục tiêu (không phải Thường trực) → lối vào trang Rà soát (lãnh đạo chỉ xem, không phải bấm).
+  const nutRs = raSoat ? ' <button type="button" class="ten-bam lien-ket" data-action="moRaSoatMucTieu" data-che="chua">Rà soát phân loại</button>' : '';
+  const tom = pl ? `<p class="chu-phu tq-chu-nho" id="tqMtPhanLoai">Phân loại: <b>${pl.gan}</b> nhiệm vụ gắn mục tiêu then chốt · <b>${pl.khong}</b> không thuộc mục tiêu then chốt · ${pl.chua
+    ? `<b class="tq-chua-pl">${pl.chua}</b> chưa phân loại — cần rà soát` : 'không còn nhiệm vụ chưa phân loại'}.${nutRs}</p>` : '';
+  const goiY = !coGan ? `<p class="goi-y-mt" role="note">Chưa có nhiệm vụ nào gắn mục tiêu then chốt. Khi giao việc, hệ thống tự gợi ý mục tiêu theo văn bản, nội dung, ngành, lĩnh vực; nhiệm vụ không phục vụ mục tiêu nào thì chọn "Không thuộc mục tiêu then chốt"; việc đã giao phân loại ở ngăn chi tiết hoặc trang Rà soát.${pl ? '' : nutRs}</p>`
+    : tuDong ? `<p class="chu-phu tq-chu-nho">${tuDong} nhiệm vụ gắn mục tiêu nhờ gợi ý của hệ thống (theo quy tắc, trợ lý AI hoặc rà soát) — cán bộ đã giữ lại khi lưu.${pl ? '' : nutRs}</p>`
+      : !pl && nutRs ? `<p class="chu-phu tq-chu-nho">${nutRs}</p>` : '';
   return `<article class="the-bd n12" id="tqMucTieu">${dauKhoi(2, 'Thực hiện các mục tiêu then chốt', 'Nghị quyết Đại hội XX Đảng bộ tỉnh (nhiệm kỳ 2025–2030), các nghị quyết, chương trình của Trung ương và Tỉnh ủy · tính trên mọi nhiệm vụ đã gắn (mọi kỳ); một nhiệm vụ có thể phục vụ nhiều mục tiêu.',
-    nhomNut('tqTabMt', 'tab', tabs.map((n) => [n.ma, n.tab]), t, 'Nhóm mục tiêu'))}${goiY}${than}</article>`;
+    nhomNut('tqTabMt', 'tab', tabs.map((n) => [n.ma, n.tab]), t, 'Nhóm mục tiêu'))}${tom}${goiY}${than}</article>`;
 }
 
 // Khối 3. t: theoKhoi; mo: Set mã khối đang mở; sap: 'qh' | 'dm'; k: kỳ.
@@ -108,7 +112,8 @@ function hangKv(d, { ten, ct, lop = '', dau = '' }) {
     <button type="button" class="kv-so ten-bam" ${mo(ct)}><b>${d.tong}</b></button><span class="kv-so an-dt">${d.tyLe === null ? '—' : `${d.tyLe}%`}</span>
     <span class="kv-so an-dt">${qh(d.qh, { ...ct, d: 'qh' })}</span></div>`;
 }
-export function linhVucHtml(t, mo2, sap, k) {
+// v3.26: dòng "Không thuộc lĩnh vực trọng tâm" (ngành "Không thuộc") và "Chưa phân loại — cần rà soát" (chưa có ngành); o: { raSoat, soNganh, soKhoi }.
+export function linhVucHtml(t, mo2, sap, k, { raSoat = false, soNganh = 12, soKhoi = t.khoi.length } = {}) {
   const khoi = t.khoi.map((d) => {
     const moKhoi = mo2.has(d.ma);
     const dau = `<button type="button" class="kv-ten kv-mo" data-action="tqLvMo" data-ma="${d.ma}" aria-expanded="${String(moKhoi)}"><span class="mui" aria-hidden="true">${moKhoi ? '−' : '+'}</span><span>${escapeHtml(d.ten)}</span></button>`;
@@ -116,11 +121,13 @@ export function linhVucHtml(t, mo2, sap, k) {
       || '<p class="chu-phu kv-trong">Không có nhiệm vụ trong kỳ.</p>' : '';
     return hangKv(d, { ten: d.ten, ct: { t: 'khoi', ma: d.ma, ten: d.ten }, dau }) + con;
   }).join('');
-  const chua = t.chuaNganh ? hangKv(t.chuaNganh, { ten: 'Chưa phân ngành', ct: { t: 'khoi', ma: 'CHUA', ten: 'Chưa phân ngành' }, lop: 'chua' }) : '';
+  const khong = t.khongThuoc ? hangKv(t.khongThuoc, { ten: 'Không thuộc lĩnh vực trọng tâm', ct: { t: 'khoi', ma: 'KHONG_THUOC', ten: 'Không thuộc lĩnh vực trọng tâm' }, lop: 'chua' }) : '';
+  const chua = t.chuaNganh ? hangKv(t.chuaNganh, { ten: 'Chưa phân loại — cần rà soát', ct: { t: 'khoi', ma: 'CHUA', ten: 'Chưa phân loại ngành, lĩnh vực' }, lop: 'chua' }) : '';
+  const nutRs = t.chuaNganh && raSoat ? `<p class="chu-phu tq-chu-nho">${t.chuaNganh.tong} nhiệm vụ chưa có ngành, lĩnh vực — <button type="button" class="ten-bam lien-ket" data-action="moRaSoatMucTieu" data-che="nganh">Rà soát phân loại</button></p>` : '';
   const chuGiai = DOAN.map(([, ten, mau]) => `<span><i style="background:var(${mau})"></i>${ten}</span>`).join('');
-  return `<article class="the-bd n12" id="tqLinhVuc">${dauKhoi(3, 'Thực hiện theo lĩnh vực trọng tâm', `Việc đang mở và việc hoàn thành ${k.trong}, gom 12 ngành của danh mục thành 5 khối như bố cục báo cáo; bấm một khối để mở các ngành.`,
+  return `<article class="the-bd n12" id="tqLinhVuc">${dauKhoi(3, 'Thực hiện theo lĩnh vực trọng tâm', `Việc đang mở và việc hoàn thành ${k.trong}, gom ${soNganh} ngành của danh mục thành ${soKhoi} khối như bố cục báo cáo; bấm một khối để mở các ngành.`,
     nhomNut('tqLvSap', 'sap', [['qh', 'Nhiều quá hạn trước'], ['dm', 'Theo danh mục']], sap, 'Sắp xếp lĩnh vực'))}
     <div class="kv-bang"><div class="kv-hang kv-dau" aria-hidden="true"><span>Khối, ngành</span><span>Cơ cấu trạng thái</span><span class="kv-so">Tổng</span><span class="kv-so an-dt">Đúng hạn</span><span class="kv-so an-dt">Quá hạn</span></div>
-      ${hangKv(t.toan, { ten: 'Toàn bộ', ct: { t: 'khoi', ma: 'TAT', ten: 'Toàn bộ lĩnh vực' }, lop: 'tong' })}${khoi}${chua}</div>
-    <div class="chu-giai kv-chu-giai">${chuGiai}</div></article>`;
+      ${hangKv(t.toan, { ten: 'Toàn bộ', ct: { t: 'khoi', ma: 'TAT', ten: 'Toàn bộ lĩnh vực' }, lop: 'tong' })}${khoi}${khong}${chua}</div>
+    ${nutRs}<div class="chu-giai kv-chu-giai">${chuGiai}</div></article>`;
 }

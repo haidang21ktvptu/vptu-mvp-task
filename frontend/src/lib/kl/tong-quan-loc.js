@@ -99,7 +99,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'vm': return { tieuDe: 'Vướng mắc chờ lãnh đạo cho ý kiến', rows: vuongMacCho(rows) };
     case 'cldl': {
       const c = chatLuongDuLieu(rows);
-      return { tieuDe: 'Nhiệm vụ cần bổ sung thông tin', nhom: [{ ten: 'Chưa gắn mục tiêu then chốt', rows: c.chuaMucTieu }, { ten: 'Chưa có ngành, lĩnh vực', rows: c.chuaNganh },
+      return { tieuDe: 'Nhiệm vụ cần bổ sung thông tin', nhom: [{ ten: 'Chưa phân loại mục tiêu then chốt', rows: c.chuaMucTieu }, { ten: 'Chưa có ngành, lĩnh vực', rows: c.chuaNganh },
         { ten: 'Hoàn thành chưa có ngày hoàn thành', rows: c.xongChuaNgay }] };
     }
     case 'loc': return { tieuDe: 'Nhiệm vụ theo bộ lọc', nhom: [{ ten: 'Đang thực hiện', rows: rows.filter(laMo) }, { ten: 'Đã hoàn thành', rows: rows.filter(laXong) }] };

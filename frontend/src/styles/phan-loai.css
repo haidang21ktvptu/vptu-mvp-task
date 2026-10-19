@@ -1,0 +1,49 @@
+/* Phân loại nhiệm vụ (v3.26 — 0116): dòng nhắc phân loại bắt buộc ở Giao việc, ô "Không thuộc mục tiêu then chốt nào" của ô chọn mục tiêu dùng chung,
+   khối "Rà soát phân loại bằng tệp Excel" ở màn Rà soát, dòng tóm tắt phân loại ở Tổng quan. Chỉ token của docs/DESIGN.md; màu đi kèm chữ (không dựa
+   vào màu). Tên lớp viết nguyên văn trong JS. */
+@layer components {
+  /* Giao việc: dòng nhắc trên ô ngành, lĩnh vực của thẻ 1 */
+  .gv-nhac-pl { margin: 12px 0 2px; padding: 8px 12px; border-left: 3px solid var(--lam); border-radius: 0 8px 8px 0; background: var(--lam-nhat);
+    font-size: 13px; line-height: 1.5; color: var(--chu); }
+  .gv-nhac-pl.hidden { display: none; }
+
+  /* Ô chọn mục tiêu: "Không thuộc mục tiêu then chốt nào" */
+  .mtg-khong { align-items: center; padding: 4px 10px 4px 6px; border: 1px solid var(--vien-o); border-radius: 999px; background: var(--the); font-size: 13px; }
+  .mtg-khong input { flex: none; width: 16px; height: 16px; min-height: 0; margin: 0; padding: 0; border: 0; background: none; accent-color: var(--lam); }
+  .mtg-khong:has(input:checked) { border-color: var(--lam); background: var(--lam-nhat); color: var(--lam); font-weight: 600; }
+  .mtg-chip[data-nguon="KHONG"] { padding-right: 10px; background: var(--nen-phu); border-color: var(--vien-o); color: var(--chu); }
+
+  /* Rà soát: khối nhập tệp */
+  .rs-tep { margin: 12px 0 0; border: 1px solid var(--vien); border-radius: 12px; background: var(--the); }
+  .rs-tep > summary { padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--navy); cursor: pointer; }
+  .rs-tep-than { display: flex; flex-direction: column; gap: 10px; padding: 0 14px 14px; }
+  .rs-tep-than > p { margin: 0; font-size: 13px; line-height: 1.5; }
+  .rs-tep-nut { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .rs-tep-kq { display: flex; flex-direction: column; gap: 10px; }
+  .rs-tep-kq:empty { display: none; }
+  .rs-tep-tom { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--nen-mo); font-size: 13.5px; line-height: 1.5; }
+  .rs-tep-ly { max-width: 640px; }
+  .rs-tep-h { margin: 6px 0 0; font-size: 14px; color: var(--chu); }
+  .rs-tep-bang td { vertical-align: top; font-size: 13px; }
+  /* .bang-tq: cột đầu giãn, các cột sau hẹp và không xuống dòng — bảng này ngược lại: mã hẹp, nội dung / phân loại / ghi chú xuống dòng */
+  .rs-tep-bang th:not(:first-child), .rs-tep-bang td:not(:first-child) { width: auto; }
+  .rs-tep-bang td:not(:first-child) { white-space: normal; overflow-wrap: anywhere; }
+  .rs-tep-bang th:first-child, .rs-tep-bang .c-ma { width: 1%; white-space: nowrap; font-weight: 600; }
+  .rs-tep-bang .c-nd { min-width: 240px; max-width: 420px; }
+  .rs-tep-bang .c-pl { min-width: 200px; }
+  .rs-tep-bang .c-ghi { min-width: 220px; }
+  @media (max-width: 760px) {   /* điện thoại: mỗi việc một khối, nhãn cột đứng trước giá trị */
+    .rs-tep-bang thead { display: none; }
+    .rs-tep-bang, .rs-tep-bang tbody, .rs-tep-bang tr { display: block; }
+    .rs-tep-bang tr { padding: 10px 0; border-bottom: 1px solid var(--vien-nhat); }
+    .rs-tep-bang td { display: block; width: auto !important; min-width: 0 !important; max-width: none !important; padding: 2px 0 !important; border: 0; }
+    .rs-tep-bang td[data-n]::before { content: attr(data-n) ": "; color: var(--chu-phu); font-size: 12.5px; font-weight: 600; }
+    .rs-tep-bang td.c-ghi:empty { display: none; }
+  }
+  .rs-tep-loi { color: var(--do-chu); font-weight: 600; }
+  .rs-tep-canh { color: var(--vang-chu); font-weight: 600; }
+  .rs-nganh { display: block; margin-top: 2px; }
+
+  /* Tổng quan: số việc chưa phân loại */
+  .tq-chua-pl { color: var(--do-chu); }
+}

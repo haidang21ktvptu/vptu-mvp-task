@@ -6,7 +6,7 @@
 // liệu theo khoá, cờ khôi phục.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec, pageAs, contextAs, nav } from './lib/app.js';
+import { NAP, moGiaoViec, pageAs, contextAs, nav, chonPhanLoai } from './lib/app.js';
 import { OPTIONAL_USERS, sessionPath } from './lib/roles.mjs';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, datCo, voiPhien } from './lib/pr2b.mjs';
@@ -60,6 +60,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       await vanBanMoi(page, `${khoa}-LDVP`);
       await page.locator('#klThNoiDung').fill(`${khoa} LDVP`); await page.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
+      await chonPhanLoai(page);   // v3.26: bắt buộc phân loại — công văn: "Không thuộc"
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('#klThLuu')).toBeEnabled();
       await page.locator('#klThLuu').click();
       await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-', NAP);
@@ -75,6 +76,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       await vanBanMoi(page, `${khoa}-TT`);
       await page.locator('#klThNoiDung').fill(`${khoa} TT`); await page.locator('#klThOwner').selectOption('dv:TONG_HOP');
       await page.locator('#klThSanPham').selectOption('TO_TRINH'); await page.locator('#klThHan').fill(H);
+      await chonPhanLoai(page);   // v3.26: bắt buộc phân loại — công văn: "Không thuộc"
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP); await expect(page.locator('#klThLuu')).toBeEnabled();
       await page.locator('#klThLuu').click();
       await expect(page.locator('#toastContainer')).toContainText('Chánh Văn phòng có thông báo', NAP);

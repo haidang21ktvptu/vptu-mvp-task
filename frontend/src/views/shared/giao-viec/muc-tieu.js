@@ -11,7 +11,7 @@ import { notifyError } from '../../../components/toast.js';
 import { danhMucKl, loadDanhMucKl } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { timMucTieu, sapTheoDanhMuc } from '../../../lib/kl/muc-tieu.js';
-import { taoBoChon, apGoiY, apGoiYAi, datVanBan, hieuLuc, ketQua, phanHoi, bat, khoaSoHieu } from '../../../lib/kl/goi-y-muc-tieu.js';
+import { taoBoChon, apGoiY, apGoiYAi, apAiDien, datVanBan, hieuLuc, ketQua, phanHoi, bat, khoaSoHieu } from '../../../lib/kl/goi-y-muc-tieu.js';
 import { goiYMucTieu, docMucTieuVanBan, ganMucTieu, ganMucTieuVanBan, vanBanTaoCungViec, themMucTieuTuDong, ghiPhanHoiGoiY } from '../../../lib/kl/muc-tieu-db.js';
 import { dangKyO, boO, khungHtml, veO, layO, datTrangThai, lyDoChu } from '../kl/chon-muc-tieu.js';
 import { MOI, timTrongDs } from './van-ban.js';
@@ -31,7 +31,10 @@ const O1 = { noi_dung: 'klThNoiDung', san_pham_mo_ta: 'klThSanPhamMoTa', nganh: 
 const giaTri = (k, cot) => String((k === KHOA_1 ? $(O1[cot]) : theCua(k)?.querySelector(`[data-cot="${cot}"]`))?.value || '').trim();
 // Mục tiêu của văn bản mà các thẻ tính theo: văn bản mới → ô của khối 1; văn bản có sẵn → DB; Thường trực + văn bản mới → không có.
 const vbCuaThe = () => (hienVb() ? hieuLuc(layO(KHOA_VB)?.tt || taoBoChon()) : laMoiVb() ? [] : gv.vbDb);
-const CHU_THE = 'hệ thống tự nhận diện theo văn bản, nội dung, ngành, lĩnh vực — mục có căn cứ chắc được tích sẵn; bấm gợi ý để thêm (không bắt buộc)';
+const CHU_THE = 'hệ thống tự nhận diện theo văn bản, nội dung, ngành, lĩnh vực — mục có căn cứ chắc được tích sẵn; bấm gợi ý để thêm; việc không phục vụ mục tiêu nào tích "Không thuộc mục tiêu then chốt nào"';
+// v3.26: lựa chọn mục tiêu của một thẻ đổi (người dùng, gợi ý về, văn bản đổi, trợ lý AI điền) → index.js vẽ lại "Còn thiếu" (mục tiêu bắt buộc — phan-loai.js).
+let khiDoiNgoai = () => {};
+export const khiMucTieuDoi = (fn) => { khiDoiNgoai = typeof fn === 'function' ? fn : () => {}; };
 
 function dauVaoThe(k) {
   const v = vanBanCo();
@@ -46,13 +49,14 @@ async function chayGoiY(k) {
   const x = layO(k); if (!x) return;
   const p = k === KHOA_VB ? dauVaoVb() : dauVaoThe(k);
   const lan = (gv.luot.get(k) || 0) + 1; gv.luot.set(k, lan);
-  if (!Object.values(p).some(Boolean)) { apGoiY(x.tt, { goi_y: [], so_hieu_moi: [] }); datTrangThai(k, ''); veO(k); if (k === KHOA_VB) truyenVanBan(); return; }
+  if (!Object.values(p).some(Boolean)) { apGoiY(x.tt, { goi_y: [], so_hieu_moi: [] }); datTrangThai(k, ''); veO(k); if (k === KHOA_VB) truyenVanBan(); khiDoiNgoai(); return; }
   datTrangThai(k, 'Đang nhận diện mục tiêu…');
   try {
     const kq = await goiYMucTieu(p);
     if (gv.luot.get(k) !== lan || layO(k) !== x) return;
     apGoiY(x.tt, kq, { moTa: lyDoChu }); datTrangThai(k, ''); veO(k);
     if (k === KHOA_VB) truyenVanBan();
+    khiDoiNgoai();
   } catch { if (gv.luot.get(k) === lan) datTrangThai(k, 'Chưa nhận diện được — có thể chọn từ danh mục.'); }
 }
 
@@ -64,11 +68,12 @@ function truyenVanBan() {
     bo.forEach((m) => { if (vb.includes(m)) return; x.tt.bo.add(m); if (x.tt.chon.get(m)?.tu === 'tich') x.tt.chon.delete(m); });
     veO(k);
   });
+  khiDoiNgoai();
 }
 
 function moO(k, el, opts) {
   if (!el) return;
-  dangKyO(k, taoBoChon({ vb: k === KHOA_VB ? [] : vbCuaThe() }), { khiDoi: k === KHOA_VB ? truyenVanBan : () => {} }); gv.khoa.add(k);
+  dangKyO(k, taoBoChon({ vb: k === KHOA_VB ? [] : vbCuaThe() }), { khiDoi: k === KHOA_VB ? truyenVanBan : () => khiDoiNgoai() }); gv.khoa.add(k);
   el.innerHTML = khungHtml(k, opts);
   veO(k);
 }
@@ -133,7 +138,8 @@ export function apAiVanBan(ds = [], nhac = []) {
   const k = hienVb() ? KHOA_VB : KHOA_1; const x = layO(k); if (!x) return;
   apGoiYAi(x.tt, [...x.tt.ai, ...ds].filter((g, i, a) => a.findIndex((y) => y.ma === g.ma) === i), nhac); veO(k);
 }
-export function apAiThe(the, ds = []) { const k = khoaThe(the); const x = layO(k); if (!x) return; apGoiYAi(x.tt, ds); veO(k); }
+// v3.26 (bấm "Điền"): mục AI đề xuất có câu trích đối chiếu được → tích sẵn (nguồn AI); AI không đề xuất mục nào → tích sẵn "Không thuộc" — người giao kiểm tra.
+export function apAiThe(the, ds = []) { const k = khoaThe(the); const x = layO(k); if (!x) return; apAiDien(x.tt, ds); veO(k); khiDoiNgoai(); }
 
 const giong = (a, b) => a.length === b.length && [...a].sort().join('|') === [...b].sort().join('|');
 let sauGiao = () => {};   // doc-ai.js: đánh dấu nhiệm vụ đọc từ văn bản đã giao
