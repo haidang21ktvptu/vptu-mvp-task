@@ -94,7 +94,7 @@ function capNhatNganh() {   // bắt buộc theo vai, loại văn bản (phan-lo
   const bb = canNganhBatBuoc();
   show('klThNganhBatBuoc', bb); show('klThLinhVucBatBuoc', bb); show('gvNhacPhanLoai', bb && !laA0()); setText('gvNhacPhanLoai', nhacPhanLoai());
   setText('klThNganhGhiChu', chuThichNganh());
-  if (nganhKl !== canNganhHienTai()) { nganhKl = canNganhHienTai(); if (danhMucKl().nganh) dienNganh(); }
+  if (nganhKl !== canNganhHienTai()) { nganhKl = canNganhHienTai(); if (danhMucKl().nganh) { dienNganh(); lamMoiLuaChonLuoi(); } }   // cả các thẻ thêm
 }
 // Ngành / lĩnh vực: chỉ các mục trong phạm vi giao ở phòng của Owner (C3); giữ lựa chọn cũ nếu vẫn hợp lệ.
 function dienNganh() {
@@ -159,13 +159,14 @@ function conThieu() {
     [Boolean(phamViThieu().thieu), phamViThieu().thieu], [theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
     .concat(thieuNhieu());
 }
+const loiConThieu = () => { const t = conThieu(); return t.length ? `Còn thiếu: ${t.join(', ')}.` : null; };   // v3.26: "Giao, nhập tiếp" đủ như "Giao việc"
 function capNhatTomTat() {
   apMacDinhNguon(loaiVanBan());   // PR-3: nguồn theo loại văn bản đang áp dụng (mới hoặc có sẵn) cho tới khi người dùng tự chọn
   if (laA0()) { THEO_LOAI_A0.forEach((id) => show(id, canNganhHienTai())); capNhatNganh(); } // theo từng ô gõ (số hiệu / ngày / loại văn bản)
   anHienNhieu();
   const [p1, p2] = trangThaiPhan();
   [p1, p2].forEach((ok, i) => $(`gvCham${i + 1}`).classList.toggle('xong', ok));
-  $('klThLuu').disabled = !(p1 && p2);
+  $('klThLuu').disabled = !(p1 && p2); $('klThLuuTiep').disabled = !(p1 && p2) || $('gvKhoa').disabled;
   const so = soThe(); const maDk = $('klThDoKhan').value; const dk = tenDoKhan(maDk);
   const owner = $('klThOwner').value ? $('klThOwner').selectedOptions[0]?.text : '…';
   const sp = $('klThSanPham').value ? $('klThSanPham').selectedOptions[0]?.text : '…';
@@ -233,7 +234,7 @@ export async function openGiaoViec(opts = {}) {
 // ngăn chi tiết mở việc đầu.
 async function luuNhieu() {
   const p = docForm(cha);
-  const loiForm = kiemTra(p) || loiNhieu();
+  const loiForm = kiemTra(p) || loiNhieu() || loiConThieu();
   if (loiForm) { notifyError(loiForm); return; }
   const { chung, dong1 } = tachDong(p); const khoa = khoaCacThe();
   $('klThLuu').disabled = true;
@@ -252,7 +253,7 @@ async function luuNhieu() {
 async function luu(nhapTiep) {
   if (coThem()) return luuNhieu();
   const p = docForm(cha);
-  const loiForm = kiemTra(p);
+  const loiForm = kiemTra(p) || loiConThieu();   // v3.26: phân loại bắt buộc — DB không chặn (nhập Excel, API vẫn ghi được)
   if (loiForm) { notifyError(loiForm); return; }
   $('klThLuu').disabled = true;
   try {

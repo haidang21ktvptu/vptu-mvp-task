@@ -71,8 +71,8 @@ export function cachGanCua(r) {
   if (laTheoVanBan(r)) return ['VAN_BAN'];
   return [...new Set(Object.values(r.muc_tieu_nguon || {}).map((x) => x.nguon || 'CHON'))];
 }
-export const laTuDong = (r) => mucTieuThat(r).length > 0 && cachGanCua(r).some((c) => ['QUY_TAC', 'AI', 'RA_SOAT'].includes(c))
-  || (laTheoVanBan(r) && Object.values(r.muc_tieu_nguon || {}).some((x) => ['QUY_TAC', 'AI', 'RA_SOAT'].includes(x.nguon)));
+export const laTuDong = (r) => mucTieuThat(r).length > 0 && (cachGanCua(r).some((c) => ['QUY_TAC', 'AI', 'RA_SOAT'].includes(c))
+  || (laTheoVanBan(r) && Object.values(r.muc_tieu_nguon || {}).some((x) => ['QUY_TAC', 'AI', 'RA_SOAT'].includes(x.nguon))));
 
 // Điều kiện lọc: '' | mã mục tiêu | 'NHOM:<nhóm>' | CHUA_GAN (chưa có mục tiêu nào). dm: danh mục (để biết nhóm của mã).
 export function khopMucTieu(r, gt, dm = []) {

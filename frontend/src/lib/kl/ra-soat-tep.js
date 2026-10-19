@@ -68,11 +68,18 @@ export function timLinhVuc(v, linhVuc = [], nganhMa = null) {
   const ds = linhVuc.filter((l) => chuan(l.ten) === c);
   return (nganhMa ? ds.find((l) => l.nganh_ma === nganhMa) : null)?.ma || (ds.length === 1 ? ds[0].ma : null);
 }
+// Mục tiêu theo mã → tên ngắn → tên → số hiệu (tầng đầu có khớp thì dừng); mục đã gộp → mục giữ lại; có mục đang dùng thì bỏ mục ngừng dùng.
+// → mã | null (không có) | false (một tên khớp nhiều mục khác nhau — người dùng ghi mã hoặc tên ngắn).
 export function timMucTieuTen(v, mucTieu = []) {
   const c = chuan(v); if (!c) return null;
   if (KHONG_MT.has(c)) return mucTieu.some((m) => m.ma === KHONG_THUOC) ? KHONG_THUOC : null;
-  return (mucTieu.find((m) => m.ma.toLowerCase() === c) || mucTieu.find((m) => chuan(m.ten_ngan) === c) || mucTieu.find((m) => chuan(m.ten) === c)
-    || mucTieu.find((m) => m.so_hieu && chuan(m.so_hieu) === c))?.ma || null;
+  const giuLai = (m) => { let x = m; for (let i = 0; x?.gop_vao && i < 5; i++) x = mucTieu.find((y) => y.ma === x.gop_vao); return x; };
+  for (const khop of [(m) => m.ma.toLowerCase() === c, (m) => chuan(m.ten_ngan) === c, (m) => chuan(m.ten) === c, (m) => Boolean(m.so_hieu) && chuan(m.so_hieu) === c]) {
+    const ds = [...new Set(mucTieu.filter(khop).map(giuLai).filter(Boolean))]; if (!ds.length) continue;
+    const dung = ds.filter((m) => m.dang_dung !== false); const ma = [...new Set((dung.length ? dung : ds).map((m) => m.ma))];
+    return ma.length === 1 ? ma[0] : false;
+  }
+  return null;
 }
 // d: một dòng docBangRaSoat; dm: danh mục. → { so, ma, nganh, linh_vuc, muc_tieu (mảng | null = giữ), ly_do, loi: [chữ] }.
 export function khopDong(d, dm = {}) {
@@ -89,7 +96,8 @@ export function khopDong(d, dm = {}) {
   if (d.mucTieu) {
     const phan = d.mucTieu.split(/[;\n]+/).map((x) => x.trim()).filter(Boolean);
     const ma = phan.map((x) => [x, timMucTieuTen(x, dm.mucTieu || [])]);
-    ma.filter(([, m]) => !m).forEach(([x]) => loi.push(`mục tiêu "${x}" không có trong danh mục`));
+    ma.filter(([, m]) => m === null).forEach(([x]) => loi.push(`mục tiêu "${x}" không có trong danh mục`));
+    ma.filter(([, m]) => m === false).forEach(([x]) => loi.push(`mục tiêu "${x}" trùng tên nhiều mục của danh mục — ghi mã hoặc tên ngắn`));
     mt = [...new Set(ma.map(([, m]) => m).filter(Boolean))];
     if (mt.includes(KHONG_THUOC) && mt.length > 1) loi.push('"Không thuộc mục tiêu then chốt" không ghi cùng mục tiêu khác');
     if (mt.length > 10) loi.push('tối đa 10 mục tiêu then chốt');

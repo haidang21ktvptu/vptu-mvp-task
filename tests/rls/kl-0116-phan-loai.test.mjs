@@ -68,7 +68,8 @@ describe('0116 — quyền rà soát phân loại, mục "Không thuộc"', { sk
     const ca = [['sua_khoi_linh_vuc', { p_ma: 'KHONG_THUOC', p: { ten: 'Khác' }, p_ly_do: KHOA }], ['sua_nhom_muc_tieu', { p_ma: 'KHONG_THUOC', p: { ten: 'Khác' }, p_ly_do: KHOA }],
       ['dat_khoi_linh_vuc', { p_bang: 'dm_nganh', p_ma: 'KHONG_THUOC', p_khoi: 'KINH_TE', p_ly_do: KHOA }],
       ['dat_trang_thai_muc_tieu', { p_ma: 'KHONG_THUOC', p_hanh_dong: 'mo_khoa', p_ly_do: KHOA }], ['gop_muc_tieu', { p_tu: 'KHONG_THUOC', p_vao: 'NQ_79', p_ly_do: KHOA }]];
-    for (const [ham, ts] of ca) assert.match(loi(await goi('demo_qtht', ham, ts)), /cố định/, ham);
+    // gộp: CSDL đã có việc gắn "Không thuộc" (staging) thì trigger "đứng riêng" (0116 mục 4) chặn trước khoá danh mục — cả hai đều là chặn
+    for (const [ham, ts] of ca) assert.match(loi(await goi('demo_qtht', ham, ts)), ham === 'gop_muc_tieu' ? /cố định|không chọn cùng/ : /cố định/, ham);
     assert.match(loi(await goi('demo_qtht', 'dat_khoi_linh_vuc', { p_bang: 'dm_linh_vuc', p_ma: 'LV08_TAI_CHINH', p_khoi: 'KHONG_THUOC', p_ly_do: KHOA })), /nhóm "Không thuộc"/);
     assert.ok(loi(await goi('demo_qtht', 'them_quy_tac', { p_ma: 'KHONG_THUOC', p_loai: 'TU_KHOA', p_gia_tri: 'kl0116 thử', p_muc: 'GOI_Y', p_ly_do: KHOA })), 'quy tắc cho "Không thuộc"');
   });
@@ -123,6 +124,9 @@ describe('0116 — logic phân loại, rà soát từ tệp', { skip: SKIP || CH
     assert.equal(ls.length, 1); assert.match(ls[0].gia_tri_moi, /lý do: KL-0116 lý do chung · chủ đề văn hóa/);
     assert.equal(await tin(), tinTruoc, 'không gửi tin');
     assert.equal((await rs('demo_cvp', dong, 'lại', true)).data[0].ket_qua, 'GIU');
+    await db().from('nhiem_vu_muc_tieu').update({ nguon: 'QUY_TAC' }).eq('nhiem_vu_id', xong);   // mục đã có giữ nguồn; chỉ mục mới mang RA_SOAT
+    assertOk(await rs('demo_cvp', [{ ma: MA_XONG, muc_tieu: ['NQ_80', 'NQ_57'] }], `${KHOA} thêm mục`, true), 'thêm mục');
+    assert.deepEqual(await mtCua(xong), [{ muc_tieu_ma: 'NQ_57', nguon: 'RA_SOAT' }, { muc_tieu_ma: 'NQ_80', nguon: 'QUY_TAC' }]);
   });
 
   test('B4. Kiểm giá trị từng dòng; dòng lỗi không làm hỏng dòng khác; ngành một lĩnh vực tự chọn; giới hạn 200 dòng', async () => {

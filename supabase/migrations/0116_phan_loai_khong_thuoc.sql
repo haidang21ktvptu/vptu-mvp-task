@@ -11,18 +11,19 @@
 -- 5. kl_tu_gan_muc_tieu_viec (nhập Excel, tự nhận diện; bản 0110 + 3 chỗ): văn bản "Không thuộc" mà quy tắc chắc tìm ra mục tiêu → việc nhận riêng mục đó.
 --    kl_dong_nhap_gan_muc_tieu (nhập Excel có ghi mục tiêu; bản 0110 + 1 dòng): dòng ghi cả "Không thuộc" lẫn mục khác → giữ mục thật (trigger ở
 --    ngoài khối bắt lỗi từng dòng của nhap_excel_dong — lỗi ở đây làm hỏng cả lượt ghi).
--- 6. ai_can_hoc (bản 0112 + 1 điều kiện): bộ tự học không học mục "Không thuộc".
+-- 6. ai_can_hoc (bản 0112 + 1 điều kiện): bộ tự học không học mục "Không thuộc". Kiểm thử: tests/rls/kl-0116-phan-loai.test.mjs.
 -- 7. ra_soat_phan_loai(p, p_ly_do, p_ap): rà soát phân loại hàng loạt từ tệp (≤ 200 dòng một lượt) — p_ap = false: xem trước (không ghi); true: ghi.
 --    Ghi được cả việc đã hoàn thành; chỉ ngành, lĩnh vực, mục tiêu; quyền từng dòng như gan_muc_tieu (người giao, người nhập việc, lãnh đạo phụ trách,
 --    toàn quyền); kiểm như sửa thông tin giao (kl_thay_doi_giao); ghi qua kl_ap_thong_tin_giao + gan_muc_tieu (nguồn RA_SOAT); diễn biến có lý do;
 --    KHÔNG gửi tin; cảnh báo khi đổi lãnh đạo kiêm nhiệm phụ trách; việc ngoài quyền chỉ trả mã + lỗi (không lộ nội dung).
--- Kiểm thử: tests/rls/kl-0116-phan-loai.test.mjs.
 
 -- ---- 1. Danh mục giữ chỗ ----
-INSERT INTO "public"."dm_khoi_linh_vuc" ("ma", "ten", "thu_tu") VALUES ('KHONG_THUOC', 'Không thuộc lĩnh vực trọng tâm', 99);
+INSERT INTO "public"."dm_khoi_linh_vuc" ("ma", "ten", "thu_tu") VALUES ('KHONG_THUOC', 'Không thuộc lĩnh vực trọng tâm', 99)   -- khối / nhóm quản trị đã tạo tay tên "Không thuộc" (mã trùng): nhận làm mục cố định
+  ON CONFLICT ("ma") DO UPDATE SET "ten" = EXCLUDED."ten", "thu_tu" = 99, "dang_dung" = true;
 INSERT INTO "public"."dm_nganh" ("ma", "ten", "thu_tu", "khoi_ma") VALUES ('KHONG_THUOC', 'Không thuộc ngành, lĩnh vực nào', 99, 'KHONG_THUOC');
 INSERT INTO "public"."dm_linh_vuc" ("ma", "nganh_ma", "ten", "thu_tu") VALUES ('LV99_KHONG_THUOC', 'KHONG_THUOC', 'Không thuộc lĩnh vực nào', 1);
-INSERT INTO "public"."dm_nhom_muc_tieu" ("ma", "ten", "tab", "mau_so_hieu", "thu_tu") VALUES ('KHONG_THUOC', 'Không thuộc mục tiêu then chốt', 'Không thuộc', NULL, 99);
+INSERT INTO "public"."dm_nhom_muc_tieu" ("ma", "ten", "tab", "mau_so_hieu", "thu_tu") VALUES ('KHONG_THUOC', 'Không thuộc mục tiêu then chốt', 'Không thuộc', NULL, 99)
+  ON CONFLICT ("ma") DO UPDATE SET "ten" = EXCLUDED."ten", "tab" = EXCLUDED."tab", "mau_so_hieu" = NULL, "thu_tu" = 99, "dang_dung" = true;
 INSERT INTO "public"."dm_muc_tieu" ("ma", "nhom", "ten", "ten_ngan", "mo_ta", "thu_tu", "trang_thai", "nguon_them")
 VALUES ('KHONG_THUOC', 'KHONG_THUOC', 'Không thuộc mục tiêu then chốt nào', 'Không thuộc mục tiêu then chốt',
         'Nhiệm vụ không phục vụ trực tiếp mục tiêu then chốt nào của danh mục', 1, 'DA_DOI_CHIEU', 'KHOI_TAO');
@@ -217,6 +218,10 @@ BEGIN
         RAISE EXCEPTION 'Không có nhiệm vụ % trong phạm vi đồng chí phân loại được (người giao, người nhập việc, lãnh đạo phụ trách).', v_ma USING ERRCODE = '42501';
       END IF;
       SELECT b."loai" INTO v_loai_vb FROM "public"."van_ban_giao_viec" b WHERE b."id" = v."van_ban_id";
+      -- Mục tiêu đang tính: gắn riêng nếu có, không thì theo văn bản (đọc trước mọi kiểm tra — dòng lỗi vẫn trả đúng phần đang có)
+      SELECT coalesce(array_agg(m."muc_tieu_ma" ORDER BY m."muc_tieu_ma"), '{}') INTO v_rieng FROM "public"."nhiem_vu_muc_tieu" m WHERE m."nhiem_vu_id" = v."id";
+      SELECT coalesce(array_agg(m."muc_tieu_ma" ORDER BY m."muc_tieu_ma"), '{}') INTO v_vb FROM "public"."van_ban_muc_tieu" m WHERE m."van_ban_id" = v."van_ban_id";
+      v_cu := CASE WHEN cardinality(v_rieng) > 0 THEN v_rieng ELSE v_vb END;
       -- Ngành, lĩnh vực: ô trống = giữ nguyên
       v_ng := coalesce(nullif(btrim(coalesce(x ->> 'nganh', '')), ''), v."nganh_ma");
       v_lv := nullif(btrim(coalesce(x ->> 'linh_vuc', '')), '');
@@ -236,10 +241,7 @@ BEGIN
         v_moi := "public"."kl_thay_doi_giao"(v, v_thay);   -- danh mục, lĩnh vực thuộc ngành, quy tắc 1400 — như Sửa thông tin giao
         v_doi := v_doi || ARRAY(SELECT k FROM jsonb_object_keys(v_moi) k ORDER BY k);
       END IF;
-      -- Mục tiêu: gắn riêng nếu có, không thì theo văn bản; ô trống = giữ nguyên
-      SELECT coalesce(array_agg(m."muc_tieu_ma" ORDER BY m."muc_tieu_ma"), '{}') INTO v_rieng FROM "public"."nhiem_vu_muc_tieu" m WHERE m."nhiem_vu_id" = v."id";
-      SELECT coalesce(array_agg(m."muc_tieu_ma" ORDER BY m."muc_tieu_ma"), '{}') INTO v_vb FROM "public"."van_ban_muc_tieu" m WHERE m."van_ban_id" = v."van_ban_id";
-      v_cu := CASE WHEN cardinality(v_rieng) > 0 THEN v_rieng ELSE v_vb END;
+      -- Mục tiêu: ô trống = giữ nguyên
       IF jsonb_typeof(x -> 'muc_tieu') = 'array' AND jsonb_array_length(x -> 'muc_tieu') > 0 THEN
         SELECT coalesce(array_agg(DISTINCT btrim(e) ORDER BY btrim(e)), '{}') INTO v_mt FROM jsonb_array_elements_text(x -> 'muc_tieu') e WHERE btrim(e) <> '';
         IF cardinality(v_mt) > 10 THEN RAISE EXCEPTION 'Mỗi việc gắn tối đa 10 mục tiêu then chốt.' USING ERRCODE = '22023'; END IF;
@@ -266,11 +268,11 @@ BEGIN
       END IF;
       IF "p_ap" AND cardinality(v_doi) > 0 THEN
         v_ly_dong := left(nullif(btrim(coalesce(x ->> 'ly_do', '')), ''), 300);
-        IF v_moi <> '{}'::jsonb THEN PERFORM "public"."kl_ap_thong_tin_giao"(v."id", v_moi); END IF;   -- không gửi tin (khác sua_thong_tin_giao)
-        IF 'muc_tieu' = ANY (v_doi) THEN
-          PERFORM "public"."gan_muc_tieu"(v."id", v_mt,
-            (SELECT jsonb_object_agg(m, jsonb_build_object('nguon', 'RA_SOAT', 'ly_do', left(coalesce(v_ly_dong, v_ly), 300))) FROM unnest(v_mt) m));
+        IF 'muc_tieu' = ANY (v_doi) THEN   -- trước khi đổi ngành: gan_muc_tieu kiểm quyền trên việc như lúc xem trước; nguồn RA_SOAT chỉ cho mục mới
+          PERFORM "public"."gan_muc_tieu"(v."id", v_mt, (SELECT jsonb_object_agg(m, jsonb_build_object('nguon', 'RA_SOAT', 'ly_do', left(coalesce(v_ly_dong, v_ly), 300)))
+            FROM unnest(v_mt) m WHERE NOT (m = ANY (v_cu))));
         END IF;
+        IF v_moi <> '{}'::jsonb THEN PERFORM "public"."kl_ap_thong_tin_giao"(v."id", v_moi); END IF;   -- không gửi tin (khác sua_thong_tin_giao)
         -- Một dòng diễn biến cho mỗi việc đổi (ngành – lĩnh vực và / hoặc mục tiêu), kèm lý do chung + lý do của dòng
         INSERT INTO "public"."lich_su" ("nhiem_vu_id", "nguoi_sua", "cot", "gia_tri_cu", "gia_tri_moi", "nguon")
         VALUES (v."id", v_me, 'ra_soat_phan_loai',

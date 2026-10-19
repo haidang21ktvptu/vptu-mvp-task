@@ -92,6 +92,8 @@ describe('Mục tiêu của dòng, khối 2–3 Tổng quan', () => {
     assert.ok(khopMucTieu(ROWS[1], KHONG_THUOC)); assert.ok(!khopMucTieu(ROWS[1], CHUA_GAN)); assert.ok(khopMucTieu(ROWS[2], CHUA_GAN));
     assert.equal(nhanLocMucTieu(KHONG_THUOC), 'Không thuộc mục tiêu then chốt');
     assert.equal(laTuDong(ROWS[3]), false, '"Không thuộc" do AI đề xuất không tính là gắn mục tiêu nhờ gợi ý');
+    const theoVb = (ma) => r({ muc_tieu: [ma], muc_tieu_rieng: [], muc_tieu_vb: [ma], muc_tieu_nguon: { [ma]: { nguon: 'AI', theo: 'vb' } } });
+    assert.equal(laTuDong(theoVb(KHONG_THUOC)), false, 'văn bản chỉ "Không thuộc" (AI) — không tính'); assert.equal(laTuDong(theoVb('DP_A')), true);
   });
   test('dsNhom không gồm nhóm "Không thuộc" (không là tab Tổng quan)', () => {
     const ds = dsNhom([{ ma: 'DOT_PHA', ten: 'Đột phá', tab: 'Đột phá', thu_tu: 1 }, { ma: KHONG_THUOC, ten: 'Không thuộc mục tiêu then chốt', tab: 'Không thuộc', thu_tu: 99 }]);
@@ -151,6 +153,15 @@ describe('Tệp rà soát phân loại', () => {
     assert.match(khopDong({ so: 2, ma: 'NV-1', nganh: 'VAN_PHONG_TINH_UY', linhVuc: 'Đầu tư' }, DM).loi[0], /lĩnh vực/);
     assert.match(khopDong({ so: 2, ma: 'NV-1', mucTieu: 'Không thuộc; NQ_57' }, DM).loi.join(' '), /không ghi cùng/);
     assert.match(khopDong({ so: 2, ma: 'NV-1', mucTieu: 'Nghị quyết 99' }, DM).loi[0], /không có trong danh mục/);
+  });
+  test('mục tiêu đã gộp → mục giữ lại; ưu tiên mục đang dùng; một tên khớp nhiều mục → lỗi của dòng', () => {
+    const dm = { ...DM, mucTieu: [...DM.mucTieu, { ma: 'NQ_57_CU', nhom: 'NQ_TW', ten: 'Nghị quyết 57 (cũ)', ten_ngan: 'NQ 57 cũ', so_hieu: '57-NQ/TW', dang_dung: false, gop_vao: 'NQ_57' },
+      { ma: 'CT_A', nhom: 'CT', ten: 'Chương trình chung', ten_ngan: 'Chương trình A', dang_dung: true }, { ma: 'CT_B', nhom: 'CT', ten: 'Chương trình chung', ten_ngan: 'Chương trình B', dang_dung: true },
+      { ma: 'CT_NGUNG', nhom: 'CT', ten: 'Chương trình ngừng', ten_ngan: 'Chương trình C', dang_dung: false }] };
+    const mt = (s) => khopDong({ so: 2, ma: 'NV-1', mucTieu: s }, dm);
+    assert.deepEqual(mt('NQ 57 cũ').muc_tieu, ['NQ_57'], 'mục đã gộp → mục giữ lại'); assert.deepEqual(mt('57-NQ/TW').muc_tieu, ['NQ_57'], 'cùng số hiệu sau khi theo gộp');
+    assert.match(mt('Chương trình chung').loi[0], /trùng tên nhiều mục/); assert.deepEqual(mt('Chương trình A').muc_tieu, ['CT_A']);
+    assert.deepEqual(mt('Chương trình C').muc_tieu, ['CT_NGUNG'], 'chỉ có mục ngừng dùng: gửi máy chủ quyết (việc đang gắn mục đó vẫn giữ được)');
   });
   test('khopBang: mã trùng chỉ lấy dòng đầu; dòng không ghi gì bỏ qua; tham số gửi DB', () => {
     const b = khopBang([{ so: 2, ma: 'NV-1', nganh: 'VAN_PHONG_TINH_UY' }, { so: 3, ma: 'NV-1', nganh: 'KINH_TE_TONG_HOP' }, { so: 4, ma: 'NV-2' }, { so: 5, ma: '', nganh: 'X' }], DM);
