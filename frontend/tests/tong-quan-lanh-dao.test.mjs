@@ -76,6 +76,10 @@ describe('khối lĩnh vực, điểm nghẽn, xếp hạng, quý', () => {
     assert.equal(theoKhoi(ROWS, K, { khoi: KHOI, nganh: NGANH }, 'dm').khoi[0].ma, 'XD', 'theo danh mục');
     assert.equal(t.chuaNganh, null, 'việc không ngành duy nhất đã hoàn thành ngoài kỳ');
     assert.deepEqual(DOAN.length, 7);
+    // v3.26.1: hoàn thành không xét được hạn (chưa có ngày hoàn thành — việc nhập Excel) ghi "Hoàn thành", màu xanh nhạt, ngay sau "đúng hạn"
+    assert.deepEqual(DOAN.slice(0, 3), [['dung', 'Hoàn thành đúng hạn', '--f-tot'], ['cdg', 'Hoàn thành', '--f-d'], ['cham', 'Hoàn thành chậm', '--f-tre']]);
+    assert.equal(doanCua(xong({ ngay_hoan_thanh: null, ket_qua: null }), K), 'cdg');   // chưa rõ ngày hoàn thành → theo ngày giao, trong kỳ
+    assert.equal(trangThaiCua(xong({ ngay_hoan_thanh: null, ket_qua: null })), 'cdg');
   });
   test('điểm nghẽn: Đỏ đặc biệt trước rồi trễ nhiều; nút cấp theo danh mục, cuối "chưa xác định"; xếp hạng theo đơn vị / Thường trực', () => {
     const ds = diemNghen(ROWS); assert.deepEqual(ids(ds), [2, 1]);

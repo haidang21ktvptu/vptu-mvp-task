@@ -11,9 +11,11 @@ const pad = (n) => String(n).padStart(2, '0');
 const cuoiThang = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
 const laDo = (r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r));
 
-// Đoạn trạng thái (khối 3) — mỗi việc vào đúng một đoạn: hoàn thành TRONG KỲ (đúng hạn / chậm / chưa đánh giá); đang mở: trong hạn (kể cả chờ xác
-// nhận minh chứng), Vàng, quá hạn (Đỏ + Đỏ đặc biệt), chưa có hạn (không áp dụng cảnh báo, thường xuyên). Hoàn thành ngoài kỳ → null (không tính).
-export const DOAN = [['dung', 'Hoàn thành đúng hạn', '--f-tot'], ['cham', 'Hoàn thành chậm', '--f-tre'], ['cdg', 'Hoàn thành, chưa đánh giá', '--vien-o'],
+// Đoạn trạng thái (khối 3) — mỗi việc vào đúng một đoạn: hoàn thành TRONG KỲ (đúng hạn / hoàn thành không xét được hạn / chậm); đang mở: trong hạn
+// (kể cả chờ xác nhận minh chứng), Vàng, quá hạn (Đỏ + Đỏ đặc biệt), chưa có hạn (không áp dụng cảnh báo, thường xuyên). Hoàn thành ngoài kỳ → null.
+// v3.26.1 (chủ dự án 19/10/2026): việc hoàn thành chưa có ngày hoàn thành / không có hạn (phần lớn nhập từ Excel thời chuyển tiếp) ghi "Hoàn thành",
+// màu xanh nhạt cạnh "Hoàn thành đúng hạn" — không còn "chưa đánh giá"; tỷ lệ đúng hạn vẫn chỉ tính việc có ngày hoàn thành.
+export const DOAN = [['dung', 'Hoàn thành đúng hạn', '--f-tot'], ['cdg', 'Hoàn thành', '--f-d'], ['cham', 'Hoàn thành chậm', '--f-tre'],
   ['th', 'Đang làm trong hạn', '--du-lieu'], ['vang', 'Sắp đến hạn (Vàng)', '--f-vang'], ['qh', 'Quá hạn (Đỏ, Đỏ đặc biệt)', '--f-do'],
   ['ch', 'Chưa có hạn, thường xuyên, chờ điều kiện', '--chu-mo']];
 export function doanCua(r, k) {

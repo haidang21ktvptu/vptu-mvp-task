@@ -22,7 +22,7 @@ export function doiNhanh(loc, k) {
   return { ...loc, nhanh: NHANH.map(([x]) => x).filter((x) => s.has(x)).join(',') };
 }
 
-export const TRANG_THAI = [['dung', 'Hoàn thành đúng hạn'], ['cham', 'Hoàn thành chậm'], ['cdg', 'Hoàn thành, chưa đánh giá'], ['th', 'Đang thực hiện trong hạn'],
+export const TRANG_THAI = [['dung', 'Hoàn thành đúng hạn'], ['cdg', 'Hoàn thành'], ['cham', 'Hoàn thành chậm'], ['th', 'Đang thực hiện trong hạn'],
   ['vang', 'Sắp đến hạn (Vàng)'], ['qh', 'Quá hạn (Đỏ, Đỏ đặc biệt)'], ['ch', 'Chưa có hạn, thường xuyên, chờ điều kiện']];
 export const trangThaiCua = (r) => (laXong(r) ? (r.ket_qua === 'DUNG_HAN' ? 'dung' : r.ket_qua === 'TRE' ? 'cham' : 'cdg')
   : !laMo(r) ? 'ch' : ({ vang: 'vang', do: 'qh', ddb: 'qh', khac: 'ch' }[mucMo(r)] || 'th'));
