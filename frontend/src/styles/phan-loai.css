@@ -46,4 +46,16 @@
 
   /* Tổng quan: số việc chưa phân loại */
   .tq-chua-pl { color: var(--do-chu); }
+
+  /* Kiểm staging 19/10. Thẻ Giao việc: nhãn ô mục tiêu (bắt buộc, có dấu *) cùng kiểu nhãn các ô khác của thẻ; thẻ hẹp (cửa sổ ~900–1280px, biểu mẫu
+     cạnh cột phải 380px) → các hàng 2–3 ô xếp một cột, ô Ngành / Lĩnh vực đọc đủ chữ. Màn Rà soát: 5 nút lọc xuống dòng, không tràn ngang. */
+  .gv-nv .mtg-dau .nhan { font-weight: 600; color: var(--navy); }
+  .gv-nganh-hang { grid-template-columns: repeat(2, minmax(0, 1fr)); }   /* hàng Ngành – Lĩnh vực: hai ô rộng bằng nhau, bỏ ô trống thứ ba */
+  .gv-nganh-hang > div:empty { display: none; }
+  .gv-nv { container-type: inline-size; container-name: gv-the; }
+  @container gv-the (max-width: 560px) {
+    .gv-nv .cot-2, .gv-nv .cot-3 { grid-template-columns: minmax(0, 1fr); }
+    .gv-nv .gv-truong .nhan { white-space: normal; overflow: visible; text-overflow: clip; }
+  }
+  .rs-loc .pham-vi { flex-wrap: wrap; max-width: 100%; }
 }

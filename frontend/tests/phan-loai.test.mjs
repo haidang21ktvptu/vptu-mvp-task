@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { taoBoChon, apGoiY, apAiDien, bat, tat, batMoi, hieuLuc, ketQua, laKhongThuoc, soDaChon, dsHien, LY_DO_AI_KHONG } from '../src/lib/kl/goi-y-muc-tieu.js';
 import { KHONG_THUOC, LV_KHONG_THUOC, mucTieuCua, mucTieuThat, khongThuocMucTieu, chuaGanMucTieu, khopMucTieu, nhanLocMucTieu, dsNhom, laTuDong, CHUA_GAN } from '../src/lib/kl/muc-tieu.js';
-import { theoKhoi, coGanMucTieu, phanLoaiMucTieu, chatLuongDuLieu, dongCuaKhoi } from '../src/lib/kl/tong-quan-lanh-dao.js';
+import { theoKhoi, coGanMucTieu, phanLoaiMucTieu, chatLuongDuLieu, dongCuaKhoi, thieuNganh, chuThieuNganh } from '../src/lib/kl/tong-quan-lanh-dao.js';
 import { khoangKy } from '../src/lib/kl/tong-quan.js';
 import { tuyChonMucTieu } from '../src/lib/kl/tq-bo-loc.js';
 import { docBangRaSoat, khopDong, khopBang, bangRaSoat, thamSo, tomTat, chuan } from '../src/lib/kl/ra-soat-tep.js';
@@ -113,6 +113,15 @@ describe('Mục tiêu của dòng, khối 2–3 Tổng quan', () => {
     assert.equal(t.khoi[0].tong, 2); assert.equal(t.khongThuoc.tong, 1); assert.equal(t.chuaNganh.tong, 1); assert.equal(t.toan.tong, 4);
     assert.deepEqual(dongCuaKhoi(ROWS, KHONG_THUOC, { nganh: NGANH, linhVuc: [] }).map((x) => x.id), [2]);
     assert.equal(theoKhoi([ROWS[0]], k, { khoi: KHOI, nganh: NGANH }).khongThuoc, null);
+  });
+  test('kiểm staging 19/10: số "chưa có ngành, lĩnh vực" của khối 3 = Chất lượng dữ liệu; dòng Chưa phân loại = phần chưa có ngành', () => {
+    const th = thieuNganh(ROWS); const k = khoangKy('nam', '2026-10-16');
+    assert.deepEqual(th, { tong: 2, khongNganh: 1, thieuLv: 1 });
+    assert.equal(th.tong, chatLuongDuLieu(ROWS).chuaNganh.length);
+    assert.equal(th.khongNganh, theoKhoi(ROWS, k, { khoi: KHOI, nganh: NGANH, linhVuc: [] }).chuaNganh.tong);
+    assert.equal(chuThieuNganh(th), '2 nhiệm vụ chưa có ngành, lĩnh vực (1 chưa có ngành, 1 chưa có lĩnh vực)');
+    assert.equal(chuThieuNganh(thieuNganh([ROWS[2]])), '1 nhiệm vụ chưa có ngành, lĩnh vực');
+    assert.equal(chuThieuNganh(thieuNganh([ROWS[3], ROWS[0]])), '1 nhiệm vụ đã có ngành nhưng chưa có lĩnh vực');
   });
   test('bộ lọc mục tiêu: có "Không thuộc" và "Chưa phân loại"', () => {
     const g = tuyChonMucTieu(ROWS, [{ ma: 'DP_A', nhom: 'DOT_PHA', ten_ngan: 'Đột phá A' }, { ma: KHONG_THUOC, nhom: KHONG_THUOC, ten_ngan: 'Không thuộc mục tiêu then chốt' }],

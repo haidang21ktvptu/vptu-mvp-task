@@ -7,7 +7,7 @@ import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { boSoThuTu } from '../../../lib/kl/nhan.js';
 import { NHOM_MUC_TIEU } from '../../../lib/kl/muc-tieu.js';
-import { DOAN, tenKy } from '../../../lib/kl/tong-quan-lanh-dao.js';
+import { DOAN, tenKy, chuThieuNganh } from '../../../lib/kl/tong-quan-lanh-dao.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { mo, dauKhoi, nhomNut, thuoc } from './template.js';
 
@@ -112,8 +112,9 @@ function hangKv(d, { ten, ct, lop = '', dau = '' }) {
     <button type="button" class="kv-so ten-bam" ${mo(ct)}><b>${d.tong}</b></button><span class="kv-so an-dt">${d.tyLe === null ? '—' : `${d.tyLe}%`}</span>
     <span class="kv-so an-dt">${qh(d.qh, { ...ct, d: 'qh' })}</span></div>`;
 }
-// v3.26: dòng "Không thuộc lĩnh vực trọng tâm" (ngành "Không thuộc") và "Chưa phân loại — cần rà soát" (chưa có ngành); o: { raSoat, soNganh, soKhoi }.
-export function linhVucHtml(t, mo2, sap, k, { raSoat = false, soNganh = 12, soKhoi = t.khoi.length } = {}) {
+// v3.26: dòng "Không thuộc lĩnh vực trọng tâm" (ngành "Không thuộc") và "Chưa phân loại — cần rà soát" (chưa có ngành); o: { raSoat, soNganh, soKhoi,
+// thieu: thieuNganh(rows) — câu dưới bảng cùng số với Chất lượng dữ liệu và ô "Chưa có ngành, lĩnh vực" của màn Rà soát }.
+export function linhVucHtml(t, mo2, sap, k, { raSoat = false, soNganh = 12, soKhoi = t.khoi.length, thieu = null } = {}) {
   const khoi = t.khoi.map((d) => {
     const moKhoi = mo2.has(d.ma);
     const dau = `<button type="button" class="kv-ten kv-mo" data-action="tqLvMo" data-ma="${d.ma}" aria-expanded="${String(moKhoi)}"><span class="mui" aria-hidden="true">${moKhoi ? '−' : '+'}</span><span>${escapeHtml(d.ten)}</span></button>`;
@@ -122,8 +123,8 @@ export function linhVucHtml(t, mo2, sap, k, { raSoat = false, soNganh = 12, soKh
     return hangKv(d, { ten: d.ten, ct: { t: 'khoi', ma: d.ma, ten: d.ten }, dau }) + con;
   }).join('');
   const khong = t.khongThuoc ? hangKv(t.khongThuoc, { ten: 'Không thuộc lĩnh vực trọng tâm', ct: { t: 'khoi', ma: 'KHONG_THUOC', ten: 'Không thuộc lĩnh vực trọng tâm' }, lop: 'chua' }) : '';
-  const chua = t.chuaNganh ? hangKv(t.chuaNganh, { ten: 'Chưa phân loại — cần rà soát', ct: { t: 'khoi', ma: 'CHUA', ten: 'Chưa phân loại ngành, lĩnh vực' }, lop: 'chua' }) : '';
-  const nutRs = t.chuaNganh && raSoat ? `<p class="chu-phu tq-chu-nho">${t.chuaNganh.tong} nhiệm vụ chưa có ngành, lĩnh vực — <button type="button" class="ten-bam lien-ket" data-action="moRaSoatMucTieu" data-che="nganh">Rà soát phân loại</button></p>` : '';
+  const chua = t.chuaNganh ? hangKv(t.chuaNganh, { ten: 'Chưa phân loại — cần rà soát', ct: { t: 'khoi', ma: 'CHUA', ten: 'Chưa có ngành — cần rà soát' }, lop: 'chua' }) : '';
+  const nutRs = thieu?.tong && raSoat ? `<p class="chu-phu tq-chu-nho" id="tqLvThieu">${chuThieuNganh(thieu)} — <button type="button" class="ten-bam lien-ket" data-action="moRaSoatMucTieu" data-che="nganh">Rà soát phân loại</button></p>` : '';
   const chuGiai = DOAN.map(([, ten, mau]) => `<span><i style="background:var(${mau})"></i>${ten}</span>`).join('');
   return `<article class="the-bd n12" id="tqLinhVuc">${dauKhoi(3, 'Thực hiện theo lĩnh vực trọng tâm', `Việc đang mở và việc hoàn thành ${k.trong}, gom ${soNganh} ngành của danh mục thành ${soKhoi} khối như bố cục báo cáo; bấm một khối để mở các ngành.`,
     nhomNut('tqLvSap', 'sap', [['qh', 'Nhiều quá hạn trước'], ['dm', 'Theo danh mục']], sap, 'Sắp xếp lĩnh vực'))}

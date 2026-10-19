@@ -38,11 +38,11 @@ export const layO = (khoa) => o.get(khoa) || null;
 export const boO = (khoa) => { o.delete(khoa); };
 export function datTrangThai(khoa, chu) { const x = o.get(khoa); if (!x) return; x.trangThai = chu || ''; const el = phan(goc(khoa), 'tt'); if (el) el.textContent = x.trangThai; }
 
-// Khung tĩnh (chèn một lần); phần đổi vẽ bằng veO.
-export function khungHtml(k, { nhan = 'Mục tiêu then chốt', chuThich = '' } = {}) {
+// Khung tĩnh (chèn một lần); phần đổi vẽ bằng veO. batBuoc (v3.26): thẻ Giao việc bắt buộc phân loại → dấu * như các ô bắt buộc khác.
+export function khungHtml(k, { nhan = 'Mục tiêu then chốt', chuThich = '', batBuoc = false } = {}) {
   const x = o.get(k); const nhomDung = dsNhom(danhMucKl().nhomMucTieu, dm()).filter((n) => n.dang_dung !== false);
-  return `<div class="mtg" data-mtg="${esc(k)}" role="group" aria-label="${esc(nhan)}">
-    <div class="mtg-dau"><span class="nhan">${esc(nhan)}</span>${chuThich ? `<small class="gv-chu-thich">${chuThich}</small>` : ''}</div>
+  return `<div class="mtg" data-mtg="${esc(k)}" role="group" aria-label="${esc(nhan)}${batBuoc ? ' (bắt buộc)' : ''}">
+    <div class="mtg-dau"><span class="nhan">${esc(nhan)}${batBuoc ? '<b class="gv-bb" aria-hidden="true">*</b>' : ''}</span>${chuThich ? `<small class="gv-chu-thich">${chuThich}</small>` : ''}</div>
     <div class="mtg-hang" data-mtg-phan="chon"></div>
     <div class="mtg-hang mtg-gy-hang" data-mtg-phan="goi-y"></div>
     <div class="mtg-nut"><label class="mt-o mtg-khong"><input type="checkbox" data-mtg-khong="${esc(k)}"><span>Không thuộc mục tiêu then chốt nào</span></label>

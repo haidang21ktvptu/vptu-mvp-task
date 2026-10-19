@@ -32,6 +32,7 @@ const giaTri = (k, cot) => String((k === KHOA_1 ? $(O1[cot]) : theCua(k)?.queryS
 // Mục tiêu của văn bản mà các thẻ tính theo: văn bản mới → ô của khối 1; văn bản có sẵn → DB; Thường trực + văn bản mới → không có.
 const vbCuaThe = () => (hienVb() ? hieuLuc(layO(KHOA_VB)?.tt || taoBoChon()) : laMoiVb() ? [] : gv.vbDb);
 const CHU_THE = 'hệ thống tự nhận diện theo văn bản, nội dung, ngành, lĩnh vực — mục có căn cứ chắc được tích sẵn; bấm gợi ý để thêm; việc không phục vụ mục tiêu nào tích "Không thuộc mục tiêu then chốt nào"';
+const oThe = () => ({ chuThich: CHU_THE, batBuoc: !laA0() });   // v3.26: ô mục tiêu của thẻ bắt buộc (trừ Thường trực giao) → dấu *
 // v3.26: lựa chọn mục tiêu của một thẻ đổi (người dùng, gợi ý về, văn bản đổi, trợ lý AI điền) → index.js vẽ lại "Còn thiếu" (mục tiêu bắt buộc — phan-loai.js).
 let khiDoiNgoai = () => {};
 export const khiMucTieuDoi = (fn) => { khiDoiNgoai = typeof fn === 'function' ? fn : () => {}; };
@@ -78,7 +79,7 @@ function moO(k, el, opts) {
   veO(k);
 }
 // Thẻ 2…20 (nhieu-the.js taoThe / xoá thẻ).
-export function ganTheMucTieu(the) { if (!gv.coDm) return; const k = khoaThe(the); moO(k, the.querySelector('[data-mtg-cho]'), { chuThich: CHU_THE }); henGoiY(k, 60); }
+export function ganTheMucTieu(the) { if (!gv.coDm) return; const k = khoaThe(the); moO(k, the.querySelector('[data-mtg-cho]'), oThe()); henGoiY(k, 60); }
 export function boTheMucTieu(the) { const k = khoaThe(the); clearTimeout(gv.hen.get(k)); boO(k); gv.khoa.delete(k); }
 
 const chipXem = (ma) => { const m = timMucTieu(danhMucKl().mucTieu, ma); return `<span class="mtg-chip" data-nguon="VAN_BAN" title="${escapeHtml(m?.ten || ma)}"><span class="mtg-ten">${escapeHtml(m?.ten_ngan || ma)}</span></span>`; };
@@ -111,11 +112,11 @@ export function datLaiMucTieuGv() {
   if ($('gvMtVb')) $('gvMtVb').innerHTML = '';
   if ($('gvMtg1')) $('gvMtg1').innerHTML = '';
   if (!gv.coDm) return;
-  moO(KHOA_1, $('gvMtg1'), { chuThich: CHU_THE });
+  moO(KHOA_1, $('gvMtg1'), oThe());
   vanBanDoiMucTieu();
 }
 // "Giao, nhập tiếp": thẻ 1 về trống (văn bản giữ nguyên — đọc lại mục tiêu của văn bản vừa tạo).
-export function datLaiTheMot() { if (!gv.coDm) return; boO(KHOA_1); gv.khoa.delete(KHOA_1); moO(KHOA_1, $('gvMtg1'), { chuThich: CHU_THE }); vanBanDoiMucTieu(); }
+export function datLaiTheMot() { if (!gv.coDm) return; boO(KHOA_1); gv.khoa.delete(KHOA_1); moO(KHOA_1, $('gvMtg1'), oThe()); vanBanDoiMucTieu(); }
 
 // Ô nhập đổi (gắn một lần ở biểu mẫu): văn bản mới (số hiệu, trích yếu) → ô văn bản + mọi thẻ; ô của một thẻ → thẻ đó.
 export function ganSuKienMucTieu() {

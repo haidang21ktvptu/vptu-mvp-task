@@ -52,7 +52,7 @@ export function theHtml(k, i) {
       ${truong('han', `Hạn hoàn thành<b class="gv-bb gvl-bb-han" aria-hidden="true">*</b>`, `<input type="date" id="${id('han')}" class="o-nhap" data-cot="han">`)}
       <div></div>
     </div>
-    <div class="cot-3">
+    <div class="cot-3 gv-nganh-hang">
       ${truong('nganh', 'Ngành<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('nganh', 'Ngành'))}
       ${truong('linh_vuc', 'Lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('linh_vuc', 'Lĩnh vực'), 'theo ngành đã chọn')}
       <div></div>

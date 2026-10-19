@@ -27,6 +27,9 @@ rồi báo **đồng ý** mới sang Bước 2.
   giả của staging); ngăn chi tiết việc vừa rà soát có dòng diễn biến kèm lý do, không có tin nhắn mới.
 - `demo_a0` — Giao việc như cũ (không bắt buộc phân loại); Kết luận BTV vẫn đòi ngành, lĩnh vực.
 - Điện thoại (≤ 600px), cửa sổ 1024px, bốn chế độ màu (Thanh lịch / Trang nghiêm × sáng / tối).
+- Claude đã kiểm lượt 1 ngày 19/10 (giao NV-9023 "Không thuộc"; rà soát bằng tệp NV-5007, NV-4598 — dữ liệu giả): đạt; 5 điểm sửa ở PR
+  `fix/v3.26-sau-kiem-staging` (khối 3 và Chất lượng dữ liệu cùng số "chưa có ngành, lĩnh vực", dấu * ô mục tiêu, thẻ hẹp một cột, nút lọc Rà soát
+  xuống dòng, diễn biến hiện tên ngành / lĩnh vực) — kiểm lại bằng `demo_cvp` sau khi PR lên staging.
 
 ## Bước 2 — Phát hành (quy tắc 12 + `docs/kien-truc.md` mục 7)
 1. Chủ dự án gửi trong phiên: **"Đồng ý áp migration 0116 lên production"**.
