@@ -45,10 +45,11 @@ export async function moApp(browser, role, testInfo) {
   await expect(page.locator('#mainHeader')).toBeVisible(NAP);
   return page;
 }
-// Một phiên cho một đoạn việc: mở, chạy fn(page), ĐÓNG ngay kể cả khi lỗi — spec không mở quá 2 phiên cùng lúc (docs/KIEM-THU.md, CI #97).
+// Một phiên cho một đoạn việc: mở, chạy fn(page), ĐÓNG ngay kể cả khi lỗi — spec không mở quá 2 phiên cùng lúc (docs/KIEM-THU.md, CI #97). Lỗi khi
+// đóng (bài đã hết giờ: "Test ended") không che lỗi thật của fn — trước đây báo cáo chỉ còn "browserContext.close", mất dòng đang chờ (CI PR #152).
 export async function voiPhien(browser, role, testInfo, fn) {
   const page = await moApp(browser, role, testInfo);
-  try { return await fn(page); } finally { await page.context().close(); }
+  try { return await fn(page); } finally { await page.context().close().catch(() => {}); }
 }
 // Đợt D v3.20 (0090): nộp minh chứng hợp lệ là hoàn thành; xem lại (tuỳ chọn) ở khối Minh chứng của ngăn chi tiết (đã mở bằng moViec):
 // Đánh giá chất lượng → chọn mức (nút Lưu mờ tới khi chọn) → Lưu đánh giá; Trả lại → lý do → Trả lại minh chứng; minh chứng nộp trước v3.20 còn
