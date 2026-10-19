@@ -56,6 +56,10 @@ Gửi nhóm cán bộ (chủ dự án sửa lời tuỳ ý):
    gửi Claude → Claude phân loại, gửi lại → nhập như bước 2–4.
 6. Kiểm: Nhiệm vụ → ô Tổng, không lọc → **Xuất theo mẫu nhập** → gửi Claude đối chiếu 100% với tệp đã duyệt; Tổng quan khối 2–3 không còn "Chưa phân loại".
    Xong thì Claude xoá các tệp dữ liệu thật khỏi phiên làm việc.
+- **Kết quả 19/10/2026 — xong.** Lượt 1: chủ dự án nhập tệp 210 việc. Lượt 2 (chủ dự án yêu cầu rà kỹ mục tiêu then chốt, kể cả 130 việc "Không thuộc", và
+  duyệt danh sách; Claude rà hai lượt độc lập, thao tác bằng `qt_vptu` trên Chrome của chủ dự án): thêm 10 nghị quyết Trung ương năm 2026 vào danh mục, đổi
+  mục tiêu 24 việc → khối 2: 94 gắn / 116 Không thuộc / 0 chưa phân loại. Kiểm 210/210 việc trên màn Rà soát (ngành – lĩnh vực và mục tiêu) thay cho bước xuất
+  tệp; tệp dữ liệu thật đã xoá. Còn 4 việc hiện "Có gợi ý chưa xử lý" (nhắc số hiệu nghị quyết cũ — xem `docs/TRANG-THAI.md`).
 
 ## Sau phát hành
 - Theo dõi khối 2–3 vài ngày đầu: việc mới có "Chưa phân loại" thì xem nguồn (nhập Excel không ghi cột, Thường trực giao) — phân loại ở màn Rà soát.
