@@ -8,7 +8,7 @@
 // trong dữ liệu không còn nhãn cam "Chậm nộp minh chứng". Dữ liệu theo khoá; cờ khôi phục.
 // Một phiên mở mỗi lúc (docs/KIEM-THU.md — CI #97: 7 phiên song song + realtime làm staging nghẽn): các vai chạy TUẦN TỰ, mở–kiểm–đóng.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec } from './lib/app.js';
+import { NAP, moGiaoViec, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, taoViec, datCo, voiPhien } from './lib/pr2b.mjs';
 
@@ -92,6 +92,7 @@ test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (kh
       await p.locator('#klThSoKL').fill(`${khoa}-GV`); await p.locator('#klThNgayBH').fill(cong(homNay(), -1));
       await p.locator('#klThNoiDung').fill(`${khoa} giao thật A2`); await p.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await p.locator('#klThSanPham').selectOption('BAO_CAO');
+      await chonPhanLoai(p);   // v3.26: ngành, lĩnh vực, mục tiêu then chốt bắt buộc — "Không thuộc"
       await expect(conThieu(p)).toHaveText('Còn thiếu: hạn hoàn thành', NAP); await expect(p.locator('#klThLuu')).toBeDisabled();
       await p.locator('#klThHan').fill(H);
       await expect(conThieu(p)).toHaveText('', NAP);

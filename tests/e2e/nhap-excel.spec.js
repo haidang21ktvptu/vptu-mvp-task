@@ -7,7 +7,7 @@
 // demo_e2e_cv / demo_e2e_tp — realtime.spec đếm huy hiệu tin của các tài khoản này). Dữ liệu theo khoá riêng, tự dọn trước và sau.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { moViec, nav, NAP } from './lib/app.js';
+import { moViec, nav, NAP, chonPhanLoai } from './lib/app.js';
 import { storageStatePath } from './lib/roles.mjs';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, datCo, voiPhien } from './lib/pr2b.mjs';
@@ -109,6 +109,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#klThSanPham')).toHaveValue('BAO_CAO');
       await page.locator('#klThNganh').selectOption('THAM_MUU_TONG_HOP');
       if (await page.locator('#klThLinhVuc').inputValue() !== 'LV01_THAM_MUU_TONG_HOP') await page.locator('#klThLinhVuc').selectOption('LV01_THAM_MUU_TONG_HOP');
+      await chonPhanLoai(page);   // v3.26: mục tiêu then chốt bắt buộc ("Không thuộc")
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP);
       await page.locator('#klThLuu').click();
       await expect(toast(page)).toContainText('Đã giao việc NV-', NAP);

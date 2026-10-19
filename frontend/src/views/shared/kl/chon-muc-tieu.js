@@ -3,13 +3,14 @@
 // { khiDoi, coThem }) → chèn khungHtml(khoa) vào trang → veO(khoa) mỗi khi trạng thái đổi (gợi ý về, văn bản đổi). Mục đang tích: chip tên ngắn + nguồn
 // (theo văn bản, tích sẵn, gợi ý, AI…; rê chuột xem căn cứ) + nút ×; gợi ý: nút "+ tên" một bấm; "Chọn thêm từ danh mục" (tìm không dấu, theo nhóm);
 // "Thêm mục tiêu mới" (cán bộ nhập liệu — them_muc_tieu 0108, dùng được ngay, chặn trùng ở DB). Phím Enter trong ô của khối không gửi biểu mẫu chứa nó.
+// v3.26 (0116): ô "Không thuộc mục tiêu then chốt nào" — tích thì bỏ mọi mục đang chọn; chọn một mục thì ô tự bỏ (lib/kl/goi-y-muc-tieu.js).
 import { escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError, notifySuccess } from '../../../components/toast.js';
 import { danhMucKl, loadDanhMucKl, damBaoMucTieu } from '../../../lib/kl/du-lieu.js';
-import { dsNhom, timMucTieu, mucTieuTheoNhom } from '../../../lib/kl/muc-tieu.js';
-import { bat, tat, batMoi, dsHien, hieuLuc, moTaLyDo, NHAN_NGUON, TOI_DA } from '../../../lib/kl/goi-y-muc-tieu.js';
+import { dsNhom, timMucTieu, mucTieuTheoNhom, KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
+import { bat, tat, batMoi, dsHien, hieuLuc, laKhongThuoc, moTaLyDo, NHAN_NGUON, TOI_DA } from '../../../lib/kl/goi-y-muc-tieu.js';
 import { themMucTieu } from '../../../lib/kl/muc-tieu-db.js';
 import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
 import { boDau } from '../../../lib/tim-chon.js';
@@ -44,7 +45,8 @@ export function khungHtml(k, { nhan = 'Mục tiêu then chốt', chuThich = '' }
     <div class="mtg-dau"><span class="nhan">${esc(nhan)}</span>${chuThich ? `<small class="gv-chu-thich">${chuThich}</small>` : ''}</div>
     <div class="mtg-hang" data-mtg-phan="chon"></div>
     <div class="mtg-hang mtg-gy-hang" data-mtg-phan="goi-y"></div>
-    <div class="mtg-nut"><button type="button" class="nut nho" data-action="mtgMoDm" data-mtg="${esc(k)}" aria-expanded="false">Chọn thêm từ danh mục</button>
+    <div class="mtg-nut"><label class="mt-o mtg-khong"><input type="checkbox" data-mtg-khong="${esc(k)}"><span>Không thuộc mục tiêu then chốt nào</span></label>
+      <button type="button" class="nut nho" data-action="mtgMoDm" data-mtg="${esc(k)}" aria-expanded="false">Chọn thêm từ danh mục</button>
       ${x?.coThem ? `<button type="button" class="nut nho" data-action="mtgMoThem" data-mtg="${esc(k)}" aria-expanded="false">+ Thêm mục tiêu mới</button>` : ''}
       <span class="mtg-tt chu-phu" data-mtg-phan="tt" aria-live="polite"></span></div>
     <div class="mtg-dm" data-mtg-phan="dm" hidden><input type="search" class="o-nhap mtg-tim" data-mtg-tim="${esc(k)}" placeholder="Tìm theo tên, số hiệu (không cần dấu)…" autocomplete="off" aria-label="Tìm mục tiêu trong danh mục">
@@ -96,8 +98,13 @@ export function veO(k) {
   const h = dsHien(x.tt);
   const moiChon = h.moi.filter((m) => m.chon); const moiGoiY = h.moi.filter((m) => !m.chon);
   const ghiChu = x.tt.vb.length && !hieuLuc(x.tt).length && !moiChon.length ? '<small class="chu-phu">Không chọn mục nào: việc tính theo mục tiêu của văn bản.</small>' : '';
-  phan(el, 'chon').innerHTML = h.daChon.length || moiChon.length ? `${h.daChon.map((it) => chip(k, it)).join('')}${moiChon.map((m) => chipMoi(k, m)).join('')}${ghiChu}`
-    : `<span class="chu-phu mtg-trong">Chưa có mục tiêu — bấm gợi ý hoặc chọn từ danh mục (không bắt buộc).</span>${ghiChu}`;
+  const khong = laKhongThuoc(x.tt); const chon = h.daChon.filter((it) => it.ma !== KHONG_THUOC);
+  const kt = h.daChon.find((it) => it.ma === KHONG_THUOC);
+  const nguonKt = kt?.theoVb ? ' — theo văn bản' : kt?.nguon === 'AI' ? ' — trợ lý AI đề xuất, đồng chí kiểm tra' : '';
+  phan(el, 'chon').innerHTML = khong ? `<span class="mtg-chip" data-nguon="KHONG" title="${esc(kt?.ly_do || '')}"><span class="mtg-ten">Không thuộc mục tiêu then chốt nào</span><small class="mtg-nguon">${esc(nguonKt.replace(' — ', ''))}</small></span>`
+    : chon.length || moiChon.length ? `${chon.map((it) => chip(k, it)).join('')}${moiChon.map((m) => chipMoi(k, m)).join('')}${ghiChu}`
+      : `<span class="chu-phu mtg-trong">Chưa phân loại — bấm gợi ý, chọn từ danh mục hoặc tích "Không thuộc mục tiêu then chốt nào".</span>${ghiChu}`;
+  const oKt = el.querySelector('[data-mtg-khong]'); if (oKt) oKt.checked = khong;
   const gy = [...h.goiY.map((g) => nutGoiY(k, g)), ...moiGoiY.map((m) => nutMoiGoiY(k, m))];
   phan(el, 'goi-y').innerHTML = gy.length ? `<span class="mtg-gy-nhan">Gợi ý:</span>${gy.join('')}` : '';
   phan(el, 'goi-y').hidden = !gy.length;
@@ -149,6 +156,8 @@ function ganMot() {
   document.addEventListener('change', (e) => {
     if (!e.target?.closest?.('.mtg')) return;
     e.stopPropagation();
+    const kk = e.target.dataset?.mtgKhong;   // ô "Không thuộc mục tiêu then chốt nào"
+    if (kk && o.get(kk)) { if (e.target.checked) bat(o.get(kk).tt, KHONG_THUOC, { nguon: 'CHON' }); else tat(o.get(kk).tt, KHONG_THUOC); doi(kk); goc(kk)?.querySelector('[data-mtg-khong]')?.focus({ preventScroll: true }); return; }
     const k = e.target.dataset?.mtgChon; const x = k && o.get(k); if (!x) return;
     if (e.target.checked) { if (!bat(x.tt, e.target.value, { nguon: 'CHON' })) { e.target.checked = false; qua(); return; } } else tat(x.tt, e.target.value);
     const giu = e.target.value; doi(k); goc(k)?.querySelector(`[data-mtg-chon][value="${CSS.escape(giu)}"]`)?.focus({ preventScroll: true });

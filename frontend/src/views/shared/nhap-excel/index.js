@@ -94,7 +94,7 @@ const duKienCua = (x) => (nx.tuGanMt && canTuGan(x) ? nx.duKien.get(khoaGoiY(dau
 const chuDong = (x) => { const d = duKienCua(x); return d && d !== 'loi' ? chuDuKien(d, (m) => tenMucTieu(danhMucKl().mucTieu, m)) : ''; };
 function tomTuGan() {
   const ds = nx.dg.filter(canTuGan); const xong = ds.filter((x) => nx.duKien.has(khoaGoiY(dauVaoGoiY(x))));
-  if (!nx.tuGanMt || !ds.length) return nx.tuGanMt ? '' : 'Đã tắt: dòng không ghi mục tiêu sẽ không được gắn (gắn sau ở trang Rà soát mục tiêu then chốt).';
+  if (!nx.tuGanMt || !ds.length) return nx.tuGanMt ? '' : 'Đã tắt: dòng không ghi mục tiêu sẽ không được gắn (gắn sau ở trang Rà soát phân loại).';
   const co = xong.filter((x) => chuDong(x)).length;
   return `${ds.length} dòng tạo việc chưa ghi mục tiêu — ${xong.length < ds.length ? `đang nhận diện ${xong.length}/${ds.length}…` : `dự kiến ${co} dòng được gắn`}; hệ thống nhận diện lại khi nhập (có thêm mục tiêu của văn bản), dòng không khớp quy tắc thì để trống.`;
 }

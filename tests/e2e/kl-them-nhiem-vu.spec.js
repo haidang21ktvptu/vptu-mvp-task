@@ -7,7 +7,7 @@ import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs, nav, moGiaoViec, moViec, mauToken, NAP } from './lib/app.js';
+import { contextAs, nav, moGiaoViec, moViec, mauToken, NAP, chonPhanLoai } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
@@ -82,6 +82,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(page.locator('#klThNgayNhan')).toHaveValue(homNayVN());   // ngày nhận mặc định hôm nay VN
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
     await page.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+    await chonPhanLoai(page);   // v3.26: mục tiêu then chốt bắt buộc ("Không thuộc")
     await page.locator('#klThHan').fill('2026-12-31');
     await page.locator('#klThThayMat').selectOption(TRUONG_PHONG_ID);          // thay mặt Trưởng phòng Tổng hợp (cùng phòng Owner)
     // PR-2b (3.4/F): người theo dõi lọc theo phạm vi Trưởng phòng được thay mặt — người giao (ngoài phòng) rời danh sách, mặc định = Trưởng phòng

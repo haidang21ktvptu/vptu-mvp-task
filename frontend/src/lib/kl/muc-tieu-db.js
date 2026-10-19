@@ -103,6 +103,13 @@ export async function ganMucTieuHangLoat(ds) {
   return kq || { ok: 0, loi: [] };
 }
 
+// Rà soát phân loại từ tệp (0116): ds = [{ ma, nganh, linh_vuc, muc_tieu, ly_do }] (≤ 200); ap = false: xem trước (không ghi). → mảng kết quả từng dòng.
+// Ghi xong: bộ nhớ gắn mục tiêu cũ không còn đúng — lần đọc sau (loadGanMucTieu) lấy lại.
+export async function raSoatPhanLoai(ds, lyDo, ap = false) {
+  const kq = await goi('ra_soat_phan_loai', { p: ds, p_ly_do: lyDo || '', p_ap: Boolean(ap) });
+  if (ap) soLanGhi++;
+  return Array.isArray(kq) ? kq : [];
+}
 // Bộ nhận diện (0110). p = { van_ban_id, so_hieu_van_ban, trich_yeu, noi_dung, san_pham_mo_ta, nganh, linh_vuc } → { goi_y, so_hieu_moi }.
 // Project chưa áp 0110 → kết quả rỗng (không chặn giao việc).
 export async function goiYMucTieu(p) {

@@ -9,7 +9,7 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { loadDanhMucKl, loadKlRows, danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { goiYMucTieuViec, ganVaoDong } from '../../../lib/kl/muc-tieu-db.js';
-import { dsNhom, mucTieuCua } from '../../../lib/kl/muc-tieu.js';
+import { dsNhom, mucTieuCua, khongThuocMucTieu, laKhongThuocNganh } from '../../../lib/kl/muc-tieu.js';
 import { apGoiY, sauKhiLuu } from '../../../lib/kl/goi-y-muc-tieu.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { laTangGiao } from '../../../lib/kl/sua-tang.js';
@@ -23,6 +23,8 @@ import { raSoatTemplate } from './template.js';
 import { dongHtml, capNhatDong, khoaO } from './dong.js';
 import { taoTrangThai, choXuLy, nhomGoiY, coThayDoi } from './ke-hoach.js';
 import { luuViec, chuKetQua } from './luu.js';
+import { ganTep } from './nhap-tep.js';
+import { loadGanMucTieu } from '../../../lib/kl/muc-tieu-db.js';
 
 const MOI_TRANG = 50; const PHAN = 200; const PHONG_KHAC = '__khac__';
 const rs = { rows: [], tt: new Map(), kq: new Map(), thaoTac: new Set(), daLuu: new Set(), loc: { che: 'chua', phong: '', vb: '', nhom: '', tim: '' },
@@ -45,7 +47,10 @@ function khopPhu(r) {
   if (l.tim) { const q = boDau(l.tim.trim()); if (q && ![r.ma, r.noi_dung, r.so_ket_luan].some((s) => boDau(s || '').includes(q))) return false; }
   return true;
 }
-const theoChe = (che, r) => (che === 'chua' ? mucTieuCua(r).length === 0 : che === 'cho' ? coGoiY(r.id) && choXuLy(r, rs.tt.get(r.id)) : true);
+// v3.26: chua = chưa phân loại mục tiêu (kể cả "Không thuộc" là đã phân loại); nganh = chưa có ngành / lĩnh vực; khong = mục tiêu hoặc ngành "Không thuộc".
+const CHE = { chua: (r) => mucTieuCua(r).length === 0, cho: (r) => coGoiY(r.id) && choXuLy(r, rs.tt.get(r.id)), nganh: (r) => !r.nganh_ma || !r.linh_vuc_ma,
+  khong: (r) => khongThuocMucTieu(r) || laKhongThuocNganh(r) };
+const theoChe = (che, r) => (CHE[che] ? CHE[che](r) : true);
 const dsLoc = () => rs.rows.filter((r) => khopPhu(r) && theoChe(rs.loc.che, r));
 const dsHangLoat = () => dsLoc().filter((r) => coGoiY(r.id) && coThayDoi(r, rs.tt.get(r.id)));
 
@@ -64,7 +69,7 @@ function veLoc() {
 }
 function veDem() {
   const ds = rs.rows.filter(khopPhu);
-  setText('rsDem-chua', ds.filter((r) => theoChe('chua', r)).length); setText('rsDem-tat', ds.length);
+  ['chua', 'nganh', 'khong'].forEach((c) => setText(`rsDem-${c}`, ds.filter((r) => theoChe(c, r)).length)); setText('rsDem-tat', ds.length);
   const xong = rs.rows.filter((r) => rs.kq.has(r.id)).length;
   setText('rsDem-cho', xong < rs.rows.length && !ds.filter((r) => theoChe('cho', r)).length ? '…' : ds.filter((r) => theoChe('cho', r)).length);
   document.querySelectorAll('#rsChe button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.che === rs.loc.che)));
@@ -80,7 +85,8 @@ function veHangLoat() {
   $('rsNutHangLoat').disabled = !n || rs.dangLuu;
 }
 const chuTrong = () => (!rs.rows.length ? 'Không có nhiệm vụ nào đồng chí gắn được mục tiêu then chốt.'
-  : rs.loc.che === 'chua' && !rs.loc.phong && !rs.loc.vb && !rs.loc.nhom && !rs.loc.tim ? 'Mọi việc trong phạm vi đã có mục tiêu then chốt.'
+  : rs.loc.che === 'chua' && !rs.loc.phong && !rs.loc.vb && !rs.loc.nhom && !rs.loc.tim ? 'Mọi việc trong phạm vi đã phân loại mục tiêu then chốt (gắn mục tiêu hoặc "Không thuộc").'
+    : rs.loc.che === 'nganh' && !rs.loc.phong && !rs.loc.vb && !rs.loc.nhom && !rs.loc.tim ? 'Mọi việc trong phạm vi đã có ngành, lĩnh vực.'
     : rs.loc.che === 'cho' && rs.rows.some((r) => !rs.kq.has(r.id)) ? 'Đang nhận diện gợi ý — danh sách sẽ hiện dần.' : 'Không có việc nào phù hợp điều kiện lọc.');
 
 function ve() {
@@ -169,7 +175,7 @@ async function nap() {
 
 export function moRaSoatMucTieu(ds = {}) {
   showSection('viewRaSoatMucTieu'); setActiveNav('navKl');
-  rs.loc = { che: ds.vb ? 'tat' : 'chua', phong: '', vb: ds.vb || '', nhom: '', tim: '' }; rs.trang = 0; an();
+  rs.loc = { che: ds.vb ? 'tat' : CHE[ds.che] ? ds.che : 'chua', phong: '', vb: ds.vb || '', nhom: '', tim: '' }; rs.trang = 0; an();
   return nap();
 }
 const an = () => show('rsXacNhan', false);
@@ -200,7 +206,8 @@ function moXacNhan() {
 
 let henTim = null;
 export function registerRaSoatMucTieu() {
-  $('viewRaSoatMucTieu').innerHTML = raSoatTemplate;
+  $('viewRaSoatMucTieu').innerHTML = raSoatTemplate();
+  ganTep({ dsLoc, sauApDung: async () => { await loadGanMucTieu().catch(() => null); await nap(); } });
   [['rsPhong', 'phong'], ['rsVanBan', 'vb'], ['rsNhom', 'nhom']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { rs.loc[k] = e.target.value; rs.trang = 0; an(); ve(); }));
   $('rsTim').addEventListener('input', (e) => { clearTimeout(henTim); henTim = setTimeout(() => { rs.loc.tim = e.target.value; rs.trang = 0; ve(); }, 250); });
   document.addEventListener('viec-da-ghi', (e) => { if (sectionDangHien('viewRaSoatMucTieu')) lamMoiDong(e.detail); });

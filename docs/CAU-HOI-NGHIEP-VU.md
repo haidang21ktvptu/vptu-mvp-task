@@ -273,3 +273,16 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 | J-4 | Rời A1 khi còn phân công phụ trách / kiêm nhiệm hiệu lực? | **Chặn** — kết thúc ở bảng Phân công trước. Cùng tinh thần (0069, sau review): còn là lãnh đạo phụ trách đơn vị ngoài (`dm_don_vi`) cũng chặn — đổi lãnh đạo phụ trách trước. | RLS `kl-0068-sua-tai-khoan` |
 | J-5 | Sang A0 khi còn cờ quản trị KL / thư ký Thường trực? | **Chặn** — thu cờ trước. | RLS `kl-0068-sua-tai-khoan` |
 | J-6 | ~~Mở~~ **Đã quyết 8/10/2026:** việc đang mở có người theo dõi là Trưởng phòng cũ (lưu cố định lúc giao) — khi người đó đổi vai/phòng, có chuyển sang Trưởng phòng mới không? | **Có, chuyển hàng loạt có lý do** (v3.20 Đợt D, migration 0092 `admin_chuyen_theo_doi`): Quản trị → Tài khoản → "Chuyển việc theo dõi" (quản trị hệ thống hoặc Chánh Văn phòng) — xem trước số việc đang mở, lý do bắt buộc, việc đã hoàn thành giữ nguyên, lịch sử từng việc + tin cho người nhận. SPEC QT-8. | Chủ dự án duyệt kế hoạch Đợt D (8/10/2026) |
+
+## Nhóm K — Quyết định 19/10/2026: phân loại nhiệm vụ cho Tổng quan khối 2–3 (v3.26, migration 0116)
+
+Chủ dự án (19/10/2026): khối 2 "Thực hiện các mục tiêu then chốt", khối 3 "Thực hiện theo lĩnh vực trọng tâm" phải hiển thị đúng; khung Giao việc nhắc người giao điền; nhiệm vụ không thuộc lĩnh vực nào thì chọn "Không thuộc". Duyệt kế hoạch cùng ngày.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| K-1 | Ghi "không thuộc" thế nào? | Mục **cố định** của danh mục (không thêm cột): ngành "Không thuộc ngành, lĩnh vực nào" (lĩnh vực `LV99_KHONG_THUOC`, khối "Không thuộc lĩnh vực trọng tâm"), mục tiêu "Không thuộc mục tiêu then chốt". Khoá sửa, xoá, gộp, kiêm nhiệm, quy tắc; mục tiêu "Không thuộc" không chọn cùng mục khác. | RLS `kl-0116` (A4, B2) |
+| K-2 | Bắt buộc với ai, loại văn bản nào? | Biểu mẫu Giao việc: **mọi loại văn bản, mọi vai trừ Thường trực** — ngành + lĩnh vực (hoặc "Không thuộc") và mục tiêu then chốt (hoặc "Không thuộc"). Kết luận BTV / Thông báo Thường trực giữ quy tắc 1400: chỉ ngành, lĩnh vực cụ thể (DB chặn "Không thuộc" ở mọi đường ghi). | RLS `kl-0116` (A3); e2e `phan-loai` |
+| K-3 | Việc tạo ngoài biểu mẫu? | Không chặn (nhập Excel, API, Thường trực giao) — hiện "Chưa phân loại — cần rà soát" ở Tổng quan, màn Rà soát. | unit `phan-loai` |
+| K-4 | Sửa phân loại việc đã hoàn thành? | **Được, chỉ qua màn Rà soát (nhập tệp)**: chỉ ngành, lĩnh vực, mục tiêu; người được sửa như gắn mục tiêu (người giao, người nhập việc, lãnh đạo phụ trách, toàn quyền); bắt buộc lý do, ghi diễn biến, **không gửi tin**; cảnh báo khi đổi lãnh đạo kiêm nhiệm phụ trách. | RLS `kl-0116` (B3–B5) |
+| K-5 | Trợ lý AI và bộ tự học với "Không thuộc"? | Bỏ qua mục "Không thuộc" (cách chọn và chi phí AI giữ nguyên); AI không đề xuất mục tiêu nào thì giao diện tích sẵn "Không thuộc" để người giao kiểm tra. | RLS `kl-0116` (B1); unit `phan-loai` |
+| K-6 | Dữ liệu production đã có? | Claude phân loại từ tệp "Xuất theo mẫu nhập" chủ dự án gửi (không đọc / ghi production); hai lượt độc lập, chỗ khác nhau xem lại, "Cần xem lại" để chủ dự án quyết; chủ dự án nhập bằng màn Rà soát sau khi v3.26.0 lên production; tệp dữ liệu thật không vào repo. | `docs/GO-LIVE-V3.26.md` |

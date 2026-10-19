@@ -14,8 +14,10 @@ import { laQuanTriMt } from './muc-tieu-thuan.js';
 
 const esc = escapeHtml;
 let sauGhi = async () => {};
-const nhom = () => [...(danhMucKl().nhomMucTieu || [])].sort((a, b) => a.thu_tu - b.thu_tu);
-const khoi = () => [...(danhMucKl().khoi || [])].sort((a, b) => a.thu_tu - b.thu_tu);
+// v3.26 (0116): nhóm, khối, ngành "Không thuộc" là mục cố định — không hiện để sửa (DB chặn sửa / xoá / gộp / đưa mục khác vào).
+const coDinh = (x) => x.ma === 'KHONG_THUOC';
+const nhom = () => [...(danhMucKl().nhomMucTieu || [])].filter((x) => !coDinh(x)).sort((a, b) => a.thu_tu - b.thu_tu);
+const khoi = () => [...(danhMucKl().khoi || [])].filter((x) => !coDinh(x)).sort((a, b) => a.thu_tu - b.thu_tu);
 const tenKhoi = (ma) => khoi().find((k) => k.ma === ma)?.ten || ma || '';
 const inp = (f, ma, v, them = '') => `<input class="o-nhap nho" data-f="${f}" data-ma="${esc(ma)}" value="${esc(v ?? '')}"${them}>`;
 const coDung = (f, ma, v, nhan) => `<label class="nhan-checkbox qt-mt-co"><input type="checkbox" data-f="${f}" data-ma="${esc(ma)}"${v !== false ? ' checked' : ''}> ${esc(nhan)}</label>`;
@@ -41,7 +43,7 @@ function chonKhoi(bang, ma, hien, { theoNganh = '' } = {}) {
     ${ds.map((k) => `<option value="${esc(k.ma)}"${k.ma === hien ? ' selected' : ''}>${esc(k.ten)}</option>`).join('')}</select>`;
 }
 function khoiHtml(qt) {
-  const nganh = danhMucKl().nganh || []; const lv = danhMucKl().linhVuc || [];
+  const nganh = (danhMucKl().nganh || []).filter((x) => !coDinh(x)); const lv = danhMucKl().linhVuc || [];
   $('qtMtKhoiThem').innerHTML = qt ? `<form class="form-hang" data-submit="qtKhoiThem" novalidate><div class="grow"><label class="nhan" for="qtKhoiTen">Tên khối mới</label>
     <input id="qtKhoiTen" class="o-nhap nho" maxlength="120" autocomplete="off"></div><button type="submit" class="nut nho chinh">Thêm khối</button></form>` : '';
   $('qtMtKhoiBody').innerHTML = khoi().map((k) => { const so = nganh.filter((n) => n.khoi_ma === k.ma).length;

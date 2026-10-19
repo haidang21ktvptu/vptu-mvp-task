@@ -22,7 +22,7 @@ export const klTemplate = `
       <button type="button" id="klXuatKy" class="nut nho" data-action="moXuatKy" title="Xuất theo tuần / tháng / quý / năm: tổng hợp theo đơn vị + bốn danh sách của kỳ">Xuất theo kỳ…</button>
       <button type="button" id="klXuatMau" class="nut nho hidden" data-action="klXuatMau" title="Xuất danh sách đang hiện theo Mẫu nhập chuẩn — sửa trong Excel rồi nhập lại để cập nhật theo mã">Xuất theo mẫu nhập</button>
       <button type="button" id="klIn" class="nut nho" data-action="klIn">In / lưu PDF</button>
-      <button type="button" id="klRaSoatMt" class="nut nho hidden" data-action="moRaSoatMucTieu" title="Hệ thống tự nhận diện mục tiêu then chốt cho các việc đã giao — đồng chí kiểm tra rồi chấp nhận">Rà soát mục tiêu then chốt</button>
+      <button type="button" id="klRaSoatMt" class="nut nho hidden" data-action="moRaSoatMucTieu" title="Ngành, lĩnh vực và mục tiêu then chốt của các việc đã giao (số liệu khối 2, 3 Tổng quan) — hệ thống tự nhận diện, đồng chí kiểm tra rồi chấp nhận; sửa hàng loạt bằng tệp Excel">Rà soát phân loại</button>
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 
   <div id="klTdSo" class="bnv-so so-8 hidden" role="group" aria-label="Lọc việc theo dõi theo tình hình"></div>

@@ -12,10 +12,12 @@ import { tenTap } from './ke-hoach.js';
 export const khoaO = (id) => `rs-${id}`;
 const vanBan = (r) => (r.van_ban_id ? `${tenLoaiVanBan(r.van_ban_loai)} ${r.so_ket_luan || '(không số)'}` : 'Không gắn văn bản');
 const chuTri = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định';
+// v3.26: ngành – lĩnh vực đang ghi (khối 3 Tổng quan); sửa hàng loạt bằng tệp rà soát (nhap-tep.js), việc đang mở sửa ở ngăn chi tiết.
+const nganhChu = (r) => (r.nganh_ma ? `Ngành: ${boSoThuTu(r.nganh_ten || r.nganh_ma)}${r.linh_vuc_ten ? ` — ${r.linh_vuc_ten}` : ' — chưa có lĩnh vực'}` : 'Chưa phân loại ngành, lĩnh vực');
 // "Đang tính: …" — đúng phần Tổng quan đang đếm cho việc này.
 export function hienChu(r, dm) {
   const ds = mucTieuCua(r);
-  return ds.length ? `Đang tính: ${tenTap(ds, dm)}${laTheoVanBan(r) ? ' (theo văn bản)' : ''}` : 'Đang tính: chưa gắn mục tiêu nào';
+  return ds.length ? `Đang tính: ${tenTap(ds, dm)}${laTheoVanBan(r) ? ' (theo văn bản)' : ''}` : 'Đang tính: chưa phân loại mục tiêu then chốt';
 }
 // Trạng thái dòng: đang nhận diện / lỗi nhận diện / đồng chí đã chọn, chưa lưu / mục tích sẵn chờ chấp nhận / đã lưu / không có gì để chấp nhận.
 export function trangThaiChu({ kq, daLuu, coKe, thaoTac }) {
@@ -30,6 +32,7 @@ export function dongHtml(r, { dm, kq, daLuu, coKe, thaoTac }) {
   return `<article class="rs-dong${daLuu ? ' da-luu' : ''}" id="rsDong-${r.id}" data-id="${r.id}">
     <div class="rs-viec"><button type="button" class="ten-bam" data-action="rsMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"><span class="ma-ng">${escapeHtml(r.ma)}</span><b>${escapeHtml(r.noi_dung)}</b></button>
       <small class="chu-phu">${escapeHtml(vanBan(r))} · ${escapeHtml(chuTri(r))} · ${escapeHtml(tenNhom(r.nhom_dem))}</small>
+      <small class="chu-phu rs-nganh">${escapeHtml(nganhChu(r))}</small>
       <small class="rs-hien" data-rs-hien="${r.id}">${escapeHtml(hienChu(r, dm))}</small></div>
     <div class="rs-mt">${khungHtml(khoaO(r.id), { nhan: 'Mục tiêu then chốt' })}</div>
     <div class="rs-chan"><span class="chu-phu" data-rs-tt="${r.id}" aria-live="polite">${escapeHtml(trangThaiChu({ kq, daLuu, coKe, thaoTac }))}</span>

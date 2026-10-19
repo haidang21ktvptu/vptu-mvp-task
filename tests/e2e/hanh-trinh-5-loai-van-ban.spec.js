@@ -4,7 +4,7 @@
 // lượng ở ngăn chi tiết (tuỳ chọn); nhãn "Hoàn thành", cây Theo văn bản (Chánh VP) có đủ 5 văn bản với việc đã hoàn thành.
 // Văn bản so_ket_luan = <khoá>-<loại>; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec, moViec, nav } from './lib/app.js';
+import { NAP, moGiaoViec, moViec, nav, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, donVanBan } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, moApp, danhGiaMc } from './lib/pr2b.mjs';
 
@@ -31,6 +31,7 @@ test.describe.serial('PR-2b / Đợt D — hành trình 5 loại văn bản: gia
       await tp.locator('#klThNoiDung').fill(`${khoa} ${loai} hành trình`); await tp.locator('#klThOwner').selectOption(`tk:${ID.e2eCv}`);
       await tp.locator('#klThSanPham').selectOption('BAO_CAO'); await tp.locator('#klThHan').fill(cong(homNay(), 20));
       if (CAN_NGANH.has(loai)) { await tp.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await tp.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH'); }
+      await chonPhanLoai(tp);   // v3.26: loại khác kết luận / thông báo cũng bắt buộc ngành ("Không thuộc"); mục tiêu then chốt "Không thuộc"
       await expect(tp.locator('#gvConThieu'), loai).toHaveText('');
       await tp.locator('#klThLuuTiep').click();
       await expect(tp.locator('#toastContainer'), loai).toContainText('Đã giao việc NV-', NAP);

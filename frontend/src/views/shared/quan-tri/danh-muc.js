@@ -15,7 +15,8 @@ export async function loadDanhMuc() {
   linhVuc = l.data;
 }
 
-export const danhSachNganh = () => nganh;
+// v3.26 (0116): ngành "Không thuộc ngành, lĩnh vực nào" là mục cố định — không thêm lĩnh vực, không phân công kiêm nhiệm (DB chặn).
+export const danhSachNganh = () => nganh.filter((n) => n.ma !== 'KHONG_THUOC');
 export const linhVucCuaNganh = (nganhMa) => linhVuc.filter((l) => l.nganh_ma === nganhMa);
 export const timNganh = (ma) => nganh.find((n) => n.ma === ma);
 export const timLinhVuc = (ma) => linhVuc.find((l) => l.ma === ma);
@@ -23,7 +24,7 @@ export const timLinhVuc = (ma) => linhVuc.find((l) => l.ma === ma);
 // "8. Kinh tế tổng hợp - Tài chính - ..." → "ngành 8" (tên đầy đủ quá dài cho ô bảng/nhật ký).
 export function tenNganhNgan(ma) {
   const n = timNganh(ma);
-  return n ? `ngành ${n.thu_tu}` : ma;
+  return n ? (n.ma === 'KHONG_THUOC' ? n.ten : `ngành ${n.thu_tu}`) : ma;
 }
 export const tenLinhVuc = (ma) => timLinhVuc(ma)?.ten || ma;
 

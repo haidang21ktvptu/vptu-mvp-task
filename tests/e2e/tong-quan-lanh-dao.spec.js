@@ -6,7 +6,7 @@
 // văn bản đổi, việc bỏ gắn riêng); danh sách Nhiệm vụ lọc
 // theo mục tiêu; khối 2 của Tổng quan mở đúng việc. (3) Chuyên viên chủ trì thấy mục tiêu, không có bút. Dữ liệu theo khoá riêng, tự dọn.
 import { test, expect } from '@playwright/test';
-import { pageAs, moGiaoViec, moViec, nav, NAP } from './lib/app.js';
+import { pageAs, moGiaoViec, moViec, nav, NAP, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
@@ -110,6 +110,8 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
       await oVb.locator('input[data-mtg-chon][value="CTR_DU_LICH"]').check();
       await expect(oVb.locator('.mtg-chip')).toContainText('Du lịch bền vững');
       await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="VAN_BAN"]')).toContainText('Du lịch bền vững', NAP);
+      await expect(p.locator('#gvConThieu')).toContainText('ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc phân loại
+      await chonPhanLoai(p);   // công văn: ngành "Không thuộc"; mục tiêu đã có (theo văn bản) — không tích "Không thuộc"
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao việc', NAP);

@@ -11,6 +11,7 @@
 // của văn bản (#gvMtVb); mỗi thẻ nhiệm vụ có ô mục tiêu then chốt có gợi ý (#gvMtg1, thẻ thêm [data-mtg-cho] — muc-tieu.js); bỏ khối mục tiêu ở "Thông tin thêm".
 import { nutDoKhanHtml } from '../../../lib/kl/do-khan.js';
 import { luoiTemplate } from './nhieu.js';
+import { NHAC } from './phan-loai.js';   // v3.26: dòng nhắc phân loại bắt buộc
 
 // Nhãn MỘT dòng ngắn; phần giải thích là chú thích nhỏ dưới ô (.gv-chu-thich); dấu * đỏ (.gv-bb) khi bắt buộc — id ô/wrap giữ nguyên (e2e).
 const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
@@ -94,6 +95,7 @@ export const giaoViecTemplate = `
           </div>
           <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
           <p class="chu-phu goi-y-han" id="gvGoiYHan">Nhiệm vụ không xác định được thời hạn (thường xuyên, chờ điều kiện): chọn mốc rà soát gần nhất làm hạn (ví dụ cuối quý hoặc 31/12) và ghi rõ "thực hiện thường xuyên" trong nội dung; đến mốc, người chủ trì báo cáo kết quả hoặc đề nghị gia hạn.</p>
+          <p class="gv-nhac-pl" id="gvNhacPhanLoai" role="note">${NHAC}</p>
           <div class="cot-3" id="gvNganhWrap">
             ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
             ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}

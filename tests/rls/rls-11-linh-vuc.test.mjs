@@ -118,10 +118,10 @@ describe('RLS-11 danh mục dm_linh_vuc: chỉ qua hàm có nhật ký, đính c
     await adminClient().from('dm_lich_su').delete().like('ly_do', `${LY}%`);
     await adminClient().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2);
   });
-  test('ai đã đăng nhập đọc 32 lĩnh vực (ngành 8 có 4); anon bị chặn; ghi thẳng bị chặn với MỌI người (0096: chỉ qua hàm, có nhật ký)', async () => {
+  test('ai đã đăng nhập đọc 33 lĩnh vực (32 + "Không thuộc" của 0116; ngành 8 có 4); anon bị chặn; ghi thẳng bị chặn với MỌI người (0096: chỉ qua hàm, có nhật ký)', async () => {
     const cv1 = await userClient('demo_cv1');
     const all = await cv1.from('dm_linh_vuc').select('ma, nganh_ma');
-    assertOk(all, 'đọc'); assert.equal(all.data.length, 32); assert.equal(all.data.filter((l) => l.nganh_ma === NGANH).length, 4);
+    assertOk(all, 'đọc'); assert.equal(all.data.length, 33); assert.equal(all.data.filter((l) => l.nganh_ma === NGANH).length, 4);
     assertDenied(await anonClient().from('dm_linh_vuc').select('ma').limit(1), 'anon');
     const qtht = await userClient('demo_qtht');
     const row = { ma: 'LV08_RLS_TEST', nganh_ma: NGANH, ten: 'RLS-TEST lĩnh vực', thu_tu: 99 };

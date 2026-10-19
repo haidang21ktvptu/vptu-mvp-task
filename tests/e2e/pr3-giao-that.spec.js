@@ -4,7 +4,7 @@
 // tự đổi nguồn; Chánh VP điền đơn vị phối hợp + số nhiệm vụ dự kiến + đã rà soát. DB lưu đúng cột. Ma trận 7 vai × 5 loại (ô hiện, mặc định,
 // "Còn thiếu" khi bỏ chọn) nằm trong giao-viec-ma-tran.spec.js (cùng phiên — quyết định 1/10/2026; 0077 bỏ hạn nộp). Dữ liệu theo khoá; cờ khôi phục.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec } from './lib/app.js';
+import { NAP, moGiaoViec, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, taoViec, datCo, voiPhien } from './lib/pr2b.mjs';
 
@@ -44,6 +44,7 @@ async function giaoMot(page, ca) {
   if (ca.lv) { await page.locator('#klThNganh').selectOption(KN.nganh); await page.locator('#klThLinhVuc').selectOption(ca.lv); }
   await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
   if (ca.phoiHop) await page.locator('#klThPhoiHop').fill(ca.phoiHop);
+  await chonPhanLoai(page, { mucTieu: ca.role !== 'A0' });   // v3.26: ngành trống → "Không thuộc"; mục tiêu (trừ Thường trực) → "Không thuộc"
   await expect(page.locator('#gvConThieu'), ca.role).toHaveText('', NAP);
   await page.locator('#klThLuu').click();
   await expect(page.locator('#toastContainer'), ca.role).toContainText('Đã giao việc NV-', NAP);

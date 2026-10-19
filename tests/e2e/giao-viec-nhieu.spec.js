@@ -4,7 +4,7 @@
 // tìm nhanh ở ô Chịu trách nhiệm (gõ "chính tôi" / tên chuyên viên, bỏ dấu) mở danh sách người khớp + dòng kết quả, tự chọn; nút chọn nhanh
 // "Chính tôi"; PCVP giao hai thẻ khác phòng, khác lĩnh vực trong một lượt từ Kết luận BTV mới. Dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec } from './lib/app.js';
+import { NAP, moGiaoViec, chonPhanLoai } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
@@ -53,6 +53,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await the(p, 2).locator('.dk-chon button[data-gia-tri="KHAN"]').click();
       await o(p, 2, 'phoi_hop').fill('Sở Tài chính'); await o(p, 2, 'san_pham_mo_ta').fill('Báo cáo quý');
       await o(p, 3, 'theo_doi').selectOption(ID.cv1); await o(p, 3, 'cap_nhan').selectOption('THUONG_TRUC');
+      for (const i of [1, 2, 3]) await chonPhanLoai(p, { the: i });   // v3.26: phân loại bắt buộc mọi thẻ ("Không thuộc")
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await expect(p.locator('#gvTomTatChu')).toContainText('và 2 việc khác');
       await expect(p.locator('#klThLuu')).toBeEnabled();
@@ -106,6 +107,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await expect(p.locator('#klThCapNhan')).toHaveValue('THUONG_TRUC');
       await p.locator('#klThSanPham').selectOption('TO_TRINH'); await p.locator('#klThHan').fill(H);
       await p.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await p.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+      await chonPhanLoai(p);   // v3.26: mục tiêu then chốt bắt buộc ("Không thuộc")
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao việc NV-', NAP);
@@ -128,6 +130,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await o(p, 2, 'noi_dung').fill(`${khoa} PCVP thẻ 2`); await o(p, 2, 'owner').selectOption(`tk:${ID.pcvp}`);
       await o(p, 2, 'nganh').selectOption('THAM_MUU_TONG_HOP'); await o(p, 2, 'linh_vuc').selectOption('LV01_THAM_MUU_TONG_HOP');
       await o(p, 2, 'san_pham').selectOption('BAO_CAO'); await o(p, 2, 'han').fill(cong(H, 5));
+      await chonPhanLoai(p); await chonPhanLoai(p, { the: 2 });   // v3.26: mục tiêu then chốt bắt buộc mọi thẻ
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao 2 việc', NAP);

@@ -41,7 +41,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/giao-viec-ma-tran.spec.js', '**/giao-viec-nhieu.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/thay-mat-nhom.spec.js', '**/cv-giao-viec.spec.js', '**/cv-xem-phong.spec.js', '**/nguon-van-ban.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/theo-van-ban-chuyen-vien.spec.js', '**/xem-toan-bo.spec.js', '**/tong-quan-lanh-dao.spec.js', '**/ra-soat-muc-tieu.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
+    { name: 'desktop', use: DESKTOP, testIgnore: ['**/dang-nhap.spec.js', '**/doi-mat-khau.spec.js', '**/chi-dao-tt.spec.js', '**/bo-cuc-mobile.spec.js', '**/tt-giao-viec.spec.js', '**/tu-choi-ba-phia.spec.js', '**/viec-moi-tung-nguoi.spec.js', '**/giao-lai-chu-tri.spec.js', '**/ca-nhan-anh.spec.js', '**/id-duy-nhat.spec.js', '**/cap-nhat-nhanh-han.spec.js', '**/giao-viec-kiem-nhiem.spec.js', '**/giao-viec-ma-tran.spec.js', '**/giao-viec-nhieu.spec.js', '**/nghiem-thu.spec.js', '**/hanh-trinh-5-loai-van-ban.spec.js', '**/b4-b6-lanh-dao.spec.js', '**/pr3-*.spec.js', '**/thay-mat-nhom.spec.js', '**/cv-giao-viec.spec.js', '**/cv-xem-phong.spec.js', '**/nguon-van-ban.spec.js', '**/quan-tri-sua-tai-khoan.spec.js', '**/nhap-theo-tang.spec.js', '**/nhap-excel.spec.js', '**/theo-van-ban-chuyen-vien.spec.js', '**/xem-toan-bo.spec.js', '**/tong-quan-lanh-dao.spec.js', '**/ra-soat-muc-tieu.spec.js', '**/phan-loai.spec.js', '**/_dem-goi/**', '**/smoke/**'] },
     // GĐ19: chi-dao-tt ghi nhiệm vụ vào phạm vi PCVP2 (Quản trị) — chạy SAU desktop để không đua với bộ số kl-dashboard (PCVP2).
     { name: 'chi-dao-tt', use: DESKTOP, testMatch: /chi-dao-tt\.spec\.js/, dependencies: ['desktop'] },
     // Spec nhạy bố cục — chạy cả hai kích thước (dang-nhap ở project riêng bên dưới).
@@ -89,8 +89,11 @@ export default defineConfig({
     { name: 'v324-tong-quan', use: DESKTOP, testMatch: /tong-quan-lanh-dao\.spec\.js/, dependencies: ['v323-xem-toan-bo'] },
     // v3.25: Rà soát mục tiêu then chốt (Trưởng phòng E2E_RT chấp nhận mục tích sẵn → ghi DB) — ghi mục tiêu nên chạy MỘT MÌNH, nối sau v324-tong-quan.
     { name: 'v325-ra-soat', use: DESKTOP, testMatch: /ra-soat-muc-tieu\.spec\.js/, dependencies: ['v324-tong-quan'] },
+    // v3.26: phân loại bắt buộc khi giao, "Không thuộc", Tổng quan khối 2–3, rà soát bằng tệp (ghi phân loại cả việc đã hoàn thành) — đọc số toàn Văn
+    // phòng của Chánh VP và ghi phân loại nên chạy MỘT MÌNH, nối sau v325-ra-soat.
+    { name: 'v326-phan-loai', use: DESKTOP, testMatch: /phan-loai\.spec\.js/, dependencies: ['v325-ra-soat'] },
     // GĐ23: doi-mat-khau tạo tài khoản tạm bằng service_role và đăng nhập qua form — chạy cùng lượt cuối với dang-nhap.
-    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4', 'v9-dot2', 'v9-nhap-excel', 'v3221-tvb', 'v323-xem-toan-bo', 'v324-tong-quan', 'v325-ra-soat'] },
+    { name: 'dang-nhap', use: DESKTOP, testMatch: [/dang-nhap\.spec\.js/, /doi-mat-khau\.spec\.js/], dependencies: ['desktop', 'mobile', 'chi-dao-tt', 'gd22', 'pr2a', 'pr2b-b4-b6', 'pr3-hien-thi', 'pr4', 'v9-dot2', 'v9-nhap-excel', 'v3221-tvb', 'v323-xem-toan-bo', 'v324-tong-quan', 'v325-ra-soat', 'v326-phan-loai'] },
   ],
   webServer: {
     command: 'npm --prefix ../../frontend run build && npm --prefix ../../frontend run preview',

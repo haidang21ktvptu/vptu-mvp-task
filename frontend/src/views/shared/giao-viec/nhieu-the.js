@@ -14,6 +14,7 @@ import { nguoiTheoDoiOptionsHtml, goiYTheoDoi, parseOwner } from '../kl/them-own
 import { locTheoDoi, lanhDaoLoc, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi } from './pham-vi.js';
 import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, canNganhHienTai, getHomNay } from './trang-thai.js';
 import { ganTheMucTieu } from './muc-tieu.js';   // v3.25: ô mục tiêu then chốt có gợi ý của thẻ
+import { canNganhBatBuoc, nganhChoPhep, chuThichNganh, linhVucDuyNhat } from './phan-loai.js';   // v3.26: phân loại bắt buộc
 
 const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
 const opt = (v, t) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`;
@@ -64,12 +65,13 @@ export function dienOwnerThe(the) { giu(o(the, 'owner'), $('klThOwner').innerHTM
 // Ngành / lĩnh vực: chỉ mục trong phạm vi giao ở phòng của Owner (như dienNganh / dienLinhVuc của biểu mẫu chính); đổi ngành → lĩnh vực → người theo dõi.
 export function dienNganhThe(the) {
   const cho = nganhDuocChon(phongCuaGiaTri(o(the, 'owner').value)); const s = o(the, 'nganh');
-  giu(s, opt('', 'Chọn ngành') + danhMucKl().nganh.filter((n) => !cho || cho.has(n.ma)).map((n) => opt(n.ma, n.ten)).join(''), s.value);
+  giu(s, opt('', 'Chọn ngành') + danhMucKl().nganh.filter((n) => (!cho || cho.has(n.ma)) && nganhChoPhep(n)).map((n) => opt(n.ma, n.ten)).join(''), s.value);
   dienLinhVucThe(the);
 }
 export function dienLinhVucThe(the) {
   const cho = linhVucDuocChon(phongCuaGiaTri(o(the, 'owner').value)); const s = o(the, 'linh_vuc');
   giu(s, opt('', 'Chọn lĩnh vực') + linhVucCuaNganh(o(the, 'nganh').value).filter((l) => !cho || cho.has(l.ma)).map((l) => opt(l.ma, l.ten)).join(''), s.value);
+  if (!s.value) s.value = linhVucDuyNhat(o(the, 'nganh').value, cho);   // ngành một lĩnh vực: tự chọn
   dienTheoDoiThe(the);
 }
 // Người theo dõi: danh sách theo phạm vi (thay mặt, ngành, lĩnh vực của thẻ); giữ lựa chọn nếu còn hợp lệ, không thì gợi ý theo Owner, rồi lãnh đạo, rồi người giao.
@@ -103,8 +105,8 @@ export function anHienThe(the) {
   const a0 = laA0(); const cn = canNganhHienTai();
   show(the.querySelector('[data-wrap="theo_doi"]'), !anTheoDoi());   // 0085: chuyên viên giao thẳng cũng không có ô (theo dõi = người giao)
   ['nganh', 'linh_vuc', 'loai'].forEach((c) => show(the.querySelector(`[data-wrap="${c}"]`), !a0 || cn));
-  the.querySelectorAll('.gvl-bb-nganh').forEach((b) => show(b, cn));
-  chuThich(the, 'nganh', cn ? 'bắt buộc với kết luận / thông báo' : 'không bắt buộc với loại văn bản này');
+  the.querySelectorAll('.gvl-bb-nganh').forEach((b) => show(b, canNganhBatBuoc()));
+  chuThich(the, 'nganh', chuThichNganh());
   const pv = thongBaoPhamVi(phongCuaGiaTri(o(the, 'owner').value), o(the, 'nganh').value, o(the, 'linh_vuc').value, danhMucKl().linhVuc);
   chuThich(the, 'linh_vuc', pv.chuThich || 'theo ngành đã chọn');
 }

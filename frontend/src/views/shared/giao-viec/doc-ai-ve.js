@@ -69,7 +69,7 @@ export function ketQuaHtml(s, dm) {
 // Ghi chú đầu thẻ sau khi điền (thay ghi chú cũ). kh: keHoachThe; n: nhiệm vụ; thu: số thứ tự trong văn bản / tổng.
 export function ghiChuTheHtml(kh, i, tong) {
   const phan = [`Điền từ văn bản (nhiệm vụ ${i + 1}/${tong})`, kh.goiY.chuTri ? `chủ trì theo văn bản: ${esc(kh.goiY.chuTri)}` : '',
-    kh.deXuat.length ? 'sản phẩm, ngành, lĩnh vực do trợ lý AI đề xuất — đồng chí kiểm tra' : '', ...kh.canhBao.map(esc)].filter(Boolean).join(' · ');
+    kh.deXuat.length ? 'sản phẩm, ngành, lĩnh vực, mục tiêu then chốt do trợ lý AI đề xuất — đồng chí kiểm tra' : '', ...kh.canhBao.map(esc)].filter(Boolean).join(' · ');
   const dungNd = (chu) => `<button type="button" class="nut nho" data-action="gvDocDungNd" data-i="${i}">${chu}</button>`;
   const lyDo = kh.goiY.tronCau ? `câu trong văn bản còn tiếp “${esc(rut(kh.goiY.conTiep, 200))}” — <button type="button" class="nut nho" data-action="gvDocDungTron" data-i="${i}">Dùng trọn câu</button> hoặc ${dungNd('Dùng phần trợ lý AI tách')}`
     : kh.goiY.conTiep ? `trợ lý AI chỉ lấy câu dẫn, văn bản còn liệt kê “${esc(rut(kh.goiY.conTiep, 160))}” — đồng chí xem lại hoặc ${dungNd('Dùng phần trợ lý AI tách')}`

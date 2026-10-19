@@ -20,8 +20,8 @@ import { loadChiDaoTu } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { khoangKy, khoangTuyChon, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, chatLuongKy, chiDaoKy, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
-import { theoKhoi, diemNghen, capNghen, theoMucTieu, coGanMucTieu, ketQuaMoiNhat, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu } from '../../../lib/kl/tong-quan-lanh-dao.js';
-import { dsNhom, mucTieuCua, timMucTieu, laTuDong } from '../../../lib/kl/muc-tieu.js';
+import { theoKhoi, diemNghen, capNghen, theoMucTieu, coGanMucTieu, phanLoaiMucTieu, ketQuaMoiNhat, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu } from '../../../lib/kl/tong-quan-lanh-dao.js';
+import { dsNhom, mucTieuCua, timMucTieu, laTuDong, KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
 import { coRaSoat } from '../ra-soat-muc-tieu/index.js';   // v3.25: lối vào Rà soát mục tiêu then chốt
 import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
@@ -101,8 +101,10 @@ function ve() {
   $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: kyTuy ? null : tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length, quyTac: quyTac() })
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
     + `<div class="luoi-tq">${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
-    + mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua), nhom: nhomMt, tuDong: rows.filter(laTuDong).length, raSoat: coRaSoat() })
-    + linhVucHtml(theoKhoi(rows, k, { khoi: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganh: dm.nganh, linhVuc: dm.linhVuc }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k)
+    + mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua), nhom: nhomMt, tuDong: rows.filter(laTuDong).length, raSoat: coRaSoat(),
+      pl: phanLoaiMucTieu(rows) })
+    + linhVucHtml(theoKhoi(rows, k, { khoi: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganh: dm.nganh, linhVuc: dm.linhVuc }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k,
+      { raSoat: coRaSoat(), soNganh: (dm.nganh || []).filter((n) => n.ma !== KHONG_THUOC).length, soKhoi: (dm.khoi || []).filter((x) => x.dang_dung !== false && x.ma !== KHONG_THUOC).length })
     + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k) + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
     + chiDaoHtml(chiDaoKy(cdsLoc(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + chatLuongHtml(chatLuongKy(rows, k), k)
