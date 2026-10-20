@@ -1,95 +1,88 @@
-// "Mẫu nhập chuẩn VPTU-TASK" (v9 đợt 2): sheet "Nhập liệu" 29 cột (v3.20: + Mức quan trọng, Cơ quan trình, Thường trực chỉ đạo; v3.24: + Mục tiêu then chốt ở cuối) theo chuẩn 3 mức (nền tiêu đề theo mức), ô danh mục có danh sách chọn lấy từ
-// sheet "Danh mục" (danh mục hiện hành của hệ thống + cán bộ "Họ tên — Phòng"), cột ngày định dạng dd/mm/yyyy; sheet "Hướng dẫn". "Xuất ra Excel
-// theo mẫu": cùng tệp, sheet "Nhập liệu" điền sẵn các việc đang lọc (có mã) — sửa trong Excel rồi nhập lại để cập nhật theo mã.
+// "Mẫu nhập chuẩn VPTU-TASK" — v3.27 (chủ dự án 20/10/2026): đúng các cột của bảng Phụ lục Văn phòng đang dùng (tệp TUCB / KL Thường trực): A STT ·
+// B Số hội nghị · C Số TB/KL · D Ngày ban hành · E Chủ trì theo dõi · F Ngành/lĩnh vực · G Cơ quan/đơn vị trình · H Lĩnh vực chi tiết · I Nội dung · J Loại
+// thời hạn · K Hạn xử lý · L Tiến độ · M Kết quả thực hiện / Minh chứng · N Văn bản triển khai · O Mã nhiệm vụ. Điền đủ B–M là nhập thẳng (ô hệ thống
+// cần mà bảng không có — sản phẩm, lĩnh vực theo danh mục, hạn còn trống — điền theo quy tắc, xem mac-dinh.js). Ô danh mục có danh sách chọn lấy từ
+// sheet "Danh mục"; cột ngày định dạng dd/mm/yyyy; sheet "Hướng dẫn". "Xuất theo mẫu" (màn Nhiệm vụ): cùng tệp, điền sẵn các việc đang lọc (có mã) —
+// vừa là bảng Phụ lục để báo cáo, vừa sửa rồi nhập lại để cập nhật theo mã.
 import { taoXlsx } from '../../xlsx.js';
-import { TRUONG_MAU } from './truong.js';
-import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG } from './chuan-hoa.js';
-import { NHOM_THAY_MAT, tenNhomThayMat } from '../thay-mat.js';
-import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../ma-nguon.js';
-import { mucTieuCua, tenMucTieu, sapTheoDanhMuc } from '../muc-tieu.js';
+import { COT_MAU } from './truong.js';
+import { LOAI_VB, TIEN_DO, dsCoQuanTrinh } from './chuan-hoa.js';
+import { KHONG_THUOC } from '../muc-tieu.js';
 
-const S_MUC = { 0: 7, 1: 4, 2: 5, 3: 6 };   // kiểu tiêu đề theo mức (lib/xlsx.js: 4 vàng, 5 lam, 6 lục, 7 xám)
-const RONG = { noi_dung: 50, kq_mo_ta: 40, vuong_mac: 30, don_vi: 30, can_bo: 28, theo_doi: 28, lanh_dao_giao: 28, nganh: 34, linh_vuc: 30, kq_trich_yeu: 30, muc_tieu: 40 };
-const KHONG_KIEM = new Set(['muc_tieu']);   // ô nhiều giá trị ("a; b"): sheet "Danh mục" để tra, không gắn danh sách chọn (Excel chặn giá trị ghép)
 const ten = (ds, ma) => ds.find(([m]) => m === ma)?.[1] || '';
 export const nhanCanBo = (a, tenPhong) => `${a.full_name}${a.department ? ` — ${tenPhong(a.department)}` : ''}`;
+// Tên ở cột "Chủ trì theo dõi": họ tên (như bảng Phụ lục); trùng họ tên với cán bộ khác → kèm phòng (nhập lại khớp đúng người).
+const canBoMau = (accounts) => accounts.filter((a) => !a.is_system && !a.bi_khoa && a.role_group !== 'A0');
+export function tenChuTri(a, accounts, tenPhong) {
+  const trung = canBoMau(accounts).filter((x) => x.full_name === a.full_name).length > 1;
+  return trung ? nhanCanBo(a, tenPhong) : a.full_name;
+}
 
-// Danh mục cho danh sách chọn: [tiêu đề cột, [giá trị]] theo đúng thứ tự cột của sheet "Danh mục".
+// Kiểu tiêu đề (lib/xlsx.js: 4 vàng — bắt buộc, 5 lam — tuỳ chọn, 6 lục — kết quả, 7 xám — tự đánh / mã).
+const KIEU = { stt: 7, ma: 7, linh_vuc_chi_tiet: 5, van_ban_trien_khai: 5, han_xu_ly: 5, kq_mo_ta: 6 };
+const RONG = { stt: 6, so_hoi_nghi: 9, so_ket_luan: 13, ngay_ban_hanh: 12, chu_tri: 24, nganh: 34, co_quan_trinh: 30, linh_vuc_chi_tiet: 20, noi_dung: 60,
+  loai_thoi_han: 22, han_xu_ly: 12, tien_do: 16, kq_mo_ta: 44, van_ban_trien_khai: 28, ma: 11 };
+
+// Danh mục cho danh sách chọn: [tiêu đề cột sheet "Danh mục", [giá trị], mã trường dùng danh sách].
 function danhMuc({ dm, accounts, tenPhong }) {
-  const canBo = accounts.filter((a) => !a.is_system && !a.bi_khoa && a.role_group !== 'A0').sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi'));
+  const canBo = canBoMau(accounts).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi'));
+  const vp = (dm.donVi || []).filter((d) => d.ma === 'VAN_PHONG_TINH_UY').map((d) => d.ten);
   return [
-    ['Loại văn bản', LOAI_VB.map(([, t]) => t), 'loai_van_ban'], ['Đơn vị chủ trì', dm.donVi.map((d) => d.ten), 'don_vi'],
-    ['Cán bộ', canBo.map((a) => nhanCanBo(a, tenPhong)), 'can_bo theo_doi'],
-    ['Lãnh đạo giao', [...NHOM_THAY_MAT.map(([, t]) => `${t} (cả nhóm)`), ...canBo.filter((a) => ['A1', 'A2'].includes(a.role_group)).map((a) => nhanCanBo(a, tenPhong))], 'lanh_dao_giao'],
-    ['Loại thời hạn', dm.loaiThoiHan.filter((l) => l.cho_phep_tao_moi).map((l) => l.ten), 'loai_thoi_han'], ['Sản phẩm', dm.sanPham.map((x) => x.ten), 'san_pham'],
-    ['Cấp nhận', dm.cap.map((x) => x.ten), 'cap_nhan'], ['Độ khẩn', DO_KHAN.map(([, t]) => t), 'do_khan'],
-    ['Nguồn nhiệm vụ', (dm.nguonNhiemVu || []).filter((x) => x.dang_dung).map((x) => x.ten), 'nguon'], ['Ngành', dm.nganh.map((x) => x.ten), 'nganh'],
-    ['Lĩnh vực', dm.linhVuc.map((x) => x.ten), 'linh_vuc'], ['Tiến độ', TIEN_DO.map(([, t]) => t), 'tien_do'], ['Chất lượng', CHAT_LUONG.map(([, t]) => t), 'chat_luong'],
-    ['Mức quan trọng', MUC_QUAN_TRONG.map(([, t]) => t), 'muc_quan_trong'], ['Cơ quan trình', dm.donVi.filter((d) => !d.trong_van_phong).map((d) => d.ten), 'co_quan_trinh'],
-    ['Thường trực chỉ đạo', accounts.filter((a) => a.role_group === 'A0' && !a.is_system && !a.bi_khoa).map((a) => a.full_name), 'thuong_truc_chi_dao'],   // 0093
-    ['Mục tiêu then chốt', (dm.mucTieu || []).filter((m) => m.dang_dung).map((m) => m.ten_ngan), 'muc_tieu'],   // 0106
+    ['Chủ trì theo dõi', [...vp, ...canBo.map((a) => tenChuTri(a, accounts, tenPhong))], 'chu_tri'],
+    ['Ngành/lĩnh vực', (dm.nganh || []).filter((n) => n.ma !== KHONG_THUOC).map((n) => n.ten), 'nganh'],
+    ['Cơ quan/đơn vị trình', dsCoQuanTrinh(dm).sort((a, b) => (a.thu_tu ?? 99) - (b.thu_tu ?? 99) || a.ten.localeCompare(b.ten, 'vi', { numeric: true })).map((d) => d.ten), 'co_quan_trinh'],
+    ['Loại thời hạn', (dm.loaiThoiHan || []).map((l) => l.ten), 'loai_thoi_han'],
+    ['Tiến độ', TIEN_DO.map(([, t]) => t), 'tien_do'],
+    ['Loại văn bản (chọn khi nhập)', LOAI_VB.map(([, t]) => t), ''],
   ];
 }
 const chuCot = (i) => { let s = ''; for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s; return s; };
 
 const HUONG_DAN = [
-  ['Mẫu nhập chuẩn VPTU-TASK — mỗi dòng ở sheet "Nhập liệu" là một nhiệm vụ.'],
-  ['Mức 1 (nền vàng) — đủ để GIAO: văn bản (loại, số hội nghị nếu là Kết luận BTV, số/ký hiệu, ngày ban hành), nội dung, đơn vị hoặc cán bộ chủ trì, sản phẩm, hạn hoàn thành (loại "Có hạn cụ thể"), ngành + lĩnh vực (Kết luận / Thông báo).'],
-  ['Ô để trống được điền theo quy tắc: độ khẩn Thường; loại hạn Có hạn cụ thể; nguồn theo loại văn bản; người theo dõi = cán bộ chủ trì hoặc Trưởng phòng; lãnh đạo giao = Trưởng phòng của phòng chủ trì hoặc Chánh Văn phòng; cấp nhận theo hệ thống.'],
-  ['Ba cột cuối (nền vàng, không bắt buộc): Mức quan trọng (A / B / C), Cơ quan trình (đơn vị ngoài Văn phòng trình), Thường trực chỉ đạo (đồng chí Thường trực).'],
-  ['Cột "Mục tiêu then chốt" (cột cuối, không bắt buộc): việc phục vụ nội dung đột phá, chương trình trọng tâm, nghị quyết Trung ương hay chỉ tiêu chủ yếu nào — ghi tên ngắn ở sheet "Danh mục"; nhiều mục cách nhau bằng dấu chấm phẩy (;), tối đa 10. Chỉ áp khi tạo việc mới; việc đã có mã sửa mục tiêu ở ngăn chi tiết.'],
-  ['Dòng còn thiếu mức 1 không mất: vào mục "Chờ hoàn thiện" để bổ sung bằng biểu mẫu Giao việc.'],
-  ['Mức 2 (nền lam) — tiến độ: Đang thực hiện / Hoàn thành; vướng mắc (gửi lãnh đạo quyết định).'],
-  ['Mức 3 (nền lục) — đủ để ĐÓNG: số hiệu, ngày, trích yếu văn bản kết quả, mô tả kết quả; chất lượng. Việc Hoàn thành được xử lý theo lựa chọn khi nhập: "Đã xong ngoài hệ thống" (đóng ngay, không tính tỷ lệ đúng hạn) hoặc "Ghi minh chứng" (hoàn thành theo minh chứng, tính đúng hạn; lãnh đạo đánh giá chất lượng khi muốn).'],
-  ['Mã nhiệm vụ (nền xám): để trống khi nhập việc mới. Có mã → cập nhật việc đó (nội dung, sản phẩm, độ khẩn, ngành, lĩnh vực, nguồn, vướng mắc…); ô trống không xoá dữ liệu đang có. Đổi chủ trì / hạn dùng Giao lại / Gia hạn trên hệ thống.'],
+  ['Mẫu nhập chuẩn VPTU-TASK — mỗi dòng ở sheet "Nhập liệu" là một nhiệm vụ; các cột giống bảng Phụ lục theo dõi kết luận của Văn phòng.'],
+  ['Điền đủ các cột B đến M (nền vàng là bắt buộc) thì nhập được ngay, không phải hoàn thiện thêm. Số hội nghị bắt buộc với Kết luận Hội nghị Ban Thường vụ; Hạn xử lý bắt buộc khi loại là "Có hạn cụ thể".'],
+  ['Chủ trì theo dõi: họ tên cán bộ (là người chủ trì và theo dõi việc), hoặc "VPTU" khi giao chung cho Văn phòng Tỉnh ủy.'],
+  ['Loại văn bản không có cột riêng: chọn một lần cho cả tệp ở bước nhập (hệ thống đoán sẵn theo dòng tiêu đề của bảng, ví dụ "…Thường trực Tỉnh ủy" → Thông báo của Thường trực).'],
+  ['Ô hệ thống cần mà bảng không có được điền theo quy tắc, ghi rõ ở bản xem trước: sản phẩm đầu ra theo nội dung (mặc định Báo cáo), lĩnh vực theo ngành và lĩnh vực chi tiết, đơn vị chủ trì theo cán bộ chủ trì.'],
+  ['Việc đang thực hiện chưa có hạn: hạn = 1 tháng kể từ ngày nhập. Loại "Nhiệm vụ thường xuyên" / "Chờ quyết định" của việc mới chuyển thành "Có hạn cụ thể" (loại gốc ghi ở ghi chú).'],
+  ['Tiến độ "Hoàn thành": khi nhập chọn "Đã xong ngoài hệ thống" (đóng ngay; cột M thành minh chứng) hoặc "Ghi minh chứng". "Chưa hoàn thành (quá hạn)" tính là đang thực hiện — quá hạn do hệ thống tự tính theo hạn.'],
+  ['Mã nhiệm vụ (cột O, nền xám): để trống khi nhập việc mới. Có mã → cập nhật việc đó; ô trống không xoá dữ liệu đang có. Đổi chủ trì / hạn dùng Giao lại / Gia hạn trên hệ thống.'],
   ['Ngày ghi dd/mm/yyyy. Ô có danh sách chọn lấy từ sheet "Danh mục"; gõ giá trị khác vẫn được — hệ thống thử khớp và hỏi lại khi chưa chắc.'],
 ];
 
-// rows: dòng v_nhiem_vu (Xuất theo mẫu) — rỗng: mẫu trống. ctx: { dm, accounts, tenPhong, findAccount }
+// rows: dòng v_nhiem_vu (Xuất theo mẫu; ket_qua_xuat = kết quả / minh chứng đọc kèm) — rỗng: mẫu trống. ctx: { dm, accounts, tenPhong, findAccount }
 export function taoMauNhap(ctx, rows = []) {
   const ds = danhMuc(ctx);
-  const cotDm = (k) => ds.findIndex(([, , ks]) => ks.split(' ').includes(k));
-  const cot = TRUONG_MAU.map((t) => ({ nhan: t.nhan, rong: RONG[t.k] || 16, kieu: t.kieu === 'ngay' ? 'ngay' : undefined, sTieuDe: S_MUC[t.muc] }));
-  const kiemTra = TRUONG_MAU.map((t, i) => [i, cotDm(t.k), t.k]).filter(([, j, k]) => j >= 0 && ds[j][1].length && !KHONG_KIEM.has(k))
+  const cotDm = (k) => ds.findIndex(([, , x]) => x === k);
+  const cot = COT_MAU.map(([k, nhan]) => ({ nhan, rong: RONG[k] || 16, kieu: ['ngay_ban_hanh', 'han_xu_ly'].includes(k) ? 'ngay' : undefined, sTieuDe: KIEU[k] || 4 }));
+  const kiemTra = COT_MAU.map(([k], i) => [i, cotDm(k)]).filter(([, j]) => j >= 0 && ds[j][1].length)
     .map(([i, j]) => ({ cot: i, nguon: `'Danh mục'!$${chuCot(j)}$2:$${chuCot(j)}$${ds[j][1].length + 1}`, den: Math.max(1001, rows.length + 501) }));
   const dai = Math.max(...ds.map(([, v]) => v.length));
   return taoXlsx([
-    { ten: 'Nhập liệu', cot, dong: rows.map((r) => TRUONG_MAU.map((t) => giaTriXuat(r, t.k, ctx))), kiemTra },
-    { ten: 'Danh mục', cot: ds.map(([nhan]) => ({ nhan, rong: 30 })), dong: Array.from({ length: dai }, (_, i) => ds.map(([, v]) => v[i] ?? null)) },
-    { ten: 'Hướng dẫn', cot: [{ nhan: 'Hướng dẫn nhập', rong: 140 }], dong: HUONG_DAN },
+    { ten: 'Nhập liệu', cot, dong: rows.map((r, i) => COT_MAU.map(([k]) => giaTriXuat(r, k, i, ctx))), kiemTra },
+    { ten: 'Danh mục', cot: ds.map(([nhan]) => ({ nhan, rong: 34 })), dong: Array.from({ length: dai }, (_, i) => ds.map(([, v]) => v[i] ?? null)) },
+    { ten: 'Hướng dẫn', cot: [{ nhan: 'Hướng dẫn nhập', rong: 150 }], dong: HUONG_DAN },
   ]);
 }
 
 // Giá trị một ô khi xuất việc đang có theo mẫu (tên hiển thị — nhập lại khớp ngược về mã).
-function giaTriXuat(r, k, { findAccount, tenPhong, dm }) {
-  const nguoi = (id) => { const a = id && findAccount(id); return a ? nhanCanBo(a, tenPhong) : ''; };
-  const lanhDao = () => (r.giao_thay_mat_nhom ? `${tenNhomThayMat(r.giao_thay_mat_nhom)} (cả nhóm)` : nguoi(r.giao_thay_mat_cho) || (['A1', 'A2'].includes(findAccount(r.tao_boi)?.role_group) ? nguoi(r.tao_boi) : ''));
+function giaTriXuat(r, k, i, { findAccount, tenPhong, accounts = [] }) {
   switch (k) {
-    case 'ma': return r.ma;
-    case 'loai_van_ban': return ten(LOAI_VB, r.van_ban_loai);
+    case 'stt': return i + 1;
     case 'so_hoi_nghi': return r.so_hoi_nghi ?? null;
-    case 'so_ket_luan': return r.so_ket_luan;
-    case 'ngay_ban_hanh': return r.ngay_ban_hanh;
-    case 'noi_dung': return r.noi_dung;
-    case 'don_vi': return r.owner_don_vi_ten || '';
-    case 'can_bo': return nguoi(r.owner_tai_khoan);
-    case 'theo_doi': return nguoi(r.nguoi_theo_doi);
-    case 'lanh_dao_giao': return lanhDao();
-    case 'loai_thoi_han': return r.loai_thoi_han_ten || '';
-    case 'han_xu_ly': return r.han_xu_ly;
-    case 'san_pham': return r.san_pham_ten || '';
-    case 'cap_nhan': return r.cap_nhan_san_pham_ten || '';
-    case 'do_khan': return ten(DO_KHAN, r.do_khan);
-    case 'nguon': return r.nguon_nhiem_vu_ten || '';
+    case 'chu_tri': { const a = r.owner_tai_khoan && findAccount(r.owner_tai_khoan); return a ? tenChuTri(a, accounts, tenPhong) : r.owner_don_vi_ten || ''; }
     case 'nganh': return r.nganh_ten || '';
-    case 'linh_vuc': return r.linh_vuc_ten || '';
-    case 'tien_do': return ten(TIEN_DO, r.tien_do_ma);
-    case 'vuong_mac': return r.vuong_mac || '';
-    case 'chat_luong': return ten(CHAT_LUONG, r.chat_luong);
-    case 'muc_quan_trong': return r.muc_quan_trong ? tenMucQuanTrong(r.muc_quan_trong) : '';
     case 'co_quan_trinh': return r.co_quan_trinh_ten || '';
-    case 'thuong_truc_chi_dao': return r.thuong_truc_chi_dao_ten || '';
-    case 'muc_tieu': return sapTheoDanhMuc(mucTieuCua(r), dm?.mucTieu).map((ma) => tenMucTieu(dm?.mucTieu, ma)).join('; ');   // 0106: gắn riêng hoặc theo văn bản
-    default: return '';
+    case 'loai_thoi_han': return r.loai_thoi_han_ten || '';
+    case 'tien_do': return ten(TIEN_DO, r.tien_do_ma);
+    case 'kq_mo_ta': return r.ket_qua_xuat || '';
+    default: return r[k] ?? '';   // so_ket_luan, ngay_ban_hanh, linh_vuc_chi_tiet, noi_dung, han_xu_ly, van_ban_trien_khai, ma
   }
+}
+
+// Kết quả / minh chứng một việc để xuất cột M: minh chứng mới nhất còn hiệu lực — số hiệu, ngày, trích yếu, mô tả; minh chứng chữ (dữ liệu chuyển đổi).
+export function chuKetQua(mc) {
+  if (!mc) return '';
+  const ngay = mc.ngay_van_ban ? String(mc.ngay_van_ban).split('-').reverse().join('/') : '';
+  return [mc.so_hieu ? `Số ${mc.so_hieu}` : '', ngay ? `ngày ${ngay}` : '', mc.trich_yeu, mc.mo_ta_ket_qua, mc.noi_dung_chu].filter(Boolean).join(' · ');
 }

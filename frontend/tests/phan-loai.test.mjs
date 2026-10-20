@@ -187,6 +187,11 @@ describe('Tệp rà soát phân loại', () => {
     assert.deepEqual([k.nganh, k.linh_vuc, k.muc_tieu, k.loi], ['KINH_TE_TONG_HOP', 'LV08_DAU_TU', ['DP_HA_TANG', 'NQ_57'], []]);
     assert.equal(d.ten, 'Danh mục'); assert.ok(d.dong.some((x) => x[2] === 'Không thuộc mục tiêu then chốt'));
     assert.deepEqual(s.kiemTra.map((x) => x.cot), [5, 6]);
+    // v3.27: mục tiêu tạm ẩn (coMt = false) — không cột mục tiêu; tệp đọc vào bỏ qua cột mục tiêu (kể cả tệp cũ còn cột)
+    const [s2, d2] = bangRaSoat([{ ma: 'NV-9', nganh_ma: 'KINH_TE_TONG_HOP', muc_tieu: ['NQ_57'] }], DM, false);
+    assert.ok(!s2.cot.some((c) => c.nhan === 'Mục tiêu then chốt')); assert.equal(s2.dong[0].length, 8); assert.equal(d2.cot.length, 2);
+    const b2 = docBangRaSoat([{ ten: 'R', dong: [s.cot.map((c) => c.nhan), s.dong[0]] }], false);
+    assert.deepEqual([b2.coCot.mucTieu, b2.dong[0].mucTieu, b2.dong[0].nganh !== ''], [false, '', true]);
   });
   test('tóm tắt kết quả máy chủ; chuẩn hoá chữ', () => {
     const t = tomTat([{ ket_qua: 'DOI', doi: ['nganh_ma', 'muc_tieu'], canh_bao: 'x', da_xong: true }, { ket_qua: 'DOI', doi: ['muc_tieu'] }, { ket_qua: 'GIU' }, { ket_qua: 'LOI' }]);

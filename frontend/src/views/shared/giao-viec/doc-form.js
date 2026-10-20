@@ -48,13 +48,13 @@ export function docForm(cha) {
   if (laA0()) {   // A0: DB tự suy người theo dõi, đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
     if (laMoi() && !vbTrong()) p.van_ban = vanBanMoi(); else if (!laMoi()) p.van_ban_id = $('klThVanBan').value;
     if (canNganhHienTai()) Object.assign(p, { nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null, ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value });
-    return { ...p, ...docThongTinNguon() };   // Đợt D: Thường trực điền mức quan trọng / cơ quan trình ngay khi giao (Thường trực chỉ đạo trống = chính mình)
+    return { ...p, ...docThongTinNguon(), linh_vuc_chi_tiet: $('klThLvct').value.trim() || null };   // Đợt D: Thường trực điền mức quan trọng / cơ quan trình ngay khi giao (Thường trực chỉ đạo trống = chính mình)
   }
   Object.assign(p, {
     ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value, cap_quyet_dinh: $('klThCapQD').value || null,
     nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null,
     nguoi_theo_doi: laA3GiaoThang() ? state.user?.id || null : $('klThNguoiTheoDoi').value || null,   // 0085: chuyên viên giao thẳng — theo dõi = người giao
-    van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThGhiChu').value.trim() || null,
+    van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThLvct').value.trim() || null,   // v3.27: ô của thẻ 1
     ...docThongTinNguon(),   // Đợt C2: phần chung của lượt (tachDong để ở chung)
   });
   if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;
@@ -64,7 +64,7 @@ export function docForm(cha) {
 // Có thẻ thêm → giao_viec_nhieu(p_chung, p_dong): tách docForm thành phần chung (văn bản, nguồn, thay mặt, ngày giao, cấp quyết định, văn bản triển
 // khai, ghi chú, theo_1400) và dòng 1 = các khoá của thẻ nhiệm vụ (cùng khoá với nhieu.js docDong cho thẻ 2…n).
 const KHOA_DONG = ['noi_dung', 'owner_don_vi_ma', 'owner_tai_khoan', 'nguoi_theo_doi', 'do_khan', 'san_pham_loai', 'san_pham_mo_ta', 'cap_nhan_san_pham',
-  'loai_thoi_han_ma', 'han_xu_ly', 'nganh_ma', 'linh_vuc_ma', 'don_vi_phoi_hop', 'dong_nhap_id', 'vuong_mac'];
+  'loai_thoi_han_ma', 'han_xu_ly', 'nganh_ma', 'linh_vuc_ma', 'don_vi_phoi_hop', 'dong_nhap_id', 'vuong_mac', 'co_quan_trinh', 'linh_vuc_chi_tiet'];   // v3.27: + cơ quan trình, lĩnh vực chi tiết theo thẻ
 export function tachDong(p) {
   const chung = { ...p }; const dong1 = {};
   KHOA_DONG.forEach((k) => { if (k in chung) { dong1[k] = chung[k]; delete chung[k]; } });

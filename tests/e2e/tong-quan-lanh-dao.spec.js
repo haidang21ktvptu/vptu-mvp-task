@@ -5,12 +5,14 @@
 // mục tiêu, việc tính theo văn bản; ngăn chi tiết: chip "theo văn bản", bút → gắn riêng cho việc (DB + lịch sử) → "Lưu cho cả văn bản" (mặc định
 // văn bản đổi, việc bỏ gắn riêng); danh sách Nhiệm vụ lọc
 // theo mục tiêu; khối 2 của Tổng quan mở đúng việc. (3) Chuyên viên chủ trì thấy mục tiêu, không có bút. Dữ liệu theo khoá riêng, tự dọn.
+// v3.27 (chủ dự án 20/10/2026): mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) — khối 2 là "Theo chủ trì theo dõi" (tổng cộng = cộng các dòng; bấm tên → danh
+// sách = cột Tổng); khối Chất lượng ẩn khi chưa có việc được xếp loại (khối nội bộ lùi lên số 8); bước 2–3 (mục tiêu) bỏ qua có ghi lý do.
 import { test, expect } from '@playwright/test';
-import { pageAs, moGiaoViec, moViec, nav, NAP, chonPhanLoai } from './lib/app.js';
+import { pageAs, moGiaoViec, moViec, nav, NAP, chonPhanLoai, HIEN_MUC_TIEU, LY_DO_AN_MT } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
-const KHOI = ['tqNghen', 'tqMucTieu', 'tqLinhVuc', 'tqXepHang', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
+const KHOI = ['tqNghen', HIEN_MUC_TIEU ? 'tqMucTieu' : 'tqChuTri', 'tqLinhVuc', 'tqXepHang', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
 // Đọc số và bấm TRONG CÙNG một lượt JS (realtime có thể vẽ lại giữa hai bước) — như ngan-chi-tiet.spec.js.
 const docVaBam = (page, docSel, bamSel = docSel) => page.evaluate(([d, b]) => {
   const o = globalThis.document.querySelector(d);
@@ -31,17 +33,32 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
   });
   test.afterAll(async () => { if (db) await don(); });
 
-  test('1. Chánh VP: 9 khối; lọc nhanh, chip, mở danh sách theo bộ lọc; bộ lọc chi tiết nhớ theo máy; khối 3 mở ngành; khối 9 gập sẵn', async ({ browser }, testInfo) => {
+  test('1. Chánh VP: 9 khối (8 khi chưa có việc xếp loại); khối 2; lọc nhanh, chip, danh sách theo bộ lọc; bộ lọc chi tiết nhớ theo máy; khối 3; khối nội bộ gập sẵn', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
     const tq = page.locator('#viewTongQuan'); const ngan = page.locator('#nganCT'); const viec = ngan.locator('.nct-viec');
     const dong = async () => { await page.keyboard.press('Escape'); await expect(ngan).toBeHidden(); };
     await expect(tq).toHaveAttribute('data-nap', /./, NAP);
     const thuTu = await tq.evaluate((el, ids) => {
       const id = [...el.querySelectorAll(':scope > .luoi-tq > [id]')].map((x) => x.id).filter((x) => ids.includes(x));
-      return { id, so: ids.map((x) => el.querySelector(`#${x} .so-khoi`)?.textContent) };
+      return { id, so: id.map((x) => el.querySelector(`#${x} .so-khoi`)?.textContent) };
     }, KHOI);
-    expect(thuTu.id, 'chín khối theo đúng thứ tự bố cục').toEqual(KHOI);
-    expect(thuTu.so).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+    const mong = KHOI.filter((x) => x !== 'tqChatLuong' || thuTu.id.includes('tqChatLuong'));   // v3.27: Chất lượng chỉ hiện khi có việc được xếp loại
+    expect(thuTu.id, 'các khối theo đúng thứ tự bố cục').toEqual(mong);
+    expect(thuTu.so, 'số khối liền nhau').toEqual(mong.map((_, i) => String(i + 1)));
+
+    if (!HIEN_MUC_TIEU) {   // v3.27: khối 2 "Theo chủ trì theo dõi" — tổng = hoàn thành + đang thực hiện + quá hạn; tổng cộng = cộng các dòng; bấm tên → cột Tổng
+      const bang = await page.locator('#tqChuTri').evaluate((el) => {
+        const n = (o) => Number((o?.textContent || '0').replace(/\D/g, '') || 0);
+        return { dong: [...el.querySelectorAll('tbody tr')].map((tr) => ['Tổng', 'Hoàn thành', 'Đang thực hiện', 'Quá hạn'].map((c) => n(tr.querySelector(`td[data-n="${c}"]`)))),
+          chan: [...el.querySelectorAll('tfoot td.so')].map(n) };
+      });
+      expect(bang.dong.length, 'khối 2 có số liệu').toBeGreaterThan(0);
+      for (const [t, x, d, q] of bang.dong) expect(t, 'Tổng = Hoàn thành + Đang thực hiện + Quá hạn').toBe(x + d + q);
+      expect(bang.chan, 'dòng Tổng cộng').toEqual([0, 1, 2, 3].map((i) => bang.dong.reduce((s, d) => s + d[i], 0)));
+      const soCt = await docVaBam(page, '#tqChuTri tbody tr:first-child td[data-n="Tổng"]', '#tqChuTri tbody tr:first-child .ten-bam');
+      await expect(viec, 'khối 2 — danh sách của chủ trì = cột Tổng').toHaveCount(soCt, NAP);
+      await dong();
+    }
 
     // Lọc nhanh → chip → danh sách theo bộ lọc đúng số đang lọc → bỏ chip.
     const nhanh = page.locator('#tqLoc [data-action="tqNhanh"][data-n="qh30"]');
@@ -82,7 +99,7 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
     await expect(viec, 'khối 3 — Toàn bộ').toHaveCount(tong);
     await dong();
 
-    // Khối 9: gập sẵn với lãnh đạo Văn phòng; mở → nhớ sau tải lại; gập lại.
+    // Khối nội bộ (9, hoặc 8 khi khối Chất lượng ẩn): gập sẵn với lãnh đạo Văn phòng; mở → nhớ sau tải lại; gập lại.
     const nut = page.locator('#tqNoiBoNut');
     await expect(nut).toHaveAttribute('aria-expanded', 'false');
     await expect(page.locator('#tqNoiBoThan')).toBeHidden();
@@ -97,6 +114,7 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
   });
 
   test('2. Trưởng phòng: giao từ văn bản mới có mục tiêu → văn bản mang mục tiêu; ngăn chi tiết gắn riêng, lưu cho cả văn bản; lọc Nhiệm vụ; khối 2', async ({ browser }, testInfo) => {
+    test.skip(!HIEN_MUC_TIEU, LY_DO_AN_MT);
     await voiPhien(browser, 'A2', testInfo, async (p) => {
       await moGiaoViec(p);
       await p.locator('#klThVanBan').selectOption('__moi__'); await p.locator('#klThLoaiVB').selectOption('CONG_VAN');
@@ -182,6 +200,7 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
   });
 
   test('3. Chuyên viên chủ trì: thấy mục tiêu của việc (theo văn bản), không có bút gắn mục tiêu', async ({ browser }, testInfo) => {
+    test.skip(!HIEN_MUC_TIEU, LY_DO_AN_MT);
     test.skip(!nv, 'Bước 2 chưa tạo được việc.');
     await voiPhien(browser, 'A3', testInfo, async (p) => {
       await moViec(p, nv.id, nv.ma);

@@ -40,7 +40,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThVanBanWrap')).toBeVisible();         // v8 đợt 4: A0 nhập được văn bản; để trống số hiệu + ngày → DB ghi mốc "Thường trực giao …"
     await expect(page.locator('#klThVanBan')).toHaveValue('__moi__');
     await expect(page.locator('#gvVbA0')).toBeVisible();
-    await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();    // người theo dõi tự suy
+    await expect(page.locator('#klThNguoiTheoDoiWrap')).toHaveClass(/\bhidden\b/);    // người theo dõi tự suy (v3.27: ô nằm trong mục gập "Thêm" — kiểm lớp ẩn)
     await expect(page.locator('#klThThayMatWrap')).toBeHidden();
     await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');
     await expect(page.locator('#klThDoKhanWrap .dk-chon button[aria-pressed="true"]')).toHaveText(/Khẩn/);   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
@@ -49,7 +49,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await page.locator('#klThOwner').selectOption(`tk:${CVP_ID}`);
     await page.locator('#klThSanPham').selectOption('BAO_CAO');
     await page.locator('#klThHan').fill(congNgay(homNayVN(), 10));
-    await expect(page.locator('#gvTomTatChu')).toContainText('độ khẩn Khẩn');
+    await expect(page.locator('#gvTomTatChu')).toContainText('Độ khẩn: Khẩn');
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
@@ -70,7 +70,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await page.goto('./');
     await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
     await moGiaoViec(page);
-    await expect(page.locator('#gvNganhWrap')).toBeHidden(); // chưa nhập văn bản → giao trực tiếp (văn bản KHAC), không đòi ngành
+    await expect(page.locator('#klThNganhWrap')).toBeHidden(); // chưa nhập văn bản → giao trực tiếp (văn bản KHAC), không đòi ngành (v3.27: ô ngành ở thẻ 1)
     await page.locator('#klThLoaiVB').selectOption('KL_BTV');
     await page.locator('#klThSoKL').fill(soKL); await page.locator('#klThNgayBH').fill(congNgay(homNayVN(), -3));
     await expect(page.locator('#gvConThieu')).toContainText('số hội nghị'); // KL_BTV thiếu số hội nghị → liệt kê ngay, khớp kiemTra
@@ -78,7 +78,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThNganhBatBuoc')).toBeVisible();        // dấu * động: kết luận → ngành/lĩnh vực bắt buộc
     await page.locator('#klThSoHN').fill('99');
     await expect(page.locator('#gvConThieu')).not.toContainText('số hội nghị');
-    await expect(page.locator('#gvNganhWrap')).toBeVisible();
+    await expect(page.locator('#klThNganhWrap')).toBeVisible(); await expect(page.locator('#klThLinhVucWrap')).toBeVisible();
     await expect(page.locator('#klThNgayNhanWrap')).toBeVisible();
     await expect(page.locator('#klThLoaiWrap')).toBeVisible();
     await page.locator('#klThNoiDung').fill(nd);

@@ -6,7 +6,7 @@
 import { ngayGiao, ngayXong, laMo, laXong, laViecGoc, xongTrongKy, mucMo, chiDaoPhan } from './tong-quan.js';
 import { loaiCua } from './tong-quan-them.js';
 import { CHUA_PHAN_LOAI } from './tong-hop.js';
-import { mucTieuCua } from './muc-tieu.js';
+import { mucTieuCua, HIEN_MUC_TIEU } from './muc-tieu.js';
 import { doanCua, DOAN, dongCuaKhoi, diemNghen, locCapNghen, khoaXepHang, vuongMacCho, chatLuongDuLieu } from './tong-quan-lanh-dao.js';
 
 export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ xác nhận minh chứng (nộp trước v3.20)', vang: 'Cảnh báo Vàng', do: 'Cảnh báo Đỏ', ddb: 'Cảnh báo Đỏ đặc biệt',
@@ -45,6 +45,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     }
     case 'nhom': {
       const cua = khoa ? rows.filter((r) => khoa(r)[0] === ct.ma) : [];
+      if (ct.m === 'qh') return { tieuDe: `${ct.ten || 'Nhóm'} — Quá hạn (Đỏ, Đỏ đặc biệt)`, rows: cua.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };   // v3.27: khối 2
       if (ct.m) return { tieuDe: `${ct.ten || 'Nhóm'} — ${TEN_MUC[ct.m] || ''}`, rows: cua.filter((r) => laMo(r) && mucMo(r) === ct.m) };
       return { tieuDe: ct.ten || 'Nhóm', nhom: moVaXong(cua, k) };
     }
@@ -99,8 +100,8 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'vm': return { tieuDe: 'Vướng mắc chờ lãnh đạo cho ý kiến', rows: vuongMacCho(rows) };
     case 'cldl': {
       const c = chatLuongDuLieu(rows);
-      return { tieuDe: 'Nhiệm vụ cần bổ sung thông tin', nhom: [{ ten: 'Chưa phân loại mục tiêu then chốt', rows: c.chuaMucTieu }, { ten: 'Chưa có ngành, lĩnh vực', rows: c.chuaNganh },
-        { ten: 'Hoàn thành chưa có ngày hoàn thành', rows: c.xongChuaNgay }] };
+      return { tieuDe: 'Nhiệm vụ cần bổ sung thông tin', nhom: [...(HIEN_MUC_TIEU ? [{ ten: 'Chưa phân loại mục tiêu then chốt', rows: c.chuaMucTieu }] : []),   // v3.27: tạm ẩn
+        { ten: 'Chưa có ngành, lĩnh vực', rows: c.chuaNganh }, { ten: 'Hoàn thành chưa có ngày hoàn thành', rows: c.xongChuaNgay }] };
     }
     case 'loc': return { tieuDe: 'Nhiệm vụ theo bộ lọc', nhom: [{ ten: 'Đang thực hiện', rows: rows.filter(laMo) }, { ten: 'Đã hoàn thành', rows: rows.filter(laXong) }] };
     default: return { tieuDe: 'Nhiệm vụ', rows: [] };

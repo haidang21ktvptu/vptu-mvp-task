@@ -18,12 +18,14 @@ const BI_DANH = {
   loai_thoi_han: { 'co han': 'CO_HAN_CU_THE', 'ky ban hanh': 'KY_BAN_HANH', 'thuong xuyen': 'THUONG_XUYEN', 'cho quyet dinh': 'CHO_QUYET_DINH' },
   do_khan: { 'binh thuong': 'THUONG', 'hoa toc': 'HOA_TOC', 'thuong khan': 'THUONG_KHAN', khan: 'KHAN', thuong: 'THUONG' },
   tien_do: { 'da hoan thanh': 'HOAN_THANH', xong: 'HOAN_THANH', 'da xong': 'HOAN_THANH', 'hoan thanh': 'HOAN_THANH', 'dang thuc hien': 'DANG_THUC_HIEN',
-    'dang lam': 'DANG_THUC_HIEN', 'chua hoan thanh': 'DANG_THUC_HIEN', 'chua thuc hien': 'DANG_THUC_HIEN', 'qua han': 'DANG_THUC_HIEN' },
+    'dang lam': 'DANG_THUC_HIEN', 'chua hoan thanh': 'DANG_THUC_HIEN', 'chua thuc hien': 'DANG_THUC_HIEN', 'qua han': 'DANG_THUC_HIEN',
+    // v3.27: nhãn của bảng Phụ lục — "Chưa hoàn thành (quá hạn)" trước đây khớp gần đúng nhầm sang Hoàn thành (chứa chữ "hoàn thành").
+    'chua hoan thanh (qua han)': 'DANG_THUC_HIEN', 'chua hoan thanh qua han': 'DANG_THUC_HIEN', 'co ban da hoan thanh': 'DANG_THUC_HIEN', 'co ban hoan thanh': 'DANG_THUC_HIEN' },
   chat_luong: { 'khong dat': 'KHONG_DAT', 'xuat sac': 'DAT_XUAT_SAC', 'dat xuat sac': 'DAT_XUAT_SAC', tot: 'DAT_TOT', 'dat tot': 'DAT_TOT', dat: 'DAT' },
   muc_quan_trong: { 'muc a': 'A', 'muc b': 'B', 'muc c': 'C', 'rat quan trong': 'A', 'quan trong': 'B', 'thong thuong': 'C', 'binh thuong': 'C' },   // 0093
 };
 // Kiểu trường → loại từ điển (khớp CHECK của tu_dien_nhap).
-export const LOAI_TU_DIEN = { loaiVanBan: 'loai_van_ban', donVi: 'don_vi', canBo: 'can_bo', lanhDao: 'can_bo', loaiThoiHan: 'loai_thoi_han', sanPham: 'san_pham', cap: 'cap',
+export const LOAI_TU_DIEN = { loaiVanBan: 'loai_van_ban', donVi: 'don_vi', coQuanTrinh: 'don_vi', canBo: 'can_bo', lanhDao: 'can_bo', chuTri: 'can_bo', loaiThoiHan: 'loai_thoi_han', sanPham: 'san_pham', cap: 'cap',
   doKhan: 'do_khan', nguon: 'nguon', nganh: 'nganh', linhVuc: 'linh_vuc', tienDo: 'tien_do', chatLuong: 'chat_luong' };
 
 const boSo = (s) => chuanChu(s).replace(/^\d+[.)]\s*/, '');
@@ -93,6 +95,26 @@ function khopCanBo(v, accounts, tuDien, tenPhong) {
   return { loi: 'không khớp cán bộ nào', chon: [] };
 }
 
+// v3.27 — cột "Chủ trì theo dõi" của bảng Phụ lục: "VPTU" / "Văn phòng Tỉnh ủy" → đơn vị Văn phòng Tỉnh ủy (xét TRƯỚC từ điển: từ điển cán bộ có thể đã
+// ghi "vptu" → một người khi nhập theo cột cũ); còn lại khớp cán bộ (→ "tk:<id>"), không được thì khớp một phòng của Văn phòng (→ "dv:<mã>").
+export const VP_DON_VI = 'VAN_PHONG_TINH_UY';
+const BI_DANH_VP = ['vptu', 'vp tu', 'van phong', 'van phong tinh uy', 'vp tinh uy'];
+function khopChuTri(v, ctx, td) {
+  const c = chuanChu(v).replace(/^\d+[.)]\s*/, '');
+  const vp = (ctx.dm.donVi || []).find((d) => d.ma === VP_DON_VI);
+  if (vp && BI_DANH_VP.includes(c)) return { ma: `dv:${vp.ma}`, hien: vp.ten, gan: 'ten' };
+  const daChon = td?.get(chuanChu(v)) || '';   // người nhập đã chọn ở bước xem trước (lưu "tk:<id>" / "dv:<mã>")
+  const tk = daChon.startsWith('tk:') && (ctx.accounts || []).find((a) => a.id === daChon.slice(3) && !a.is_system);
+  if (tk) return { ma: daChon, hien: `${tk.full_name}${tk.department ? ` — ${(ctx.tenPhong || ((x) => x))(tk.department)}` : ''}`, gan: 'tu_dien' };
+  const dvChon = daChon.startsWith('dv:') && (ctx.dm.donVi || []).find((d) => d.ma === daChon.slice(3) && d.trong_van_phong);
+  if (dvChon) return { ma: daChon, hien: dvChon.ten, gan: 'tu_dien' };
+  const cb = khopCanBo(v, ctx.accounts || [], td, ctx.tenPhong || ((x) => x || ''));
+  if (cb.ma) return { ...cb, ma: `tk:${cb.ma}` };
+  const dv = khopDanhMuc(v, (ctx.dm.donVi || []).filter((d) => d.trong_van_phong), null);
+  if (dv.ma) return { ...dv, ma: `dv:${dv.ma}` };
+  return { loi: cb.loi || 'không khớp cán bộ hay phòng nào', chon: (cb.chon || []).map((x) => ({ ...x, ma: `tk:${x.ma}` })) };
+}
+
 // Mục tiêu then chốt (v3.24): nhiều mục cách nhau bằng ';' hoặc xuống dòng (tên ngắn có dấu phẩy); mỗi mục khớp mã → tên ngắn / tên đầy đủ → gần
 // đúng duy nhất. Không mục nào khớp → lỗi (ô tuỳ chọn: bỏ giá trị, vẫn nhập dòng); khớp một phần → giữ phần khớp, ghi phần bỏ (gần đúng: xem lại).
 export function khopMucTieuNhap(v, ds) {
@@ -110,7 +132,10 @@ export function khopMucTieuNhap(v, ds) {
   return { ma: giu, hien: ghi ? `${hien} (${ghi})` : hien, gan: ghi || ganDung ? 'gan_dung' : 'ten' };
 }
 
-// ctx: { dm (danhMucKl), accounts, tuDien: Map<loai, Map<goc, ma>>, tenPhong(ma) }. kieu theo truong.js. → { ma, hien, gan } | { loi, chon } | null (ô trống)
+// Cơ quan trình (0087; v3.27 — 0117): đơn vị ngoài Văn phòng, và "1. Văn phòng Tỉnh ủy" (danh mục 13 cơ quan, đơn vị trình của bảng Phụ lục).
+export const dsCoQuanTrinh = (dm) => (dm?.donVi || []).filter((d) => !d.trong_van_phong || d.ma === VP_DON_VI);
+
+// ctx: { dm (danhMucKl), accounts: Map<loai, Map<goc, ma>>, tenPhong(ma) }. kieu theo truong.js. → { ma, hien, gan } | { loi, chon } | null (ô trống)
 export function chuanGiaTri(kieu, v, ctx, them = {}) {
   if (v === null || v === undefined || String(v).trim() === '') return null;
   const td = ctx.tuDien?.get(LOAI_TU_DIEN[kieu]);
@@ -133,7 +158,8 @@ export function chuanGiaTri(kieu, v, ctx, them = {}) {
     case 'lanhDao': return khopLanhDao(v, ctx.accounts || [], td, ctx.tenPhong || ((x) => x || ''));
     // 0093: ba ô nguồn — không có từ điển (ô tuỳ chọn: không khớp thì bỏ giá trị, vẫn nhập dòng).
     case 'mucQT': return khopDanhMuc(v, tuDs(MUC_QUAN_TRONG), null, BI_DANH.muc_quan_trong);
-    case 'coQuanTrinh': return khopDanhMuc(v, (ctx.dm.donVi || []).filter((d) => !d.trong_van_phong), null);
+    case 'coQuanTrinh': return khopDanhMuc(v, dsCoQuanTrinh(ctx.dm), td);   // v3.27 (0117): + "1. Văn phòng Tỉnh ủy"; từ điển chung với đơn vị (mã phải là cơ quan trình)
+    case 'chuTri': return khopChuTri(v, ctx, td);
     case 'thuongTruc': return khopCanBo(v, (ctx.accounts || []).filter((a) => a.role_group === 'A0'), null, ctx.tenPhong || ((x) => x || ''));
     case 'mucTieu': return khopMucTieuNhap(v, ctx.dm.mucTieu || []);   // v3.24 (0106)
     default: { const s = String(v).replace(/\r\n?/g, '\n').trim(); return { ma: s, hien: s }; }

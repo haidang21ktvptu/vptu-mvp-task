@@ -3,8 +3,9 @@
 // Thuần chuỗi HTML; mọi chữ người dùng đều escape. Tên lớp ghi nguyên văn (Tailwind giữ lớp có trong mã).
 import { escapeHtml } from '../../../lib/dom.js';
 import { TRUONG, TEN_MUC, nhanTruong, truong } from '../../../lib/kl/nhap/truong.js';
-import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG } from '../../../lib/kl/nhap/chuan-hoa.js';
+import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG, dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';
 import { hienGoc } from '../../../lib/kl/nhap/bang.js';
+import { formatNgay } from '../../../lib/kl/ngay.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../../../lib/kl/thay-mat.js';
 
 const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
@@ -15,16 +16,17 @@ export const chipKq = (k) => `<span class="${KQ[k]?.[1] || 'nx-kq'}">${KQ[k]?.[0
 
 export const khungNhapHtml = () => `
   <section class="tam nx-phan" aria-labelledby="nxTieuDe">
-    <div class="tam-dau"><h2 id="nxTieuDe">Nhập nhiệm vụ từ tệp Excel</h2><span class="chu-phu">chuẩn ba mức: đủ để giao · tiến độ · đủ để đóng</span></div>
+    <div class="tam-dau"><h2 id="nxTieuDe">Nhập nhiệm vụ từ tệp Excel</h2><span class="chu-phu">mẫu chuẩn = bảng Phụ lục theo dõi kết luận (cột A–O)</span></div>
     <div class="nx-chon">
       <label class="nut chinh nx-tep" for="nxTep">Chọn tệp .xlsx</label>
       <input type="file" id="nxTep" class="sr-only" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-      <span id="nxTenTep" class="chu-phu" aria-live="polite">Mẫu chuẩn của hệ thống hoặc bảng đang dùng (Phụ lục 2…) — hệ thống tự nhận dòng tiêu đề và cột.</span>
+      <span id="nxTenTep" class="chu-phu" aria-live="polite">Mẫu chuẩn hoặc bảng Phụ lục đang dùng (tiêu đề ở dòng nào cũng được) — hệ thống tự nhận dòng tiêu đề và cột.</span>
       <button type="button" class="nut" data-action="nxTaiMau">Tải mẫu nhập chuẩn</button>
     </div>
-    <ul class="nx-muc"><li class="nx-m1"><b>Mức 1 — đủ để giao</b> văn bản, nội dung, chủ trì, sản phẩm, hạn; thiếu → vào "Chờ hoàn thiện", không mất dòng.</li>
-      <li class="nx-m2"><b>Mức 2 — tiến độ</b> đang thực hiện / hoàn thành, vướng mắc.</li>
-      <li class="nx-m3"><b>Mức 3 — đủ để đóng</b> số hiệu, ngày, trích yếu văn bản kết quả, mô tả kết quả; chất lượng.</li></ul>
+    <ul class="nx-muc"><li class="nx-m1"><b>Điền đủ cột B–M là nhập ngay</b> số hội nghị, số TB/KL, ngày ban hành, chủ trì theo dõi, ngành/lĩnh vực, cơ quan trình, nội dung,
+      loại thời hạn, hạn, tiến độ, kết quả; sản phẩm, lĩnh vực theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
+      <li class="nx-m2"><b>Đang thực hiện</b> giao cho người chủ trì; cột M ghi tiến độ thì vào ghi chú.</li>
+      <li class="nx-m3"><b>Hoàn thành</b> chọn "Đã xong ngoài hệ thống" (cột M thành minh chứng) hoặc "Ghi minh chứng".</li></ul>
   </section>
   <div id="nxBuoc"></div>`;
 
@@ -57,6 +59,9 @@ export function luaChon(kieu, ctx, them = [], k = '') {
     || (kieu === 'lanhDao' ? [...NHOM_THAY_MAT.map(([ma, ten]) => ({ ma: giaTriNhom(ma), ten: `${ten} (cả nhóm)` })), ...luaChon('canBo', ctx, [], 'lanh_dao_giao')]
       : kieu === 'canBo' ? ctx.accounts.filter((a) => canBoChon(a, k)).map((a) => ({ ma: a.id, ten: `${a.full_name} — ${ctx.tenPhong(a.department)}` }))
       : kieu === 'linhVuc' ? (ctx.dm.linhVuc || []).map((l) => ({ ma: l.ma, ten: tenLv(l, ctx) }))
+      : kieu === 'chuTri' ? [...(ctx.dm.donVi || []).filter((d) => d.trong_van_phong).map((d) => ({ ma: `dv:${d.ma}`, ten: d.ten })),   // v3.27: cột "Chủ trì theo dõi"
+        ...ctx.accounts.filter((a) => canBoChon(a, k)).map((a) => ({ ma: `tk:${a.id}`, ten: `${a.full_name} — ${ctx.tenPhong(a.department)}` }))]
+      : kieu === 'coQuanTrinh' ? dsCoQuanTrinh(ctx.dm)
         : { donVi: ctx.dm.donVi, sanPham: ctx.dm.sanPham, cap: ctx.dm.cap, nguon: (ctx.dm.nguonNhiemVu || []).filter((x) => x.dang_dung), nganh: ctx.dm.nganh,
           loaiThoiHan: ctx.dm.loaiThoiHan }[kieu]) || [];
   const dau = ds.filter((d) => them.some((x) => x.ma === d.ma));
@@ -76,22 +81,31 @@ export function xemTruocHtml(s, ctx) {
       s.loDo ? ` <span class="chu-phu">(theo lô ${escapeHtml(s.loDo.ma)} đang nhập dở)</span>` : ''}</legend>
       <label><input type="radio" name="nxCheDo" value="DA_XONG_NGOAI"${s.cheDoXong === 'DA_XONG_NGOAI' ? ' checked' : ''}> Đã xong ngoài hệ thống — đóng ngay, không tính tỷ lệ đúng hạn (dữ liệu cũ)</label>
       <label><input type="radio" name="nxCheDo" value="CHO_NGHIEM_THU"${s.cheDoXong === 'CHO_NGHIEM_THU' ? ' checked' : ''}> Ghi minh chứng — giao như thường kèm minh chứng, việc hoàn thành theo ngày văn bản (lãnh đạo xem, đánh giá chất lượng khi muốn)</label></fieldset>` : ''}
-    ${s.coTuGan ? tuGanHtml(s) : ''}${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
+    ${s.coCotLoai ? '' : loaiVbHtml(s)}${s.coTuGan ? tuGanHtml(s) : ''}${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
     <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung</th><th scope="col">Chủ trì</th><th scope="col">Hạn</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
-      <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d, s.duKien?.(x) || '')).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>
+      <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d, s.duKien?.(x) || '', ctx.dm)).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>
     ${hien.length > s.soHien ? `<button type="button" class="nut nho" data-action="nxXemThem">Xem thêm ${Math.min(100, hien.length - s.soHien)} dòng (còn ${hien.length - s.soHien})</button>` : ''}</section>
     <div class="nx-chan"><span id="nxThongBao" class="chu-phu" aria-live="polite">${escapeHtml(s.thongBao || '')}</span>
       <button type="button" class="nut chinh" id="nxNhap" data-action="nxNhap"${s.choNhap ? '' : ' disabled'}>${s.loDo ? `Nhập tiếp lô ${escapeHtml(s.loDo.ma)}` : `Nhập ${s.dg.length} dòng`}</button></div>`;
 }
+// v3.27: tệp không có cột "Loại văn bản" (bảng Phụ lục) — chọn một lần cho cả tệp; đoán sẵn theo dòng tiêu đề của bảng.
+const loaiVbHtml = (s) => `<div class="nx-loai-vb"><label class="nhan" for="nxLoaiVb">Văn bản trong tệp là <b class="gv-bb" aria-hidden="true">*</b></label>
+  <select id="nxLoaiVb" class="o-nhap">${opt('', 'Tự nhận theo số hiệu (có số hội nghị → Kết luận Hội nghị Ban Thường vụ)', !s.loaiVb)}${LOAI_VB.map(([ma, t]) => opt(ma, t, ma === s.loaiVb)).join('')}</select>
+  <small class="chu-phu">${s.loaiVbDoan ? `đoán theo dòng tiêu đề của bảng: ${escapeHtml(LOAI_VB.find(([m]) => m === s.loaiVbDoan)?.[1] || '')} — đổi nếu chưa đúng` : 'tệp không có cột "Loại văn bản": chọn loại cho cả tệp'}</small></div>`;
 // v3.25: ô "Tự gắn mục tiêu then chốt" (mặc định bật) — dòng tạo việc không ghi mục tiêu được hệ thống gắn mục tích sẵn khi nhập (trigger 0110).
 const tuGanHtml = (s) => `<div class="nx-tu-gan"><label><input type="checkbox" id="nxTuGanMt"${s.tuGanMt ? ' checked' : ''}> Tự gắn mục tiêu then chốt theo quy tắc tích sẵn cho dòng không ghi mục tiêu</label>
   <small class="chu-phu" id="nxTuGanTom" aria-live="polite">${escapeHtml(s.tuGanTom || '')}</small></div>`;
 const hienO = (d, k) => (d.o[k] && !d.o[k].loi ? d.o[k].hien : '');
-function dongXemHtml(x, d, duKien = '') {
-  const chuTri = hienO(d, 'can_bo') || hienO(d, 'don_vi') || (x.gt.don_vi ? '(theo cán bộ)' : '');
-  const ghi = [...x.thieu.map((k) => `thiếu ${nhanTruong(k).toLowerCase()}${d.o[k]?.loi ? ` (${d.o[k].loi})` : ''}`), ...x.canhBao];
+// v3.27: ô trống điền theo quy tắc ghi rõ giá trị ở từng dòng ("tự điền: …"); cột Hạn là hạn sẽ ghi (kể cả hạn tự điền).
+const MD_HIEN = { san_pham: 'sanPham', linh_vuc: 'linhVuc', han_xu_ly: '', loai_thoi_han: 'loaiThoiHan', co_quan_trinh: 'donVi' };
+const tenMa = (k, v, dm = {}) => (k === 'han_xu_ly' ? formatNgay(v) : (dm[MD_HIEN[k]] || []).find((x) => x.ma === v)?.ten || v);
+function dongXemHtml(x, d, duKien = '', dm = {}) {
+  const chuTri = hienO(d, 'can_bo') || hienO(d, 'chu_tri') || hienO(d, 'don_vi') || (x.gt.don_vi ? '(theo cán bộ)' : '');
+  const tuDien = Object.keys(MD_HIEN).filter((k) => x.macDinh.has(k) && x.gt[k]).map((k) => `${nhanTruong(k).toLowerCase()} ${tenMa(k, x.gt[k], dm)}`);
+  const ghi = [...x.thieu.map((k) => `thiếu ${nhanTruong(k).toLowerCase()}${d.o[k]?.loi ? ` (${d.o[k].loi})` : ''}`), ...(tuDien.length ? [`tự điền: ${tuDien.join(', ')}`] : []), ...x.canhBao];
+  const han = hienO(d, 'han_xu_ly') || (x.gt.loai_thoi_han === 'KY_BAN_HANH' ? 'ký ban hành' : x.gt.han_xu_ly ? formatNgay(x.gt.han_xu_ly) : '');
   return `<tr data-dong="${d.soDong}"><td>${d.soDong}</td><td>${chipKq(x.ket_qua)}</td><td class="nx-nd">${escapeHtml(String(x.gt.noi_dung || x.gt.ma || '').slice(0, 140))}</td>
-    <td>${escapeHtml(chuTri)}</td><td>${escapeHtml(hienO(d, 'han_xu_ly') || (x.gt.loai_thoi_han === 'KY_BAN_HANH' ? 'ký ban hành' : ''))}</td>
+    <td>${escapeHtml(chuTri)}</td><td>${escapeHtml(han)}</td>
     <td class="chu-phu">${escapeHtml(ghi.join('; '))}<span class="nx-dk" data-dk="${d.soDong}">${escapeHtml(duKien)}</span></td></tr>`;
 }
 
@@ -130,8 +144,11 @@ function hangLoatHtml(thieuDem, s, ctx) {
 }
 // Ô trống tự điền theo quy tắc mặc định (danh-gia.js): một dòng tóm tắt (trường · số dòng), mở ra xem quy tắc — thay cho ghi chú lặp ở từng dòng.
 const QUY_TAC = { loai_van_ban: 'có số hội nghị → Kết luận Hội nghị Ban Thường vụ; ký hiệu TB / NQ / CV → loại tương ứng; còn lại → Văn bản khác',
-  do_khan: 'Thường', tien_do: 'Đang thực hiện', loai_thoi_han: 'Có hạn cụ thể', nguon: 'theo loại văn bản', don_vi: 'đơn vị của cán bộ chủ trì',
-  nganh: 'ngành của lĩnh vực', linh_vuc: 'ngành chỉ có một lĩnh vực', lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)',
+  do_khan: 'Thường', tien_do: 'Đang thực hiện', nguon: 'theo loại văn bản', don_vi: 'đơn vị của cán bộ chủ trì',
+  loai_thoi_han: 'Có hạn cụ thể (việc mới ghi "thường xuyên" / "chờ quyết định" cũng chuyển thành Có hạn cụ thể — loại gốc ghi ở ghi chú)',
+  han_xu_ly: 'việc đang làm còn trống hạn: 1 tháng kể từ hôm nay', san_pham: 'theo nội dung ("ban hành Kế hoạch…" → Kế hoạch; "Ký ban hành" → Dự thảo văn bản), còn lại Báo cáo',
+  co_quan_trinh: 'đơn vị ngoài Văn phòng ghi ở cột đơn vị chủ trì', nganh: 'ngành của lĩnh vực',
+  linh_vuc: 'ngành chỉ có một lĩnh vực; không thì theo lĩnh vực chi tiết, nội dung (ví dụ "kiểm tra, giám sát" → Kiểm tra Đảng); không nhận ra → lĩnh vực đầu của ngành (dòng ghi "kiểm tra lại")', lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)',
   theo_doi: 'cán bộ chủ trì; không có → Trưởng phòng chủ trì (việc của Văn phòng) hoặc lãnh đạo giao' };
 function macDinhHtml(s) {
   const dem = {}; s.dg.forEach((x) => x.macDinh.forEach((k) => { dem[k] = (dem[k] || 0) + 1; }));

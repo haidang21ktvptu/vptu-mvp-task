@@ -7,7 +7,7 @@
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, linhVucCuaNganh, tenTrongDanhMuc, loadPhanCongHieuLuc, xemToanBo } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, linhVucCuaNganh, tenTrongDanhMuc, loadPhanCongHieuLuc, xemToanBo, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { trongPhamVi, locCanBo, tuyChonCanBo, chiXem } from '../../../lib/kl/pham-vi.js';
 import { tongHop, sapXep, locRows, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
 import { THU_TU_NHOM, tenNhom, boSoThuTu } from '../../../lib/kl/nhan.js';
@@ -131,8 +131,9 @@ function dienBoLoc() {
     .map((m) => opt(m, `${tenDoKhan(m)} (${dk.get(m) || 0})`, kl.loc.doKhan === m)).join('');
   const mt = tuyChonMucTieu(rows, danhMucKl().mucTieu || [], danhMucKl().nhomMucTieu).map((g) => { const o = g.ds.map((x) => opt(x.ma, `${x.ten} (${x.n})`, kl.loc.mucTieu === x.ma)).join(''); return g.nhom ? `<optgroup label="${escapeHtml(g.nhom)}">${o}</optgroup>` : o; });
   $('klLocMucTieu').innerHTML = opt('', 'Mọi mục tiêu then chốt') + mt.join('');
-  show('klLocMucTieu', (danhMucKl().mucTieu || []).length > 0);
-  show('klRaSoatMt', (danhMucKl().mucTieu || []).length > 0 && state.user?.role_group !== 'A0' && !state.user?.bi_khoa);   // v3.25: lối vào Rà soát mục tiêu (gan_muc_tieu là chốt)
+  show('klLocMucTieu', coMucTieu());   // v3.27: mục tiêu tạm ẩn
+  show('klRaSoatMt', state.user?.role_group !== 'A0' && !state.user?.bi_khoa);   // v3.25: lối vào Rà soát (v3.27: phân loại ngành – lĩnh vực, nhập tệp rà soát)
+  if (!coMucTieu()) $('klRaSoatMt').title = 'Ngành, lĩnh vực của các việc đã giao (số liệu khối 3 Tổng quan) — chọn từng việc hoặc sửa hàng loạt bằng tệp Excel';
 }
 function dienLinhVuc() {
   const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;

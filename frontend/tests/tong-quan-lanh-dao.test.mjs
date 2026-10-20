@@ -3,13 +3,14 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ganMucTieuVaoDong, gomGan, khopMucTieu, nhanLocMucTieu, laTheoVanBan, CHUA_GAN, khoiCuaNganh } from '../src/lib/kl/muc-tieu.js';
-import { DOAN, doanCua, theoKhoi, diemNghen, capNghen, locCapNghen, theoMucTieu, ketQuaMoiNhat, tenKy, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu } from '../src/lib/kl/tong-quan-lanh-dao.js';
+import { DOAN, doanCua, theoKhoi, diemNghen, capNghen, locCapNghen, theoMucTieu, ketQuaMoiNhat, tenKy, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu, theoChuTri, khoaChuTri, khoaXepHang } from '../src/lib/kl/tong-quan-lanh-dao.js';
 import { khoangKy, khoangTuyChon } from '../src/lib/kl/tong-quan.js';
 import { locTongQuan, coLoc, coGiaTri, LOC_TRONG } from '../src/lib/kl/tong-quan-them.js';
 import { doiNhanh, dsNhanh, tuyChonLocMoi, tuyChonMucTieu, chipLoc, trangThaiCua } from '../src/lib/kl/tq-bo-loc.js';
 import { locRows } from '../src/lib/kl/tong-hop.js';
 import { KHOA_THEM, demLocThem } from '../src/lib/kl/loc-them.js';
 import { locChiTieu } from '../src/lib/kl/tong-quan-loc.js';
+import { HIEN_MUC_TIEU } from '../src/lib/kl/muc-tieu.js';
 
 const HOM = '2026-10-16';
 const K = khoangKy('nam', HOM);
@@ -86,7 +87,10 @@ describe('khối lĩnh vực, điểm nghẽn, xếp hạng, quý', () => {
     assert.deepEqual(capNghen(ds, [{ ma: 'THUONG_TRUC', ten: 'Thường trực Tỉnh ủy' }]), [{ ma: 'THUONG_TRUC', ten: 'Thường trực Tỉnh ủy', n: 1 }, { ma: 'CHUA', ten: 'Chưa xác định cấp', n: 1 }]);
     assert.deepEqual(ids(locCapNghen(ds, 'CHUA')), [2]);
     const dv = xepHang(ROWS, K, 'dv');   // cùng 1 việc quá hạn → đúng hạn thấp trước (Văn phòng 0% — một việc trễ; UBND chưa có việc đánh giá)
-    assert.deepEqual(dv.map((d) => [d.ma, d.ten, d.ddb + d.do, d.tyLe]), [['VP', 'Văn phòng Tỉnh ủy (các phòng)', 1, 0], ['UBND', 'Đảng ủy UBND tỉnh', 1, null]]);
+    assert.deepEqual(dv.map((d) => [d.ma, d.ten, d.ddb + d.do, d.tyLe]), [['VP', 'Văn phòng Tỉnh ủy', 1, 0], ['UBND', 'Đảng ủy UBND tỉnh', 1, null]]);
+    const vp = khoaXepHang('dv');   // v3.27 (0117): cơ quan trình "Văn phòng Tỉnh ủy" chung dòng với việc không ghi cơ quan trình
+    assert.deepEqual([vp({ co_quan_trinh: 'VAN_PHONG_TINH_UY', co_quan_trinh_ten: '1. Văn phòng Tỉnh ủy' }), vp({ owner_trong_van_phong: true, owner_don_vi_ma: 'TONG_HOP' })],
+      [['VP', 'Văn phòng Tỉnh ủy'], ['VP', 'Văn phòng Tỉnh ủy']]);
     const tt = xepHang(ROWS, K, 'tt'); assert.deepEqual(tt.map((d) => d.ma), ['KHONG', 'tt1']);
     const q = dungHanQuy(ROWS, HOM); assert.deepEqual(q.map((x) => [x.ten, x.dung, x.dg]), [['quý III', 0, 1], ['quý IV (đến nay)', 0, 0]]);
     assert.deepEqual(ids(vuongMacCho(ROWS)), [1]); assert.deepEqual(ids(chatLuongDuLieu(ROWS).chuaNganh), [3, 5]);
@@ -137,7 +141,28 @@ describe('bộ lọc chi tiết', () => {
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'nghen', cap: 'THUONG_TRUC' }, K, o).rows), [1]);
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'quy', tu: '2026-07-01', den: '2026-09-30' }, K, o).nhom[0].rows), [4]);
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'vm' }, K, o).rows), [1]);
-    assert.deepEqual(locChiTieu(ROWS, { t: 'cldl' }, K, o).nhom.map((p) => p.rows.length), [2, 2, 0]);   // + hoàn thành chưa có ngày (18/10)
+    assert.deepEqual(locChiTieu(ROWS, { t: 'cldl' }, K, o).nhom.map((p) => [p.ten, p.rows.length]),   // + hoàn thành chưa có ngày (18/10); v3.27: mục tiêu tạm ẩn
+      [...(HIEN_MUC_TIEU ? [['Chưa phân loại mục tiêu then chốt', 2]] : []), ['Chưa có ngành, lĩnh vực', 2], ['Hoàn thành chưa có ngày hoàn thành', 0]]);
     assert.equal(locChiTieu(ROWS, { t: 'loc' }, K, o).nhom.reduce((s, p) => s + p.rows.length, 0), 6);
+  });
+});
+
+describe('theoChuTri (v3.27 — khối 2 "Theo chủ trì theo dõi", cột như bảng tổng hợp của Văn phòng)', () => {
+  const k = khoangKy('nhiem-ky', '2026-10-02');
+  const v = (o) => ({ nhom_dem: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH', ngay_nhan_van_ban: '2026-09-10', owner_trong_van_phong: true, owner_phong: 'TONG_HOP',
+    owner_don_vi_ma: 'TONG_HOP', owner_don_vi_ten: 'Phòng Tổng hợp', owner_tai_khoan: 'u1', owner_tai_khoan_ten: 'Nguyễn Văn A', ...o });
+  const xong = { nhom_dem: 'HOAN_THANH', muc_canh_bao: 'KHONG_AP_DUNG' };
+  const rows = [v({ id: 1 }), v({ id: 2, muc_canh_bao: 'DO', nhom_dem: 'QUA_HAN' }), v({ id: 3, ...xong, ngay_hoan_thanh: '2026-09-20', ket_qua: 'DUNG_HAN' }),
+    v({ id: 4, ...xong, ngay_hoan_thanh: '2026-09-28', ket_qua: 'TRE' }), v({ id: 5, ...xong, ngay_nhan_van_ban: '2025-10-02' }),
+    v({ id: 6, owner_tai_khoan: null, owner_tai_khoan_ten: null, owner_phong: null, owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_don_vi_ten: '1. Văn phòng Tỉnh ủy', ...xong }),
+    v({ id: 7, owner_tai_khoan: 'u2', owner_tai_khoan_ten: 'Trần Thị B', muc_canh_bao: 'DO_DAC_BIET', nhom_dem: 'QUA_HAN' }),
+    v({ id: 8, ...xong, ngay_nhan_van_ban: '2025-06-01' })];   // trước nhiệm kỳ: ngoài kỳ
+  test('mỗi chủ trì: tổng = hoàn thành trong kỳ + đang thực hiện + quá hạn; đúng hạn chỉ trên việc xét được; xếp theo tổng', () => {
+    const ds = theoChuTri(rows, k);
+    assert.deepEqual(ds.map((d) => [d.ten, d.tong, d.xong, d.dangLam, d.qh, d.tyLe, d.xetDuoc]),
+      [['Nguyễn Văn A', 5, 3, 1, 1, 50, 2], ['Trần Thị B', 1, 0, 0, 1, null, 0], ['Văn phòng Tỉnh ủy', 1, 1, 0, 0, null, 0]]);
+    assert.equal(ds.reduce((t, d) => t + d.tong, 0), 7, 'việc trước kỳ không tính');
+    assert.deepEqual(khoaChuTri(rows[5]), ['DV:VAN_PHONG_TINH_UY', 'Văn phòng Tỉnh ủy']);
+    assert.deepEqual(theoChuTri([], k), []);
   });
 });

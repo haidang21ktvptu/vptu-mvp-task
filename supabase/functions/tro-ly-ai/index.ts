@@ -17,7 +17,7 @@
 // Deploy: supabase functions deploy tro-ly-ai --project-ref <ref> (deploy-staging.yml / deploy-prod.yml).
 import { taoCsdl, napDanhMuc } from './csdl.js';
 import { NHA_CUNG_CAP, goiAi, LoiAi } from './nha-cung-cap.js';
-import { LOAI_VAN_BAN, TOI_DA_KY_TU, luocDoDocVanBan, HE_THONG_DOC, noiDungDoc, luocDoQuyTac, HE_THONG_QUY_TAC, noiDungQuyTac, dsQuyTac } from './de-bai.js';
+import { LOAI_VAN_BAN, TOI_DA_KY_TU, luocDoDocVanBan, heThongDoc, noiDungDoc, luocDoQuyTac, HE_THONG_QUY_TAC, noiDungQuyTac, dsQuyTac } from './de-bai.js';
 import { xacMinhKetQua } from './xac-minh.js';
 import { giaLap } from './gia-lap.js';
 
@@ -47,7 +47,7 @@ async function docVanBan(body: any, ch: CauHinh, khoa: string | null, batDau: nu
   const anh = Array.isArray(body.anh) ? body.anh.slice(0, 12).filter((a: any) => /^image\/(jpeg|png|webp)$/.test(a?.media) && typeof a?.data === 'string' && a.data.length < 3_000_000) : [];
   if (!chu.trim() && !anh.length) throw new LoiAi('Không đọc được chữ hay ảnh nào từ tệp.', { status: 400, ma: 'TRONG' });
   const dm = await napDanhMuc(csdl, LOAI_VAN_BAN);
-  const r = await goiAi(ch, khoa, { heThong: HE_THONG_DOC, noiDung: noiDungDoc(dm.day, chu, String(body.ten_tep || 'van-ban.pdf').slice(0, 120), anh.length > 0),
+  const r = await goiAi(ch, khoa, { heThong: heThongDoc(dm.ma.mucTieu.length > 0), noiDung: noiDungDoc(dm.day, chu, String(body.ten_tep || 'van-ban.pdf').slice(0, 120), anh.length > 0),
     anh: chu.trim() ? [] : anh, schema: luocDoDocVanBan(dm.ma), tenSchema: 'doc_van_ban', toiDa: 32000 }, { giaLap: choGiaLap ? giaLap : null, hetGio: hetGioDoc(batDau) });
   try {
     return { ket_qua: xacMinhKetQua(r.json, chu, dm.xacMinh), vao: r.vao, ra: r.ra };

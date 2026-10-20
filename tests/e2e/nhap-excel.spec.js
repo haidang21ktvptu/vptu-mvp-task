@@ -5,6 +5,9 @@
 // thiện (biểu mẫu điền sẵn, chỉ chọn ngành / lĩnh vực) → việc mới, dòng DA_HOAN_THIEN; (3) chủ trì (demo_e2e_cv) mở việc → khối "Dữ liệu gốc";
 // (4) Hoàn tác lô → việc đã xong (chưa ai đụng) bị xoá. Project chưa áp 0072 → skip. Chạy ở project riêng SAU v9-dot2 (tin tổng hợp tới
 // demo_e2e_cv / demo_e2e_tp — realtime.spec đếm huy hiệu tin của các tài khoản này). Dữ liệu theo khoá riêng, tự dọn trước và sau.
+// v3.27 (chủ dự án 20/10/2026): tệp đúng cột bảng Phụ lục = mẫu nhập chuẩn (hồ sơ "bảng Phụ lục"); cột G là CƠ QUAN TRÌNH (giá trị chưa khớp → chọn
+// trong danh sách cơ quan trình, lưu từ điển); sản phẩm, lĩnh vực theo quy tắc (không còn bước điền hàng loạt); DB ghi cơ quan trình, lĩnh vực chi tiết
+// (cả việc đã xong — 0117); dòng chờ chỉ thiếu ngành, lĩnh vực; Hoàn thiện điền sẵn cơ quan trình.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { moViec, nav, NAP, chonPhanLoai } from './lib/app.js';
@@ -41,7 +44,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
   });
   test.afterAll(async () => { if (db && khoa) { await don(); await datCo(db, ID.e2eTk, { quan_tri_kl: false }); } });
 
-  test('1. chọn tệp → nhận hồ sơ, xem trước (khớp đơn vị, điền hàng loạt, chế độ việc đã xong) → Nhập lô; DB đúng từng đường đi', async ({ browser }, testInfo) => {
+  test('1. chọn tệp → nhận hồ sơ, xem trước (khớp cơ quan trình, quy tắc mặc định, chế độ việc đã xong) → Nhập lô; DB đúng từng đường đi', async ({ browser }, testInfo) => {
     const bh = cong(homNay(), -10); const han = cong(homNay(), 60); const dv = `${khoa} đơn vị`;
     const buffer = taoXlsx('Phụ lục 2', {
       1: ['PHỤ LỤC 2: THEO DÕI THỰC HIỆN KẾT LUẬN (dữ liệu hư cấu)'], 3: TD,
@@ -58,17 +61,16 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await page.locator('[data-action="nxTaiMau"]').click();
       expect((await tai).suggestedFilename()).toBe('mau-nhap-chuan-vptu-task.xlsx');
       await page.locator('#nxTep').setInputFiles({ name: tep, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer });
-      await expect(page.locator('#nxNhanDien')).toContainText('Phụ lục 2', NAP);
+      await expect(page.locator('#nxNhanDien')).toContainText('bảng Phụ lục', NAP);
+      await expect(page.locator('#nxNhanDien')).toContainText('sheet "Phụ lục 2"');
       await expect(page.locator('#nxNhanDien')).toContainText('tiêu đề ở dòng 3 · 3 dòng dữ liệu');
       await expect(page.locator('[data-nx-cot="16"]')).toHaveValue('can_bo');   // cột người dùng chèn thêm vào bảng Phụ lục 2
       const khop = page.locator('.nx-khop-dong').filter({ hasText: dv });
-      await expect(khop).toContainText('3 dòng');
-      await khop.locator('select').selectOption('E2E_RT');
+      await expect(khop).toContainText('3 dòng'); await expect(khop).toContainText('Cơ quan trình');   // v3.27: cột G = cơ quan trình, không phải đơn vị chủ trì
+      await expect(khop.locator('select option[value="E2E_RT"]'), 'phòng của Văn phòng không phải cơ quan trình').toHaveCount(0);
+      await khop.locator('select').selectOption('DANG_UY_UBND');
       await expect(page.locator('.nx-khop-dong').filter({ hasText: dv })).toHaveCount(0);
       await page.locator('input[name="nxCheDo"][value="DA_XONG_NGOAI"]').check();
-      await page.locator('#nxHlTruong').selectOption('san_pham');
-      await page.locator('#nxHlGt').selectOption('BAO_CAO');
-      await page.locator('[data-action="nxHangLoat"]').click();
       const loc = page.locator('#nxXem .nx-loc');
       await expect(loc).toContainText('Giao ngay 1'); await expect(loc).toContainText('Đã xong (ngoài hệ thống) 1'); await expect(loc).toContainText('Chờ hoàn thiện 1');
       await expect(page.locator('#nxXem tr[data-dong="6"]')).toContainText('thiếu ngành');
@@ -76,19 +78,19 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#nxKetQua')).toBeVisible(NAP);
       await expect(toast(page)).toContainText('Đã nhập lô LO-');
       lo = (await db.from('lo_nhap').select('id, ma, mau, che_do_xong, xong_luc').eq('ten_tep', tep).single()).data;
-      expect(lo).toMatchObject({ mau: 'PHU_LUC_2', che_do_xong: 'DA_XONG_NGOAI' }); expect(lo.xong_luc).toBeTruthy();
+      expect(lo).toMatchObject({ mau: 'CHUAN', che_do_xong: 'DA_XONG_NGOAI' }); expect(lo.xong_luc).toBeTruthy();
       await expect(page.locator('#nxKetQua h2')).toHaveText(`Đã nhập lô ${lo.ma}`);
       dong = (await db.from('dong_nhap').select('id, so_dong, ket_qua, nhiem_vu_id, thieu').eq('lo_id', lo.id).order('so_dong')).data;
       expect(dong.map((d) => [d.so_dong, d.ket_qua])).toEqual([[4, 'GIAO'], [5, 'DA_XONG'], [6, 'CHO_HOAN_THIEN']]);
       expect(dong[2].thieu).toEqual(['nganh', 'linh_vuc']);
-      const g = (await db.from('nhiem_vu').select('owner_don_vi_ma, owner_tai_khoan, nguoi_theo_doi, giao_thay_mat_cho, san_pham_loai, nganh_ma, linh_vuc_ma, nguon, tao_boi, han_xu_ly')
+      const g = (await db.from('nhiem_vu').select('owner_don_vi_ma, owner_tai_khoan, nguoi_theo_doi, giao_thay_mat_cho, san_pham_loai, nganh_ma, linh_vuc_ma, nguon, tao_boi, han_xu_ly, co_quan_trinh, linh_vuc_chi_tiet')
         .eq('id', dong[0].nhiem_vu_id).single()).data;
       expect(g).toEqual({ owner_don_vi_ma: 'E2E_RT', owner_tai_khoan: ID.e2eCv, nguoi_theo_doi: ID.e2eCv, giao_thay_mat_cho: ID.e2eTp, san_pham_loai: 'BAO_CAO',
-        nganh_ma: 'THAM_MUU_TONG_HOP', linh_vuc_ma: 'LV01_THAM_MUU_TONG_HOP', nguon: 'app', tao_boi: ID.e2eTk, han_xu_ly: han });
-      const x = (await db.from('nhiem_vu').select('nguon, tien_do_ma, theo_1400').eq('id', dong[1].nhiem_vu_id).single()).data;
-      expect(x).toEqual({ nguon: 'excel', tien_do_ma: 'HOAN_THANH', theo_1400: false });
+        nganh_ma: 'THAM_MUU_TONG_HOP', linh_vuc_ma: 'LV01_THAM_MUU_TONG_HOP', nguon: 'app', tao_boi: ID.e2eTk, han_xu_ly: han, co_quan_trinh: 'DANG_UY_UBND', linh_vuc_chi_tiet: 'Tổ chức thực hiện' });
+      const x = (await db.from('nhiem_vu').select('nguon, tien_do_ma, theo_1400, co_quan_trinh').eq('id', dong[1].nhiem_vu_id).single()).data;
+      expect(x, 'việc đã xong giữ cơ quan trình (0117)').toEqual({ nguon: 'excel', tien_do_ma: 'HOAN_THANH', theo_1400: false, co_quan_trinh: 'DANG_UY_UBND' });
       const td = (await db.from('tu_dien_nhap').select('ma').eq('loai', 'don_vi').eq('goc', `${khoa.toLowerCase()} don vi`)).data;
-      expect(td).toEqual([{ ma: 'E2E_RT' }]);
+      expect(td).toEqual([{ ma: 'DANG_UY_UBND' }]);
     });
   });
 
@@ -107,6 +109,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#klThOwner')).toHaveValue(`tk:${ID.e2eCv}`);
       await expect(page.locator('#klThThayMat')).toHaveValue(ID.e2eTp);
       await expect(page.locator('#klThSanPham')).toHaveValue('BAO_CAO');
+      await expect(page.locator('#klThCoQuanTrinh')).toHaveValue('DANG_UY_UBND');   // v3.27: cơ quan trình của dòng
       await page.locator('#klThNganh').selectOption('THAM_MUU_TONG_HOP');
       if (await page.locator('#klThLinhVuc').inputValue() !== 'LV01_THAM_MUU_TONG_HOP') await page.locator('#klThLinhVuc').selectOption('LV01_THAM_MUU_TONG_HOP');
       await chonPhanLoai(page);   // v3.26: mục tiêu then chốt bắt buộc ("Không thuộc")
@@ -115,8 +118,8 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(toast(page)).toContainText('Đã giao việc NV-', NAP);
       await expect.poll(async () => (await db.from('dong_nhap').select('ket_qua, nhiem_vu_id').eq('id', dong[2].id).single()).data?.ket_qua, NAP).toBe('DA_HOAN_THIEN');
       const v = (await db.from('dong_nhap').select('nhiem_vu_id').eq('id', dong[2].id).single()).data;
-      const nv = (await db.from('nhiem_vu').select('noi_dung, nganh_ma, linh_vuc_ma, owner_tai_khoan').eq('id', v.nhiem_vu_id).single()).data;
-      expect(nv).toEqual({ noi_dung: `${khoa} thiếu ngành`, nganh_ma: 'THAM_MUU_TONG_HOP', linh_vuc_ma: 'LV01_THAM_MUU_TONG_HOP', owner_tai_khoan: ID.e2eCv });
+      const nv = (await db.from('nhiem_vu').select('noi_dung, nganh_ma, linh_vuc_ma, owner_tai_khoan, co_quan_trinh').eq('id', v.nhiem_vu_id).single()).data;
+      expect(nv).toEqual({ noi_dung: `${khoa} thiếu ngành`, nganh_ma: 'THAM_MUU_TONG_HOP', linh_vuc_ma: 'LV01_THAM_MUU_TONG_HOP', owner_tai_khoan: ID.e2eCv, co_quan_trinh: 'DANG_UY_UBND' });
     });
   });
 

@@ -4,12 +4,16 @@
 // điền "Văn bản mới" (chỉ ô trống, chỉ giá trị đã đối chiếu — lib/kl/dien-van-ban.js); mục tiêu của văn bản và của từng nhiệm vụ thành gợi ý một bấm
 // (muc-tieu.js); nhiệm vụ điền vào thẻ (từng việc / tất cả, tối đa 20 thẻ — giao xong điền tiếp vào văn bản vừa tạo). Trợ lý AI chưa bật → chỉ đọc
 // số hiệu, ngày ban hành, trích yếu ở trang đầu (lib/kl/doc-van-ban.js), không gửi đi đâu. DB và người giao là chốt cuối.
+// v3.27 (mục 5 yêu cầu 20/10/2026): bảng đề xuất sửa được tại chỗ (doc-ai-bang.js, lib/kl/bang-de-xuat.js) — mỗi dòng: nội dung, chịu trách nhiệm, sản
+// phẩm, loại thời hạn + hạn, cơ quan trình; "× Bỏ" / "Lấy lại" từng dòng; điền nhanh chịu trách nhiệm, hạn cho các dòng còn trống; "Điền" dùng đúng giá
+// trị đã sửa. Việc trùng bỏ sẵn. "Bỏ kết quả" → "Bỏ tất cả".
 import { $, show, setText } from '../../../lib/dom.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError, notifySuccess } from '../../../components/toast.js';
 import { danhMucKl, timVanBan } from '../../../lib/kl/du-lieu.js';
 import { trangThaiAi, aiDocDuoc, docVanBanAi } from '../../../lib/kl/tro-ly-ai.js';
-import { kiemTep, laBanChup, keHoachVanBan, keHoachThe, phanLoaiNhacToi, laTrung, nhiemVuTuDoan, tronCau } from '../../../lib/kl/dien-van-ban.js';
+import { kiemTep, laBanChup, keHoachVanBan, phanLoaiNhacToi, nhiemVuTuDoan, tronCau } from '../../../lib/kl/dien-van-ban.js';
+import { dongBanDau, keHoachBang, dienNhanh, conDien } from '../../../lib/kl/bang-de-xuat.js';
 import { doanTuChu } from '../../../lib/kl/doc-van-ban.js';
 import { MOI, napVanBan } from './van-ban.js';
 import { getHomNay, nhanMoi } from './trang-thai.js';
@@ -17,13 +21,18 @@ import { themDong, soThe, TOI_DA } from './nhieu.js';
 import { o as oThe } from './nhieu-the.js';
 import { apAiVanBan, apAiThe, khoaThe, khiDaGiao } from './muc-tieu.js';
 import { dauHtml, ketQuaHtml, ghiChuTheHtml } from './doc-ai-ve.js';
+import { ganBang, napLuaChon } from './doc-ai-bang.js';
 
-const da = { kq: null, tep: '', soTrang: 0, moHinh: '', ncc: '', banChup: false, vbCo: null, vbDaDien: new Set(), the: new Map(), daGiao: new Set(), vbId: null, dang: false,
-  luot: 0, vbTay: false, giuVb: false };   // luot: lượt đọc (mở lại biểu mẫu / bỏ kết quả → kết quả lượt cũ bỏ); vbTay: người dùng tự chọn văn bản có sẵn
+const da = { kq: null, sua: [], tep: '', soTrang: 0, moHinh: '', ncc: '', banChup: false, vbCo: null, vbDaDien: new Set(), the: new Map(), daGiao: new Set(), vbId: null,
+  dang: false, luot: 0, vbTay: false, giuVb: false };   // luot: lượt đọc (mở lại biểu mẫu / bỏ kết quả → kết quả lượt cũ bỏ); vbTay: người dùng tự chọn văn bản có
+// sẵn; sua: dòng của bảng đề xuất (theo thứ tự nhiệm vụ — lib/kl/bang-de-xuat.js dongBanDau)
 const phat = (el, loai) => el?.dispatchEvent(new Event(loai, { bubbles: true }));
 const tt = (chu) => { setText('gvDocTt', chu); show('gvDocTt', Boolean(chu)); };
 const chuanSo = (s) => String(s || '').replace(/\s+/g, '').toUpperCase();
-const ID1 = { noi_dung: 'klThNoiDung', san_pham: 'klThSanPham', san_pham_mo_ta: 'klThSanPhamMoTa', han: 'klThHan', loai: 'klThLoai', nganh: 'klThNganh', linh_vuc: 'klThLinhVuc', phoi_hop: 'klThPhoiHop' };
+const ID1 = { noi_dung: 'klThNoiDung', owner: 'klThOwner', san_pham: 'klThSanPham', san_pham_mo_ta: 'klThSanPhamMoTa', han: 'klThHan', loai: 'klThLoai', nganh: 'klThNganh',
+  linh_vuc: 'klThLinhVuc', phoi_hop: 'klThPhoiHop', co_quan_trinh: 'klThCoQuanTrinh' };
+// Thứ tự điền: chịu trách nhiệm trước (đổi danh sách ngành, lĩnh vực theo phạm vi phòng, gợi ý người theo dõi), loại thời hạn trước hạn.
+const THU_TU = ['owner', 'nganh', 'linh_vuc', 'san_pham', 'loai', 'han', 'co_quan_trinh', 'noi_dung', 'san_pham_mo_ta', 'phoi_hop'];
 const oCua = (the, cot) => (the?.id === 'gvThe1' ? $(ID1[cot]) : oThe(the, cot));
 const cacThe = () => [$('gvThe1'), ...document.querySelectorAll('#gvLuoiThan .gv-nv')].filter(Boolean);
 const theTheoKhoa = (k) => cacThe().find((t) => khoaThe(t) === k) || null;
@@ -33,14 +42,19 @@ function chuHuongDan(t) {
   if (aiDocDuoc(t)) return `Tệp chỉ được đọc trên máy này; nội dung gửi tới trợ lý AI (${t.ten || 'AI'}) để tách số hiệu, ngày, trích yếu và từng nhiệm vụ — không lưu vào hệ thống. Giá trị nguyên văn chỉ tự điền khi đối chiếu được trong tệp.`;
   return `Trợ lý AI ${t?.bat === false && !t?.loi ? 'đang tắt' : 'chưa sẵn sàng'} — hệ thống chỉ đọc số hiệu, ngày ban hành, trích yếu ở trang đầu (tệp có lớp chữ), không gửi tệp đi đâu.`;
 }
+const khoaDong = (i) => da.daGiao.has(i) || da.the.has(i);
 function veKq() {
   const el = $('gvDocKq'); if (!el) return;
   show('gvDocKq', Boolean(da.kq));
   if (!da.kq) { el.innerHTML = ''; return; }
+  da.the.forEach((k, i) => { if (!theTheoKhoa(k)) da.the.delete(i); });   // thẻ đã xoá → dòng sửa và điền lại được
+  const cuon = el.querySelector('.gv-db-ds')?.scrollTop || 0;
   const hien = { klThSoKL: $('klThSoKL').value, klThNgayBH: $('klThNgayBH').value, klThTrichYeu: $('klThTrichYeu').value, klThSoHN: $('klThSoHN').value };
   const vbKh = keHoachVanBan(da.kq.van_ban, hien, { homNay: getHomNay() }).map((x) => ({ ...x, trong: x.k === 'loai' ? !da.vbDaDien.has(x.o) : !hien[x.o],
     trung: x.k === 'loai' && $('klThLoaiVB').value === x.gia_tri }));   // ô Loại đã đúng giá trị đọc được → không hiện nút "Điền" (kiểm tay 18/10)
   el.innerHTML = ketQuaHtml({ ...da, vbKh, tenThe }, danhMucKl());
+  napLuaChon(el);
+  if (cuon && el.querySelector('.gv-db-ds')) el.querySelector('.gv-db-ds').scrollTop = cuon;
 }
 
 const huyDangDoc = () => { da.luot += 1; da.dang = false; if ($('gvDocNut')) $('gvDocNut').disabled = false; tt(''); };
@@ -50,6 +64,7 @@ export async function datLaiDocAi({ an = false } = {}) {
   if (!el.dataset.gan) {
     el.innerHTML = dauHtml(); el.dataset.gan = '1';
     $('gvDocTep').addEventListener('change', (e) => { e.stopPropagation(); const f = e.target.files?.[0]; e.target.value = ''; if (f) docTep(f); });
+    ganBang($('gvDocKq'), () => da.sua);
     const tay = (e) => { if (e.isTrusted) da.vbTay = true; };   // chọn ở ô chọn hoặc gõ tìm (ô tìm tự chọn kết quả đầu)
     $('klThVanBan')?.addEventListener('change', tay); $('klThVanBanTim')?.addEventListener('input', tay);
   }
@@ -116,11 +131,11 @@ async function docTep(f) {
     tt(`Trợ lý AI đang đọc ${doc.soTrang} trang — thường mất từ 20 giây đến 2 phút, đồng chí vui lòng chờ…`);
     const r = await docVanBanAi({ ten_tep: f.name, chu: banChup ? '' : doc.chu, anh, so_trang: doc.soTrang }); if (cu()) return;
     Object.assign(da, { kq: r.ket_qua, tep: f.name, soTrang: doc.soTrang, moHinh: r.mo_hinh || '', ncc: r.nha_cung_cap || '', banChup, vbCo: null,
-      vbDaDien: new Set(), the: new Map(), daGiao: new Set(), vbId: null });
+      vbDaDien: new Set(), the: new Map(), daGiao: new Set(), vbId: null, sua: (r.ket_qua?.nhiem_vu || []).map((n) => dongBanDau(n, danhMucKl().sanPham || [])) });
     document.querySelectorAll('#giaoViecForm [data-ai-ghi]').forEach((x) => x.remove());
     await apVanBan(cu); if (cu()) return;
     const n = r.ket_qua?.nhiem_vu?.length || 0; const sot = r.ket_qua?.tong_bo_sot || 0;
-    notifySuccess(`Đã đọc văn bản${da.vbCo ? ' (đã có trên hệ thống — đã chọn)' : da.giuVb ? ' (giữ văn bản đồng chí đã chọn)' : ''}: ${n} nhiệm vụ.${sot ? ` Có ${sot} đoạn có thể còn sót — đồng chí xem cuối danh sách.` : ''} Đồng chí bấm "Điền" để đưa vào các thẻ.`);
+    notifySuccess(`Đã đọc văn bản${da.vbCo ? ' (đã có trên hệ thống — đã chọn)' : da.giuVb ? ' (giữ văn bản đồng chí đã chọn)' : ''}: ${n} nhiệm vụ.${sot ? ` Có ${sot} đoạn có thể còn sót — đồng chí xem cuối danh sách.` : ''} Đồng chí sửa, chọn người chịu trách nhiệm, hạn ngay trong bảng rồi bấm "Điền" để đưa vào các thẻ.`);
   } catch (e) { if (!cu()) notifyError(`Chưa đọc được văn bản: ${e.message}`); } finally {
     if (!cu()) { da.dang = false; $('gvDocNut').disabled = false; tt(''); veKq(); }
   }
@@ -140,11 +155,11 @@ function datOThe(the, cot, gt) {
   el.value = String(gt); phat(el, el.tagName === 'SELECT' ? 'change' : 'input');
 }
 function dienVao(i) {
-  const n = da.kq?.nhiem_vu?.[i]; if (!n) return false;
+  const n = da.kq?.nhiem_vu?.[i]; const d = da.sua[i]; if (!n || !d) return false;
   const the = theDeDien(i); if (!the) return false;
   const hien = Object.fromEntries(Object.keys(ID1).map((c) => [c, oCua(the, c)?.value || '']));
-  const kh = keHoachThe(n, hien, { banChup: da.banChup });
-  ['nganh', 'linh_vuc', 'san_pham', 'loai', 'han', 'noi_dung', 'san_pham_mo_ta', 'phoi_hop'].forEach((c) => { if (kh.dien[c] !== undefined) datOThe(the, c, kh.dien[c]); });
+  const kh = keHoachBang(n, d, hien, { banChup: da.banChup });
+  THU_TU.forEach((c) => { if (kh.dien[c] !== undefined) datOThe(the, c, kh.dien[c]); });
   the.querySelector('[data-ai-ghi]')?.remove();
   the.querySelector('.gv-nv-dau')?.insertAdjacentHTML('afterend', ghiChuTheHtml(kh, i, da.kq.nhiem_vu.length));
   apAiThe(the, n.muc_tieu || []);
@@ -153,10 +168,11 @@ function dienVao(i) {
 }
 async function dienTatCa() {
   if (da.vbId && $('klThVanBan').value !== da.vbId) await chonVanBan(da.vbId);   // điền tiếp: nhiệm vụ còn lại vào văn bản vừa tạo
-  let n = 0; let het = false;   // nhiệm vụ trùng (máy chủ rà — trung_voi) không điền khi "Điền tất cả"
-  (da.kq?.nhiem_vu || []).forEach((x, i) => { if (het || da.daGiao.has(i) || da.the.has(i) || laTrung(x)) return; if (dienVao(i)) n += 1; else het = true; });
+  da.the.forEach((k, i) => { if (!theTheoKhoa(k)) da.the.delete(i); });
+  let n = 0; let het = false; let chuaOwner = 0;   // dòng đã bỏ (kể cả việc trùng bỏ sẵn) không điền
+  conDien(da.sua, khoaDong).forEach((i) => { if (het) return; if (dienVao(i)) { n += 1; if (!da.sua[i].owner) chuaOwner += 1; } else het = true; });
   veKq();
-  if (n) notifySuccess(`Đã điền ${n} nhiệm vụ vào các thẻ — đồng chí chọn người chịu trách nhiệm, kiểm tra hạn, sản phẩm của từng thẻ rồi bấm Giao.`);
+  if (n) notifySuccess(`Đã điền ${n} nhiệm vụ vào các thẻ${chuaOwner ? ` (${chuaOwner} thẻ chưa chọn người chịu trách nhiệm)` : ''} — đồng chí kiểm tra từng thẻ rồi bấm Giao.`);
   if (het) notifyError(`Biểu mẫu đã đủ ${TOI_DA} nhiệm vụ — giao lượt này trước rồi bấm "Điền tiếp".`);
   $('gvPhan2')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
@@ -169,29 +185,33 @@ export function mountDocAi() {
   });
   registerActions({
     gvDocChon: () => { if (!da.dang) $('gvDocTep')?.click(); },
-    gvDocBo: () => { Object.assign(da, { kq: null, vbCo: null, giuVb: false, the: new Map(), daGiao: new Set(), vbId: null }); document.querySelectorAll('#giaoViecForm [data-ai-ghi]').forEach((x) => x.remove()); veKq(); },
+    gvDocBo: () => { Object.assign(da, { kq: null, sua: [], vbCo: null, giuVb: false, the: new Map(), daGiao: new Set(), vbId: null }); document.querySelectorAll('#giaoViecForm [data-ai-ghi]').forEach((x) => x.remove()); veKq(); },
     gvDocDienVb: ({ o }) => {
       if (o !== 'klThLoaiVB' && $(o)?.value) { notifyError('Ô đã có giá trị — giữ nguyên.'); veKq(); return; }
       const x = keHoachVanBan(da.kq?.van_ban, {}, { homNay: '9999-12-31' }).find((y) => y.o === o); if (x && datO(o, x.gia_tri)) da.vbDaDien.add(o); veKq();
     },
     gvDocDien: ({ i }) => { if (!dienVao(Number(i))) notifyError(`Biểu mẫu đã đủ ${TOI_DA} nhiệm vụ — giao lượt này trước.`); veKq(); },
     gvDocDienTatCa: () => dienTatCa(),
-    gvDocDungHan: ({ i, han }) => { const the = theTheoKhoa(da.the.get(Number(i))); if (the && !oCua(the, 'han')?.value) datOThe(the, 'han', han); },
-    gvDocDungNd: ({ i }, nut) => {   // người giao chủ động dùng nội dung trợ lý AI tách (chưa khớp nguyên văn / chưa trọn câu) — vẫn phải đối chiếu văn bản gốc
-      const the = theTheoKhoa(da.the.get(Number(i))); const nd = da.kq?.nhiem_vu?.[Number(i)]?.noi_dung?.gia_tri;
-      if (!the || !nd) return;
-      datOThe(the, 'noi_dung', nd); nut?.closest('[data-ai-nd]')?.replaceWith(document.createTextNode('Đã dùng nội dung trợ lý AI tách — đồng chí đối chiếu văn bản gốc.'));
+    gvDocBoDong: ({ i }) => { const d = da.sua[Number(i)]; if (d) { d.bo = true; veKq(); } },
+    gvDocLayLai: ({ i }) => { const d = da.sua[Number(i)]; if (d) { d.bo = false; veKq(); } },
+    gvDocBangTron: ({ i }) => {   // nội dung khớp nguyên văn nhưng câu còn tiếp: dùng trọn câu (nguyên văn chữ của tệp — máy chủ con_tiep)
+      const d = da.sua[Number(i)]; const x = da.kq?.nhiem_vu?.[Number(i)]?.noi_dung;
+      if (d && x?.gia_tri && x.con_tiep) { d.noi_dung = tronCau(x.gia_tri, x.con_tiep); d.sua.add('noi_dung'); veKq(); }
     },
-    gvDocDungTron: ({ i }, nut) => {   // nội dung khớp nguyên văn nhưng câu còn tiếp: dùng trọn câu (nguyên văn chữ của tệp — máy chủ con_tiep)
-      const the = theTheoKhoa(da.the.get(Number(i))); const x = da.kq?.nhiem_vu?.[Number(i)]?.noi_dung;
-      if (!the || !x?.gia_tri || !x.con_tiep) return;
-      datOThe(the, 'noi_dung', tronCau(x.gia_tri, x.con_tiep)); nut?.closest('[data-ai-nd]')?.replaceWith(document.createTextNode('Đã dùng trọn câu trong văn bản.'));
+    gvDocBangHan: ({ i }) => { const d = da.sua[Number(i)]; if (d?.han_goi_y && !d.han) { d.han = d.han_goi_y; d.sua.add('han'); veKq(); } },
+    gvDocDienNhanh: () => {
+      const owner = $('gvDbOwner')?.value || ''; const han = $('gvDbHan')?.value || '';
+      if (!owner && !han) { notifyError('Chọn người chịu trách nhiệm hoặc hạn hoàn thành chung trước.'); return; }
+      const n = dienNhanh(da.sua, { owner, han }, khoaDong); veKq();
+      notifySuccess(n ? `Đã điền chung cho ${n} nhiệm vụ còn trống — các dòng đã có giá trị giữ nguyên.` : 'Các dòng đều đã có giá trị — không đổi dòng nào.');
     },
     gvDocThemDoan: ({ j }) => {   // đoạn "có thể còn sót" → thêm vào danh sách nhiệm vụ (nguyên văn), người giao bấm điền như các việc khác
       const ds = da.kq?.nghi_bo_sot || []; const d = ds[Number(j)]; if (!d) return;
-      da.kq = { ...da.kq, nhiem_vu: [...(da.kq.nhiem_vu || []), nhiemVuTuDoan(d)], nghi_bo_sot: ds.filter((_, k) => k !== Number(j)),
+      const nv = nhiemVuTuDoan(d);
+      da.kq = { ...da.kq, nhiem_vu: [...(da.kq.nhiem_vu || []), nv], nghi_bo_sot: ds.filter((_, k) => k !== Number(j)),
         tong_bo_sot: Math.max(0, (da.kq.tong_bo_sot || ds.length) - 1) };
-      veKq(); notifySuccess(`Đã thêm vào danh sách thành nhiệm vụ ${da.kq.nhiem_vu.length} — đồng chí bấm "Điền vào thẻ".`);
+      da.sua = [...da.sua, dongBanDau(nv, danhMucKl().sanPham || [])];
+      veKq(); notifySuccess(`Đã thêm vào bảng thành nhiệm vụ ${da.kq.nhiem_vu.length} — đồng chí sửa, chọn người chịu trách nhiệm, hạn rồi bấm "Điền vào thẻ".`);
     },
   });
 }

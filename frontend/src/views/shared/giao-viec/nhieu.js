@@ -38,9 +38,13 @@ function danhSoLai() {
   $('gvThemDong').disabled = soThe() >= TOI_DA;
   $('gvLuoiDem').textContent = `${soThe()} / ${TOI_DA} nhiệm vụ`;
 }
-export function themDong() {
+// Người dùng bấm "+ Thêm nhiệm vụ" (chepCoQuan): cơ quan/đơn vị trình mang theo thẻ trước (đổi được) — như v3.26 khi ô này dùng chung cả lượt. Thẻ do
+// trợ lý AI điền (doc-ai.js) để trống: lấy đúng giá trị từng dòng của bảng đề xuất.
+export function themDong({ chepCoQuan = false } = {}) {
   if (soThe() >= TOI_DA) return;
+  const truoc = dongs().at(-1); const cq = chepCoQuan ? (truoc ? o(truoc, 'co_quan_trinh') : $('klThCoQuanTrinh'))?.value : '';
   const the = taoThe(than(), soThe() + 1);
+  if (cq) o(the, 'co_quan_trinh').value = cq;
   danhSoLai(); o(the, 'noi_dung').focus();
 }
 export function xoaDong({ dong }) {
@@ -94,7 +98,8 @@ export function docDong() {
     const v = (c) => o(the, c).value; const ow = parseOwner(v('owner'), danhMucKl(), state.accounts);
     const d = { noi_dung: v('noi_dung').trim(), owner_don_vi_ma: ow.owner_don_vi_ma, owner_tai_khoan: ow.owner_tai_khoan, do_khan: v('do_khan'),
       san_pham_loai: v('san_pham') || null, san_pham_mo_ta: v('san_pham_mo_ta').trim() || null, cap_nhan_san_pham: v('cap_nhan') || null,
-      loai_thoi_han_ma: v('loai'), han_xu_ly: v('loai') === 'KY_BAN_HANH' ? null : v('han') || null, don_vi_phoi_hop: v('phoi_hop').trim() || null };
+      loai_thoi_han_ma: v('loai'), han_xu_ly: v('loai') === 'KY_BAN_HANH' ? null : v('han') || null, don_vi_phoi_hop: v('phoi_hop').trim() || null,
+      co_quan_trinh: v('co_quan_trinh') || null, linh_vuc_chi_tiet: v('lvct').trim() || null };   // v3.27: cột G, H của bảng Phụ lục theo từng thẻ
     if (!a0 || cn) Object.assign(d, { nganh_ma: v('nganh') || null, linh_vuc_ma: v('linh_vuc') || null });
     if (!nhuA0()) d.nguoi_theo_doi = laA3GiaoThang() ? state.user?.id || null : v('theo_doi') || null;   // 0085: chuyên viên giao thẳng — theo dõi = người giao
     return d;

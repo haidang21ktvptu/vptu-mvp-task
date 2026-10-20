@@ -1,0 +1,55 @@
+/* v3.27 (chủ dự án 20/10/2026): bảng đề xuất sửa được của trợ lý AI ở Giao việc (doc-ai-bang.js), mục gập "Thêm" của thẻ nhiệm vụ, ô "Văn bản trong
+   tệp là" của Nhập từ Excel, bảng "Theo chủ trì theo dõi" ở Tổng quan (chu-tri.js), khung "Bổ sung dữ liệu chuyển đổi" (nhap-excel/bo-sung.js). Chỉ token của docs/DESIGN.md; trạng thái đi kèm chữ (không dựa
+   vào màu). Tên lớp viết nguyên văn trong JS. */
+@layer components {
+  /* Bảng đề xuất: mỗi nhiệm vụ một dòng sửa được — số cột ô theo bề rộng khung (thẻ hẹp → 2 rồi 1 cột) */
+  .gv-doc-kq { container-type: inline-size; container-name: gv-doc; }
+  .gv-doc-nv-dau > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .gv-db-ds { gap: 8px; max-height: min(70vh, 880px); }
+  .gv-db { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+  .gv-db-dau { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .gv-db-dau > b { font-size: 13.5px; color: var(--navy); }
+  .gv-db-nut { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+  .gv-db textarea.o-nhap { min-height: 64px; resize: vertical; font-size: 13.5px; line-height: 1.45; }
+  .gv-db > small { font-size: 12.5px; line-height: 1.45; }
+  .gv-db-o { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 12px; }
+  .gv-db-o > label, .gv-db-o > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .gv-db-o .nhan { font-size: 12px; font-weight: 700; color: var(--chu-phu); }
+  .gv-db-o .o-nhap { width: 100%; min-width: 0; }
+  .gv-db-o .nut { align-self: flex-start; }
+  .gv-db-han { display: flex; gap: 6px; min-width: 0; }
+  .gv-db-han > .o-nhap { flex: 1 1 0; }
+  .gv-db-han > [hidden] { display: none; }
+  @container gv-doc (min-width: 520px) { .gv-db-o { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @container gv-doc (min-width: 980px) { .gv-db-o { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .gv-db-gon .gv-doc-nd p { -webkit-line-clamp: 2; }
+  .gv-db-gon.bo { border-style: dashed; background: var(--nen-mo); }
+  .gv-db-gon.bo .gv-doc-nd p { color: var(--chu-phu); }
+  .gv-db-nhanh { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border-radius: 10px; background: var(--nen-mo); }
+  .gv-db-nhanh .nhan { font-size: 12.5px; font-weight: 700; color: var(--chu-phu); }
+  .gv-db-nhanh select.o-nhap { flex: 1 1 240px; min-width: 0; max-width: 420px; }
+  .gv-db-nhanh input.o-nhap { flex: 0 1 170px; }
+
+  /* Thẻ nhiệm vụ: mục gập "Thêm" (người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận) */
+  .gv-nv-them { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--vien); }
+  .gv-nv-them > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--navy); }
+  .gv-nv-them > summary:focus-visible { outline: 2px solid var(--vien-focus); outline-offset: 2px; border-radius: 4px; }
+
+  /* Nhập từ Excel: loại văn bản của cả tệp (bảng Phụ lục không có cột "Loại văn bản") */
+  .nx-loai-vb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 10px 0; }
+  .nx-loai-vb select.o-nhap { flex: 0 1 420px; min-width: 0; }
+  .nx-loai-vb small { flex: 1 1 100%; }
+
+  /* Tổng quan khối 2 "Theo chủ trì theo dõi": dòng tổng cộng; màn hẹp — tên + quá hạn + đúng hạn (như các bảng Tổng quan khác) */
+  .bang-chu-tri tfoot th, .bang-chu-tri tfoot td { padding: 10px 12px; border-top: 1px solid var(--vien); font-weight: 700; color: var(--chu); }
+  .bang-chu-tri tfoot th:first-child { padding-left: 2px; }
+  @container tq (max-width: 860px) {   /* cùng mốc với các bảng Tổng quan khác (tong-quan.css) */
+    .bang-chu-tri tfoot { display: none; }
+    .bang-chu-tri td[data-n="Đang thực hiện"] { display: none; }
+    .bang-chu-tri td[data-n="Quá hạn"] { grid-column: 2; grid-row: 2; justify-self: end; }
+  }
+
+  /* Nhập từ Excel — "Bổ sung dữ liệu chuyển đổi" (chỉ toàn quyền): bảng kết quả cuộn trong khung */
+  .nx-bo-sung > summary { cursor: pointer; }
+  .nx-bo-sung .bang-cuon { max-height: 60vh; overflow: auto; }
+}

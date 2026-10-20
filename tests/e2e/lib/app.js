@@ -13,8 +13,10 @@ import { createClient } from '@supabase/supabase-js';
 import { getKeys, SEED_PASSWORD } from './keys.mjs';
 import { USERS, TQ, sessionPath } from './roles.mjs';
 import { ganTre } from './tre.mjs';
+import { HIEN_MUC_TIEU } from '../../../frontend/src/lib/kl/muc-tieu.js';   // v3.27: mục tiêu then chốt tạm ẩn — spec mục tiêu tự bỏ qua
 
-export { USERS };
+export { USERS, HIEN_MUC_TIEU };
+export const LY_DO_AN_MT = 'Mục tiêu then chốt tạm ẩn (v3.27, chủ dự án 20/10/2026 — chưa đủ dữ liệu); bật lại cờ HIEN_MUC_TIEU thì chạy lại.';
 // Thời gian chờ DỮ LIỆU NẠP XONG trên staging (data-nap, #klRow-*, #vct*, #the-*, #tt-viec-*, ngăn chi tiết…): staging nhỏ, 2 worker → có thể
 // quá 10 giây. Assert giao diện thuần (nút, nhãn, lớp CSS) giữ 10 giây mặc định.
 export const NAP = { timeout: 20_000 };
@@ -101,7 +103,7 @@ export async function moGiaoViec(page, mo = () => nav(page, 'navGiaoViec')) {
 // chính). Ô đã có giá trị (kịch bản tự chọn, AI / tệp điền sẵn, ngành chỉ một lĩnh vực) giữ nguyên. Ngành trống → nganh (mặc định "Không thuộc
 // ngành, lĩnh vực nào"; kết luận / thông báo phải truyền ngành cụ thể); lĩnh vực trống → linhVuc hoặc mục đầu danh sách. Ô mục tiêu chưa có mục nào
 // (kể cả mục theo văn bản) → tích "Không thuộc mục tiêu then chốt nào"; mucTieu: false = không đụng (kịch bản tự chọn mục tiêu). Ô ngành đang ẩn
-// (Thường trực giao loại không bắt buộc) → bỏ qua ngành, lĩnh vực.
+// (Thường trực giao loại không bắt buộc) → bỏ qua ngành, lĩnh vực. v3.27: mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) → chỉ ngành, lĩnh vực.
 export async function chonPhanLoai(page, { the = 1, nganh = 'KHONG_THUOC', linhVuc = null, mucTieu = true } = {}) {
   const goc = the === 1 ? page.locator('#gvThe1') : page.locator(`#gvLuoiThan .gv-nv[data-dong="${the}"]`);
   const sNganh = the === 1 ? page.locator('#klThNganh') : goc.locator('[data-cot="nganh"]');
@@ -112,11 +114,18 @@ export async function chonPhanLoai(page, { the = 1, nganh = 'KHONG_THUOC', linhV
     const ds = await sLv.locator('option').evaluateAll((os) => os.map((x) => x.value).filter(Boolean));
     await sLv.selectOption(linhVuc || ds[0]);
   }
-  if (!mucTieu) return;
+  if (!mucTieu || !HIEN_MUC_TIEU) return;
   const o = goc.locator('.mtg').first();
   await expect(o.locator('[data-mtg-khong]')).toBeVisible(NAP);
   if (await o.locator('[data-mtg-phan="chon"] .mtg-chip').count() === 0) await o.locator('[data-mtg-khong]').check();
   await expect(o.locator('[data-mtg-phan="chon"] .mtg-chip')).not.toHaveCount(0);
+}
+
+// v3.27: người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận ở mục gập "Thêm" của thẻ nhiệm vụ — mở trước khi điền. the: số thẻ (1 = thẻ chính).
+export async function moThem(page, the = 1) {
+  const d = the === 1 ? page.locator('#gvThe1Them') : page.locator(`#gvLuoiThan .gv-nv[data-dong="${the}"] .gv-nv-them`);
+  if ((await d.getAttribute('open')) === null) await d.locator('summary').click();
+  await expect(d).toHaveAttribute('open', '');
 }
 
 export async function nav(page, id) {

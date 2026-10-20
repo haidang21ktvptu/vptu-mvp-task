@@ -102,12 +102,13 @@ export function ketQuaMoiNhat(ketQua = []) {
 export const tenKy = (ky) => { const [y, p] = String(ky).split('-'); return !p ? `năm ${y}` : p[0] === 'Q' ? `quý ${['I', 'II', 'III', 'IV'][Number(p[1]) - 1]}/${y}` : `tháng ${Number(p)}/${y}`; };
 
 // Khối 4: xếp hạng theo đơn vị chịu trách nhiệm (cơ quan trình; dữ liệu cũ: đơn vị chủ trì ngoài Văn phòng; còn lại Văn phòng) hoặc theo đồng chí
-// Thường trực chỉ đạo. Nhiều việc quá hạn trước, rồi đúng hạn thấp trước, rồi nhiều việc giao trước.
+// Thường trực chỉ đạo. Nhiều việc quá hạn trước, rồi đúng hạn thấp trước, rồi nhiều việc giao trước. v3.27 (0117): cơ quan trình "Văn phòng Tỉnh ủy" chung
+// một dòng với việc không ghi cơ quan trình (như chú thích khối: không ghi → tính cho Văn phòng Tỉnh ủy).
 export const VP_KHOA = 'VP'; export const KHONG_TT = 'KHONG';
 export const khoaXepHang = (cach) => (cach === 'tt'
   ? (r) => (r.thuong_truc_chi_dao ? [r.thuong_truc_chi_dao, r.thuong_truc_chi_dao_ten || 'Đồng chí Thường trực'] : [KHONG_TT, 'Không ghi đồng chí Thường trực chỉ đạo'])
-  : (r) => (r.co_quan_trinh ? [r.co_quan_trinh, boSoThuTu(r.co_quan_trinh_ten) || r.co_quan_trinh]
-    : !r.owner_trong_van_phong && r.owner_don_vi_ma ? [r.owner_don_vi_ma, boSoThuTu(r.owner_don_vi_ten) || r.owner_don_vi_ma] : [VP_KHOA, 'Văn phòng Tỉnh ủy (các phòng)']));
+  : (r) => (r.co_quan_trinh && r.co_quan_trinh !== 'VAN_PHONG_TINH_UY' ? [r.co_quan_trinh, boSoThuTu(r.co_quan_trinh_ten) || r.co_quan_trinh]
+    : !r.co_quan_trinh && !r.owner_trong_van_phong && r.owner_don_vi_ma ? [r.owner_don_vi_ma, boSoThuTu(r.owner_don_vi_ten) || r.owner_don_vi_ma] : [VP_KHOA, 'Văn phòng Tỉnh ủy']));
 export function xepHang(rows, k, cach = 'dv') {
   const khoa = khoaXepHang(cach); const m = new Map();
   rows.forEach((r) => { const [ma, ten] = khoa(r); if (!m.has(ma)) m.set(ma, { ma, ten, rows: [] }); m.get(ma).rows.push(r); });
@@ -130,6 +131,19 @@ export function dungHanQuy(rows, homNay) {
 // Khối 7: việc đang mở có vướng mắc / đề nghị lãnh đạo quyết định. Ghi chú chất lượng dữ liệu: việc chưa gắn mục tiêu, việc chưa có ngành / lĩnh vực,
 // việc hoàn thành chưa có ngày hoàn thành (tính theo ngày giao, không xét được đúng hạn — kiểm tay 18/10).
 export const vuongMacCho = (rows) => rows.filter((r) => laMo(r) && r.vuong_mac);
+// Khối 2 (v3.27 — chủ dự án 20/10/2026: bỏ khối mục tiêu then chốt; bảng như "Tổng hợp KL TTTU" của Văn phòng — theo người chủ trì theo dõi): mỗi cán bộ
+// chủ trì (việc giao cho cả đơn vị, ví dụ Văn phòng Tỉnh ủy, gom theo đơn vị) một dòng: hoàn thành trong kỳ, đang thực hiện (chưa quá hạn), quá hạn (Đỏ +
+// Đỏ đặc biệt, đến hôm nay); tổng = ba cột cộng lại; đúng hạn trên việc xét được. Nhiều việc trước.
+export const khoaChuTri = (r) => (r.owner_tai_khoan ? [r.owner_tai_khoan, r.owner_tai_khoan_ten || 'Cán bộ']
+  : [`DV:${r.owner_don_vi_ma || ''}`, boSoThuTu(r.owner_don_vi_ten) || 'Chưa xác định']);
+export function theoChuTri(rows, k) {
+  const m = new Map();
+  rows.forEach((r) => { const [ma, ten] = khoaChuTri(r); if (!m.has(ma)) m.set(ma, { ma, ten, rows: [] }); m.get(ma).rows.push(r); });
+  return [...m.values()].map((g) => {
+    const s = soLieuChinh(g.rows, k); const qh = s.mo.do + s.mo.ddb;
+    return { ma: g.ma, ten: g.ten, xong: s.xong, dangLam: s.dangMo - qh, qh, tong: s.xong + s.dangMo, tyLe: s.tyLeDungHan, xetDuoc: s.dungHan + s.tre };
+  }).filter((g) => g.tong > 0).sort((a, b) => b.tong - a.tong || b.qh - a.qh || a.ten.localeCompare(b.ten, 'vi'));
+}
 export const chatLuongDuLieu = (rows) => ({ chuaMucTieu: rows.filter(chuaGanMucTieu), chuaNganh: rows.filter((r) => !r.nganh_ma || !r.linh_vuc_ma),
   xongChuaNgay: rows.filter(chuaRoNgayXong) });
 // v3.26 (kiểm staging 19/10): việc chưa đủ ngành, lĩnh vực = chưa có ngành (dòng "Chưa phân loại" của khối 3 — chưa xếp được vào khối) + có ngành nhưng

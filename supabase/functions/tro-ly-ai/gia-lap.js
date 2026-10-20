@@ -21,7 +21,7 @@ function docVanBan(noiDung) {
     const mt = /chuyển đổi số/i.test(noi) ? [{ ma: 'DP_KHCN_CDS', trich: 'chuyển đổi số', ly_do: 'Nhiệm vụ về chuyển đổi số (giả lập)' }] : [];
     return { noi_dung: noi, trich: d, don_vi_chu_tri: (/^(Giao|Đề nghị)\s+([^,;]+?)\s+(chủ trì|tham mưu|thực hiện)/.exec(noi) || [])[2] || '', don_vi_phoi_hop: '',
       han: h ? `${h[3]}-${pad(h[2])}-${pad(h[1])}` : '', trich_han: h ? h[0] : '', loai_thoi_han: h ? 'CO_HAN_CU_THE' : '', san_pham: /báo cáo/i.test(noi) ? 'BAO_CAO' : '',
-      mo_ta_san_pham: '', nganh: '', linh_vuc: '', muc_tieu: mt };
+      mo_ta_san_pham: '', nganh: '', linh_vuc: '', co_quan_trinh: '', muc_tieu: mt };
   });
   const nhac = [...chu.matchAll(/([0-9]{1,5}-NQ\/TW)[^.;\n]{0,120}/g)].filter((m) => !sh || m[1] !== sh[1]).map((m) => ({ so_hieu: m[1], ten: '', trich: m[0] }));
   return {

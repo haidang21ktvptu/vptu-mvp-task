@@ -4,7 +4,7 @@
 // tìm nhanh ở ô Chịu trách nhiệm (gõ "chính tôi" / tên chuyên viên, bỏ dấu) mở danh sách người khớp + dòng kết quả, tự chọn; nút chọn nhanh
 // "Chính tôi"; PCVP giao hai thẻ khác phòng, khác lĩnh vực trong một lượt từ Kết luận BTV mới. Dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
-import { NAP, moGiaoViec, chonPhanLoai } from './lib/app.js';
+import { NAP, moGiaoViec, chonPhanLoai, moThem } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
@@ -51,11 +51,13 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       }
       await expect(o(p, 2, 'cap_nhan')).toHaveValue('PHO_CHANH_VAN_PHONG');   // cấp nhận = cấp trên của Owner
       await the(p, 2).locator('.dk-chon button[data-gia-tri="KHAN"]').click();
+      await moThem(p, 2); await moThem(p, 3);   // v3.27: phối hợp, mô tả, người theo dõi, cấp nhận ở mục gập "Thêm" của thẻ
       await o(p, 2, 'phoi_hop').fill('Sở Tài chính'); await o(p, 2, 'san_pham_mo_ta').fill('Báo cáo quý');
       await o(p, 3, 'theo_doi').selectOption(ID.cv1); await o(p, 3, 'cap_nhan').selectOption('THUONG_TRUC');
       for (const i of [1, 2, 3]) await chonPhanLoai(p, { the: i });   // v3.26: phân loại bắt buộc mọi thẻ ("Không thuộc")
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
-      await expect(p.locator('#gvTomTatChu')).toContainText('và 2 việc khác');
+      await expect(p.locator('#gvTomTatChu')).toContainText('Sẵn sàng giao 3 nhiệm vụ — nhiệm vụ 1: Chủ trì theo dõi:');   // v3.27: không trích nội dung
+      await expect(p.locator('#gvXtPhu')).toContainText('và 2 nhiệm vụ khác');
       await expect(p.locator('#klThLuu')).toBeEnabled();
       await p.locator('#klThLuu').click();
       await expect(p.locator('#toastContainer')).toContainText('Đã giao 3 việc', NAP);
@@ -124,7 +126,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await p.locator('#gvThemDong').click();
       await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(1);
       await p.locator('#klThNoiDung').fill(`${khoa} PCVP thẻ 1`); await p.locator('#klThOwner').selectOption('dv:TONG_HOP');
-      await p.locator('#klThNguoiTheoDoi').selectOption(ID.tp);   // người theo dõi riêng của thẻ 1 (trưởng phòng Tổng hợp)
+      await moThem(p); await p.locator('#klThNguoiTheoDoi').selectOption(ID.tp);   // người theo dõi riêng của thẻ 1 (trưởng phòng Tổng hợp) — mục "Thêm" (v3.27)
       await p.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await p.locator('#klThLinhVuc').selectOption('LV08_NGAN_SACH');   // không dùng LV08_TAI_CHINH: fixture kiêm nhiệm của spec khác
       await p.locator('#klThSanPham').selectOption('TO_TRINH'); await p.locator('#klThHan').fill(cong(H, 4));
       await o(p, 2, 'noi_dung').fill(`${khoa} PCVP thẻ 2`); await o(p, 2, 'owner').selectOption(`tk:${ID.pcvp}`);

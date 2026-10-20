@@ -2,11 +2,11 @@
 // diện của NQ_57 (số hiệu — 0113, kiểm thử trên dữ liệu), thêm một mục tiêu E2E vào nhóm Nghị quyết Tỉnh ủy rồi khoá (đã đối chiếu) — lịch sử ghi
 // cả hai; Cấu hình AI: trạng thái (Edge Function tro-ly-ai giả bằng route — không gọi dịch vụ thật), chuyển nhà cung cấp hiện đúng secret, lưu một
 // thay đổi nhỏ có lý do (Nhật ký hệ thống ghi) rồi trả lại bằng service_role. Chuyên viên (demo_cv1) vào từ bánh răng: thêm được, không có Quản lý,
-// quy tắc chỉ xem, không có tab Cấu hình AI. Mục tiêu E2E tự dọn. Tự bỏ qua khi project chưa có 0107–0112 hoặc chưa có demo_qtht.
+// quy tắc chỉ xem, không có tab Cấu hình AI (v3.27: bỏ qua khi mục tiêu tạm ẩn — bánh răng người nhập không còn mục này). Mục tiêu E2E tự dọn. Tự bỏ qua khi project chưa có 0107–0112 hoặc chưa có demo_qtht.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, contextAs, nav, NAP } from './lib/app.js';
+import { pageAs, contextAs, nav, NAP, HIEN_MUC_TIEU, LY_DO_AN_MT } from './lib/app.js';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
@@ -133,6 +133,7 @@ test.describe.serial('Quản trị: danh mục mục tiêu then chốt, cấu h�
   });
 
   test('Chuyên viên: vào từ bánh răng, thêm được, không có Quản lý, quy tắc chỉ xem, không có Cấu hình AI', async ({ browser }, testInfo) => {
+    test.skip(!HIEN_MUC_TIEU, LY_DO_AN_MT);   // v3.27: bánh răng của người nhập không còn "Danh mục mục tiêu" (quản trị hệ thống vẫn có)
     const page = await pageAs(browser, 'A3', testInfo);
     await page.locator('#banhRangBtn').click();
     await page.locator('#banhRangMenu button[data-tab="qtKhuMucTieu"]').click();

@@ -6,7 +6,9 @@ import { $, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { nhanTruong } from '../../../lib/kl/nhap/truong.js';
+import { dienSanCho, chuDienSan } from '../../../lib/kl/nhap/mac-dinh.js';
+import { danhMucKl, loadDanhMucKl } from '../../../lib/kl/du-lieu.js';
+import { homNayVN } from '../../../lib/kl/ngay.js';
 import { docLoVaCho, boDongCho, hoanTacLo } from '../../../lib/kl/nhap/du-lieu.js';
 import { datNapTab, datSoCho, duocGiao } from './tab.js';
 import { KQ, xacNhanHoanTacHtml } from './ve.js';
@@ -17,9 +19,13 @@ const conHan = (lo) => !lo.hoan_tac_luc && Date.now() - new Date(lo.tao_luc).get
   && (lo.tao_boi === state.user?.id || Boolean(state.user?.quan_tri_he_thong));
 const tomTat = (d) => escapeHtml(String(d.du_lieu?.noi_dung || Object.values(d.du_lieu_goc || {}).find((v) => String(v).length > 20) || '(không có nội dung)').slice(0, 160));
 
+// v3.27: "thiếu" tính lại theo quy tắc mới (mac-dinh.js dienSanCho) — có cán bộ chủ trì thì không thiếu đơn vị; sản phẩm, lĩnh vực nhận ra được, hạn
+// còn trống được điền sẵn khi mở Hoàn thiện (ghi "điền sẵn"); mục tiêu then chốt tạm bỏ.
 function dongHtml(d) {
+  const { thieu, dien } = chuDienSan(dienSanCho({ thieu: d.thieu || [], du: d.du_lieu || {}, goc: d.du_lieu_goc || {} }, danhMucKl(), homNayVN()));
   return `<div class="nx-cho-dong the-con" id="nxCho-${d.id}" data-dong="${d.so_dong}"><p><b>Dòng ${d.so_dong}</b> ${tomTat(d)}
-    <span class="chu-phu">${d.thieu?.length ? ` · thiếu: ${escapeHtml(d.thieu.map(nhanTruong).join(', ').toLowerCase())}` : ''}${d.ghi_chu ? ` · ${escapeHtml(d.ghi_chu)}` : ''}</span></p>
+    <span class="chu-phu">${thieu.length ? ` · thiếu: ${escapeHtml(thieu.join(', '))}` : ' · đủ thông tin — bấm Hoàn thiện để kiểm tra rồi giao'}${
+      dien.length ? ` · điền sẵn: ${escapeHtml(dien.join(', '))}` : ''}${d.ghi_chu ? ` · ${escapeHtml(d.ghi_chu)}` : ''}</span></p>
     <div class="hanh-dong">${duocGiao(state.user) ? `<button type="button" class="nut nho chinh" data-action="nxHoanThien" data-id="${d.id}">Hoàn thiện</button>`
       : '<span class="chu-phu">Hoàn thiện bằng biểu mẫu Giao việc: chuyên viên quản trị nhiệm vụ; hoặc sửa tệp rồi nhập lại.</span>'}
       <button type="button" class="nut nho" data-action="moO" data-o="oBo-${d.id}">Bỏ dòng</button></div>
@@ -55,7 +61,9 @@ function ve() {
 }
 export async function napCho() {
   if (!$('gvKhuCho').innerHTML) $('gvKhuCho').innerHTML = '<p class="chu-phu">Đang tải…</p>';
-  try { du = await docLoVaCho(); datSoCho(du.cho.length); ve(); } catch (e) { $('gvKhuCho').innerHTML = `<p class="nx-loi">${escapeHtml(e.message)}</p>`; }
+  try {   // v3.27: cùng danh mục — quy tắc điền sẵn (mac-dinh.js) cần ngành, lĩnh vực, sản phẩm
+    [du] = await Promise.all([docLoVaCho(), loadDanhMucKl()]); datSoCho(du.cho.length); ve();
+  } catch (e) { $('gvKhuCho').innerHTML = `<p class="nx-loi">${escapeHtml(e.message)}</p>`; }
 }
 
 // Gửi một lần: nút gửi của hộp xác nhận mờ trong lúc chờ (bấm đúp không gửi hai lần).
@@ -78,7 +86,7 @@ export function mountChoHoanThien() {
   registerActions({
     nxHoanThien: ({ id }) => {
       const d = du.cho.find((x) => x.id === id); const lo = du.lo.find((x) => x.id === d?.lo_id);
-      if (d) openGiaoViec({ tab: 'giao', dienSan: { id: d.id, so_dong: d.so_dong, lo_ma: lo?.ma || '', ten_tep: lo?.ten_tep || '', du_lieu: d.du_lieu, thieu: d.thieu, ghi_chu: d.ghi_chu } });
+      if (d) openGiaoViec({ tab: 'giao', dienSan: { id: d.id, so_dong: d.so_dong, lo_ma: lo?.ma || '', ten_tep: lo?.ten_tep || '', du_lieu: d.du_lieu, du_lieu_goc: d.du_lieu_goc, thieu: d.thieu, ghi_chu: d.ghi_chu } });
     },
     nxBoDong: ({ id }, form) => motLan(form, async () => {
       try { await boDongCho(id); notifySuccess('Đã bỏ dòng.'); await napCho(); } catch (e) { notifyError(e.message); }

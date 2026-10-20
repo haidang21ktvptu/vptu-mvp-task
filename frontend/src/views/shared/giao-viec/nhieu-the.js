@@ -1,5 +1,6 @@
 // Thẻ "Nhiệm vụ n" (n ≥ 2) của biểu mẫu Giao việc (v3.17.1; v3.18 gộp bố cục — thẻ 1 là bộ ô chính ở template.js): mỗi thẻ mang ĐỦ các ô của một
-// việc — nội dung, chịu trách nhiệm, người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành, lĩnh vực —
+// việc, v3.27 xếp theo cột bảng Phụ lục — nội dung, chủ trì theo dõi, ngành/lĩnh vực, lĩnh vực, cơ quan trình, lĩnh vực chi tiết, loại thời hạn, hạn,
+// sản phẩm, độ khẩn; mục gập "Thêm": người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận —
 // để một văn bản giao đủ mọi nhiệm vụ trong MỘT lượt dù khác phòng, khác lĩnh vực. Danh sách chọn, gợi ý người theo dõi / cấp nhận, lọc phạm vi
 // dùng chung hàm với thẻ 1 (them-owner.js, pham-vi.js); ô Chịu trách nhiệm / Sản phẩm / Cấp nhận / Loại thời hạn sao chép lựa chọn của ô chính
 // (đã lọc theo vai, thay mặt). Phần chung (văn bản, nguồn, thay mặt, ngày giao, thông tin thêm) ở biểu mẫu chính. Thẻ có data-dong (số thứ tự
@@ -35,28 +36,35 @@ export function theHtml(k, i) {
   const inp = (cot, them) => `<input type="text" id="${id(cot)}" class="o-nhap" data-cot="${cot}" autocomplete="off"${them}>`;
   return `<article class="gv-nv" data-dong="${i}" data-khoa="${k}" aria-label="Nhiệm vụ ${i}">
     <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ ${i}</b><button type="button" class="nut nho gvl-xoa" data-action="gvXoaDong" data-dong="${i}" title="Bỏ nhiệm vụ này">× Bỏ</button></header>
-    ${truong('noi_dung', `Nội dung nhiệm vụ${BB}`, `<textarea id="${id('noi_dung')}" class="o-nhap" rows="2" data-cot="noi_dung" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>`)}
+    ${truong('noi_dung', `Nội dung kết luận / nhiệm vụ${BB}`, `<textarea id="${id('noi_dung')}" class="o-nhap" rows="2" data-cot="noi_dung" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>`)}
     <div class="cot-3">
-      ${truong('owner', `Chịu trách nhiệm${BB}`, selTim('owner', 'Chịu trách nhiệm'), 'một Owner: phòng hoặc cán bộ')}
-      ${truong('theo_doi', `Người theo dõi${BB}`, selTim('theo_doi', 'Người theo dõi'), 'gợi ý theo người chịu trách nhiệm')}
-      ${truong('phoi_hop', 'Đơn vị phối hợp', inp('phoi_hop', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ"'), 'không bắt buộc, cách nhau bằng dấu ;')}
+      ${truong('owner', `Chủ trì theo dõi${BB}`, selTim('owner', 'Chủ trì theo dõi'), 'người chịu trách nhiệm: phòng hoặc cán bộ')}
+      ${truong('nganh', 'Ngành/lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('nganh', 'Ngành/lĩnh vực'))}
+      ${truong('linh_vuc', 'Lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('linh_vuc', 'Lĩnh vực'), 'theo ngành đã chọn')}
     </div>
-    <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml(`do_khan_${k}`, nhuA0() ? 'KHAN' : 'THUONG', id('do_khan'))}</div>
     <div class="cot-3">
-      ${truong('san_pham', `Sản phẩm đầu ra${BB}`, sel('san_pham', 'Sản phẩm'))}
-      ${truong('san_pham_mo_ta', 'Mô tả sản phẩm', inp('san_pham_mo_ta', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
-      ${truong('cap_nhan', 'Cấp nhận sản phẩm', sel('cap_nhan', 'Cấp nhận sản phẩm'), 'mặc định là cấp trên của người chịu trách nhiệm')}
+      ${truong('co_quan_trinh', 'Cơ quan/đơn vị trình', sel('co_quan_trinh', 'Cơ quan/đơn vị trình'))}
+      ${truong('lvct', 'Lĩnh vực chi tiết', inp('lvct', ' maxlength="200" placeholder="Ví dụ: Đầu tư công"'), 'không bắt buộc')}
+      <div></div>
     </div>
     <div class="cot-3">
       ${truong('loai', 'Loại thời hạn', sel('loai', 'Loại thời hạn'))}
-      ${truong('han', `Hạn hoàn thành<b class="gv-bb gvl-bb-han" aria-hidden="true">*</b>`, `<input type="date" id="${id('han')}" class="o-nhap" data-cot="han">`)}
-      <div></div>
+      ${truong('han', `Hạn xử lý<b class="gv-bb gvl-bb-han" aria-hidden="true">*</b>`, `<input type="date" id="${id('han')}" class="o-nhap" data-cot="han">`)}
+      ${truong('san_pham', `Sản phẩm đầu ra${BB}`, sel('san_pham', 'Sản phẩm'))}
     </div>
-    <div class="cot-3 gv-nganh-hang">
-      ${truong('nganh', 'Ngành<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('nganh', 'Ngành'))}
-      ${truong('linh_vuc', 'Lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('linh_vuc', 'Lĩnh vực'), 'theo ngành đã chọn')}
-      <div></div>
-    </div>
+    <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml(`do_khan_${k}`, nhuA0() ? 'KHAN' : 'THUONG', id('do_khan'))}</div>
+    <details class="gv-nv-them" data-them="${k}"><summary>Thêm: người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận</summary>
+      <div class="cot-3">
+        ${truong('theo_doi', `Người theo dõi${BB}`, selTim('theo_doi', 'Người theo dõi'), 'tự gợi ý theo người chủ trì')}
+        ${truong('phoi_hop', 'Đơn vị phối hợp', inp('phoi_hop', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ"'), 'không bắt buộc, cách nhau bằng dấu ;')}
+        <div></div>
+      </div>
+      <div class="cot-3">
+        ${truong('san_pham_mo_ta', 'Mô tả sản phẩm', inp('san_pham_mo_ta', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
+        ${truong('cap_nhan', 'Cấp nhận sản phẩm', sel('cap_nhan', 'Cấp nhận sản phẩm'), 'mặc định là cấp trên của người chịu trách nhiệm')}
+        <div></div>
+      </div>
+    </details>
     <div class="gv-mtg-cho" data-mtg-cho="gv-${k}"></div>
   </article>`;
 }
@@ -104,6 +112,7 @@ export function capNhatHanThe(the) {
 export function anHienThe(the) {
   const a0 = laA0(); const cn = canNganhHienTai();
   show(the.querySelector('[data-wrap="theo_doi"]'), !anTheoDoi());   // 0085: chuyên viên giao thẳng cũng không có ô (theo dõi = người giao)
+  if (!anTheoDoi() && !o(the, 'theo_doi').value) the.querySelector('.gv-nv-them').open = true;   // v3.27: ô bắt buộc trong mục "Thêm" còn trống → mở
   ['nganh', 'linh_vuc', 'loai'].forEach((c) => show(the.querySelector(`[data-wrap="${c}"]`), !a0 || cn));
   the.querySelectorAll('.gvl-bb-nganh').forEach((b) => show(b, canNganhBatBuoc()));
   chuThich(the, 'nganh', chuThichNganh());
@@ -119,7 +128,7 @@ export function taoThe(container, i) {
   container.insertAdjacentHTML('beforeend', theHtml(khoa, i));
   const the = container.lastElementChild;
   the.querySelector('.dk-chon input[type="hidden"]').dataset.cot = 'do_khan';
-  [['san_pham', 'klThSanPham'], ['cap_nhan', 'klThCapNhan'], ['loai', 'klThLoai']].forEach(([cot, goc]) => { o(the, cot).innerHTML = $(goc).innerHTML; });
+  [['san_pham', 'klThSanPham'], ['cap_nhan', 'klThCapNhan'], ['loai', 'klThLoai'], ['co_quan_trinh', 'klThCoQuanTrinh']].forEach(([cot, goc]) => { o(the, cot).innerHTML = $(goc).innerHTML; });
   o(the, 'loai').value = 'CO_HAN_CU_THE';
   tim.set(the, { owner: ganTimChon(o(the, 'owner_tim'), o(the, 'owner')), theoDoi: ganTimChon(o(the, 'theo_doi_tim'), o(the, 'theo_doi')) });
   lamMoiThe(the); ganTheMucTieu(the);

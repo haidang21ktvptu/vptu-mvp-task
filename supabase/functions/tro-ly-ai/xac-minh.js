@@ -175,6 +175,7 @@ export function xacMinhKetQua(kq, chu, dm) {
       san_pham: { gia_tri: coMa(dm.sanPham, n?.san_pham) },
       mo_ta_san_pham: trongNhiemVu(goc, ks, cat(n?.mo_ta_san_pham, 200)),
       nganh: { gia_tri: nganh }, linh_vuc: { gia_tri: linhVuc },
+      co_quan_trinh: { gia_tri: coMa(dm.coQuanTrinh || [], n?.co_quan_trinh) },   // v3.27: cột G bảng Phụ lục
       muc_tieu: mt(n?.muc_tieu),
     };
   });

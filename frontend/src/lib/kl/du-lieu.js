@@ -6,7 +6,7 @@ import { COT_VIEC, COT_TU_CHOI, taiTheoTrang } from './cot.js';
 import { homNayVN } from './ngay.js';
 import { trongPhamVi, ghiNgoaiPhamVi } from './pham-vi.js';
 import { loadGanMucTieu } from './muc-tieu-db.js';
-import { ganMucTieuVaoDong } from './muc-tieu.js';
+import { ganMucTieuVaoDong, HIEN_MUC_TIEU } from './muc-tieu.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -56,6 +56,8 @@ export async function damBaoMucTieu(ma = []) {
   try { await loadDanhMucKl(true); return true; } catch { return false; }
 }
 export const danhMucKl = () => danhMuc || { nganh: [], linhVuc: [], donVi: [], sanPham: [], cap: [], loaiThoiHan: [], tienDo: [], mucTieu: [], khoi: [] };
+// v3.27: phần mục tiêu then chốt chỉ hiện khi cờ HIEN_MUC_TIEU bật và danh mục có mục tiêu (Quản trị › Danh mục mục tiêu vẫn đọc mucTieu).
+export const coMucTieu = () => HIEN_MUC_TIEU && (danhMucKl().mucTieu || []).length > 0;
 export const tenTrongDanhMuc = (bang, ma) => danhMucKl()[bang]?.find((x) => x.ma === ma)?.ten || ma || '';
 export const linhVucCuaNganh = (nganhMa) => danhMucKl().linhVuc.filter((l) => l.nganh_ma === nganhMa);
 

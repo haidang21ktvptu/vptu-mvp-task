@@ -1,15 +1,14 @@
-// v3.25 (0107–0112): Giao việc — đọc văn bản gốc (PDF) bằng trợ lý AI và mục tiêu then chốt theo từng thẻ. Trưởng phòng (demo_truongphong) chọn một
-// tệp PDF có lớp chữ (dựng tại chỗ, nội dung hư cấu); Edge Function tro-ly-ai GIẢ bằng route (không gọi dịch vụ AI thật) trả kết quả đã "đối chiếu":
-// văn bản mới được điền (loại, số hiệu, ngày, trích yếu), mục tiêu văn bản là gợi ý AI; "Điền 2 nhiệm vụ vào các thẻ" → hai thẻ có nội dung, hạn,
-// sản phẩm; bộ nhận diện thật của DB (0110 + quy tắc 0113) tích sẵn Nghị quyết 57-NQ/TW ở thẻ 1 và mời thêm số hiệu Tỉnh ủy chưa có ở thẻ 2. Giao →
-// DB: văn bản mang mục tiêu AI (nguồn AI), thẻ 1 gắn riêng có NQ_57 nguồn tích sẵn và mục của văn bản giữ nguồn của văn bản (AI — máy chủ chép), số
-// hiệu mới tự thêm vào danh mục (TU_DONG) và gắn cho thẻ 2.
-// Đợt sửa gộp 18/10/2026: việc thứ ba trùng việc 1 (trung_voi) → "Điền tất cả" bỏ qua; việc 2 chưa trọn câu (con_tiep) → không tự điền nội dung, bấm
-// "Dùng trọn câu"; đoạn "có thể còn sót" (nghi_bo_sot) → "Thêm vào danh sách" thêm thành nhiệm vụ thứ tư (không điền, không giao).
-// v3.26 (0116): trợ lý AI đề xuất ngành, lĩnh vực của từng nhiệm vụ → thẻ được điền sẵn (phân loại bắt buộc), DB nhận đúng ngành, lĩnh vực.
+// v3.25 (0107–0112): Giao việc — đọc văn bản gốc (PDF) bằng trợ lý AI. Trưởng phòng (demo_truongphong) chọn một tệp PDF có lớp chữ (dựng tại chỗ,
+// nội dung hư cấu); Edge Function tro-ly-ai GIẢ bằng route (không gọi dịch vụ AI thật) trả kết quả đã "đối chiếu": văn bản mới được điền (loại, số
+// hiệu, ngày, trích yếu). Đợt sửa gộp 18/10/2026: việc trùng (trung_voi), việc chưa trọn câu (con_tiep), đoạn "có thể còn sót" (nghi_bo_sot).
+// v3.26 (0116): trợ lý AI đề xuất ngành, lĩnh vực của từng nhiệm vụ → DB nhận đúng ngành, lĩnh vực.
+// v3.27 (mục 5 yêu cầu 20/10/2026): BẢNG ĐỀ XUẤT SỬA ĐƯỢC — việc trùng bỏ sẵn (Lấy lại được); dòng 1: AI điền sẵn sản phẩm, hạn đã đối chiếu, cơ quan
+// trình; người giao sửa nội dung, chọn chịu trách nhiệm ngay tại bảng; dòng 2: "Dùng trọn câu", "Dùng <ngày>" (hạn chưa đối chiếu), đổi sản phẩm, chọn
+// cơ quan trình "Văn phòng Tỉnh ủy" (0117); đoạn còn sót thêm thành dòng 4 rồi "× Bỏ" riêng dòng đó; điền nhanh chịu trách nhiệm cho dòng còn trống →
+// "Điền 2 nhiệm vụ vào các thẻ" dùng đúng giá trị đã sửa → Giao → DB. Mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU): phần mục tiêu chỉ kiểm khi bật lại.
 // Dữ liệu theo khoá riêng, tự dọn (việc, văn bản, mục tiêu tự thêm). Tự bỏ qua khi project chưa có 0107–0112.
 import { test, expect } from '@playwright/test';
-import { contextAs, moGiaoViec, expectLoggedIn, NAP } from './lib/app.js';
+import { contextAs, moGiaoViec, expectLoggedIn, NAP, HIEN_MUC_TIEU } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong } from './lib/pr2b.mjs';
 
@@ -28,7 +27,7 @@ function pdfCo(dong) {
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 const gt = (v, trich = v, xm = 'dung') => ({ gia_tri: v, trich, xac_minh: xm });
 
-test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, mục tiêu then chốt theo thẻ (v3.25)', () => {
+test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, bảng đề xuất sửa được (v3.25 – v3.27)', () => {
   test.describe.configure({ timeout: 150_000 });
   let db; let khoa; let co = false;
   const soVb = () => `${khoa}-AI`;
@@ -45,15 +44,16 @@ test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, mục 
   });
   test.afterAll(async () => { if (db && co) await don(); });
 
-  test('Trưởng phòng: đọc PDF → điền văn bản và hai thẻ → mục tiêu tích sẵn / số hiệu mới → giao → DB có nguồn', async ({ browser }, testInfo) => {
+  test('Trưởng phòng: đọc PDF → sửa tại bảng đề xuất (nội dung, chịu trách nhiệm, sản phẩm, hạn, cơ quan trình; bỏ từng dòng; điền nhanh) → điền 2 thẻ → giao → DB', async ({ browser }, testInfo) => {
     test.skip(!co, 'Chưa có migration 0107–0112 trên project này.');
-    const han = cong(homNay(), 20); const ngay = cong(homNay(), -1);
-    const nd1 = `${khoa} viec AI 1: Giao Van phong Tinh uy tham muu trien khai Nghi quyet so 57-NQ/TW ve chuyen doi so`;
+    const han = cong(homNay(), 20); const han2 = cong(homNay(), 35); const ngay = cong(homNay(), -1);
+    const nd1 = `${khoa} viec AI 1: Giao Van phong Tinh uy tham muu trien khai Nghi quyet so 57-NQ/TW ve chuyen doi so`; const nd1Sua = `${nd1} (sua tai bang de xuat)`;
     const nd2 = `${khoa} viec AI 2: Thuc hien Nghi quyet so ${SO_TU} ve phat trien du lich`; const tiep2 = ', bao cao ket qua (e2e).';
     const viecAi = (nd, them = {}, pl = {}) => ({ noi_dung: { gia_tri: nd, xac_minh: 'dung', ...them }, trich: nd, don_vi_chu_tri: { gia_tri: 'Van phong Tinh uy' },
-      don_vi_phoi_hop: { gia_tri: '', xac_minh: false }, han: gt(han, 'han hoan thanh'), loai_thoi_han: { gia_tri: 'CO_HAN_CU_THE' }, san_pham: { gia_tri: 'BAO_CAO' },
-      mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: pl.nganh || '' }, linh_vuc: { gia_tri: pl.lv || '' }, muc_tieu: [] });
-    const PL1 = { nganh: 'VAN_HOA_XA_HOI', lv: 'LV10_CHUYEN_DOI_SO' }; const PL2 = { nganh: 'VAN_HOA_XA_HOI', lv: 'LV10_VAN_HOA' };   // v3.26
+      don_vi_phoi_hop: { gia_tri: '', xac_minh: false }, han: pl.han || gt(han, 'han hoan thanh'), loai_thoi_han: { gia_tri: 'CO_HAN_CU_THE' }, san_pham: { gia_tri: pl.sp ?? 'BAO_CAO' },
+      mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: pl.nganh || '' }, linh_vuc: { gia_tri: pl.lv || '' }, co_quan_trinh: { gia_tri: pl.cqt || '' }, muc_tieu: [] });
+    const PL1 = { nganh: 'VAN_HOA_XA_HOI', lv: 'LV10_CHUYEN_DOI_SO', cqt: 'DANG_UY_UBND' };   // v3.26 ngành, lĩnh vực; v3.27 cơ quan trình
+    const PL2 = { nganh: 'VAN_HOA_XA_HOI', lv: 'LV10_VAN_HOA', sp: '', han: gt(han2, 'trong thang toi', false) };   // hạn chưa đối chiếu → nút "Dùng <ngày>"
     const ketQua = {
       van_ban: { loai: gt('CONG_VAN', 'V/v trien khai'), so_hieu: gt(soVb(), `So: ${soVb()}`), ngay_ban_hanh: gt(ngay, 'ngay hom qua'),
         trich_yeu: gt('V/v trien khai nhiem vu (e2e)'), so_hoi_nghi: gt('', '', false), co_quan_ban_hanh: gt('Tinh uy Cao Bang') },
@@ -75,69 +75,94 @@ test.describe.serial('Giao việc: đọc văn bản bằng trợ lý AI, mục 
     await expect(p.locator('#gvDoc')).toBeVisible();
     await expect(p.locator('#gvDocChu')).toContainText('trợ lý AI', NAP);
 
-    // Đọc tệp: văn bản mới được điền (đã đối chiếu), mục tiêu văn bản là gợi ý AI (chưa tích).
+    // Đọc tệp: văn bản mới được điền (đã đối chiếu); bảng đề xuất 3 dòng — việc trùng bỏ sẵn, việc 2 chưa trọn câu.
     const loiTrang = []; p.on('pageerror', (e) => loiTrang.push(e.message));
     await p.locator('#gvDocTep').setInputFiles({ name: 'van-ban-e2e.pdf', mimeType: 'application/pdf',
       buffer: pdfCo(['TINH UY CAO BANG', `So: ${soVb()}`, 'V/v trien khai nhiem vu (e2e)', ...Array.from({ length: 12 }, (_, i) => `Noi dung thu nghiem dong ${i + 1} cua van ban e2e.`)]) });
-    const kq = p.locator('#gvDocKq');
+    const kq = p.locator('#gvDocKq'); const dong = (i) => kq.locator(`.gv-db[data-i="${i}"]`); const nv = (i) => kq.locator('.gv-doc-nv').nth(i);
     await expect(kq).toBeVisible(NAP);
     await expect(kq).toContainText('Văn bản giao 3 nhiệm vụ');
-    await expect(kq.locator('.gv-doc-nv').nth(2)).toContainText('trùng nhiệm vụ 1');
-    await expect(kq.locator('.gv-doc-nv').nth(1)).toContainText('chưa trọn câu');
+    await expect(kq.locator('[data-action="gvDocBo"]')).toHaveText('Bỏ tất cả');
+    await expect(nv(2)).toContainText('đã bỏ (trùng nhiệm vụ 1)'); await expect(nv(2).locator('[data-action="gvDocLayLai"]')).toBeVisible();
+    await expect(dong(1)).toContainText('chưa trọn câu');
     await expect(kq.locator('.gv-doc-sot')).toContainText('Có thể còn sót: 1 đoạn');
     expect(loiTrang, 'không lỗi khi đọc PDF').toEqual([]);
     await expect(p.locator('#klThVanBan')).toHaveValue('__moi__');
     await expect(p.locator('#klThSoKL')).toHaveValue(soVb());
     await expect(p.locator('#klThNgayBH')).toHaveValue(ngay);
     await expect(p.locator('#klThLoaiVB')).toHaveValue('CONG_VAN');
-    const oVb = p.locator('#gvMtVb .mtg');
-    const goiYAi = oVb.locator('.mtg-gy[data-nguon="AI"][data-ma="DP_CAN_BO"]');
-    await expect(goiYAi).toBeVisible(NAP);
-    await goiYAi.click();
-    await expect(oVb.locator('.mtg-chip[data-nguon="AI"]')).toContainText('Đột phá cán bộ');
+    if (HIEN_MUC_TIEU) {   // mục tiêu văn bản là gợi ý AI (chưa tích)
+      const oVb = p.locator('#gvMtVb .mtg'); const goiYAi = oVb.locator('.mtg-gy[data-nguon="AI"][data-ma="DP_CAN_BO"]');
+      await expect(goiYAi).toBeVisible(NAP); await goiYAi.click();
+      await expect(oVb.locator('.mtg-chip[data-nguon="AI"]')).toContainText('Đột phá cán bộ');
+    }
 
-    // Điền hai thẻ (việc trùng bỏ qua): nội dung, hạn, sản phẩm; thẻ 2 chưa trọn câu → "Dùng trọn câu"; thẻ 1 tích sẵn NQ 57 (số hiệu trong nội dung —
-    // quy tắc 0113), thẻ 2 mời số hiệu Tỉnh ủy chưa có. Đoạn còn sót → "Thêm vào danh sách" (nhiệm vụ thứ tư, không điền).
-    await expect(kq.locator('[data-action="gvDocDienTatCa"]')).toHaveText('Điền 2 nhiệm vụ vào các thẻ');
-    await kq.locator('[data-action="gvDocDienTatCa"]').click();
-    await expect(p.locator('#klThNoiDung')).toHaveValue(nd1);
-    await expect(p.locator('#klThHan')).toHaveValue(han);
-    await expect(p.locator('#klThSanPham')).toHaveValue('BAO_CAO');
-    await expect(p.locator('#klThNganh')).toHaveValue(PL1.nganh); await expect(p.locator('#klThLinhVuc')).toHaveValue(PL1.lv);   // v3.26: AI đề xuất ngành, lĩnh vực
-    const the2 = p.locator('#gvLuoiThan .gv-nv').first();
-    await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(1);
-    await expect(the2.locator('[data-cot="noi_dung"]')).toHaveValue('');
-    await expect(the2.locator('[data-cot="nganh"]')).toHaveValue(PL2.nganh); await expect(the2.locator('[data-cot="linh_vuc"]')).toHaveValue(PL2.lv);
-    await the2.locator('[data-action="gvDocDungTron"]').click();
-    await expect(the2.locator('[data-cot="noi_dung"]')).toHaveValue(`${nd2}${tiep2}`);
+    // Dòng 1: AI đề xuất sẵn sản phẩm, hạn đã đối chiếu, cơ quan trình; người giao sửa nội dung, chọn chịu trách nhiệm ngay tại bảng.
+    const o = (i, c) => dong(i).locator(`[data-sua="${c}"]`);
+    await expect(o(0, 'san_pham')).toHaveValue('BAO_CAO'); await expect(o(0, 'han')).toHaveValue(han);
+    await expect(o(0, 'co_quan_trinh')).toHaveValue(PL1.cqt); await expect(o(0, 'owner')).toHaveValue('');
+    await o(0, 'noi_dung').fill(nd1Sua);
+    await o(0, 'owner').selectOption(`tk:${ID.cv1}`);
+    // Dòng 2: dùng trọn câu; hạn văn bản nêu chưa đối chiếu → bấm "Dùng <ngày>"; đổi sản phẩm; cơ quan trình Văn phòng Tỉnh ủy (0117).
+    await dong(1).locator('[data-action="gvDocBangTron"]').click();
+    await expect(o(1, 'noi_dung')).toHaveValue(`${nd2}${tiep2}`);
+    await expect(o(1, 'han')).toHaveValue('');
+    await dong(1).locator('[data-action="gvDocBangHan"]').click();
+    await expect(o(1, 'han')).toHaveValue(han2);
+    await o(1, 'san_pham').selectOption('KE_HOACH');
+    await o(1, 'co_quan_trinh').selectOption('VAN_PHONG_TINH_UY');
+    await expect(o(0, 'noi_dung'), 'vẽ lại bảng giữ giá trị đã sửa').toHaveValue(nd1Sua);
+    // Đoạn còn sót → dòng 4 → bỏ riêng dòng đó (các dòng khác giữ nguyên).
     await kq.locator('[data-action="gvDocThemDoan"]').click();
     await expect(kq).toContainText('Văn bản giao 4 nhiệm vụ');
-    await expect(kq.locator('.gv-doc-nv').nth(3)).toContainText('hệ thống rà thấy');
+    await expect(dong(3)).toContainText('hệ thống rà thấy');
     await expect(kq.locator('.gv-doc-sot')).toHaveCount(0);
+    await dong(3).locator('[data-action="gvDocBoDong"]').click();
+    await expect(nv(3)).toContainText('đã bỏ'); await expect(kq).toContainText('2 nhiệm vụ đã bỏ');
+    await expect(o(1, 'san_pham')).toHaveValue('KE_HOACH');
+    // Điền nhanh chịu trách nhiệm cho dòng còn trống (dòng 1 đã chọn — giữ nguyên).
+    await kq.locator('#gvDbOwner').selectOption(`tk:${ID.cv1}`);
+    await kq.locator('[data-action="gvDocDienNhanh"]').click();
+    await expect(p.locator('#toastContainer')).toContainText('Đã điền chung cho 1 nhiệm vụ còn trống', NAP);
+    await expect(o(1, 'owner')).toHaveValue(`tk:${ID.cv1}`);
+
+    // Điền vào thẻ: đúng giá trị đã sửa ở bảng; ngành, lĩnh vực theo đề xuất AI; dòng đã bỏ không điền.
+    await expect(kq.locator('[data-action="gvDocDienTatCa"]')).toHaveText('Điền 2 nhiệm vụ vào các thẻ');
+    await kq.locator('[data-action="gvDocDienTatCa"]').click();
+    for (const [id, v] of [['klThNoiDung', nd1Sua], ['klThOwner', `tk:${ID.cv1}`], ['klThHan', han], ['klThSanPham', 'BAO_CAO'], ['klThCoQuanTrinh', PL1.cqt],
+      ['klThNganh', PL1.nganh], ['klThLinhVuc', PL1.lv]]) await expect(p.locator(`#${id}`), id).toHaveValue(v);
+    await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(1);
+    const the2 = p.locator('#gvLuoiThan .gv-nv').first();
+    for (const [c, v] of [['noi_dung', `${nd2}${tiep2}`], ['owner', `tk:${ID.cv1}`], ['han', han2], ['san_pham', 'KE_HOACH'], ['co_quan_trinh', 'VAN_PHONG_TINH_UY'],
+      ['nganh', PL2.nganh], ['linh_vuc', PL2.lv]]) await expect(the2.locator(`[data-cot="${c}"]`), `thẻ 2: ${c}`).toHaveValue(v);
+    await expect(nv(0)).toContainText('đã điền vào'); await expect(nv(1)).toContainText('đã điền vào');
     await expect(p.locator('#gvThe1 .gv-ai-ghi')).toContainText('Điền từ văn bản');
-    await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="QUY_TAC"]').filter({ hasText: 'Nghị quyết 57-NQ/TW' })).toBeVisible(NAP);
-    await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="VAN_BAN"]')).toContainText('Đột phá cán bộ');   // mục của văn bản: thẻ tính theo
-    await expect(the2.locator('.mtg-chip[data-nguon="MOI"]')).toContainText(SO_TU.replace(/^0+/, ''), NAP);
-    await p.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
-    await the2.locator('[data-cot="owner"]').selectOption(`tk:${ID.cv1}`);
+    if (HIEN_MUC_TIEU) {   // thẻ 1 tích sẵn NQ 57 (quy tắc 0113), mục của văn bản; thẻ 2 mời số hiệu Tỉnh ủy chưa có
+      await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="QUY_TAC"]').filter({ hasText: 'Nghị quyết 57-NQ/TW' })).toBeVisible(NAP);
+      await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="VAN_BAN"]')).toContainText('Đột phá cán bộ');
+      await expect(the2.locator('.mtg-chip[data-nguon="MOI"]')).toContainText(SO_TU.replace(/^0+/, ''), NAP);
+    }
     await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
     await p.locator('#klThLuu').click();
     await expect(p.locator('#toastContainer')).toContainText('Đã giao 2 việc', NAP);
 
-    // DB: văn bản mang mục tiêu AI; thẻ 1 gắn riêng có NQ_57 (tích sẵn); số hiệu mới vào danh mục (TU_DONG) và gắn cho thẻ 2.
+    // DB: hai việc (việc trùng, dòng đã bỏ không giao) mang đúng giá trị đã sửa ở bảng.
     const vb = (await db.from('van_ban_giao_viec').select('id').eq('so_ket_luan', soVb()).single()).data;
-    await expect.poll(async () => (await db.from('van_ban_muc_tieu').select('muc_tieu_ma, nguon').eq('van_ban_id', vb.id)).data, NAP)
-      .toEqual([{ muc_tieu_ma: 'DP_CAN_BO', nguon: 'AI' }]);
-    const viec = (await db.from('nhiem_vu').select('id, noi_dung, nganh_ma, linh_vuc_ma').eq('van_ban_id', vb.id)).data;
-    expect(viec, 'việc trùng và đoạn còn sót không được giao').toHaveLength(2);
-    const v1 = viec.find((x) => x.noi_dung === nd1); const v2 = viec.find((x) => x.noi_dung === `${nd2}${tiep2}`);
-    expect([v1.nganh_ma, v1.linh_vuc_ma, v2.nganh_ma, v2.linh_vuc_ma], 'ngành, lĩnh vực theo đề xuất của AI').toEqual([PL1.nganh, PL1.lv, PL2.nganh, PL2.lv]);
-    const mt = async (id) => (await db.from('nhiem_vu_muc_tieu').select('muc_tieu_ma, nguon').eq('nhiem_vu_id', id)).data;
-    await expect.poll(async () => (await mt(v1.id)).find((x) => x.muc_tieu_ma === 'NQ_57')?.nguon, NAP).toBe('QUY_TAC');
-    expect((await mt(v1.id)).find((x) => x.muc_tieu_ma === 'DP_CAN_BO')?.nguon, 'mục của văn bản trong phần gắn riêng giữ nguồn của văn bản').toBe('AI');
-    const moi = (await db.from('dm_muc_tieu').select('ma, nhom, nguon_them').eq('so_hieu', SO_TU)).data;
-    expect(moi, 'số hiệu Tỉnh ủy mới được hệ thống thêm vào danh mục').toEqual([expect.objectContaining({ nhom: 'NQ_TU', nguon_them: 'TU_DONG' })]);
-    expect((await mt(v2.id)).map((x) => x.muc_tieu_ma)).toEqual(expect.arrayContaining(['DP_CAN_BO', moi[0].ma]));
+    const viec = (await db.from('nhiem_vu').select('id, noi_dung, owner_tai_khoan, han_xu_ly, san_pham_loai, co_quan_trinh, nganh_ma, linh_vuc_ma').eq('van_ban_id', vb.id)).data;
+    expect(viec, 'việc trùng và dòng đã bỏ không được giao').toHaveLength(2);
+    const v1 = viec.find((x) => x.noi_dung === nd1Sua); const v2 = viec.find((x) => x.noi_dung === `${nd2}${tiep2}`);
+    expect(v1).toMatchObject({ owner_tai_khoan: ID.cv1, han_xu_ly: han, san_pham_loai: 'BAO_CAO', co_quan_trinh: PL1.cqt, nganh_ma: PL1.nganh, linh_vuc_ma: PL1.lv });
+    expect(v2).toMatchObject({ owner_tai_khoan: ID.cv1, han_xu_ly: han2, san_pham_loai: 'KE_HOACH', co_quan_trinh: 'VAN_PHONG_TINH_UY', nganh_ma: PL2.nganh, linh_vuc_ma: PL2.lv });
+    if (HIEN_MUC_TIEU) {   // văn bản mang mục tiêu AI; thẻ 1 có NQ_57 (tích sẵn); số hiệu mới vào danh mục (TU_DONG) và gắn cho thẻ 2
+      await expect.poll(async () => (await db.from('van_ban_muc_tieu').select('muc_tieu_ma, nguon').eq('van_ban_id', vb.id)).data, NAP)
+        .toEqual([{ muc_tieu_ma: 'DP_CAN_BO', nguon: 'AI' }]);
+      const mt = async (id) => (await db.from('nhiem_vu_muc_tieu').select('muc_tieu_ma, nguon').eq('nhiem_vu_id', id)).data;
+      await expect.poll(async () => (await mt(v1.id)).find((x) => x.muc_tieu_ma === 'NQ_57')?.nguon, NAP).toBe('QUY_TAC');
+      expect((await mt(v1.id)).find((x) => x.muc_tieu_ma === 'DP_CAN_BO')?.nguon, 'mục của văn bản trong phần gắn riêng giữ nguồn của văn bản').toBe('AI');
+      const moi = (await db.from('dm_muc_tieu').select('ma, nhom, nguon_them').eq('so_hieu', SO_TU)).data;
+      expect(moi, 'số hiệu Tỉnh ủy mới được hệ thống thêm vào danh mục').toEqual([expect.objectContaining({ nhom: 'NQ_TU', nguon_them: 'TU_DONG' })]);
+      expect((await mt(v2.id)).map((x) => x.muc_tieu_ma)).toEqual(expect.arrayContaining(['DP_CAN_BO', moi[0].ma]));
+    }
     await context.close();
   });
 });
