@@ -5,6 +5,7 @@ import { escapeHtml } from '../../../lib/dom.js';
 import { TRUONG, TEN_MUC, nhanTruong, truong } from '../../../lib/kl/nhap/truong.js';
 import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG, dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';
 import { hienGoc } from '../../../lib/kl/nhap/bang.js';
+import { HIEN_MUC_TIEU } from '../../../lib/kl/muc-tieu.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../../../lib/kl/thay-mat.js';
 
@@ -30,9 +31,9 @@ export const khungNhapHtml = () => `
   </section>
   <div id="nxBuoc"></div>`;
 
-// Ô chọn trường cho một cột: nhóm theo mức; trường đang dùng ở cột khác vẫn chọn được (chọn lại thì cột cũ bỏ ghép).
+// Ô chọn trường cho một cột: nhóm theo mức; trường đang dùng ở cột khác vẫn chọn được (chọn lại thì cột cũ bỏ ghép). v3.27: không có mục tiêu khi tạm ẩn.
 const chonTruong = (i, k) => `<select class="o-nhap" data-nx-cot="${i}" aria-label="Ghép cột ${i + 1} vào trường">${opt('', '— Không ghép (giữ ở dữ liệu gốc) —', !k)}${
-  [0, 1, 2, 3].map((m) => `<optgroup label="${escapeHtml(TEN_MUC[m])}">${TRUONG.filter((t) => t.muc === m).map((t) => opt(t.k, `${t.nhan}${t.mau ? '' : ' (trường phụ)'}`, t.k === k)).join('')}</optgroup>`).join('')}</select>`;
+  [0, 1, 2, 3].map((m) => `<optgroup label="${escapeHtml(TEN_MUC[m])}">${TRUONG.filter((t) => t.muc === m && (HIEN_MUC_TIEU || t.k !== 'muc_tieu')).map((t) => opt(t.k, `${t.nhan}${t.mau ? '' : ' (trường phụ)'}`, t.k === k)).join('')}</optgroup>`).join('')}</select>`;
 
 export function ghepHtml(s) {
   const viDu = (i) => s.dongDuLieu.slice(0, 3).map((d) => d.goc[s.tieuDe[i]]).filter((v) => v !== undefined).map((v) => escapeHtml(hienGoc(v).slice(0, 40))).join(' · ');

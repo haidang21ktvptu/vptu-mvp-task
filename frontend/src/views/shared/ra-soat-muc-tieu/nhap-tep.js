@@ -71,7 +71,7 @@ async function docTep(f) {
     const b = docBangRaSoat(await docXlsx(await f.arrayBuffer()), coMucTieu());
     const k = khopBang(b.dong, danhMucKl());
     Object.assign(tp, { gui: k.gui, loiTep: k.loi, trung: k.trung });
-    if (!k.gui.length && !k.loi.length) throw new Error('Tệp không có dòng nào ghi ngành, lĩnh vực hoặc mục tiêu then chốt.');
+    if (!k.gui.length && !k.loi.length) throw new Error(`Tệp không có dòng nào ghi ngành, lĩnh vực${coMucTieu() ? ' hoặc mục tiêu then chốt' : ''}.`);
     tp.kq = k.gui.length ? await goi(k.gui, '', false) : [];
   } catch (e) { notifyError(`Chưa đọc được tệp rà soát: ${loiDeHieu(e)}`); setText('rsTepTt', ''); }
   tp.dang = false; ve();

@@ -36,7 +36,7 @@ export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo
     phong && tc.phong.length ? { nhom: 'Phòng, đơn vị chủ trì', ds: tc.phong.map((o) => ({ ...o, ma: `P:${o.ma}` })) } : null,
     tc.canBo.length ? { nhom: 'Cán bộ chủ trì', ds: tc.canBo.map((o) => ({ ...o, ma: `CB:${o.ma}` })) } : null].filter(Boolean);
   const luoi = `<div class="tq-luoi-loc" id="tqLocLuoi"${moLuoi ? '' : ' hidden'}>
-      ${oChon('tqLocMucTieu', 'mucTieu', 'Mục tiêu then chốt', tc.mucTieu, loc.mucTieu, 'Mọi mục tiêu')}
+      ${oChon('tqLocMucTieu', 'mucTieu', 'Mục tiêu then chốt', coMucTieu() ? tc.mucTieu : [], loc.mucTieu, 'Mọi mục tiêu')}
       ${oChon('tqLocCachGan', 'cachGan', 'Cách gắn mục tiêu', coMucTieu() ? tc.cachGan || [] : [], loc.cachGan, 'Mọi cách gắn')}
       ${oChon('tqLocKhoi', 'khoi', 'Khối lĩnh vực', tc.khoi, loc.khoi, 'Mọi khối')}
       ${oChon('tqLocNganh', 'nganh', 'Ngành, lĩnh vực', tc.nganh, loc.nganh, 'Mọi ngành, lĩnh vực')}
