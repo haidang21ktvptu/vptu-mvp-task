@@ -41,12 +41,14 @@
   .nx-loai-vb small { flex: 1 1 100%; }
 
   /* Tổng quan khối 2 "Theo chủ trì theo dõi": dòng tổng cộng; màn hẹp — tên + quá hạn + đúng hạn (như các bảng Tổng quan khác) */
-  .bang-chu-tri tfoot th, .bang-chu-tri tfoot td { padding: 10px 12px; border-top: 1px solid var(--vien); font-weight: 700; color: var(--chu); }
+  .bang-chu-tri tfoot th, .bang-chu-tri tfoot td { padding: 10px 12px; border-top: 1px solid var(--vien); border-bottom: 0; font-weight: 700; color: var(--chu); }
   .bang-chu-tri tfoot th:first-child { padding-left: 2px; }
+  .bang-chu-tri .qh-khong { display: none; }
   @container tq (max-width: 860px) {   /* cùng mốc với các bảng Tổng quan khác (tong-quan.css) */
     .bang-chu-tri tfoot { display: none; }
     .bang-chu-tri td[data-n="Đang thực hiện"] { display: none; }
     .bang-chu-tri td[data-n="Quá hạn"] { grid-column: 2; grid-row: 2; justify-self: end; }
+    .bang-chu-tri .qh-0 { display: none; } .bang-chu-tri .qh-khong { display: inline-grid; }   /* như khối 4: "Không" thay số 0 */
   }
 
   /* Nhập từ Excel — "Bổ sung dữ liệu chuyển đổi" (chỉ toàn quyền): bảng kết quả cuộn trong khung */

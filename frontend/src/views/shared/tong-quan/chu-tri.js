@@ -4,13 +4,15 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { mo, dauKhoi, thuoc } from './template.js';
 
+// Không có việc quá hạn: bảng rộng ghi số 0 (cột số như bảng tổng hợp); màn hẹp ghi "Không" như khối 4 (v327.css).
+const KHONG_QH = '<span class="qh-0">0</span><span class="muc-tq tot qh-khong">Không</span>';
 // ds: theoChuTri(rows, k); k: kỳ.
 export function chuTriHtml(ds, k) {
   const tong = ds.reduce((t, d) => ({ tong: t.tong + d.tong, xong: t.xong + d.xong, dangLam: t.dangLam + d.dangLam, qh: t.qh + d.qh }), { tong: 0, xong: 0, dangLam: 0, qh: 0 });
   const dong = (d) => { const ct = { t: 'nhom', kh: 'ct', ma: d.ma, ten: d.ten };
     return `<tr><td class="c-ten"><button type="button" class="ten-bam" ${mo(ct)}><b>${escapeHtml(d.ten)}</b><small><span class="chi-dt">${d.xong} hoàn thành, ${d.dangLam + d.qh} đang làm</span></small></button></td>
       <td class="so" data-n="Tổng">${d.tong}</td><td class="so" data-n="Hoàn thành">${d.xong}</td><td class="so" data-n="Đang thực hiện">${d.dangLam}</td>
-      <td class="so" data-n="Quá hạn">${d.qh ? `<button type="button" class="muc-tq ddb" ${mo({ ...ct, m: 'qh' })}>${d.qh}<span class="sr"> việc quá hạn</span></button>` : '0'}</td>
+      <td class="so" data-n="Quá hạn">${d.qh ? `<button type="button" class="muc-tq ddb" ${mo({ ...ct, m: 'qh' })}>${d.qh}<span class="sr"> việc quá hạn</span></button>` : KHONG_QH}</td>
       <td data-n="Đúng hạn">${d.xetDuoc ? thuoc(d.tyLe) : '<span class="chu-phu">chưa xét được</span>'}</td></tr>`; };
   return `<article class="the-bd n12" id="tqChuTri">${dauKhoi(2, 'Theo chủ trì theo dõi', `Hoàn thành ${k.trong}; đang thực hiện, quá hạn tính đến hôm nay; tổng = ba cột cộng lại · lọc Kết luận Ban Thường vụ / Thông báo Thường trực ở thanh lọc`)}
     ${ds.length ? `<div class="cuon-ngang"><table class="bang-tq bang-chu-tri"><thead><tr><th>Chủ trì theo dõi</th><th class="so">Tổng</th><th class="so">Hoàn thành</th>
