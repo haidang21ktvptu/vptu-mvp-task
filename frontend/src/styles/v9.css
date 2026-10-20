@@ -46,6 +46,10 @@
   .gv-nhanh button { height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--vien-o); background: var(--the); font-size: 13px; font-weight: 600; color: var(--chu); }
   .gv-nhanh button:hover:not(:disabled) { border-color: var(--navy); color: var(--navy); }
   .gv-nhanh small { font-size: 12.5px; color: var(--chu-phu); }
+  /* v3.27 (kiểm staging 20/10): dải chọn nhanh nằm trong hàng ô của nó — thẻ rộng (3 cột): trải hết hàng, ngay dưới hàng (dense: ô sau lấp chỗ trống
+     của hàng trên); thẻ hẹp, điện thoại (1 cột): ngay dưới đúng ô của nó (Chủ trì theo dõi, Hạn xử lý, Sản phẩm đầu ra) — không lạc xuống dưới ô Lĩnh vực. */
+  .gv-hang-nhanh { grid-auto-flow: row dense; }
+  .gv-hang-nhanh > .gv-nhanh { grid-column: 1 / -1; }
   /* Kế thừa từ cấp trên (giao tiếp xuống) */
   .gv-ke-thua { margin: 10px 0 4px; padding: 10px 14px 12px; border: 1px dashed var(--vien-o); border-radius: 12px; background: var(--nen-mo); }
   .kt-dau { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--chu-phu); margin-bottom: 6px; }
