@@ -74,24 +74,24 @@ export const giaoViecTemplate = `
           <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ 1</b></header>
           ${truong('klThNoiDung', `Nội dung kết luận / nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
     'việc giao cho đơn vị ngoài Văn phòng (sở, ban, ngành, huyện): ghi rõ đơn vị thực hiện ngay trong nội dung, ví dụ "Sở Tài chính tham mưu…"; người chịu trách nhiệm là phòng / cán bộ Văn phòng theo dõi việc đó')}
-          <div class="cot-3">
+          <div class="cot-3 gv-hang-nhanh">
             ${truong('klThOwner', `Chủ trì theo dõi${BB}`, selTim('klThOwner'), '', 'người chịu trách nhiệm (Owner): phòng hoặc cán bộ — lãnh đạo có thể giao cho chính mình')}
+            <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
             ${truong('klThNganh', 'Ngành/lĩnh vực<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
             ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
           </div>
-          <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
           <div class="cot-3">
             ${truong('klThCoQuanTrinh', 'Cơ quan/đơn vị trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
             ${truong('klThLvct', 'Lĩnh vực chi tiết', inp('klThLvct', 'text', ' maxlength="200" placeholder="Ví dụ: Đầu tư công" autocomplete="off"'), '', 'không bắt buộc')}
             <div></div>
           </div>
-          <div class="cot-3" id="gvHanWrap">
+          <div class="cot-3 gv-hang-nhanh" id="gvHanWrap">
             ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
             ${truong('klThHan', 'Hạn xử lý<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
+            <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
             ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
+            <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
           </div>
-          <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
-          <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
           <p class="chu-phu goi-y-han" id="gvGoiYHan">Nhiệm vụ không xác định được thời hạn (thường xuyên, chờ điều kiện): chọn mốc rà soát gần nhất làm hạn (ví dụ cuối quý hoặc 31/12) và ghi rõ "thực hiện thường xuyên" trong nội dung; đến mốc, người chủ trì báo cáo kết quả hoặc đề nghị gia hạn.</p>
           <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
           <p class="gv-nhac-pl" id="gvNhacPhanLoai" role="note">${NHAC}</p>
