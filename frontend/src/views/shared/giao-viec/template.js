@@ -22,7 +22,7 @@ const inp = (id, type = 'text', them = '') => `<input type="${type}" id="${id}" 
 const selTim = (id) => `<div class="gv-tim-chon"><input type="search" id="${id}Tim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="${id}" aria-label="Tìm nhanh (gõ tên hoặc phòng, không cần dấu)">${sel(id)}</div>`;
 
 export const giaoViecTemplate = `
-  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">một biểu mẫu, hai khối · nút Giao việc chỉ sáng khi đủ văn bản, nguồn nhiệm vụ, nội dung, người chịu trách nhiệm, sản phẩm và hạn hoàn thành của từng nhiệm vụ</span></div>
+  <div class="dau"><h1>Giao việc</h1><span id="gvPhuDe">các ô theo cột của bảng Phụ lục · nút Giao việc sáng khi đủ văn bản, nội dung, chủ trì theo dõi, ngành/lĩnh vực, hạn xử lý và sản phẩm đầu ra của từng nhiệm vụ</span></div>
   <div class="tab-hang hidden" id="gvTabs" role="tablist" aria-label="Cách giao việc">
     <button type="button" id="gvTabGiao" role="tab" data-action="gvChonTab" data-tab="giao" aria-selected="true">Giao từng việc</button>
     <button type="button" id="gvTabNhap" role="tab" data-action="gvChonTab" data-tab="nhap" aria-selected="false">Nhập từ Excel</button>
@@ -72,35 +72,42 @@ export const giaoViecTemplate = `
         <p class="chu-phu" id="gvPhan2Phu">Mỗi thẻ là một việc: một chủ trì, một sản phẩm, một hạn hoàn thành. Văn bản giao nhiều việc thì bấm <b>+ Thêm nhiệm vụ</b> — tất cả được giao trong một lượt.</p>
         <article class="gv-nv" id="gvThe1" data-dong="1" aria-label="Nhiệm vụ 1">
           <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ 1</b></header>
-          ${truong('klThNoiDung', `Nội dung nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
+          ${truong('klThNoiDung', `Nội dung kết luận / nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
     'việc giao cho đơn vị ngoài Văn phòng (sở, ban, ngành, huyện): ghi rõ đơn vị thực hiện ngay trong nội dung, ví dụ "Sở Tài chính tham mưu…"; người chịu trách nhiệm là phòng / cán bộ Văn phòng theo dõi việc đó')}
           <div class="cot-3">
-            ${truong('klThOwner', `Chịu trách nhiệm${BB}`, selTim('klThOwner'), '', 'một Owner: phòng hoặc cán bộ — lãnh đạo có thể giao cho chính mình')}
-            ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, selTim('klThNguoiTheoDoi'), '', 'gợi ý theo người chịu trách nhiệm')}
-            ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
+            ${truong('klThOwner', `Chủ trì theo dõi${BB}`, selTim('klThOwner'), '', 'người chịu trách nhiệm (Owner): phòng hoặc cán bộ — lãnh đạo có thể giao cho chính mình')}
+            ${truong('klThNganh', 'Ngành/lĩnh vực<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
+            ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
           </div>
           <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
-          <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
-          <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
           <div class="cot-3">
-            ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
-            ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
-            ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của người chịu trách nhiệm')}
+            ${truong('klThCoQuanTrinh', 'Cơ quan/đơn vị trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
+            ${truong('klThLvct', 'Lĩnh vực chi tiết', inp('klThLvct', 'text', ' maxlength="200" placeholder="Ví dụ: Đầu tư công" autocomplete="off"'), '', 'không bắt buộc')}
+            <div></div>
           </div>
-          <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
           <div class="cot-3" id="gvHanWrap">
             ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
-            ${truong('klThHan', 'Hạn hoàn thành<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
-            <div></div>
+            ${truong('klThHan', 'Hạn xử lý<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
+            ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
           </div>
           <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
+          <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
           <p class="chu-phu goi-y-han" id="gvGoiYHan">Nhiệm vụ không xác định được thời hạn (thường xuyên, chờ điều kiện): chọn mốc rà soát gần nhất làm hạn (ví dụ cuối quý hoặc 31/12) và ghi rõ "thực hiện thường xuyên" trong nội dung; đến mốc, người chủ trì báo cáo kết quả hoặc đề nghị gia hạn.</p>
+          <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
           <p class="gv-nhac-pl" id="gvNhacPhanLoai" role="note">${NHAC}</p>
-          <div class="cot-3 gv-nganh-hang" id="gvNganhWrap">
-            ${truong('klThNganh', 'Ngành<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
-            ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
-            <div></div>
-          </div>
+          <details class="gv-nv-them" id="gvThe1Them"><summary>Thêm: người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận</summary>
+            <div class="cot-3">
+              ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, selTim('klThNguoiTheoDoi'), '', 'tự gợi ý theo người chủ trì')}
+              ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
+              <div></div>
+            </div>
+            <div class="cot-3">
+              ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
+              ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của người chịu trách nhiệm')}
+              <div></div>
+            </div>
+            <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
+          </details>
           <div class="gv-mtg-cho" id="gvMtg1" data-mtg-cho="gv1"></div>
         </article>
         ${luoiTemplate}
@@ -111,18 +118,18 @@ export const giaoViecTemplate = `
         <div class="cot-3" id="gvPhuWrap">
           ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
           ${truong('klThVanBanTK', 'Văn bản triển khai', inp('klThVanBanTK'))}
-          ${truong('klThGhiChu', 'Ghi chú / lĩnh vực chi tiết', inp('klThGhiChu'))}
+          <div></div>
         </div>
         <div class="cot-3" id="gvNguonThemWrap">
           ${truong('klThMucQT', 'Mức quan trọng', sel('klThMucQT'), '', 'A cao nhất')}
-          ${truong('klThCoQuanTrinh', 'Cơ quan trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
           ${truong('klThTTChiDao', 'Thường trực chỉ đạo', sel('klThTTChiDao'), '', 'đồng chí Thường trực Tỉnh ủy chỉ đạo nội dung này')}
+          <div></div>
         </div>
       </details>
     </fieldset>
 
     <div class="gv-tom-tat" id="gvTomTat">
-      <p><span id="gvConThieu" class="gv-thieu" aria-live="polite"></span><span id="gvTomTatChu" class="chu-phu">Giao … cho …, hạn …, sản phẩm …, độ khẩn Thường</span></p>
+      <p><span id="gvConThieu" class="gv-thieu" aria-live="polite"></span><span id="gvTomTatChu" class="chu-phu"></span></p>
       <div>
         <button type="button" data-action="huyKlThem" class="nut">Huỷ</button>
         <button type="button" data-action="luuKlThemTiep" id="klThLuuTiep" class="nut">Giao, nhập tiếp</button>
@@ -134,7 +141,7 @@ export const giaoViecTemplate = `
     <section class="tam hidden" id="gvVanBanDangNhap" aria-live="polite"></section>
     <section class="tam"><div class="tam-dau"><h2>Xem trước thẻ việc</h2></div>
       <div class="gv-xem-truoc" id="gvXemTruoc"><div class="ct-nhan"><span class="ma">NV-mới</span><span class="tag" id="gvXtDoKhan">Thường</span></div>
-        <b id="gvXtNoiDung">Nội dung nhiệm vụ…</b><span id="gvXtPhu">Chủ trì … · hạn … · sản phẩm …</span></div></section>
+        <b id="gvXtNoiDung">Nội dung nhiệm vụ (chưa nhập)</b><span id="gvXtPhu">Chủ trì: chưa chọn · Hạn: chưa chọn · Sản phẩm: chưa chọn</span></div></section>
     <section class="tam"><div class="tam-dau"><h2>Ba bước sau khi giao</h2></div>
       <ol class="gv-buoc-sau">
         <li><i>1</i><span id="gvBuoc1">Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>

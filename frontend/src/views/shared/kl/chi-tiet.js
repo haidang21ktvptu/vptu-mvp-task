@@ -4,7 +4,7 @@
 import { $, escapeHtml, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
-import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl } from '../../../lib/kl/du-lieu.js';
+import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
 import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, tenChatLuong, lopQuaHan } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
@@ -132,7 +132,7 @@ export function chiTietHtml(r, ls, dc) {
           ${r.minh_chung ? hang('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hang('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hang('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
-          ${hang('Mục tiêu then chốt', tenMucTieuViec(r), canCu('gan_muc_tieu', ls))}
+          ${coMucTieu() ? hang('Mục tiêu then chốt', tenMucTieuViec(r), canCu('gan_muc_tieu', ls)) : ''}
           ${hang('Nguồn dòng · Đính chính', `${nguonDong}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'} · ${dinhChinh}`, '')}
         </tbody></table>
       </details>

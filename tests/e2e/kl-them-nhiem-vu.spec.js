@@ -7,7 +7,7 @@ import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { OPTIONAL_USERS, storageStatePath } from './lib/roles.mjs';
-import { contextAs, nav, moGiaoViec, moViec, mauToken, NAP, chonPhanLoai } from './lib/app.js';
+import { contextAs, nav, moGiaoViec, moViec, mauToken, NAP, chonPhanLoai, moThem } from './lib/app.js';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 
@@ -91,11 +91,12 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(page.locator('#gvCham1')).toHaveClass(/\bxong\b/);           // khối 1: văn bản, nguồn, ngày giao, thay mặt đủ
     await expect(page.locator('#gvCham2')).not.toHaveClass(/\bxong\b/);        // khối 2: thiếu sản phẩm
     await expect(page.locator('#klThLuu')).toBeDisabled();
-    await expect(page.locator('#gvTomTatChu')).toContainText('sản phẩm …');
+    await expect(page.locator('#gvConThieu')).toContainText('sản phẩm');   // v3.27: còn thiếu → chỉ "Còn thiếu: …", không dòng tóm tắt
+    await expect(page.locator('#gvTomTatChu')).toHaveText('');
     await page.locator('#klThSanPham').selectOption('TO_TRINH');
-    await page.locator('#klThSanPhamMoTa').fill('Tờ trình thử nghiệm e2e');
+    await moThem(page); await page.locator('#klThSanPhamMoTa').fill('Tờ trình thử nghiệm e2e');
     await expect(page.locator('#gvCham2')).toHaveClass(/\bxong\b/);
-    await expect(page.locator('#gvTomTatChu')).toContainText('sản phẩm Tờ trình, độ khẩn Thường');
+    await expect(page.locator('#gvTomTatChu')).toContainText('Sản phẩm đầu ra: Tờ trình · Độ khẩn: Thường');
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');

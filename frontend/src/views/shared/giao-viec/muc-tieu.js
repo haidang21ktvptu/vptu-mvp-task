@@ -8,7 +8,7 @@
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
-import { danhMucKl, loadDanhMucKl } from '../../../lib/kl/du-lieu.js';
+import { danhMucKl, loadDanhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { timMucTieu, sapTheoDanhMuc } from '../../../lib/kl/muc-tieu.js';
 import { taoBoChon, apGoiY, apGoiYAi, apAiDien, datVanBan, hieuLuc, ketQua, phanHoi, bat, khoaSoHieu } from '../../../lib/kl/goi-y-muc-tieu.js';
@@ -108,7 +108,7 @@ export async function vanBanDoiMucTieu() {
 // Mở biểu mẫu: bỏ mọi ô của lượt trước; danh mục trống (project chưa áp 0105) → không vẽ gì.
 export function datLaiMucTieuGv() {
   gv.khoa.forEach((k) => { clearTimeout(gv.hen.get(k)); boO(k); }); gv.khoa.clear(); gv.vbDb = [];
-  gv.coDm = (danhMucKl().mucTieu || []).length > 0;
+  gv.coDm = coMucTieu();   // v3.27: mục tiêu tạm ẩn (cờ HIEN_MUC_TIEU) → không vẽ ô, không gọi gợi ý, không gắn sau giao
   if ($('gvMtVb')) $('gvMtVb').innerHTML = '';
   if ($('gvMtg1')) $('gvMtg1').innerHTML = '';
   if (!gv.coDm) return;

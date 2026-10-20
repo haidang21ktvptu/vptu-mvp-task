@@ -3,8 +3,9 @@
 // → ngành → lĩnh vực → người theo dõi) bằng chính sự kiện change của ô, nên mọi kiểm tra / gợi ý của biểu mẫu chạy như người dùng chọn. Gửi Giao
 // việc kèm dong_nhap_id (+ vướng mắc của dòng) → giao_viec (0073) gắn việc vào dòng (DA_HOAN_THIEN). Quyền thật ở DB.
 import { $, show, escapeHtml } from '../../../lib/dom.js';
-import { vanBanTheoKhoa } from '../../../lib/kl/du-lieu.js';
-import { nhanTruong } from '../../../lib/kl/nhap/truong.js';
+import { vanBanTheoKhoa, danhMucKl } from '../../../lib/kl/du-lieu.js';
+import { dienSanCho, chuDienSan } from '../../../lib/kl/nhap/mac-dinh.js';
+import { getHomNay } from './trang-thai.js';
 import { giaTriNhom } from '../../../lib/kl/thay-mat.js';
 import { napVanBan, MOI } from './van-ban.js';
 import { datMucTieuGv } from './muc-tieu.js';
@@ -23,8 +24,12 @@ const go = (id, v, loai = 'input') => { if (v !== null && v !== undefined && v !
 
 export async function apDienSan(dong, { nhanMoi }) {
   dang = dong; const d = dong.du_lieu || {};
-  $('gvHoanThien').innerHTML = `<b>Hoàn thiện dòng ${dong.so_dong} của lô ${escapeHtml(dong.lo_ma)}</b> (tệp ${escapeHtml(dong.ten_tep)})${dong.thieu?.length
-    ? ` — còn thiếu: ${escapeHtml(dong.thieu.map(nhanTruong).join(', '))}` : ''}${dong.ghi_chu ? `. Hệ thống báo: ${escapeHtml(dong.ghi_chu)}` : ''}.${
+  // v3.27: thiếu tính lại + ô điền sẵn theo quy tắc (mac-dinh.js) — dòng có cán bộ chủ trì không còn "thiếu đơn vị chủ trì".
+  const ds = dienSanCho({ thieu: dong.thieu || [], du: d, goc: dong.du_lieu_goc || {} }, danhMucKl(), getHomNay());
+  const { thieu, dien: tenDien } = chuDienSan(ds);
+  $('gvHoanThien').innerHTML = `<b>Hoàn thiện dòng ${dong.so_dong} của lô ${escapeHtml(dong.lo_ma)}</b> (tệp ${escapeHtml(dong.ten_tep)})${thieu.length
+    ? ` — còn thiếu: ${escapeHtml(thieu.join(', '))}` : ''}${tenDien.length ? ` — đã điền sẵn theo quy tắc: ${escapeHtml(tenDien.join(', '))} (đồng chí kiểm tra)` : ''}${
+    dong.ghi_chu ? `. Hệ thống báo: ${escapeHtml(dong.ghi_chu)}` : ''}.${
     d.tien_do_ma === 'HOAN_THANH' ? ' Tệp ghi việc đã hoàn thành: giao xong, chủ trì nộp minh chứng là việc hoàn thành.' : ''}
     <button type="button" class="nut nho" data-action="gvBoHoanThien">Thôi, về danh sách chờ</button>`;
   show('gvHoanThien', true);
@@ -46,9 +51,16 @@ export async function apDienSan(dong, { nhanMoi }) {
   go('klThNoiDung', d.noi_dung); chon('klThSanPham', d.san_pham_loai); chon('klThCapNhan', d.cap_nhan_san_pham);
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
   if (chon('klThNguon', d.nguon_nhiem_vu_ma)) phat($('klThNguon'), 'input');   // đánh dấu đã chọn: mặc định theo loại văn bản không ghi đè
-  go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThGhiChu', d.linh_vuc_chi_tiet);
+  go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThLvct', d.linh_vuc_chi_tiet); chon('klThCoQuanTrinh', d.co_quan_trinh);
+  // v3.27: ô trống điền theo quy tắc (sau ô của tệp; loại hạn trước hạn)
+  if (ds.dien.loai_thoi_han_ma) chon('klThLoai', ds.dien.loai_thoi_han_ma);
+  if (ds.dien.linh_vuc_ma && !$('klThLinhVuc').value) chon('klThLinhVuc', ds.dien.linh_vuc_ma);
+  if (ds.dien.san_pham_loai && !$('klThSanPham').value) chon('klThSanPham', ds.dien.san_pham_loai);
+  if (ds.dien.han_xu_ly && !$('klThHan').value) go('klThHan', ds.dien.han_xu_ly);
+  if (ds.dien.co_quan_trinh && !$('klThCoQuanTrinh').value) chon('klThCoQuanTrinh', ds.dien.co_quan_trinh);
   if (Array.isArray(d.muc_tieu_ma)) datMucTieuGv(d.muc_tieu_ma);   // v3.24: mục tiêu then chốt ghi trong tệp (v3.25: ô của thẻ 1, người nhập đã chọn)
-  if (d.van_ban_trien_khai || d.linh_vuc_chi_tiet) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy (v3.25: mục tiêu ở thẻ 1)
+  if (d.van_ban_trien_khai) $('gvThemWrap').open = true;   // v3.18: "Thông tin thêm" thu gọn — có giá trị từ tệp thì mở cho thấy (v3.27: lĩnh vực chi tiết ở thẻ 1)
+  if (d.don_vi_phoi_hop || d.san_pham_mo_ta || d.cap_nhan_san_pham) $('gvThe1Them').open = true;
   $('klThDoKhanWrap').querySelector(`.dk-chon button[data-gia-tri="${d.do_khan || 'THUONG'}"]`)?.click();   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
   phat($('giaoViecForm'), 'input');
   $('klThNoiDung').focus();

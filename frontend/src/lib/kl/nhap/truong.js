@@ -1,46 +1,49 @@
 // Chuẩn nhập của hệ thống (v9 đợt 2 — nhập Excel toàn trình), 3 mức: mức 1 = đủ để GIAO việc; mức 2 = tiến độ (tuỳ chọn); mức 3 = đủ để
-// ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). 29 trường (mau: true — 25 cũ + 3 ô nguồn v3.20 + mục tiêu then chốt v3.24 ở cuối) là cột của "Mẫu nhập chuẩn VPTU-TASK"; trường phụ (mau: false) nhận
-// khi tệp khác có cột tương ứng. Mã trường khớp kl_truong_nhap() (migration 0072). ten: tiêu đề hay gặp (đã chuẩn hoá — chuanTieuDe) để tự ghép cột.
+// ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). Mã trường khớp kl_truong_nhap() (migration 0072). ten: tiêu đề hay gặp (đã chuẩn hoá — chuanTieuDe)
+// để tự ghép cột. v3.27 (chủ dự án 20/10/2026 — "chuẩn hoá theo tệp TUCB …, điền đủ cột B tới M thì import được ngay"): MẪU NHẬP CHUẨN = đúng các cột
+// của bảng Phụ lục (COT_MAU, A–O); mẫu 29 cột cũ (cu: true) vẫn nhận ra (HO_SO_MAU_CU). Cột "Chủ trì theo dõi" (chu_tri) = cán bộ chủ trì + người theo
+// dõi, hoặc một đơn vị Văn phòng ("VPTU"); "Cơ quan/đơn vị trình" là cơ quan trình (trước v3.27 bị ghép nhầm vào đơn vị chủ trì).
 
 export const TRUONG = [
-  { k: 'ma', nhan: 'Mã nhiệm vụ', muc: 0, mau: true, ten: ['ma nhiem vu', 'ma nv', 'ma'], goiY: 'Để trống khi nhập việc mới; có mã → cập nhật việc đó' },
-  { k: 'loai_van_ban', nhan: 'Loại văn bản', muc: 1, mau: true, kieu: 'loaiVanBan', ten: ['loai van ban', 'loai vb'] },
-  { k: 'so_hoi_nghi', nhan: 'Số hội nghị', muc: 1, mau: true, kieu: 'so', ten: ['so hoi nghi', 'hoi nghi so', 'hoi nghi'] },
-  { k: 'so_ket_luan', nhan: 'Số/ký hiệu văn bản', muc: 1, mau: true, ten: ['so/ky hieu van ban', 'so ky hieu van ban', 'so tb/kl', 'so tb kl', 'so kl/tb', 'so van ban', 'so hieu van ban', 'so ket luan', 'so hieu', 'ky hieu'] },
-  { k: 'ngay_ban_hanh', nhan: 'Ngày ban hành', muc: 1, mau: true, kieu: 'ngay', ten: ['ngay ban hanh', 'ngay bh', 'ngay van ban'] },
-  { k: 'noi_dung', nhan: 'Nội dung nhiệm vụ', muc: 1, mau: true, ten: ['noi dung nhiem vu', 'noi dung ket luan / van ban trinh', 'noi dung ket luan', 'noi dung', 'nhiem vu'] },
-  { k: 'don_vi', nhan: 'Đơn vị chủ trì', muc: 1, mau: true, kieu: 'donVi', ten: ['don vi chu tri', 'co quan/don vi trinh', 'co quan don vi trinh', 'co quan chu tri', 'don vi thuc hien', 'don vi'] },
-  { k: 'can_bo', nhan: 'Cán bộ chủ trì', muc: 1, mau: true, kieu: 'canBo', ten: ['can bo chu tri', 'chuyen vien chu tri', 'nguoi chu tri', 'nguoi thuc hien'] },
-  { k: 'theo_doi', nhan: 'Người theo dõi', muc: 1, mau: true, kieu: 'canBo', ten: ['nguoi theo doi', 'chu tri theo doi', 'can bo theo doi', 'theo doi'] },
-  { k: 'lanh_dao_giao', nhan: 'Lãnh đạo giao', muc: 1, mau: true, kieu: 'lanhDao', ten: ['lanh dao giao', 'nguoi giao', 'lanh dao chi dao'], goiY: 'Họ tên lãnh đạo, hoặc "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" (cả nhóm — v3.18)' },
-  { k: 'loai_thoi_han', nhan: 'Loại thời hạn', muc: 1, mau: true, kieu: 'loaiThoiHan', ten: ['loai thoi han', 'loai han'] },
-  { k: 'han_xu_ly', nhan: 'Hạn hoàn thành', muc: 1, mau: true, kieu: 'ngay', ten: ['han hoan thanh', 'han xu ly', 'thoi han hoan thanh', 'thoi han', 'han'] },
-  { k: 'san_pham', nhan: 'Sản phẩm đầu ra', muc: 1, mau: true, kieu: 'sanPham', ten: ['san pham dau ra', 'loai san pham', 'san pham'] },
-  { k: 'cap_nhan', nhan: 'Cấp nhận sản phẩm', muc: 1, mau: true, kieu: 'cap', ten: ['cap nhan san pham', 'cap nhan', 'trinh cap'] },
-  { k: 'do_khan', nhan: 'Độ khẩn', muc: 1, mau: true, kieu: 'doKhan', ten: ['do khan', 'muc do khan'] },
-  { k: 'nguon', nhan: 'Nguồn nhiệm vụ', muc: 1, mau: true, kieu: 'nguon', ten: ['nguon nhiem vu', 'nguon'] },
-  { k: 'nganh', nhan: 'Ngành', muc: 1, mau: true, kieu: 'nganh', ten: ['nganh', 'nganh/linh vuc', 'nganh linh vuc'] },
-  { k: 'linh_vuc', nhan: 'Lĩnh vực', muc: 1, mau: true, kieu: 'linhVuc', ten: ['linh vuc'] },
-  { k: 'tien_do', nhan: 'Tiến độ', muc: 2, mau: true, kieu: 'tienDo', ten: ['tien do', 'tinh trang', 'trang thai'] },
-  { k: 'vuong_mac', nhan: 'Vướng mắc', muc: 2, mau: true, ten: ['vuong mac', 'kho khan vuong mac', 'kho khan, vuong mac', 'de xuat kien nghi'] },
-  { k: 'kq_so_hieu', nhan: 'Số hiệu văn bản kết quả', muc: 3, mau: true, ten: ['so hieu van ban ket qua', 'so van ban ket qua', 'so hieu minh chung'] },
-  { k: 'kq_ngay', nhan: 'Ngày văn bản kết quả', muc: 3, mau: true, kieu: 'ngay', ten: ['ngay van ban ket qua', 'ngay minh chung'] },
-  { k: 'kq_trich_yeu', nhan: 'Trích yếu văn bản kết quả', muc: 3, mau: true, ten: ['trich yeu van ban ket qua', 'trich yeu ket qua', 'trich yeu'] },
-  { k: 'kq_mo_ta', nhan: 'Mô tả kết quả', muc: 3, mau: true, ten: ['mo ta ket qua', 'ket qua thuc hien / minh chung', 'ket qua thuc hien', 'ket qua'] },
-  { k: 'chat_luong', nhan: 'Chất lượng', muc: 3, mau: true, kieu: 'chatLuong', ten: ['chat luong', 'danh gia chat luong'] },
+  { k: 'ma', nhan: 'Mã nhiệm vụ', muc: 0, cu: true, ten: ['ma nhiem vu', 'ma nv', 'ma'], goiY: 'Để trống khi nhập việc mới; có mã → cập nhật việc đó' },
+  { k: 'loai_van_ban', nhan: 'Loại văn bản', muc: 1, cu: true, kieu: 'loaiVanBan', ten: ['loai van ban', 'loai vb'] },
+  { k: 'so_hoi_nghi', nhan: 'Số hội nghị', muc: 1, cu: true, kieu: 'so', ten: ['so hoi nghi', 'hoi nghi so', 'hoi nghi'] },
+  { k: 'so_ket_luan', nhan: 'Số/ký hiệu văn bản', muc: 1, cu: true, ten: ['so/ky hieu van ban', 'so ky hieu van ban', 'so tb/kl', 'so tb kl', 'so kl/tb', 'so van ban', 'so hieu van ban', 'so ket luan', 'so hieu', 'ky hieu'] },
+  { k: 'ngay_ban_hanh', nhan: 'Ngày ban hành', muc: 1, cu: true, kieu: 'ngay', ten: ['ngay ban hanh', 'ngay bh', 'ngay van ban'] },
+  { k: 'noi_dung', nhan: 'Nội dung nhiệm vụ', muc: 1, cu: true, ten: ['noi dung nhiem vu', 'noi dung ket luan / van ban trinh', 'noi dung ket luan', 'noi dung', 'nhiem vu'] },
+  { k: 'don_vi', nhan: 'Đơn vị chủ trì', muc: 1, cu: true, kieu: 'donVi', ten: ['don vi chu tri', 'co quan chu tri', 'don vi thuc hien', 'don vi'] },
+  { k: 'chu_tri', nhan: 'Chủ trì theo dõi', muc: 1, kieu: 'chuTri', ten: ['chu tri theo doi', 'chu tri', 'nguoi chu tri theo doi'], goiY: 'Họ tên cán bộ, hoặc "VPTU" (Văn phòng Tỉnh ủy)' },
+  { k: 'can_bo', nhan: 'Cán bộ chủ trì', muc: 1, cu: true, kieu: 'canBo', ten: ['can bo chu tri', 'chuyen vien chu tri', 'nguoi chu tri', 'nguoi thuc hien'] },
+  { k: 'theo_doi', nhan: 'Người theo dõi', muc: 1, cu: true, kieu: 'canBo', ten: ['nguoi theo doi', 'can bo theo doi', 'theo doi'] },
+  { k: 'lanh_dao_giao', nhan: 'Lãnh đạo giao', muc: 1, cu: true, kieu: 'lanhDao', ten: ['lanh dao giao', 'nguoi giao', 'lanh dao chi dao'], goiY: 'Họ tên lãnh đạo, hoặc "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" (cả nhóm — v3.18)' },
+  { k: 'loai_thoi_han', nhan: 'Loại thời hạn', muc: 1, cu: true, kieu: 'loaiThoiHan', ten: ['loai thoi han', 'loai han'] },
+  { k: 'han_xu_ly', nhan: 'Hạn hoàn thành', muc: 1, cu: true, kieu: 'ngay', ten: ['han hoan thanh', 'han xu ly', 'thoi han hoan thanh', 'thoi han', 'han'] },
+  { k: 'san_pham', nhan: 'Sản phẩm đầu ra', muc: 1, cu: true, kieu: 'sanPham', ten: ['san pham dau ra', 'loai san pham', 'san pham'] },
+  { k: 'cap_nhan', nhan: 'Cấp nhận sản phẩm', muc: 1, cu: true, kieu: 'cap', ten: ['cap nhan san pham', 'cap nhan', 'trinh cap'] },
+  { k: 'do_khan', nhan: 'Độ khẩn', muc: 1, cu: true, kieu: 'doKhan', ten: ['do khan', 'muc do khan'] },
+  { k: 'nguon', nhan: 'Nguồn nhiệm vụ', muc: 1, cu: true, kieu: 'nguon', ten: ['nguon nhiem vu', 'nguon'] },
+  { k: 'nganh', nhan: 'Ngành', muc: 1, cu: true, kieu: 'nganh', ten: ['nganh', 'nganh/linh vuc', 'nganh linh vuc'] },
+  { k: 'linh_vuc', nhan: 'Lĩnh vực', muc: 1, cu: true, kieu: 'linhVuc', ten: ['linh vuc'] },
+  { k: 'tien_do', nhan: 'Tiến độ', muc: 2, cu: true, kieu: 'tienDo', ten: ['tien do', 'tinh trang', 'trang thai'] },
+  { k: 'vuong_mac', nhan: 'Vướng mắc', muc: 2, cu: true, ten: ['vuong mac', 'kho khan vuong mac', 'kho khan, vuong mac', 'de xuat kien nghi'] },
+  { k: 'kq_so_hieu', nhan: 'Số hiệu văn bản kết quả', muc: 3, cu: true, ten: ['so hieu van ban ket qua', 'so van ban ket qua', 'so hieu minh chung'] },
+  { k: 'kq_ngay', nhan: 'Ngày văn bản kết quả', muc: 3, cu: true, kieu: 'ngay', ten: ['ngay van ban ket qua', 'ngay minh chung'] },
+  { k: 'kq_trich_yeu', nhan: 'Trích yếu văn bản kết quả', muc: 3, cu: true, ten: ['trich yeu van ban ket qua', 'trich yeu ket qua', 'trich yeu'] },
+  { k: 'kq_mo_ta', nhan: 'Mô tả kết quả', muc: 3, cu: true, ten: ['mo ta ket qua', 'ket qua thuc hien / minh chung', 'ket qua thuc hien', 'ket qua'] },
+  { k: 'chat_luong', nhan: 'Chất lượng', muc: 3, cu: true, kieu: 'chatLuong', ten: ['chat luong', 'danh gia chat luong'] },
   // Đợt D v3.20 (0093): ba ô nguồn của 0087 — thêm cuối mẫu (giữ vị trí 25 cột cũ để tệp đã điền / "Xuất theo mẫu" nhập lại đúng cột).
-  { k: 'muc_quan_trong', nhan: 'Mức quan trọng', muc: 1, mau: true, kieu: 'mucQT', ten: ['muc quan trong', 'muc do quan trong'] },
-  { k: 'co_quan_trinh', nhan: 'Cơ quan trình', muc: 1, mau: true, kieu: 'coQuanTrinh', ten: ['co quan trinh'] },
-  { k: 'thuong_truc_chi_dao', nhan: 'Thường trực chỉ đạo', muc: 1, mau: true, kieu: 'thuongTruc', ten: ['thuong truc chi dao', 'dong chi thuong truc chi dao'] },
+  { k: 'muc_quan_trong', nhan: 'Mức quan trọng', muc: 1, cu: true, kieu: 'mucQT', ten: ['muc quan trong', 'muc do quan trong'] },
+  { k: 'co_quan_trinh', nhan: 'Cơ quan trình', muc: 1, cu: true, kieu: 'coQuanTrinh', ten: ['co quan/don vi trinh', 'co quan don vi trinh', 'co quan trinh', 'don vi trinh'] },
+  { k: 'thuong_truc_chi_dao', nhan: 'Thường trực chỉ đạo', muc: 1, cu: true, kieu: 'thuongTruc', ten: ['thuong truc chi dao', 'dong chi thuong truc chi dao'] },
   // v3.24 (0106): mục tiêu then chốt — cuối mẫu; nhiều mục cách nhau bằng dấu chấm phẩy; chỉ áp khi lô TẠO việc (cập nhật theo mã không đổi).
-  { k: 'muc_tieu', nhan: 'Mục tiêu then chốt', muc: 1, mau: true, kieu: 'mucTieu', ten: ['muc tieu then chot', 'muc tieu', 'phuc vu muc tieu'],
+  { k: 'muc_tieu', nhan: 'Mục tiêu then chốt', muc: 1, cu: true, kieu: 'mucTieu', ten: ['muc tieu then chot', 'muc tieu', 'phuc vu muc tieu'],
     goiY: 'Tên ngắn (sheet "Danh mục") hoặc mã; nhiều mục cách nhau bằng dấu chấm phẩy (;), tối đa 10' },
-  { k: 'linh_vuc_chi_tiet', nhan: 'Lĩnh vực chi tiết', muc: 1, mau: false, ten: ['linh vuc chi tiet'] },
-  { k: 'van_ban_trien_khai', nhan: 'Văn bản triển khai', muc: 2, mau: false, ten: ['van ban trien khai'] },
-  { k: 'don_vi_phoi_hop', nhan: 'Đơn vị phối hợp', muc: 1, mau: false, ten: ['don vi phoi hop', 'phoi hop'] },
-  { k: 'ghi_chu', nhan: 'Ghi chú', muc: 2, mau: false, ten: ['ghi chu'] },
+  { k: 'linh_vuc_chi_tiet', nhan: 'Lĩnh vực chi tiết', muc: 1, ten: ['linh vuc chi tiet'] },
+  { k: 'van_ban_trien_khai', nhan: 'Văn bản triển khai', muc: 2, ten: ['van ban trien khai'] },
+  { k: 'don_vi_phoi_hop', nhan: 'Đơn vị phối hợp', muc: 1, ten: ['don vi phoi hop', 'phoi hop'] },
+  { k: 'ghi_chu', nhan: 'Ghi chú', muc: 2, ten: ['ghi chu'] },
 ];
-export const TRUONG_MAU = TRUONG.filter((t) => t.mau);
+export const TRUONG_CU = TRUONG.filter((t) => t.cu);   // 29 cột của mẫu trước v3.27 (thứ tự cột cũ)
 export const truong = (k) => TRUONG.find((t) => t.k === k);
 export const nhanTruong = (k) => truong(k)?.nhan || k;
 export const TEN_MUC = { 0: 'Định danh', 1: 'Mức 1 — đủ để giao', 2: 'Mức 2 — tiến độ', 3: 'Mức 3 — đủ để đóng' };
@@ -50,17 +53,20 @@ export const chuanChu = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]
   .toLowerCase().replace(/\(\*\)|\*/g, '').replace(/\s+/g, ' ').trim();
 export const chuanTieuDe = (s) => chuanChu(s).replace(/\s*\/\s*/g, '/').replace(/[:.]$/, '');
 
-// Hồ sơ dựng sẵn (không lưu DB): mẫu chuẩn của hệ thống và "Phụ lục 2" (bảng theo dõi kết luận BTV hiện dùng, tiêu đề ở dòng 3).
+// v3.27: mẫu nhập chuẩn = các cột của bảng Phụ lục (tệp TUCB / KL Thường trực của Văn phòng): A STT … O Mã nhiệm vụ. "STT" không ghép (đánh số).
+export const COT_MAU = [['stt', 'STT'], ['so_hoi_nghi', 'Số hội nghị'], ['so_ket_luan', 'Số TB/KL'], ['ngay_ban_hanh', 'Ngày ban hành'], ['chu_tri', 'Chủ trì theo dõi'],
+  ['nganh', 'Ngành/lĩnh vực'], ['co_quan_trinh', 'Cơ quan/đơn vị trình'], ['linh_vuc_chi_tiet', 'Lĩnh vực chi tiết'], ['noi_dung', 'Nội dung kết luận / Văn bản trình'],
+  ['loai_thoi_han', 'Loại thời hạn'], ['han_xu_ly', 'Hạn xử lý'], ['tien_do', 'Tiến độ'], ['kq_mo_ta', 'Kết quả thực hiện / Minh chứng'],
+  ['van_ban_trien_khai', 'Văn bản triển khai'], ['ma', 'Mã nhiệm vụ']];
+export const COT_BAT_BUOC = ['so_ket_luan', 'ngay_ban_hanh', 'chu_tri', 'nganh', 'co_quan_trinh', 'noi_dung', 'loai_thoi_han', 'tien_do'];   // B (KL BTV), K (Có hạn cụ thể) theo dòng
+// Hồ sơ dựng sẵn (không lưu DB): mẫu chuẩn (bảng Phụ lục — tiêu đề ở dòng nào cũng nhận) và mẫu 29 cột trước v3.27.
 export const HO_SO_MAU = {
-  ten: 'Mẫu nhập chuẩn VPTU-TASK', mau: 'CHUAN', ten_sheet: 'Nhập liệu', dong_tieu_de: 1,
-  anh_xa: Object.fromEntries(TRUONG.map((t) => [chuanTieuDe(t.nhan), t.k])),
+  ten: 'Mẫu nhập chuẩn VPTU-TASK (bảng Phụ lục)', mau: 'CHUAN', ten_sheet: 'Nhập liệu', dong_tieu_de: 1,
+  anh_xa: Object.fromEntries(COT_MAU.filter(([k]) => k !== 'stt').map(([k, t]) => [chuanTieuDe(t), k])),
 };
-export const HO_SO_PHU_LUC_2 = {
-  ten: 'Phụ lục 2 (theo dõi kết luận BTV)', mau: 'PHU_LUC_2', ten_sheet: 'Phụ lục 2', dong_tieu_de: 3,
-  anh_xa: { 'so hoi nghi': 'so_hoi_nghi', 'so tb/kl': 'so_ket_luan', 'ngay ban hanh': 'ngay_ban_hanh', 'chu tri theo doi': 'theo_doi',
-    'nganh/linh vuc': 'nganh', 'co quan/don vi trinh': 'don_vi', 'linh vuc chi tiet': 'linh_vuc_chi_tiet', 'noi dung ket luan/van ban trinh': 'noi_dung',
-    'loai thoi han': 'loai_thoi_han', 'han xu ly': 'han_xu_ly', 'tien do': 'tien_do', 'ket qua thuc hien/minh chung': 'kq_mo_ta',
-    'van ban trien khai': 'van_ban_trien_khai', 'ma nhiem vu': 'ma' },
+export const HO_SO_MAU_CU = {
+  ten: 'Mẫu nhập 29 cột (trước v3.27)', mau: 'CHUAN', ten_sheet: 'Nhập liệu', dong_tieu_de: 1,
+  anh_xa: Object.fromEntries(TRUONG.filter((t) => t.k !== 'chu_tri').map((t) => [chuanTieuDe(t.nhan), t.k])),
 };
 
 // Ghép một tiêu đề với trường chuẩn: khớp đúng tên hay gặp, rồi "bắt đầu bằng" tên dài nhất (tránh "han" ăn "han nop").
@@ -85,10 +91,10 @@ export function ghepTheoHoSo(hang, h) {
   return anhXa;
 }
 
-// Tìm sheet + dòng tiêu đề tốt nhất trong 15 dòng đầu mỗi sheet (sheet ẩn bỏ qua): điểm = số cột ghép được; hồ sơ có sẵn (mẫu, Phụ lục 2, hồ sơ
+// Tìm sheet + dòng tiêu đề tốt nhất trong 15 dòng đầu mỗi sheet (sheet ẩn bỏ qua): điểm = số cột ghép được; hồ sơ có sẵn (mẫu chuẩn, mẫu cũ, hồ sơ
 // đã lưu) khớp ≥ 60% tiêu đề của nó thì dùng hồ sơ đó (ghepTheoHoSo). → { sheet, dongTieuDe, hoSo, anhXa: {chỉ số cột: mã trường} }
 export function timTieuDe(sheets, hoSoDaLuu = []) {
-  const hoSoDs = [HO_SO_MAU, HO_SO_PHU_LUC_2, ...hoSoDaLuu.map((h) => ({ ...h, mau: 'TU_GHEP' }))];
+  const hoSoDs = [HO_SO_MAU, HO_SO_MAU_CU, ...hoSoDaLuu.map((h) => ({ ...h, mau: 'TU_GHEP' }))];
   let tot = null;
   sheets.forEach((s, si) => {
     if (s.an) return;

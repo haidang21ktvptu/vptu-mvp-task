@@ -6,6 +6,7 @@ import { escapeHtml } from '../../../lib/dom.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { KHONG_VB, CHUA_LDVP } from '../../../lib/kl/tong-quan-them.js';
 import { NHANH, dsNhanh } from '../../../lib/kl/tq-bo-loc.js';
+import { coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { mo, dauThe, pillCanh, thuoc } from './template.js';
 
 const MAU = ['--f-tot', '--du-lieu', '--f-vang', '--f-nt', '--f-xs', '--f-dt', '--f-tre', '--chu-mo'];
@@ -29,13 +30,14 @@ export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo
   const { phong = false, ldvp = false, phamViNhan = 'Việc tôi theo dõi hoặc giao' } = hien;
   const tb = hien.toanBo === null || hien.toanBo === undefined ? ''
     : pv('toanBo', [['1', 'Toàn Văn phòng', 'tqToanBo'], ['0', 'Phạm vi của tôi', 'tqToanBo']], hien.toanBo ? '1' : '0', 'tqToanBo', 'Phạm vi số liệu');
-  const nhanh = NHANH.map(([k, ten]) => `<button type="button" class="nhanh-tq" data-action="tqNhanh" data-n="${k}" aria-pressed="${String(dsNhanh(loc).includes(k))}">${ten}</button>`).join('');
+  const nhanh = NHANH.filter(([k]) => k !== 'dp' || coMucTieu()).map(([k, ten]) =>   // v3.27: "Nhiệm vụ đột phá" là nhóm mục tiêu — tạm ẩn
+    `<button type="button" class="nhanh-tq" data-action="tqNhanh" data-n="${k}" aria-pressed="${String(dsNhanh(loc).includes(k))}">${ten}</button>`).join('');
   const nguoi = [ldvp && tc.ldvp.length ? { nhom: 'Lãnh đạo Văn phòng phụ trách', ds: [...tc.ldvp.map((o) => ({ ...o, ma: `LD:${o.ma}` })), { ma: `LD:${CHUA_LDVP}`, ten: 'Chưa có lãnh đạo phụ trách', n: null }] } : null,
     phong && tc.phong.length ? { nhom: 'Phòng, đơn vị chủ trì', ds: tc.phong.map((o) => ({ ...o, ma: `P:${o.ma}` })) } : null,
     tc.canBo.length ? { nhom: 'Cán bộ chủ trì', ds: tc.canBo.map((o) => ({ ...o, ma: `CB:${o.ma}` })) } : null].filter(Boolean);
   const luoi = `<div class="tq-luoi-loc" id="tqLocLuoi"${moLuoi ? '' : ' hidden'}>
       ${oChon('tqLocMucTieu', 'mucTieu', 'Mục tiêu then chốt', tc.mucTieu, loc.mucTieu, 'Mọi mục tiêu')}
-      ${oChon('tqLocCachGan', 'cachGan', 'Cách gắn mục tiêu', tc.cachGan || [], loc.cachGan, 'Mọi cách gắn')}
+      ${oChon('tqLocCachGan', 'cachGan', 'Cách gắn mục tiêu', coMucTieu() ? tc.cachGan || [] : [], loc.cachGan, 'Mọi cách gắn')}
       ${oChon('tqLocKhoi', 'khoi', 'Khối lĩnh vực', tc.khoi, loc.khoi, 'Mọi khối')}
       ${oChon('tqLocNganh', 'nganh', 'Ngành, lĩnh vực', tc.nganh, loc.nganh, 'Mọi ngành, lĩnh vực')}
       ${oChon('tqLocLoai', 'loai', 'Văn bản chỉ đạo', tc.loai, loc.loai, 'Mọi loại văn bản')}

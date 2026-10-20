@@ -66,7 +66,8 @@ export function keHoachThe(n, hienTai = {}, { banChup = false } = {}) {
 // Đoạn "có thể còn sót" (máy chủ rà — nghi_bo_sot: nguyên văn chữ của tệp) → nhiệm vụ để người giao thêm vào danh sách rồi điền như các nhiệm vụ khác.
 export const nhiemVuTuDoan = (d) => ({ noi_dung: { gia_tri: String(d?.chu || ''), xac_minh: 'dung' }, trich: String(d?.chu || ''), trang: d?.trang ?? null,
   don_vi_chu_tri: { gia_tri: '' }, don_vi_phoi_hop: { gia_tri: '', xac_minh: false }, han: { gia_tri: '', trich: '', xac_minh: false }, loai_thoi_han: { gia_tri: '' },
-  san_pham: { gia_tri: '' }, mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: '' }, linh_vuc: { gia_tri: '' }, muc_tieu: [], tu_ra_soat: true });
+  san_pham: { gia_tri: '' }, mo_ta_san_pham: { gia_tri: '', xac_minh: false }, nganh: { gia_tri: '' }, linh_vuc: { gia_tri: '' }, co_quan_trinh: { gia_tri: '' }, muc_tieu: [],
+  tu_ra_soat: true });
 // Nhiệm vụ "Điền tất cả" bỏ qua: trùng với một nhiệm vụ khác của văn bản (người giao vẫn bấm điền riêng được).
 export const laTrung = (n) => Number.isInteger(n?.trung_voi);
 

@@ -28,15 +28,15 @@ export function trangThaiChu({ kq, daLuu, coKe, thaoTac }) {
   return daLuu ? 'Đã lưu' : 'Không có mục nào cần chấp nhận';
 }
 
-export function dongHtml(r, { dm, kq, daLuu, coKe, thaoTac }) {
+export function dongHtml(r, { dm, kq, daLuu, coKe, thaoTac }, coMt = true) {   // v3.27: coMt = false → không ô mục tiêu, không nút Chấp nhận
   return `<article class="rs-dong${daLuu ? ' da-luu' : ''}" id="rsDong-${r.id}" data-id="${r.id}">
     <div class="rs-viec"><button type="button" class="ten-bam" data-action="rsMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"><span class="ma-ng">${escapeHtml(r.ma)}</span><b>${escapeHtml(r.noi_dung)}</b></button>
       <small class="chu-phu">${escapeHtml(vanBan(r))} · ${escapeHtml(chuTri(r))} · ${escapeHtml(tenNhom(r.nhom_dem))}</small>
       <small class="chu-phu rs-nganh">${escapeHtml(nganhChu(r))}</small>
-      <small class="rs-hien" data-rs-hien="${r.id}">${escapeHtml(hienChu(r, dm))}</small></div>
-    <div class="rs-mt">${khungHtml(khoaO(r.id), { nhan: 'Mục tiêu then chốt' })}</div>
+      ${coMt ? `<small class="rs-hien" data-rs-hien="${r.id}">${escapeHtml(hienChu(r, dm))}</small>` : ''}</div>
+    ${coMt ? `<div class="rs-mt">${khungHtml(khoaO(r.id), { nhan: 'Mục tiêu then chốt' })}</div>
     <div class="rs-chan"><span class="chu-phu" data-rs-tt="${r.id}" aria-live="polite">${escapeHtml(trangThaiChu({ kq, daLuu, coKe, thaoTac }))}</span>
-      <button type="button" class="nut nho chinh" data-action="rsLuu" data-id="${r.id}"${coKe && kq ? '' : ' disabled'}>Chấp nhận</button></div>
+      <button type="button" class="nut nho chinh" data-action="rsLuu" data-id="${r.id}"${coKe && kq ? '' : ' disabled'}>Chấp nhận</button></div>` : ''}
   </article>`;
 }
 // Cập nhật chữ + nút của một dòng đang vẽ (sau khi gợi ý về, người dùng chọn, lưu xong) — ô chọn vẽ lại riêng (veO).

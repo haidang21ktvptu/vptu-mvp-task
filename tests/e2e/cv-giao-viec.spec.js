@@ -33,7 +33,7 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
       await expect(p.locator('#navGiaoViec')).toHaveCount(1); await expect(p.locator('#navNghiemThu')).toHaveCount(0);   // Đợt D: bỏ mục Cần nghiệm thu
       await moGiaoViec(p);
       await expect(p.locator('#klThThayMatWrap')).toBeVisible(); await expect(p.locator('#klThThayMat')).toHaveValue('');   // Đợt F: quyền chung, để trống = giao thẳng
-      await expect(p.locator('#klThNguoiTheoDoiWrap')).toBeHidden();
+      await expect(p.locator('#klThNguoiTheoDoiWrap')).toHaveClass(/\bhidden\b/);   // v3.27: ô trong mục gập "Thêm" — kiểm lớp ẩn
       expect(await p.locator('#klThOwner optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual(['Chuyên viên']);
       const owner = await p.locator('#klThOwner option').evaluateAll((os) => os.map((x) => x.value).filter(Boolean));
       expect(owner[0]).toBe(`tk:${ID.e2eCv}`);   // chính tôi đứng đầu
@@ -45,7 +45,7 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
       await p.locator('#klThSanPham').selectOption('BAO_CAO'); await p.locator('#klThHan').fill(cong(H, 1));
       await expect(p.locator('#klThCapNhan')).toHaveValue('TRUONG_PHONG');
       await p.locator('#gvThemDong').click();
-      await expect(the(p, 2).locator('[data-wrap="theo_doi"]')).toBeHidden();
+      await expect(the(p, 2).locator('[data-wrap="theo_doi"]')).toHaveClass(/\bhidden\b/);
       await o(p, 2, 'noi_dung').fill(`${khoa} việc 2 tự làm`); await o(p, 2, 'owner').selectOption(`tk:${ID.e2eCv}`);
       await o(p, 2, 'san_pham').selectOption('TO_TRINH'); await o(p, 2, 'han').fill(cong(H, 2));
       await chonPhanLoai(p); await chonPhanLoai(p, { the: 2 });   // v3.26: phân loại bắt buộc mọi thẻ

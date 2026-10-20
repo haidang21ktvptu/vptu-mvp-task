@@ -6,7 +6,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { danhMucKl, loadDanhMucKl } from '../../../lib/kl/du-lieu.js';
+import { danhMucKl, loadDanhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { timMucTieu, laTheoVanBan, mucTieuCua, sapTheoDanhMuc } from '../../../lib/kl/muc-tieu.js';
 import { taoBoChon, apGoiY, ketQua, phanHoi, khoaSoHieu, NHAN_NGUON, TOI_DA } from '../../../lib/kl/goi-y-muc-tieu.js';
 import { ganMucTieu, ganMucTieuVanBan, quyenVanBan, goiYMucTieuViec, themMucTieuTuDong, ghiPhanHoiGoiY } from '../../../lib/kl/muc-tieu-db.js';
@@ -26,7 +26,7 @@ export const duocGanMucTieu = (r) => conDung(r) && (laTangGiao(r) || ['A1', 'A2'
 // (napMucTieu): người nhập văn bản, hoặc Phó Chánh VP / Trưởng phòng xử lý được mọi việc gốc của văn bản — như gan_muc_tieu_van_ban.
 const vbNgay = (r) => conDung(r) && Boolean(r.van_ban_id) && Boolean(state.user?.is_chief);
 const vbKiem = (r) => conDung(r) && Boolean(r.van_ban_id) && !state.user?.is_chief && vai() !== 'A0';
-const coDanhMuc = () => (danhMucKl().mucTieu || []).length > 0;   // project chưa áp 0105 → không vẽ gì
+const coDanhMuc = () => coMucTieu();   // project chưa áp 0105 / v3.27 mục tiêu tạm ẩn → không vẽ gì
 const giongNhau = (a = [], b = []) => [...a].sort().join('|') === [...b].sort().join('|');
 const khoaCt = (id) => `ct-${id}`;
 

@@ -1,11 +1,13 @@
 // Nhập Excel toàn trình (v9 đợt 2): đọc .xlsx (ZIP DEFLATE / STORE, chuỗi dùng chung, ngày theo định dạng, ô gộp), tự nhận dòng tiêu đề và
-// hồ sơ (mẫu chuẩn, Phụ lục 2), chuẩn hoá giá trị (ngày, danh mục, cán bộ, từ điển), đánh giá 3 mức + quy tắc mặc định, mẫu nhập chuẩn.
+// hồ sơ (v3.27: mẫu chuẩn = các cột bảng Phụ lục; mẫu 29 cột cũ), chuẩn hoá giá trị (ngày, danh mục, cán bộ, từ điển), đánh giá 3 mức + quy tắc mặc
+// định, mẫu nhập chuẩn. Phần riêng v3.27 (chủ trì theo dõi, cơ quan trình, quy tắc điền mặc định): nhap-excel-v327.test.mjs.
 // Dữ liệu hư cấu. Chạy `npm test` trong frontend/ (node:test).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { deflateRawSync, crc32 } from 'node:zlib';
 import { docXlsx, ngayTuSo } from '../src/lib/xlsx-doc.js';
-import { timTieuDe, doanTruong, chuanTieuDe, TRUONG_MAU } from '../src/lib/kl/nhap/truong.js';
+import { timTieuDe, doanTruong, chuanTieuDe, TRUONG_CU, COT_MAU, HO_SO_MAU } from '../src/lib/kl/nhap/truong.js';
+import { HIEN_MUC_TIEU } from '../src/lib/kl/muc-tieu.js';
 import { chuanGiaTri, docNgay } from '../src/lib/kl/nhap/chuan-hoa.js';
 import { danhGia, doanLoaiVanBan } from '../src/lib/kl/nhap/danh-gia.js';
 import { layDong, chuanDong } from '../src/lib/kl/nhap/bang.js';
@@ -82,17 +84,18 @@ Dòng 2 _x005F_x000D_</x:t></x:is></x:c><x:c s="4"><x:v>${46387 - 1462}</x:v></x
   await assert.rejects(docXlsx(new ArrayBuffer(40)), /Không đọc được|không phải \.xlsx/);
 });
 
-test('Nhận tiêu đề: Phụ lục 2 ở dòng 3 theo hồ sơ dựng sẵn; tệp lạ ghép theo tên hay gặp; cột "Hạn nộp minh chứng" (đã bỏ từ 3.17) không ghép vào đâu', async () => {
+test('Nhận tiêu đề: bảng Phụ lục ở dòng 3 theo mẫu chuẩn (v3.27); tệp lạ ghép theo tên hay gặp; cột "Hạn nộp minh chứng" (đã bỏ từ 3.17) không ghép vào đâu', async () => {
   const ds = await docXlsx(zipNen(TEP_PL2));
   const t = timTieuDe(ds);
-  assert.equal(t.sheet, 0); assert.equal(t.dongTieuDe, 2); assert.equal(t.hoSo?.mau, 'PHU_LUC_2');
-  assert.equal(t.anhXa[8], 'noi_dung'); assert.equal(t.anhXa[4], 'theo_doi'); assert.equal(t.anhXa[6], 'don_vi'); assert.equal(t.anhXa[14], 'ma'); assert.equal(t.anhXa[0], undefined);
+  assert.equal(t.sheet, 0); assert.equal(t.dongTieuDe, 2); assert.equal(t.hoSo?.ten, HO_SO_MAU.ten);
+  assert.equal(t.anhXa[8], 'noi_dung'); assert.equal(t.anhXa[4], 'chu_tri', 'E: chủ trì theo dõi'); assert.equal(t.anhXa[6], 'co_quan_trinh', 'G: cơ quan trình (trước v3.27 ghép nhầm vào đơn vị chủ trì)');
+  assert.equal(t.anhXa[7], 'linh_vuc_chi_tiet'); assert.equal(t.anhXa[12], 'kq_mo_ta'); assert.equal(t.anhXa[13], 'van_ban_trien_khai'); assert.equal(t.anhXa[14], 'ma'); assert.equal(t.anhXa[0], undefined);
   const la = timTieuDe([{ ten: 'S', an: false, dong: [['Ghi chú'], ['Nội dung', 'Hạn nộp minh chứng', 'Hạn', 'Người theo dõi (*)', 'Cột lạ']] }]);
   assert.equal(la.hoSo, null); assert.equal(la.dongTieuDe, 1);
   assert.deepEqual(la.anhXa, { 0: 'noi_dung', 2: 'han_xu_ly', 3: 'theo_doi' });
   assert.equal(doanTruong('Số/ ký hiệu văn bản'), 'so_ket_luan'); assert.equal(chuanTieuDe('  Đơn vị chủ trì (*) '), 'don vi chu tri');
   const them = timTieuDe([{ ten: 'PL2', an: false, dong: [[...TD, 'Cán bộ chủ trì', 'Ghi chú (2)']] }]);
-  assert.equal(them.hoSo?.mau, 'PHU_LUC_2'); assert.equal(them.anhXa[16], 'can_bo', 'hồ sơ dựng sẵn: cột người dùng chèn thêm vẫn được đoán');
+  assert.equal(them.hoSo?.ten, HO_SO_MAU.ten); assert.equal(them.anhXa[16], 'can_bo', 'hồ sơ dựng sẵn: cột người dùng chèn thêm vẫn được đoán');
   assert.equal(them.anhXa[15], undefined); assert.equal(them.anhXa[17], 'ghi_chu');
   const luu = timTieuDe([{ ten: 'S', an: false, dong: [['Nội dung', 'Hạn', 'Cán bộ chủ trì']] }], [{ ten: 'Bảng phòng', anh_xa: { 'noi dung': 'noi_dung', han: 'han_xu_ly' } }]);
   assert.equal(luu.hoSo?.ten, 'Bảng phòng'); assert.deepEqual(luu.anhXa, { 0: 'noi_dung', 1: 'han_xu_ly' }, 'hồ sơ đã lưu: giữ đúng cách ghép đã chọn');
@@ -139,7 +142,8 @@ test('Đánh giá: mặc định (Kết luận BTV khi có số hội nghị, ng
 
 test('Đánh giá: thiếu mức 1 → CHO_HOAN_THIEN; điền hàng loạt lấp chỗ trống; Hoàn thành theo chế độ lô; cán bộ khác phòng chặn; ô tuỳ chọn sai bỏ qua', () => {
   const thieu = danhGia(dong({ ...DU, san_pham: undefined, nganh: undefined, linh_vuc: undefined }), DG);
-  assert.equal(thieu.ket_qua, 'CHO_HOAN_THIEN'); assert.deepEqual(thieu.du_lieu.thieu, ['san_pham', 'nganh', 'linh_vuc']);
+  assert.equal(thieu.ket_qua, 'CHO_HOAN_THIEN'); assert.deepEqual(thieu.du_lieu.thieu, ['nganh', 'linh_vuc'], 'v3.27: sản phẩm điền theo quy tắc');
+  assert.equal(thieu.du_lieu.san_pham_loai, 'BAO_CAO'); assert.ok(thieu.macDinh.has('san_pham'));
   const hl = danhGia(dong({ ...DU, san_pham: undefined }), { ...DG, hangLoat: { san_pham: 'TO_TRINH' } });
   assert.equal(hl.ket_qua, 'GIAO'); assert.equal(hl.du_lieu.san_pham_loai, 'TO_TRINH');
   const xong = { ...DU, tien_do: 'Hoàn thành', kq_so_hieu: '12/BC', kq_ngay: '20/09/2026', kq_trich_yeu: 'Báo cáo', kq_mo_ta: 'Đã gửi' };
@@ -151,7 +155,8 @@ test('Đánh giá: thiếu mức 1 → CHO_HOAN_THIEN; điền hàng loạt lấ
   assert.equal(lech.ket_qua, 'CHO_HOAN_THIEN'); assert.ok(lech.thieu.includes('can_bo'));
   const tuyChon = danhGia(dong({ ...DU, chat_luong: 'Khá' }), DG);
   assert.equal(tuyChon.ket_qua, 'GIAO'); assert.ok(tuyChon.canhBao.some((c) => c.includes('Chất lượng')));
-  assert.equal(danhGia(dong({ ...DU, loai_thoi_han: 'Nhiệm vụ thường xuyên' }), DG).ket_qua, 'CHO_HOAN_THIEN');
+  const tx = danhGia(dong({ ...DU, loai_thoi_han: 'Nhiệm vụ thường xuyên' }), DG);   // v3.27: việc mới chuyển "Có hạn cụ thể", loại gốc ghi ở ghi chú
+  assert.equal(tx.ket_qua, 'GIAO'); assert.equal(tx.du_lieu.loai_thoi_han_ma, 'CO_HAN_CU_THE'); assert.match(tx.du_lieu.ghi_chu, /Loại thời hạn theo tệp: Nhiệm vụ thường xuyên/);
 });
 
 test('v3.18: cột "Lãnh đạo giao" nhận nhóm (Lãnh đạo Văn phòng / Thường trực, bí danh, đuôi "(cả nhóm)", từ điển) → thay_mat_nhom; chuyên viên không khớp; đơn vị chủ trì ngoài Văn phòng → chờ hoàn thiện', () => {
@@ -209,29 +214,28 @@ test('Đánh giá: mã đã có → CAP_NHAT chỉ ô có trong tệp (không m�
   assert.equal(moi.ket_qua, 'GIAO'); assert.ok(moi.canhBao[0].includes('chưa có trên hệ thống'));
 });
 
-test('Mẫu nhập chuẩn: 3 sheet, 29 cột đúng thứ tự (v3.20: + 3 ô nguồn; v3.24: + mục tiêu then chốt ở cuối), danh sách chọn trỏ sheet Danh mục, tiêu đề tô theo mức; đọc lại tự nhận hồ sơ mẫu', async () => {
+test('Mẫu nhập chuẩn (v3.27): 3 sheet, 15 cột bảng Phụ lục, danh sách chọn trỏ sheet Danh mục; xuất việc đang có; đọc lại tự nhận mẫu, cập nhật theo mã', async () => {
   const b = taoMauNhap({ ...CTX, findAccount: (id) => ACC.find((a) => a.id === id) },
-    [{ ma: 'NV-9', van_ban_loai: 'KL_BTV', so_hoi_nghi: 45, so_ket_luan: '45-KL/TU', ngay_ban_hanh: '2026-08-01', noi_dung: 'Báo cáo quý', owner_tai_khoan: 'cv1',
-      nguoi_theo_doi: 'tp', tao_boi: 'tp', do_khan: 'KHAN', tien_do_ma: 'DANG_THUC_HIEN', han_xu_ly: '2026-12-31', muc_quan_trong: 'A', co_quan_trinh_ten: 'Ban Tổ chức Tỉnh ủy',
-      muc_tieu: ['DP_CAN_BO', 'NQ_57'] }]);
+    [{ ma: 'NV-9', so_hoi_nghi: 45, so_ket_luan: '45-KL/TU', ngay_ban_hanh: '2026-08-01', noi_dung: 'Báo cáo quý', owner_tai_khoan: 'cv1', tien_do_ma: 'DANG_THUC_HIEN',
+      nganh_ten: '8. Kinh tế tổng hợp - Tài chính - Đầu tư - Ngân sách', co_quan_trinh_ten: '6. Đảng ủy Ủy ban nhân dân tỉnh', linh_vuc_chi_tiet: 'Tài chính',
+      loai_thoi_han_ten: 'Có hạn cụ thể', han_xu_ly: '2026-12-31', ket_qua_xuat: '' }]);
   const ds = await docXlsx(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
   assert.deepEqual(ds.map((x) => x.ten), ['Nhập liệu', 'Danh mục', 'Hướng dẫn']);
-  assert.equal(TRUONG_MAU.length, 29); assert.deepEqual(ds[0].dong[0], TRUONG_MAU.map((t) => t.nhan)); assert.equal(TRUONG_MAU[28].k, 'muc_tieu');
+  assert.deepEqual(ds[0].dong[0], COT_MAU.map(([, t]) => t)); assert.equal(COT_MAU.length, 15); assert.equal(TRUONG_CU.length, 29, 'mẫu 29 cột cũ vẫn nhận ra');
   const r = ds[0].dong[1];
-  assert.equal(r[0], 'NV-9'); assert.equal(r[1], 'Kết luận Hội nghị Ban Thường vụ'); assert.equal(r[7], 'Lý Văn Phúc — Phòng Tổng hợp');
-  assert.equal(r[9], 'Nông Thị Lan — Phòng Tổng hợp', 'lãnh đạo giao = người tạo A2'); assert.equal(r[14], 'Khẩn'); assert.equal(r[11], '2026-12-31');
-  assert.equal(r[25], 'A — rất quan trọng'); assert.equal(r[26], 'Ban Tổ chức Tỉnh ủy'); assert.equal(r[28], 'Đột phá cán bộ, nguồn nhân lực; Nghị quyết 57-NQ/TW');
-  assert.ok(ds[1].dong[0].includes('Mục tiêu then chốt')); assert.ok(ds[1].dong.some((d) => d.includes('Du lịch bền vững')) && !ds[1].dong.some((d) => d.includes('Chỉ tiêu cũ')));
-  assert.ok(ds[1].dong[0].includes('Lĩnh vực')); assert.ok(ds[1].dong.some((d) => d[2] === 'Đàm Văn Sơn — Phòng Quản trị'));
-  assert.ok(!ds[1].dong.some((d) => (d[2] || '').startsWith('Hệ thống')), 'không đưa tài khoản hệ thống');
-  const xml = new TextDecoder().decode(b); assert.match(xml, /<dataValidation type="list"[^>]*sqref="B2:B1001"><formula1>&apos;Danh mục&apos;!\$A\$2:\$A\$8<\/formula1>/);   // 0087: 7 loại văn bản (+ KL / NQ Ban Chấp hành)
-  assert.doesNotMatch(xml, /sqref="AC2:AC/, 'cột mục tiêu nhiều giá trị: không gắn danh sách chọn');
+  assert.deepEqual([r[0], r[1], r[2], r[3], r[4]], [1, 45, '45-KL/TU', '2026-08-01', 'Lý Văn Phúc — Phòng Tổng hợp'], 'trùng họ tên → kèm phòng');
+  assert.deepEqual([r[6], r[7], r[9], r[10], r[11], r[14]], ['6. Đảng ủy Ủy ban nhân dân tỉnh', 'Tài chính', 'Có hạn cụ thể', '2026-12-31', 'Đang thực hiện', 'NV-9']);
+  const dm = ds[1].dong;
+  assert.deepEqual(dm[0].slice(0, 3), ['Chủ trì theo dõi', 'Ngành/lĩnh vực', 'Cơ quan/đơn vị trình']);
+  assert.equal(dm[1][0], '1. Văn phòng Tỉnh ủy', 'chủ trì: Văn phòng Tỉnh ủy đầu danh sách'); assert.ok(dm.some((d) => d[0] === 'Đàm Văn Sơn'));
+  assert.ok(!dm.some((d) => (d[0] || '').startsWith('Hệ thống')), 'không đưa tài khoản hệ thống');
+  assert.deepEqual(dm.slice(1).map((d) => d[2]).filter(Boolean), ['1. Văn phòng Tỉnh ủy', '6. Đảng ủy Ủy ban nhân dân tỉnh'], 'cơ quan trình: ngoài Văn phòng + Văn phòng Tỉnh ủy');
+  const xml = new TextDecoder().decode(b); assert.match(xml, /<dataValidation type="list"[^>]*sqref="E2:E1001"><formula1>&apos;Danh mục&apos;!\$A\$2:/);
   assert.match(xml, /<fgColor rgb="FFFFF6D6"\/>/);
-  const sTieuDe = (c) => new RegExp(`<c r="${c}1" t="inlineStr" s="(\\d+)"`).exec(xml)?.[1];
-  assert.deepEqual(['A', 'B', 'R', 'S', 'T', 'U', 'Y', 'Z', 'AB'].map(sTieuDe), ['7', '4', '4', '5', '5', '6', '6', '4', '4'], 'tiêu đề tô theo mức: mã xám, mức 1 vàng, mức 2 lam, mức 3 lục; 3 ô nguồn mức 1');
-  const t = timTieuDe(ds); assert.equal(t.hoSo?.mau, 'CHUAN'); assert.equal(t.anhXa[0], 'ma'); assert.equal(t.anhXa[24], 'chat_luong');
+  const t = timTieuDe(ds); assert.equal(t.hoSo?.ten, HO_SO_MAU.ten); assert.equal(t.anhXa[0], undefined, 'STT không ghép'); assert.equal(t.anhXa[14], 'ma');
   const kq = danhGia(chuanDong(layDong(ds[0], 0, t.anhXa)[0], CTX), { ...DG, maDaCo: new Set(['NV-9']) });
-  assert.equal(kq.ket_qua, 'CAP_NHAT'); assert.equal(kq.du_lieu.owner_tai_khoan, 'cv1'); assert.equal(kq.du_lieu.do_khan, 'KHAN');
+  assert.equal(kq.ket_qua, 'CAP_NHAT'); assert.equal(kq.du_lieu.owner_tai_khoan, 'cv1'); assert.equal(kq.du_lieu.nguoi_theo_doi, null, 'cập nhật theo mã: không đổi người theo dõi');
+  assert.equal(kq.du_lieu.co_quan_trinh, 'DANG_UY_UBND'); assert.equal(kq.du_lieu.linh_vuc_chi_tiet, 'Tài chính');
 });
 
 test('v3.24 (0106): mục tiêu then chốt — nhiều mục cách nhau bằng dấu chấm phẩy (tên ngắn có dấu phẩy), mã / tên ngắn / tên đầy đủ / gần đúng; bỏ mục ngừng dùng; gửi muc_tieu_ma', () => {
@@ -243,6 +247,10 @@ test('v3.24 (0106): mục tiêu then chốt — nhiều mục cách nhau bằng 
   assert.ok(chuanGiaTri('mucTieu', 'Không có trong danh mục', CTX).loi); assert.equal(chuanGiaTri('mucTieu', '  ', CTX), null);
   assert.equal(doanTruong('Mục tiêu then chốt'), 'muc_tieu');
   const kq = danhGia(dong({ ...DU, muc_tieu: 'Du lịch bền vững; Nghị quyết 59-NQ/TW' }), DG);
+  if (!HIEN_MUC_TIEU) {   // v3.27: mục tiêu then chốt tạm ẩn — cột bỏ qua, không gửi, không cảnh báo
+    assert.equal(kq.ket_qua, 'GIAO'); assert.equal(kq.du_lieu.muc_tieu_ma, null); assert.ok(!kq.canhBao.some((c) => c.includes('Mục tiêu then chốt')));
+    return;
+  }
   assert.equal(kq.ket_qua, 'GIAO'); assert.deepEqual(kq.du_lieu.muc_tieu_ma, ['CTR_DU_LICH', 'NQ_59']);
   assert.equal(danhGia(dong(DU), DG).du_lieu.muc_tieu_ma, null);
   const loi = danhGia(dong({ ...DU, muc_tieu: 'xyz' }), DG);
@@ -253,12 +261,13 @@ test('v3.24 (0106): mục tiêu then chốt — nhiều mục cách nhau bằng 
   assert.equal(cn.ket_qua, 'CAP_NHAT'); assert.ok(cn.canhBao.some((c) => c.includes('chỉ gắn khi tạo việc mới')));
 });
 
-test('v3.20 (0093): ba ô nguồn — Mức quan trọng (A/B/C, chữ "quan trọng"), Cơ quan trình chỉ đơn vị ngoài Văn phòng; không khớp → lỗi ô tuỳ chọn', () => {
+test('v3.20 (0093): ba ô nguồn — Mức quan trọng (A/B/C, chữ "quan trọng"), Cơ quan trình = đơn vị ngoài Văn phòng hoặc Văn phòng Tỉnh ủy (v3.27); không khớp → lỗi', () => {
   assert.equal(chuanGiaTri('mucQT', 'b', CTX).ma, 'B');
   assert.equal(chuanGiaTri('mucQT', 'Rất quan trọng', CTX).ma, 'A');
   assert.equal(chuanGiaTri('coQuanTrinh', 'Đảng ủy Ủy ban nhân dân tỉnh', CTX).ma, 'DANG_UY_UBND');
-  assert.ok(chuanGiaTri('coQuanTrinh', 'Văn phòng Tỉnh ủy', CTX).loi, 'đơn vị trong Văn phòng không là cơ quan trình');
+  assert.equal(chuanGiaTri('coQuanTrinh', 'Văn phòng Tỉnh ủy', CTX).ma, 'VAN_PHONG_TINH_UY', 'v3.27 (0117): Văn phòng Tỉnh ủy là cơ quan trình');
+  assert.ok(chuanGiaTri('coQuanTrinh', 'Phòng Tổng hợp', CTX).loi, 'phòng trong Văn phòng không là cơ quan trình');
   assert.ok(chuanGiaTri('mucQT', 'D', CTX).loi);
   assert.equal(doanTruong('Mức quan trọng'), 'muc_quan_trong'); assert.equal(doanTruong('Cơ quan trình'), 'co_quan_trinh');
-  assert.equal(doanTruong('Cơ quan/đơn vị trình'), 'don_vi', 'cột Phụ lục 2 vẫn là đơn vị chủ trì');
+  assert.equal(doanTruong('Cơ quan/đơn vị trình'), 'co_quan_trinh', 'v3.27: cột G bảng Phụ lục là cơ quan trình');
 });

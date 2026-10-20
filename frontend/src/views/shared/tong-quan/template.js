@@ -5,7 +5,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
-import { vongHtml, duongHtml, cotThangHtml, xepHtml, chuGiaiHtml } from './bieu-do.js';
+import { vongHtml, cotThangHtml, xepHtml, chuGiaiHtml } from './bieu-do.js';
 
 export const mo = (ct) => `data-action="tqMo" data-ct='${escapeHtml(JSON.stringify(ct))}'`;
 export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><div><h2>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
@@ -16,21 +16,24 @@ export const nhomNut = (act, k, ds, chon, nhan) => `<div class="pham-vi" role="g
 const ICON_GIAO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
 export const KY = ['thang', 'quy', 'nam', 'nhiem-ky'];
 
-// Đợt C1: mỗi ô có dòng tỷ lệ (hoàn thành, đang làm trên tổng việc trong phạm vi; cảnh báo trên việc đang làm) và một câu quy tắc cảnh báo (quyTac).
+// Đợt C1: mỗi ô có dòng tỷ lệ và một câu quy tắc cảnh báo (quyTac). v3.27 (chủ dự án 20/10/2026 — Tổng quan chính xác tối đa với dữ liệu hiện có):
+// vòng tròn là TỶ LỆ HOÀN THÀNH = hoàn thành trong kỳ / (hoàn thành trong kỳ + đang làm) — trước đây "đúng hạn" chỉ dựa trên vài việc có ngày hoàn
+// thành (dữ liệu nhập từ Excel chưa có ngày) nên ghi 100% gây hiểu nhầm; đúng hạn ghi kèm số việc xét được; % hoàn thành / đang làm cùng mẫu số đó.
 // kyChon null = đang dùng kỳ tuỳ chọn của bộ lọc chi tiết (không nút kỳ nào sáng).
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
-export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, thang, coGiaoViec, tong = 0, quyTac = '' }) {
+export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, coGiaoViec, tong = 0, quyTac = '' }) {
   const capNhat = luc ? `Số liệu cập nhật ${luc.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' })} ngày ${luc.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}` : 'Đang nạp số liệu…';
+  const kyTong = s.xong + s.dangMo;
   const o = (khoa, so, nhan, phu, tyLe = '') => `<button type="button" class="o-hung" data-so="${khoa}" ${mo({ t: khoa })} aria-label="${escapeHtml(`${so} ${nhan} — xem danh sách`)}"><span class="gia">${so}</span><span class="nhan-so">${nhan}</span><span class="phu-h">${phu}</span>${tyLe ? `<span class="ty-le">${tyLe}</span>` : ''}</button>`;
   return `<section class="anh-hung" aria-label="Tổng quan thực hiện nhiệm vụ">
     <div class="hung-dau"><div><h1>${escapeHtml(tieuDe)}</h1><p>${escapeHtml(phamVi)}. <span class="ngay-hung">${capNhat}</span></p></div>
       <div class="hung-phai"><div class="ky" role="group" aria-label="Kỳ số liệu" id="tqKy">${KY.map((ky) => `<button type="button" data-action="tqKy" data-ky="${ky}" aria-pressed="${String(kyChon === ky)}">${escapeHtml(ten[ky])}</button>`).join('')}</div>
         ${coGiaoViec ? `<button type="button" class="nut chinh" data-action="openGiaoViec" aria-label="Giao việc">${ICON_GIAO}<span class="chu-nut">Giao việc</span></button>` : ''}</div></div>
     <div class="hung-so" id="tqSo">
-      <button type="button" class="o-hung o-vong" ${mo({ t: 'dg' })}>${vongHtml(s.tyLeDungHan)}<span class="xh-tq"><span class="nhan-so">Hoàn thành đúng hạn</span><span class="phu-h">${s.xong ? `${s.dungHan} trên ${s.dungHan + s.tre} việc xét được đúng hạn` : 'chưa có việc hoàn thành'}</span>${duongHtml(thang)}</span></button>
+      <button type="button" class="o-hung o-vong" ${mo({ t: 'xong' })}>${vongHtml(kyTong ? pct(s.xong, kyTong) : null, 'hoàn thành')}<span class="xh-tq"><span class="nhan-so">Tỷ lệ hoàn thành</span><span class="phu-h">${kyTong ? `${s.xong} trên ${kyTong} nhiệm vụ của kỳ (hoàn thành ${k.trong} + đang làm)` : 'chưa có nhiệm vụ trong kỳ'} · đúng hạn: ${s.dungHan + s.tre ? `${s.dungHan}/${s.dungHan + s.tre} việc xét được` : 'chưa có việc xét được'}</span></span></button>
       ${o('giao', s.giao, 'nhiệm vụ giao', k.trong, `tổng ${tong} nhiệm vụ trong phạm vi`)}
-      ${o('xong', s.xong, 'đã hoàn thành', `${s.dungHan} đúng hạn${s.tre ? `, ${s.tre} trễ` : ''}${s.chuaRoNgay ? `, ${s.chuaRoNgay} chưa rõ ngày hoàn thành` : ''}`, `${pct(s.xong, tong)}% tổng số`)}
-      ${o('mo', s.dangMo, 'đang thực hiện', `${s.mo.trongHan + s.mo.nt} việc trong hạn`, `${pct(s.dangMo, tong)}% tổng số`)}
+      ${o('xong', s.xong, 'đã hoàn thành', `${s.dungHan} đúng hạn${s.tre ? `, ${s.tre} trễ` : ''}${s.chuaRoNgay ? `, ${s.chuaRoNgay} chưa rõ ngày hoàn thành` : ''}`, `${pct(s.xong, kyTong)}% việc của kỳ`)}
+      ${o('mo', s.dangMo, 'đang thực hiện', `${s.mo.trongHan + s.mo.nt} việc trong hạn`, `${pct(s.dangMo, kyTong)}% việc của kỳ`)}
       ${o('canh', s.canhBao, 'cảnh báo', s.canhBao ? `${s.mo.vang} Vàng, ${s.mo.do} Đỏ, ${s.mo.ddb} Đỏ đặc biệt` : 'không có việc chậm', `${pct(s.canhBao, s.dangMo)}% việc đang làm`)}
     </div>${quyTac ? `<p class="hung-quy-tac" id="tqQuyTac">${escapeHtml(quyTac)}</p>` : ''}</section>`;
 }

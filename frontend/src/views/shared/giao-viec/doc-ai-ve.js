@@ -2,11 +2,16 @@
 // Mỗi giá trị kèm nhãn đối chiếu (rê chuột xem câu trích nguyên văn); văn bản đã có trên hệ thống thì báo đã chọn văn bản có sẵn; danh sách nhiệm vụ
 // với nút điền từng việc / điền tất cả (tối đa 20 thẻ một lượt — giao xong thì điền tiếp). Đợt sửa gộp 18/10/2026: nhãn "chưa trọn câu", "trùng nhiệm
 // vụ N" (Điền tất cả bỏ qua việc trùng), số trang; khối "Có thể còn sót" — đoạn có dấu hiệu giao việc máy chủ rà thấy, bấm thêm vào danh sách.
+// v3.27 (mục 5 yêu cầu 20/10/2026): danh sách nhiệm vụ thành BẢNG SỬA ĐƯỢC (doc-ai-bang.js) — sửa nội dung, chọn chịu trách nhiệm, sản phẩm, hạn, cơ
+// quan trình ngay tại bảng, bỏ riêng từng nhiệm vụ; "Bỏ kết quả" → "Bỏ tất cả"; mục tiêu then chốt tạm ẩn thì không nhắc tới.
 import { escapeHtml } from '../../../lib/dom.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { nhanXacMinh, chuThongKe, laTrung } from '../../../lib/kl/dien-van-ban.js';
+import { nhanXacMinh, chuThongKe } from '../../../lib/kl/dien-van-ban.js';
+import { conDien } from '../../../lib/kl/bang-de-xuat.js';
+import { coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { nhanVanBan } from './van-ban.js';
+import { dongHtml, nhanhHtml } from './doc-ai-bang.js';
 
 const esc = escapeHtml;
 const ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>';
@@ -15,10 +20,8 @@ export const dauHtml = () => `<div class="gv-doc-dau"><button type="button" clas
   <p class="gv-doc-tt hidden" id="gvDocTt" role="status"></p><div class="gv-doc-kq hidden" id="gvDocKq"></div>`;
 
 const xm = (x, trich = '') => { const [lop, ten] = nhanXacMinh(x); return `<span class="gv-xm ${lop}" title="${esc(trich ? `Trích nguyên văn: “${trich}”` : ten)}">${ten}</span>`; };
-const nhan = (chu, title = '') => `<span class="gv-xm kiem"${title ? ` title="${esc(title)}"` : ''}>${chu}</span>`;
 const rut = (t, n) => (String(t).length > n ? `${String(t).slice(0, n - 1)}…` : String(t));
 const giaTriVb = (x) => (x.k === 'ngay_ban_hanh' ? formatNgay(x.gia_tri) : x.k === 'loai' ? tenLoaiVanBan(x.gia_tri) : x.gia_tri);
-const ten = (ds, ma) => (ds || []).find((x) => x.ma === ma)?.ten || ma;
 
 function vanBanHtml(s) {
   if (s.vbCo) return `<p class="gv-doc-vbco"><b>Văn bản này đã có trên hệ thống:</b> ${esc(nhanVanBan(s.vbCo))} — đã chọn văn bản có sẵn, các nhiệm vụ giao thêm vào văn bản này.</p>`;
@@ -27,19 +30,6 @@ function vanBanHtml(s) {
   return `${giu}<dl class="gv-doc-vb">${s.vbKh.map((x) => `<div><dt>${esc(x.ten)}</dt><dd><span class="gv-doc-gt">${esc(giaTriVb(x))}</span>${xm(x.xac_minh, x.trich)}
     ${s.vbDaDien.has(x.o) ? '<small class="gv-doc-da">đã điền</small>' : x.trung ? '<small class="gv-doc-da">trùng loại đang chọn</small>'
     : x.trong ? `<button type="button" class="nut nho" data-action="gvDocDienVb" data-o="${x.o}">Điền</button>` : '<small class="chu-phu">ô đã có giá trị — giữ nguyên</small>'}</dd></div>`).join('')}</dl>`;
-}
-function nvHtml(s, n, i, dm) {
-  const han = n.han?.gia_tri ? `Hạn: ${formatNgay(n.han.gia_tri)} ${xm(n.han.xac_minh, n.han.trich)}` : '';
-  const phu = [n.trang ? `Trang ${n.trang}` : '', n.don_vi_chu_tri?.gia_tri ? `Chủ trì theo văn bản: ${esc(n.don_vi_chu_tri.gia_tri)}` : '', han,
-    n.san_pham?.gia_tri ? `Sản phẩm: ${esc(ten(dm.sanPham, n.san_pham.gia_tri))}` : '', n.linh_vuc?.gia_tri ? `Lĩnh vực: ${esc(ten(dm.linhVuc, n.linh_vuc.gia_tri))}` : '',
-    n.muc_tieu?.length ? `Mục tiêu gợi ý: ${n.muc_tieu.length}` : ''].filter(Boolean).join(' · ');
-  const tt = s.daGiao.has(i) ? '<small class="gv-doc-da">đã giao</small>' : s.the.has(i) ? `<small class="gv-doc-da">đã điền vào ${esc(s.tenThe(s.the.get(i)))}</small>`
-    : `<button type="button" class="nut nho" data-action="gvDocDien" data-i="${i}">Điền vào thẻ</button>`;
-  const them = [n.noi_dung?.con_tiep ? nhan(n.noi_dung.cau_dan ? 'chỉ có câu dẫn' : 'chưa trọn câu', `Văn bản còn tiếp: “${n.noi_dung.con_tiep}”`) : '',
-    laTrung(n) ? nhan(`trùng nhiệm vụ ${n.trung_voi + 1}`, 'Cùng đoạn văn bản, cùng đơn vị chủ trì — "Điền tất cả" bỏ qua việc này') : '',
-    n.tu_ra_soat ? nhan('hệ thống rà thấy') : ''].join('');
-  return `<li class="gv-doc-nv${s.daGiao.has(i) ? ' xong' : ''}"><div class="gv-doc-nd"><p>${esc(n.noi_dung?.gia_tri || '')}</p>${xm(n.noi_dung?.xac_minh)}${them}</div>
-    ${phu ? `<small class="chu-phu">${phu}</small>` : ''}<span class="gv-doc-nv-nut">${tt}</span></li>`;
 }
 // Đoạn có dấu hiệu giao việc mà không nhiệm vụ nào chứa (máy chủ rà — supabase/functions/tro-ly-ai/ra-soat.js).
 function sotHtml(kq) {
@@ -51,30 +41,31 @@ function sotHtml(kq) {
       <button type="button" class="nut nho" data-action="gvDocThemDoan" data-j="${j}">Thêm vào danh sách</button></li>`).join('')}</ul>
     ${tong > ds.length ? `<small class="chu-phu">Còn ${tong - ds.length} đoạn khác — đồng chí rà văn bản gốc.</small>` : ''}</div>`;
 }
-// s: { tep, soTrang, moHinh, ncc, banChup, kq, vbKh: [... + trong], vbCo, vbDaDien: Set id ô, the: Map i → khoá thẻ, daGiao: Set i, tenThe(khoá) }
+// s: { tep, soTrang, moHinh, ncc, banChup, kq, sua: [dòng của bảng], vbKh: [... + trong], vbCo, vbDaDien: Set id ô, the: Map i → khoá thẻ, daGiao: Set i,
+// tenThe(khoá) }
 export function ketQuaHtml(s, dm) {
-  const ds = s.kq?.nhiem_vu || []; const conLai = ds.map((_, i) => i).filter((i) => !s.daGiao.has(i) && !s.the.has(i));
-  const con = conLai.filter((i) => !laTrung(ds[i])).length; const trung = conLai.length - con;
+  const ds = s.kq?.nhiem_vu || []; const khoa = (i) => s.daGiao.has(i) || s.the.has(i);
+  const con = conDien(s.sua, khoa).length; const bo = s.sua.filter((d, i) => d?.bo && !khoa(i)).length;
   const nut = con ? `<button type="button" class="nut nho chinh" data-action="gvDocDienTatCa">${s.daGiao.size ? `Điền tiếp ${con} nhiệm vụ còn lại` : `Điền ${con} nhiệm vụ vào các thẻ`}</button>` : '';
+  const mt = coMucTieu() ? ', mục tiêu' : '';
   return `<div class="gv-doc-kq-dau"><div><b>Đã đọc “${esc(s.tep)}” — ${s.soTrang} trang</b>
       <small class="chu-phu">${esc(s.ncc || 'Trợ lý AI')}${s.moHinh ? ` (${esc(s.moHinh)})` : ''} · ${esc(chuThongKe(s.kq?.thong_ke))}${s.banChup ? ' · tệp là bản chụp: chưa đối chiếu tự động được, đồng chí kiểm tra từng giá trị' : ''}</small></div>
-    <button type="button" class="nut nho" data-action="gvDocBo">Bỏ kết quả</button></div>
+    <button type="button" class="nut nho" data-action="gvDocBo">Bỏ tất cả</button></div>
     ${vanBanHtml(s)}
-    ${ds.length ? `<div class="gv-doc-nv-dau"><b>Văn bản giao ${ds.length} nhiệm vụ</b>${nut}</div>${ds.length > 20 ? '<small class="chu-phu">Mỗi lượt giao tối đa 20 nhiệm vụ: giao lượt đầu xong, bấm "Điền tiếp" để điền phần còn lại vào văn bản vừa tạo.</small>' : ''}
-      ${trung ? `<small class="chu-phu">"Điền" bỏ qua ${trung} nhiệm vụ trùng — cần giao riêng thì bấm "Điền vào thẻ" ở việc đó.</small>` : ''}
-      <ol class="gv-doc-ds">${ds.map((n, i) => nvHtml(s, n, i, dm)).join('')}</ol>` : '<p class="chu-phu">Không tách được nhiệm vụ nào — đồng chí nhập ở khối 2.</p>'}
+    ${ds.length ? `<div class="gv-doc-nv-dau"><div><b>Văn bản giao ${ds.length} nhiệm vụ</b><small class="chu-phu">Sửa ngay trong bảng: nội dung, chịu trách nhiệm, sản phẩm, hạn, cơ quan trình; nhiệm vụ không giao thì bấm “× Bỏ”.</small></div>${nut}</div>
+      ${con > 20 ? '<small class="chu-phu">Mỗi lượt giao tối đa 20 nhiệm vụ: giao lượt đầu xong, bấm "Điền tiếp" để điền phần còn lại vào văn bản vừa tạo.</small>' : ''}
+      ${bo ? `<small class="chu-phu">${bo} nhiệm vụ đã bỏ (việc trùng được bỏ sẵn) — cần giao thì bấm “Lấy lại”.</small>` : ''}
+      ${nhanhHtml(con)}
+      <ol class="gv-doc-ds gv-db-ds">${ds.map((n, i) => dongHtml(s, n, i, dm)).join('')}</ol>` : '<p class="chu-phu">Không tách được nhiệm vụ nào — đồng chí nhập ở khối 2.</p>'}
     ${sotHtml(s.kq)}
-    <small class="chu-phu gv-doc-chan">Chỉ điền vào ô còn trống; giá trị nguyên văn (số hiệu, ngày, trích yếu, nội dung, hạn) chỉ tự điền khi đã đối chiếu được trong tệp và điền đúng chữ của tệp — chưa đối chiếu được, hoặc nội dung chưa trọn câu, thì hiện để đồng chí bấm dùng (bản chụp: nội dung điền kèm cảnh báo); số hiệu, ngày, loại văn bản chỉ lấy ở phần đầu trang 1; hạn, đơn vị phối hợp phải nằm trong chính nhiệm vụ; sản phẩm, ngành, lĩnh vực, mục tiêu là đề xuất của trợ lý AI. Đồng chí kiểm tra trước khi bấm Giao việc. Tệp và nội dung không lưu vào hệ thống.</small>`;
+    <small class="chu-phu gv-doc-chan">Chỉ điền vào ô còn trống; giá trị nguyên văn (số hiệu, ngày, trích yếu, nội dung, hạn) chỉ tự điền khi đã đối chiếu được trong tệp và điền đúng chữ của tệp — chưa đối chiếu được, hoặc nội dung chưa trọn câu, thì hiện để đồng chí bấm dùng (bản chụp: nội dung điền kèm cảnh báo); số hiệu, ngày, loại văn bản chỉ lấy ở phần đầu trang 1; hạn, đơn vị phối hợp phải nằm trong chính nhiệm vụ; sản phẩm, ngành, lĩnh vực, cơ quan trình${mt} là đề xuất của trợ lý AI (sản phẩm AI không đề xuất thì theo từ khoá nội dung). Đồng chí kiểm tra trước khi bấm Giao việc. Tệp và nội dung không lưu vào hệ thống.</small>`;
 }
-// Ghi chú đầu thẻ sau khi điền (thay ghi chú cũ). kh: keHoachThe; n: nhiệm vụ; thu: số thứ tự trong văn bản / tổng.
+// Ghi chú đầu thẻ sau khi điền (thay ghi chú cũ). kh: keHoachBang; i: số thứ tự trong văn bản / tong. v3.27: nội dung, hạn đã chốt ở bảng đề xuất (nút
+// "Dùng trọn câu", "Dùng ngày" ở bảng) — ghi chú chỉ còn nguồn, đề xuất cần kiểm tra và cảnh báo.
+const TEN_DE_XUAT = { san_pham: 'sản phẩm', nganh: 'ngành', linh_vuc: 'lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan trình' };
 export function ghiChuTheHtml(kh, i, tong) {
+  const deXuat = [...new Set(kh.deXuat)].map((c) => TEN_DE_XUAT[c]).filter(Boolean);
   const phan = [`Điền từ văn bản (nhiệm vụ ${i + 1}/${tong})`, kh.goiY.chuTri ? `chủ trì theo văn bản: ${esc(kh.goiY.chuTri)}` : '',
-    kh.deXuat.length ? 'sản phẩm, ngành, lĩnh vực, mục tiêu then chốt do trợ lý AI đề xuất — đồng chí kiểm tra' : '', ...kh.canhBao.map(esc)].filter(Boolean).join(' · ');
-  const dungNd = (chu) => `<button type="button" class="nut nho" data-action="gvDocDungNd" data-i="${i}">${chu}</button>`;
-  const lyDo = kh.goiY.tronCau ? `câu trong văn bản còn tiếp “${esc(rut(kh.goiY.conTiep, 200))}” — <button type="button" class="nut nho" data-action="gvDocDungTron" data-i="${i}">Dùng trọn câu</button> hoặc ${dungNd('Dùng phần trợ lý AI tách')}`
-    : kh.goiY.conTiep ? `trợ lý AI chỉ lấy câu dẫn, văn bản còn liệt kê “${esc(rut(kh.goiY.conTiep, 160))}” — đồng chí xem lại hoặc ${dungNd('Dùng phần trợ lý AI tách')}`
-      : `trợ lý AI tách chưa khớp nguyên văn với tệp — đồng chí chép từ văn bản gốc hoặc ${dungNd('Dùng nội dung trợ lý AI tách')}`;
-  const nd = kh.goiY.noiDung ? ` <span data-ai-nd>Nội dung chưa điền: ${lyDo}</span>` : '';
-  const han = kh.goiY.han ? ` Văn bản nêu thời hạn “${esc(kh.goiY.han.trich || '')}” — chưa đối chiếu được ngày: <button type="button" class="nut nho" data-action="gvDocDungHan" data-i="${i}" data-han="${esc(kh.goiY.han.gia_tri)}">Dùng ngày ${esc(formatNgay(kh.goiY.han.gia_tri))}</button>` : '';
-  return `<p class="gv-ai-ghi" data-ai-ghi="${i}">${phan}.${nd}${han}</p>`;
+    deXuat.length ? `${deXuat.join(', ')} do trợ lý AI đề xuất — đồng chí kiểm tra` : '', ...kh.canhBao.map(esc)].filter(Boolean).join(' · ');
+  return `<p class="gv-ai-ghi" data-ai-ghi="${i}">${phan}.</p>`;
 }

@@ -4,7 +4,7 @@
 // ở Cập nhật, không có nút Đóng. Kèm: việc cũ (theo_1400 = false) không có nút xác nhận trên dòng, chỉ có nút xác nhận tuỳ chọn ở ngăn chi tiết.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-import { pageAs, moViec, moGiaoViec, chonPhanLoai, NAP } from './lib/app.js';
+import { pageAs, moViec, moGiaoViec, chonPhanLoai, moThem, NAP } from './lib/app.js';
 import { getKeys } from './lib/keys.mjs';
 import { E2E_TAG } from './global-setup.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
@@ -65,7 +65,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên d�
     await page.locator('#klThOwner').selectOption(`tk:${CV1_ID}`);
     await expect(page.locator('#klThCapNhan')).toHaveValue('TRUONG_PHONG');
     await page.locator('#klThSanPham').selectOption('BAO_CAO');
-    await page.locator('#klThSanPhamMoTa').fill('Báo cáo tham mưu (e2e)');
+    await moThem(page); await page.locator('#klThSanPhamMoTa').fill('Báo cáo tham mưu (e2e)');   // v3.27: mục gập "Thêm" của thẻ
     await page.locator('#klThHan').fill(congNgay(homNayVN(), 3));
     await chonPhanLoai(page);   // v3.26: ngành, lĩnh vực, mục tiêu then chốt bắt buộc ("Không thuộc")
     await page.locator('#klThLuu').click();

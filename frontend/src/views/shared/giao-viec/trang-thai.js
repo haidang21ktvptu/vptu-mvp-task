@@ -43,3 +43,8 @@ export const hanTruocBH = () => Boolean($('klThHan').value && ngayBH()) && $('kl
 export const loaiVanBan = () => (laMoi() ? (vbTrong() ? 'KHAC' : $('klThLoaiVB').value) : vanBanChon()?.loai) || 'KHAC';
 export const canNganhHienTai = () => canNganh(loaiVanBan());
 export const canNgayNhan = () => !laA0() || canNganhHienTai();
+// v3.27 (chủ dự án 20/10/2026, mục 2 — dòng "Giao "3. Tờ trình…" cho …, sản phẩm …" dễ hiểu nhầm): chân biểu mẫu chỉ hiện câu này khi đã đủ thông tin,
+// không trích nội dung, mỗi ô có nhãn; khung xem trước ghi "chưa chọn" thay cho "…". o: { so, owner, han, sp } (chuỗi rỗng = chưa chọn).
+const hoac = (v) => v || 'chưa chọn';
+export const chuSanSang = ({ so, owner, han, sp, dk }) => `Sẵn sàng giao ${so > 1 ? `${so} nhiệm vụ — nhiệm vụ 1: ` : '— '}Chủ trì theo dõi: ${hoac(owner)} · Hạn xử lý: ${hoac(han)} · Sản phẩm đầu ra: ${hoac(sp)}${dk ? ` · Độ khẩn: ${dk}` : ''}`;
+export const chuXemTruoc = ({ so, owner, han, sp }) => `Chủ trì: ${hoac(owner)} · Hạn: ${hoac(han)} · Sản phẩm: ${hoac(sp)}${so > 1 ? ` · và ${so - 1} nhiệm vụ khác` : ''}`;

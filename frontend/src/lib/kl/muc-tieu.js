@@ -11,6 +11,10 @@ export const NHOM_MUC_TIEU = [
   { ma: 'CHI_TIEU', tab: 'Chỉ tiêu chủ yếu', ten: 'Chỉ tiêu chủ yếu', thu_tu: 5 },
 ];
 export const CHUA_GAN = 'CHUA';
+// v3.27 (chủ dự án 20/10/2026: "bỏ mục tiêu then chốt … do chưa đủ dữ liệu — tối thiểu việc phải điền"): TẠM ẨN mọi phần mục tiêu ở màn hình người
+// dùng (Giao việc, Tổng quan, ngăn chi tiết, bộ lọc, Rà soát, nhập Excel) và trợ lý AI thôi đề xuất. Dữ liệu, danh mục quản trị giữ nguyên — đủ dữ
+// liệu thì đổi cờ này thành true (và bật lại các kịch bản e2e ghi "tạm ẩn") là dùng lại.
+export const HIEN_MUC_TIEU = false;
 // v3.26 (0116): mục CỐ ĐỊNH "Không thuộc" của danh mục — khối, ngành, nhóm và mục tiêu cùng mã KHONG_THUOC; lĩnh vực LV99_KHONG_THUOC. Mục tiêu "Không
 // thuộc" là một quyết định đã phân loại (khác "chưa gắn"), không chọn cùng mục khác, không là tab / nhóm của Tổng quan.
 export const KHONG_THUOC = 'KHONG_THUOC';

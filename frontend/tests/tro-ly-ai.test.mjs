@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chuanTrich, coTrong, taoBo, boMepTrang, kiemNgay, kiemHan, kiemSoHieu, kiemLoai, xacMinhKetQua } from '../../supabase/functions/tro-ly-ai/xac-minh.js';
 import { yeuCauAnthropic, yeuCauOpenAI, docKetQuaAnthropic, goiAi, diaChi, LoiAi } from '../../supabase/functions/tro-ly-ai/nha-cung-cap.js';
-import { luocDoDocVanBan, dsQuyTac, noiDungDoc, LOAI_VAN_BAN } from '../../supabase/functions/tro-ly-ai/de-bai.js';
+import { luocDoDocVanBan, dsQuyTac, noiDungDoc, LOAI_VAN_BAN, heThongDoc } from '../../supabase/functions/tro-ly-ai/de-bai.js';
 import { giaLap } from '../../supabase/functions/tro-ly-ai/gia-lap.js';
 
 const VB = `TỈNH ỦY CAO BẰNG
@@ -147,4 +147,17 @@ test('giả lập: kết quả chép nguyên văn nên xác minh được', () =
   assert.equal(kq.van_ban.so_hieu.gia_tri, '999-KL/TU'); assert.ok(kq.van_ban.so_hieu.xac_minh); assert.ok(kq.van_ban.ngay_ban_hanh.xac_minh);
   assert.equal(kq.nhiem_vu.length, 2); assert.ok(kq.nhiem_vu.every((n) => n.noi_dung.xac_minh)); assert.equal(kq.nhiem_vu[0].han.gia_tri, '2026-11-30');
   assert.deepEqual(kq.van_ban_nhac_toi.map((v) => v.so_hieu), ['57-NQ/TW']);
+});
+
+test('v3.27: mục tiêu then chốt tạm ẩn (danh mục rỗng) → lược đồ, đề bài không có mục tiêu; thêm cơ quan/đơn vị trình (mã trong danh mục, không thì "")', () => {
+  const ld = luocDoDocVanBan({ loai: ['KL_BTV'], sanPham: ['BAO_CAO'], loaiThoiHan: ['X'], nganh: ['N'], linhVuc: ['L'], mucTieu: [], coQuanTrinh: ['DANG_UY_UBND', 'VAN_PHONG_TINH_UY'] });
+  assert.deepEqual(Object.keys(ld.properties), ['van_ban', 'nhiem_vu']);
+  const nv = ld.properties.nhiem_vu.items.properties;
+  assert.equal(nv.muc_tieu, undefined); assert.deepEqual(nv.co_quan_trinh.enum, ['', 'DANG_UY_UBND', 'VAN_PHONG_TINH_UY']);
+  assert.ok(!heThongDoc(false).includes('"muc_tieu"') && heThongDoc(true).includes('"muc_tieu"') && heThongDoc(false).includes('"co_quan_trinh"'));
+  const nd = noiDungDoc({ loai: LOAI_VAN_BAN, sanPham: [], loaiThoiHan: [], nganh: [], linhVuc: [], mucTieu: [], coQuanTrinh: [{ ma: 'DANG_UY_UBND', ten: '6. Đảng ủy UBND tỉnh' }] }, VB, 'kl.pdf', false);
+  assert.ok(nd.includes('Cơ quan/đơn vị trình:\nDANG_UY_UBND = 6. Đảng ủy UBND tỉnh') && !nd.includes('Mục tiêu then chốt'));
+  const kq = xacMinhKetQua({ van_ban: {}, nhiem_vu: [{ noi_dung: 'Giao Văn phòng Tỉnh ủy tham mưu tổng kết', trich: 'Giao Văn phòng Tỉnh ủy tham mưu tổng kết', co_quan_trinh: 'DANG_UY_UBND' },
+    { noi_dung: 'Giao Văn phòng Tỉnh ủy tham mưu tổng kết', trich: 'x', co_quan_trinh: 'MA_LA' }] }, VB, { ...DM, coQuanTrinh: ['DANG_UY_UBND'] });
+  assert.deepEqual(kq.nhiem_vu.map((n) => n.co_quan_trinh.gia_tri), ['DANG_UY_UBND', '']);
 });

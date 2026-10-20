@@ -3,6 +3,7 @@
 // Dữ liệu gốc = MỌI ô có giá trị của dòng theo tiêu đề cột (kể cả cột không ghép) — lưu cùng dòng nhập, hiện ở ngăn chi tiết.
 import { truong } from './truong.js';
 import { chuanGiaTri } from './chuan-hoa.js';
+import { HIEN_MUC_TIEU } from '../muc-tieu.js';
 
 // Giá trị ô để hiển thị (ví dụ ở bước ghép cột, khối "Dữ liệu gốc"): ngày (xlsx-doc trả 'YYYY-MM-DD') → dd/mm/yyyy.
 export const hienGoc = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? String(v).split('-').reverse().join('/') : String(v ?? ''));
@@ -39,6 +40,6 @@ export function layDong(sheet, dongTieuDe, anhXa) {
 export function chuanDong(dong, ctx) {
   const o = {};
   const thuTu = Object.keys(dong.raw).sort((a, b) => (a === 'linh_vuc') - (b === 'linh_vuc'));   // ngành trước lĩnh vực
-  thuTu.forEach((k) => { o[k] = chuanGiaTri(truong(k)?.kieu, dong.raw[k], ctx, { nganh: o.nganh?.ma }); });
+  thuTu.forEach((k) => { if (k !== 'muc_tieu' || HIEN_MUC_TIEU) o[k] = chuanGiaTri(truong(k)?.kieu, dong.raw[k], ctx, { nganh: o.nganh?.ma }); });   // v3.27: mục tiêu tạm ẩn
   return { soDong: dong.soDong, goc: dong.goc, raw: dong.raw, o };
 }

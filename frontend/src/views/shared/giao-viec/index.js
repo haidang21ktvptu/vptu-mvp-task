@@ -31,7 +31,7 @@ import { dienThongTinNguon } from './thong-tin-nguon.js';   // Đợt C2: mức 
 import { ganSauGiao, vanBanDoiMucTieu, datLaiMucTieuGv, datLaiTheMot, ganSuKienMucTieu, khoaCacThe, khiMucTieuDoi, KHOA_1 } from './muc-tieu.js';   // v3.25: mục tiêu then chốt theo thẻ
 import { canNganhBatBuoc, thieuMucTieu, nganhChoPhep, chuThichNganh, linhVucDuyNhat, mucThieuNganh, MUC_THIEU_MT, nhacPhanLoai } from './phan-loai.js';   // v3.26: phân loại bắt buộc
 import { dongNganCT } from '../ngan-chi-tiet.js';
-import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan, canNganhHienTai, canNgayNhan } from './trang-thai.js';
+import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan, canNganhHienTai, canNgayNhan, chuSanSang, chuXemTruoc } from './trang-thai.js';
 import { datLaiDocAi, mountDocAi } from './doc-ai.js';   // v3.25: đọc văn bản gốc (PDF) bằng trợ lý AI
 import { kiemTra, docForm, tachDong } from './doc-form.js';
 import { datLaiNhieu, anHienNhieu, lamMoiLuaChonLuoi, ganSuKienNhieu, themDong, xoaDong, thieuNhieu, duNhieu, loiNhieu, docDong, soThe, coThem, doiDoKhanMacDinhNhieu } from './nhieu.js';
@@ -51,7 +51,7 @@ function datDoKhanChinh(ma) { $('klThDoKhan').value = ma; $('klThDoKhanWrap').qu
 const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'gvPhuWrap', 'klThLuuTiep'];   // A0: không người theo dõi, không "Giao, nhập tiếp"; "Thông tin thêm" chỉ ba ô nguồn (Đợt D)
 const anHienTheoDoi = () => ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'].forEach((id) => show(id, !anTheoDoi()));   // ẩn khi Thường trực giao / chuyên viên giao thẳng (0085)
 // A0 với văn bản kết luận / thông báo: giao_viec bắt buộc ngành + lĩnh vực (và ngày giao, loại hạn như A1) → hiện các ô này theo loại văn bản.
-const THEO_LOAI_A0 = ['gvNganhWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];
+const THEO_LOAI_A0 = ['klThNganhWrap', 'klThLinhVucWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];   // v3.27: ngành, lĩnh vực cùng hàng với chủ trì
 const vanBanChon = () => timTrongDs($('klThVanBan').value);
 // C3: tổ hợp (phòng Owner, ngành, lĩnh vực) đang chọn có trong phạm vi giao (kl_pham_vi_giao) không; người theo dõi: pham-vi.js (3.4, F).
 const phamViThieu = () => thongBaoPhamVi(phongOwner(), $('klThNganh').value, $('klThLinhVuc').value, danhMucKl().linhVuc);
@@ -167,19 +167,18 @@ function capNhatTomTat() {
   const [p1, p2] = trangThaiPhan();
   [p1, p2].forEach((ok, i) => $(`gvCham${i + 1}`).classList.toggle('xong', ok));
   $('klThLuu').disabled = !(p1 && p2); $('klThLuuTiep').disabled = !(p1 && p2) || $('gvKhoa').disabled;
-  const so = soThe(); const maDk = $('klThDoKhan').value; const dk = tenDoKhan(maDk);
-  const owner = $('klThOwner').value ? $('klThOwner').selectedOptions[0]?.text : '…';
-  const sp = $('klThSanPham').value ? $('klThSanPham').selectedOptions[0]?.text : '…';
-  const nd = $('klThNoiDung').value.trim(); const han = $('klThHan').value ? formatNgay($('klThHan').value) : '…';
-  const khac = so > 1 ? ` · và ${so - 1} việc khác` : '';
+  const so = soThe(); const maDk = $('klThDoKhan').value; const dk = tenDoKhan(maDk); const nd = $('klThNoiDung').value.trim();
+  const o = { so, owner: $('klThOwner').value ? $('klThOwner').selectedOptions[0]?.text : '', sp: $('klThSanPham').value ? $('klThSanPham').selectedOptions[0]?.text : '',
+    han: $('klThLoai').value === 'KY_BAN_HANH' ? 'Ký ban hành' : $('klThHan').value ? formatNgay($('klThHan').value) : '', dk };
   setText('klThLuu', so > 1 ? `Giao ${so} việc` : 'Giao việc');
-  setText('gvTomTatChu', `Giao "${nd ? nd.slice(0, 60) + (nd.length > 60 ? '…' : '') : '…'}" cho ${owner}, hạn ${han}, sản phẩm ${sp}, độ khẩn ${dk}${khac}`);
   const thieu = conThieu(); setText('gvConThieu', thieu.length ? `Còn thiếu: ${thieu.join(', ')}` : '');
+  setText('gvTomTatChu', thieu.length ? '' : chuSanSang(o));   // v3.27 (mục 2): không trích nội dung; chỉ khi đủ — "Sẵn sàng giao …"
+  if (!anTheoDoi() && (!$('klThNguoiTheoDoi').value || theoDoiNgoaiPhamVi())) $('gvThe1Them').open = true;   // ô bắt buộc trong mục "Thêm"
   setText('gvPhamViGhiChu', phamViThieu().chuThich || 'theo ngành đã chọn');
   // Xem trước thẻ việc (cột phụ) đọc lại các ô của thẻ 1
   setText('gvXtDoKhan', dk); $('gvXtDoKhan').className = `tag ${['THUONG_KHAN', 'HOA_TOC'].includes(maDk) ? 'do' : maDk === 'KHAN' ? 'vang' : ''}`;
-  setText('gvXtNoiDung', nd || 'Nội dung nhiệm vụ…');
-  setText('gvXtPhu', `Chủ trì ${owner} · hạn ${han} · sản phẩm ${sp}${khac}`);
+  setText('gvXtNoiDung', nd || 'Nội dung nhiệm vụ (chưa nhập)');
+  setText('gvXtPhu', chuXemTruoc(o));
 }
 
 export async function openGiaoViec(opts = {}) {
@@ -218,7 +217,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThCapQD').innerHTML = opt('', 'Chưa xác định') + dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThNganh').innerHTML = '';
   $('klThLoai').innerHTML = dm.loaiThoiHan.filter((l) => l.cho_phep_tao_moi).map((l) => opt(l.ma, l.ten, l.ma === 'CO_HAN_CU_THE')).join('');
-  ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThTrichYeu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
+  ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThLvct', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThTrichYeu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
   $('klThNgayNhan').value = homNay;
   datDoKhanChinh(a0 ? 'KHAN' : 'THUONG');
   datLaiNhieu(); datLaiMucTieuGv();
@@ -268,7 +267,7 @@ async function luu(nhapTiep) {
     if (p.dong_nhap_id) { boHoanThien(); await openGiaoViec({ tab: 'cho' }); await moNhiemVu(kq.id, kq.ma); return; }   // dòng chờ đã thành việc
     if (!nhapTiep) { await openGiaoViec(); await moNhiemVu(kq.id, kq.ma); return; } // v9 đợt 2: ở lại Giao việc (biểu mẫu mở lại sạch), việc vừa giao hiện trong ngăn chi tiết
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
-    ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThGhiChu', 'klThSanPhamMoTa', 'klThPhoiHop'].forEach((id) => { $(id).value = ''; });
+    ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThLvct', 'klThSanPhamMoTa', 'klThPhoiHop'].forEach((id) => { $(id).value = ''; });
     $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; dienNganh(); datLaiTheMot();
     capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus(); $('giaoViecForm').dispatchEvent(new Event('gv-da-giao'));   // v9.js: số đã nhập
   } catch (e) {
@@ -293,7 +292,7 @@ export function registerGiaoViec() {
   $('giaoViecForm').addEventListener('change', capNhatTomTat);
   registerActions({ openGiaoViec: () => openGiaoViec(), giaoTiepXuong: ({ id }) => openGiaoViec({ cha: timKlRow(id) }),
     huyKlThem: () => openKl(), luuKlThem: () => luu(false), luuKlThemTiep: () => luu(true), giaoThemTuVanBan: ({ vb: id }) => { dongNganCT(); return openGiaoViec({ vanBan: id }); },
-    gvThemDong: () => { themDong(); capNhatTomTat(); }, gvXoaDong: (ds) => { xoaDong(ds); capNhatTomTat(); },
+    gvThemDong: () => { themDong({ chepCoQuan: true }); capNhatTomTat(); }, gvXoaDong: (ds) => { xoaDong(ds); capNhatTomTat(); },
     gvBoHoanThien: () => { boHoanThien(); openGiaoViec({ tab: 'cho' }); },
     gvVbXemThem: () => napVanBan({ them: true, nhanMoi: nhanMoi() }).catch((e) => notifyError(e.message)) });
 }

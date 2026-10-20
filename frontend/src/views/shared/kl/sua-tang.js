@@ -11,6 +11,7 @@ import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tenCapDuyet } from '../../../lib/kl/thay-mat.js';
 import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
+import { dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';   // v3.27 (0117): cơ quan trình = đơn vị ngoài Văn phòng + Văn phòng Tỉnh ủy
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
@@ -125,7 +126,7 @@ function oMoiHtml(cot, r) {
   const ds = k === 'doKhan' ? THU_TU_DO_KHAN.map((m) => ({ ma: m, ten: tenDoKhan(m) }))
     : k === 'nguonNhiemVu' ? (dm.nguonNhiemVu || []).filter((d) => d.dang_dung || d.ma === v)
       : k === 'mucQT' ? MUC_QUAN_TRONG.map(([ma, ten]) => ({ ma, ten }))
-        : k === 'donViNgoai' ? (dm.donVi || []).filter((d) => !d.trong_van_phong)
+        : k === 'donViNgoai' ? dsCoQuanTrinh(dm)
           : k === 'thuongTruc' ? state.accounts.filter((a) => a.role_group === 'A0' && !a.is_system).map((a) => ({ ma: a.id, ten: a.full_name })) : (dm[DM[k]] || []);
   const trong = ['doKhan', 'sanPham', 'cap'].includes(k) ? '' : opt('', '(để trống)', !v);   // độ khẩn, sản phẩm, cấp nhận: luôn phải có
   return `${nhan}<select id="stMoi" class="o-nhap">${trong}${ds.map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>`;

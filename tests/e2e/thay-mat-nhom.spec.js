@@ -56,7 +56,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       const nhomOwner = await page.locator('#klThOwner optgroup').evaluateAll((gs) => gs.map((g) => g.label));
       expect(nhomOwner).not.toContain('Đơn vị ngoài Văn phòng');
       expect(await giaTri(page.locator('#klThOwner option'))).not.toContain('dv:DANG_UY_UBND');
-      await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeVisible();
+      await expect(page.locator('#klThNguoiTheoDoiWrap')).not.toHaveClass(/\bhidden\b/);   // v3.27: ô trong mục gập "Thêm" — kiểm lớp ẩn
       await vanBanMoi(page, `${khoa}-LDVP`);
       await page.locator('#klThNoiDung').fill(`${khoa} LDVP`); await page.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
@@ -69,7 +69,7 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       await moGiaoViec(page);
       // (2) Thường trực Tỉnh ủy → như Thường trực giao
       await page.locator('#klThThayMat').selectOption('nhom:THUONG_TRUC'); await expect(page.locator('#gvKhoa')).toBeEnabled(NAP);
-      await expect(page.locator('#klThNguoiTheoDoiWrap')).toBeHidden();
+      await expect(page.locator('#klThNguoiTheoDoiWrap')).toHaveClass(/\bhidden\b/);
       await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');
       const owner = await giaTri(page.locator('#klThOwner option'));
       expect(owner).toContain('dv:TONG_HOP'); expect(owner).toContain(`tk:${ID.cvp}`); expect(owner).not.toContain(`tk:${ID.cv1}`); expect(owner).not.toContain('dv:VAN_PHONG_TINH_UY');

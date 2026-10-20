@@ -7,15 +7,16 @@ import { state, findAccount } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, danhMucKl } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
-import { timTieuDe, ghepTheoHoSo, HO_SO_MAU, HO_SO_PHU_LUC_2, chuanTieuDe, chuanChu, truong } from '../../../lib/kl/nhap/truong.js';
+import { timTieuDe, ghepTheoHoSo, HO_SO_MAU, HO_SO_MAU_CU, chuanTieuDe, chuanChu, truong } from '../../../lib/kl/nhap/truong.js';
 import { LOAI_TU_DIEN } from '../../../lib/kl/nhap/chuan-hoa.js';
 import { danhGia, demKetQua } from '../../../lib/kl/nhap/danh-gia.js';
 import { tieuDeCot, layDong, chuanDong } from '../../../lib/kl/nhap/bang.js';
-import { docTuDien, docHoSo, luuHoSo, luuTuDien, maDaCo, nhapLo, loDoCuaTep } from '../../../lib/kl/nhap/du-lieu.js';
+import { docTuDien, docHoSo, luuHoSo, luuTuDien, maDaCo, nhapLo, loDoCuaTep, docMinhChungXuat } from '../../../lib/kl/nhap/du-lieu.js';
 import { khungNhapHtml, ghepHtml, xemTruocHtml, ketQuaHtml } from './ve.js';
 import { napCho, hoanTacLoAction } from './cho.js';
+import { mountBoSung } from './bo-sung.js';   // v3.27: bổ sung dữ liệu chuyển đổi (toàn quyền)
 import { dsDangHien } from '../kl/danh-sach.js';
 import { goiYMucTieuDs } from '../../../lib/kl/muc-tieu-db.js';
 import { tenMucTieu } from '../../../lib/kl/muc-tieu.js';
@@ -25,11 +26,18 @@ const TOI_DA_DONG = 2000;   // mỗi lô (CHECK của lo_nhap)
 // loDo: lô của lần bấm Nhập trước bị lỗi giữa chừng (bấm lại = gửi tiếp vào lô đó); khongLuu: lựa chọn chỉ dùng cho tệp này (trùng tên người).
 const nx = { sheets: [], tenTep: '', sheet: 0, dongTieuDe: 0, anhXa: {}, hoSoTen: '', mau: 'TU_GHEP', nhanDien: '', hangLoat: {}, hlTruong: '', loc: '', soHien: 100,
   cheDoXong: '', tuDien: new Map(), tuDienMoi: new Map(), khongLuu: new Set(), hoSoDs: [], ma: new Set(), maKhoa: '', loiMa: '', dong: [], dg: [], dangNhap: false, loDo: null,
-  tuGanMt: true, duKien: new Map() };   // v3.25: tự gắn mục tiêu then chốt (mặc định bật) + dự kiến theo nội dung dòng (nhớ trong phiên)
+  tuGanMt: true, duKien: new Map(), loaiVb: '', loaiVbDoan: '' };   // v3.25: tự gắn mục tiêu (nhớ trong phiên); v3.27: loại văn bản của cả tệp
 const tenPhong = (m) => DEPT_NAMES[m] || m || '';
 const ctx = () => { const td = new Map([...nx.tuDien].map(([k, m]) => [k, new Map(m)])); nx.tuDienMoi.forEach((m, k) => { if (!td.has(k)) td.set(k, new Map()); m.forEach((v, g) => td.get(k).set(g, v)); });
   return { dm: danhMucKl(), accounts: state.accounts || [], tenPhong, tuDien: td }; };
-const hoSoTatCa = () => [HO_SO_MAU, HO_SO_PHU_LUC_2, ...nx.hoSoDs.map((h) => ({ ...h, mau: 'TU_GHEP' }))];
+const hoSoTatCa = () => [HO_SO_MAU, HO_SO_MAU_CU, ...nx.hoSoDs.map((h) => ({ ...h, mau: 'TU_GHEP' }))];
+// v3.27: bảng Phụ lục không có cột "Loại văn bản" — đoán theo các dòng trên dòng tiêu đề ("…Thường trực Tỉnh ủy" / "…Ban Thường vụ…"), người nhập đổi được.
+function doanLoaiTuTieuDe(sh, dongTieuDe) {
+  const chu = chuanChu((sh?.dong || []).slice(0, dongTieuDe).flat().filter(Boolean).join(' '));
+  return /thuong truc/.test(chu) ? 'TB_THUONG_TRUC' : /ban thuong vu|btv/.test(chu) ? 'KL_BTV' : '';
+}
+const coCotLoai = () => Object.values(nx.anhXa).includes('loai_van_ban');
+const hangLoatDg = () => ({ ...nx.hangLoat, ...(nx.loaiVb && !coCotLoai() ? { loai_van_ban: nx.loaiVb } : {}) });
 
 async function chonTep(f) {
   if (!f || nx.dangNhap) return;
@@ -40,8 +48,9 @@ async function chonTep(f) {
     const t = timTieuDe(nx.sheets, nx.hoSoDs);
     if (!t) throw new Error('Không nhận ra dòng tiêu đề nào (cần ít nhất 2 cột như "Nội dung", "Hạn hoàn thành"). Kiểm tra lại tệp hoặc dùng mẫu nhập chuẩn.');
     const loDo = await loDoCuaTep(f.name, state.user?.id).catch(() => null);   // cùng tệp, lô lần trước nhập dở → nhập tiếp đúng lô đó, đúng chế độ của lô
+    const doan = doanLoaiTuTieuDe(nx.sheets[t.sheet], t.dongTieuDe);
     Object.assign(nx, { sheet: t.sheet, dongTieuDe: t.dongTieuDe, anhXa: t.anhXa, hoSoTen: t.hoSo?.ten || '', mau: t.hoSo?.mau || 'TU_GHEP', hangLoat: {}, loc: '', soHien: 100,
-      cheDoXong: loDo?.che_do_xong || '', tuDienMoi: new Map(), khongLuu: new Set(), loDo, maKhoa: '', loiMa: '' });
+      cheDoXong: loDo?.che_do_xong || '', tuDienMoi: new Map(), khongLuu: new Set(), loDo, maKhoa: '', loiMa: '', loaiVb: doan, loaiVbDoan: doan });
     $('nxTenTep').textContent = f.name;
     await tinhLai();
   } catch (e) { $('nxTenTep').textContent = f.name; $('nxBuoc').innerHTML = `<p class="nx-loi">${escapeHtml(e.message)}</p>`; }
@@ -64,7 +73,7 @@ async function tinhLai() {
       nx.ma = new Set(); nx.maKhoa = ''; nx.loiMa = `Không kiểm tra được mã việc trên hệ thống (${e.message}) — chọn lại tệp để thử lại.`;
     }
   }
-  nx.dg = nx.dong.map((d) => danhGia(d, { me: state.user, dm: c.dm, accounts: c.accounts, cheDoXong: nx.cheDoXong || 'CHO_NGHIEM_THU', hangLoat: nx.hangLoat, maDaCo: nx.ma, homNay: homNayVN() }));
+  nx.dg = nx.dong.map((d) => danhGia(d, { me: state.user, dm: c.dm, accounts: c.accounts, cheDoXong: nx.cheDoXong || 'CHO_NGHIEM_THU', hangLoat: hangLoatDg(), maDaCo: nx.ma, homNay: homNayVN() }));
   const xong = nx.dg.some((x) => x.gt.tien_do === 'HOAN_THANH' && x.ket_qua !== 'CAP_NHAT');   // chỉ việc MỚI đã hoàn thành phải chọn cách xử lý
   const nhom = new Map();   // giá trị cần người nhập chọn: chưa khớp (loi) và khớp gần đúng (ma = mục đã khớp, chọn sẵn)
   nx.dong.forEach((d) => Object.entries(d.o).forEach(([k, x]) => { const gan = x?.gan === 'gan_dung'; if (!(x?.loi || gan) || !LOAI_TU_DIEN[truong(k)?.kieu]) return;
@@ -79,7 +88,7 @@ async function tinhLai() {
       : nx.loiMa || (xong && !nx.cheDoXong ? 'Chọn cách xử lý việc đã hoàn thành trước khi nhập.'
         : nx.loDo ? `Lô ${nx.loDo.ma} nhập dở — bấm "Nhập tiếp" để gửi tiếp; dòng đã nhập không bị tạo lại.` : 'Chưa ghi gì cho tới khi bấm Nhập.') };
   nx.chuaKhop = s.chuaKhop;
-  Object.assign(s, { coTuGan: coMucTieu() && nx.dg.some(canTuGan), duKien: chuDong, tuGanTom: tomTuGan() });
+  Object.assign(s, { coTuGan: coMucTieu() && nx.dg.some(canTuGan), duKien: chuDong, tuGanTom: tomTuGan(), coCotLoai: coCotLoai() });
   $('nxBuoc').innerHTML = ghepHtml(s) + xemTruocHtml(s, ctx());
   napDuKien();
   if (tieuDiem) { document.querySelector(tieuDiem)?.focus(); tieuDiem = ''; }   // vẽ lại sau mỗi lựa chọn: tiêu điểm về ô vừa đổi / ô kế tiếp
@@ -88,8 +97,7 @@ let tieuDiem = '';
 const ve = (chon) => { tieuDiem = chon; tinhLai(); };
 
 // v3.25: dự kiến mục tiêu tự gắn (goi_y_muc_tieu_ds — 200 dòng mỗi lượt, nhớ theo nội dung dòng); về tới thì chỉ điền chữ vào ô ghi chú của từng dòng
-// (không vẽ lại cả bảng — đang chọn ô khác không bị mất). Lỗi đọc: bỏ phần dự kiến, cờ vẫn gửi (DB tự nhận diện khi nhập).
-const coMucTieu = () => (danhMucKl().mucTieu || []).length > 0;
+// (không vẽ lại cả bảng — đang chọn ô khác không bị mất). Lỗi đọc: bỏ phần dự kiến, cờ vẫn gửi (DB tự nhận diện khi nhập). v3.27: tạm ẩn (coMucTieu).
 const duKienCua = (x) => (nx.tuGanMt && canTuGan(x) ? nx.duKien.get(khoaGoiY(dauVaoGoiY(x))) : null);
 const chuDong = (x) => { const d = duKienCua(x); return d && d !== 'loi' ? chuDuKien(d, (m) => tenMucTieu(danhMucKl().mucTieu, m)) : ''; };
 function tomTuGan() {
@@ -154,9 +162,10 @@ function doiO(e) {
   }
   if (t.dataset.nxKhop !== undefined && t.value) {   // trùng tên người: chỉ áp cho tệp này (lần sau người cùng tên có thể là người khác); nhóm lãnh đạo (v3.18): từ điển
     const g = nx.chuaKhop[Number(t.dataset.nxKhop)]; const loai = LOAI_TU_DIEN[truong(g.k).kieu]; const goc = chuanChu(g.v);   // can_bo trên máy chủ chỉ nhận id tài khoản → chỉ tệp này
+    const gt = t.value.startsWith('tk:') ? t.value.slice(3) : t.value;   // v3.27: "Chủ trì theo dõi" chọn cán bộ → lưu id như từ điển cán bộ; chọn phòng ("dv:") chỉ tệp này
     if (!nx.tuDienMoi.has(loai)) nx.tuDienMoi.set(loai, new Map());
-    nx.tuDienMoi.get(loai).set(goc, t.value);
-    if (/trùng tên/.test(g.loi) || t.value.startsWith('nhom:')) nx.khongLuu.add(`${loai}|${goc}`); else nx.khongLuu.delete(`${loai}|${goc}`);
+    nx.tuDienMoi.get(loai).set(goc, gt);
+    if (/trùng tên/.test(g.loi) || /^(nhom|dv):/.test(gt)) nx.khongLuu.add(`${loai}|${goc}`); else nx.khongLuu.delete(`${loai}|${goc}`);
     ve('.nx-khop select, #nxHlTruong, #nxNhap'); return;
   }
   if (t.id === 'nxSheet') {
@@ -166,6 +175,7 @@ function doiO(e) {
   else if (t.id === 'nxHoSo') { apHoSo(hoSoTatCa().find((h) => h.ten === t.value), true); ve('#nxHoSo'); }
   else if (t.name === 'nxCheDo') { nx.cheDoXong = t.value; ve(`input[name="nxCheDo"][value="${t.value}"]`); }
   else if (t.id === 'nxHlTruong') { nx.hlTruong = t.value; ve('#nxHlTruong'); }
+  else if (t.id === 'nxLoaiVb') { nx.loaiVb = t.value; ve('#nxLoaiVb'); }
 }
 // Áp một hồ sơ: cột theo tiêu đề đã chuẩn hoá (chọn hồ sơ → nhảy tới dòng tiêu đề của hồ sơ; gõ dòng tiêu đề → giữ dòng đã gõ); không hồ sơ →
 // đoán lại theo tiêu đề của dòng đang chọn.
@@ -187,9 +197,10 @@ async function luuHoSoAction() {
 // Mẫu trống (thẻ Nhập) hoặc danh sách đang hiện ở màn Nhiệm vụ theo mẫu (có mã — sửa rồi nhập lại để cập nhật theo mã). Bộ ghi xlsx nạp động.
 async function taiMau(rows = []) {
   try {
-    const [{ taoMauNhap }, { taiXuong }] = await Promise.all([import('../../../lib/kl/nhap/mau.js'), import('../../../lib/xlsx.js'), loadDanhMucKl()]);
+    const [{ taoMauNhap, chuKetQua }, { taiXuong }] = await Promise.all([import('../../../lib/kl/nhap/mau.js'), import('../../../lib/xlsx.js'), loadDanhMucKl()]);
     const ten = rows.length ? `vptu-theo-mau-nhap-${homNayVN().replace(/-/g, '')}.xlsx` : 'mau-nhap-chuan-vptu-task.xlsx';
-    taiXuong(ten, taoMauNhap({ dm: danhMucKl(), accounts: state.accounts || [], tenPhong, findAccount }, rows));
+    const mc = rows.length ? await docMinhChungXuat(rows.map((r) => r.id)) : new Map();   // v3.27: cột M = kết quả / minh chứng mới nhất
+    taiXuong(ten, taoMauNhap({ dm: danhMucKl(), accounts: state.accounts || [], tenPhong, findAccount }, rows.map((r) => ({ ...r, ket_qua_xuat: chuKetQua(mc.get(r.id)) }))));
     if (rows.length) notifySuccess(`Đã xuất ${rows.length} nhiệm vụ theo mẫu nhập (${ten}). Sửa trong Excel rồi nhập lại ở Giao việc → Nhập từ Excel.`);
   } catch (e) { notifyError('Không tạo được tệp theo mẫu: ' + e.message); }
 }
@@ -214,4 +225,5 @@ export function mountNhapExcel() {
     },
     nxLamLai: () => { $('nxBuoc').innerHTML = ''; $('nxTenTep').textContent = 'Chọn tệp khác để nhập tiếp.'; },
   });
+  mountBoSung();
 }

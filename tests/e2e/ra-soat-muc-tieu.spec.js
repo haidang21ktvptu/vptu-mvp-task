@@ -2,8 +2,9 @@
 // danh sách Nhiệm vụ: việc nhắc "Nghị quyết số 57-NQ/TW" có Nghị quyết 57-NQ/TW TÍCH SẴN (bộ nhận diện của DB, quy tắc số hiệu 0113), việc không khớp
 // quy tắc nào không có gì để chấp nhận; Chấp nhận một việc → DB gắn NQ_57 nguồn RA_SOAT, dòng "Đã lưu", "Đang tính" đổi theo. Văn bản + việc theo
 // khoá riêng, tự dọn. Chạy một mình (project v325-ra-soat, nối sau v324-tong-quan) vì ghi mục tiêu.
+// v3.27: mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) — cả kịch bản bỏ qua có ghi lý do; phần ngành – lĩnh vực của màn Rà soát kiểm ở phan-loai.spec.js.
 import { test, expect } from '@playwright/test';
-import { pageAs, nav, NAP } from './lib/app.js';
+import { pageAs, nav, NAP, HIEN_MUC_TIEU, LY_DO_AN_MT } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 import { dbAdmin, taoViec } from './lib/pr2b.mjs';
 
@@ -11,6 +12,7 @@ test.describe.serial('Rà soát mục tiêu then chốt (v3.25)', () => {
   test.describe.configure({ timeout: 120_000 });
   let db; let khoa; let vbId; let v1; let v2;
   test.beforeAll(async () => {
+    test.skip(!HIEN_MUC_TIEU, LY_DO_AN_MT);
     db = dbAdmin(); khoa = khoaRieng('RSMT', test.info());
     test.skip(Boolean((await db.rpc('goi_y_muc_tieu', { p: {} })).error), 'Project chưa có migration 0110 (goi_y_muc_tieu).');
     vbId = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN' });   // KL_BTV (mặc định) bắt buộc số hội nghị

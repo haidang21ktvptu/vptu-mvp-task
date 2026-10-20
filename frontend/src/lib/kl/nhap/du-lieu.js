@@ -16,6 +16,8 @@ export const luuHoSo = ({ ten, tenSheet, dongTieuDe, anhXa }) => goi('ho_so_nhap
 export const xoaHoSo = (id) => goi('ho_so_nhap_xoa', { p_id: id });
 export const boDongCho = (id) => goi('dong_nhap_bo', { p_id: id });
 export const hoanTacLo = (id) => goi('hoan_tac_lo', { p_lo: id });
+// v3.27 (0118): bổ sung dữ liệu chuyển đổi — chỉ tài khoản toàn quyền; ap = false: xem trước (máy chủ hoàn tác), true: ghi.
+export const boSungChuyenDoi = (p, lyDo, ap) => goi('bo_sung_chuyen_doi', { p, p_ly_do: lyDo, p_ap: Boolean(ap) });
 
 export const docHoSo = () => doc(supabase.from('ho_so_nhap').select('id, ten, ten_sheet, dong_tieu_de, anh_xa, cap_nhat_luc').order('ten'));
 // Từ điển dùng chung → Map<loai, Map<goc, ma>>.
@@ -44,6 +46,20 @@ export async function loDoCuaTep(tenTep, toi) {
   const ds = await doc(supabase.from('lo_nhap').select('id, ma, che_do_xong').eq('tao_boi', toi).eq('ten_tep', tenTep).is('xong_luc', null).is('hoan_tac_luc', null)
     .gte('tao_luc', new Date(Date.now() - 24 * 3600e3).toISOString()).order('tao_luc', { ascending: false }).limit(1));
   return ds[0] || null;
+}
+// v3.27 — cột M "Kết quả thực hiện / Minh chứng" khi xuất theo mẫu: minh chứng mới nhất không bị trả lại của từng việc (RLS: việc trong tầm xem),
+// đọc 100 mã một lượt (địa chỉ truy vấn ngắn, như thong-ke-nhap-moi.js), mỗi lượt đọc hết các trang 1000 dòng. → Map<nhiem_vu_id, minh chứng>.
+export async function docMinhChungXuat(ids) {
+  const m = new Map(); const LO = 100; const TRANG = 1000;
+  for (let i = 0; i < ids.length; i += LO) {
+    for (let tu = 0; ; tu += TRANG) {
+      const ds = await doc(supabase.from('minh_chung').select('id, nhiem_vu_id, so_hieu, ngay_van_ban, trich_yeu, mo_ta_ket_qua, noi_dung_chu, hop_le, nop_luc')
+        .in('nhiem_vu_id', ids.slice(i, i + LO)).order('nop_luc', { ascending: false }).order('id').range(tu, tu + TRANG - 1));
+      ds.forEach((x) => { if (x.hop_le !== false && !m.has(x.nhiem_vu_id)) m.set(x.nhiem_vu_id, x); });
+      if (ds.length < TRANG) break;
+    }
+  }
+  return m;
 }
 // Dữ liệu gốc của một việc (ngăn chi tiết): dòng tệp đã tạo / cập nhật việc này — RLS cho người thấy việc đọc.
 export const docDuLieuGoc = (nhiemVuId) => doc(supabase.from('dong_nhap').select('so_dong, ket_qua, du_lieu_goc, xu_ly_luc, lo_nhap(ma, ten_tep)')
