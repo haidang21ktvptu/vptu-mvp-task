@@ -5,7 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { soVN, soCoDau, ptVN, tyLe, namHienThi, canDatTai, mucGiaiNgan, nhanMuc, moTaMuc, kiemTraKy, lechTong, tongHopNam, soCuaNhiemVu, mucCuaNhiemVu,
   dienBienDoiTuong, viecTheoDoi, duoiMucChung, nguoiNhap, duocNhapKy } from '../src/lib/kl/giai-ngan.js';
-import { docSo, doanKieuSo, bangTuChu, bangTuChuPdf, bangTuHtml, bangTuDan, doanCot, nhanCot, docBang, goiYDonVi, donViTheoChu, dongTong, tenGon, tenChuan, khopTen }
+import { docSo, doanKieuSo, bangTuChu, bangTuChuPdf, bangTuHtml, bangTuDan, doanCot, nhanCot, docBang, goiYDonVi, donViTheoChu, dongTong, tenGon, tenChuan, khopTen, laDongChiSo }
   from '../src/lib/kl/giai-ngan-bang.js';
 
 const NAM = 2026;
@@ -212,6 +212,25 @@ describe('đọc bảng', () => {
     const h = bangTuHtml(`<table><tr><td>STT</td><td>Đơn vị</td><td>Kế hoạch</td><td>Lũy kế</td></tr><tr><td colspan="4">II. CÁC XÃ, PHƯỜNG</td></tr>
       <tr><td>1</td><td>UBND xã A</td><td>10</td><td>5</td></tr></table>`);
     assert.deepEqual(docBang(h, { cot: { ten: 1, kh: 2, da: 3 }, tuDong: 1 }).map((d) => [d.ten, d.loi]), [['UBND xã A', '']], 'đề mục gộp cả bảng: bỏ qua, không thành dòng lỗi');
+  });
+  test('tiêu đề có ô năm riêng ("Kế hoạch vốn" trên "2026"), dòng giữa một nhãn ("Trong đó"): vẫn lấy cột lũy kế (rà soát lần 3)', () => {
+    const muc = { tuDong: 2, ten: 1, kh: 2, da: 4, coTieuDe: true };
+    assert.deepEqual(doanCot(bangTuChu(['STT\tChủ đầu tư\tKế hoạch vốn\tGiải ngân\t\tTỷ lệ', '\t\t2026\tTrong tháng\tLũy kế\t(%)', '1\tBan A\t100\t5\t60\t60'].join('\n'))), muc, 'TSV');
+    const x = [['STT', 'Chủ đầu tư', 'Kế hoạch vốn', 'Giải ngân', '', 'Tỷ lệ'], ['', '', 2026, 'Trong tháng', 'Lũy kế', '(%)'], [1, 'Ban A', 100, 5, 60, 60]];
+    assert.deepEqual(doanCot(x), muc, '.xlsx (2026 là số)');
+    assert.deepEqual(nhanCot(x, 2).slice(2, 5), ['Kế hoạch vốn 2026', 'Giải ngân Trong tháng', 'Giải ngân Lũy kế']);
+    const h = bangTuHtml(`<table><tr><td rowspan=2>STT</td><td rowspan=2>Chủ đầu tư</td><td>Kế hoạch vốn năm</td><td colspan=2>Giải ngân</td><td rowspan=2>Tỷ lệ</td></tr>
+      <tr><td x:num="2026">2026</td><td>Trong tháng</td><td>Lũy kế</td></tr><tr><td>1</td><td>Ban A</td><td x:num="100">100</td><td x:num="5">5</td><td x:num="60">60</td><td>60</td></tr></table>`);
+    assert.deepEqual(doanCot(h), muc, 'HTML x:num="2026"');
+    const t = bangTuChu(['STT\tChủ đầu tư\tKế hoạch vốn năm 2026\tGiải ngân\t\t', '\t\t\tTrong đó\t\t', '\t\t\tTrong tháng\tVốn NSĐP\tLũy kế', '1\tBan A\t100\t5\t10\t60'].join('\n'));
+    assert.deepEqual(doanCot(t), { tuDong: 3, ten: 1, kh: 2, da: 5, coTieuDe: true }, 'tiêu đề ba dòng, dòng giữa một nhãn');
+  });
+  test('dòng chỉ số cột: các kiểu thường gặp; dòng dữ liệu có tên một chữ, số nhỏ không bị bỏ', () => {
+    for (const d of [['A', 'B', '1', '2', '3', '4=3/1'], ['1', '2', '3', '4', '5=4/3*100%'], ['A', 'B', '1', '2', '3=2/1 (%)'], ['1', '2', '3', '4', '5 = 4 × 100/3'],
+      ['(1)', '(2)', '(3)', '(4)', '(5)=(4)/(3)'], ['a', 'b', '1', '2', '3'], ['A', 'B', 1, 2, 3, '4=3/1*100']]) assert.equal(laDongChiSo(d), true, JSON.stringify(d));
+    for (const d of [['B', 3, 1], ['B', '3', '1'], ['1', 'Ban A', '12', '5'], ['C', 12, 13]]) assert.equal(laDongChiSo(d), false, JSON.stringify(d));
+    const mo = [['Tên', 'Kế hoạch', 'Đã giải ngân'], ['Vốn A', 12, 5], ['B', 3, 1], ['Vốn C', 100, 50]];   // kỳ đã lưu mở lại để sửa
+    assert.deepEqual(docBang(mo, { cot: doanCot(mo), tuDong: 1 }).map((d) => d.ten), ['Vốn A', 'B', 'Vốn C']);
   });
   test('số thứ tự chữ cái A, B, C… không nhầm C là số La Mã', () => {
     const phang = docBang([['A', 'Ban A', 100, 50], ['B', 'Ban B', 100, 50], ['C', 'Ban C', 150, 50]], { cot: { ten: 1, kh: 2, da: 3 } });

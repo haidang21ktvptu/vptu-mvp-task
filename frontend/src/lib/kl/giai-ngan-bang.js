@@ -133,19 +133,35 @@ const KHOP = { ten: /(tên|nguồn\s*vốn|chủ\s*đầu\s*tư|đơn\s*vị|d�
   da: /(giải\s*ngân|thực\s*hiện|lũy\s*kế|luỹ\s*kế)/i, luyKe: /(lũy|luỹ)\s*kế|đến\s*(ngày|hết)|từ\s*đầu\s*năm/i };
 const laSo = (v) => typeof v === 'number' || (typeof v === 'string' && /^[(-]?\d[\d.,\s]*\)?%?$/.test(v.trim()));
 const coO = (v) => String(v ?? '').trim() !== '';
-const soO = (d) => (d || []).filter((v) => laSo(v) && coO(v)).length;
+// Năm đứng riêng một ô (2026): ở dòng tiêu đề là nhãn ("Kế hoạch vốn" trên "2026"), không phải số liệu.
+const laNam = (v) => { const s = String(v ?? '').trim(); return /^\d{4}$/.test(s) && s >= '1990' && s <= '2100'; };
+const soLieu = (d) => (d || []).filter((v) => laSo(v) && coO(v) && !laNam(v)).length;
 const chuO = (o) => (typeof o === 'string' ? o.normalize('NFC').replace(KHOANG, ' ').trim() : '');
-// Dòng chỉ số cột của biểu ("A | B | 1 | 2 | 3 | 4=3/2", "(1) | (2) | (3)") — thuộc phần tiêu đề, không phải dữ liệu.
-const CHI_SO = /^\(?(?:[A-ZĐ]|\d{1,2})\)?(?:\s*=\s*[\dA-ZĐ\s()+\-*/x:.,]+)?$/;
-export const laDongChiSo = (d) => { const o = (d || []).map((v) => (typeof v === 'number' ? String(v) : chuO(v))).filter(Boolean); return o.length >= 3 && o.every((x) => CHI_SO.test(x)); };
-// Dòng tiêu đề: từ hai nhãn chữ khác nhau, không ô số, ô đầu không phải số thứ tự (dòng nhóm "A | Vốn trong nước", "I | Các dự án…" không phải tiêu đề).
-const laTieuDe = (d) => { const o = (d || []).map(chuO).filter(Boolean); return new Set(o).size > 1 && !soO(d) && !STT_TRAN.test(o[0]) && !laDongChiSo(d); };
-// Khối tiêu đề ngay trên dòng den: các dòng tiêu đề liền nhau (bỏ qua dòng trống, dòng chỉ số cột), tối đa 3; dừng ở dòng chú thích / dòng nhóm / dòng số.
+const nhanO = (v) => (laNam(v) ? String(v).trim() : chuO(v));   // nhãn của ô tiêu đề: chữ hoặc năm
+// Dòng chỉ số cột của biểu ("A | B | 1 | 2 | 3 | 4=3/2", "(1) | (2) | (3)", "a | b | 1 | 2", "5 = 4 × 100/3", "3=2/1 (%)") — thuộc tiêu đề, không phải dữ
+// liệu: mọi ô là một chữ cái / số 1–2 chữ số (có thể kèm công thức); có ô công thức "=", hoặc các số chạy liền nhau — từ ba số (1, 2, 3…), hay từ 1 sau
+// các chữ A, B… (bảng bốn cột "A | B | 1 | 2"). Dòng dữ liệu tên một chữ, số nhỏ ("B | 3 | 1") không phải dòng chỉ số.
+const CHI_SO = /^\(?(?:[A-Za-zĐđ]|\d{1,2})\)?(?:\s*[=×x*/+:-]\s*[\dA-Za-zĐđ\s()+\-*/×x:.,%]+)?\s*%?$/;
+export function laDongChiSo(d) {
+  const o = (d || []).map((v) => (typeof v === 'number' ? String(v) : chuO(v))).filter(Boolean);
+  if (o.length < 3 || !o.every((x) => CHI_SO.test(x))) return false;
+  const so = o.map((x) => /^\(?(\d{1,2})/.exec(x)?.[1]).filter(Boolean).map(Number);
+  if (o.some((x) => x.includes('='))) return so.length >= 2;
+  const chu = o.map((x) => /^\(?([A-Za-z])\)?$/.exec(x)?.[1]).filter(Boolean).map((x) => x.toUpperCase());
+  const lienChu = chu.length >= 2 && chu.every((x, i) => x.codePointAt(0) === 65 + i);   // A, B, C…
+  return so.every((x, i) => !i || x === so[i - 1] + 1) && (so.length >= 3 || (lienChu && so[0] === 1));
+}
+// Dòng tiêu đề: từ hai nhãn khác nhau (chữ, năm), không ô số liệu, ô đầu không phải số thứ tự (dòng nhóm "A | Vốn trong nước", "I | Các dự án…").
+const laTieuDe = (d) => { const o = (d || []).map(nhanO).filter(Boolean); return new Set(o).size > 1 && !soLieu(d) && !(STT_TRAN.test(o[0]) && !laNam(o[0])) && !laDongChiSo(d); };
+// Dòng một nhãn, không số liệu: chú thích ("Đơn vị: …"), nhãn gộp giữa hai dòng tiêu đề ("Trong đó"), đề mục không số.
+const motNhan = (d) => new Set((d || []).map(nhanO).filter(Boolean)).size === 1 && !soLieu(d);
+// Khối tiêu đề ngay trên dòng den: tối đa 3 dòng tiêu đề trong 6 dòng phía trên (bỏ qua dòng trống, dòng chỉ số cột, dòng một nhãn); dừng ở dòng nhóm có số
+// thứ tự, dòng có số liệu.
 function khoiTieuDe(bang, den) {
   const ds = [];
-  for (let i = den - 1; i >= 0 && ds.length < 3; i--) {
+  for (let i = den - 1; i >= Math.max(0, den - 6) && ds.length < 3; i--) {
     const d = bang[i] || [];
-    if (!d.some(coO) || laDongChiSo(d)) continue;
+    if (!d.some(coO) || laDongChiSo(d) || motNhan(d)) continue;
     if (!laTieuDe(d)) break;
     ds.unshift(i);
   }
@@ -154,13 +170,13 @@ function khoiTieuDe(bang, den) {
 // Nhãn mỗi cột ghép từ các dòng (chỉ số dòng; bỏ dòng chú thích — một nhãn trải cả bảng như "Biểu 2", "Đơn vị: …"). Ô trống của dòng trên mà dòng dưới
 // có nhãn con → lấy nhãn bên trái (ô gộp ngang chép bằng tab: Excel chỉ ghi chữ ở ô đầu).
 function nhanGop(bang, dong) {
-  const ds = dong.map((i) => bang[i] || []).filter((d) => new Set(d.map(chuO).filter(Boolean)).size > 1);
+  const ds = dong.map((i) => bang[i] || []).filter((d) => new Set(d.map(nhanO).filter(Boolean)).size > 1);
   const rong = Math.max(0, ...ds.map((d) => d.length)); const nhan = Array.from({ length: rong }, () => []);
   ds.forEach((d, i) => {
     let trai = '';
     for (let j = 0; j < rong; j++) {
-      let o = chuO(d[j]);
-      if (!o && trai && i < ds.length - 1 && chuO(ds[i + 1][j])) o = trai;
+      let o = nhanO(d[j]);
+      if (!o && trai && i < ds.length - 1 && nhanO(ds[i + 1][j])) o = trai;
       if (o && nhan[j].at(-1) !== o) nhan[j].push(o);
       trai = o;
     }
@@ -178,18 +194,19 @@ function khopNhan(d) {
 // Nhãn cột cho ô chọn của màn xem trước: ghép khối tiêu đề (tối đa 3 dòng) ngay trên dòng dữ liệu đầu.
 export const nhanCot = (bang, tuDong) => nhanGop(bang, khoiTieuDe(bang, tuDong));
 // Đoán cột tên / kế hoạch / đã giải ngân và dòng bắt đầu dữ liệu. (1) Khối tiêu đề (1–3 dòng, ghép theo cột) ngay trên dòng có số đầu tiên — dòng đó là
-// dòng dữ liệu đầu, kể cả khi chỉ có một ô số (dòng "Tổng cộng" đầu bảng); cột giải ngân ưu tiên "lũy kế / đến ngày / từ đầu năm", bỏ cột tỷ lệ. (2) Không
-// thấy: dò tiêu đề từng dòng, dữ liệu từ dòng sau đó có số ở cột kế hoạch / giải ngân. (3) Không có tiêu đề nhận ra được: cột chữ đầu + hai cột số đầu
-// của dòng đầu có từ hai ô số, dữ liệu từ dòng đó (coTieuDe = false). Dòng chỉ số cột (A | B | 1 | 2…) không bao giờ là dữ liệu.
+// dòng dữ liệu đầu, kể cả khi chỉ có một ô số (dòng "Tổng cộng" đầu bảng); ô năm (2026) không tính là số; cột giải ngân ưu tiên "lũy kế / đến ngày /
+// từ đầu năm", bỏ cột tỷ lệ. (2) Không thấy: dò tiêu đề từng dòng, dữ liệu từ dòng sau đó (không phải dòng tiêu đề) có số ở cột kế hoạch / giải ngân.
+// (3) Không có tiêu đề nhận ra được: cột chữ đầu + hai cột số đầu của dòng đầu có từ hai ô số, dữ liệu từ dòng đó (coTieuDe = false). Dòng chỉ số cột
+// (A | B | 1 | 2…) không bao giờ là dữ liệu.
 export function doanCot(bang) {
-  const dau = bang.findIndex((d) => soO(d) > 0 && !laDongChiSo(d));
+  const dau = bang.findIndex((d) => soLieu(d) > 0 && !laDongChiSo(d));
   const gan = dau > 0 ? khopNhan(nhanCot(bang, dau)) : null;
   if (gan) return { tuDong: dau, ...gan, coTieuDe: true };
   for (let i = 0; i < Math.min(bang.length, 15); i++) {
     const k = khopNhan(nhanGop(bang, [i]));
-    if (k) { const tu = bang.slice(i + 1).findIndex((x) => !laDongChiSo(x) && (laSo(x?.[k.kh]) || laSo(x?.[k.da]))); return { tuDong: tu >= 0 ? i + 1 + tu : i + 1, ...k, coTieuDe: true }; }
+    if (k) { const tu = bang.slice(i + 1).findIndex((x) => !laDongChiSo(x) && !laTieuDe(x) && (laSo(x?.[k.kh]) || laSo(x?.[k.da]))); return { tuDong: tu >= 0 ? i + 1 + tu : i + 1, ...k, coTieuDe: true }; }
   }
-  const dau2 = bang.findIndex((d) => soO(d) >= 2 && !laDongChiSo(d)); const mau = bang[dau2] || [];
+  const dau2 = bang.findIndex((d) => soLieu(d) >= 2 && !laDongChiSo(d)); const mau = bang[dau2] || [];
   const so = mau.map((v, j) => (laSo(v) && coO(v) ? j : -1)).filter((j) => j >= 0);
   const ten = mau.findIndex((v, j) => !so.includes(j) && !STT_TRAN.test(String(v ?? '').trim()) && String(v ?? '').trim().length > 1);
   return { tuDong: Math.max(0, dau2), ten: Math.max(0, ten), kh: so[0] ?? 1, da: so[1] ?? 2, coTieuDe: false };

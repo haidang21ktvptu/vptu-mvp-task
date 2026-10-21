@@ -13,6 +13,7 @@ import { tenChuan, tenGon } from '../../../lib/kl/giai-ngan-bang.js';
 import { docNam, docGanViec, ganNhiemVu, xoaKy, coGiaiNgan } from '../../../lib/kl/giai-ngan-db.js';
 import { laTangGiao } from '../../../lib/kl/sua-tang.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
+import { laToanQuyen } from '../../../lib/toan-quyen.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { chipMucHtml, doiTuongChu } from '../tong-quan/giai-ngan.js';
 import { timKlRow } from './danh-sach.js';
@@ -22,11 +23,14 @@ let sauHanhDong = async () => {};
 const me = () => state.user;
 const vai = () => state.user?.role_group;
 const LIEN_QUAN = /giải\s*ngân|đầu\s*tư\s*công|vốn\s*đầu\s*tư|kế\s*hoạch\s*vốn|chủ\s*đầu\s*tư|nguồn\s*vốn/i;
-// Gắn mới (như ghi vướng mắc 0103): chủ trì, người theo dõi, lãnh đạo trong phạm vi. Việc đã gắn nguồn vốn / chủ đầu tư (0120–0121): đổi, bỏ — lãnh đạo
-// trong phạm vi hoặc người giao, không phải người chủ trì (kể cả việc tự giao cho mình); hoặc chính người đã gắn khi mục tiêu còn mặc định (100% trước 31/12).
-// Mục tiêu riêng: như trên, không có ngoại lệ người tự gắn. Việc "Số liệu toàn tỉnh": chỉ lãnh đạo Văn phòng. Hàm DB là chốt; ở đây chỉ để ẩn nút.
+// Gắn mới (như ghi vướng mắc 0103): chủ trì, người theo dõi, lãnh đạo trong phạm vi. Việc đã gắn nguồn vốn / chủ đầu tư (0120–0122): đổi, bỏ — lãnh đạo
+// trong phạm vi hoặc người giao, không phải người chủ trì (tài khoản chủ trì — kể cả tự giao cho mình —, Trưởng phòng của việc giao cho phòng), trừ Chánh
+// Văn phòng / toàn quyền; hoặc chính người đã gắn khi mục tiêu còn mặc định (100% trước 31/12). Mục tiêu riêng: như trên, không có ngoại lệ người tự gắn.
+// Việc "Số liệu toàn tỉnh": chỉ lãnh đạo Văn phòng. Hàm DB là chốt; ở đây chỉ để ẩn nút.
 const duocGan = (r) => Boolean(r) && !chiXem(r) && nguoiNhap(me()) && (r.owner_tai_khoan === me().id || r.nguoi_theo_doi === me().id || ['A1', 'A2'].includes(vai()));
-const duocDoiMucTieu = (r) => !chiXem(r) && nguoiNhap(me()) && r.owner_tai_khoan !== me().id && (['A1', 'A2'].includes(vai()) || laTangGiao(r));
+const laChanh = () => (vai() === 'A1' && Boolean(me()?.is_chief)) || laToanQuyen(me());
+const laChuTri = (r) => r.owner_tai_khoan === me().id || (!r.owner_tai_khoan && vai() === 'A2' && Boolean(r.owner_phong) && r.owner_phong === me().department);
+const duocDoiMucTieu = (r) => !chiXem(r) && nguoiNhap(me()) && (!laChuTri(r) || laChanh()) && (['A1', 'A2'].includes(vai()) || laTangGiao(r));
 const macDinh = (g) => g.muc_tieu_pt === 100 && g.muc_tieu_ngay === `${g.nam}-12-31`;
 const duocSua = (r, g) => (!g ? duocGan(r) : g.loai === 'TOAN_TINH' ? vai() === 'A1' && !chiXem(r) && nguoiNhap(me())
   : duocGan(r) && (duocDoiMucTieu(r) || (g.gan_boi === me().id && macDinh(g))));
@@ -137,10 +141,10 @@ const gnDongTheoDoi = () => { $('gnTdModal').classList.add('hidden'); td.id = nu
 async function gnLuuTheoDoi() {
   const r = timKlRow(td.id); if (!r) { gnDongTheoDoi(); return; }
   const g = ganCua.get(r.id) || null; const loai = $('gnTdLoai').value; const nam = Number($('gnTdNam').value);
-  const ten = tenGon($('gnTdTen').value); const doiNam = g && g.nam !== nam;
+  const ten = tenGon($('gnTdTen').value); const doiNam = g && (g.nam !== nam || (g.loai === 'TOAN_TINH') !== (loai === 'TOAN_TINH'));   // đổi năm / kiểu: mục tiêu cũ không mang sang
   if (!Number.isInteger(nam) || nam < 2020 || nam > 2100) { notifyError('Năm kế hoạch vốn không hợp lệ.'); return; }
   if (loai !== 'TOAN_TINH' && !ten) { notifyError('Ghi tên nguồn vốn hoặc chủ đầu tư — chọn trong danh sách gợi ý của kỳ số liệu.'); return; }
-  const mt = $('gnTdMt').disabled ? (doiNam ? { muc_tieu_pt: 100, muc_tieu_ngay: mocMacDinh(nam) } : {})   // đổi năm: mục tiêu năm cũ không áp cho năm mới
+  const mt = $('gnTdMt').disabled ? (doiNam ? { muc_tieu_pt: 100, muc_tieu_ngay: mocMacDinh(nam) } : {})
     : { muc_tieu_pt: Number($('gnTdMt').value) || 100, muc_tieu_ngay: $('gnTdMoc').value || mocMacDinh(nam) };
   await ghiTheoDoi(r, { loai, nam, ten: loai === 'TOAN_TINH' ? null : ten, ten_chuan: loai === 'TOAN_TINH' ? null : tenChuan(ten), ...mt });
 }
