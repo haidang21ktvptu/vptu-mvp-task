@@ -1,6 +1,6 @@
 # Phát hành v3.28.0 — theo dõi giải ngân vốn đầu tư công trên Tổng quan
 
-Bản phát hành **v3.28.0** (nhánh `feature/v3.28-giai-ngan`, migration **0119**, CHANGELOG 82, SPEC DB-11, CAU-HOI nhóm M) làm việc chủ dự án yêu cầu
+Bản phát hành **v3.28.0** (nhánh `feature/v3.28-giai-ngan`, migration **0119–0120**, CHANGELOG 82, SPEC DB-11, CAU-HOI nhóm M) làm việc chủ dự án yêu cầu
 ngày 21/10/2026: trên Tổng quan, lãnh đạo nhìn bức tranh giải ngân vốn đầu tư công toàn tỉnh trước (số tổng, theo nguồn vốn, theo chủ đầu tư, % qua các
 kỳ), rồi từng nhiệm vụ theo mục tiêu riêng, báo chậm so với tiến độ đều.
 
@@ -10,8 +10,10 @@ Làm **lần lượt**, xong bước này mới sang bước sau.
 ## Thay đổi khi áp lên production
 - **0119** thêm 3 bảng `gn_ky`, `gn_ky_dong`, `gn_nhiem_vu` (RLS: chỉ đọc; ghi qua hàm), các hàm `gn_ghi_ky`, `gn_xoa_ky`, `gn_gan_nhiem_vu` và hàm phụ.
   **Không sửa dữ liệu đang có**, không đổi hàm cũ. Diễn biến mới mã `giai_ngan` (hiện tên "Giải ngân vốn").
-- Giao diện: khối "Giải ngân vốn đầu tư công năm 2026" trên Tổng quan (chưa có số liệu: chỉ lãnh đạo Văn phòng thấy hướng dẫn), mục "Giải ngân vốn" và hộp
-  "Theo dõi giải ngân" ở ngăn chi tiết, hộp "Nhập kỳ số liệu"; số khối của Tổng quan đánh theo các khối đang hiện.
+- **0120** thay hai hàm của 0119 (`gn_gan_nhiem_vu`, `gn_ghi_ky`): việc đã gắn nguồn vốn / chủ đầu tư chỉ lãnh đạo trong phạm vi hoặc người giao đổi, bỏ
+  (người tự gắn mà mục tiêu còn mặc định được tự sửa); chặn số NaN / quá lớn, tên trùng sau khi cắt khoảng trắng. Không đụng dữ liệu.
+- Giao diện: khối "Giải ngân vốn đầu tư công năm 2026" trên Tổng quan (chưa có số liệu: chỉ lãnh đạo Văn phòng và người nhập kỳ thấy hướng dẫn), mục "Giải ngân
+  vốn" và hộp "Theo dõi giải ngân" (bỏ theo dõi có bước xác nhận) ở ngăn chi tiết, hộp "Nhập kỳ số liệu"; số khối của Tổng quan đánh theo các khối đang hiện.
 
 ## Bước 1 — Kiểm bản cuối trên staging (`https://haidang21ktvptu.github.io/vptu-mvp-task/staging/`)
 Claude tự kiểm trong khung trình duyệt bằng dữ liệu giả (chủ dự án chỉ đăng nhập tài khoản Claude nêu tên, không gõ mật khẩu hộ) và báo kết quả; chủ dự án
@@ -25,7 +27,7 @@ xem lại rồi báo **đồng ý** mới sang Bước 2.
   chạy lại được (kịch bản tự bỏ qua khi năm hiện tại trên staging đã có việc "Số liệu toàn tỉnh").
 
 ## Bước 2 — Phát hành (quy tắc 12 + `docs/kien-truc.md` mục 7)
-1. Chủ dự án gửi trong phiên: **"Đồng ý áp migration 0119 lên production"**.
+1. Chủ dự án gửi trong phiên: **"Đồng ý áp migration 0119–0120 lên production"**.
 2. PR `release/v3.28.0` xanh đủ check → gắn tag `v3.28.0` lên **đầu nhánh phát hành** (chủ dự án đẩy tag).
 3. GitHub → Actions → run "Deploy production" của tag → **Review deployments** → duyệt; theo dõi tới smoke xanh và tag `production`.
 4. Kiểm `https://haidang21ktvptu.github.io/vptu-mvp-task/phien-ban.json` ghi `v3.28.0` → merge PR phát hành bằng **merge commit**.

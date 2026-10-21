@@ -1,6 +1,6 @@
 // Giải ngân vốn (v3.28, migration 0119): đọc / ghi DB. Đọc theo năm: mọi kỳ số liệu (gn_ky), mọi dòng của các kỳ đó (gn_ky_dong), nhiệm vụ theo dõi
 // (gn_nhiem_vu — RLS: việc "Số liệu toàn tỉnh" mọi người thấy, việc khác theo phạm vi việc). Bộ nhớ đệm 60 giây theo năm (ngăn chi tiết vẽ lại nhiều
-// lần khi có realtime); Tổng quan đọc mới (moi). Project chưa áp 0119 (bảng chưa có) → coi như chưa có số liệu, không làm vỡ trang. Ghi chỉ qua
+// lần khi có realtime); Tổng quan đọc mới (moi). Project chưa áp 0119 (bảng chưa có) → null (không vẽ khối, không hướng dẫn), không làm vỡ trang. Ghi chỉ qua
 // hàm gn_ghi_ky / gn_xoa_ky / gn_gan_nhiem_vu — DB là chốt quyền; ghi xong xoá bộ nhớ đệm.
 import { supabase } from '../supabase.js';
 import { taiTheoTrang } from './cot.js';
@@ -19,7 +19,6 @@ const so = (x) => (x === null || x === undefined || x === '' ? null : Number(x))
 const chuanKy = (k) => ({ ...k, ke_hoach: so(k.ke_hoach), da_giai_ngan: so(k.da_giai_ngan), uoc_tinh: Boolean(k.uoc_tinh) });
 const chuanDong = (d) => ({ ...d, ke_hoach: so(d.ke_hoach), da_giai_ngan: so(d.da_giai_ngan), thu_tu: Number(d.thu_tu) || 0 });
 const chuanGan = (g) => ({ ...g, nam: Number(g.nam), muc_tieu_pt: so(g.muc_tieu_pt) ?? 100 });
-const rong = (nam) => ({ nam, ky: [], dong: [], gan: [] });
 
 async function docMoi(nam) {
   const [ky, gan] = await Promise.all([
@@ -31,9 +30,9 @@ async function docMoi(nam) {
   return { nam, ky: ky.map(chuanKy), dong: dong.map(chuanDong), gan: gan.map(chuanGan) };
 }
 
-// Một năm → { nam, ky (cũ trước), dong, gan }. Lỗi khác "thiếu bảng" → ném (người gọi giữ số cũ / báo lỗi).
+// Một năm → { nam, ky (cũ trước), dong, gan }; chưa có bảng (project chưa áp 0119) → null. Lỗi khác → ném (người gọi giữ số cũ / báo lỗi).
 export async function docNam(nam, { moi = false } = {}) {
-  if (!coBang) return rong(nam);
+  if (!coBang) return null;
   const c = dem.get(nam);
   if (!moi && c && Date.now() - c.luc < HAN_DEM) return c.d;
   try {
@@ -41,7 +40,7 @@ export async function docNam(nam, { moi = false } = {}) {
     dem.set(nam, { luc: Date.now(), d });
     return d;
   } catch (e) {
-    if (laThieuBang(e)) { coBang = false; return rong(nam); }
+    if (laThieuBang(e)) { coBang = false; return null; }
     throw e;
   }
 }

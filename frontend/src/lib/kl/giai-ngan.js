@@ -49,7 +49,9 @@ export function mucGiaiNgan({ da, kh, ngaySoLieu, nam, mucTieuPt = 100, mucTieuN
   const pt = tron1((Number(da) / Number(kh)) * 100); const mucTieu = Number(mucTieuPt) || 100; const moc = mucTieuNgay || mocMacDinh(nam);
   const soNgayCu = homNay ? Math.max(0, soNgay(ngaySoLieu, homNay)) : 0;
   const canDat = tron1(canDatTai(ngaySoLieu, { nam, mucTieuPt: mucTieu, mucTieuNgay: moc }));
-  const chung = { pt, canDat, mucTieu, moc, ngay: ngaySoLieu, cu: soNgayCu > NGAY_CU, soNgayCu };
+  // Nhắc "cần kỳ mới" chỉ khi còn kỳ để nhập: số liệu chưa tới mốc và chưa qua hạn giải ngân kế hoạch vốn năm (31/1 năm sau).
+  const conKy = ngaySoLieu < moc && (!homNay || homNay <= `${Number(nam) + 1}-01-31`);
+  const chung = { pt, canDat, mucTieu, moc, ngay: ngaySoLieu, cu: soNgayCu > NGAY_CU && conKy, soNgayCu };
   if (pt >= mucTieu) return { ...chung, muc: 'DAT', thieu: 0, quaMoc: false };
   const quaMoc = ngaySoLieu >= moc; const thieu = tron1(canDat - pt);
   const muc = quaMoc || thieu > NGUONG_CHAM_NHIEU ? 'CHAM_NHIEU' : thieu > NGUONG_CHAM ? 'CHAM' : 'DUNG';

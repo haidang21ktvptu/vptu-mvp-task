@@ -5,7 +5,7 @@
 // bỏ qua; chỉ dùng khi bảng không có dòng tiêu đề nhận ra được). Hàm đọc bảng thuần: lib/kl/giai-ngan-bang.js.
 import { escapeHtml } from '../../../lib/dom.js';
 import { notifyError } from '../../../components/toast.js';
-import { bangTuDan, doanCot, docBang, doanKieuSo, goiYDonVi, dongTong, khopTen, TEN_DON_VI } from '../../../lib/kl/giai-ngan-bang.js';
+import { bangTuDan, doanCot, docBang, doanKieuSo, goiYDonVi, dongTong, khopTen, nhanCot, TEN_DON_VI } from '../../../lib/kl/giai-ngan-bang.js';
 import { soVN, ptVN, tyLe } from '../../../lib/kl/giai-ngan.js';
 
 export const LOAI_BANG = ['NGUON', 'CHU_DAU_TU'];
@@ -53,15 +53,17 @@ function napBang(loai, goc, nguon) {
 }
 
 const sel = (k, nhan, ds, chon, loai) => `<label class="gn-chon"><span>${nhan}</span><select class="o-nhap" data-gn-o="${k}" data-loai="${loai}">${ds.map(([v, t]) => `<option value="${v}"${String(v) === String(chon) ? ' selected' : ''}>${escapeHtml(t)}</option>`).join('')}</select></label>`;
-const catChu = (s, n = 28) => { const t = String(s ?? '').replace(/\s+/g, ' ').trim(); return t.length > n ? `${t.slice(0, n - 1)}…` : t; };
-// Tên cột trong ô chọn: chữ của dòng tiêu đề (dòng ngay trên dòng dữ liệu đầu), không có thì ô đầu tiên có chữ của cột.
+// Chữ dài: giữ đầu và cuối (nhãn ghép hai dòng tiêu đề — nhãn con như "Lũy kế" ở cuối).
+const catChu = (s, n = 36) => { const t = String(s ?? '').replace(/\s+/g, ' ').trim(); return t.length > n ? `${t.slice(0, n - 13)}…${t.slice(-12)}` : t; };
+// Tên cột trong ô chọn: nhãn ghép từ các dòng tiêu đề ngay trên dòng dữ liệu đầu (tiêu đề hai, ba dòng), không có thì ô đầu tiên có chữ của cột.
 function dsCot(b) {
-  const rong = Math.max(...b.goc.map((d) => d.length)); const tieu = b.goc[b.tuDong - 1] || [];
+  const rong = Math.max(...b.goc.map((d) => d.length)); const tieu = nhanCot(b.goc, b.tuDong);
   return Array.from({ length: rong }, (_, j) => { const mau = catChu(tieu[j] || b.goc.find((d) => String(d[j] ?? '').trim())?.[j]); return [j, `Cột ${j + 1}${mau ? `: ${mau}` : ''}`]; });
 }
 function ghiChu(loai, b, d) {
   if (d.loi) return `<span class="gn-loi-chu">${escapeHtml(d.loi)}</span>`;
   if (d.laTong) return 'dòng tổng — dùng đối chiếu';
+  if (d.nhom && !laChon(b, d)) return 'dòng nhóm — đã gồm các dòng cấp dưới, không tích để khỏi cộng trùng';
   if (d.khop?.kieu === 'khop') return '<span class="gn-khop">khớp kỳ trước</span>';
   if (d.khop?.kieu === 'gan') return `<label class="gn-ten-cu"><input type="checkbox" data-gn-ten-cu="${loai}" data-dong="${d.dong}"${b.tenCu.get(d.dong) !== false ? ' checked' : ''}> dùng tên kỳ trước: ${escapeHtml(d.khop.ten)}</label>`;
   return st.truoc[loai].length ? '<span class="gn-ten-moi">tên mới</span>' : '';
@@ -76,7 +78,7 @@ function vungHtml(loai) {
   const nhap = `<div class="gn-nhap-bang"><label class="nut nho gn-tep"><input type="file" accept=".xlsx" data-gn-tep="${loai}" class="sr">Chọn tệp Excel (.xlsx)</label>
     <textarea class="o-nhap gn-dan" rows="2" data-gn-dan="${loai}" aria-label="Dán bảng theo ${TEN[loai]}" placeholder="hoặc dán bảng theo ${TEN[loai]} vào đây (Ctrl+V) — chép từ Excel, Word hoặc PDF của báo cáo"></textarea></div>`;
   if (!b.goc) return `${nhap}<p class="chu-phu gn-khong-bb">Không bắt buộc — có bảng này thì Tổng quan hiện tỷ lệ từng ${TEN[loai]} và nhiệm vụ gắn với ${TEN[loai]} có số.</p>`;
-  const dong = b.goc.slice(0, 20).map((_, i) => [i, `dòng ${i + 1}`]);
+  const dong = b.goc.slice(0, Math.max(20, b.tuDong + 10)).map((_, i) => [i, `dòng ${i + 1}`]);   // đủ chỗ quanh dòng đang chọn (bảng có nhiều dòng chú thích)
   const ctl = `<div class="gn-cot">${b.sheets?.length > 1 ? sel('sheet', 'Trang tính', b.sheets.map((s, i) => [i, s.ten]), b.sheet, loai) : ''}
     ${sel('ten', 'Cột tên', dsCot(b), b.cot.ten, loai)}${sel('kh', 'Cột kế hoạch', dsCot(b), b.cot.kh, loai)}${sel('da', 'Cột đã giải ngân (lũy kế)', dsCot(b), b.cot.da, loai)}
     ${sel('tuDong', 'Dữ liệu từ', dong, b.tuDong, loai)}${sel('donVi', 'Đơn vị trong bảng', Object.entries(TEN_DON_VI), b.donVi, loai)}

@@ -5,7 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { soVN, soCoDau, ptVN, tyLe, namHienThi, canDatTai, mucGiaiNgan, nhanMuc, moTaMuc, kiemTraKy, lechTong, tongHopNam, soCuaNhiemVu, mucCuaNhiemVu,
   dienBienDoiTuong, viecTheoDoi, duoiMucChung, nguoiNhap, duocNhapKy } from '../src/lib/kl/giai-ngan.js';
-import { docSo, doanKieuSo, bangTuChu, bangTuChuPdf, bangTuHtml, bangTuDan, doanCot, docBang, goiYDonVi, donViTheoChu, dongTong, tenGon, tenChuan, khopTen }
+import { docSo, doanKieuSo, bangTuChu, bangTuChuPdf, bangTuHtml, bangTuDan, doanCot, nhanCot, docBang, goiYDonVi, donViTheoChu, dongTong, tenGon, tenChuan, khopTen }
   from '../src/lib/kl/giai-ngan-bang.js';
 
 const NAM = 2026;
@@ -64,7 +64,10 @@ describe('tiến độ đều và mức', () => {
     assert.equal(qua.muc, 'CHAM_NHIEU'); assert.equal(qua.quaMoc, true); assert.equal(nhanMuc(qua), 'Đến mốc 31/12/2026 còn thiếu 15 điểm %');
     const cu = mucGiaiNgan({ nam: NAM, da: 70, kh: 100, ngaySoLieu: '2026-09-30', homNay: '2027-01-05' });
     assert.equal(cu.muc, 'DUNG', 'hôm nay qua mốc nhưng số liệu chưa tới mốc: xét theo ngày số liệu');
-    assert.equal(cu.cu, true);
+    assert.equal(cu.cu, true, 'trước 31/1 năm sau vẫn nhập được kỳ mới');
+    assert.equal(mucGiaiNgan({ nam: NAM, da: 70, kh: 100, ngaySoLieu: '2026-09-30', homNay: '2027-06-01' }).cu, false, 'năm đã khép (qua 31/1 năm sau): không nhắc');
+    assert.equal(mucGiaiNgan({ nam: NAM, da: 85, kh: 100, ngaySoLieu: '2026-11-30', mucTieuNgay: '2026-11-30', homNay: '2027-01-20' }).cu, false, 'số liệu đã tới mốc (51 ngày): không nhắc');
+    assert.equal(mucGiaiNgan({ nam: NAM, da: 85, kh: 100, ngaySoLieu: '2026-11-30', homNay: '2027-01-20' }).cu, true, 'chưa tới mốc 31/12, 51 ngày: nhắc');
     assert.equal(muc({ da: null, kh: 100, ngaySoLieu: '2026-09-30' }).muc, 'CHUA_CO');
     assert.equal(nhanMuc({ muc: 'CHUA_CO' }), 'Chưa có số liệu');
   });
@@ -162,7 +165,7 @@ describe('đọc bảng', () => {
   });
   test('HTML của Excel: giá trị gốc x:num, colspan, ký tự đặc biệt', () => {
     const html = '<table><tr><td colspan=2>Tên &amp; mã</td><td>KH</td></tr><tr><td>1</td><td>Ban<br>QLDA</td><td x:num="1234.567">1.234,567</td></tr></table>';
-    assert.deepEqual(bangTuHtml(html), [['Tên & mã', '', 'KH'], ['1', 'Ban QLDA', 1234.567]]);
+    assert.deepEqual(bangTuHtml(html), [['Tên & mã', 'Tên & mã', 'KH'], ['1', 'Ban QLDA', 1234.567]], 'ô gộp ngang có chữ: lặp ở các ô nó phủ');
     assert.equal(bangTuHtml('<p>không có bảng</p>'), null);
     assert.deepEqual(bangTuHtml('<table><tr><td>A</td><td sdval="2054.516" sdnum="1066;">2.054,52</td></tr></table>'), [['A', 2054.516]], 'LibreOffice: sdval');
     assert.equal(bangTuDan('a\tb', '<table><tr><td>x</td></tr></table>')[0][0], 'x', 'ưu tiên bảng HTML');
@@ -181,6 +184,18 @@ describe('đọc bảng', () => {
     assert.deepEqual([ban.kh, ban.da, ban.chon], [1234.567, 456.789, true]);
     assert.equal(dongTong(ds).kh, 1332.567);
   });
+  test('tiêu đề hai dòng: "Giải ngân" gộp trên "Trong tháng | Lũy kế" — lấy cột lũy kế (dán tab và HTML có rowspan / colspan); dòng chú thích không làm nhiễu', () => {
+    const tsv = bangTuChu(['Đơn vị: tỷ đồng', 'STT\tChủ đầu tư\tKế hoạch\tGiải ngân\t\tTỷ lệ', '\t\t\tTrong tháng\tTừ đầu năm\t', '1\tBan A\t100\t5\t40\t40'].join('\n'));
+    assert.deepEqual(doanCot(tsv), { tuDong: 3, ten: 1, kh: 2, da: 4, coTieuDe: true });
+    const html = `<table><tr><td colspan="6">Biểu 2 — Đơn vị: triệu đồng</td></tr><tr><td rowspan="2">STT</td><td rowspan="2">Chủ đầu tư</td><td rowspan="2">Kế hoạch vốn năm</td>
+      <td colspan="2">Giải ngân</td><td rowspan="2">Tỷ lệ</td></tr><tr><td>Trong tháng</td><td>Lũy kế đến 30/9</td></tr>
+      <tr><td>1</td><td>Ban A</td><td x:num="100000">100.000</td><td x:num="5000">5.000</td><td x:num="40000">40.000</td><td>40</td></tr></table>`;
+    const b = bangTuHtml(html);
+    assert.deepEqual(b[2], ['STT', 'Chủ đầu tư', 'Kế hoạch vốn năm', 'Trong tháng', 'Lũy kế đến 30/9', 'Tỷ lệ'], 'rowspan giữ đúng cột');
+    assert.deepEqual(doanCot(b), { tuDong: 3, ten: 1, kh: 2, da: 4, coTieuDe: true });
+    assert.deepEqual(nhanCot(b, 3).slice(3, 5), ['Giải ngân Trong tháng', 'Giải ngân Lũy kế đến 30/9'], 'nhãn ô chọn cột ghép hai dòng');
+    assert.equal(goiYDonVi(b, doanCot(b), 3, 'vi'), 'trieu');
+  });
   test('tiêu đề: cột giải ngân ưu tiên lũy kế, bỏ cột tỷ lệ; dòng dữ liệu bắt đầu sau tiêu đề', () => {
     const b = [['Biểu 2'], ['STT', 'Chủ đầu tư', 'Kế hoạch vốn năm 2026', 'Giải ngân trong tháng', 'Lũy kế giải ngân đến 30/9', 'Tỷ lệ giải ngân (%)'], ['1', 'Ban A', '10', '1', '5', '50']];
     assert.deepEqual(doanCot(b), { tuDong: 2, ten: 1, kh: 2, da: 4, coTieuDe: true });
@@ -192,6 +207,17 @@ describe('đọc bảng', () => {
     assert.deepEqual(ds.map((d) => [d.ten, d.chon, d.loi, d.laTong]), [['TỔNG CỘNG (A+B)', false, '', true], ['Ban QLDA tỉnh', true, '', false], ['Ban QLDA tỉnh', false, 'trùng tên dòng trên', false],
       ['Sở Y tế', false, 'số âm', false], ['Tổng công ty Điện lực', true, '', false], ['Trong đó:', false, 'không có số', true], ['Sở Tài chính', false, 'không có số', false]]);
     assert.deepEqual([ds[1].kh, ds[1].da], [2000, 500]);
+  });
+  test('bảng nhiều cấp (I / 1): dòng nhóm không tích sẵn để không cộng trùng; số thứ tự ở cột riêng hoặc đầu tên', () => {
+    const b = [['', 'Tổng số', 8250, 4450], ['I', 'Vốn ngân sách địa phương', 2100, 1200], ['1', 'Vốn cân đối ngân sách địa phương', 1500, 900], ['2', 'Vốn thu tiền sử dụng đất', 600, 300],
+      ['II', 'Vốn ngân sách trung ương', 6150, 3250], ['1', 'Vốn trong nước', 6000, 3200], ['2', 'Vốn nước ngoài', 150, 50]];
+    const ds = docBang(b, { cot: { ten: 1, kh: 2, da: 3 } });
+    assert.deepEqual(ds.map((d) => [d.ten, d.nhom, d.chon]), [['Tổng số', false, false], ['Vốn ngân sách địa phương', true, false], ['Vốn cân đối ngân sách địa phương', false, true],
+      ['Vốn thu tiền sử dụng đất', false, true], ['Vốn ngân sách trung ương', true, false], ['Vốn trong nước', false, true], ['Vốn nước ngoài', false, true]]);
+    assert.equal(ds.filter((d) => d.chon).reduce((t, d) => t + d.kh, 0), 8250, 'các dòng được tích cộng đúng số tổng');
+    const dau = docBang([['I. Vốn trong nước', 10, 5], ['1. Vốn cân đối', 6, 3], ['2. Vốn khác', 4, 2], ['II. Vốn nước ngoài', 3, 1]], { cot: { ten: 0, kh: 1, da: 2 } });
+    assert.deepEqual(dau.map((d) => [d.ten, d.chon]), [['Vốn trong nước', false], ['Vốn cân đối', true], ['Vốn khác', true], ['Vốn nước ngoài', true]], 'nhóm cuối không có dòng con: tích');
+    assert.equal(docSo('\u2212'), null, 'ô chỉ có dấu trừ (U+2212) là ô trống');
   });
   test('gợi ý đơn vị theo độ lớn khi bảng không ghi đơn vị', () => {
     const c = { ten: 0, kh: 1, da: 2 };

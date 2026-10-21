@@ -1,6 +1,7 @@
 // Hộp "Nhập kỳ số liệu" giải ngân (v3.28, 0119) — mở từ khối Giải ngân vốn của Tổng quan hoặc ngăn chi tiết của nhiệm vụ "Số liệu toàn tỉnh". Một kỳ =
 // một báo cáo chính thức (UBND tỉnh / Sở Tài chính): số liệu đến ngày, văn bản căn cứ, ước tính hay thực hiện, kế hoạch vốn năm, lũy kế đã giải ngân
-// (tỷ đồng) + bảng theo nguồn vốn / chủ đầu tư (giai-ngan-nhap-bang.js). Số tổng còn trống → điền từ dòng "Tổng cộng" của bảng vừa đọc. Cảnh báo ngay
+// (tỷ đồng) + bảng theo nguồn vốn / chủ đầu tư (giai-ngan-nhap-bang.js). Số tổng còn trống → điền từ dòng "Tổng cộng" của bảng vừa đọc (đổi đơn vị /
+// cột của bảng đó thì điền lại, tới khi người dùng tự gõ số tổng). Cảnh báo ngay
 // khi nhập (vẫn cho ghi): ngày đã có kỳ (ghi = thay kỳ đó), lệch tổng, lũy kế giảm / cao hơn kỳ sau, kế hoạch đổi, số lớn bất thường (sai đơn vị / dấu
 // thập phân). Sửa kỳ: mở sẵn số và bảng đã lưu; đổi ngày = ghi kỳ mới rồi xoá kỳ cũ. Không dùng AI. gn_ghi_ky là chốt quyền và kiểm tra.
 import { escapeHtml } from '../../../lib/dom.js';
@@ -14,7 +15,7 @@ import { idDangMo } from './chi-tiet.js';   // vòng nhập chi-tiet ↔ giai-ng
 import { LOAI_BANG, mountBang, datLaiBang, datTenTruoc, dongDaChon, dongTongBang, nhoCachChon, doiTab, boBang } from './giai-ngan-nhap-bang.js';
 
 const $ = (id) => document.getElementById(id);
-const nk = { nam: null, ky: [], cu: null, mo: null, tuDien: false };
+const nk = { nam: null, ky: [], cu: null, mo: null, tuDien: null };   // tuDien: loại bảng đã điền số tổng (null: số do người dùng ghi / chưa điền)
 let sauHanhDong = async () => {};
 export const nhapKyTemplate = `
 <div id="gnModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="gnTieuDe">
@@ -55,9 +56,12 @@ const tenTheoLoai = (d, boKy) => { const ngay = new Map(d.ky.map((k) => [k.id, k
   return Object.fromEntries(LOAI_BANG.map((l) => [l, [...new Map(ds.filter((x) => x.loai === l).map((x) => [x.ten_chuan, { ten: x.ten, ten_chuan: x.ten_chuan }])).values()]])); };
 
 function capNhat({ moi = false, loai = null } = {}) {
-  if (moi && loai && !$('gnKh').value.trim() && !$('gnDa').value.trim()) {   // số tổng trống → điền từ dòng "Tổng cộng" của bảng vừa đọc
+  // Số tổng trống + bảng mới, hoặc số tổng đã điền từ chính bảng này (đổi đơn vị, cột, dòng, dán lại) → điền / điền lại từ dòng "Tổng cộng";
+  // bảng đó không còn dòng tổng → bỏ số đã điền. Người dùng tự ghi số tổng (sự kiện input) → thôi điền.
+  if (loai && (nk.tuDien === loai || (moi && !$('gnKh').value.trim() && !$('gnDa').value.trim()))) {
     const t = dongTongBang(loai);
-    if (t && t.kh !== null) { $('gnKh').value = soVN(t.kh); $('gnDa').value = t.da === null ? '' : soVN(t.da); nk.tuDien = true; }
+    if (t && t.kh !== null) { $('gnKh').value = soVN(t.kh); $('gnDa').value = t.da === null ? '' : soVN(t.da); nk.tuDien = loai; }
+    else if (nk.tuDien === loai) { $('gnKh').value = ''; $('gnDa').value = ''; }
   }
   const kh = soNhap($('gnKh').value); const da = soNhap($('gnDa').value); const ngay = $('gnNgay').value;
   const doc = (x) => (x === null ? '' : Number.isNaN(x) ? 'không đọc được số' : `= ${soVN(x)} tỷ đồng`);
@@ -75,7 +79,7 @@ function capNhat({ moi = false, loai = null } = {}) {
 
 async function gnMoNhap({ nam, ky }, el) {
   const n = Number(nam); if (!Number.isInteger(n)) return;
-  Object.assign(nk, { nam: n, ky: [], cu: null, mo: el || document.activeElement, tuDien: false });
+  Object.assign(nk, { nam: n, ky: [], cu: null, mo: el || document.activeElement, tuDien: null });
   const homNay = homNayVN(); const den = [homNay, `${n + 1}-01-31`].sort()[0];
   $('gnTieuDe').textContent = `${ky ? 'Sửa' : 'Nhập'} kỳ số liệu giải ngân năm ${n}`;
   Object.assign($('gnNgay'), { min: `${n}-01-01`, max: den, value: ky ? '' : ngayMacDinh(n, homNay) });
@@ -83,7 +87,7 @@ async function gnMoNhap({ nam, ky }, el) {
   datLaiBang(); capNhat(); $('gnModal').classList.remove('hidden'); $('gnNgay').focus();
   try {
     const d = await docNam(n, { moi: true });
-    if (nk.nam !== n) return;
+    if (nk.nam !== n || !d) return;   // null: project chưa có bảng giải ngân — lưu sẽ báo lỗi của DB
     nk.ky = d.ky; nk.cu = ky ? d.ky.find((k) => k.id === ky) || null : null;
     if (nk.cu) {
       const k = nk.cu; $('gnNgay').value = k.ngay_so_lieu; $('gnCanCu').value = k.can_cu; $('gnKh').value = soVN(k.ke_hoach); $('gnDa').value = soVN(k.da_giai_ngan);
@@ -132,7 +136,7 @@ export function mountGiaiNganNhap(registerActions, napLai) {
   sauHanhDong = napLai;
   $('modalRoot').insertAdjacentHTML('beforeend', nhapKyTemplate);
   mountBang((e) => capNhat(e));
-  ['gnNgay', 'gnKh', 'gnDa'].forEach((id) => $(id).addEventListener('input', () => { if (id !== 'gnNgay') nk.tuDien = false; capNhat(); }));
+  ['gnNgay', 'gnKh', 'gnDa'].forEach((id) => $(id).addEventListener('input', () => { if (id !== 'gnNgay') nk.tuDien = null; capNhat(); }));
   $('gnModal').addEventListener('keydown', (e) => { if (e.key === 'Escape') gnDongNhap(); });
   registerActions({ gnMoNhap, gnDongNhap, gnLuuKy, gnTab: ({ loai }) => doiTab(loai), gnBoBang: ({ loai }) => boBang(loai) });
 }

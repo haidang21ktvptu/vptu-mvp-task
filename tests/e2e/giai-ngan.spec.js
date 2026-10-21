@@ -2,6 +2,8 @@
 // nguồn vốn như Excel chép (HTML, số gốc x:num, "Đơn vị: triệu đồng", dòng TỔNG CỘNG, cột "Lũy kế" đứng sau cột "trong tháng") → số tổng tự điền từ
 // dòng tổng, đổi ra tỷ đồng; dán bảng chủ đầu tư dạng chữ có tab → lưu → vòng %, bảng nguồn vốn / chủ đầu tư, nhiệm vụ gắn chủ đầu tư có mức đúng
 // như lib/kl/giai-ngan.js tính (tiến độ đều tại ngày số liệu); ngăn chi tiết của việc "Số liệu toàn tỉnh" có mục Giải ngân vốn và diễn biến.
+// Hộp "Theo dõi giải ngân" (rà soát 21/10): Enter trong ô mục tiêu là LƯU (trước đây nút "Bỏ theo dõi" đứng đầu là nút submit mặc định → Enter bỏ theo
+// dõi); bỏ theo dõi phải qua bước xác nhận ("Không" giữ nguyên).
 // Dữ liệu: việc mẫu theo khoá riêng; việc "Số liệu toàn tỉnh" của năm đặt bằng service role CHỈ KHI năm đó chưa có (staging đã có thì bỏ qua — không
 // đụng số liệu kiểm tay); dọn kỳ theo căn cứ chứa khoá. Bỏ qua trên production. Chỉ máy tính (project desktop).
 import { test, expect } from '@playwright/test';
@@ -81,6 +83,35 @@ test.describe.serial('Giải ngân vốn đầu tư công (v3.28)', () => {
     await expect(muc).toContainText('Số liệu toàn tỉnh');
     await expect(muc).toContainText('Diễn biến qua 1 kỳ số liệu');
     await expect(page.locator(`#klDienBien-${tt.id}`)).toContainText('Giải ngân vốn', NAP);
+    await page.context().close();
+  });
+
+  test('Sửa theo dõi: Enter trong ô mục tiêu là lưu; bỏ theo dõi phải xác nhận', async ({ browser }, testInfo) => {
+    const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
+    const hop = page.locator('#gnTdModal'); const xn = page.locator('#gnTdXacNhan'); const muc = page.locator(`#klGiaiNgan-${cdt.id}`);
+    const gan = async () => (await db.from('gn_nhiem_vu').select('muc_tieu_pt').eq('nhiem_vu_id', cdt.id)).data || [];
+    await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
+    await page.locator(`#tqGiaiNgan [data-action="tqMoViec"][data-id="${cdt.id}"]`).first().click();
+    await expect(muc).toContainText('Sửa theo dõi', NAP);
+    await muc.locator('[data-action="gnMoTheoDoi"]').click();
+    await expect(hop).toBeVisible();
+    await page.locator('#gnTdMt').fill('90');
+    await page.locator('#gnTdMt').press('Enter');
+    await expect(hop, 'Enter = Lưu theo dõi').toBeHidden(NAP);
+    await expect.poll(async () => (await gan()).map((x) => Number(x.muc_tieu_pt)), NAP).toEqual([90]);
+    await expect(muc).toContainText('mục tiêu 90%', NAP);
+
+    await muc.locator('[data-action="gnMoTheoDoi"]').click();
+    await page.locator('#gnTdBo').click();
+    await expect(xn).toBeVisible();
+    await page.locator('#gnTdKhongBo').click();
+    await expect(xn).toBeHidden();
+    await expect(hop).toBeVisible();
+    await page.locator('#gnTdBo').click();
+    await page.locator('#gnTdBoThat').click();
+    await expect(hop).toBeHidden(NAP);
+    await expect.poll(async () => (await gan()).length, NAP).toBe(0);
+    await expect(muc).toContainText('chưa theo dõi', NAP);
     await page.context().close();
   });
 });

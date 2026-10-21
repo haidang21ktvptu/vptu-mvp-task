@@ -5,6 +5,8 @@
 //     (dòng chi tiết thay hết); số âm, ngày ngoài năm kế hoạch vốn, căn cứ trống, hai dòng cùng tên → 22023; diễn biến ghi vào việc toàn tỉnh;
 // (3) gắn việc với chủ đầu tư: chủ trì gắn được (mục tiêu mặc định 100% trước 31/12), không tự đổi mục tiêu; Chánh VP đổi được; người ngoài phạm vi,
 //     Thường trực bị chặn; gắn lại y hệt không ghi diễn biến;
+// (3b, 0120) việc lãnh đạo đã đặt mục tiêu: chủ trì không bỏ theo dõi, không đổi đối tượng / năm; người tự gắn với mục tiêu mặc định tự sửa, tự bỏ được;
+//     mục tiêu NaN, số tổng NaN / quá numeric(16,3), dòng NaN, "dong" không phải danh sách, tên trùng sau khi cắt khoảng trắng → 22023 (lỗi tiếng Việt);
 // (4) xem: kỳ, dòng mọi tài khoản đọc; việc toàn tỉnh mọi người thấy, việc gắn khác theo phạm vi (bỏ qua khi cấu hình xem toàn bộ đang bật); anon
 //     không đọc; không ai ghi thẳng ba bảng; (5) xoá kỳ: người ngoài bị chặn, chủ trì xoá được (có diễn biến); bỏ chọn việc toàn tỉnh chỉ lãnh đạo VP.
 // Khoá dữ liệu "KL-0119"; tự dọn (cả kỳ năm 1999 của lần chạy dở trước).
@@ -79,6 +81,25 @@ describe('0119 — giải ngân vốn đầu tư công: quyền, kiểm số, xe
     assert.deepEqual(g, { muc_tieu_pt: 80, muc_tieu_ngay: `${NAM}-11-30` });
     for (const u of ['demo_cv2', 'demo_a0']) chan(await goi(u, 'gn_gan_nhiem_vu', { p_nv: cdt, p }), '42501', u);
     assert.equal((await ls(cdt)).length, 2, 'diễn biến: gắn, đổi mục tiêu (gắn lại y hệt không ghi)');
+  });
+
+  test('3b. (0120) Việc lãnh đạo đặt mục tiêu: chủ trì không bỏ / đổi; người tự gắn (mục tiêu mặc định) tự sửa, tự bỏ; NaN, số quá lớn, tên trùng → 22023', async () => {
+    const p = { loai: 'CHU_DAU_TU', nam: NAM, ten: 'Ban QLDA tỉnh', ten_chuan: 'ban qlda tỉnh' }; const xa = { ten: 'UBND xã A', ten_chuan: 'ubnd xã a' };
+    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { loai: null } }), '42501', 'chủ trì bỏ theo dõi việc lãnh đạo đặt mục tiêu');
+    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, ...xa } }), '42501', 'chủ trì đổi đối tượng');
+    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, nam: NAM - 1 } }), '42501', 'chủ trì đổi năm (về mục tiêu mặc định)');
+    chan(await goi('demo_cvp', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, muc_tieu_pt: 'NaN' } }), '22023', 'mục tiêu NaN');
+    const g = (await db().from('gn_nhiem_vu').select('nam, ten_chuan, muc_tieu_pt').eq('nhiem_vu_id', cdt).single()).data;
+    assert.deepEqual(g, { nam: NAM, ten_chuan: 'ban qlda tỉnh', muc_tieu_pt: 80 }, 'việc gắn giữ nguyên');
+    const c = await giao('demo_cvp', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.truongphong }); assertOk(c, 'giao việc tự gắn');
+    assertOk(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: c.data.id, p }), 'chủ trì tự gắn');
+    assertOk(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: c.data.id, p: { ...p, ...xa } }), 'tự sửa đối tượng (mục tiêu mặc định)');
+    const bo = await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: c.data.id, p: { loai: null } }); assertOk(bo, 'tự bỏ theo dõi'); assert.equal(bo.data.doi, true);
+    const sai = [['kế hoạch NaN', { ke_hoach: 'NaN' }, /Kế hoạch vốn phải lớn hơn 0/], ['lũy kế quá lớn', { da_giai_ngan: 1e13 }, /Kế hoạch vốn phải lớn hơn 0/],
+      ['dòng NaN', { dong: [{ loai: 'NGUON', ten: 'B', ten_chuan: 'b', da_giai_ngan: 'NaN' }] }, /Dòng chi tiết có số không hợp lệ/],
+      ['"dong" không phải danh sách', { dong: { loai: 'NGUON' } }, /phải là một danh sách/],
+      ['tên trùng sau khi cắt khoảng trắng', { dong: [{ loai: 'NGUON', ten: 'C', ten_chuan: 'c' }, { loai: 'NGUON', ten: 'C', ten_chuan: 'c ' }] }, /hai dòng cùng tên/]];
+    for (const [nhan, o, m] of sai) { const r = await goi('demo_cv1', 'gn_ghi_ky', { p: ky(o) }); chan(r, '22023', nhan); assert.match(r.error.message, m, nhan); }
   });
 
   test('4. Xem: kỳ và dòng mọi tài khoản; việc toàn tỉnh mọi người, việc khác theo phạm vi; anon không đọc; không ghi thẳng bảng', async () => {

@@ -58,7 +58,7 @@ export function giaiNganHtml(d, { rows = [], tatCa = [], homNay, user, ui = {}, 
   const tong = `<div class="gn-tong"><span class="gn-vong ${LOP_MUC[m.muc]}">${vongHtml(Math.min(100, m.pt), 'đã giải ngân', ptVN(m.pt))}</span>
     <div class="gn-so"><b class="gn-tien">${soVN(k.da_giai_ngan)} <small>/ ${soVN(k.ke_hoach)} tỷ đồng</small></b><span class="chu-phu">Đã giải ngân / kế hoạch vốn năm · còn phải giải ngân ${soVN(con)} tỷ đồng</span>
       ${chipMucHtml(m)}<small class="chu-phu">${escapeHtml(moTaMuc(m))}</small></div></div>`;
-  const canCu = `<p class="gn-can-cu">Số liệu đến <b>${formatNgay(k.ngay_so_lieu)}</b>${k.uoc_tinh ? ' (ước tính)' : ''} · căn cứ: ${escapeHtml(k.can_cu)}${k.ghi_chu ? ` · ${escapeHtml(k.ghi_chu)}` : ''}${th.ky.length > 1 ? ` · ${th.ky.length} kỳ số liệu` : ''}${m.cu ? ` <span class="gn-cu">Số liệu đã ${m.soNgayCu} ngày — cần nhập kỳ mới</span>` : ''}</p>`;
+  const canCu = `<p class="gn-can-cu">Số liệu đến <b>${formatNgay(k.ngay_so_lieu)}</b>${k.uoc_tinh ? ' (ước tính)' : ''} · căn cứ: ${escapeHtml(k.can_cu)}${k.ghi_chu ? ` · ${escapeHtml(k.ghi_chu)}` : ''}${th.ky.length > 1 ? ` · ${th.ky.length} kỳ số liệu` : ''}${m.cu ? ` <span class="gn-cu">Số liệu đã cũ ${m.soNgayCu} ngày — cần nhập kỳ mới</span>` : ''}</p>`;
   const canhBao = th.canhBao.length ? `<ul class="gn-canh-bao" role="note" aria-label="Lưu ý về số liệu kỳ này">${th.canhBao.map((x) => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '';
   const du = Boolean(ui.gnDu); const nCdt = th.chuDauTu.length;
   const nutDu = nCdt > SO_DONG_CDT ? `<button type="button" class="nut nho" data-action="tqGnDu" aria-expanded="${String(du)}">${du ? 'Thu gọn' : `Xem đủ ${nCdt} đơn vị`}</button>` : '';

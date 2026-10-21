@@ -78,6 +78,10 @@
   .gn-ct-bang tr.gn-ct-xoa .o.mo { margin: 6px 0 10px; }
   .gn-ct-nut { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .gn-ct-moi .nut { margin-left: 6px; }
+  /* Hộp "Theo dõi giải ngân" — bước xác nhận bỏ theo dõi */
+  .gn-td-xn { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 14px; padding: 10px 14px; border-radius: 12px; background: var(--nen-vang-mo); border: 1px solid var(--vien-vang); }
+  .gn-td-xn[hidden] { display: none; }
+  .gn-td-xn p { flex: 1 1 100%; margin: 0; font-size: 14px; line-height: 1.5; color: var(--chu); }
   .gn-trong .dau-bd { margin-bottom: 8px; }
 
   /* Hộp "Nhập kỳ số liệu" */

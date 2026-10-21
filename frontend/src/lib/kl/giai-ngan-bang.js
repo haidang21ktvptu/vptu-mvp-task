@@ -24,7 +24,7 @@ export const tenLong = (s) => tenChuan(s).normalize('NFD').replace(/\p{M}/gu, ''
 export function docSo(v, kieu = 'vi') {
   if (typeof v === 'number') return Number.isFinite(v) ? v : NaN;
   let s = String(v ?? '').normalize('NFC').replace(KHOANG, '').replace(/[%*]+$/, '');
-  if (s === '' || /^[-–—x]$/i.test(s)) return null;
+  if (s === '' || /^[-–—−x]$/i.test(s)) return null;
   let am = false;
   if (/^\(.*\)$/.test(s)) { am = true; s = s.slice(1, -1); }
   if (/^[-–—−]/.test(s)) { am = true; s = s.slice(1); }
@@ -66,7 +66,7 @@ export function bangTuChu(text) {
   return kq.filter((d) => d.some((x) => String(x).trim() !== ''));
 }
 
-const laTuSo = (t) => /^[(-]?\d[\d.,]*\)?%?$/.test(t) || /^[-–—x]$/i.test(t);
+const laTuSo = (t) => /^[(-]?\d[\d.,]*\)?%?$/.test(t) || /^[-–—−x]$/i.test(t);
 // Chữ chép từ PDF (ô cách nhau bằng dấu cách): mỗi dòng = tên + các số ở cuối dòng. Số cột số = số gặp nhiều nhất (≥ 2) ở cuối các dòng — tên có số
 // ("… số 2") không bị cắt; dòng không có số ngay sau một dòng có số = phần tên xuống dòng của dòng trên. → [[tên, số 1, số 2, …]].
 export function bangTuChuPdf(text) {
@@ -88,22 +88,32 @@ export function bangTuChuPdf(text) {
 const giaiMa = (s) => s.replace(/&nbsp;/gi, ' ').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
   .replace(/&amp;/gi, '&');
 // HTML trong bộ nhớ tạm (Excel / Word / LibreOffice / trang web chép bảng) → bảng; Excel ghi giá trị gốc ở thuộc tính x:num (LibreOffice: sdval) — dùng
-// giá trị đó (không phụ thuộc dấu chấm, phẩy). Ô gộp ngang (colspan) thêm ô trống cho thẳng cột. Không có bảng → null.
+// giá trị đó (không phụ thuộc dấu chấm, phẩy). Dựng lưới theo ô gộp: colspan / rowspan giữ đúng cột; ô gộp có chữ lặp lại ở các ô nó phủ (tiêu đề hai
+// dòng "Giải ngân" → "Trong tháng | Lũy kế"; "Tổng cộng" gộp qua cột STT), ô số gộp không lặp. Không có bảng → null.
 export function bangTuHtml(html) {
   const t = /<table[\s\S]*?<\/table>/i.exec(String(html ?? ''));
   if (!t) return null;
-  const kq = [];
+  const kq = []; const cho = []; let r = 0;   // cho[r][c]: giá trị của ô gộp dọc từ dòng trên phủ xuống
   for (const tr of t[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
-    const dong = [];
+    const dong = []; let c = 0;
+    const lap = () => { while (cho[r]?.[c] !== undefined) { dong[c] = cho[r][c]; c++; } };
     for (const td of tr[1].matchAll(/<t([dh])\b([^>]*)>([\s\S]*?)<\/t\1>/gi)) {
+      lap();
       const num = /\b(?:x:num|sdval)(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/i.exec(td[2]);   // Excel: x:num; LibreOffice: sdval
       const goc = num ? (num[1] ?? num[2] ?? num[3]) : undefined;
       const chu = giaiMa(td[3].replace(/<br\s*\/?>/gi, ' ').replace(/<\/p>/gi, ' ').replace(/<[^>]+>/g, '')).replace(KHOANG, ' ').trim();
-      dong.push(goc !== undefined && goc !== '' && Number.isFinite(Number(goc)) ? Number(goc) : chu);
-      const span = Number(/\bcolspan=["']?(\d+)/i.exec(td[2])?.[1] || 1);
-      for (let k = 1; k < Math.min(span, 50); k++) dong.push('');
+      const gt = goc !== undefined && goc !== '' && Number.isFinite(Number(goc)) ? Number(goc) : chu; const lai = typeof gt === 'number' ? '' : gt;
+      const ngang = Math.min(Number(/\bcolspan=["']?(\d+)/i.exec(td[2])?.[1] || 1), 50); const doc = Math.min(Number(/\browspan=["']?(\d+)/i.exec(td[2])?.[1] || 1), 200);
+      for (let k = 0; k < ngang; k++) {
+        dong[c + k] = k ? lai : gt;
+        for (let h = 1; h < doc; h++) (cho[r + h] ||= [])[c + k] = lai;
+      }
+      c += ngang;
     }
-    if (dong.some((x) => String(x).trim() !== '')) kq.push(dong);
+    lap();
+    const du = Array.from(dong, (x) => x ?? '');
+    if (du.some((x) => String(x).trim() !== '')) kq.push(du);
+    r++;
   }
   return kq.length ? kq : null;
 }
@@ -122,34 +132,71 @@ export function donViTheoChu(bang) {
 const KHOP = { ten: /(tên|nguồn\s*vốn|chủ\s*đầu\s*tư|đơn\s*vị|dự\s*án|nội\s*dung|địa\s*phương)/i, kh: /(kế\s*hoạch|vốn\s*giao|kh\s*vốn)/i,
   da: /(giải\s*ngân|thực\s*hiện|lũy\s*kế|luỹ\s*kế)/i, luyKe: /(lũy|luỹ)\s*kế|đến\s*(ngày|hết)|từ\s*đầu\s*năm/i };
 const laSo = (v) => typeof v === 'number' || (typeof v === 'string' && /^[(-]?\d[\d.,\s]*\)?%?$/.test(v.trim()));
-// Đoán cột tên / kế hoạch / đã giải ngân và dòng bắt đầu dữ liệu: theo dòng tiêu đề nếu có (cột giải ngân ưu tiên "lũy kế / đến ngày", bỏ cột tỷ lệ),
-// không thì cột chữ đầu + hai cột số đầu của dòng có số đầu tiên. tuDong của cách đoán thứ hai = dòng đó (coTieuDe = false).
-export function doanCot(bang) {
-  for (let i = 0; i < Math.min(bang.length, 15); i++) {
-    const d = (bang[i] || []).map((o) => (typeof o === 'string' ? o.normalize('NFC') : ''));
-    const kh = d.findIndex((o) => KHOP.kh.test(o) && !KHOP.da.test(o));
-    const ung = d.map((o, j) => (j !== kh && KHOP.da.test(o) && !/(tỷ\s*lệ|%)/i.test(o) ? j : -1)).filter((j) => j >= 0);
-    const da = ung.find((j) => KHOP.luyKe.test(d[j])) ?? ung[0];
-    if (kh >= 0 && da !== undefined) {
-      const ten = d.findIndex((o, j) => j !== kh && j !== da && KHOP.ten.test(o));
-      const tuDong = bang.slice(i + 1).findIndex((x) => laSo(x?.[kh]) || laSo(x?.[da]));
-      return { tuDong: tuDong >= 0 ? i + 1 + tuDong : i + 1, ten: ten >= 0 ? ten : 0, kh, da, coTieuDe: true };
+const coSoDong = (d) => (d || []).filter((v) => laSo(v) && String(v).trim() !== '').length >= 2;
+const chuO = (o) => (typeof o === 'string' ? o.normalize('NFC').replace(KHOANG, ' ').trim() : '');
+// Nhãn mỗi cột ghép từ các dòng tiêu đề tu..den (bỏ dòng chú thích — một nhãn trải cả bảng như "Biểu 2", "Đơn vị: …"). Ô trống của dòng trên mà dòng dưới
+// có nhãn con → lấy nhãn bên trái (ô gộp ngang chép bằng tab: Excel chỉ ghi chữ ở ô đầu).
+function nhanGop(bang, tu, den) {
+  const ds = bang.slice(tu, den + 1).filter((d) => new Set((d || []).map(chuO).filter(Boolean)).size > 1);
+  const rong = Math.max(0, ...ds.map((d) => d.length)); const nhan = Array.from({ length: rong }, () => []);
+  ds.forEach((d, i) => {
+    let trai = '';
+    for (let j = 0; j < rong; j++) {
+      let o = chuO(d[j]);
+      if (!o && trai && i < ds.length - 1 && chuO(ds[i + 1][j])) o = trai;
+      if (o && nhan[j].at(-1) !== o) nhan[j].push(o);
+      trai = o;
     }
+  });
+  return nhan.map((x) => x.join(' '));
+}
+function khopNhan(d) {
+  const kh = d.findIndex((o) => KHOP.kh.test(o) && !KHOP.da.test(o));
+  const ung = d.map((o, j) => (j !== kh && KHOP.da.test(o) && !/(tỷ\s*lệ|%)/i.test(o) ? j : -1)).filter((j) => j >= 0);
+  const da = ung.find((j) => KHOP.luyKe.test(d[j])) ?? ung[0];
+  if (kh < 0 || da === undefined) return null;
+  const ten = d.findIndex((o, j) => j !== kh && j !== da && KHOP.ten.test(o));
+  return { ten: ten >= 0 ? ten : 0, kh, da };
+}
+// Nhãn cột cho ô chọn của màn xem trước: ghép tối đa 3 dòng tiêu đề ngay trên dòng dữ liệu đầu.
+export const nhanCot = (bang, tuDong) => nhanGop(bang, Math.max(0, tuDong - 3), tuDong - 1);
+// Đoán cột tên / kế hoạch / đã giải ngân và dòng bắt đầu dữ liệu: theo tối đa 3 dòng tiêu đề ngay trên dòng có số đầu tiên (tiêu đề hai dòng ghép theo
+// cột; cột giải ngân ưu tiên "lũy kế / đến ngày / từ đầu năm", bỏ cột tỷ lệ), không thấy thì dò từng dòng; không có tiêu đề nhận ra được → cột chữ đầu +
+// hai cột số đầu của dòng có số đầu tiên (coTieuDe = false).
+export function doanCot(bang) {
+  const dauSo = bang.findIndex(coSoDong);
+  const gan = dauSo > 0 ? khopNhan(nhanCot(bang, dauSo)) : null;
+  if (gan) return { tuDong: dauSo, ...gan, coTieuDe: true };
+  for (let i = 0; i < Math.min(bang.length, 15); i++) {
+    const k = khopNhan(nhanGop(bang, i, i));
+    if (k) { const tu = bang.slice(i + 1).findIndex((x) => laSo(x?.[k.kh]) || laSo(x?.[k.da])); return { tuDong: tu >= 0 ? i + 1 + tu : i + 1, ...k, coTieuDe: true }; }
   }
-  const mau = bang.find((d) => d.filter((v) => laSo(v) && String(v).trim() !== '').length >= 2) || [];
+  const mau = bang[dauSo] || [];
   const so = mau.map((v, j) => (laSo(v) && String(v).trim() !== '' ? j : -1)).filter((j) => j >= 0);
   const ten = mau.findIndex((v, j) => !so.includes(j) && !STT_TRAN.test(String(v ?? '').trim()) && String(v ?? '').trim().length > 1);
-  return { tuDong: Math.max(0, bang.indexOf(mau)), ten: Math.max(0, ten), kh: so[0] ?? 1, da: so[1] ?? 2, coTieuDe: false };
+  return { tuDong: Math.max(0, dauSo), ten: Math.max(0, ten), kh: so[0] ?? 1, da: so[1] ?? 2, coTieuDe: false };
 }
 
 // "Tổng cộng (A+B)", "Tổng số", "Cộng", "Trong đó:", "Toàn tỉnh" — không nhầm "Tổng công ty…", "Cộng đồng…".
 const TONG = /^(tổng\s*cộng|tổng\s*số|tổng|cộng|trong\s*đó|toàn\s*tỉnh)(\s*[:(,]|\s*$|\s+(toàn|chung|các|a\s*\+))/i;
-// Bảng → các dòng { dong (số dòng trong bảng, từ 1), ten, tenChuan, kh, da (tỷ đồng), laTong, loi, chon }.
-// Dòng tổng / dòng lỗi / dòng trùng tên dòng trên: không tích sẵn.
+// Cấp của số thứ tự: A, B → 0; I, II → 1; 1, 2 → 2; 1.1 → 3; a, b → 4; "-", "+", "•" → 5; không có → null.
+function capStt(t) {
+  const s = String(t ?? '').trim().replace(/[.)]$/, '');
+  if (!s) return null;
+  if (/^[IVXLC]+$/.test(s)) return 1;
+  if (/^[A-ZĐ]$/.test(s)) return 0;
+  if (/^\d+$/.test(s)) return 2;
+  if (/^\d+(\.\d+)+$/.test(s)) return 2 + s.split('.').length - 1;
+  if (/^[a-zđ]$/.test(s)) return 4;
+  return /^[-+•]$/.test(s) ? 5 : null;
+}
+// Bảng → các dòng { dong (số dòng trong bảng, từ 1), ten, tenChuan, kh, da (tỷ đồng), laTong, nhom, loi, chon }.
+// Không tích sẵn: dòng tổng, dòng lỗi, dòng trùng tên dòng trên, dòng nhóm (số thứ tự cấp trên, ngay dưới là dòng cấp con — tích cả hai thì cộng trùng).
+// Số thứ tự lấy ở cột ngay trước cột tên, hoặc ở đầu ô tên ("I. Vốn trong nước").
 export function docBang(bang, { cot, tuDong = 0, kieu = 'vi', donVi = 'ty' }) {
   const he = DON_VI[donVi] ?? 1; const kq = []; const daCo = new Set();
   for (let i = tuDong; i < bang.length; i++) {
-    const d = bang[i] || []; const ten = tenGon(d[cot.ten]);
+    const d = bang[i] || []; const goc = String(d[cot.ten] ?? '').normalize('NFC').replace(KHOANG, ' ').trim(); const ten = tenGon(goc);
     const kh = docSo(d[cot.kh], kieu); const da = docSo(d[cot.da], kieu);
     if (!ten && kh === null && da === null) continue;
     const loi = !ten ? 'thiếu tên' : Number.isNaN(kh) || Number.isNaN(da) ? 'số không đọc được'
@@ -157,9 +204,14 @@ export function docBang(bang, { cot, tuDong = 0, kieu = 'vi', donVi = 'ty' }) {
     const laTong = TONG.test(ten); const tc = tenChuan(ten);
     const trung = !loi && !laTong && daCo.has(tc);
     if (!loi && !laTong) daCo.add(tc);
+    const sttO = cot.ten > 0 && STT_TRAN.test(String(d[cot.ten - 1] ?? '').trim()) ? d[cot.ten - 1] : (STT.exec(goc)?.[1] ?? '');
     kq.push({ dong: i + 1, ten, tenChuan: tc, kh: typeof kh === 'number' && !Number.isNaN(kh) ? lam(kh * he) : null,
-      da: typeof da === 'number' && !Number.isNaN(da) ? lam(da * he) : null, laTong, loi: loi || (trung ? 'trùng tên dòng trên' : ''), chon: !loi && !laTong && !trung });
+      da: typeof da === 'number' && !Number.isNaN(da) ? lam(da * he) : null, laTong, cap: capStt(sttO), nhom: false, loi: loi || (trung ? 'trùng tên dòng trên' : ''), chon: !loi && !laTong && !trung });
   }
+  kq.forEach((x, j) => {   // dòng nhóm: dòng có số kế tiếp (không phải dòng tổng) ở cấp sâu hơn
+    const sau = kq.slice(j + 1).find((y) => !y.laTong && !y.loi);
+    if (!x.laTong && x.cap !== null && sau?.cap !== null && sau?.cap !== undefined && sau.cap > x.cap) { x.nhom = true; x.chon = false; }
+  });
   return kq;
 }
 
