@@ -22,11 +22,11 @@ let sauHanhDong = async () => {};
 const me = () => state.user;
 const vai = () => state.user?.role_group;
 const LIEN_QUAN = /giải\s*ngân|đầu\s*tư\s*công|vốn\s*đầu\s*tư|kế\s*hoạch\s*vốn|chủ\s*đầu\s*tư|nguồn\s*vốn/i;
-// Gắn mới (như ghi vướng mắc 0103): chủ trì, người theo dõi, lãnh đạo trong phạm vi. Việc đã gắn nguồn vốn / chủ đầu tư (0120): đổi, bỏ — lãnh đạo trong
-// phạm vi hoặc người giao, hoặc chính người đã gắn khi mục tiêu còn mặc định (100% trước 31/12). Việc "Số liệu toàn tỉnh": chỉ lãnh đạo Văn phòng.
-// Hàm DB là chốt; ở đây chỉ để ẩn nút.
+// Gắn mới (như ghi vướng mắc 0103): chủ trì, người theo dõi, lãnh đạo trong phạm vi. Việc đã gắn nguồn vốn / chủ đầu tư (0120–0121): đổi, bỏ — lãnh đạo
+// trong phạm vi hoặc người giao, không phải người chủ trì (kể cả việc tự giao cho mình); hoặc chính người đã gắn khi mục tiêu còn mặc định (100% trước 31/12).
+// Mục tiêu riêng: như trên, không có ngoại lệ người tự gắn. Việc "Số liệu toàn tỉnh": chỉ lãnh đạo Văn phòng. Hàm DB là chốt; ở đây chỉ để ẩn nút.
 const duocGan = (r) => Boolean(r) && !chiXem(r) && nguoiNhap(me()) && (r.owner_tai_khoan === me().id || r.nguoi_theo_doi === me().id || ['A1', 'A2'].includes(vai()));
-const duocDoiMucTieu = (r) => !chiXem(r) && nguoiNhap(me()) && (['A1', 'A2'].includes(vai()) || laTangGiao(r));
+const duocDoiMucTieu = (r) => !chiXem(r) && nguoiNhap(me()) && r.owner_tai_khoan !== me().id && (['A1', 'A2'].includes(vai()) || laTangGiao(r));
 const macDinh = (g) => g.muc_tieu_pt === 100 && g.muc_tieu_ngay === `${g.nam}-12-31`;
 const duocSua = (r, g) => (!g ? duocGan(r) : g.loai === 'TOAN_TINH' ? vai() === 'A1' && !chiXem(r) && nguoiNhap(me())
   : duocGan(r) && (duocDoiMucTieu(r) || (g.gan_boi === me().id && macDinh(g))));
@@ -82,7 +82,7 @@ export async function napGiaiNgan(r) {
 }
 
 // ---- Hộp "Theo dõi giải ngân"
-const td = { id: null, ten: { NGUON: [], CHU_DAU_TU: [] } };
+const td = { id: null, doiMt: false, ten: { NGUON: [], CHU_DAU_TU: [] } };
 const opt = (v, t, chon) => `<option value="${v}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 export const theoDoiTemplate = `
 <div id="gnTdModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="gnTdTieuDe">
@@ -108,8 +108,8 @@ const dsTen = (d, loai) => { const ngay = new Map((d?.ky || []).map((k) => [k.id
   return [...new Map((d?.dong || []).filter((x) => x.loai === loai).sort((a, b) => String(ngay.get(a.ky_id)).localeCompare(String(ngay.get(b.ky_id)))).map((x) => [x.ten_chuan, x.ten])).values()]
     .sort((a, b) => a.localeCompare(b, 'vi')); };
 function veTen() {
-  const loai = $('gnTdLoai').value; const tt = loai === 'TOAN_TINH';
-  $('gnTdTenWrap').classList.toggle('hidden', tt);
+  const loai = $('gnTdLoai').value; const tt = loai === 'TOAN_TINH'; const doiMt = td.doiMt || (tt && vai() === 'A1');   // mục tiêu việc toàn tỉnh: lãnh đạo Văn phòng
+  $('gnTdTenWrap').classList.toggle('hidden', tt); $('gnTdMt').disabled = !doiMt; $('gnTdMoc').disabled = !doiMt;
   $('gnTdDs').innerHTML = (td.ten[loai] || []).map((t) => `<option value="${escapeHtml(t)}"></option>`).join('');
 }
 async function napTen(nam) {
@@ -120,14 +120,14 @@ async function gnMoTheoDoi({ id }) {
   const r = timKlRow(id); if (!r) return;
   const g = ganCua.get(id) || null;
   if (g && !duocSua(r, g)) { notifyError(g.loai === 'TOAN_TINH' ? 'Chỉ lãnh đạo Văn phòng đổi hoặc bỏ nhiệm vụ "Số liệu toàn tỉnh".' : KHONG_SUA); return; }
-  td.id = id; const nam = g?.nam || namHienThi(homNayVN()); const doiMt = duocDoiMucTieu(r) || (g?.loai === 'TOAN_TINH' && vai() === 'A1');
+  td.id = id; td.doiMt = duocDoiMucTieu(r); const nam = g?.nam || namHienThi(homNayVN()); const doiMt = td.doiMt || (g?.loai === 'TOAN_TINH' && vai() === 'A1');
   $('gnTdMoTa').textContent = `${r.ma} — ${r.noi_dung}`;
   $('gnTdLoai').innerHTML = (vai() === 'A1' ? opt('TOAN_TINH', 'Số liệu toàn tỉnh (nhiệm vụ nhập kỳ số liệu)', g?.loai === 'TOAN_TINH') : '')
     + opt('CHU_DAU_TU', 'Một chủ đầu tư, đơn vị', !g || g.loai === 'CHU_DAU_TU') + opt('NGUON', 'Một nguồn vốn', g?.loai === 'NGUON');
   $('gnTdNam').value = nam; $('gnTdTen').value = g?.ten || ''; $('gnTdMt').value = g?.muc_tieu_pt ?? 100; $('gnTdMoc').value = g?.muc_tieu_ngay || mocMacDinh(nam);
-  $('gnTdMt').disabled = !doiMt; $('gnTdMoc').disabled = !doiMt; $('gnTdBo').classList.toggle('hidden', !g); $('gnTdXacNhan').hidden = true;
+  $('gnTdBo').classList.toggle('hidden', !g); $('gnTdXacNhan').hidden = true;
   $('gnTdLuu').disabled = false; $('gnTdBoThat').disabled = false;
-  $('gnTdGoiY').textContent = `${doiMt ? 'Mặc định 100% kế hoạch vốn trước 31/12.' : 'Mục tiêu do lãnh đạo trong phạm vi hoặc người giao việc đặt (mặc định 100% trước 31/12).'} Số của nhiệm vụ lấy từ kỳ số liệu mới nhất có tên này, không cộng dồn giữa các nhiệm vụ; mỗi năm chỉ một nhiệm vụ "Số liệu toàn tỉnh".`;
+  $('gnTdGoiY').textContent = `${doiMt ? 'Mặc định 100% kế hoạch vốn trước 31/12.' : 'Mục tiêu do lãnh đạo trong phạm vi hoặc người giao việc (không phải người chủ trì) đặt; mặc định 100% trước 31/12.'} Số của nhiệm vụ lấy từ kỳ số liệu mới nhất có tên này, không cộng dồn giữa các nhiệm vụ; mỗi năm chỉ một nhiệm vụ "Số liệu toàn tỉnh".`;
   veTen(); $('gnTdModal').classList.remove('hidden'); $('gnTdLoai').focus();
   napTen(nam);
 }

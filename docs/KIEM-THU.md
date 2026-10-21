@@ -177,22 +177,25 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - e2e `giao-viec-ai.spec.js` (desktop): Trưởng phòng đọc PDF dựng tại chỗ, Edge Function `tro-ly-ai` GIẢ bằng route (không gọi dịch vụ thật) → văn bản mới điền ô đã đối chiếu, gợi ý AI cho văn bản, điền 2 thẻ, bộ nhận diện thật tích sẵn Nghị quyết 57 ở thẻ 1, mời số hiệu Tỉnh ủy mới ở thẻ 2 → giao → DB (văn bản nguồn AI, thẻ 1 NQ_57 tích sẵn + mục của văn bản giữ nguồn AI, số hiệu mới TU_DONG gắn thẻ 2). `quan-tri-muc-tieu.spec.js` (desktop): danh mục, quy tắc NQ_57 + kiểm thử, thêm mục E2E rồi khoá, Cấu hình AI (route giả), chuyên viên chỉ xem quy tắc. `ra-soat-muc-tieu.spec.js` (project `v325-ra-soat`, nối sau `v324-tong-quan`): chấp nhận mục tích sẵn → DB nguồn RA_SOAT.
 - Hàm SQL kiểm thêm khi không có Docker: Postgres 16 cục bộ (không Supabase) với lớp giả `auth.uid()` / hàm quyền — áp 0105–0113, chạy kịch bản (gắn khi mục của văn bản đã ngừng dùng, chép nguồn văn bản, phản hồi lệch mức / không khớp / sau khi đổi mức, gộp số hiệu, hạn mức tự thêm 30 / ngày, khối còn ngành, giữ / xong lượt AI, từ loại trừ tự kiểm, nhập Excel tự gắn). CI (`supabase start` trên runner) vẫn là nơi kiểm chính.
 
-## e2e + RLS v3.28 — giải ngân vốn đầu tư công (`kl-0119`, `giai-ngan.spec.js`; 0119–0120, từ 21/10/2026)
+## e2e + RLS v3.28 — giải ngân vốn đầu tư công (`kl-0119`, `giai-ngan.spec.js`; 0119–0121, từ 21/10/2026)
 - RLS `kl-0119-giai-ngan.test.mjs` (token thật, chạy cả staging; năm 1999 để không đụng số liệu thật, tự dọn kỳ và việc của khoá `KL-0119`): chưa có việc
   "Số liệu toàn tỉnh" thì không nhận kỳ; chọn việc toàn tỉnh chỉ lãnh đạo Văn phòng, mỗi năm một việc; nhập kỳ — chủ trì việc toàn tỉnh, Phó Chánh VP được,
   chuyên viên khác / quản trị hệ thống / Thường trực → 42501; ghi lại cùng ngày thay kỳ và dòng; số âm, ngày ngoài năm, căn cứ trống, kế hoạch 0, trùng tên,
   dòng âm → 22023; gắn chủ đầu tư (chủ trì được, không tự đổi mục tiêu; Chánh VP đổi; gắn lại y hệt không ghi diễn biến); xem theo phạm vi (bỏ phần kiểm
   "không thấy" khi cấu hình xem toàn bộ đang bật); không ghi thẳng bảng; xoá kỳ, bỏ chọn việc toàn tỉnh. Bài 3b (0120): việc lãnh đạo đã đặt mục tiêu —
   chủ trì không bỏ theo dõi, không đổi đối tượng / năm (42501); người tự gắn với mục tiêu mặc định tự sửa, tự bỏ được; mục tiêu NaN, số tổng NaN / ≥ 10^13,
-  dòng NaN, "dong" không phải danh sách, tên trùng sau khi cắt khoảng trắng → 22023 kèm lời tiếng Việt.
+  dòng NaN, "dong" không phải danh sách, tên trùng sau khi cắt khoảng trắng → 22023 kèm lời tiếng Việt. Bài 3c (0121): chuyên viên tự giao việc cho mình
+  không hạ mục tiêu / không bỏ việc Trưởng phòng gắn; Phó Chánh VP ngoài phạm vi không đổi việc đang gắn chủ đầu tư sang "Số liệu toàn tỉnh" (cùng / khác năm),
+  không bỏ; kế hoạch 0,0004 (làm tròn thành 0) → 22023.
 - e2e `giai-ngan.spec.js` (desktop): Chánh VP nhập kỳ bằng bảng dán (HTML như Excel chép, đơn vị triệu, dòng tổng; bảng chủ đầu tư có tab) → Tổng quan, ngăn
   chi tiết; bài 2: hộp "Theo dõi giải ngân" — Enter trong ô mục tiêu là Lưu, "Bỏ theo dõi" phải qua bước xác nhận ("Không" giữ nguyên). Việc toàn tỉnh của
   năm hiện tại đặt bằng service role chỉ khi đích chưa có (staging đã có thì bỏ qua); bỏ qua trên production.
 - Unit `frontend/tests/giai-ngan.test.mjs`: số kiểu Việt Nam, tiến độ đều (tính cả hai đầu), ngưỡng mức trên số đã làm tròn, kiểm tra kỳ, tổng hợp năm, đọc
-  bảng (HTML x:num / sdval, tab, chữ PDF, đơn vị, kiểu số, dòng tổng không nhầm "Tổng công ty", tiêu đề hai dòng và ô gộp, dòng nhóm I / II, dấu trừ U+2212),
+  bảng (HTML x:num / sdval, tab, chữ PDF, đơn vị, kiểu số, dòng tổng không nhầm "Tổng công ty", tiêu đề hai dòng và ô gộp, dòng nhóm A / I, chữ C không nhầm số La Mã, dòng chỉ số cột, đề mục gộp cả bảng, dòng đầu chỉ một ô số, dấu trừ U+2212),
   tên chuẩn (hoà / hòa, thuỷ / thủy), khớp tên kỳ trước, nhắc số liệu cũ chỉ khi năm còn nhập được.
-- SQL 0119–0120 kiểm thêm khi không có Docker: Postgres 16 cục bộ (không Supabase), áp toàn bộ migration + seed rồi 33 phép kiểm 0119 và 18 phép kiểm 0120
-  (quyền đổi / bỏ việc đã gắn, NaN, số quá lớn, tên trùng sau chuẩn hoá, kiểu dòng sai).
+- SQL 0119–0120 kiểm thêm khi không có Docker: Postgres 16 cục bộ (không Supabase), áp toàn bộ migration + seed rồi 33 phép kiểm 0119, 18 phép kiểm 0120 và
+  15 phép kiểm 0121 (quyền đổi / bỏ việc đã gắn, chủ trì tự giao, đường vòng toàn tỉnh, NaN, số quá lớn, làm tròn, tên trùng sau chuẩn hoá, kiểu dòng sai); hai
+  phiên psql ghi cùng một việc cùng lúc (khoá theo việc: người sau thấy quyết định của người trước).
 
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 

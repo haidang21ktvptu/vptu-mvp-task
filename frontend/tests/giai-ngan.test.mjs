@@ -196,6 +196,31 @@ describe('đọc bảng', () => {
     assert.deepEqual(nhanCot(b, 3).slice(3, 5), ['Giải ngân Trong tháng', 'Giải ngân Lũy kế đến 30/9'], 'nhãn ô chọn cột ghép hai dòng');
     assert.equal(goiYDonVi(b, doanCot(b), 3, 'vi'), 'trieu');
   });
+  test('dòng dữ liệu đầu chỉ có một ô số vẫn giữ; dòng nhóm / chỉ số cột không lẫn vào tiêu đề (rà soát lần 2)', () => {
+    const c1 = bangTuChu('Tên\tKế hoạch\tĐã giải ngân\nBan A\t100\t-\nBan B\t200\t50');
+    assert.deepEqual(doanCot(c1), { tuDong: 1, ten: 0, kh: 1, da: 2, coTieuDe: true }, 'dòng "Ban A" chỉ một ô số không bị bỏ');
+    assert.deepEqual(docBang(c1, { cot: doanCot(c1), tuDong: 1 }).map((d) => [d.ten, d.kh, d.da, d.chon]), [['Ban A', 100, null, true], ['Ban B', 200, 50, true]]);
+    const c2 = bangTuChu('Tên\tKế hoạch\tĐã giải ngân\nTổng cộng\t170\t-\nBan A\t100\t-\nBan B\t70\t50');
+    assert.equal(dongTong(docBang(c2, { cot: doanCot(c2), tuDong: doanCot(c2).tuDong })).kh, 170, 'dòng tổng đầu bảng vẫn điền số tổng');
+    for (const nhom of ['A\tVốn kế hoạch các năm trước kéo dài\t\t', 'I\tCác dự án thực hiện năm 2026\t\t']) {
+      assert.deepEqual(doanCot(bangTuChu(`STT\tNguồn vốn\tKế hoạch\tLũy kế\n${nhom}\n1\tVốn X\t100\t50`)), { tuDong: 2, ten: 1, kh: 2, da: 3, coTieuDe: true }, nhom);
+    }
+    const c3 = bangTuChu('STT\tNguồn vốn\tKế hoạch\tLũy kế\nA\tB\t1\t2\n1\tVốn X\t100\t50');
+    assert.deepEqual(doanCot(c3), { tuDong: 2, ten: 1, kh: 2, da: 3, coTieuDe: true }, 'dòng chỉ số cột A | B | 1 | 2 thuộc tiêu đề');
+    assert.deepEqual(docBang(c3, { cot: doanCot(c3), tuDong: 1 }).map((d) => d.ten), ['Vốn X'], 'chọn "Dữ liệu từ" lên dòng chỉ số: vẫn bỏ qua');
+    assert.deepEqual(nhanCot(c3, 2), ['STT', 'Nguồn vốn', 'Kế hoạch', 'Lũy kế']);
+    const h = bangTuHtml(`<table><tr><td>STT</td><td>Đơn vị</td><td>Kế hoạch</td><td>Lũy kế</td></tr><tr><td colspan="4">II. CÁC XÃ, PHƯỜNG</td></tr>
+      <tr><td>1</td><td>UBND xã A</td><td>10</td><td>5</td></tr></table>`);
+    assert.deepEqual(docBang(h, { cot: { ten: 1, kh: 2, da: 3 }, tuDong: 1 }).map((d) => [d.ten, d.loi]), [['UBND xã A', '']], 'đề mục gộp cả bảng: bỏ qua, không thành dòng lỗi');
+  });
+  test('số thứ tự chữ cái A, B, C… không nhầm C là số La Mã', () => {
+    const phang = docBang([['A', 'Ban A', 100, 50], ['B', 'Ban B', 100, 50], ['C', 'Ban C', 150, 50]], { cot: { ten: 1, kh: 2, da: 3 } });
+    assert.deepEqual(phang.map((d) => d.chon), [true, true, true], 'danh sách phẳng A, B, C: tích cả ba');
+    const cap = docBang([['A', 'Vốn trong nước', 200, 100], ['I', 'Vốn X', 200, 100], ['B', 'Vốn nước ngoài', 50, 10], ['I', 'Vốn Y', 50, 10],
+      ['C', 'Vốn khác', 100, 50], ['I', 'Vốn Z', 60, 30], ['II', 'Vốn W', 40, 20]], { cot: { ten: 1, kh: 2, da: 3 } });
+    assert.deepEqual(cap.filter((d) => d.nhom).map((d) => d.ten), ['Vốn trong nước', 'Vốn nước ngoài', 'Vốn khác'], 'C có dòng con I, II: là dòng nhóm');
+    assert.equal(cap.filter((d) => d.chon).reduce((t, d) => t + d.kh, 0), 350);
+  });
   test('tiêu đề: cột giải ngân ưu tiên lũy kế, bỏ cột tỷ lệ; dòng dữ liệu bắt đầu sau tiêu đề', () => {
     const b = [['Biểu 2'], ['STT', 'Chủ đầu tư', 'Kế hoạch vốn năm 2026', 'Giải ngân trong tháng', 'Lũy kế giải ngân đến 30/9', 'Tỷ lệ giải ngân (%)'], ['1', 'Ban A', '10', '1', '5', '50']];
     assert.deepEqual(doanCot(b), { tuDong: 2, ten: 1, kh: 2, da: 4, coTieuDe: true });

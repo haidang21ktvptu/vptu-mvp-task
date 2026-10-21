@@ -7,6 +7,8 @@
 //     Thường trực bị chặn; gắn lại y hệt không ghi diễn biến;
 // (3b, 0120) việc lãnh đạo đã đặt mục tiêu: chủ trì không bỏ theo dõi, không đổi đối tượng / năm; người tự gắn với mục tiêu mặc định tự sửa, tự bỏ được;
 //     mục tiêu NaN, số tổng NaN / quá numeric(16,3), dòng NaN, "dong" không phải danh sách, tên trùng sau khi cắt khoảng trắng → 22023 (lỗi tiếng Việt);
+// (3c, 0121) chuyên viên tự giao việc cho mình không hạ mục tiêu / không bỏ việc Trưởng phòng gắn; Phó Chánh VP ngoài phạm vi không đổi việc đang gắn chủ
+//     đầu tư sang "Số liệu toàn tỉnh" (đường vòng), không bỏ; số làm tròn 3 chữ số trước khi kiểm (0,0004 → 22023);
 // (4) xem: kỳ, dòng mọi tài khoản đọc; việc toàn tỉnh mọi người thấy, việc gắn khác theo phạm vi (bỏ qua khi cấu hình xem toàn bộ đang bật); anon
 //     không đọc; không ai ghi thẳng ba bảng; (5) xoá kỳ: người ngoài bị chặn, chủ trì xoá được (có diễn biến); bỏ chọn việc toàn tỉnh chỉ lãnh đạo VP.
 // Khoá dữ liệu "KL-0119"; tự dọn (cả kỳ năm 1999 của lần chạy dở trước).
@@ -87,7 +89,7 @@ describe('0119 — giải ngân vốn đầu tư công: quyền, kiểm số, xe
     const p = { loai: 'CHU_DAU_TU', nam: NAM, ten: 'Ban QLDA tỉnh', ten_chuan: 'ban qlda tỉnh' }; const xa = { ten: 'UBND xã A', ten_chuan: 'ubnd xã a' };
     chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { loai: null } }), '42501', 'chủ trì bỏ theo dõi việc lãnh đạo đặt mục tiêu');
     chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, ...xa } }), '42501', 'chủ trì đổi đối tượng');
-    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, nam: NAM - 1 } }), '42501', 'chủ trì đổi năm (về mục tiêu mặc định)');
+    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, nam: NAM - 1, muc_tieu_pt: 100, muc_tieu_ngay: `${NAM - 1}-12-31` } }), '42501', 'chủ trì đổi năm (về mục tiêu mặc định, như giao diện gửi)');
     chan(await goi('demo_cvp', 'gn_gan_nhiem_vu', { p_nv: cdt, p: { ...p, muc_tieu_pt: 'NaN' } }), '22023', 'mục tiêu NaN');
     const g = (await db().from('gn_nhiem_vu').select('nam, ten_chuan, muc_tieu_pt').eq('nhiem_vu_id', cdt).single()).data;
     assert.deepEqual(g, { nam: NAM, ten_chuan: 'ban qlda tỉnh', muc_tieu_pt: 80 }, 'việc gắn giữ nguyên');
@@ -100,6 +102,20 @@ describe('0119 — giải ngân vốn đầu tư công: quyền, kiểm số, xe
       ['"dong" không phải danh sách', { dong: { loai: 'NGUON' } }, /phải là một danh sách/],
       ['tên trùng sau khi cắt khoảng trắng', { dong: [{ loai: 'NGUON', ten: 'C', ten_chuan: 'c' }, { loai: 'NGUON', ten: 'C', ten_chuan: 'c ' }] }, /hai dòng cùng tên/]];
     for (const [nhan, o, m] of sai) { const r = await goi('demo_cv1', 'gn_ghi_ky', { p: ky(o) }); chan(r, '22023', nhan); assert.match(r.error.message, m, nhan); }
+  });
+
+  test('3c. (0121) Chủ trì tự giao cho mình không hạ / bỏ việc Trưởng phòng gắn; Phó Chánh VP ngoài phạm vi không đi vòng qua "Số liệu toàn tỉnh"', async () => {
+    const p = { loai: 'CHU_DAU_TU', nam: NAM, ten: 'Ban QLDA tỉnh', ten_chuan: 'ban qlda tỉnh' };
+    const s = await giao('demo_cv1', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1 }); assertOk(s, 'chuyên viên tự giao việc cho mình');
+    assertOk(await goi('demo_truongphong', 'gn_gan_nhiem_vu', { p_nv: s.data.id, p: { ...p, muc_tieu_pt: 80, muc_tieu_ngay: `${NAM}-09-30` } }), 'Trưởng phòng gắn, mục tiêu 80%');
+    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: s.data.id, p: { ...p, muc_tieu_pt: 10 } }), '42501', 'chủ trì (tự giao) hạ mục tiêu');
+    chan(await goi('demo_cv1', 'gn_gan_nhiem_vu', { p_nv: s.data.id, p: { loai: null } }), '42501', 'chủ trì (tự giao) bỏ theo dõi');
+    for (const q of [{ loai: 'TOAN_TINH', nam: NAM - 1, muc_tieu_pt: 10 }, { loai: 'TOAN_TINH', nam: 2099 }, { loai: null }]) {
+      chan(await goi('demo_pcvp2', 'gn_gan_nhiem_vu', { p_nv: cdt, p: q }), '42501', `Phó Chánh VP ngoài phạm vi: ${JSON.stringify(q)}`);
+    }
+    const g = (await db().from('gn_nhiem_vu').select('nhiem_vu_id, nam, loai, muc_tieu_pt').in('nhiem_vu_id', [s.data.id, cdt]).order('muc_tieu_pt')).data;
+    assert.deepEqual(g.map((x) => [x.nam, x.loai, Number(x.muc_tieu_pt)]), [[NAM, 'CHU_DAU_TU', 80], [NAM, 'CHU_DAU_TU', 80]], 'hai việc gắn giữ nguyên');
+    const r = await goi('demo_cv1', 'gn_ghi_ky', { p: ky({ ke_hoach: '0.0004' }) }); chan(r, '22023', 'kế hoạch 0,0004 (làm tròn thành 0)');
   });
 
   test('4. Xem: kỳ và dòng mọi tài khoản; việc toàn tỉnh mọi người, việc khác theo phạm vi; anon không đọc; không ghi thẳng bảng', async () => {

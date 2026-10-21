@@ -132,12 +132,29 @@ export function donViTheoChu(bang) {
 const KHOP = { ten: /(tên|nguồn\s*vốn|chủ\s*đầu\s*tư|đơn\s*vị|dự\s*án|nội\s*dung|địa\s*phương)/i, kh: /(kế\s*hoạch|vốn\s*giao|kh\s*vốn)/i,
   da: /(giải\s*ngân|thực\s*hiện|lũy\s*kế|luỹ\s*kế)/i, luyKe: /(lũy|luỹ)\s*kế|đến\s*(ngày|hết)|từ\s*đầu\s*năm/i };
 const laSo = (v) => typeof v === 'number' || (typeof v === 'string' && /^[(-]?\d[\d.,\s]*\)?%?$/.test(v.trim()));
-const coSoDong = (d) => (d || []).filter((v) => laSo(v) && String(v).trim() !== '').length >= 2;
+const coO = (v) => String(v ?? '').trim() !== '';
+const soO = (d) => (d || []).filter((v) => laSo(v) && coO(v)).length;
 const chuO = (o) => (typeof o === 'string' ? o.normalize('NFC').replace(KHOANG, ' ').trim() : '');
-// Nhãn mỗi cột ghép từ các dòng tiêu đề tu..den (bỏ dòng chú thích — một nhãn trải cả bảng như "Biểu 2", "Đơn vị: …"). Ô trống của dòng trên mà dòng dưới
+// Dòng chỉ số cột của biểu ("A | B | 1 | 2 | 3 | 4=3/2", "(1) | (2) | (3)") — thuộc phần tiêu đề, không phải dữ liệu.
+const CHI_SO = /^\(?(?:[A-ZĐ]|\d{1,2})\)?(?:\s*=\s*[\dA-ZĐ\s()+\-*/x:.,]+)?$/;
+export const laDongChiSo = (d) => { const o = (d || []).map((v) => (typeof v === 'number' ? String(v) : chuO(v))).filter(Boolean); return o.length >= 3 && o.every((x) => CHI_SO.test(x)); };
+// Dòng tiêu đề: từ hai nhãn chữ khác nhau, không ô số, ô đầu không phải số thứ tự (dòng nhóm "A | Vốn trong nước", "I | Các dự án…" không phải tiêu đề).
+const laTieuDe = (d) => { const o = (d || []).map(chuO).filter(Boolean); return new Set(o).size > 1 && !soO(d) && !STT_TRAN.test(o[0]) && !laDongChiSo(d); };
+// Khối tiêu đề ngay trên dòng den: các dòng tiêu đề liền nhau (bỏ qua dòng trống, dòng chỉ số cột), tối đa 3; dừng ở dòng chú thích / dòng nhóm / dòng số.
+function khoiTieuDe(bang, den) {
+  const ds = [];
+  for (let i = den - 1; i >= 0 && ds.length < 3; i--) {
+    const d = bang[i] || [];
+    if (!d.some(coO) || laDongChiSo(d)) continue;
+    if (!laTieuDe(d)) break;
+    ds.unshift(i);
+  }
+  return ds;
+}
+// Nhãn mỗi cột ghép từ các dòng (chỉ số dòng; bỏ dòng chú thích — một nhãn trải cả bảng như "Biểu 2", "Đơn vị: …"). Ô trống của dòng trên mà dòng dưới
 // có nhãn con → lấy nhãn bên trái (ô gộp ngang chép bằng tab: Excel chỉ ghi chữ ở ô đầu).
-function nhanGop(bang, tu, den) {
-  const ds = bang.slice(tu, den + 1).filter((d) => new Set((d || []).map(chuO).filter(Boolean)).size > 1);
+function nhanGop(bang, dong) {
+  const ds = dong.map((i) => bang[i] || []).filter((d) => new Set(d.map(chuO).filter(Boolean)).size > 1);
   const rong = Math.max(0, ...ds.map((d) => d.length)); const nhan = Array.from({ length: rong }, () => []);
   ds.forEach((d, i) => {
     let trai = '';
@@ -158,31 +175,33 @@ function khopNhan(d) {
   const ten = d.findIndex((o, j) => j !== kh && j !== da && KHOP.ten.test(o));
   return { ten: ten >= 0 ? ten : 0, kh, da };
 }
-// Nhãn cột cho ô chọn của màn xem trước: ghép tối đa 3 dòng tiêu đề ngay trên dòng dữ liệu đầu.
-export const nhanCot = (bang, tuDong) => nhanGop(bang, Math.max(0, tuDong - 3), tuDong - 1);
-// Đoán cột tên / kế hoạch / đã giải ngân và dòng bắt đầu dữ liệu: theo tối đa 3 dòng tiêu đề ngay trên dòng có số đầu tiên (tiêu đề hai dòng ghép theo
-// cột; cột giải ngân ưu tiên "lũy kế / đến ngày / từ đầu năm", bỏ cột tỷ lệ), không thấy thì dò từng dòng; không có tiêu đề nhận ra được → cột chữ đầu +
-// hai cột số đầu của dòng có số đầu tiên (coTieuDe = false).
+// Nhãn cột cho ô chọn của màn xem trước: ghép khối tiêu đề (tối đa 3 dòng) ngay trên dòng dữ liệu đầu.
+export const nhanCot = (bang, tuDong) => nhanGop(bang, khoiTieuDe(bang, tuDong));
+// Đoán cột tên / kế hoạch / đã giải ngân và dòng bắt đầu dữ liệu. (1) Khối tiêu đề (1–3 dòng, ghép theo cột) ngay trên dòng có số đầu tiên — dòng đó là
+// dòng dữ liệu đầu, kể cả khi chỉ có một ô số (dòng "Tổng cộng" đầu bảng); cột giải ngân ưu tiên "lũy kế / đến ngày / từ đầu năm", bỏ cột tỷ lệ. (2) Không
+// thấy: dò tiêu đề từng dòng, dữ liệu từ dòng sau đó có số ở cột kế hoạch / giải ngân. (3) Không có tiêu đề nhận ra được: cột chữ đầu + hai cột số đầu
+// của dòng đầu có từ hai ô số, dữ liệu từ dòng đó (coTieuDe = false). Dòng chỉ số cột (A | B | 1 | 2…) không bao giờ là dữ liệu.
 export function doanCot(bang) {
-  const dauSo = bang.findIndex(coSoDong);
-  const gan = dauSo > 0 ? khopNhan(nhanCot(bang, dauSo)) : null;
-  if (gan) return { tuDong: dauSo, ...gan, coTieuDe: true };
+  const dau = bang.findIndex((d) => soO(d) > 0 && !laDongChiSo(d));
+  const gan = dau > 0 ? khopNhan(nhanCot(bang, dau)) : null;
+  if (gan) return { tuDong: dau, ...gan, coTieuDe: true };
   for (let i = 0; i < Math.min(bang.length, 15); i++) {
-    const k = khopNhan(nhanGop(bang, i, i));
-    if (k) { const tu = bang.slice(i + 1).findIndex((x) => laSo(x?.[k.kh]) || laSo(x?.[k.da])); return { tuDong: tu >= 0 ? i + 1 + tu : i + 1, ...k, coTieuDe: true }; }
+    const k = khopNhan(nhanGop(bang, [i]));
+    if (k) { const tu = bang.slice(i + 1).findIndex((x) => !laDongChiSo(x) && (laSo(x?.[k.kh]) || laSo(x?.[k.da]))); return { tuDong: tu >= 0 ? i + 1 + tu : i + 1, ...k, coTieuDe: true }; }
   }
-  const mau = bang[dauSo] || [];
-  const so = mau.map((v, j) => (laSo(v) && String(v).trim() !== '' ? j : -1)).filter((j) => j >= 0);
+  const dau2 = bang.findIndex((d) => soO(d) >= 2 && !laDongChiSo(d)); const mau = bang[dau2] || [];
+  const so = mau.map((v, j) => (laSo(v) && coO(v) ? j : -1)).filter((j) => j >= 0);
   const ten = mau.findIndex((v, j) => !so.includes(j) && !STT_TRAN.test(String(v ?? '').trim()) && String(v ?? '').trim().length > 1);
-  return { tuDong: Math.max(0, dauSo), ten: Math.max(0, ten), kh: so[0] ?? 1, da: so[1] ?? 2, coTieuDe: false };
+  return { tuDong: Math.max(0, dau2), ten: Math.max(0, ten), kh: so[0] ?? 1, da: so[1] ?? 2, coTieuDe: false };
 }
 
 // "Tổng cộng (A+B)", "Tổng số", "Cộng", "Trong đó:", "Toàn tỉnh" — không nhầm "Tổng công ty…", "Cộng đồng…".
 const TONG = /^(tổng\s*cộng|tổng\s*số|tổng|cộng|trong\s*đó|toàn\s*tỉnh)(\s*[:(,]|\s*$|\s+(toàn|chung|các|a\s*\+))/i;
-// Cấp của số thứ tự: A, B → 0; I, II → 1; 1, 2 → 2; 1.1 → 3; a, b → 4; "-", "+", "•" → 5; không có → null.
-function capStt(t) {
-  const s = String(t ?? '').trim().replace(/[.)]$/, '');
+// Cấp của số thứ tự (đã bỏ dấu chấm / ngoặc): A, B → 0; I, II → 1; 1, 2 → 2; 1.1 → 3; a, b → 4; "-", "+", "•" → 5; không có → null. Chữ I, V, X, L, C
+// đứng ngay sau chữ cái liền trước (B → C, H → I) là chữ cái (cấp 0), không phải số La Mã.
+function capStt(s, chuTruoc) {
   if (!s) return null;
+  if (/^[IVXLC]$/.test(s) && chuTruoc && s.codePointAt(0) === chuTruoc.codePointAt(0) + 1) return 0;
   if (/^[IVXLC]+$/.test(s)) return 1;
   if (/^[A-ZĐ]$/.test(s)) return 0;
   if (/^\d+$/.test(s)) return 2;
@@ -192,11 +211,14 @@ function capStt(t) {
 }
 // Bảng → các dòng { dong (số dòng trong bảng, từ 1), ten, tenChuan, kh, da (tỷ đồng), laTong, nhom, loi, chon }.
 // Không tích sẵn: dòng tổng, dòng lỗi, dòng trùng tên dòng trên, dòng nhóm (số thứ tự cấp trên, ngay dưới là dòng cấp con — tích cả hai thì cộng trùng).
-// Số thứ tự lấy ở cột ngay trước cột tên, hoặc ở đầu ô tên ("I. Vốn trong nước").
+// Số thứ tự lấy ở cột ngay trước cột tên, hoặc ở đầu ô tên ("I. Vốn trong nước"). Bỏ qua: dòng chỉ số cột, dòng chữ gộp ngang (đề mục trải cả bảng —
+// bảng HTML lặp chữ ở các ô gộp).
 export function docBang(bang, { cot, tuDong = 0, kieu = 'vi', donVi = 'ty' }) {
-  const he = DON_VI[donVi] ?? 1; const kq = []; const daCo = new Set();
+  const he = DON_VI[donVi] ?? 1; const kq = []; const daCo = new Set(); let chuTruoc = '';
   for (let i = tuDong; i < bang.length; i++) {
-    const d = bang[i] || []; const goc = String(d[cot.ten] ?? '').normalize('NFC').replace(KHOANG, ' ').trim(); const ten = tenGon(goc);
+    const d = bang[i] || []; const chu = d.map(chuO).filter(Boolean);
+    if (laDongChiSo(d) || (chu.length > 1 && new Set(chu).size === 1 && !d.some((v) => typeof v === 'number'))) continue;
+    const goc = String(d[cot.ten] ?? '').normalize('NFC').replace(KHOANG, ' ').trim(); const ten = tenGon(goc);
     const kh = docSo(d[cot.kh], kieu); const da = docSo(d[cot.da], kieu);
     if (!ten && kh === null && da === null) continue;
     const loi = !ten ? 'thiếu tên' : Number.isNaN(kh) || Number.isNaN(da) ? 'số không đọc được'
@@ -204,9 +226,10 @@ export function docBang(bang, { cot, tuDong = 0, kieu = 'vi', donVi = 'ty' }) {
     const laTong = TONG.test(ten); const tc = tenChuan(ten);
     const trung = !loi && !laTong && daCo.has(tc);
     if (!loi && !laTong) daCo.add(tc);
-    const sttO = cot.ten > 0 && STT_TRAN.test(String(d[cot.ten - 1] ?? '').trim()) ? d[cot.ten - 1] : (STT.exec(goc)?.[1] ?? '');
+    const stt = String(cot.ten > 0 && STT_TRAN.test(String(d[cot.ten - 1] ?? '').trim()) ? d[cot.ten - 1] : (STT.exec(goc)?.[1] ?? '')).trim().replace(/[.)]$/, '');
+    const cap = capStt(stt, chuTruoc); if (cap === 0) chuTruoc = stt;
     kq.push({ dong: i + 1, ten, tenChuan: tc, kh: typeof kh === 'number' && !Number.isNaN(kh) ? lam(kh * he) : null,
-      da: typeof da === 'number' && !Number.isNaN(da) ? lam(da * he) : null, laTong, cap: capStt(sttO), nhom: false, loi: loi || (trung ? 'trùng tên dòng trên' : ''), chon: !loi && !laTong && !trung });
+      da: typeof da === 'number' && !Number.isNaN(da) ? lam(da * he) : null, laTong, cap, nhom: false, loi: loi || (trung ? 'trùng tên dòng trên' : ''), chon: !loi && !laTong && !trung });
   }
   kq.forEach((x, j) => {   // dòng nhóm: dòng có số kế tiếp (không phải dòng tổng) ở cấp sâu hơn
     const sau = kq.slice(j + 1).find((y) => !y.laTong && !y.loi);
