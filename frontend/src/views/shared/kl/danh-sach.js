@@ -133,7 +133,7 @@ function dienBoLoc() {
   $('klLocMucTieu').innerHTML = opt('', 'Mọi mục tiêu then chốt') + mt.join('');
   show('klLocMucTieu', coMucTieu());   // v3.27: mục tiêu tạm ẩn
   show('klRaSoatMt', state.user?.role_group !== 'A0' && !state.user?.bi_khoa);   // v3.25: lối vào Rà soát (v3.27: phân loại ngành – lĩnh vực, nhập tệp rà soát)
-  if (!coMucTieu()) $('klRaSoatMt').title = 'Ngành, lĩnh vực của các việc đã giao (số liệu khối 3 Tổng quan) — chọn từng việc hoặc sửa hàng loạt bằng tệp Excel';
+  if (!coMucTieu()) $('klRaSoatMt').title = 'Ngành, lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — chọn từng việc hoặc sửa hàng loạt bằng tệp Excel';
 }
 function dienLinhVuc() {
   const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;

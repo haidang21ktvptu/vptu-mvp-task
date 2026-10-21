@@ -20,6 +20,7 @@ import { maNguonHtml, nhanMucHtml, oLuoiNguonHtml, nutGiaoThemHtml } from './tho
 import { tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { oMucTieuHtml, khoiMucTieuHtml, tenMucTieuViec, napMucTieu } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt
+import { khoiGiaiNganHtml, hangGiaiNganHtml, napGiaiNgan } from './giai-ngan.js';   // v3.28 (0119): giải ngân vốn
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu', co_quan_trinh: 'donVi' };
@@ -116,6 +117,7 @@ export function chiTietHtml(r, ls, dc) {
       ${khoiMucTieuHtml(r)}
       ${khoiDeNghiSuaHtml(r)}
       ${khoiPr3Html(r)}
+      ${khoiGiaiNganHtml(r)}
       <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
       <div class="khoi-nho khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>
       <div class="khoi-nho db-khoi" id="klDienBien-${r.id}"><h4>Diễn biến <span class="chu-phu">mới nhất trên đầu</span></h4><div><p class="chu-phu">Đang tải diễn biến…</p></div></div>
@@ -134,6 +136,7 @@ export function chiTietHtml(r, ls, dc) {
           ${hang('Ngành · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
           ${coMucTieu() ? hang('Mục tiêu then chốt', tenMucTieuViec(r), canCu('gan_muc_tieu', ls)) : ''}
           ${hang('Nguồn dòng · Đính chính', `${nguonDong}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'} · ${dinhChinh}`, '')}
+          ${hangGiaiNganHtml(r)}
         </tbody></table>
       </details>
     </div>`;
@@ -166,7 +169,7 @@ async function nap(id, cheDo, giuBang) {
     o.innerHTML = chiTietHtml(r, ls, dc);
     traNhap();
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
-    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napDeNghiSua(r), napDuLieuGoc(r), napMucTieu(r)]);
+    await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napDeNghiSua(r), napDuLieuGoc(r), napMucTieu(r), napGiaiNgan(r)]);
     if (cheDo === 'chi-dao') focusChiDao(id);
   })();
   dangNap = p.catch((e) => { notifyError('Không đọc được lịch sử: ' + e.message); if (dangMo === id) o.innerHTML = `<p class="loi-inline">Không đọc được lịch sử: ${escapeHtml(e.message)}. Bấm lại dòng để thử lại.</p>`; });

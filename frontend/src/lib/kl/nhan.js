@@ -93,6 +93,7 @@ export const TEN_COT = {
   tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển người theo dõi',   // 0090, 0092
   gan_muc_tieu: 'Mục tiêu then chốt',   // 0105
   ra_soat_phan_loai: 'Rà soát phân loại (ngành, lĩnh vực, mục tiêu then chốt)',   // 0116
+  giai_ngan: 'Giải ngân vốn',   // 0119: nhập / xoá kỳ số liệu, gắn / đổi / bỏ theo dõi
   van_ban_trich_yeu: 'Trích yếu văn bản',   // 0046 dat_trich_yeu_van_ban — trước đây diễn biến hiện tên cột thô (kiểm tay 18/10)
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;

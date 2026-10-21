@@ -43,7 +43,7 @@ export const quanTriMucTieuTemplate = `
       <div id="qtMtNhomThem"></div>
       <div class="bang-cuon"><table><thead><tr><th>Tên nhóm</th><th>Nhãn thẻ</th><th>Dạng số hiệu</th><th class="so">Thứ tự</th><th>Đang dùng</th><th class="phai">Thao tác</th></tr></thead>
         <tbody id="qtMtNhomBody"><tr><td colspan="6" class="trong">Đang tải dữ liệu</td></tr></tbody></table></div></div>
-    <div class="bang" id="qtMtKhoiKhu"><div class="bang-dau"><h2>Khối lĩnh vực<span class="chu-phu">khối 3 "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan gom ngành vào khối; một lĩnh vực có thể thuộc khối riêng</span></h2></div>
+    <div class="bang" id="qtMtKhoiKhu"><div class="bang-dau"><h2>Khối lĩnh vực<span class="chu-phu">khối "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan gom ngành vào khối; một lĩnh vực có thể thuộc khối riêng</span></h2></div>
       <div id="qtMtKhoiThem"></div>
       <div class="bang-cuon"><table><thead><tr><th>Tên khối</th><th class="so">Thứ tự</th><th>Đang dùng</th><th class="so">Số ngành</th><th class="phai">Thao tác</th></tr></thead>
         <tbody id="qtMtKhoiBody"><tr><td colspan="5" class="trong">Đang tải dữ liệu</td></tr></tbody></table></div>

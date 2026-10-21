@@ -20,7 +20,7 @@ export const nganhChoPhep = (n) => n.ma !== KHONG_THUOC || !canNganhHienTai();
 export const mucThieuNganh = () => (canNganhHienTai() ? 'ngành' : 'ngành (hoặc "Không thuộc")');   // kết luận / thông báo: không có "Không thuộc"
 export const MUC_THIEU_MT = 'mục tiêu then chốt (hoặc "Không thuộc")';
 // Dòng nhắc (ẩn với Thường trực): kết luận / thông báo không có ngành "Không thuộc". v3.27: mục tiêu then chốt tạm ẩn — câu nhắc chỉ còn ngành – lĩnh vực.
-const NHAC_DAU = () => (coMucTieu() ? 'Ngành – lĩnh vực và mục tiêu then chốt là căn cứ số liệu khối 2, 3 của Tổng quan — bắt buộc chọn ở mọi thẻ.'
+const NHAC_DAU = () => (coMucTieu() ? 'Ngành – lĩnh vực và mục tiêu then chốt là căn cứ số liệu "Thực hiện các mục tiêu then chốt", "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan — bắt buộc chọn ở mọi thẻ.'
   : 'Ngành/lĩnh vực là căn cứ số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan — bắt buộc chọn ở mọi thẻ.');
 const NHAC_AI = 'đọc văn bản gốc (PDF) rồi bấm "Điền" thì trợ lý AI đề xuất sẵn, đồng chí kiểm tra.';
 const KHONG = () => (coMucTieu() ? 'ngành, mục tiêu nào' : 'ngành, lĩnh vực nào');

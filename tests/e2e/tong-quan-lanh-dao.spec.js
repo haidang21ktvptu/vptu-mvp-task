@@ -5,14 +5,16 @@
 // mục tiêu, việc tính theo văn bản; ngăn chi tiết: chip "theo văn bản", bút → gắn riêng cho việc (DB + lịch sử) → "Lưu cho cả văn bản" (mặc định
 // văn bản đổi, việc bỏ gắn riêng); danh sách Nhiệm vụ lọc
 // theo mục tiêu; khối 2 của Tổng quan mở đúng việc. (3) Chuyên viên chủ trì thấy mục tiêu, không có bút. Dữ liệu theo khoá riêng, tự dọn.
-// v3.27 (chủ dự án 20/10/2026): mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) — khối 2 là "Theo chủ trì theo dõi" (tổng cộng = cộng các dòng; bấm tên → danh
-// sách = cột Tổng); khối Chất lượng ẩn khi chưa có việc được xếp loại (khối nội bộ lùi lên số 8); bước 2–3 (mục tiêu) bỏ qua có ghi lý do.
+// v3.27 (chủ dự án 20/10/2026): mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) — khối "Theo chủ trì theo dõi" (tổng cộng = cộng các dòng; bấm tên → danh
+// sách = cột Tổng); khối Chất lượng ẩn khi chưa có việc được xếp loại; bước 2–3 (mục tiêu) bỏ qua có ghi lý do. v3.28: khối Giải ngân vốn (tuỳ có
+// số liệu) ngay sau điểm nghẽn; số khối đánh theo các khối đang hiện, luôn liền nhau.
 import { test, expect } from '@playwright/test';
 import { pageAs, moGiaoViec, moViec, nav, NAP, chonPhanLoai, HIEN_MUC_TIEU, LY_DO_AN_MT } from './lib/app.js';
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
-const KHOI = ['tqNghen', HIEN_MUC_TIEU ? 'tqMucTieu' : 'tqChuTri', 'tqLinhVuc', 'tqXepHang', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
+const KHOI = ['tqNghen', 'tqGiaiNgan', HIEN_MUC_TIEU ? 'tqMucTieu' : 'tqChuTri', 'tqLinhVuc', 'tqXepHang', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
+const TUY_CHON = ['tqGiaiNgan', 'tqChatLuong'];   // v3.28: Giải ngân vốn (ẩn khi chưa có số liệu, trừ lãnh đạo / người nhập), Chất lượng (v3.27) — khối ẩn không làm hụt số
 // Đọc số và bấm TRONG CÙNG một lượt JS (realtime có thể vẽ lại giữa hai bước) — như ngan-chi-tiet.spec.js.
 const docVaBam = (page, docSel, bamSel = docSel) => page.evaluate(([d, b]) => {
   const o = globalThis.document.querySelector(d);
@@ -42,7 +44,7 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
       const id = [...el.querySelectorAll(':scope > .luoi-tq > [id]')].map((x) => x.id).filter((x) => ids.includes(x));
       return { id, so: id.map((x) => el.querySelector(`#${x} .so-khoi`)?.textContent) };
     }, KHOI);
-    const mong = KHOI.filter((x) => x !== 'tqChatLuong' || thuTu.id.includes('tqChatLuong'));   // v3.27: Chất lượng chỉ hiện khi có việc được xếp loại
+    const mong = KHOI.filter((x) => !TUY_CHON.includes(x) || thuTu.id.includes(x));
     expect(thuTu.id, 'các khối theo đúng thứ tự bố cục').toEqual(mong);
     expect(thuTu.so, 'số khối liền nhau').toEqual(mong.map((_, i) => String(i + 1)));
 

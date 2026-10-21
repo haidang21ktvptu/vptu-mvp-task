@@ -23,6 +23,8 @@ import { mountMinhChung } from './minh-chung.js';
 import { mountThongTinGiao } from './thong-tin-giao.js';
 import { mountSuaTang } from './sua-tang.js';
 import { mountMucTieu } from './muc-tieu.js';
+import { mountGiaiNgan } from './giai-ngan.js';   // v3.28 (0119): giải ngân vốn — mục trong ngăn, hộp Theo dõi giải ngân
+import { mountGiaiNganNhap } from './giai-ngan-nhap.js';   // v3.28: hộp Nhập kỳ số liệu
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { moNganViec } from '../ngan-chi-tiet.js';
 import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
@@ -137,6 +139,7 @@ export function registerKlView() {
   mountThongTinGiao(registerActions, napLaiSauHanhDong);
   mountSuaTang(registerActions, napLaiSauHanhDong);   // v9 đợt 2: sửa thông tin giao / đề nghị sửa (0070–0071)
   mountMucTieu(registerActions, napLaiSauHanhDong);   // v3.24 (0105): gắn mục tiêu then chốt
+  mountGiaiNgan(registerActions, napLaiSauHanhDong); mountGiaiNganNhap(registerActions, napLaiSauHanhDong);   // v3.28 (0119): giải ngân vốn
   mountXuatKy();   // v3.16: xuất Excel theo tuần / tháng / quý / năm
   ganBoLoc();
   // PR-3 G: Xuất Excel nạp động lib/kl/xuat.js + lib/xlsx.js (không tăng bundle lúc mở app); In / lưu PDF dùng in.css.

@@ -94,7 +94,7 @@ async function qtKhoiLuu({ ma }) {
 }
 async function qtKhoiThem() {
   const ten = $('qtKhoiTen').value.trim(); if (!ten) { notifyError('Nhập tên khối.'); return; }
-  const ld = await askLyDo({ title: 'Thêm khối lĩnh vực', moTa: `Thêm khối "${ten}" ở khối 3 Tổng quan; sau đó chọn ngành / lĩnh vực thuộc khối.`, nhanXacNhan: 'Thêm' });
+  const ld = await askLyDo({ title: 'Thêm khối lĩnh vực', moTa: `Thêm khối lĩnh vực "${ten}" (Tổng quan — "Thực hiện theo lĩnh vực trọng tâm"); sau đó chọn ngành / lĩnh vực thuộc khối.`, nhanXacNhan: 'Thêm' });
   if (ld) await ghi('them_khoi_linh_vuc', { p_ten: ten, p_ly_do: ld.lyDo }, `Đã thêm khối ${ten}.`);
 }
 async function doiKhoi(e) {

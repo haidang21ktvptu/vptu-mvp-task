@@ -6,12 +6,12 @@ import { escapeHtml } from '../../../lib/dom.js';
 
 const goi = (s) => `data-goi="${escapeHtml(s)}"`;
 
-// Vòng tỷ lệ (0–100) ở giữa ghi số; null = chưa có việc được đánh giá.
-export function vongHtml(p, nhan = 'đúng hạn') {
+// Vòng tỷ lệ (0–100) ở giữa ghi số; null = chưa có việc được đánh giá. chu: chữ ở giữa thay cho "p%" (v3.28: số thập phân kiểu Việt "24,2%").
+export function vongHtml(p, nhan = 'đúng hạn', chu = null) {
   const C = 2 * Math.PI * 50;
-  const cung = p > 0 ? `<circle cx="60" cy="60" r="50" class="tien-vong" stroke-dasharray="${((C * p) / 100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 60 60)"/>` : '';
+  const cung = p > 0 ? `<circle cx="60" cy="60" r="50" class="tien-vong" stroke-dasharray="${((C * Math.min(100, p)) / 100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 60 60)"/>` : '';
   return `<span class="vong-tq"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" class="ray-vong"/>${cung}</svg>`
-    + `<span class="giua-vong"><b>${p === null ? '—' : `${p}%`}</b><span>${nhan}</span></span></span>`;
+    + `<span class="giua-vong"><b>${chu ?? (p === null ? '—' : `${p}%`)}</b><span>${nhan}</span></span></span>`;
 }
 
 // Đường xu hướng nhỏ (tỷ lệ theo tháng); tháng chưa có số bị bỏ qua, chấm cuối là tháng gần nhất có số.

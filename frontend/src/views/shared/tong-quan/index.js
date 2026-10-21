@@ -6,6 +6,8 @@
 // → 1 điểm nghẽn, 2 mục tiêu then chốt, 3 lĩnh vực trọng tâm (khoi-lanh-dao.js) → 4 xếp hạng (khoi-them.js), 5 theo tháng + quý → 6 văn bản, 7 chỉ
 // đạo + vướng mắc, 8 chất lượng → 9 quản lý nội bộ (KPI theo cán bộ, lãnh đạo VP phụ trách, theo phòng — gập) → ghi chú chất lượng dữ liệu.
 // Đợt E / C1 / 0103 giữ nguyên: KPI theo cán bộ, theo lãnh đạo VP phụ trách, chuyên viên xem cả phòng, "Toàn Văn phòng / Phạm vi của tôi".
+// v3.28 (0119): khối "Giải ngân vốn đầu tư công" ngay sau điểm nghẽn (giai-ngan.js; số liệu năm kế hoạch vốn đọc cùng lượt, lỗi thì giữ số cũ); số khối
+// đánh theo các khối đang hiện (danhSoKhoi).
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -27,16 +29,19 @@ import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNganDanhSach, moNganViec, khiGhiTrongNgan } from '../ngan-chi-tiet.js';
-import { dauTrangHtml, theThangHtml, bangNhomHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY } from './template.js';
+import { dauTrangHtml, theThangHtml, bangNhomHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY, danhSoKhoi } from './template.js';
 import { kpiCanBoHtml } from './kpi-can-bo.js';
 import { thanhLocHtml, loaiVanBanHtml, lanhDaoVpHtml, tenLoai } from './loc-template.js';
 import { nghenHtml, mucTieuHtml, linhVucHtml } from './khoi-lanh-dao.js';
 import { chuTriHtml } from './chu-tri.js';   // v3.27: khối 2 "Theo chủ trì theo dõi" (mục tiêu then chốt tạm ẩn)
 import { xepHangHtml, noiBoHtml, duLieuHtml } from './khoi-them.js';
 import { taoHanhDong, docUi, viTriFocus } from './hanh-dong.js';
+import { giaiNganHtml, hanhDongGn } from './giai-ngan.js';   // v3.28 (0119): khối Giải ngân vốn đầu tư công
+import { docNam } from '../../../lib/kl/giai-ngan-db.js';
+import { namHienThi } from '../../../lib/kl/giai-ngan.js';
 
-const tq = { rows: [], tatCa: [], cds: [], phanCong: [], ketQua: [], luc: null, ky: 'nam', loi: null, loc: { ...LOC_TRONG }, toanBo: true,
-  ui: { locMo: false, cap: '', tabMt: 'DOT_PHA', lvSap: 'qh', lvMo: new Set(), xh: 'dv', vbXem: 'vb', noiBo: null, ...docUi() } };
+const tq = { rows: [], tatCa: [], cds: [], phanCong: [], ketQua: [], gn: null, luc: null, ky: 'nam', loi: null, loc: { ...LOC_TRONG }, toanBo: true,
+  ui: { locMo: false, cap: '', tabMt: 'DOT_PHA', lvSap: 'qh', lvMo: new Set(), xh: 'dv', vbXem: 'vb', noiBo: null, gnDu: false, ...docUi() } };
 export const dongTongQuan = () => tq.rows;   // dòng đã nạp (Giao việc v9 liệt kê việc vừa nhập theo văn bản)
 const vai = () => state.user?.role_group;
 // 0103: đang xem toàn Văn phòng (cấu hình bật, người xem có việc ngoài phạm vi, chưa chọn "Phạm vi của tôi").
@@ -100,9 +105,10 @@ function ve() {
   const noiBo = `${vn === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}${laCapVanPhong() ? lanhDaoVpHtml(theoLanhDaoVP(rows, k, tq.phanCong, lanhDaoVP(), DEPT_NAMES), k) : ''}`
     + bangNhomHtml(theoNhom(rows, k, khoaNhom(vn, DEPT_NAMES, state.user?.department)), vn, k);
   const focus = viTriFocus($('viewTongQuan'));
-  $('viewTongQuan').innerHTML = dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: kyTuy ? null : tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length, quyTac: quyTac() })
+  $('viewTongQuan').innerHTML = danhSoKhoi(dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: kyTuy ? null : tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length, quyTac: quyTac() })
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
     + `<div class="luoi-tq">${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
+    + giaiNganHtml(tq.gn, { rows, tatCa: tq.tatCa, homNay, user: state.user, ui: tq.ui, daLoc: coLoc(tq.loc) })   // v3.28: ẩn khi chưa có số (trừ lãnh đạo / người nhập)
     + (coMucTieu() ? mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua), nhom: nhomMt, tuDong: rows.filter(laTuDong).length,
       raSoat: coRaSoat(), pl: phanLoaiMucTieu(rows) }) : chuTriHtml(theoChuTri(rows, k), k))
     + linhVucHtml(theoKhoi(rows, k, { khoi: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganh: dm.nganh, linhVuc: dm.linhVuc }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k,
@@ -111,7 +117,7 @@ function ve() {
     + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k) + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
     + chiDaoHtml(chiDaoKy(cdsLoc(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + (coCl ? chatLuongHtml(cl, k) : '')   // v3.27: khối 8 ẩn khi chưa có số
-    + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2', coCl ? 9 : 8)}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
+    + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2')}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`);   // v3.28: số khối đánh theo khối đang hiện
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
   if (focus) $('viewTongQuan').querySelector(focus)?.focus({ preventScroll: true });   // vẽ lại sau khi đổi ô lọc / bấm nút: giữ tiêu điểm đúng chỗ (bàn phím)
   if (tq.cdTu && tuChiDao() < tq.cdTu) napTongQuan();   // kỳ sớm hơn phần chỉ đạo đã đọc → đọc lại
@@ -130,12 +136,12 @@ let dangNap = null; let canNapLai = false;
 // Chỉ đạo đọc từ đầu năm, hoặc từ đầu kỳ đang xem nếu sớm hơn (Nhiệm kỳ, khoảng ngày) — ve() nạp lại khi chọn kỳ sớm hơn phần đã đọc.
 const tuChiDao = () => { const dau = `${homNayVN().slice(0, 4)}-01-01`; const tu = kyHienTai(homNayVN()).tu; return tu && tu < dau ? tu : dau; };
 const docSoLieu = (cdTu) => Promise.all([loadDanhMucKl(), loadKlRows(), loadChiDaoTu(cdTu), laCapVanPhong() || xemToanBo() ? loadPhanCongHieuLuc() : [],
-  coMucTieu() ? loadKetQuaChiTieu() : []]);   // v3.27: mục tiêu tạm ẩn → không đọc kết quả chỉ tiêu
+  coMucTieu() ? loadKetQuaChiTieu() : [], docNam(namHienThi(homNayVN()), { moi: true }).catch(() => tq.gn)]);   // v3.27: mục tiêu tạm ẩn → không đọc kết quả chỉ tiêu; v3.28: giải ngân lỗi → giữ số cũ
 async function napMotLan(lan = 0) {
   try {
     const cdTu = tuChiDao();
-    const [, r, cds, phanCong, ketQua] = await docSoLieu(cdTu);
-    Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds, phanCong, ketQua, cdTu, luc: r.luc, loi: null });
+    const [, r, cds, phanCong, ketQua, gn] = await docSoLieu(cdTu);
+    Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds, phanCong, ketQua, gn, cdTu, luc: r.luc, loi: null });
     if (sectionDangHien('viewTongQuan')) ve();
   } catch (e) {
     if (lan < 1) { await new Promise((ok) => { setTimeout(ok, 800); }); return napMotLan(lan + 1); }
@@ -190,10 +196,11 @@ function tqMo({ ct }) {
 const dongTq = (id) => coSo().find((r) => r.id === id) || tq.tatCa.find((r) => r.id === id) || null;
 
 export function registerTongQuan() {
-  registerActions({ openTongQuan, tqMo, ...taoHanhDong(tq, ve, noiBoMo),
+  registerActions({ openTongQuan, tqMo, ...taoHanhDong(tq, ve, noiBoMo), ...hanhDongGn(tq, ve),
     tqMoViec: ({ id }) => moNganViec(id, { row: dongTq(id) }), tqChiDao: ({ id }) => moNganViec(id, { cheDo: 'chi-dao', row: dongTq(id) }) });
   $('viewTongQuan').addEventListener('change', onDoiLoc);
   khiGhiTrongNgan('viewTongQuan', napTongQuan);   // v3.24: ghi trong ngăn (gắn mục tiêu không qua realtime) → số liệu mới ngay
+  document.addEventListener('giai-ngan-da-ghi', () => { if (sectionDangHien('viewTongQuan')) napTongQuan(); });   // v3.28: nhập / xoá kỳ, gắn theo dõi giải ngân
   document.addEventListener('mouseover', hienGoi);
   document.addEventListener('focusin', hienGoi);
   window.addEventListener('scroll', () => { const g = $('tqGoi'); if (g) g.hidden = true; }, { passive: true });

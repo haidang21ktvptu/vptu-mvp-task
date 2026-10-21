@@ -8,7 +8,7 @@ import { tepHtml } from './nhap-tep.js';
 const AN = (coMt) => (coMt ? '' : ' hidden');
 export const raSoatTemplate = (coMt = true) => `
   <div class="dau"><h1>Rà soát phân loại nhiệm vụ</h1>
-    <span${coMt ? '' : ' hidden'}>mục tiêu then chốt (khối 2 Tổng quan) và ngành, lĩnh vực (khối 3) — hệ thống tự nhận diện mục tiêu theo văn bản, nội dung, ngành, lĩnh vực; mục tích sẵn có căn cứ chắc, mục gợi ý bấm để thêm; việc không phục vụ mục tiêu nào tích "Không thuộc"; đồng chí kiểm tra rồi bấm Chấp nhận</span>${coMt ? '' : '<span>ngành, lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — việc đang mở sửa ở ngăn chi tiết, việc đã hoàn thành sửa hàng loạt bằng tệp rà soát</span>'}
+    <span${coMt ? '' : ' hidden'}>mục tiêu then chốt (khối "Thực hiện các mục tiêu then chốt" của Tổng quan) và ngành, lĩnh vực (khối "Thực hiện theo lĩnh vực trọng tâm") — hệ thống tự nhận diện mục tiêu theo văn bản, nội dung, ngành, lĩnh vực; mục tích sẵn có căn cứ chắc, mục gợi ý bấm để thêm; việc không phục vụ mục tiêu nào tích "Không thuộc"; đồng chí kiểm tra rồi bấm Chấp nhận</span>${coMt ? '' : '<span>ngành, lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — việc đang mở sửa ở ngăn chi tiết, việc đã hoàn thành sửa hàng loạt bằng tệp rà soát</span>'}
     <div class="phai-dau"><button type="button" class="nut nho" data-action="rsNapLai">Tải lại</button>
       <button type="button" class="nut nho" data-action="openKl">Về danh sách nhiệm vụ</button></div></div>
   <div class="kl-loc rs-loc">
