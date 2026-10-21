@@ -82,6 +82,8 @@
   .gn-td-xn { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 14px; padding: 10px 14px; border-radius: 12px; background: var(--nen-vang-mo); border: 1px solid var(--vien-vang); }
   .gn-td-xn[hidden] { display: none; }
   .gn-td-xn p { flex: 1 1 100%; margin: 0; font-size: 14px; line-height: 1.5; color: var(--chu); }
+  /* .nut:hover đổi nền sang --nen-phu mà giữ màu chữ của nút đỏ → chữ mất khi rê chuột; nút xoá / bỏ của phần này giữ nền đỏ (chỉ tối đi một chút) */
+  .gn-td-xn .nut.nguy-hiem:hover:not(:disabled), .gn-ct-bang .nut.nguy-hiem:hover:not(:disabled) { background: var(--do); filter: brightness(.92); }
   .gn-trong .dau-bd { margin-bottom: 8px; }
 
   /* Hộp "Nhập kỳ số liệu" */
