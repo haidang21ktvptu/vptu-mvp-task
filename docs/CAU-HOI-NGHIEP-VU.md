@@ -300,3 +300,16 @@ Chủ dự án (20/10/2026): danh sách chờ hoàn thiện báo sai "thiếu đ
 | L-5 | Văn bản 06-TB/TU? | Là **Thông báo của Thường trực**: đổi loại văn bản; 3 việc đã có giữ mã, chủ trì theo tệp Thường trực; nhập thêm các việc còn lại của văn bản. | RLS `kl-0117` (B3–B4) |
 | L-6 | Tự điền ô trống khi chuyển đổi? | **Chỉ cho hai tệp chủ dự án gửi** (giai đoạn chuyển đổi): Claude đọc nội dung từng việc để điền ô trống, kể cả "Kết quả thực hiện / Minh chứng" (mở đầu "[Tự điền]", không đặt ra số hiệu / ngày văn bản; chỉ việc đã hoàn thành); ô có giá trị giữ nguyên; tệp xem trước (ô tự điền tô màu) gửi chủ dự án duyệt trước khi ghi; ghi bằng tài khoản toàn quyền (`bo_sung_chuyen_doi`, Nhập từ Excel), mỗi việc có diễn biến "Bổ sung dữ liệu chuyển đổi". Nhập liệu thường ngày không tự điền bằng AI. | RLS `kl-0117` (B1–B4) |
 
+## Nhóm M — Quyết định 21/10/2026: theo dõi giải ngân vốn đầu tư công trên Tổng quan (v3.28, migration 0119)
+
+Chủ dự án (21/10/2026): "Trong bảng điều hành dashboard tôi muốn theo dõi từng nhiệm vụ theo tiến độ giải ngân vốn của tỉnh Cao Bằng" — lãnh đạo nhìn tổng thể
+trên Tổng quan trước, rồi từng nhiệm vụ; giao Claude đề xuất phương pháp tổng hợp sát và chính xác nhất. Duyệt kế hoạch cùng ngày.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| M-1 | Số liệu lấy từ đâu? | **Cán bộ theo dõi nhập tay** từ **báo cáo định kỳ chính thức** của UBND tỉnh / Sở Tài chính (không lấy số báo chí — cùng tháng 7/2026 báo chí có 24% và 32,52% vì khác mẫu số, khác ước tính / thực hiện). Mỗi kỳ ghi văn bản căn cứ, ngày số liệu, ước tính hay thực hiện; nhập bù được kỳ cũ. Không dùng AI. | RLS `kl-0119` (2) |
+| M-2 | Tổng thể gồm gì? | Số tổng toàn tỉnh, chia theo nguồn vốn, theo chủ đầu tư / đơn vị, biểu đồ % qua các kỳ. Mẫu số cố định: kế hoạch vốn năm theo báo cáo của tỉnh. | unit `giai-ngan`; e2e `giai-ngan` |
+| M-3 | Nhiệm vụ gắn với số liệu thế nào? | Mỗi nhiệm vụ gắn **toàn tỉnh** (việc "Số liệu toàn tỉnh", mỗi năm một việc) hoặc **một nguồn vốn / một chủ đầu tư**; số của nhiệm vụ lấy từ kỳ mới nhất có đối tượng đó — nhập một lần, mọi nơi cùng số, **không cộng dồn** từ nhiệm vụ. | unit `giai-ngan` |
+| M-4 | Mục tiêu và báo chậm? | **Mục tiêu riêng từng nhiệm vụ** (mặc định 100% kế hoạch vốn trước 31/12); so với **tiến độ đều** tại ngày số liệu: đúng tiến độ (thiếu ≤ 10 điểm %), chậm (10–20), chậm nhiều (> 20 hoặc tới mốc chưa đạt). Chữ khác "Vàng / Đỏ" của cảnh báo hạn. | unit `giai-ngan` |
+| M-5 | Ai nhập, ai xem? | Chọn việc toàn tỉnh: lãnh đạo Văn phòng (gồm toàn quyền). Nhập / xoá kỳ: lãnh đạo Văn phòng, chủ trì / người theo dõi việc toàn tỉnh. Gắn việc với nguồn vốn / chủ đầu tư: như ghi vướng mắc; đổi mục tiêu: lãnh đạo trong phạm vi hoặc người giao. Xem số liệu kỳ: mọi tài khoản; việc toàn tỉnh: mọi người; việc gắn khác: theo phạm vi. | RLS `kl-0119` |
+| M-6 | Khi nào nhắc "số liệu cũ"? | Kế hoạch duyệt ghi 30 ngày; khi làm Claude **đổi thành 45 ngày** vì báo cáo tháng thường có sau 5–10 ngày (30 ngày sẽ nhắc sai mỗi tháng gần một tuần) — **chờ chủ dự án xác nhận**; nhắc tách khỏi mức chậm. | unit `giai-ngan` |

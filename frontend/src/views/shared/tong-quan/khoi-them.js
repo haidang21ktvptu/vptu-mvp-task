@@ -23,11 +23,11 @@ export function xepHangHtml(ds, cach, k) {
 }
 
 // than: HTML các bảng (KPI theo cán bộ, theo lãnh đạo VP phụ trách, theo phòng / cán bộ); moKhoi: đang mở; phong: góc nhìn phòng (Trưởng phòng).
-export function noiBoHtml(than, moKhoi, phong = false, so = 9) {   // so: số khối (v3.27: 8 khi khối Chất lượng ẩn — chưa có việc được xếp loại)
+export function noiBoHtml(than, moKhoi, phong = false) {   // số khối: danhSoKhoi (v3.28) đánh theo các khối đang hiện
   const phu = phong ? 'Theo cán bộ của phòng — hoàn thành, đúng hạn trong kỳ; đang làm, cảnh báo đến hôm nay.'
     : 'KPI theo phòng, cán bộ chủ trì và theo lãnh đạo Văn phòng phụ trách — gập mặc định, mở khi cần.';
   const nut = `<button type="button" class="nut nho" id="tqNoiBoNut" data-action="tqNoiBo" aria-expanded="${String(moKhoi)}" aria-controls="tqNoiBoThan">${moKhoi ? 'Thu gọn' : 'Mở khối này'}</button>`;
-  return `<section class="the-bd n12 khoi-noi-bo" id="tqNoiBo" aria-labelledby="tqNoiBoTieu">${dauKhoi(so, phong ? 'Quản lý nội bộ của phòng' : 'Quản lý nội bộ Văn phòng', phu, nut, 'tqNoiBoTieu')}
+  return `<section class="the-bd n12 khoi-noi-bo" id="tqNoiBo" aria-labelledby="tqNoiBoTieu">${dauKhoi(9, phong ? 'Quản lý nội bộ của phòng' : 'Quản lý nội bộ Văn phòng', phu, nut, 'tqNoiBoTieu')}
     <div class="luoi-tq noi-bo-than" id="tqNoiBoThan"${moKhoi ? '' : ' hidden'}>${than}</div></section>`;
 }
 
@@ -37,7 +37,7 @@ export function duLieuHtml(c, coMt = true) {
   if (!a && !b && !x) return '';
   const phan = [a ? `${a} nhiệm vụ chưa phân loại mục tiêu then chốt (gắn mục tiêu, hoặc chọn "Không thuộc")` : '', b ? chuThieuNganh(thieuNganh(c.chuaNganh)) : '',
     x ? `${x} nhiệm vụ hoàn thành chưa có ngày hoàn thành (tính theo ngày giao, chưa xét được đúng hạn)` : ''].filter(Boolean).join('; ');
-  const khoi = [a ? 'khối 2' : '', b ? 'khối 3' : '', x ? 'tỷ lệ đúng hạn' : ''].filter(Boolean).join(', ');   // b: khối 3 lĩnh vực trọng tâm
+  const khoi = [a ? 'mục tiêu then chốt' : '', b ? 'lĩnh vực trọng tâm' : '', x ? 'tỷ lệ đúng hạn' : ''].filter(Boolean).join(', ');   // v3.28: tên khối, không ghi số (số khối đổi theo khối đang hiện)
   return `<div class="dl-tq n12" role="note" id="tqDuLieu"><svg class="dl-bieu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
     <span><b>Chất lượng dữ liệu:</b> ${phan} — số liệu ${khoi} chưa đầy đủ.</span><span class="tq-day"></span>
     <button type="button" class="nut nho" ${mo({ t: 'cldl' })}>Xem các việc này</button></div>`;

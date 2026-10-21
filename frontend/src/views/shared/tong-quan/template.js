@@ -9,8 +9,10 @@ import { vongHtml, cotThangHtml, xepHtml, chuGiaiHtml } from './bieu-do.js';
 
 export const mo = (ct) => `data-action="tqMo" data-ct='${escapeHtml(JSON.stringify(ct))}'`;
 export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><div><h2>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
-// v3.24: tiêu đề khối có số thứ tự (khối 1–9 theo bố cục được duyệt).
+// v3.24: tiêu đề khối có số thứ tự. v3.28: số do danhSoKhoi đánh lại theo thứ tự các khối đang hiện (khối ẩn — Giải ngân vốn chưa có số liệu, Chất
+// lượng chưa có việc xếp loại — không làm hụt số); `so` truyền vào chỉ là chỗ giữ.
 export const dauKhoi = (so, tieu, phu, phai = '', id = '') => `<div class="dau-bd"><div><h2${id ? ` id="${id}"` : ''}><span class="so-khoi" aria-hidden="true">${so}</span>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
+export const danhSoKhoi = (html) => { let n = 0; return html.replace(/<span class="so-khoi" aria-hidden="true">\d+<\/span>/g, () => `<span class="so-khoi" aria-hidden="true">${++n}</span>`); };
 // Nhóm nút chọn một (segmented) — act: hành động; k: tên data-*; ds: [[giá trị, nhãn]].
 export const nhomNut = (act, k, ds, chon, nhan) => `<div class="pham-vi" role="group" aria-label="${nhan}">${ds.map(([v, ten]) => `<button type="button" data-action="${act}" data-${k}="${escapeHtml(v)}" aria-pressed="${String(chon === v)}">${escapeHtml(ten)}</button>`).join('')}</div>`;
 const ICON_GIAO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
