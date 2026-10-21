@@ -164,6 +164,7 @@ describe('đọc bảng', () => {
     const html = '<table><tr><td colspan=2>Tên &amp; mã</td><td>KH</td></tr><tr><td>1</td><td>Ban<br>QLDA</td><td x:num="1234.567">1.234,567</td></tr></table>';
     assert.deepEqual(bangTuHtml(html), [['Tên & mã', '', 'KH'], ['1', 'Ban QLDA', 1234.567]]);
     assert.equal(bangTuHtml('<p>không có bảng</p>'), null);
+    assert.deepEqual(bangTuHtml('<table><tr><td>A</td><td sdval="2054.516" sdnum="1066;">2.054,52</td></tr></table>'), [['A', 2054.516]], 'LibreOffice: sdval');
     assert.equal(bangTuDan('a\tb', '<table><tr><td>x</td></tr></table>')[0][0], 'x', 'ưu tiên bảng HTML');
   });
   test('chữ chép từ PDF: tên + số cuối dòng, số thứ tự bị bỏ, tên có số không bị cắt, tên xuống dòng nối lại', () => {

@@ -87,8 +87,8 @@ export function bangTuChuPdf(text) {
 
 const giaiMa = (s) => s.replace(/&nbsp;/gi, ' ').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
   .replace(/&amp;/gi, '&');
-// HTML trong bộ nhớ tạm (Excel / Word / trang web chép bảng) → bảng; Excel ghi giá trị gốc ở thuộc tính x:num — dùng giá trị đó (không phụ thuộc dấu
-// chấm, phẩy). Ô gộp ngang (colspan) thêm ô trống cho thẳng cột. Không có bảng → null.
+// HTML trong bộ nhớ tạm (Excel / Word / LibreOffice / trang web chép bảng) → bảng; Excel ghi giá trị gốc ở thuộc tính x:num (LibreOffice: sdval) — dùng
+// giá trị đó (không phụ thuộc dấu chấm, phẩy). Ô gộp ngang (colspan) thêm ô trống cho thẳng cột. Không có bảng → null.
 export function bangTuHtml(html) {
   const t = /<table[\s\S]*?<\/table>/i.exec(String(html ?? ''));
   if (!t) return null;
@@ -96,7 +96,7 @@ export function bangTuHtml(html) {
   for (const tr of t[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
     const dong = [];
     for (const td of tr[1].matchAll(/<t([dh])\b([^>]*)>([\s\S]*?)<\/t\1>/gi)) {
-      const num = /\bx:num(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/i.exec(td[2]);
+      const num = /\b(?:x:num|sdval)(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/i.exec(td[2]);   // Excel: x:num; LibreOffice: sdval
       const goc = num ? (num[1] ?? num[2] ?? num[3]) : undefined;
       const chu = giaiMa(td[3].replace(/<br\s*\/?>/gi, ' ').replace(/<\/p>/gi, ' ').replace(/<[^>]+>/g, '')).replace(KHOANG, ' ').trim();
       dong.push(goc !== undefined && goc !== '' && Number.isFinite(Number(goc)) ? Number(goc) : chu);
