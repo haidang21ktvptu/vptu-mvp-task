@@ -39,7 +39,7 @@ test.describe.serial('Giải ngân vốn đầu tư công (v3.28)', () => {
     await don();
     const co = (await db.from('gn_nhiem_vu').select('nhiem_vu_id').eq('nam', nam).eq('loai', 'TOAN_TINH')).data || [];
     test.skip(co.length > 0, `Năm ${nam} đã có nhiệm vụ "Số liệu toàn tỉnh" trên project này — không đụng số liệu kiểm tay.`);
-    vbId = await taoVanBanRieng(db, khoa);
+    vbId = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN' });   // mặc định KL_BTV cần số hội nghị
     tt = await taoViec(db, vbId, `${khoa} Theo dõi, tổng hợp tiến độ giải ngân vốn đầu tư công năm ${nam}`);
     cdt = await taoViec(db, vbId, `${khoa} Đẩy nhanh giải ngân dự án giao thông`);
     const r = await db.from('gn_nhiem_vu').insert([{ nhiem_vu_id: tt.id, nam, loai: 'TOAN_TINH', muc_tieu_ngay: `${nam}-12-31` },
