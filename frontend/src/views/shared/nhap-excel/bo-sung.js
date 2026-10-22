@@ -20,7 +20,7 @@ const bs = { du: null, tep: '', kq: null, dang: false };
 const LY_DO = 'Bổ sung dữ liệu chuyển đổi theo tệp chủ dự án gửi ngày 20/10/2026';
 const boSungHtml = () => `<details class="tam nx-phan nx-bo-sung hidden" id="nxBoSung"><summary><b>Bổ sung dữ liệu chuyển đổi</b> <span class="chu-phu">— chỉ tài khoản toàn quyền</span></summary>
   <p class="chu-phu">Điền ô còn trống của các việc đã có trên hệ thống (cơ quan/đơn vị trình, lĩnh vực chi tiết, hạn xử lý, văn bản triển khai, ghi chú; kết quả thành minh chứng chữ
-    cho việc đã hoàn thành chưa có minh chứng), đổi loại văn bản, đổi chủ trì khi tệp ghi rõ. Ô đã có giá trị giữ nguyên; không gửi tin cho cán bộ; mỗi việc ghi diễn biến
+    cho việc đã hoàn thành chưa có minh chứng), đổi loại văn bản, đổi chủ trì theo dõi khi tệp ghi rõ. Ô đã có giá trị giữ nguyên; không gửi tin cho cán bộ; mỗi việc ghi diễn biến
     kèm lý do. Chỉ dùng cho tệp chuyển đổi đã duyệt.</p>
   <div class="nx-hang"><label class="nut" for="nxBsTep">Chọn tệp bổ sung (.json)</label><input type="file" id="nxBsTep" class="sr-only" accept=".json,application/json">
     <span id="nxBsTen" class="chu-phu" aria-live="polite"></span></div>

@@ -325,6 +325,6 @@ ngành/lĩnh vực, Cơ quan/đơn vị trình,... Phải giống như các cộ
 | # | Câu hỏi | Quyết định | Kiểm bằng |
 |---|---|---|---|
 | N-1 | Tên ô trên các màn hình? | **Đúng tên cột bảng Phụ lục** (mẫu nhập chuẩn): Chủ trì theo dõi, Ngành/lĩnh vực, Cơ quan/đơn vị trình, Nội dung kết luận / Văn bản trình, Hạn xử lý, Mã nhiệm vụ, Số TB/KL… ở mọi màn hình, Xuất Excel, Diễn biến (DESIGN mục 12). | unit `ten-o-phu-luc` |
-| N-2 | Ô không có trong bảng Phụ lục? | Theo tên ở màn Giao việc: Người theo dõi (thay "Theo dõi"), Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm. | unit `ten-o-phu-luc` |
-| N-3 | Chỗ nào giữ nguyên? | Nghĩa khác cột Excel: "Trạng thái" (tính theo hạn), "Số hiệu" văn bản ở Giao việc (mọi loại văn bản), cột "Nhiệm vụ" của bảng, ô hộp nộp minh chứng, tệp rà soát phân loại (đọc lại theo tiêu đề cũ). Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột). | unit `ten-o-phu-luc` (mẫu cũ) |
+| N-2 | Ô không có trong bảng Phụ lục? | Theo tên ở màn Giao việc: Người theo dõi (thay "Theo dõi"), Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm (cả trong hộp nộp minh chứng). | unit `ten-o-phu-luc` |
+| N-3 | Chỗ nào giữ nguyên? | Nghĩa khác cột Excel: "Trạng thái" (tính theo hạn), "Số hiệu" văn bản ở Giao việc (mọi loại văn bản), cột "Nhiệm vụ" của bảng, các ô riêng của minh chứng (số hiệu, ngày, trích yếu, mô tả kết quả), màn và tệp rà soát phân loại (tệp đọc lại theo tiêu đề cũ), chữ "Theo dõi" ở nhóm menu và hộp "Theo dõi giải ngân". Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột). Thông báo lỗi do cơ sở dữ liệu trả về còn chữ "Owner" — cần migration, để sau. | unit `ten-o-phu-luc` (mẫu cũ) |
 

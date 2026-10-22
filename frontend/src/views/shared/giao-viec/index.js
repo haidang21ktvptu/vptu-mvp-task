@@ -212,7 +212,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThNguoiTheoDoi').innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user); $('klThNguoiTheoDoi').value = state.user?.id || '';
   $('klThThayMat').innerHTML = opt('', 'Không — giao thẳng cho chuyên viên') + thayMatOptionsHtml(state.accounts); tim.thayMat?.apLai();
   datLaiNguon(); dienThongTinNguon();
-  $('klThSanPham').innerHTML = opt('', 'Chọn loại sản phẩm') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
+  $('klThSanPham').innerHTML = opt('', 'Chọn sản phẩm đầu ra') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
   $('klThCapNhan').innerHTML = dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThCapQD').innerHTML = opt('', 'Chưa xác định') + dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThNganh').innerHTML = '';

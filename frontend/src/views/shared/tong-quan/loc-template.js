@@ -41,9 +41,9 @@ export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo
       ${oChon('tqLocKhoi', 'khoi', 'Khối lĩnh vực', tc.khoi, loc.khoi, 'Mọi khối')}
       ${oChon('tqLocNganh', 'nganh', 'Ngành/lĩnh vực', tc.nganh, loc.nganh, 'Mọi ngành/lĩnh vực')}
       ${oChon('tqLocLoai', 'loai', 'Văn bản chỉ đạo', tc.loai, loc.loai, 'Mọi loại văn bản')}
-      ${oChon('tqLocCoQuan', 'coQuan', 'Cơ quan/đơn vị trình', tc.coQuan, loc.coQuan, 'Mọi cơ quan, đơn vị trình')}
+      ${oChon('tqLocCoQuan', 'coQuan', 'Cơ quan/đơn vị trình', tc.coQuan, loc.coQuan, 'Mọi cơ quan/đơn vị trình')}
       ${oChon('tqLocThuongTruc', 'thuongTruc', 'Đồng chí Thường trực chỉ đạo', tc.thuongTruc, loc.thuongTruc, 'Mọi đồng chí')}
-      ${oChon('tqLocNguoi', 'nguoi', ldvp ? 'Lãnh đạo VP phụ trách, phòng, cán bộ' : phong ? 'Đơn vị, chủ trì theo dõi' : 'Chủ trì theo dõi', nguoi, loc.nguoi, 'Mọi lãnh đạo, phòng, cán bộ')}
+      ${oChon('tqLocNguoi', 'nguoi', ldvp ? 'Lãnh đạo VP phụ trách, phòng, cán bộ' : phong ? 'Chủ trì theo dõi (phòng, cán bộ)' : 'Chủ trì theo dõi', nguoi, loc.nguoi, 'Mọi lãnh đạo, phòng, cán bộ')}
       ${oChon('tqLocTrangThai', 'trangThai', 'Trạng thái', tc.trangThai, loc.trangThai, 'Mọi trạng thái')}
       ${oChon('tqLocMucQT', 'mucQT', 'Mức quan trọng', tc.mucQT, loc.mucQT, 'Mọi mức')}
       ${oChon('tqLocDoKhan', 'doKhan', 'Độ khẩn', tc.doKhan, loc.doKhan, 'Mọi độ khẩn')}

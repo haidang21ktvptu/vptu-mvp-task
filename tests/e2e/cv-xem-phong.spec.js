@@ -59,7 +59,7 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
       await expect(p.locator('#tqQuyTac')).toContainText('Quy tắc');
       await p.locator('#tqLocChiTietNut').click();
       await expect(p.locator('#tqLocLuoi')).toBeVisible();
-      await expect(p.locator('#tqLocNguoi optgroup[label="Phòng, đơn vị chủ trì"]')).toHaveCount(0);   // chuyên viên không có lựa chọn theo phòng
+      await expect(p.locator('#tqLocNguoi optgroup[label="Đơn vị chủ trì theo dõi"]')).toHaveCount(0);   // chuyên viên không có lựa chọn theo phòng
       await p.locator('#tqVanBan [data-action="tqVbXem"][data-xem="loai"]').click();
       await expect(p.locator('#tqLoaiVanBan')).toBeVisible();
       await p.locator('#tqLoaiVanBan button[data-loai="CONG_VAN"]').click();

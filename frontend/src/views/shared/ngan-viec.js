@@ -57,7 +57,7 @@ export function nganNguoiHtml(a, rows, dongAction = 'dongNganCanBo') {
       <p class="chu-phu">${owner.length} việc mở là chủ trì theo dõi: <b>${dem.do}</b> Đỏ, ${dem.vang} Vàng, ${lam} đang làm${theoDoi.length ? ` · ${theoDoi.length} việc là người theo dõi` : ''}</p>
       <h4>Việc đang mở (${owner.length})</h4>
       ${owner.length ? owner.map((r) => `${dongViecHtml(r, homNay)}${hanhDongViecHtml(r, 'oNg')}`).join('') : '<p class="trong-nho">Không có việc mở nào cán bộ này là chủ trì theo dõi.</p>'}
-      ${theoDoi.length ? `<h4>Việc theo dõi (${theoDoi.length})</h4>${theoDoi.map((r) => dongViecHtml(r, homNay)).join('')}` : ''}
+      ${theoDoi.length ? `<h4>Việc là người theo dõi (${theoDoi.length})</h4>${theoDoi.map((r) => dongViecHtml(r, homNay)).join('')}` : ''}
     </div>`;
 }
 

@@ -46,6 +46,8 @@ export const TRUONG = [
 export const TRUONG_CU = TRUONG.filter((t) => t.cu);   // 29 cột của mẫu trước v3.27 (thứ tự cột cũ)
 export const truong = (k) => TRUONG.find((t) => t.k === k);
 export const nhanTruong = (k) => truong(k)?.nhan || k;
+// Tên ô giữa câu ("thiếu …"): chỉ hạ chữ đầu — giữ nguyên "TB/KL", "Văn bản trình" như cột bảng Phụ lục (v3.28.1).
+export const chuThuong = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
 export const TEN_MUC = { 0: 'Định danh', 1: 'Mức 1 — đủ để giao', 2: 'Mức 2 — tiến độ', 3: 'Mức 3 — đủ để đóng' };
 
 // Chuẩn hoá chữ để so khớp: thường, bỏ dấu (đ → d), bỏ "(*)", gộp khoảng trắng.

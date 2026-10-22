@@ -908,7 +908,7 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 
 ## 83. v3.28.1 — tên ô nhiệm vụ theo đúng tên cột bảng Phụ lục (22/10/2026, chủ dự án quyết; chỉ giao diện, không migration)
 - Lý do: Giao việc (v3.27) đã ghi "Chủ trì theo dõi", "Cơ quan/đơn vị trình" nhưng ngăn chi tiết, danh sách, bộ lọc, xuất Excel… vẫn ghi "Chủ trì", "Theo dõi", "Cơ quan trình" — dễ nhầm "Theo dõi" (người theo dõi) với chủ trì.
-- Mọi màn hình theo tên cột bảng Phụ lục: Chủ trì theo dõi, Ngành/lĩnh vực, Cơ quan/đơn vị trình, Nội dung kết luận / Văn bản trình, Hạn xử lý, Mã nhiệm vụ, Số TB/KL; ô ngoài bảng theo Giao việc (Người theo dõi, Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm); bỏ chữ "Owner".
+- Mọi màn hình theo tên cột bảng Phụ lục: Chủ trì theo dõi, Ngành/lĩnh vực, Cơ quan/đơn vị trình, Nội dung kết luận / Văn bản trình, Hạn xử lý, Mã nhiệm vụ, Số TB/KL; ô ngoài bảng theo Giao việc (Người theo dõi, Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm); bỏ chữ "Owner" trên giao diện (thông báo lỗi do cơ sở dữ liệu trả về còn — cần migration, để sau).
 - Tổng quan: ô lọc "Đơn vị chịu trách nhiệm" (thực ra lọc cơ quan trình) nay ghi "Cơ quan/đơn vị trình". Xuất Excel chỉ đổi tên cột. Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột).
 - DESIGN mục 12 (bảng tên ô), SPEC GV-26, CAU-HOI nhóm N; unit `ten-o-phu-luc` (4 kịch bản) + sửa các bài so chữ cũ.
 

@@ -52,7 +52,7 @@ export function theThangHtml(thang, nam, quy = []) {
 export const pillCanh = (d, kh = null) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do', 'Đỏ'], [d.vang, 'vang', 'Vàng']].filter(([n]) => n)
   .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} việc ${ten}" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten, m: lop, ...(kh ? { kh } : {}) })}>${n}<span class="sr"> việc ${ten}</span></button>`).join('') || '<span class="chu-phu">Không</span>';
 export const thuoc = (p) => `<span class="dong-han"><span class="thuoc-tq ${p === null ? '' : p >= 85 ? 'tot' : p >= 70 ? 'canh' : 'nguy'}"><i style="width:${p || 0}%"></i></span><b>${p === null ? '—' : `${p}%`}</b></span>`;
-const TIEU_NHOM = { A0: ['Theo đơn vị chủ trì', 'Đơn vị'], A2: ['Theo cán bộ', 'Cán bộ'], A3: ['Theo cán bộ', 'Cán bộ'], A1: ['Theo phòng, đơn vị', 'Phòng'] };
+const TIEU_NHOM = { A0: ['Theo đơn vị chủ trì theo dõi', 'Đơn vị'], A2: ['Theo cán bộ', 'Cán bộ'], A3: ['Theo cán bộ', 'Cán bộ'], A1: ['Theo phòng, đơn vị', 'Phòng'] };
 export function bangNhomHtml(ds, vai, k) {
   const [tieu, cot] = TIEU_NHOM[vai] || TIEU_NHOM.A1;
   const dong = (d) => {

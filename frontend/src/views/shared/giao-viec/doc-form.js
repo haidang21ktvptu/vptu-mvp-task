@@ -21,12 +21,12 @@ export function kiemTra(p) {
     if (p.van_ban.ngay_ban_hanh > homNay) return 'Ngày ban hành ở tương lai — kiểm tra lại năm.';
   } else if (!p.van_ban_id && !laA0()) return 'Chọn văn bản giao việc hoặc nhập văn bản mới.';
   if (canNgayNhan() && !p.ngay_nhan_van_ban) return 'Nhập ngày giao nhiệm vụ (mốc bắt đầu đếm).';
-  if (!p.noi_dung) return 'Nhập nội dung nhiệm vụ.';
+  if (!p.noi_dung) return 'Nhập nội dung kết luận / văn bản trình.';
   if (!p.owner_don_vi_ma) return 'Chọn chủ trì theo dõi (phòng hoặc cán bộ) — mỗi việc đúng một chủ trì theo dõi.';
   if (!p.san_pham_loai) return 'Chọn loại sản phẩm đầu ra — mỗi việc phải định nghĩa sản phẩm ngay từ đầu.';
   if (p.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly) return 'Nhập hạn xử lý — mỗi việc phải có một hạn cụ thể.';
   if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
-  if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành/lĩnh vực và lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
+  if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành/lĩnh vực và lĩnh vực trong ngành (bắt buộc với việc từ kết luận / thông báo).';
   if (!anTheoDoi() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
   return loiNguon();
 }
