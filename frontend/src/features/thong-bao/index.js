@@ -15,13 +15,13 @@ import { lamMoiHuyHieu, onSoChuaXuLy } from '../huy-hieu.js';
 let tin = [];
 const maCua = (content) => (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
 
-// Gom theo nhiệm vụ: mới nhất trước; số chưa đọc; dòng đầu = tin mới nhất.
+// Gom theo nhiệm vụ: mới nhất trước; số chưa đọc (chỉ tin gửi tới mình — dòng mình gửi người khác "chưa đọc" là của họ); dòng đầu = tin mới nhất.
 export function gomTheoViec(ds) {
   const m = new Map();
   ds.forEach((t) => {
     const k = t.nhiem_vu_id || `tin-${t.id}`;
     if (!m.has(k)) m.set(k, { nv: t.nhiem_vu_id, ma: maCua(t.content), moiNhat: t, so: 0, chuaDoc: 0 });
-    const g = m.get(k); g.so++; if (!t.is_read) g.chuaDoc++;
+    const g = m.get(k); g.so++; if (!t.is_read && t.receiver_id === state.user?.id) g.chuaDoc++;
   });
   return [...m.values()].sort((a, b) => (b.chuaDoc > 0) - (a.chuaDoc > 0) || (a.moiNhat.created_at < b.moiNhat.created_at ? 1 : -1));
 }
@@ -53,7 +53,7 @@ function render() {
 
 export async function loadThongBao() {
   if (!state.user) return;
-  try { tin = await loadTinHeThong(); render(); } catch (e) { notifyError(e.message); }
+  try { tin = await loadTinHeThong(60, { nguoiNhan: state.user.id }); render(); } catch (e) { notifyError(e.message); }   // chuông: chỉ tin gửi tới mình
 }
 
 function toggleThongBao() {

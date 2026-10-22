@@ -53,9 +53,12 @@ export const chiDaoDanhDauDoc = (nhiemVuId) => supabase.rpc('chi_dao_danh_dau_do
 export const datCapQuyetDinh = (id, cap) => rpc('dat_cap_quyet_dinh', { p_id: id, p_cap: cap || null });
 
 // Tin hệ thống của tôi (chuông), mới nhất trước.
-export async function loadTinHeThong(gioiHan = 60) {
-  return loi(await supabase.from('direct_messages').select('id, sender_id, content, is_read, created_at, nhiem_vu_id')
-    .eq('loai', 'he_thong').order('created_at', { ascending: false }).limit(gioiHan), 'đọc thông báo') || [];
+// RLS cho đọc tin mình gửi lẫn tin mình nhận. nguoiNhan (chuông): chỉ tin gửi TỚI người đó — tin hệ thống mỗi người nhận một dòng, người thao tác
+// (người gửi) không thấy các dòng báo người khác trong chuông của mình (v3.29, kiểm tay staging 22/10/2026). Hội thoại của việc đọc cả hai chiều.
+export async function loadTinHeThong(gioiHan = 60, { nguoiNhan = null } = {}) {
+  let q = supabase.from('direct_messages').select('id, sender_id, receiver_id, content, is_read, created_at, nhiem_vu_id').eq('loai', 'he_thong');
+  if (nguoiNhan) q = q.eq('receiver_id', nguoiNhan);
+  return loi(await q.order('created_at', { ascending: false }).limit(gioiHan), 'đọc thông báo') || [];
 }
 export const tinHeThongDaDoc = (nhiemVuId = null) => rpc('tin_he_thong_da_doc', { p_nhiem_vu: nhiemVuId });
 
