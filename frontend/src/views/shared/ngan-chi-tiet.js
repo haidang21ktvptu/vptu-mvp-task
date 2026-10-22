@@ -7,7 +7,8 @@
 // (khiGhiTrongNgan), quay lại danh sách thấy trạng thái mới của việc vừa xử lý.
 // v3.29 (chủ dự án 22/10/2026 17:02): mở việc → "…/<chức năng>/NV-…" (kl/chi-tiet.js ghiViec); người dùng đóng / Quay lại / Esc → bỏ mã, lùi đúng bước
 // đã thêm (boViec); mở danh sách khác → cũng bỏ mã như vậy; Quay lại / Tiến tới của trình duyệt (cùng màn) → dongViecTheoDuong, không ghi lịch sử.
-// Dòng tiêu đề phụ (chủ trì · hạn) theo dòng mới mỗi khi việc đang mở được đọc lại (điều chỉnh hạn, đổi chủ trì, gia hạn, realtime — 'viec-doc-lai').
+// Tiêu đề ngăn (mã; chủ trì · hạn) vẽ lại cùng thân chi tiết ('chi-tiet-da-ve' của kl/chi-tiet.js): sau điều chỉnh hạn, đổi chủ trì, gia hạn, realtime,
+// nạp lại danh sách, bấm việc khác — tiêu đề luôn khớp việc đang hiện.
 import { $, escapeHtml, show, setText } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -155,9 +156,8 @@ export function mountNganChiTiet() {
     nganLui: () => nganLui({ url: true }), nganDong: () => dongNganCT({ url: true }), dongViecTheoDuong,
   });
   document.addEventListener('doi-man', () => { quenViec(); dongNganCT(); });   // chọn mục khác ở menu (shell/index.js showSection)
-  document.addEventListener('viec-doc-lai', (e) => {   // việc đang mở vừa đọc lại khác dòng cũ (nap-lai-viec.js): tiêu đề phụ theo dòng mới
-    const r = nganDangMoViec() && idDangMo() === e.detail ? timKlRow(e.detail) : null;
-    if (r) setText('nganCTPhu', phuViec(r));
+  document.addEventListener('chi-tiet-da-ve', ({ detail: r }) => {   // thân chi tiết vừa vẽ (kl/chi-tiet.js nap): tiêu đề ngăn theo đúng dòng đó
+    if (r?.id && nganDangMoViec() && idDangMo() === r.id) { setText('nganCTTieuDe', r.ma); setText('nganCTPhu', phuViec(r)); }
   });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !laMo() || document.querySelector('.modal-nen:not(.hidden)') || e.target.closest?.('input, textarea, select')) return;   // đang gõ: không mất chữ
