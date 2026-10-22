@@ -79,7 +79,7 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
   test('4. mỗi người nhận một tin he_thong, sender_id NULL; người nhận đọc được qua RLS; ghi lich_su không người sửa', { skip: CHI_CUC_BO }, async () => {
     const tin = await tinCua('NV-T102');
     assert.equal(tin.length, 6);
-    assert.ok(tin.every((t) => t.sender_id === null && /Đỏ đặc biệt · NV-T102: quá hạn 5 ngày/.test(t.content)), 'nội dung tin');
+    assert.ok(tin.every((t) => t.sender_id === null && /^Quá hạn từ \d+ ngày trở lên · NV-T102: quá hạn 5 ngày/.test(t.content)), 'nội dung tin (tiêu đề theo cách ghi mới — 0127)');
     const cv1 = await (await userClient('demo_cv1')).from('direct_messages').select('content, sender_id').eq('nhiem_vu_id', id['NV-T102']).eq('loai', 'he_thong');
     assertOk(cv1, 'cv1 đọc tin'); assert.equal(cv1.data.length, 1); assert.equal(cv1.data[0].sender_id, null);
     const cv2 = await (await userClient('demo_cv2')).from('direct_messages').select('content').eq('nhiem_vu_id', id['NV-T101']).eq('loai', 'he_thong');

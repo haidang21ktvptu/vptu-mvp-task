@@ -131,7 +131,7 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
       '**Sửa**: đổi vai trò, phòng, chức danh (có lý do). Mỗi phòng chỉ có **một Trưởng phòng đang hoạt động** — muốn đổi Trưởng phòng, khoá hoặc đổi vai tài khoản cũ trước.',
       '**Đặt lại mật khẩu** khi cán bộ quên: hệ thống sinh mật khẩu tạm mới.',
       '**Khoá** tài khoản cán bộ chuyển công tác (không xoá — lịch sử việc giữ nguyên).',
-      '**Cấp QTHT** (quản trị hệ thống), **Cấp thư ký TT** (thư ký Thường trực: xử lý, đóng chỉ đạo Thường trực thay mặt) — có lý do, ghi nhật ký.',
+      '**Cấp QTHT** (quản trị hệ thống), **Cấp thư ký TT** (thư ký Thường trực — v3.29: xem mọi nhiệm vụ; với việc chưa hoàn thành: cập nhật, nộp minh chứng, ghi vướng mắc, sửa thông tin giao, **Điều chỉnh hạn**, **Đổi chủ trì theo dõi**; đóng chỉ đạo Thường trực thay mặt) — có lý do, ghi nhật ký.',
       '**Chuyển việc theo dõi** (v3.20, Quản trị hệ thống): cán bộ nghỉ, chuyển công tác hoặc đổi nhiệm vụ — bấm nút này ở dòng tài khoản, chọn **Người nhận theo dõi**: hệ thống báo ngay số việc đang mở sẽ chuyển (kèm mã); ghi **lý do** (vào lịch sử từng việc) rồi bấm **Chuyển**. Người nhận có một thông báo kê mã việc; việc nào không chuyển được được báo riêng và giữ nguyên; việc đã hoàn thành giữ người theo dõi cũ. Nên chuyển **trước khi khoá** tài khoản.',
     ]),
     ...hinh('qt-10-chuyen-theo-doi-cat.jpg', 'Hộp Chuyển việc đang theo dõi: người nhận, số việc sẽ chuyển, lý do'),
@@ -168,7 +168,8 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     P1('Phần 9. Hỏi đáp nhanh'),
     bang(['Tình huống', 'Cách xử lý'], [
       ['Tôi không thấy một việc mà tôi biết là có.', 'Hệ thống chỉ hiện việc trong phạm vi của mình: chuyên viên thấy việc mình chủ trì/theo dõi; Trưởng phòng thấy việc của phòng. Nhờ người giao kiểm tra lại người chủ trì / người theo dõi của việc, hoặc dùng Đề nghị sửa.'],
-      ['Việc giao nhầm người / nhầm hạn.', 'Chuyên viên: bấm *Đề nghị sửa* (ô có khoá) hoặc *Từ chối* có lý do. Người giao: *Giao lại* hoặc *Gia hạn* trong ô Chỉ đạo — không xoá việc.'],
+      ['Việc giao nhầm người / nhầm hạn.', 'Chuyên viên: bấm *Đề nghị sửa* (ô có khoá) hoặc *Từ chối* có lý do; chủ trì theo dõi tự *Điều chỉnh hạn* khi việc chưa quá hạn. Người giao: *Giao lại* hoặc *Gia hạn* trong ô Chỉ đạo. Thư ký Thường trực: *Đổi chủ trì theo dõi*, *Điều chỉnh hạn* — không xoá việc.'],
+      ['Ghi nhầm văn bản giao, minh chứng; việc đã hoàn thành cần làm lại.', 'Tài khoản quản trị (v3.29), ở ngăn chi tiết: **Sửa toàn bộ thông tin**, **Sửa văn bản giao**, **Sửa** / **Gỡ** cạnh minh chứng, **Mở lại nhiệm vụ** — mỗi thao tác ghi lý do, lưu lịch sử; trừ sửa văn bản giao, hệ thống báo chủ trì và người giao. Mở lại: minh chứng cũ chuyển "Bị trả lại", chủ trì nộp minh chứng mới để hoàn thành lại.'],
       ['Lãnh đạo có phải bấm gì để việc hoàn thành không?', 'Không. Nộp minh chứng hợp lệ là việc **hoàn thành** (ngày hoàn thành = ngày văn bản). Lãnh đạo chỉ **Trả lại** khi kết quả chưa đạt (việc mở lại) hoặc **đánh giá chất lượng** nếu muốn — đều không bắt buộc.'],
       ['Việc lãnh đạo chủ trì thì ai nhập kết quả?', 'Người đã nhập việc (chuyên viên giao, chuyên viên nhập thay mặt lãnh đạo) cập nhật và **nộp minh chứng thay**; lãnh đạo không phải tự nhập (mục 3.5).'],
       ['Cán bộ nghỉ / chuyển công tác, việc đang theo dõi xử lý sao?', 'Quản trị hệ thống dùng **Chuyển việc theo dõi** ở thẻ Tài khoản (mục 8.1) để chuyển một lần mọi việc đang mở sang người khác, rồi mới khoá tài khoản.'],

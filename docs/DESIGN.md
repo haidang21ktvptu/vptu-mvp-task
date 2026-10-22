@@ -299,3 +299,11 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
   đầu của vai, thông báo "Đường dẫn không thuộc chức năng của tài khoản đồng chí — đã mở trang đầu." Dữ liệu vẫn chỉ theo đăng nhập và RLS.
 - Đường dẫn chỉ gồm tên chức năng — không mã việc, không dữ liệu.
 
+## 15. Hộp sửa có lý do (v3.29 — chủ dự án quyết 22/10/2026, CAU-HOI O-4…O-6)
+
+Điều chỉnh hạn, Đổi chủ trì theo dõi, Sửa toàn bộ thông tin, Sửa văn bản giao, Sửa minh chứng dùng chung một khuôn với "Sửa thông tin giao" (mục 5,
+modal): tiêu đề "Tên hộp · mã việc", dòng mô tả chữ phụ (nội dung việc hoặc điều sẽ xảy ra), ô "Đang ghi" (giá trị hiện tại, chữ đậm), ô mới, một dòng
+chữ phụ nói hệ quả ngay khi nhập ("Lùi hạn: tính là gia hạn lần 2.", "Phòng, đơn vị chủ trì sau khi đổi: …", "Sẽ sửa: Hạn xử lý, Ghi chú."), ô **Lý do**
+bắt buộc ngay trên chân hộp, nút chính "Lưu …" bên phải. Thao tác một bước trên một việc (Mở lại nhiệm vụ, Gỡ minh chứng) dùng ô lý do mở tại chỗ
+dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với người có quyền; việc đã quá hạn thì chủ trì thấy một dòng chữ phụ thay cho nút Điều chỉnh hạn.
+

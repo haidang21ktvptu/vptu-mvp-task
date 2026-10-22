@@ -19,6 +19,8 @@ import { batBuocTep, taiLenTep, xoaTepChuaGan } from '../../../lib/kl/tep-minh-c
 import { ganSuKienTep, tepDangChon, datLaiTep } from './minh-chung-tep.js';
 import { klCapNhatTemplate } from './cap-nhat-template.js';
 import { timKlRow } from './danh-sach.js';
+import { cheDoDieuChinhHan } from '../../../lib/kl/quyen-them.js';
+import { capNhatChiNhoThuKy } from './dong.js';
 
 let afterSave = () => {};
 let row = null;
@@ -27,6 +29,14 @@ let homNay = homNayVN();
 const laHT = () => $('klCnTienDo').value === 'HOAN_THANH';
 const coMcNhanh = () => Boolean(row?.theo_1400) && row.tien_do_ma !== 'HOAN_THANH' && duocNopMinhChung(row);
 const khoaHan = () => Boolean(row?.han_xu_ly) && !state.user?.quan_tri_kl;
+// v3.29 (0123): đổi hạn đã có = nút "Điều chỉnh hạn" ở ngăn chi tiết (chủ trì theo dõi khi việc chưa quá hạn, thư ký Thường trực, tài khoản quản trị).
+function chuKhoaHan(r) {
+  const dau = `Hạn xử lý: ${formatNgay(r.han_xu_ly)} — đã chốt khi giao.`;
+  const che = cheDoDieuChinhHan(r, state.user, homNay);
+  if (che === 'duoc') return `${dau} Đổi hạn: bấm "Điều chỉnh hạn" ở ngăn chi tiết (ghi lý do; người giao việc, lãnh đạo phụ trách được báo).`;
+  if (che === 'qua-han') return `${dau} Việc đã quá hạn — đồng chí đề nghị lãnh đạo giao việc gia hạn hoặc báo thư ký Thường trực.`;
+  return `${dau} Muốn đổi hạn, đồng chí đề nghị gia hạn với lãnh đạo giao việc.`;
+}
 const trong = (s) => !s || !s.trim();
 
 function capNhatHienThi() {
@@ -49,7 +59,8 @@ export async function openKlCapNhat({ id, rows }) {
   // GĐ16 (MC-3, MC-4): việc theo quy tắc 1400 đóng bằng nút "Đóng nhiệm vụ" sau khi nộp minh chứng có cấu trúc — modal này
   // không có ô chữ tự do và không chọn Hoàn thành (trigger 0028 là chốt); việc cũ giữ quy tắc chữ.
   const theo1400 = Boolean(row.theo_1400) && row.tien_do_ma !== 'HOAN_THANH';
-  $('klCnTienDo').innerHTML = danhMucKl().tienDo.filter((t) => !(theo1400 && t.ma === 'HOAN_THANH'))
+  const anHt = theo1400 || capNhatChiNhoThuKy(row);   // v3.29: thư ký Thường trực (chỉ nhờ cờ) không tự đóng việc
+  $('klCnTienDo').innerHTML = danhMucKl().tienDo.filter((t) => !(anHt && t.ma === 'HOAN_THANH'))
     .map((t) => `<option value="${t.ma}"${t.ma === row.tien_do_ma ? ' selected' : ''}>${t.ten}</option>`).join('');
   show('klCnMinhChungWrap', !row.theo_1400);
   show('klCnGhiChu1400', theo1400);
@@ -61,7 +72,7 @@ export async function openKlCapNhat({ id, rows }) {
   $('klCnHan').value = row.han_xu_ly || '';
   show('klCnHanWrap', !khoaHan());
   show('klCnHanKhoa', khoaHan());
-  setText('klCnHanKhoa', khoaHan() ? `Hạn xử lý: ${formatNgay(row.han_xu_ly)} — đã chốt khi giao. Muốn đổi hạn, đồng chí đề nghị gia hạn với lãnh đạo giao việc.` : '');
+  setText('klCnHanKhoa', khoaHan() ? chuKhoaHan(row) : '');
   $('klCnHan').min = row.ngay_ban_hanh;
   setText('klCnHanLoai', row.loai_thoi_han_ma === 'KY_BAN_HANH' ? '(tự tính = ngày ban hành + 10, không sửa)' : row.loai_thoi_han_ma === 'CO_HAN_CU_THE' ? '' : '(không bắt buộc với loại này)');
   $('klCnChuaCoHan').checked = row.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !row.han_xu_ly && row.tien_do_ma !== 'HOAN_THANH';

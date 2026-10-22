@@ -3,20 +3,17 @@
 import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { notifyError } from '../../components/toast.js';
 import { loadDienBien, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
-import { tenCot, tenChatLuong } from '../../lib/kl/nhan.js';
-import { tenTrongDanhMuc } from '../../lib/kl/du-lieu.js';
-import { findAccount } from '../../lib/state.js';
-import { tenMucQuanTrong } from '../../lib/kl/ma-nguon.js';
+import { tenCot } from '../../lib/kl/nhan.js';
 import { moNhiemVu } from './kl/index.js';
+import { hienGiaTri } from '../../lib/kl/gia-tri.js';
 
 const NHAN_NGUON = { lich_su: '', canh_bao: 'Cảnh báo', tu_choi: 'Từ chối', tu_choi_ly_do: 'Lý do từ chối', chi_dao: 'Chỉ đạo', phan_hoi: 'Phản hồi', minh_chung: 'Minh chứng' };
 const LOP_NGUON = { lich_su: 'db-lich-su', canh_bao: 'db-canh-bao', tu_choi: 'db-tu-choi', tu_choi_ly_do: 'db-tu-choi', chi_dao: 'db-chi-dao', phan_hoi: 'db-phan-hoi', minh_chung: 'db-minh-chung' };
 const TT_MC = { CHO_XAC_NHAN: 'chờ xác nhận', HOP_LE: 'hợp lệ', KHONG_HOP_LE: 'không hợp lệ' };
 
-// PR-3: mã chất lượng / nguồn nhiệm vụ trong lịch sử hiện bằng tên; v3.26: cả ngành, lĩnh vực (rà soát phân loại, sửa thông tin giao).
-const gt = (cot, v) => (v == null || v === '' ? v : cot === 'chat_luong' ? tenChatLuong(v) || v : cot === 'nguon_nhiem_vu_ma' ? tenTrongDanhMuc('nguonNhiemVu', v)
-  : cot === 'nganh_ma' ? tenTrongDanhMuc('nganh', v) : cot === 'linh_vuc_ma' ? tenTrongDanhMuc('linhVuc', v)
-  : cot === 'co_quan_trinh' ? tenTrongDanhMuc('donVi', v) : cot === 'thuong_truc_chi_dao' ? findAccount(v)?.full_name || v : cot === 'muc_quan_trong' ? tenMucQuanTrong(v) : v);   // C2 (0087)
+// Giá trị trong lịch sử hiện bằng tên, ngày dd/mm/yyyy (như bảng căn cứ của ngăn chi tiết — hienGiaTri): mã danh mục (ngành, lĩnh vực, nguồn, chất
+// lượng, mức quan trọng, cơ quan trình, tiến độ, loại thời hạn, cấp, đơn vị), tài khoản (chủ trì, người theo dõi, Thường trực chỉ đạo), ngày.
+const gt = (cot, v) => (v == null || v === '' ? v : hienGiaTri(cot, v));
 function noiDung(d) {
   if (d.nguon === 'lich_su') {
     if (d.loai === '*') return `Tạo dòng ${escapeHtml(d.noi_dung || '')}`;
@@ -33,11 +30,15 @@ function noiDung(d) {
   return escapeHtml(d.noi_dung || '');
 }
 
-// v3.29: lĩnh vực tự đổi theo ngành (không còn ô Lĩnh vực) — dòng lĩnh vực ghi CÙNG LẦN đổi ngành thì ẩn (dòng ngành đã đủ); lĩnh vực đổi riêng
-// (rà soát bằng tệp, sửa lĩnh vực chi tiết) vẫn hiện — lĩnh vực quyết định lãnh đạo Văn phòng phụ trách theo kiêm nhiệm.
+// v3.29: dòng của các ô đã được một dòng khác ghi CÙNG LẦN (cùng lúc) nói đủ thì ẩn — lĩnh vực tự đổi theo ngành (không còn ô Lĩnh vực; lĩnh vực
+// đổi riêng — rà soát bằng tệp, sửa lĩnh vực chi tiết — vẫn hiện); hạn, số lần gia hạn khi "Điều chỉnh hạn"; chủ trì, phòng, người theo dõi khi
+// "Đổi chủ trì theo dõi"; tiến độ, ngày hoàn thành khi "Mở lại nhiệm vụ" (dòng tóm tắt có cũ → mới và lý do).
+const AN_CUNG_LAN = { nganh_ma: ['linh_vuc_ma'], dieu_chinh_han: ['han_xu_ly', 'so_lan_gia_han'], doi_chu_tri: ['owner_tai_khoan', 'owner_don_vi_ma', 'nguoi_theo_doi'],
+  mo_lai: ['tien_do_ma', 'ngay_hoan_thanh'] };
 export function dienBienHtml(tatCa) {
-  const doiNganh = new Set(tatCa.filter((d) => d.nguon === 'lich_su' && d.loai === 'nganh_ma').map((d) => d.luc));
-  const rows = tatCa.filter((d) => !(d.nguon === 'lich_su' && d.loai === 'linh_vuc_ma' && doiNganh.has(d.luc)));
+  const ls = tatCa.filter((d) => d.nguon === 'lich_su');
+  const an = new Set(ls.flatMap((d) => (AN_CUNG_LAN[d.loai] || []).map((c) => `${c}|${d.luc}`)));
+  const rows = tatCa.filter((d) => !(d.nguon === 'lich_su' && an.has(`${d.loai}|${d.luc}`)));
   if (!rows.length) return '<p class="chu-phu">Chưa có diễn biến nào.</p>';
   return `<ul class="dien-bien">${rows.map((d) => `<li class="${LOP_NGUON[d.nguon] || ''}" data-nguon="${escapeHtml(d.nguon)}">
       <span class="db-luc">${formatDateTime(d.luc)}</span><span class="db-nguoi">${escapeHtml(d.nguoi_ten || 'Hệ thống')}</span>

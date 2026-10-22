@@ -8,6 +8,7 @@ import { trongPhamVi, ghiNgoaiPhamVi } from './pham-vi.js';
 import { loadGanMucTieu } from './muc-tieu-db.js';
 import { ganMucTieuVaoDong, HIEN_MUC_TIEU } from './muc-tieu.js';
 import { datNguongCanhBao } from './nhan.js';
+import { laThuKyTT } from './quyen-them.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -72,7 +73,8 @@ export async function loadCauHinhKl(lai = false) {
 export const cauHinhKl = (khoa, macDinh) => cauHinh?.[khoa] ?? macDinh;
 export const tuNhanViec = () => cauHinhKl('xac_nhan_nhan_viec', 1) === 2;   // 0085: cấu hình 2 = việc coi như đã nhận ngay khi giao (không cần xác nhận)
 export const chuyenVienXemPhong = () => cauHinhKl('pham_vi_chuyen_vien', 1) === 2;   // 0086: cấu hình 2 = chuyên viên xem cả phòng (chỉ xem; RLS là chốt)
-export const xemToanBo = () => cauHinhKl('xem_toan_bo', 1) === 2;   // 0103: cấu hình 2 = mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem ngoài phạm vi)
+// 0103: cấu hình 2 = mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem ngoài phạm vi); v3.29 (0124): thư ký Thường trực luôn xem toàn bộ (như kl_xem_toan_bo).
+export const xemToanBo = () => cauHinhKl('xem_toan_bo', 1) === 2 || laThuKyTT(state.user);
 
 // Toàn bộ dòng trong phạm vi người dùng (RLS) + tập id đã có xác nhận nhận việc, kèm mốc thời gian đọc ("Số liệu tính đến").
 // v3.23 (0103): rows = việc TRONG phạm vi xử lý (mọi màn hình làm việc giữ nguyên); tatCa = mọi dòng đọc được (cấu hình xem toàn bộ: cả việc

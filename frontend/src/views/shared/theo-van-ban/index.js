@@ -132,4 +132,5 @@ export function registerTheoVanBan() {
   const tvbToanBo = ({ tb }) => { toanBo = tb === '1'; datRows(); render(); };
   const tvbLocVb = ({ loc }) => { tvb.loc = O_SO_VB.some(([k]) => k === loc) ? loc : 'tat'; render(); };
   registerActions({ openTheoVanBan: () => openTheoVanBan(), tvbGap, tvbGapTatCa, tvbRaSoat, tvbToanBo, tvbLocVb, tvbMoViec: ({ id, ma }) => moNhiemVu(id, ma) });
+  document.addEventListener('van-ban-da-sua', () => { if (sectionDangHien('viewTheoVanBan')) loadTheoVanBan(); });   // v3.29: sửa văn bản giao (kl/sua-van-ban.js)
 }

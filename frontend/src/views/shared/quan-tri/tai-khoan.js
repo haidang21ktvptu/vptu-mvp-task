@@ -75,7 +75,8 @@ export async function toggleThuKyTT({ username, bat }, onDone) {
   const turnOn = bat === '1';
   const answer = await askLyDo({
     title: turnOn ? 'Cấp quyền thư ký Thường trực' : 'Thu quyền thư ký Thường trực',
-    moTa: `${turnOn ? 'Cấp cho' : 'Thu của'} ${acc.full_name} (${username}). Thư ký ${turnOn ? 'sẽ' : 'sẽ không còn'} xem việc có chỉ đạo Thường trực và đóng chỉ đạo Thường trực thay mặt; không gửi chỉ đạo, không ghi gì khác.`,
+    // v3.29 (0124): thư ký xem mọi nhiệm vụ và ghi được ở mọi việc chưa hoàn thành — câu mô tả nói đủ để người cấp cân nhắc.
+    moTa: `${turnOn ? 'Cấp cho' : 'Thu của'} ${acc.full_name} (${username}). Thư ký ${turnOn ? 'sẽ' : 'sẽ không còn'} xem mọi nhiệm vụ; với mọi việc chưa hoàn thành: cập nhật tiến độ, kết quả, nộp minh chứng, ghi vướng mắc, sửa thông tin giao, điều chỉnh hạn, đổi chủ trì theo dõi; đóng chỉ đạo Thường trực thay mặt. Không gửi chỉ đạo, không trả lại hay đánh giá minh chứng, không đóng nhiệm vụ.`,
     nhanXacNhan: turnOn ? 'Cấp quyền' : 'Thu quyền',
   });
   if (!answer) return;

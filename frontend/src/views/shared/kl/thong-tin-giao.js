@@ -1,6 +1,7 @@
 // Ngăn chi tiết — PR-3 (0062–0067): nguồn nhiệm vụ, đơn vị phối hợp, kết quả hoàn thành (chất lượng + Trước hạn / Đúng hạn / Trễ) và khối
 // "Vướng mắc / đề nghị lãnh đạo quyết định" sửa tại chỗ. Ai sửa (chỉ ẩn/hiện — hàm DB là chốt):
-//   - vướng mắc (dat_vuong_mac): Owner / người theo dõi, lãnh đạo A1/A2 thấy việc, quan_tri_kl; không A0. Để trống rồi Lưu = đã giải quyết.
+//   - vướng mắc (dat_vuong_mac): Owner / người theo dõi, lãnh đạo A1/A2 thấy việc, quan_tri_kl, thư ký Thường trực (0124, việc chưa hoàn thành);
+//     không A0. Để trống rồi Lưu = đã giải quyết.
 //   - nguồn + đơn vị phối hợp: tầng giao (0091 — người giao / người tạo việc, lãnh đạo trong phạm vi, quan_tri_kl) — hộp Cập nhật nhanh và "Sửa thông tin giao".
 import { escapeHtml } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
@@ -13,14 +14,15 @@ import { homNayVN } from '../../../lib/kl/ngay.js';
 import { laTangGiao } from '../../../lib/kl/sua-tang.js';
 import { laBenTrong } from './dong.js';
 import { duocChiDao } from './chi-dao.js';
-import { chiXem } from '../../../lib/kl/pham-vi.js';
+import { chiXemVoi, thuKyGhi } from '../../../lib/kl/quyen-them.js';
 
 let sauHanhDong = async () => {};
 const laA0 = () => state.user?.role_group === 'A0';
 // Quản trị KL CÒN HẠN (như me_quan_tri_kl() ở DB: cờ + quan_tri_kl_het_han chưa qua), không phải A0.
 export const laQtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN()) && !laA0();
 const qtkl = laQtklConHan;
-export const duocSuaVuongMac = (r) => !laA0() && !chiXem(r) && (laBenTrong(r) || duocChiDao() || qtkl());   // 0103: việc chỉ xem → không
+// 0103: việc chỉ xem → không; v3.29 (0124): + thư ký Thường trực với mọi việc chưa hoàn thành.
+export const duocSuaVuongMac = (r) => !laA0() && !chiXemVoi(r, state.user) && (laBenTrong(r) || duocChiDao() || qtkl() || thuKyGhi(r, state.user));
 // 0091: cùng tầng giao với "Sửa thông tin giao" (dat_thong_tin_giao gọi kl_la_tang_giao) — người giao / người tạo việc, lãnh đạo trong phạm vi, quản trị.
 export const duocSuaThongTinGiao = (r) => laTangGiao(r);
 
