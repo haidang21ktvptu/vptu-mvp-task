@@ -50,7 +50,7 @@ export function giaiNganHtml(d, { rows = [], tatCa = [], homNay, user, ui = {}, 
   const phai = nut ? `<div class="gn-nut">${nut}</div>` : '';
   if (!th.moi) {
     if (user?.role_group !== 'A1' && !nhap) return '';
-    const buoc = th.tt ? `Đã có nhiệm vụ "Số liệu toàn tỉnh"${rowTt ? ` ${escapeHtml(rowTt.ma)}` : ''}. Cán bộ chủ trì hoặc theo dõi nhiệm vụ đó bấm "Nhập kỳ số liệu", chọn tệp Excel hoặc dán bảng của báo cáo UBND tỉnh / Sở Tài chính; nhập bù các kỳ trước để có đường tiến độ.`
+    const buoc = th.tt ? `Đã có nhiệm vụ "Số liệu toàn tỉnh"${rowTt ? ` ${escapeHtml(rowTt.ma)}` : ''}. Chủ trì theo dõi hoặc người theo dõi nhiệm vụ đó bấm "Nhập kỳ số liệu", chọn tệp Excel hoặc dán bảng của báo cáo UBND tỉnh / Sở Tài chính; nhập bù các kỳ trước để có đường tiến độ.`
       : 'Bước 1: lãnh đạo Văn phòng mở nhiệm vụ theo dõi, tổng hợp tiến độ giải ngân (hoặc giao việc mới), mục "Giải ngân vốn" (hoặc bảng "Xem chi tiết") → "Theo dõi giải ngân" → chọn "Số liệu toàn tỉnh". Bước 2: cán bộ chủ trì nhiệm vụ đó nhập kỳ số liệu từ báo cáo chính thức.';
     return `<article class="the-bd n12 gn-tq gn-trong" id="tqGiaiNgan">${dauKhoi(0, tieu, 'Chưa có số liệu năm này. Chỉ lãnh đạo Văn phòng và người nhập số liệu thấy hướng dẫn này.', phai)}<p class="gn-huong-dan">${buoc}</p></article>`;
   }

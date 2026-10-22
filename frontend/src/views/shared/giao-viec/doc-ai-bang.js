@@ -24,16 +24,16 @@ function dongSuaHtml(n, d, i, dm) {
   const hanGy = d.han_goi_y && !d.han && d.loai !== 'KY_BAN_HANH'
     ? `<button type="button" class="nut nho" data-action="gvDocBangHan" data-i="${i}" title="${esc(`Văn bản nêu: “${d.han_trich}” — chưa đối chiếu được ngày`)}">Dùng ${esc(formatNgay(d.han_goi_y))}</button>` : '';
   const phu = [n.trang ? `Trang ${esc(n.trang)}` : '', n.don_vi_chu_tri?.gia_tri ? `Chủ trì theo văn bản: ${esc(n.don_vi_chu_tri.gia_tri)}` : '',
-    n.nganh?.gia_tri ? `Ngành: ${esc(ten(dm.nganh, n.nganh.gia_tri))}` : '', n.linh_vuc?.gia_tri ? `Lĩnh vực: ${esc(ten(dm.linhVuc, n.linh_vuc.gia_tri))}` : ''].filter(Boolean).join(' · ');
+    n.nganh?.gia_tri ? `Ngành/lĩnh vực: ${esc(ten(dm.nganh, n.nganh.gia_tri))}` : '', n.linh_vuc?.gia_tri ? `Lĩnh vực: ${esc(ten(dm.linhVuc, n.linh_vuc.gia_tri))}` : ''].filter(Boolean).join(' · ');
   return `<li class="gv-doc-nv gv-db" data-i="${i}">
     <div class="gv-db-dau"><b>Nhiệm vụ ${i + 1}</b>${nhanNd}<span class="gv-db-nut"><button type="button" class="nut nho chinh" data-action="gvDocDien" data-i="${i}">Điền vào thẻ</button>
       <button type="button" class="nut nho" data-action="gvDocBoDong" data-i="${i}" aria-label="Bỏ nhiệm vụ ${i + 1}">× Bỏ</button></span></div>
     <textarea class="o-nhap" rows="3" data-sua="noi_dung" data-i="${i}" aria-label="Nội dung — nhiệm vụ ${i + 1}">${esc(d.noi_dung)}</textarea>${tron}
     <div class="gv-db-o">
-      <label><span class="nhan">Chịu trách nhiệm${BB}</span>${chon('owner', i, 'klThOwner', d.owner, 'Chịu trách nhiệm')}</label>
+      <label><span class="nhan">Chủ trì theo dõi${BB}</span>${chon('owner', i, 'klThOwner', d.owner, 'Chủ trì theo dõi')}</label>
       <label><span class="nhan">Sản phẩm đầu ra${BB}</span>${chon('san_pham', i, 'klThSanPham', d.san_pham, 'Sản phẩm đầu ra')}</label>
-      <div><span class="nhan">Hạn hoàn thành${BB}</span><span class="gv-db-han">${chon('loai', i, 'klThLoai', d.loai, 'Loại thời hạn')}
-        <input type="date" class="o-nhap" data-sua="han" data-i="${i}" value="${esc(d.han)}" aria-label="Hạn hoàn thành — nhiệm vụ ${i + 1}"${d.loai === 'KY_BAN_HANH' ? ' hidden' : ''}></span>${hanGy}</div>
+      <div><span class="nhan">Hạn xử lý${BB}</span><span class="gv-db-han">${chon('loai', i, 'klThLoai', d.loai, 'Loại thời hạn')}
+        <input type="date" class="o-nhap" data-sua="han" data-i="${i}" value="${esc(d.han)}" aria-label="Hạn xử lý — nhiệm vụ ${i + 1}"${d.loai === 'KY_BAN_HANH' ? ' hidden' : ''}></span>${hanGy}</div>
       <label><span class="nhan">Cơ quan/đơn vị trình</span>${chon('co_quan_trinh', i, 'klThCoQuanTrinh', d.co_quan_trinh, 'Cơ quan/đơn vị trình')}</label>
     </div>
     ${phu ? `<small class="chu-phu">${phu}</small>` : ''}</li>`;
@@ -55,8 +55,8 @@ export function dongHtml(s, n, i, dm) {
 }
 // Điền nhanh (từ 2 dòng còn điền được): chịu trách nhiệm, hạn chung → các dòng đang trống ô đó.
 export const nhanhHtml = (so) => (so < 2 ? '' : `<div class="gv-db-nhanh"><span class="nhan">Điền nhanh các dòng còn trống</span>
-  <select class="o-nhap" id="gvDbOwner" data-nguon="klThOwner" data-gt="" aria-label="Chịu trách nhiệm chung"></select>
-  <input type="date" class="o-nhap" id="gvDbHan" aria-label="Hạn hoàn thành chung">
+  <select class="o-nhap" id="gvDbOwner" data-nguon="klThOwner" data-gt="" aria-label="Chủ trì theo dõi chung"></select>
+  <input type="date" class="o-nhap" id="gvDbHan" aria-label="Hạn xử lý chung">
   <button type="button" class="nut nho" data-action="gvDocDienNhanh">Áp vào các dòng còn trống</button></div>`);
 
 // Sau khi chèn HTML: chép lựa chọn từ ô nguồn (bỏ dấu ẩn của ô tìm nhanh), đặt giá trị của dòng.

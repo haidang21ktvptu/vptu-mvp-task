@@ -13,7 +13,7 @@ export const nhanMucHtml = (r) => (r.muc_quan_trong ? `<span class="muc-qt muc-$
 // Ô lưới (dt/dd) của ngăn chi tiết — o(nhãn, giá trị, cột) như chi-tiet.js (cột: bút / khoá của ô tầng giao).
 export function oLuoiNguonHtml(r, o) {
   return [r.muc_quan_trong ? o('Mức quan trọng', escapeHtml(tenMucQuanTrong(r.muc_quan_trong)), 'muc_quan_trong') : '',
-    r.co_quan_trinh ? o('Cơ quan trình', escapeHtml(boSoThuTu(r.co_quan_trinh_ten) || r.co_quan_trinh), 'co_quan_trinh') : '',
+    r.co_quan_trinh ? o('Cơ quan/đơn vị trình', escapeHtml(boSoThuTu(r.co_quan_trinh_ten) || r.co_quan_trinh), 'co_quan_trinh') : '',
     r.thuong_truc_chi_dao ? o('Thường trực chỉ đạo', escapeHtml(r.thuong_truc_chi_dao_ten || ''), 'thuong_truc_chi_dao') : ''].join('');
 }
 

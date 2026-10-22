@@ -93,7 +93,7 @@ test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (kh
       await p.locator('#klThNoiDung').fill(`${khoa} giao thật A2`); await p.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await p.locator('#klThSanPham').selectOption('BAO_CAO');
       await chonPhanLoai(p);   // v3.26: ngành, lĩnh vực, mục tiêu then chốt bắt buộc — "Không thuộc"
-      await expect(conThieu(p)).toHaveText('Còn thiếu: hạn hoàn thành', NAP); await expect(p.locator('#klThLuu')).toBeDisabled();
+      await expect(conThieu(p)).toHaveText('Còn thiếu: hạn xử lý', NAP); await expect(p.locator('#klThLuu')).toBeDisabled();
       await p.locator('#klThHan').fill(H);
       await expect(conThieu(p)).toHaveText('', NAP);
       await expect(p.locator('#klThLuu')).toBeEnabled(); await p.locator('#klThLuu').click();

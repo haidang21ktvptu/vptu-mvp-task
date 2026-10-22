@@ -47,7 +47,7 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
       const tep = testInfo.outputPath('xuat.xlsx'); await tai.saveAs(tep);
       const [sheet] = docXlsx(tep);
       expect(sheet.dong).toHaveLength(3);   // tiêu đề + 2 dòng
-      expect(sheet.dong[0]).toEqual(expect.arrayContaining(['Mã', 'Nội dung', 'Nguồn nhiệm vụ', 'Chất lượng', 'Tiến độ hoàn thành', 'Vướng mắc']));
+      expect(sheet.dong[0]).toEqual(expect.arrayContaining(['Mã nhiệm vụ', 'Nội dung kết luận / Văn bản trình', 'Nguồn nhiệm vụ', 'Chất lượng', 'Tiến độ hoàn thành', 'Vướng mắc']));
       expect(sheet.dong.slice(1).map((d) => d[0]).sort()).toEqual([T1.ma, T2.ma].sort());
     });
   });

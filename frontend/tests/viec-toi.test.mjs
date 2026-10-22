@@ -53,7 +53,7 @@ test('việc cần làm: thứ tự xác nhận → trả lời chỉ đạo →
 });
 
 test('vai, sắp xếp mới giao / hạn / mức cảnh báo, nhóm theo văn bản giữ thứ tự', () => {
-  assert.equal(vaiCua(DS[0], ME), 'Chủ trì'); assert.equal(vaiCua(DS[7], ME), 'Theo dõi'); assert.equal(vaiCua(DS[8], ME), '');
+  assert.equal(vaiCua(DS[0], ME), 'Chủ trì theo dõi'); assert.equal(vaiCua(DS[7], ME), 'Người theo dõi'); assert.equal(vaiCua(DS[8], ME), '');
   const a = v('a', { created_at: '2026-10-02T01:00:00Z', van_ban_id: 'vb2', han_xu_ly: '2026-12-01' });
   const b = v('b', { created_at: '2026-10-03T01:00:00Z', van_ban_id: 'vb1', han_xu_ly: '2026-10-20', muc_canh_bao: 'VANG' });
   const c = v('c', { created_at: '2026-10-01T01:00:00Z', van_ban_id: 'vb2', han_xu_ly: '2026-10-10', muc_canh_bao: 'DO_DAC_BIET' });

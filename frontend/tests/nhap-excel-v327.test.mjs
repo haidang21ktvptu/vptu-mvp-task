@@ -66,7 +66,7 @@ test('Tệp kiểu cũ: đơn vị ngoài Văn phòng ở cột "Đơn vị ch�
   const kq = danhGia(dong({ ...PL, chu_tri: undefined, can_bo: 'Đàm Văn Sơn', don_vi: 'Đảng ủy Ủy ban nhân dân tỉnh', co_quan_trinh: undefined }), LANH_DAO);
   assert.equal(kq.ket_qua, 'GIAO', kq.thieu.join(', '));
   assert.deepEqual([kq.du_lieu.owner_don_vi_ma, kq.du_lieu.co_quan_trinh], ['QUAN_TRI', 'DANG_UY_UBND']);
-  assert.ok(kq.canhBao.some((c) => c.includes('ghi vào cơ quan trình')));
+  assert.ok(kq.canhBao.some((c) => c.includes('ghi vào cơ quan/đơn vị trình')));
 });
 
 test('Quy tắc mặc định: sản phẩm theo nội dung, lĩnh vực theo lĩnh vực chi tiết / từ khoá / ngành, cộng tháng (cuối tháng), hạn từ hôm nay', () => {
@@ -98,7 +98,7 @@ test('"Chờ hoàn thiện" tính lại (lỗi lô LO-0003): có cán bộ chủ
   const chu = chuDienSan(chuaRo);   // chữ hiện: lĩnh vực đoán theo ngành ở "thiếu" kèm lời nhắc (không lặp ở "điền sẵn"); đơn vị → chủ trì theo dõi
   assert.deepEqual(chu.thieu, ['lĩnh vực (đã gợi ý theo ngành — kiểm tra lại)', 'chủ trì theo dõi']);
   assert.ok(!chu.dien.includes('lĩnh vực') && chu.dien.includes('sản phẩm đầu ra'), chu.dien.join(', '));
-  assert.deepEqual(chuDienSan(x), { thieu: [], dien: ['loại thời hạn', 'sản phẩm đầu ra', 'lĩnh vực', 'hạn xử lý', 'cơ quan trình'] });
+  assert.deepEqual(chuDienSan(x), { thieu: [], dien: ['loại thời hạn', 'sản phẩm đầu ra', 'lĩnh vực', 'hạn xử lý', 'cơ quan/đơn vị trình'] });
 });
 
 test('Cột M khi xuất theo mẫu: minh chứng → số hiệu · ngày · trích yếu · mô tả; minh chứng chữ giữ nguyên', () => {

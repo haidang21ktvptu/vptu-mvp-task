@@ -23,7 +23,7 @@ export function nhanhHtml(r, cap, { con, mc, mo, homNay }) {
       ${coCon ? `<button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="nv-${r.id}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} ${escapeHtml(r.ma)}"></button>` : '<i class="tvb-gap trong"></i>'}
       <button type="button" class="tvb-nut" data-action="tvbMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" title="Bấm để xem chi tiết">
         <span class="bnv-c bnv-c-nv"><span class="ma">${cap > 1 ? '↳ ' : ''}${escapeHtml(r.ma)}${r.stt_van_ban ? `<small class="tvb-stt" title="Số thứ tự trong văn bản">·${String(r.stt_van_ban).padStart(2, '0')}</small>` : ''}</span><span class="nd">${escapeHtml(r.noi_dung)}${chiXem(r) ? NHAN_CHI_XEM : ''}</span></span>
-        <span class="bnv-c chu-tri" data-nhan="Chủ trì">${escapeHtml(ownerText(r))}</span>
+        <span class="bnv-c chu-tri" data-nhan="Chủ trì theo dõi">${escapeHtml(ownerText(r))}</span>
         <span class="bnv-c han" data-nhan="Hạn xử lý"><b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span></span>
         <span class="bnv-c bnv-c-tt" data-nhan="Trạng thái"><span class="trang-thai ${tt.lop}">${escapeHtml(tt.chu)}</span>${mc.map(laHtml).join('')}</span></button>
     </div>
@@ -66,6 +66,6 @@ export function vanBanHtml(d, o) {
         <span class="tvb-tien-chu">${t.xong}/${t.n} hoàn thành</span></span>
       <span class="bnv-c" data-nhan="Cảnh báo">${canhBaoHtml(t)}</span>
     </div>
-    <div class="tvb-con bnv-con"><div class="bnv-con-dau" aria-hidden="true"><span>Nhiệm vụ của văn bản</span><span>Chủ trì</span><span>Hạn xử lý</span><span>Trạng thái</span></div>
+    <div class="tvb-con bnv-con"><div class="bnv-con-dau" aria-hidden="true"><span>Nhiệm vụ của văn bản</span><span>Chủ trì theo dõi</span><span>Hạn xử lý</span><span>Trạng thái</span></div>
       ${o.nhanh}${chanConHtml(d, o.sua)}</div></section>`;
 }

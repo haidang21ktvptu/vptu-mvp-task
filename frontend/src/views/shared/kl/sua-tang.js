@@ -165,7 +165,7 @@ async function luuSuaTang() {
   try {
     if ($('stCheDo').value === 'sua') {
       await suaThongTinGiao(id, thay, lyDo);
-      notifySuccess(`Đã sửa ${tenOGiao(cot).toLowerCase()}. Chủ trì và người theo dõi được báo.`);
+      notifySuccess(`Đã sửa ${tenOGiao(cot).toLowerCase()}. Chủ trì theo dõi và người theo dõi được báo.`);
     } else {
       await guiDeNghiSua(id, thay, lyDo);
       notifySuccess('Đã gửi đề nghị sửa. Người duyệt nhận thông báo; việc vẫn chạy trong lúc chờ.');

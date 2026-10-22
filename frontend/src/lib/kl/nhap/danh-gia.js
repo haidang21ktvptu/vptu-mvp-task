@@ -87,8 +87,8 @@ export function danhGia(dong, ctx) {
     if (ngoai && !xongNgoai) {   // v3.18 (0079): Owner luôn là phòng / cán bộ Văn phòng. v3.27: đơn vị ngoài ở cột "Đơn vị chủ trì" thực chất là cơ quan trình
       delete gt.don_vi;
       if (!gt.co_quan_trinh && !loi.includes('co_quan_trinh')) { gt.co_quan_trinh = ngoai.ma; macDinh.add('co_quan_trinh'); }
-      if (gt.can_bo) canhBao.push(`"${ngoai.ten}" ở cột đơn vị chủ trì → ghi vào cơ quan trình; đơn vị chủ trì theo cán bộ chủ trì`);
-      else { loi.push('don_vi'); canhBao.push('đơn vị chủ trì ngoài Văn phòng — ghi tên đơn vị thực hiện trong nội dung, chọn phòng / cán bộ Văn phòng chịu trách nhiệm'); }
+      if (gt.can_bo) canhBao.push(`"${ngoai.ten}" ở cột đơn vị chủ trì → ghi vào cơ quan/đơn vị trình; đơn vị chủ trì theo dõi theo cán bộ chủ trì`);
+      else { loi.push('don_vi'); canhBao.push('đơn vị chủ trì ngoài Văn phòng — ghi tên đơn vị thực hiện trong nội dung, chọn phòng / cán bộ Văn phòng chủ trì theo dõi'); }
     }
     md('don_vi', donViCuaCanBo(accounts.find((a) => a.id === gt.can_bo), dm));
     const dv = dm.donVi.find((d) => d.ma === gt.don_vi);
@@ -99,7 +99,7 @@ export function danhGia(dong, ctx) {
     if (cb && dv && (dv.phong ? cb.department !== dv.phong : !(dv.ma === 'VAN_PHONG_TINH_UY' && cb.role_group === 'A1'))) {
       delete gt.can_bo; loi.push('can_bo'); canhBao.push('cán bộ chủ trì không thuộc đơn vị chủ trì');
     } else if (tt && !xongNgoai && (cb ? cb.role_group !== 'A1' : dv && !dv.phong)) {   // Thường trực giao cho lãnh đạo Văn phòng hoặc một phòng (giao_viec v_nhu_a0)
-      const k = cb ? 'can_bo' : 'don_vi'; delete gt[k]; loi.push(k); canhBao.push('thay mặt Thường trực: người chịu trách nhiệm phải là lãnh đạo Văn phòng hoặc một phòng');
+      const k = cb ? 'can_bo' : 'don_vi'; delete gt[k]; loi.push(k); canhBao.push('thay mặt Thường trực: chủ trì theo dõi phải là lãnh đạo Văn phòng hoặc một phòng');
     }
     // v3.27: Trưởng phòng giao trong phòng mình (giao_viec, kl_nhap_da_xong chặn) — báo ở bản xem trước thay vì dòng rơi vào "Chờ hoàn thiện" khi nhập
     if (me?.role_group === 'A2' && !me.quan_tri_kl && (gt.can_bo || gt.don_vi)) {

@@ -30,7 +30,7 @@ test('gộp kết quả các lượt; số giữ nguyên; chữ ô cũ → mới
   assert.equal(gopKetQua([{ da_ghi: true }, { da_ghi: false }]).da_ghi, false);
   const ten = (k, v) => ({ DANG_UY_UBND: '6. Đảng ủy Ủy ban nhân dân tỉnh' }[v] || v);
   assert.deepEqual(chuDoi({ cu: { co_quan_trinh: null, han_xu_ly: null }, moi: { co_quan_trinh: 'DANG_UY_UBND', han_xu_ly: '2026-11-20', ket_qua: '[Tự điền] Đã ban hành kế hoạch' } }, ten),
-    ['Cơ quan trình: (trống) → 6. Đảng ủy Ủy ban nhân dân tỉnh', 'Hạn xử lý: (trống) → 2026-11-20', 'Kết quả (minh chứng chữ): [Tự điền] Đã ban hành kế hoạch']);
+    ['Cơ quan/đơn vị trình: (trống) → 6. Đảng ủy Ủy ban nhân dân tỉnh', 'Hạn xử lý: (trống) → 2026-11-20', 'Kết quả thực hiện / Minh chứng: [Tự điền] Đã ban hành kế hoạch']);
 });
 
 test('cột chu_tri: cán bộ → chủ trì + người theo dõi là cán bộ đó; "VPTU" → Văn phòng Tỉnh ủy, theo dõi Chánh Văn phòng; tên phòng → Trưởng phòng; không rõ / trùng tên → lỗi', () => {

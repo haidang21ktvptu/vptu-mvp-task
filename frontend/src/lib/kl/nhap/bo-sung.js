@@ -45,8 +45,8 @@ export function chuanHoaChuTri(d, ctx) {
   return { du: { ...d, viec }, loi };
 }
 
-export const TEN_O = { co_quan_trinh: 'Cơ quan trình', linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', han_xu_ly: 'Hạn xử lý', van_ban_trien_khai: 'Văn bản triển khai',
-  ghi_chu: 'Ghi chú', ket_qua: 'Kết quả (minh chứng chữ)', owner_tai_khoan: 'Chủ trì theo dõi', owner_don_vi_ma: 'Đơn vị chủ trì', nguoi_theo_doi: 'Người theo dõi' };
+export const TEN_O = { co_quan_trinh: 'Cơ quan/đơn vị trình', linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', han_xu_ly: 'Hạn xử lý', van_ban_trien_khai: 'Văn bản triển khai',
+  ghi_chu: 'Ghi chú', ket_qua: 'Kết quả thực hiện / Minh chứng', owner_tai_khoan: 'Chủ trì theo dõi', owner_don_vi_ma: 'Đơn vị chủ trì theo dõi', nguoi_theo_doi: 'Người theo dõi' };
 const rut = (t, n = 140) => (String(t).length > n ? `${String(t).slice(0, n - 1)}…` : String(t));
 // x: một việc trong kết quả; ten(k, v): tên hiển thị của giá trị (đơn vị, cán bộ, ngày). → ['Cơ quan trình: (trống) → 6. Đảng ủy …', …]
 export function chuDoi(x, ten = (k, v) => v) {

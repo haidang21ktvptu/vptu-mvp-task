@@ -69,14 +69,14 @@ export const giaoViecTemplate = `
       </section>
 
       <section class="gv-phan" id="gvPhan2"><h2><i id="gvCham2" class="gv-so">2</i>Nhiệm vụ</h2>
-        <p class="chu-phu" id="gvPhan2Phu">Mỗi thẻ là một việc: một chủ trì, một sản phẩm, một hạn hoàn thành. Văn bản giao nhiều việc thì bấm <b>+ Thêm nhiệm vụ</b> — tất cả được giao trong một lượt.</p>
+        <p class="chu-phu" id="gvPhan2Phu">Mỗi thẻ là một việc: một chủ trì theo dõi, một sản phẩm đầu ra, một hạn xử lý. Văn bản giao nhiều việc thì bấm <b>+ Thêm nhiệm vụ</b> — tất cả được giao trong một lượt.</p>
         <article class="gv-nv" id="gvThe1" data-dong="1" aria-label="Nhiệm vụ 1">
           <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ 1</b></header>
-          ${truong('klThNoiDung', `Nội dung kết luận / nhiệm vụ${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
-    'việc giao cho đơn vị ngoài Văn phòng (sở, ban, ngành, huyện): ghi rõ đơn vị thực hiện ngay trong nội dung, ví dụ "Sở Tài chính tham mưu…"; người chịu trách nhiệm là phòng / cán bộ Văn phòng theo dõi việc đó')}
+          ${truong('klThNoiDung', `Nội dung kết luận / Văn bản trình${BB}`, '<textarea id="klThNoiDung" class="o-nhap" rows="3" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>', '',
+    'việc giao cho đơn vị ngoài Văn phòng (sở, ban, ngành, huyện): ghi rõ đơn vị thực hiện ngay trong nội dung, ví dụ "Sở Tài chính tham mưu…"; chủ trì theo dõi là phòng / cán bộ Văn phòng theo dõi việc đó')}
           <div class="cot-3 gv-hang-nhanh">
-            ${truong('klThOwner', `Chủ trì theo dõi${BB}`, selTim('klThOwner'), '', 'người chịu trách nhiệm (Owner): phòng hoặc cán bộ — lãnh đạo có thể giao cho chính mình')}
-            <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh người chịu trách nhiệm"></div>
+            ${truong('klThOwner', `Chủ trì theo dõi${BB}`, selTim('klThOwner'), '', 'phòng hoặc cán bộ chịu trách nhiệm theo dõi việc — lãnh đạo có thể giao cho chính mình')}
+            <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh chủ trì theo dõi"></div>
             ${truong('klThNganh', 'Ngành/lĩnh vực<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
             ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
           </div>
@@ -88,7 +88,7 @@ export const giaoViecTemplate = `
           <div class="cot-3 gv-hang-nhanh" id="gvHanWrap">
             ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
             ${truong('klThHan', 'Hạn xử lý<b id="klThHanBatBuoc" class="gv-bb" aria-hidden="true">*</b>', inp('klThHan', 'date'), '', '<span id="klThHanLoai"></span><span id="klThHanGhiChu" aria-live="polite"></span>')}
-            <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn hoàn thành"></div>
+            <div class="gv-nhanh" id="gvNhanhHan" aria-label="Chọn nhanh hạn xử lý"></div>
             ${truong('klThSanPham', `Sản phẩm đầu ra${BB}`, sel('klThSanPham'))}
             <div class="gv-nhanh" id="gvNhanhSanPham" aria-label="Chọn nhanh sản phẩm"></div>
           </div>
@@ -103,7 +103,7 @@ export const giaoViecTemplate = `
             </div>
             <div class="cot-3">
               ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
-              ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của người chịu trách nhiệm')}
+              ${truong('klThCapNhan', 'Cấp nhận sản phẩm', sel('klThCapNhan'), '', 'mặc định là cấp trên của chủ trì theo dõi')}
               <div></div>
             </div>
             <p class="chu-phu" id="gvGoiYCanBo">Cân tải: xem bức tranh tải việc ở mục Cán bộ trước khi chọn người.</p>
@@ -141,12 +141,12 @@ export const giaoViecTemplate = `
     <section class="tam hidden" id="gvVanBanDangNhap" aria-live="polite"></section>
     <section class="tam"><div class="tam-dau"><h2>Xem trước thẻ việc</h2></div>
       <div class="gv-xem-truoc" id="gvXemTruoc"><div class="ct-nhan"><span class="ma">NV-mới</span><span class="tag" id="gvXtDoKhan">Thường</span></div>
-        <b id="gvXtNoiDung">Nội dung nhiệm vụ (chưa nhập)</b><span id="gvXtPhu">Chủ trì: chưa chọn · Hạn: chưa chọn · Sản phẩm: chưa chọn</span></div></section>
+        <b id="gvXtNoiDung">Nội dung kết luận / Văn bản trình (chưa nhập)</b><span id="gvXtPhu">Chủ trì theo dõi: chưa chọn · Hạn xử lý: chưa chọn · Sản phẩm đầu ra: chưa chọn</span></div></section>
     <section class="tam"><div class="tam-dau"><h2>Ba bước sau khi giao</h2></div>
       <ol class="gv-buoc-sau">
-        <li><i>1</i><span id="gvBuoc1">Người chịu trách nhiệm và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
+        <li><i>1</i><span id="gvBuoc1">Chủ trì theo dõi và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
-        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản; có thể kèm tệp) trước hạn hoàn thành — nộp là việc hoàn thành; người giao việc, lãnh đạo xem kết quả và trả lại nếu chưa đạt.</span></li>
+        <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản; có thể kèm tệp) trước hạn xử lý — nộp là việc hoàn thành; người giao việc, lãnh đạo xem kết quả và trả lại nếu chưa đạt.</span></li>
       </ol></section>
   </aside>
   </div>

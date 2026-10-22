@@ -52,7 +52,7 @@ export function ketQuaHtml(s, dm) {
       <small class="chu-phu">${esc(s.ncc || 'Trợ lý AI')}${s.moHinh ? ` (${esc(s.moHinh)})` : ''} · ${esc(chuThongKe(s.kq?.thong_ke))}${s.banChup ? ' · tệp là bản chụp: chưa đối chiếu tự động được, đồng chí kiểm tra từng giá trị' : ''}</small></div>
     <button type="button" class="nut nho" data-action="gvDocBo">Bỏ tất cả</button></div>
     ${vanBanHtml(s)}
-    ${ds.length ? `<div class="gv-doc-nv-dau"><div><b>Văn bản giao ${ds.length} nhiệm vụ</b><small class="chu-phu">Sửa ngay trong bảng: nội dung, chịu trách nhiệm, sản phẩm, hạn, cơ quan trình; nhiệm vụ không giao thì bấm “× Bỏ”.</small></div>${nut}</div>
+    ${ds.length ? `<div class="gv-doc-nv-dau"><div><b>Văn bản giao ${ds.length} nhiệm vụ</b><small class="chu-phu">Sửa ngay trong bảng: nội dung, chủ trì theo dõi, sản phẩm đầu ra, hạn xử lý, cơ quan/đơn vị trình; nhiệm vụ không giao thì bấm “× Bỏ”.</small></div>${nut}</div>
       ${con > 20 ? '<small class="chu-phu">Mỗi lượt giao tối đa 20 nhiệm vụ: giao lượt đầu xong, bấm "Điền tiếp" để điền phần còn lại vào văn bản vừa tạo.</small>' : ''}
       ${bo ? `<small class="chu-phu">${bo} nhiệm vụ đã bỏ (việc trùng được bỏ sẵn) — cần giao thì bấm “Lấy lại”.</small>` : ''}
       ${nhanhHtml(con)}
@@ -62,7 +62,7 @@ export function ketQuaHtml(s, dm) {
 }
 // Ghi chú đầu thẻ sau khi điền (thay ghi chú cũ). kh: keHoachBang; i: số thứ tự trong văn bản / tong. v3.27: nội dung, hạn đã chốt ở bảng đề xuất (nút
 // "Dùng trọn câu", "Dùng ngày" ở bảng) — ghi chú chỉ còn nguồn, đề xuất cần kiểm tra và cảnh báo.
-const TEN_DE_XUAT = { san_pham: 'sản phẩm', nganh: 'ngành', linh_vuc: 'lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan trình' };
+const TEN_DE_XUAT = { san_pham: 'sản phẩm đầu ra', nganh: 'ngành/lĩnh vực', linh_vuc: 'lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan/đơn vị trình' };
 export function ghiChuTheHtml(kh, i, tong) {
   const deXuat = [...new Set(kh.deXuat)].map((c) => TEN_DE_XUAT[c]).filter(Boolean);
   const phan = [`Điền từ văn bản (nhiệm vụ ${i + 1}/${tong})`, kh.goiY.chuTri ? `chủ trì theo văn bản: ${esc(kh.goiY.chuTri)}` : '',

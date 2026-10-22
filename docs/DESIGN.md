@@ -221,9 +221,31 @@ Màu mức cảnh báo (Vàng, Đỏ, Đỏ đặc biệt) và trạng thái gi�
 Mọi danh sách nhiệm vụ (Nhiệm vụ, Việc tôi theo dõi, Việc của tôi, Theo văn bản) là **bảng có cột** kiểu V-Office; thay "dòng cao 44px" của mục 4 cho các bảng này. CSS `styles/bang-nhiem-vu.css` (khung, cột) + `styles/bang-man-hinh.css` (màn hẹp, in); lớp tiền tố `bnv-` (tên trong mẫu như `.bang .han .stt` đã là lớp chung), viết nguyên văn trong JS.
 - **Ô số** trên bảng: một khối, các ô cách nhau 1px, chia đều một hàng; ô đang chọn nền `--navy-dac`, chữ trắng, số `--vang-tren-dac`; chọn một ô một lúc; số của ô = số dòng khi chọn ô đó (cùng một mảng). Bộ 8 ô: 4 + 4 ở 861–1199px; ≤ 860px hai ô một hàng.
 - **Dòng**: cao ≥ 58px, kẻ ngang mảnh, không kẻ dọc, không sọc; **mép trái 4px theo mức** (lam trong hạn, vàng, đỏ, tím Đỏ đặc biệt — nền tím nhạt cả dòng, lục hoàn thành); hàng tiêu đề chữ 13px đậm vừa màu `--chu-phu` trên nền `--nen-mo`; giờ và con số bằng Lexend; mã việc đậm màu navy; ô Hạn: ngày đậm theo màu mức + dòng phụ "còn 3 ngày / trễ 4 ngày / xong 29/9 · trước hạn 1 ngày"; Trạng thái là nhãn màu. Chú giải màu ngay trên bảng.
-- **Cột**: Nhiệm vụ — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì | Hạn xử lý | Trạng thái; Việc tôi theo dõi — STT | Nhiệm vụ | Chủ trì | Văn bản giao | Hạn | Trạng thái | Tình hình (xám bình thường, vàng cần đôn đốc, đỏ vướng mắc / chỉ đạo chờ, lục đã nộp minh chứng); Việc của tôi — STT | Nhiệm vụ | Văn bản giao | Thời gian giao | Hạn | Trạng thái | Việc cần làm; Theo văn bản — STT | Văn bản | Ngày nhận | Người giao | Nhiệm vụ (đã nhập / dự kiến) | Tiến độ (thanh lục / đỏ / vàng + "x/n hoàn thành") | Cảnh báo, bấm tên văn bản mở bảng con (Nhiệm vụ của văn bản | Chủ trì | Hạn | Trạng thái; việc giao tiếp xuống thụt "↳").
+- **Cột**: Nhiệm vụ — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì theo dõi | Hạn xử lý | Trạng thái; Việc tôi theo dõi — STT | Nhiệm vụ | Chủ trì theo dõi | Văn bản giao | Hạn | Trạng thái | Tình hình (xám bình thường, vàng cần đôn đốc, đỏ vướng mắc / chỉ đạo chờ, lục đã nộp minh chứng); Việc của tôi — STT | Nhiệm vụ | Văn bản giao | Thời gian giao | Hạn | Trạng thái | Việc cần làm; Theo văn bản — STT | Văn bản | Ngày nhận | Người giao | Nhiệm vụ (đã nhập / dự kiến) | Tiến độ (thanh lục / đỏ / vàng + "x/n hoàn thành") | Cảnh báo, bấm tên văn bản mở bảng con (Nhiệm vụ của văn bản | Chủ trì | Hạn | Trạng thái; việc giao tiếp xuống thụt "↳").
 - **Việc cần làm** (Việc của tôi): một nút cho việc đầu tiên áp dụng — Xác nhận đã nhận việc (nút lam, kèm nút viền "Từ chối") → Trả lời chỉ đạo → Nộp minh chứng (nút lam khi việc gấp) → Cập nhật tiến độ; không có việc chờ thì chữ xám. Biểu mẫu mở **ngay dưới dòng** (khối viền trái theo mức), mỗi lúc một khối, Huỷ đưa con trỏ về nút đã mở.
 - **Trang**: 50 dòng mỗi trang; chân bảng "Hiển thị 1–50 trong 230 nhiệm vụ (lọc từ 812)" + "‹ Trang trước · Trang 1/5 · Trang sau ›"; đổi ô số / tìm / lọc / sắp xếp về trang 1. In và Xuất Excel lấy đủ danh sách.
 - **Ngăn chi tiết** (màn Nhiệm vụ) hiện **cạnh** bảng (520px; 420px khi ≤ 1180px), không phủ lên bảng; khi ngăn mở, dưới 1600px dòng thành thẻ gọn.
 - **Màn hẹp**: 1024–1365px gộp cột thời gian vào dòng phụ dưới nội dung; < 1024px mỗi dòng là thẻ, mỗi ô có nhãn (`data-nhan`); ≤ 600px nội dung 3 dòng, nút thao tác rộng hết thẻ (≥ 44px); 360px không cuộn ngang.
 - **In**: ẩn ô số, chú giải, nút trang, khối dưới dòng và cột Việc cần làm; dòng không bị cắt giữa trang.
+
+## 12. Tên ô nhiệm vụ theo bảng Phụ lục (v3.28.1 — chủ dự án quyết 22/10/2026)
+
+"Phải theo đúng như các cột ở file excel … để thuận tiện sử dụng." Mọi màn hình (Giao việc, Nhiệm vụ và ngăn chi tiết, Tổng quan, Theo văn bản,
+Việc của tôi, Cần xử lý, Báo cáo, Nhập / Xuất Excel, Diễn biến) gọi một ô bằng **đúng một tên** — tên cột bảng Phụ lục (mẫu nhập chuẩn `COT_MAU`);
+ô không có trong bảng Phụ lục dùng đúng tên ở màn Giao việc. Thêm màn hình hay ô mới: lấy tên ở bảng dưới, không đặt tên khác.
+
+| Ô (dữ liệu) | Tên dùng thống nhất |
+|---|---|
+| người, phòng chịu trách nhiệm (Owner) | **Chủ trì theo dõi** (cột E) — phòng của chủ trì: **Đơn vị chủ trì theo dõi**; Diễn biến: "Chủ trì theo dõi (cán bộ)", "Chủ trì theo dõi (phòng, đơn vị)" |
+| ngành | **Ngành/lĩnh vực** (cột F) |
+| cơ quan trình | **Cơ quan/đơn vị trình** (cột G) |
+| nội dung | **Nội dung kết luận / Văn bản trình** (cột I) |
+| hạn | **Hạn xử lý** (cột K) |
+| mã | **Mã nhiệm vụ** (cột O) |
+| số văn bản | **Số TB/KL** (cột C) |
+| Lĩnh vực chi tiết, Loại thời hạn, Tiến độ, Văn bản triển khai, Số hội nghị, Ngày ban hành | như tên cột (H, J, L, N, B, D) |
+| người theo dõi · sản phẩm · nguồn · phối hợp · cấp nhận | **Người theo dõi** · **Sản phẩm đầu ra** · **Nguồn nhiệm vụ** · **Đơn vị phối hợp** · **Cấp nhận sản phẩm** (tên ở Giao việc) |
+
+Không dùng "Chủ trì", "Theo dõi", "Chịu trách nhiệm", "Hạn hoàn thành", "Cơ quan trình" hay chữ "Owner" làm tên ô. Giữ nguyên vì nghĩa khác cột Excel:
+"Trạng thái" (tính theo hạn — khác cột "Tiến độ"); "Số hiệu" của văn bản ở Giao việc (mọi loại văn bản); cột "Nhiệm vụ" của bảng (mã + nội dung);
+các ô trong hộp nộp minh chứng; tệp rà soát phân loại (đọc lại theo tiêu đề cũ); chữ "Theo dõi" ở nhóm menu và hộp "Theo dõi giải ngân".

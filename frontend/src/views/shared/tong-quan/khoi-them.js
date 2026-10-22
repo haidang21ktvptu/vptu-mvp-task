@@ -10,16 +10,16 @@ const pillsXh = (d, cach) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do'
   || '<span class="muc-tq tot">Không</span>';
 // ds: xepHang(rows, k, cach); cach: 'dv' | 'tt'.
 export function xepHangHtml(ds, cach, k) {
-  const cot = cach === 'tt' ? 'Đồng chí Thường trực chỉ đạo' : 'Cơ quan, đơn vị trình';   // v3.27: tên theo cột G bảng Phụ lục
+  const cot = cach === 'tt' ? 'Đồng chí Thường trực chỉ đạo' : 'Cơ quan/đơn vị trình';   // v3.27: tên theo cột G bảng Phụ lục
   const ten = (d) => (cach === 'tt' && d.ma !== 'KHONG' ? `Đồng chí ${d.ten}` : d.ten);
   const dong = (d) => `<tr><td class="c-ten"><button type="button" class="ten-bam" ${mo({ t: 'xh', cach, ma: d.ma, ten: ten(d) })}><b>${escapeHtml(ten(d))}</b><small><span class="chi-mt">${d.giao} giao ${k.trong}</span><span class="chi-dt">${d.xong} hoàn thành, ${d.dangMo} đang làm</span></small></button></td>
     <td class="so" data-n="Tổng">${d.giao}</td><td class="so" data-n="Hoàn thành">${d.xong}</td><td data-n="Đúng hạn">${thuoc(d.tyLe)}</td><td class="so" data-n="Đang làm">${d.dangMo}</td>
     <td data-n="Cảnh báo"><span class="canh-tq">${pillsXh(d, cach)}</span></td></tr>`;
   return `<article class="the-bd n7" id="tqXepHang">${dauKhoi(4, 'Xếp hạng thực hiện', `Nhiều việc quá hạn trước; giao, hoàn thành và đúng hạn tính ${k.trong}; đang làm, quá hạn tính đến hôm nay.`,
-    nhomNut('tqXh', 'cach', [['dv', 'Theo cơ quan, đơn vị trình'], ['tt', 'Theo đồng chí Thường trực chỉ đạo']], cach, 'Xếp hạng theo'))}
+    nhomNut('tqXh', 'cach', [['dv', 'Theo cơ quan/đơn vị trình'], ['tt', 'Theo đồng chí Thường trực chỉ đạo']], cach, 'Xếp hạng theo'))}
     ${ds.length ? `<div class="cuon-ngang"><table class="bang-tq"><thead><tr><th>${cot}</th><th class="so">Giao</th><th class="so">Hoàn thành</th><th>Đúng hạn</th><th class="so">Đang làm</th><th>Quá hạn</th></tr></thead>
       <tbody>${ds.map(dong).join('')}</tbody></table></div>` : '<p class="trong">Chưa có nhiệm vụ trong kỳ.</p>'}
-    ${cach === 'dv' ? '<p class="chu-phu tq-chu-nho">Theo cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ (cột "Cơ quan/đơn vị trình"); việc không ghi cơ quan trình tính cho Văn phòng Tỉnh ủy.</p>' : ''}</article>`;
+    ${cach === 'dv' ? '<p class="chu-phu tq-chu-nho">Theo cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ (cột "Cơ quan/đơn vị trình"); việc không ghi cơ quan/đơn vị trình tính cho Văn phòng Tỉnh ủy.</p>' : ''}</article>`;
 }
 
 // than: HTML các bảng (KPI theo cán bộ, theo lãnh đạo VP phụ trách, theo phòng / cán bộ); moKhoi: đang mở; phong: góc nhìn phòng (Trưởng phòng).

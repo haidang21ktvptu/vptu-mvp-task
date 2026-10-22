@@ -89,7 +89,7 @@ export function dienSanCho({ thieu = [], du = {}, goc = {} }, dm = {}, homNay = 
 }
 // Chữ "thiếu" / "điền sẵn" dùng chung cho danh sách "Chờ hoàn thiện" và dải nhắc của biểu mẫu Hoàn thiện. x: dienSanCho. Đơn vị chủ trì đọc là "chủ trì
 // theo dõi" (một ô của biểu mẫu); lĩnh vực chỉ đoán theo ngành (chưa chắc) nằm ở "thiếu" kèm lời nhắc, không nhắc lại ở "điền sẵn".
-const TEN_DIEN = { loai_thoi_han_ma: 'loại thời hạn', san_pham_loai: 'sản phẩm đầu ra', linh_vuc_ma: 'lĩnh vực', han_xu_ly: 'hạn xử lý', co_quan_trinh: 'cơ quan trình' };
+const TEN_DIEN = { loai_thoi_han_ma: 'loại thời hạn', san_pham_loai: 'sản phẩm đầu ra', linh_vuc_ma: 'lĩnh vực', han_xu_ly: 'hạn xử lý', co_quan_trinh: 'cơ quan/đơn vị trình' };
 export function chuDienSan(x) {
   const goiYLv = Boolean(x.dien?.linh_vuc_ma) && !x.lvChac;
   return { thieu: (x.thieu || []).map((k) => (k === 'don_vi' ? 'chủ trì theo dõi' : k === 'linh_vuc' && goiYLv ? 'lĩnh vực (đã gợi ý theo ngành — kiểm tra lại)' : nhanTruong(k).toLowerCase())),

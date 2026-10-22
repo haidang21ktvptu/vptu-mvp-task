@@ -36,9 +36,9 @@ export function theHtml(k, i) {
   const inp = (cot, them) => `<input type="text" id="${id(cot)}" class="o-nhap" data-cot="${cot}" autocomplete="off"${them}>`;
   return `<article class="gv-nv" data-dong="${i}" data-khoa="${k}" aria-label="Nhiệm vụ ${i}">
     <header class="gv-nv-dau"><b class="gvl-so">Nhiệm vụ ${i}</b><button type="button" class="nut nho gvl-xoa" data-action="gvXoaDong" data-dong="${i}" title="Bỏ nhiệm vụ này">× Bỏ</button></header>
-    ${truong('noi_dung', `Nội dung kết luận / nhiệm vụ${BB}`, `<textarea id="${id('noi_dung')}" class="o-nhap" rows="2" data-cot="noi_dung" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>`)}
+    ${truong('noi_dung', `Nội dung kết luận / Văn bản trình${BB}`, `<textarea id="${id('noi_dung')}" class="o-nhap" rows="2" data-cot="noi_dung" placeholder="Ghi rõ việc cần làm, phạm vi, yêu cầu…"></textarea>`)}
     <div class="cot-3">
-      ${truong('owner', `Chủ trì theo dõi${BB}`, selTim('owner', 'Chủ trì theo dõi'), 'người chịu trách nhiệm: phòng hoặc cán bộ')}
+      ${truong('owner', `Chủ trì theo dõi${BB}`, selTim('owner', 'Chủ trì theo dõi'), 'phòng hoặc cán bộ chịu trách nhiệm theo dõi việc')}
       ${truong('nganh', 'Ngành/lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('nganh', 'Ngành/lĩnh vực'))}
       ${truong('linh_vuc', 'Lĩnh vực<b class="gv-bb gvl-bb-nganh" aria-hidden="true">*</b>', sel('linh_vuc', 'Lĩnh vực'), 'theo ngành đã chọn')}
     </div>
@@ -50,7 +50,7 @@ export function theHtml(k, i) {
     <div class="cot-3">
       ${truong('loai', 'Loại thời hạn', sel('loai', 'Loại thời hạn'))}
       ${truong('han', `Hạn xử lý<b class="gv-bb gvl-bb-han" aria-hidden="true">*</b>`, `<input type="date" id="${id('han')}" class="o-nhap" data-cot="han">`)}
-      ${truong('san_pham', `Sản phẩm đầu ra${BB}`, sel('san_pham', 'Sản phẩm'))}
+      ${truong('san_pham', `Sản phẩm đầu ra${BB}`, sel('san_pham', 'Sản phẩm đầu ra'))}
     </div>
     <div class="gv-truong gv-dk"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml(`do_khan_${k}`, nhuA0() ? 'KHAN' : 'THUONG', id('do_khan'))}</div>
     <details class="gv-nv-them" data-them="${k}"><summary>Thêm: người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận</summary>
@@ -61,7 +61,7 @@ export function theHtml(k, i) {
       </div>
       <div class="cot-3">
         ${truong('san_pham_mo_ta', 'Mô tả sản phẩm', inp('san_pham_mo_ta', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
-        ${truong('cap_nhan', 'Cấp nhận sản phẩm', sel('cap_nhan', 'Cấp nhận sản phẩm'), 'mặc định là cấp trên của người chịu trách nhiệm')}
+        ${truong('cap_nhan', 'Cấp nhận sản phẩm', sel('cap_nhan', 'Cấp nhận sản phẩm'), 'mặc định là cấp trên của chủ trì theo dõi')}
         <div></div>
       </div>
     </details>
@@ -73,7 +73,7 @@ export function dienOwnerThe(the) { giu(o(the, 'owner'), $('klThOwner').innerHTM
 // Ngành / lĩnh vực: chỉ mục trong phạm vi giao ở phòng của Owner (như dienNganh / dienLinhVuc của biểu mẫu chính); đổi ngành → lĩnh vực → người theo dõi.
 export function dienNganhThe(the) {
   const cho = nganhDuocChon(phongCuaGiaTri(o(the, 'owner').value)); const s = o(the, 'nganh');
-  giu(s, opt('', 'Chọn ngành') + danhMucKl().nganh.filter((n) => (!cho || cho.has(n.ma)) && nganhChoPhep(n)).map((n) => opt(n.ma, n.ten)).join(''), s.value);
+  giu(s, opt('', 'Chọn ngành/lĩnh vực') + danhMucKl().nganh.filter((n) => (!cho || cho.has(n.ma)) && nganhChoPhep(n)).map((n) => opt(n.ma, n.ten)).join(''), s.value);
   dienLinhVucThe(the);
 }
 export function dienLinhVucThe(the) {

@@ -35,7 +35,7 @@ test('v3.21.1: chuyên viên KHÔNG có cờ quản trị KL (mọi tài khoản
   for (const tm of ['tp', 'cvp', 'nhom:LANH_DAO_VP']) {
     assert.deepEqual(ids(canBoOwner(DS, CV, false, tm)), ['cv', 'cv2', 'cvp', 'tp'], `thay mặt ${tm}`);
     const html = ownerOptionsHtml(DM, DS, CV, false, tm);
-    assert.match(html, /Chọn phòng hoặc cán bộ chịu trách nhiệm/); assert.match(html, /tk:cv2"/); assert.match(html, /dv:TONG_HOP"/);
+    assert.match(html, /Chọn phòng hoặc cán bộ chủ trì theo dõi/); assert.match(html, /tk:cv2"/); assert.match(html, /dv:TONG_HOP"/);
   }
   assert.deepEqual(ids(canBoOwner(DS, CV, true, 'nhom:THUONG_TRUC')), ['cvp'], 'thay mặt Thường trực: chỉ lãnh đạo Văn phòng');
 });

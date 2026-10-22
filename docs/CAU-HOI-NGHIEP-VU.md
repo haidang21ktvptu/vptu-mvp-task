@@ -35,6 +35,8 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Quyết định (16/9):** ☑ **A** — giữ cột, đổi tên "Người theo dõi"; số liệu đánh giá tính theo Owner.
 
+**Bổ sung (22/10/2026, `v3.28.1` — nhóm N):** trên giao diện, ô người / phòng chịu trách nhiệm (Owner) ghi **"Chủ trì theo dõi"** đúng cột E bảng Phụ lục (nhập Excel từ v3.27 ghi cột E vào cả chủ trì và người theo dõi); vai theo dõi riêng giữ tên **"Người theo dõi"**.
+
 **Bổ sung (17/9/2026, `v3.6.1`):** chủ trì (Owner tài khoản) và người theo dõi **mỗi người tự xác nhận nhận việc**, người này nhận không thay cho người kia (dải "Cần xử lý ngay", thẻ "Việc mới giao", nút ở ngăn chi tiết và `kl_so_chua_xu_ly.viec_moi` đều tính theo chính người xem); khâu nghẽn "Chưa nhận việc" và cảnh báo tự động (`da_nhan_viec`, `v_ngoai_le`) tính khi **chưa ai** nhận.
 
 ### CH-3. Chuỗi 4 cấp: cấp phòng có bắt buộc trong chuỗi giao việc không?
@@ -313,3 +315,16 @@ trên Tổng quan trước, rồi từng nhiệm vụ; giao Claude đề xuất 
 | M-4 | Mục tiêu và báo chậm? | **Mục tiêu riêng từng nhiệm vụ** (mặc định 100% kế hoạch vốn trước 31/12); so với **tiến độ đều** tại ngày số liệu: đúng tiến độ (thiếu ≤ 10 điểm %), chậm (10–20), chậm nhiều (> 20 hoặc tới mốc chưa đạt). Chữ khác "Vàng / Đỏ" của cảnh báo hạn. | unit `giai-ngan` |
 | M-5 | Ai nhập, ai xem? | Chọn việc toàn tỉnh: lãnh đạo Văn phòng (gồm toàn quyền). Nhập / xoá kỳ: lãnh đạo Văn phòng, chủ trì / người theo dõi việc toàn tỉnh. Gắn việc với nguồn vốn / chủ đầu tư: như ghi vướng mắc; đổi mục tiêu: lãnh đạo trong phạm vi hoặc người giao. Việc đã gắn — đổi đối tượng / năm, bỏ theo dõi: lãnh đạo trong phạm vi hoặc người giao; người tự gắn mà mục tiêu còn mặc định được tự sửa / bỏ (0120 — để chủ trì không gỡ việc lãnh đạo gắn hoặc hạ mục tiêu bằng cách bỏ rồi gắn lại). **0121 (Claude làm rõ theo mục đích "người thực hiện không tự hạ mục tiêu"; chủ dự án đồng ý 21/10/2026):** người chủ trì không được coi là lãnh đạo / người giao của chính việc mình — chuyên viên tự giao việc cho mình, Trưởng phòng chủ trì việc của mình không tự đặt / hạ mục tiêu, không bỏ việc cấp trên gắn; mục tiêu do lãnh đạo cấp trên trong phạm vi đặt. **0122:** việc giao cho phòng (chưa giao cán bộ — kiểu Thường trực / Phó Chánh VP giao phòng) thì Trưởng phòng của phòng đó là chủ trì, như trên; Chánh Văn phòng (và tài khoản toàn quyền) là cấp cao nhất nên vẫn đặt mục tiêu cho việc mình chủ trì. Xem số liệu kỳ: mọi tài khoản; việc toàn tỉnh: mọi người; việc gắn khác: theo phạm vi. | RLS `kl-0119` |
 | M-6 | Khi nào nhắc "số liệu cũ"? | Kế hoạch duyệt ghi 30 ngày; khi làm Claude **đổi thành 45 ngày** vì báo cáo tháng thường có sau 5–10 ngày (30 ngày sẽ nhắc sai mỗi tháng gần một tuần) — **chủ dự án đồng ý 21/10/2026**; nhắc tách khỏi mức chậm; chỉ nhắc khi năm kế hoạch vốn còn nhập được (chưa qua 31/1 năm sau) và chưa tới mốc. | unit `giai-ngan` |
+
+## Nhóm N — Quyết định 22/10/2026: tên ô nhiệm vụ theo cột bảng Phụ lục (v3.28.1, chỉ giao diện)
+
+Chủ dự án (22/10/2026) chỉ ra màn Giao việc ghi "Chủ trì theo dõi", "Cơ quan/đơn vị trình" còn ngăn chi tiết màn Nhiệm vụ ghi "Chủ trì", "Theo dõi",
+"Cơ quan trình" — dễ hiểu nhầm ("Theo dõi" là ô Người theo dõi, khác hẳn chủ trì). Quyết định: "Phải theo đúng như các cột ở file excel. Chủ trì theo dõi,
+ngành/lĩnh vực, Cơ quan/đơn vị trình,... Phải giống như các cột trong file excel để thuận tiện sử dụng." Duyệt kế hoạch cùng ngày.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| N-1 | Tên ô trên các màn hình? | **Đúng tên cột bảng Phụ lục** (mẫu nhập chuẩn): Chủ trì theo dõi, Ngành/lĩnh vực, Cơ quan/đơn vị trình, Nội dung kết luận / Văn bản trình, Hạn xử lý, Mã nhiệm vụ, Số TB/KL… ở mọi màn hình, Xuất Excel, Diễn biến (DESIGN mục 12). | unit `ten-o-phu-luc` |
+| N-2 | Ô không có trong bảng Phụ lục? | Theo tên ở màn Giao việc: Người theo dõi (thay "Theo dõi"), Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm. | unit `ten-o-phu-luc` |
+| N-3 | Chỗ nào giữ nguyên? | Nghĩa khác cột Excel: "Trạng thái" (tính theo hạn), "Số hiệu" văn bản ở Giao việc (mọi loại văn bản), cột "Nhiệm vụ" của bảng, ô hộp nộp minh chứng, tệp rà soát phân loại (đọc lại theo tiêu đề cũ). Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột). | unit `ten-o-phu-luc` (mẫu cũ) |
+

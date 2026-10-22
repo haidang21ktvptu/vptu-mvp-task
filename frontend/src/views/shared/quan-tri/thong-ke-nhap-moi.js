@@ -129,8 +129,8 @@ async function xuatExcel() {
       dong: [...nm.gom.ky].reverse().map((x) => [nhanKy(x.ky, nm.donVi), x.tong, x.GIAO_VIEC, x.TIEP_XUONG, x.EXCEL]) },
     { ten: 'Theo người nhập', cot: [{ nhan: 'Người nhập', rong: 30 }, so('Tổng'), so('Giao việc'), so('Giao tiếp xuống'), so('Nhập Excel')],
       dong: nm.gom.nguoi.map((g) => [tenCua(g.nguoi), g.tong, g.GIAO_VIEC, g.TIEP_XUONG, g.EXCEL]) },
-    { ten: 'Danh sách kỳ đang chọn', cot: [{ nhan: 'Thời gian nhập', rong: 18 }, { nhan: 'Mã', rong: 12 }, { nhan: 'Nội dung nhiệm vụ', rong: 60 },
-      { nhan: 'Văn bản giao', rong: 24 }, { nhan: 'Ngày ban hành', rong: 14, kieu: 'ngay' }, { nhan: 'Cách nhập', rong: 22 }, { nhan: 'Người nhập', rong: 26 }],
+    { ten: 'Danh sách kỳ đang chọn', cot: [{ nhan: 'Thời gian nhập', rong: 18 }, { nhan: 'Mã nhiệm vụ', rong: 12 }, { nhan: 'Nội dung kết luận / Văn bản trình', rong: 60 },
+      { nhan: 'Số TB/KL', rong: 24 }, { nhan: 'Ngày ban hành', rong: 14, kieu: 'ngay' }, { nhan: 'Cách nhập', rong: 22 }, { nhan: 'Người nhập', rong: 26 }],
     dong: chiTietLoc().map((r) => [gioVN(r.created_at), r.ma, r.noi_dung, r.so_ket_luan || '', r.ngay_ban_hanh || '', CACH_NHAP[r.cach], tenCua(r.tao_boi)]) },
   ];
   taiXuong(`nhiem-vu-nhap-moi-theo-${nm.donVi}-${nm.tu}-${nm.den}.xlsx`, taoXlsx(sheets));

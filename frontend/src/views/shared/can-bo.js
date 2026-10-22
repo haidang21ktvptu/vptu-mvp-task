@@ -47,7 +47,7 @@ function phongHtml(ma, rows) {
   const cuaPhong = rows.filter((r) => laOwnerPhong(r, ma) || canBo.some((a) => a.id === r.owner_tai_khoan));
   const k = calculateGroupKPI(canBo.map((a) => a.id), rows, ma);
   const phongOwner = rows.filter((r) => laOwnerPhong(r, ma) && mo(r)).length;
-  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì: việc cán bộ trong phòng hoặc chính phòng chủ trì. Đỏ: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì đang mở · ${k.quaHan} Đỏ (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là Owner` : ''}</span></div>
+  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì theo dõi: việc cán bộ trong phòng hoặc chính phòng chủ trì theo dõi. Đỏ: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì theo dõi.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì theo dõi đang mở · ${k.quaHan} Đỏ (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là chủ trì theo dõi` : ''}</span></div>
     ${canBo.map((a) => nguoiHtml(a, cuaPhong, rows)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
 }
 
@@ -62,7 +62,7 @@ function danhSachPhong(me, rows) {
 function ve() {
   const me = state.user; const phong = danhSachPhong(me, rowsHienTai);
   $('viewCanBo').innerHTML = `
-    <div class="dau"><h1>${TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>tải việc theo người: Đỏ / Vàng / đang làm — chỉ việc đang mở cán bộ là Owner; bấm một người để xem việc ngay trong trang</span>
+    <div class="dau"><h1>${TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>tải việc theo người: Đỏ / Vàng / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
       <div class="phai-dau"><button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
     <div class="hai-ngan${nguoiDangMo ? ' mo' : ''}"><div class="cb">${phong.length ? phong.map((p) => phongHtml(p, rowsHienTai)).join('') : '<p class="trong">Không có phòng nào trong phạm vi của đồng chí.</p>'}</div>
       <aside class="ngan-ben${nguoiDangMo ? '' : ' hidden'}" id="cbNgan" aria-label="Chi tiết cán bộ đang chọn"></aside></div>`;

@@ -20,7 +20,7 @@ export const raSoatTemplate = (coMt = true) => `
       <button type="button" data-action="rsChe" data-che="tat" aria-pressed="false">Tất cả <b id="rsDem-tat">0</b></button></div>
     <label class="kl-tim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input type="search" id="rsTim" placeholder="Tìm mã, nội dung, số hiệu văn bản" aria-label="Tìm nhiệm vụ cần rà soát" autocomplete="off"></label>
-    <select id="rsPhong" aria-label="Lọc theo phòng, đơn vị chịu trách nhiệm"><option value="">Mọi phòng</option></select>
+    <select id="rsPhong" aria-label="Lọc theo đơn vị chủ trì theo dõi"><option value="">Mọi phòng</option></select>
     <select id="rsVanBan" aria-label="Lọc theo văn bản giao việc"><option value="">Mọi văn bản</option></select>
     <select id="rsNhom" aria-label="Lọc theo nhóm mục tiêu được gợi ý"${AN(coMt)}><option value="">Mọi nhóm mục tiêu gợi ý</option></select>
   </div>

@@ -53,7 +53,7 @@ export function dongHtml(r, homNay, dangChon, { now = Date.now(), stt = '', cot 
   const oNv = `<span class="bnv-c bnv-c-nv" title="${escapeHtml(goi)}"><span class="bnv-dong1"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${qh}${laViecMoi(r, now) ? NHAN_MOI : ''}${nhanMucHtml(r)}${nhanPhuHtml(r)}${chiXem(r) ? NHAN_CHI_XEM : ''}</span>
       <span class="bnv-nd">${escapeHtml(r.noi_dung)}</span>${gon ? `<span class="bnv-phu bnv-chi-gon">${gon}</span>` : ''}${cy ? `<span class="bnv-phu bnv-chu-y">${escapeHtml(cy)}</span>` : ''}</span>`;
   const oVb = o('Văn bản giao', `<span class="bnv-vb">${escapeHtml(vb.ten)}</span>${phu(vb.phu)}`);
-  const oChuTri = o('Chủ trì', `<span>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`);
+  const oChuTri = o('Chủ trì theo dõi', `<span>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`);
   const oHan = o('Hạn xử lý', `<b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span>`, 'han');
   const oTt = o('Trạng thái', `<span class="trang-thai ${tt.lop}">${escapeHtml(tt.chu)}</span>${nhanChatLuongHtml(r.chat_luong)}`, 'bnv-c-tt');
   let cells;

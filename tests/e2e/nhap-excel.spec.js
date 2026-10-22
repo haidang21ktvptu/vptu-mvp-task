@@ -66,7 +66,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#nxNhanDien')).toContainText('tiêu đề ở dòng 3 · 3 dòng dữ liệu');
       await expect(page.locator('[data-nx-cot="16"]')).toHaveValue('can_bo');   // cột người dùng chèn thêm vào bảng Phụ lục 2
       const khop = page.locator('.nx-khop-dong').filter({ hasText: dv });
-      await expect(khop).toContainText('3 dòng'); await expect(khop).toContainText('Cơ quan trình');   // v3.27: cột G = cơ quan trình, không phải đơn vị chủ trì
+      await expect(khop).toContainText('3 dòng'); await expect(khop).toContainText('Cơ quan/đơn vị trình');   // v3.27: cột G = cơ quan trình, không phải đơn vị chủ trì
       await expect(khop.locator('select option[value="E2E_RT"]'), 'phòng của Văn phòng không phải cơ quan trình').toHaveCount(0);
       await khop.locator('select').selectOption('DANG_UY_UBND');
       await expect(page.locator('.nx-khop-dong').filter({ hasText: dv })).toHaveCount(0);
@@ -100,7 +100,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
       await page.locator('#gvTabCho').click();
       const the = page.locator(`#nxCho-${dong[2].id}`);
-      await expect(the).toContainText('thiếu: ngành, lĩnh vực', NAP);
+      await expect(the).toContainText('thiếu: ngành/lĩnh vực, lĩnh vực', NAP);
       await expect(page.locator(`#nxLo-${lo.id}`)).toContainText(`Lô ${lo.ma}`);
       await the.getByRole('button', { name: 'Hoàn thiện' }).click();
       await expect(page.locator('#gvHoanThien')).toContainText(`Hoàn thiện dòng 6 của lô ${lo.ma}`, NAP);

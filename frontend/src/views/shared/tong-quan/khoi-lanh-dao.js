@@ -25,7 +25,7 @@ function sanPhamThieu(r) {
 function coQuanCanBo(r) {
   const dv = boSoThuTu(r.co_quan_trinh_ten) || boSoThuTu(r.owner_don_vi_ten) || 'Chưa xác định';
   const phong = DEPT_NAMES[r.nguoi_theo_doi_phong];
-  const phu = r.co_quan_trinh || !r.owner_tai_khoan ? `Theo dõi: Đ/c ${r.nguoi_theo_doi_ten || '—'}${phong ? `, ${phong}` : ''}` : `Chủ trì: Đ/c ${r.owner_tai_khoan_ten}`;
+  const phu = r.co_quan_trinh || !r.owner_tai_khoan ? `Người theo dõi: Đ/c ${r.nguoi_theo_doi_ten || '—'}${phong ? `, ${phong}` : ''}` : `Chủ trì theo dõi: Đ/c ${r.owner_tai_khoan_ten}`;
   return [dv, phu];
 }
 
@@ -45,7 +45,7 @@ export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
     const vb = [tenLoaiVanBan(r.van_ban_loai), r.so_ket_luan].filter(Boolean).join(' ');
     return `<tr><td data-n="Mức"><span class="muc-tq ${lop}">${muc}</span></td>
       <td class="c-ten"><button type="button" class="ten-bam" data-action="tqMoViec" data-id="${r.id}"><span class="ma-ng">${escapeHtml(r.ma)}</span><b>${escapeHtml(r.noi_dung)}</b><small>${escapeHtml(vb)}</small></button></td>
-      <td data-n="Cơ quan, cán bộ chủ trì"><b class="nd-ng">${escapeHtml(dv)}</b><small>${escapeHtml(cb)}</small></td>
+      <td data-n="Cơ quan/đơn vị trình, chủ trì theo dõi"><b class="nd-ng">${escapeHtml(dv)}</b><small>${escapeHtml(cb)}</small></td>
       <td class="so" data-n="Trễ"><b class="tre-ng">${r.so_ngay_qua ?? 0}</b><small>ngày</small></td>
       <td data-n="Sản phẩm còn thiếu"><span class="nd-ng">${escapeHtml(sanPhamThieu(r))}</span><small>${escapeHtml(r.vuong_mac ? `Vướng mắc: ${r.vuong_mac}` : 'Chưa báo vướng mắc')}</small></td>
       <td data-n="Cấp cần quyết định"><span class="cap-ng">${escapeHtml(r.cap_quyet_dinh_ten || 'Chưa xác định')}</span></td>
@@ -53,7 +53,7 @@ export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   };
   const chan = `Đang hiện ${Math.min(SO_DONG_NGHEN, hien.length)} trong ${hien.length} việc${chon ? '' : cap.length > 1 ? ` · ${cap.map((c) => `${c.ten} ${c.n}`).join(' · ')}` : ''}`;
   return `<article class="the-bd n12" id="tqNghen">${dauKhoi(1, 'Điểm nghẽn cần chỉ đạo', phu, nut)}
-    <div class="cuon-ngang"><table class="bang-tq bang-ng"><thead><tr><th>Mức</th><th>Nhiệm vụ</th><th>Cơ quan, cán bộ chủ trì</th><th class="so">Trễ</th><th>Sản phẩm còn thiếu</th><th>Cấp cần quyết định</th><th><span class="sr">Thao tác</span></th></tr></thead>
+    <div class="cuon-ngang"><table class="bang-tq bang-ng"><thead><tr><th>Mức</th><th>Nhiệm vụ</th><th>Cơ quan/đơn vị trình, chủ trì theo dõi</th><th class="so">Trễ</th><th>Sản phẩm còn thiếu</th><th>Cấp cần quyết định</th><th><span class="sr">Thao tác</span></th></tr></thead>
       <tbody>${hien.slice(0, SO_DONG_NGHEN).map(dong).join('')}</tbody></table></div>
     <div class="chan-ng"><span>${chan}</span><button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
 }

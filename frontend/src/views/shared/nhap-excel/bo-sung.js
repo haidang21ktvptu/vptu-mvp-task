@@ -19,7 +19,7 @@ const esc = escapeHtml;
 const bs = { du: null, tep: '', kq: null, dang: false };
 const LY_DO = 'Bổ sung dữ liệu chuyển đổi theo tệp chủ dự án gửi ngày 20/10/2026';
 const boSungHtml = () => `<details class="tam nx-phan nx-bo-sung hidden" id="nxBoSung"><summary><b>Bổ sung dữ liệu chuyển đổi</b> <span class="chu-phu">— chỉ tài khoản toàn quyền</span></summary>
-  <p class="chu-phu">Điền ô còn trống của các việc đã có trên hệ thống (cơ quan trình, lĩnh vực chi tiết, hạn, văn bản triển khai, ghi chú; kết quả thành minh chứng chữ
+  <p class="chu-phu">Điền ô còn trống của các việc đã có trên hệ thống (cơ quan/đơn vị trình, lĩnh vực chi tiết, hạn xử lý, văn bản triển khai, ghi chú; kết quả thành minh chứng chữ
     cho việc đã hoàn thành chưa có minh chứng), đổi loại văn bản, đổi chủ trì khi tệp ghi rõ. Ô đã có giá trị giữ nguyên; không gửi tin cho cán bộ; mỗi việc ghi diễn biến
     kèm lý do. Chỉ dùng cho tệp chuyển đổi đã duyệt.</p>
   <div class="nx-hang"><label class="nut" for="nxBsTep">Chọn tệp bổ sung (.json)</label><input type="file" id="nxBsTep" class="sr-only" accept=".json,application/json">
@@ -40,7 +40,7 @@ function ketQuaHtml(kq) {
   return `<p class="nx-bs-tom"><b>${kq.da_ghi ? 'Đã ghi' : 'Xem trước — chưa ghi gì'}:</b> ${kq.so_viec} việc · ${kq.so_doi} việc bổ sung · ${soGiu(kq)} giữ nguyên · ${kq.so_loi} lỗi</p>
     ${vb.length ? `<ul class="nx-ghi">${vb.join('')}</ul>` : ''}
     ${loi.length ? `<ul class="nx-ghi">${loi.map((x) => `<li><b>${esc(x.ma || '(không mã)')}</b>: ${esc(x.loi || '')}</li>`).join('')}</ul>` : ''}
-    ${doi.length ? `<div class="bang-cuon"><table class="nx-bang"><thead><tr><th scope="col">Mã</th><th scope="col">Ô bổ sung (cũ → mới)</th></tr></thead>
+    ${doi.length ? `<div class="bang-cuon"><table class="nx-bang"><thead><tr><th scope="col">Mã nhiệm vụ</th><th scope="col">Ô bổ sung (cũ → mới)</th></tr></thead>
       <tbody>${doi.map((x) => `<tr><td>${esc(x.ma)}${x.da_xong ? '<br><small class="chu-phu">đã hoàn thành</small>' : ''}</td><td>${chuDoi(x, tenGt).map(esc).join('<br>')}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
 }
 const tenTep = () => (bs.du ? `${bs.tep}: ${bs.du.viec.length} việc, ${bs.du.van_ban.length} văn bản` : '');

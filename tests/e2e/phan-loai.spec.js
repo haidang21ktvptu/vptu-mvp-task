@@ -47,7 +47,7 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
       await p.locator('#klThSanPham').selectOption('BAO_CAO'); await p.locator('#klThHan').fill(cong(homNay(), 20));
       const thieu = p.locator('#gvConThieu'); const luu = p.locator('#klThLuu');
       await expect(p.locator('#gvNhacPhanLoai')).toContainText('bắt buộc chọn');
-      await expect(thieu).toContainText('ngành (hoặc "Không thuộc"), lĩnh vực', NAP);
+      await expect(thieu).toContainText('ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực', NAP);
       if (HIEN_MUC_TIEU) await expect(thieu).toContainText('mục tiêu then chốt (hoặc "Không thuộc")');
       await expect(luu).toBeDisabled();
 
@@ -73,7 +73,7 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
       await p.locator('#klThLoaiVB').selectOption('KL_BTV');
       await expect(p.locator('#klThNganh option[value="KHONG_THUOC"]')).toHaveCount(0);
       await expect(p.locator('#klThNganh')).toHaveValue('');
-      await expect(thieu).toContainText('ngành, lĩnh vực'); await expect(thieu).not.toContainText('ngành (hoặc');
+      await expect(thieu).toContainText('ngành/lĩnh vực, lĩnh vực'); await expect(thieu).not.toContainText('ngành/lĩnh vực (hoặc');
       await p.locator('#klThLoaiVB').selectOption('CONG_VAN');
       await expect(p.locator('#klThNganh option[value="KHONG_THUOC"]')).toHaveCount(1);
       await p.locator('#klThNganh').selectOption('KHONG_THUOC'); await expect(p.locator('#klThLinhVuc')).toHaveValue('LV99_KHONG_THUOC');

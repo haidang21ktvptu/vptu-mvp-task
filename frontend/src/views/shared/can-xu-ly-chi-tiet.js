@@ -17,7 +17,7 @@ const vai = () => state.user?.role_group;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const trich = (s, n = 110) => { const t = (s || '').trim(); return t.length > n ? `${t.slice(0, n)}…` : t; };
 // Ai liên quan (đã escape — chu của dong() là HTML).
-const lienQuan = (r) => escapeHtml([r.owner_tai_khoan_ten || r.owner_don_vi_ten, r.nguoi_theo_doi_ten && r.nguoi_theo_doi_ten !== r.owner_tai_khoan_ten ? `theo dõi: ${r.nguoi_theo_doi_ten}` : '']
+const lienQuan = (r) => escapeHtml([r.owner_tai_khoan_ten || r.owner_don_vi_ten, r.nguoi_theo_doi_ten && r.nguoi_theo_doi_ten !== r.owner_tai_khoan_ten ? `người theo dõi: ${r.nguoi_theo_doi_ten}` : '']
   .filter(Boolean).join(' · '));
 const maNut = (r) => `<button type="button" class="cx-ma" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" aria-expanded="false" title="Mở diễn biến của việc"><b>${escapeHtml(r.ma)}</b></button>`;
 const dong = (muc, r, chu, hanhDong = '', them = '') => `<div class="cx-dong the-con" id="cx-${muc}-${r.id}" data-nhiem-vu="${r.id}">

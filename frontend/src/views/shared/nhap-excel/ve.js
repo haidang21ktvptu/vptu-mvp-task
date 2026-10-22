@@ -24,8 +24,8 @@ export const khungNhapHtml = () => `
       <span id="nxTenTep" class="chu-phu" aria-live="polite">Mẫu chuẩn hoặc bảng Phụ lục đang dùng (tiêu đề ở dòng nào cũng được) — hệ thống tự nhận dòng tiêu đề và cột.</span>
       <button type="button" class="nut" data-action="nxTaiMau">Tải mẫu nhập chuẩn</button>
     </div>
-    <ul class="nx-muc"><li class="nx-m1"><b>Điền đủ cột B–M là nhập ngay</b> số hội nghị, số TB/KL, ngày ban hành, chủ trì theo dõi, ngành/lĩnh vực, cơ quan trình, nội dung,
-      loại thời hạn, hạn, tiến độ, kết quả; sản phẩm, lĩnh vực theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
+    <ul class="nx-muc"><li class="nx-m1"><b>Điền đủ cột B–M là nhập ngay</b> số hội nghị, số TB/KL, ngày ban hành, chủ trì theo dõi, ngành/lĩnh vực, cơ quan/đơn vị trình, nội dung,
+      loại thời hạn, hạn xử lý, tiến độ, kết quả thực hiện; sản phẩm, lĩnh vực theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
       <li class="nx-m2"><b>Đang thực hiện</b> giao cho người chủ trì; cột M ghi tiến độ thì vào ghi chú.</li>
       <li class="nx-m3"><b>Hoàn thành</b> chọn "Đã xong ngoài hệ thống" (cột M thành minh chứng) hoặc "Ghi minh chứng".</li></ul>
   </section>
@@ -83,7 +83,7 @@ export function xemTruocHtml(s, ctx) {
       <label><input type="radio" name="nxCheDo" value="DA_XONG_NGOAI"${s.cheDoXong === 'DA_XONG_NGOAI' ? ' checked' : ''}> Đã xong ngoài hệ thống — đóng ngay, không tính tỷ lệ đúng hạn (dữ liệu cũ)</label>
       <label><input type="radio" name="nxCheDo" value="CHO_NGHIEM_THU"${s.cheDoXong === 'CHO_NGHIEM_THU' ? ' checked' : ''}> Ghi minh chứng — giao như thường kèm minh chứng, việc hoàn thành theo ngày văn bản (lãnh đạo xem, đánh giá chất lượng khi muốn)</label></fieldset>` : ''}
     ${s.coCotLoai ? '' : loaiVbHtml(s)}${s.coTuGan ? tuGanHtml(s) : ''}${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
-    <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung</th><th scope="col">Chủ trì</th><th scope="col">Hạn</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
+    <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung kết luận / Văn bản trình</th><th scope="col">Chủ trì theo dõi</th><th scope="col">Hạn xử lý</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
       <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d, s.duKien?.(x) || '', ctx.dm)).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>
     ${hien.length > s.soHien ? `<button type="button" class="nut nho" data-action="nxXemThem">Xem thêm ${Math.min(100, hien.length - s.soHien)} dòng (còn ${hien.length - s.soHien})</button>` : ''}</section>
     <div class="nx-chan"><span id="nxThongBao" class="chu-phu" aria-live="polite">${escapeHtml(s.thongBao || '')}</span>

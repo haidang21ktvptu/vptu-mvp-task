@@ -12,7 +12,7 @@ export const choNghiemThu = (r) => ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'].incl
 export const chuaNhan = (r, me) => Boolean(r.theo_1400) && mo(r) && !r.toi_da_xac_nhan && laCuaToi(r, me) && !r.bi_tu_choi;
 // Còn phải nộp minh chứng: việc theo 1400 đang mở, chưa có minh chứng hợp lệ, không chờ xác nhận minh chứng nộp trước v3.20.
 export const canMinhChung = (r) => mo(r) && Boolean(r.theo_1400) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r);
-export const vaiCua = (r, me) => (r.owner_tai_khoan === me ? 'Chủ trì' : r.nguoi_theo_doi === me ? 'Theo dõi' : '');
+export const vaiCua = (r, me) => (r.owner_tai_khoan === me ? 'Chủ trì theo dõi' : r.nguoi_theo_doi === me ? 'Người theo dõi' : '');
 const coChiDao = (r, c) => mo(r) && (c.chiDao?.(r.id) || []).length > 0;
 const can = (r, c) => laCuaToi(r, c.me) && mo(r) && (Boolean(r.bi_tu_choi) || chuaNhan(r, c.me) || coChiDao(r, c)
   || r.minh_chung_buoc === 'BI_TRA_LAI' || (GAP.includes(r.muc_canh_bao) && !choNghiemThu(r)));
