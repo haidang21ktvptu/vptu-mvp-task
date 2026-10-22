@@ -48,9 +48,9 @@ function khopPhu(r) {
   if (l.tim) { const q = boDau(l.tim.trim()); if (q && ![r.ma, r.noi_dung, r.so_ket_luan].some((s) => boDau(s || '').includes(q))) return false; }
   return true;
 }
-// v3.26: chua = chưa phân loại mục tiêu (kể cả "Không thuộc" là đã phân loại); nganh = chưa có ngành / lĩnh vực; khong = mục tiêu hoặc ngành "Không thuộc"
-// (v3.27: mục tiêu tạm ẩn — chỉ ngành "Không thuộc").
-const CHE = { chua: (r) => mucTieuCua(r).length === 0, cho: (r) => coGoiY(r.id) && choXuLy(r, rs.tt.get(r.id)), nganh: (r) => !r.nganh_ma || !r.linh_vuc_ma,
+// v3.26: chua = chưa phân loại mục tiêu (kể cả "Không thuộc" là đã phân loại); nganh = chưa có ngành/lĩnh vực (v3.29: lĩnh vực tự xác định theo ngành);
+// khong = mục tiêu hoặc ngành "Không thuộc" (v3.27: mục tiêu tạm ẩn — chỉ ngành "Không thuộc").
+const CHE = { chua: (r) => mucTieuCua(r).length === 0, cho: (r) => coGoiY(r.id) && choXuLy(r, rs.tt.get(r.id)), nganh: (r) => !r.nganh_ma,
   khong: (r) => (coMucTieu() && khongThuocMucTieu(r)) || laKhongThuocNganh(r) };
 const theoChe = (che, r) => (CHE[che] ? CHE[che](r) : true);
 const dsLoc = () => rs.rows.filter((r) => khopPhu(r) && theoChe(rs.loc.che, r));
@@ -86,9 +86,9 @@ function veHangLoat() {
   $('rsNutHangLoat').textContent = n ? `Chấp nhận các mục đã tích sẵn cho ${n} việc` : 'Chấp nhận các mục đã tích sẵn';
   $('rsNutHangLoat').disabled = !n || rs.dangLuu;
 }
-const chuTrong = () => (!rs.rows.length ? `Không có nhiệm vụ nào đồng chí ${coMucTieu() ? 'gắn được mục tiêu then chốt' : 'phân loại được ngành, lĩnh vực'}.`
+const chuTrong = () => (!rs.rows.length ? `Không có nhiệm vụ nào đồng chí ${coMucTieu() ? 'gắn được mục tiêu then chốt' : 'phân loại được ngành/lĩnh vực'}.`
   : rs.loc.che === 'chua' && !rs.loc.phong && !rs.loc.vb && !rs.loc.nhom && !rs.loc.tim ? 'Mọi việc trong phạm vi đã phân loại mục tiêu then chốt (gắn mục tiêu hoặc "Không thuộc").'
-    : rs.loc.che === 'nganh' && !rs.loc.phong && !rs.loc.vb && !rs.loc.nhom && !rs.loc.tim ? 'Mọi việc trong phạm vi đã có ngành, lĩnh vực.'
+    : rs.loc.che === 'nganh' && !rs.loc.phong && !rs.loc.vb && !rs.loc.nhom && !rs.loc.tim ? 'Mọi việc trong phạm vi đã có ngành/lĩnh vực.'
     : rs.loc.che === 'cho' && rs.rows.some((r) => !rs.kq.has(r.id)) ? 'Đang nhận diện gợi ý — danh sách sẽ hiện dần.' : 'Không có việc nào phù hợp điều kiện lọc.');
 
 function ve() {
@@ -209,7 +209,7 @@ function moXacNhan() {
 let henTim = null;
 export function registerRaSoatMucTieu() {
   $('viewRaSoatMucTieu').innerHTML = raSoatTemplate(coMucTieu());
-  ganTep({ dsLoc, sauApDung: async () => { await loadGanMucTieu().catch(() => null); await nap(); } });
+  ganTep({ dsLoc, timMa: (ma) => rs.rows.find((r) => r.ma === ma) || null, sauApDung: async () => { await loadGanMucTieu().catch(() => null); await nap(); } });
   [['rsPhong', 'phong'], ['rsVanBan', 'vb'], ['rsNhom', 'nhom']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { rs.loc[k] = e.target.value; rs.trang = 0; an(); ve(); }));
   $('rsTim').addEventListener('input', (e) => { clearTimeout(henTim); henTim = setTimeout(() => { rs.loc.tim = e.target.value; rs.trang = 0; ve(); }, 250); });
   document.addEventListener('viec-da-ghi', (e) => { if (sectionDangHien('viewRaSoatMucTieu')) lamMoiDong(e.detail); });

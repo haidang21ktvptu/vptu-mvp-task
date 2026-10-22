@@ -1,6 +1,6 @@
 // Phạm vi giao việc trên biểu mẫu (PR-2a C3): tập (phòng, ngành, lĩnh vực) người giao được giao lấy từ kl_pham_vi_giao() — hàm DB lọc
-// bằng CHÍNH kl_duoc_giao_cho_phong mà giao_viec dùng để chặn (một nguồn, test kl-pq-pham-vi-giao). Biểu mẫu chỉ đưa ra Owner / ngành /
-// lĩnh vực trong tập đó và nói rõ lý do ở dòng "Còn thiếu" + chú thích dưới ô lĩnh vực; DB vẫn là chốt.
+// bằng CHÍNH kl_duoc_giao_cho_phong mà giao_viec dùng để chặn (một nguồn, test kl-pq-pham-vi-giao). Biểu mẫu chỉ đưa ra chủ trì / ngành trong tập
+// đó, lĩnh vực tự xác định trong tập (v3.29 — không còn ô Lĩnh vực), nói rõ lý do ở dòng "Còn thiếu" + chú thích dưới ô Ngành/lĩnh vực; DB vẫn là chốt.
 // Không áp: A0 và thay mặt Thường trực (quy tắc riêng — lãnh đạo Văn phòng hoặc phòng, ô Owner đã chỉ gồm họ), người quản trị KL chưa chọn
 // lãnh đạo được thay mặt. Owner không thuộc phòng nào (Văn phòng Tỉnh ủy) = dòng phòng NULL của hàm (một dòng, không theo ngành–lĩnh vực).
 // v3.18: thayMat là uuid (một lãnh đạo) hoặc "nhom:LANH_DAO_VP" (kl_pham_vi_giao p_thay_mat_nhom — phạm vi Chánh VP).
@@ -61,7 +61,7 @@ export function linhVucDuocChon(phong) {
   return new Set((theoPhong.get(phong) || []).filter((x) => x.linh_vuc_ma).map((x) => x.linh_vuc_ma));
 }
 
-// Chú thích dưới ô lĩnh vực + mục "Còn thiếu" khi tổ hợp đang chọn không được giao. dsLinhVuc: danh mục lĩnh vực (tên).
+// Chú thích dưới ô Ngành/lĩnh vực + mục "Còn thiếu" khi tổ hợp đang chọn không được giao. dsLinhVuc: danh mục lĩnh vực (tên).
 export function thongBaoPhamVi(phong, nganh, lv, dsLinhVuc) {
   if (!tap || !phong || !theoPhong.has(phong)) return { chuThich: '', thieu: null };
   const coLv = linhVucDuocChon(phong);
@@ -70,9 +70,9 @@ export function thongBaoPhamVi(phong, nganh, lv, dsLinhVuc) {
   const khongCo = dsLinhVuc.filter((l) => !coLv.has(l.ma)).map((l) => ten(l.ma));
   const chuThich = !caPhong
     ? `Ở ${tenPhong(phong)}, đồng chí chỉ giao được lĩnh vực đang kiêm nhiệm: ${[...coLv].map(ten).join(', ')}.`
-    : khongCo.length ? `Ở ${tenPhong(phong)}, ${khongCo.length} lĩnh vực do lãnh đạo khác kiêm nhiệm không có trong danh sách.` : '';
+    : khongCo.length ? `Ở ${tenPhong(phong)}, lĩnh vực ${khongCo.join(', ')} do lãnh đạo khác kiêm nhiệm — việc đồng chí giao không xếp vào các lĩnh vực này.` : '';
   if (duocGiao(phong, nganh, lv)) return { chuThich, thieu: null };
-  return { chuThich, thieu: !lv ? `lĩnh vực đồng chí kiêm nhiệm ở ${tenPhong(phong)}` : `lĩnh vực trong phạm vi đồng chí phụ trách ở ${tenPhong(phong)}` };
+  return { chuThich, thieu: `ngành/lĩnh vực trong phạm vi đồng chí ${caPhong ? 'phụ trách' : 'kiêm nhiệm'} ở ${tenPhong(phong)}` };
 }
 
 // Người theo dõi (mục 3.4 + bổ sung F, 30/9): PCVP giao trực tiếp, hoặc người quản trị KL (A3) giao thay mặt một lãnh đạo không phải Chánh VP —

@@ -7,6 +7,7 @@ import { homNayVN } from './ngay.js';
 import { trongPhamVi, ghiNgoaiPhamVi } from './pham-vi.js';
 import { loadGanMucTieu } from './muc-tieu-db.js';
 import { ganMucTieuVaoDong, HIEN_MUC_TIEU } from './muc-tieu.js';
+import { datNguongCanhBao } from './nhan.js';
 
 let danhMuc = null;   // { nganh, linhVuc, donVi, sanPham, cap, loaiThoiHan, tienDo }
 let cauHinh = null;   // { nguong_sap_den_han_ngay: 7, nguong_vang_ngay: 3, ... }
@@ -32,6 +33,7 @@ function dat(dm) {
   const { cauHinh: ch, ...con } = dm;
   danhMuc = con;
   cauHinh = Object.fromEntries(Object.entries(ch || {}).map(([k, v]) => [k, Number(v)]));
+  datNguongCanhBao(cauHinh);   // v3.29: nhãn mức cảnh báo ghi đúng số ngày của cấu hình
 }
 export function loadDanhMucKl(lai = false) {
   if (danhMuc && !lai) return Promise.resolve(danhMuc);

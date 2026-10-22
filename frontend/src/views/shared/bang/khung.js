@@ -7,8 +7,9 @@ import { escapeHtml } from '../../../lib/dom.js';
 export const oSoHtml = (ds, so, chon, action, mau = {}) => ds.map(([k, ten]) => `<button type="button" class="o-so${mau[k] ? ` ${mau[k]}` : ''}" data-action="${action}" data-loc="${k}" aria-pressed="${String(chon === k)}"><span>${escapeHtml(ten)}</span><b>${so[k] ?? 0}</b></button>`).join('');
 // cot: [[tên cột, lớp]] — hàng tiêu đề chỉ để nhìn (mỗi ô của dòng có nhãn riêng — data-nhan — khi bảng thành thẻ).
 export const dauBangHtml = (cot) => cot.map(([ten, lop]) => `<span${lop ? ` class="${lop}"` : ''}>${ten}</span>`).join('');
-export const CHU_GIAI_MUC = '<span><i class="dac-biet"></i>Đỏ đặc biệt: quá hạn từ 3 ngày</span><span><i class="do"></i>Đỏ: quá hạn</span>'
-  + '<span><i class="vang"></i>Vàng: còn không quá 3 ngày</span><span><i class="lam"></i>Trong hạn</span><span><i class="luc"></i>Hoàn thành</span>';
+// v3.29: chú giải ghi nghĩa trước, tên mức theo Công văn 1400 trong ngoặc (số ngày theo mặc định cấu hình — như nhãn ở lib/kl/nhan.js tenMuc).
+export const CHU_GIAI_MUC = '<span><i class="dac-biet"></i>Quá hạn từ 3 ngày trở lên (mức Đỏ đặc biệt)</span><span><i class="do"></i>Quá hạn dưới 3 ngày (mức Đỏ)</span>'
+  + '<span><i class="vang"></i>Sắp đến hạn: còn ≤ 3 ngày (mức Vàng)</span><span><i class="lam"></i>Trong hạn</span><span><i class="luc"></i>Hoàn thành</span>';
 
 // Nút trang (chỉ khi nhiều hơn một trang): ‹ Trang trước · Trang x/y · Trang sau › (data-huong để giữ con trỏ bàn phím khi sang trang).
 export function nutTrangHtml(p, action) {

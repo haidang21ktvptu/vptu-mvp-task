@@ -46,11 +46,14 @@ export function xuatNhiemVu(rows) {
   return ten;
 }
 
-// Báo cáo A1: bảng theo phòng / đơn vị + bảng theo nguồn (mỗi bảng: { cot: [tên cột], dong: [[...]] } đã tính ở màn Báo cáo) + danh sách Đỏ.
-export function xuatBaoCao({ theoPhong, theoNguon, rowsDo }) {
-  const tuBang = (ten, b) => ({ ten, cot: b.cot.map((nhan, i) => ({ nhan, rong: i === 0 ? 40 : 12 })), dong: b.dong });
+// Báo cáo A1 (v3.29): theo phòng chuyên môn, theo chuyên viên (cột tên: phòng + cán bộ), theo nguồn (mỗi bảng: { cot: [tên cột], dong: [[...]] } đã tính ở
+// màn Báo cáo, cùng sáu cột số) + danh sách quá hạn (cột của màn Nhiệm vụ, bỏ cột Chất lượng — Báo cáo không còn xếp loại chất lượng).
+const COT_QUA_HAN = COT_NHIEM_VU.filter((c) => c.nhan !== 'Chất lượng');
+export function xuatBaoCao({ theoPhong, theoChuyenVien, theoNguon, rowsQuaHan }) {
+  const tuBang = (ten, b, soCotChu = 1) => ({ ten, cot: b.cot.map((nhan, i) => ({ nhan, rong: i < soCotChu ? 36 : 14 })), dong: b.dong });
   const ten = `vptu-bao-cao-${ngayTep()}.xlsx`;
-  taiXuong(ten, taoXlsx([tuBang('Theo phòng', theoPhong), tuBang('Theo nguồn', theoNguon), bang('Danh sách Đỏ', COT_NHIEM_VU, rowsDo)]));
+  taiXuong(ten, taoXlsx([tuBang('Theo phòng chuyên môn', theoPhong), tuBang('Theo chuyên viên', theoChuyenVien, 2), tuBang('Theo nguồn', theoNguon),
+    bang('Danh sách quá hạn', COT_QUA_HAN, rowsQuaHan)]));
   return ten;
 }
 

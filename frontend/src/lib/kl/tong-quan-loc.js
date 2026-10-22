@@ -6,10 +6,13 @@
 import { ngayGiao, ngayXong, laMo, laXong, laViecGoc, xongTrongKy, mucMo, chiDaoPhan } from './tong-quan.js';
 import { loaiCua } from './tong-quan-them.js';
 import { CHUA_PHAN_LOAI } from './tong-hop.js';
+import { tenMuc } from './nhan.js';
 import { mucTieuCua, HIEN_MUC_TIEU } from './muc-tieu.js';
 import { doanCua, DOAN, dongCuaKhoi, diemNghen, locCapNghen, khoaXepHang, vuongMacCho, chatLuongDuLieu } from './tong-quan-lanh-dao.js';
 
-export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ xác nhận minh chứng (nộp trước v3.20)', vang: 'Cảnh báo Vàng', do: 'Cảnh báo Đỏ', ddb: 'Cảnh báo Đỏ đặc biệt',
+// v3.29: mức cảnh báo ghi bằng nghĩa (tenMuc — số ngày theo cấu hình đã nạp, nên đọc lúc dùng).
+export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ xác nhận minh chứng (nộp trước v3.20)', get vang() { return `Nhiệm vụ ${tenMuc('vang')}`; },
+  get do() { return `Nhiệm vụ ${tenMuc('do')}`; }, get ddb() { return `Nhiệm vụ ${tenMuc('ddb')}`; },
   khac: 'Không áp dụng cảnh báo (thường xuyên, cần điền hạn, chờ điều kiện, đang đính chính)' };
 const TEN_DG = { DUNG_HAN: 'Hoàn thành đúng hạn', TRE: 'Hoàn thành trễ hạn', chua: 'Hoàn thành, chưa xét được đúng hạn (thiếu hạn hoặc ngày hoàn thành)' };
 const TEN_CL = { DAT_XUAT_SAC: 'Xuất sắc', DAT_TOT: 'Đạt tốt', DAT: 'Đạt', KHONG_DAT: 'Không đạt' };
@@ -29,8 +32,8 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'giao': return { tieuDe: `Nhiệm vụ giao ${k.trong}`, rows: rows.filter((r) => trongKy(ngayGiao(r), k)) };
     case 'xong': return { tieuDe: `Hoàn thành ${k.trong}`, rows: xong() };
     case 'mo': return { tieuDe: 'Nhiệm vụ đang thực hiện', rows: rows.filter(laMo) };
-    case 'canh': return { tieuDe: 'Việc có cảnh báo Vàng, Đỏ, Đỏ đặc biệt', rows: rows.filter((r) => laMo(r) && ['vang', 'do', 'ddb'].includes(mucMo(r))) };
-    case 'do': return { tieuDe: 'Việc Đỏ, Đỏ đặc biệt cần chỉ đạo', rows: rows.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };
+    case 'canh': return { tieuDe: `Nhiệm vụ có cảnh báo: ${tenMuc('vang')}, quá hạn`, rows: rows.filter((r) => laMo(r) && ['vang', 'do', 'ddb'].includes(mucMo(r))) };
+    case 'do': return { tieuDe: 'Nhiệm vụ quá hạn cần chỉ đạo', rows: rows.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };
     case 'muc': return { tieuDe: TEN_MUC[ct.m] || 'Nhiệm vụ đang thực hiện', rows: rows.filter((r) => laMo(r) && mucMo(r) === ct.m) };
     case 'dg': {
       const x = xong();
@@ -45,7 +48,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     }
     case 'nhom': {
       const cua = khoa ? rows.filter((r) => khoa(r)[0] === ct.ma) : [];
-      if (ct.m === 'qh') return { tieuDe: `${ct.ten || 'Nhóm'} — Quá hạn (Đỏ, Đỏ đặc biệt)`, rows: cua.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };   // v3.27: khối 2
+      if (ct.m === 'qh') return { tieuDe: `${ct.ten || 'Nhóm'} — Quá hạn`, rows: cua.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };   // v3.27: khối 2
       if (ct.m) return { tieuDe: `${ct.ten || 'Nhóm'} — ${TEN_MUC[ct.m] || ''}`, rows: cua.filter((r) => laMo(r) && mucMo(r) === ct.m) };
       return { tieuDe: ct.ten || 'Nhóm', nhom: moVaXong(cua, k) };
     }
@@ -81,7 +84,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     }
     case 'mtm': {   // m: 'qh' = Đỏ + Đỏ đặc biệt (ô Quá hạn của bảng nghị quyết), còn lại một mức
       const muc = ct.m === 'qh' ? ['do', 'ddb'] : [ct.m];
-      return { tieuDe: `${ct.ten || 'Mục tiêu'} — ${ct.m === 'qh' ? 'Quá hạn (Đỏ, Đỏ đặc biệt)' : TEN_MUC[ct.m] || ''}`, rows: rows.filter((r) => mucTieuCua(r).includes(ct.ma) && laMo(r) && muc.includes(mucMo(r))) };
+      return { tieuDe: `${ct.ten || 'Mục tiêu'} — ${ct.m === 'qh' ? 'Quá hạn' : TEN_MUC[ct.m] || ''}`, rows: rows.filter((r) => mucTieuCua(r).includes(ct.ma) && laMo(r) && muc.includes(mucMo(r))) };
     }
     case 'khoi': {   // khối / ngành của khối 3: tách theo đoạn trạng thái (cùng cách đếm thanh xếp chồng)
       const cua = dongCuaKhoi(rows, ct.ma, { nganh: nganhDm, linhVuc: linhVucDm }, ct.loai, ct.kh || null);
@@ -101,7 +104,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'cldl': {
       const c = chatLuongDuLieu(rows);
       return { tieuDe: 'Nhiệm vụ cần bổ sung thông tin', nhom: [...(HIEN_MUC_TIEU ? [{ ten: 'Chưa phân loại mục tiêu then chốt', rows: c.chuaMucTieu }] : []),   // v3.27: tạm ẩn
-        { ten: 'Chưa có ngành, lĩnh vực', rows: c.chuaNganh }, { ten: 'Hoàn thành chưa có ngày hoàn thành', rows: c.xongChuaNgay }] };
+        { ten: 'Chưa có ngành/lĩnh vực', rows: c.chuaNganh }, { ten: 'Hoàn thành chưa có ngày hoàn thành', rows: c.xongChuaNgay }] };
     }
     case 'loc': return { tieuDe: 'Nhiệm vụ theo bộ lọc', nhom: [{ ten: 'Đang thực hiện', rows: rows.filter(laMo) }, { ten: 'Đã hoàn thành', rows: rows.filter(laXong) }] };
     default: return { tieuDe: 'Nhiệm vụ', rows: [] };

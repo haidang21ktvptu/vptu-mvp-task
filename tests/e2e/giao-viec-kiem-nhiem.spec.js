@@ -1,7 +1,9 @@
 // PR-2a C3: biểu mẫu Giao việc theo phạm vi giao của DB (kl_pham_vi_giao = cùng hàm giao_viec dùng để chặn) — ma trận vai × 7 loại văn bản.
 // Vai: PCVP2 kiêm nhiệm (Tổng hợp, Kinh tế tổng hợp, Tài chính — phân công tạm do spec tạo), PCVP phụ trách cả Tổng hợp, Chánh VP, Trưởng phòng.
-// Mỗi vai MỘT phiên; đổi 7 loại ngay trên biểu mẫu để kiểm ô ngành/lĩnh vực bắt buộc, lựa chọn Owner / lĩnh vực và dòng "Còn thiếu"; chỉ bấm
-// Giao thật ở ô đại diện (mỗi vai ≥ 1 ô được; ô bị chặn = không có lựa chọn / nút mờ kèm lý do). Chỉ máy tính (logic, không bố cục).
+// Mỗi vai MỘT phiên; đổi 7 loại ngay trên biểu mẫu để kiểm ô ngành/lĩnh vực bắt buộc, lựa chọn Owner / ngành, lĩnh vực tự xác định và dòng "Còn
+// thiếu"; chỉ bấm Giao thật ở ô đại diện (mỗi vai ≥ 1 ô được; ô bị chặn = không có lựa chọn / nút mờ kèm lý do). Chỉ máy tính (logic, không bố cục).
+// v3.29 (chủ dự án 22/10/2026): bỏ ô Lĩnh vực — lĩnh vực tự xác định trong phạm vi kiêm nhiệm (ô ẩn #klThLinhVuc): ô Lĩnh vực chi tiết ghi tên một
+// lĩnh vực ngoài phạm vi cũng không đưa việc vào lĩnh vực đó.
 // v3.26 (0116): mọi vai ở đây (không phải Thường trực) bắt buộc ngành + lĩnh vực với MỌI loại văn bản; loại không phải kết luận / thông báo có thêm
 // lựa chọn "Không thuộc" (ô "Còn thiếu" ghi 'ngành (hoặc "Không thuộc")'); ô mục tiêu then chốt chọn "Không thuộc" bằng chonPhanLoai.
 // Dữ liệu: văn bản so_ket_luan = E2E-TEST-GVKN-<project>-<vai>; phân công ly_do = khoá; tự dọn trước và sau.
@@ -26,6 +28,14 @@ async function moTrang(browser, role, testInfo) {
 }
 const giaTri = (page, sel) => page.locator(`${sel} option`).evaluateAll((os) => os.map((o) => o.value).filter(Boolean));
 const conThieu = (page) => page.locator('#gvConThieu');
+const lv = (page) => page.locator('#klThLinhVuc');
+// Ghi ô Lĩnh vực chi tiết rồi kiểm lĩnh vực tự xác định; xoá ô sau khi kiểm (các bước sau không mang theo).
+async function quaChiTiet(page, chu, kiem) { await page.locator('#klThLvct').fill(chu); await kiem(expect(lv(page))); await page.locator('#klThLvct').fill(''); }
+// Ngành trống: "Còn thiếu" có mục ngành/lĩnh vực (kết luận / thông báo không có "Không thuộc") — v3.29 không còn mục "lĩnh vực" riêng.
+async function thieuNganh(page, loai) {
+  if (!BAT_BUOC.has(loai)) { await expect(conThieu(page)).toContainText('ngành/lĩnh vực (hoặc "Không thuộc")'); return; }
+  await expect(conThieu(page)).toContainText('ngành/lĩnh vực'); await expect(conThieu(page)).not.toContainText('ngành/lĩnh vực (hoặc');
+}
 async function chonLoai(page, loai) {
   await page.locator('#klThVanBan').selectOption('__moi__');
   await page.locator('#klThLoaiVB').selectOption(loai);
@@ -42,7 +52,7 @@ async function giaoThat(page, vai, loai, { owner, nganh, lv }) {
   await page.locator('#klThNoiDung').fill(`${soKL(vai)} ${loai}`);
   await page.locator('#klThOwner').selectOption(owner);
   if (nganh) await page.locator('#klThNganh').selectOption(nganh);
-  if (lv) await page.locator('#klThLinhVuc').selectOption(lv);
+  if (lv) await expect(page.locator('#klThLinhVuc')).toHaveValue(lv);   // v3.29: tự xác định (không còn ô chọn)
   await page.locator('#klThSanPham').selectOption('BAO_CAO');
   await page.locator('#klThHan').fill('2026-12-31');
   await chonPhanLoai(page);   // v3.26: ngành trống → "Không thuộc"; mục tiêu → "Không thuộc"
@@ -75,7 +85,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
     await db.from('phu_trach_phong').delete().eq('ly_do', khoa);
   });
 
-  test('PCVP2 kiêm nhiệm: ở Tổng hợp chỉ có ngành/lĩnh vực kiêm nhiệm; loại không bắt buộc lĩnh vực vẫn phải chọn lĩnh vực kiêm nhiệm; giao KL_BTV đúng lĩnh vực → được', async ({ browser }, testInfo) => {
+  test('PCVP2 kiêm nhiệm: ở Tổng hợp chỉ có ngành kiêm nhiệm, lĩnh vực tự là lĩnh vực kiêm nhiệm (lĩnh vực chi tiết khác không đổi được); mọi loại phải có ngành; giao KL_BTV → đúng lĩnh vực', async ({ browser }, testInfo) => {
     const page = await moTrang(browser, 'PCVP2', testInfo);
     const owner = await giaTri(page, '#klThOwner');
     expect(owner).toEqual(expect.arrayContaining(['dv:TONG_HOP', 'dv:QUAN_TRI']));
@@ -85,10 +95,14 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
       await page.locator('#klThOwner').selectOption('dv:TONG_HOP');
       expect(await giaTri(page, '#klThNganh')).toEqual([KN.nganh]);
       await page.locator('#klThNganh').selectOption(KN.nganh);
-      expect(await giaTri(page, '#klThLinhVuc')).toEqual([KN.lv]);
-      await page.locator('#klThLinhVuc').selectOption('');
-      await expect(page.locator('#gvPhamViGhiChu')).toContainText('chỉ giao được lĩnh vực đang kiêm nhiệm');
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'lĩnh vực' : 'lĩnh vực đồng chí kiêm nhiệm ở Phòng Tổng hợp');
+      await expect(lv(page)).toHaveValue(KN.lv);
+      await quaChiTiet(page, 'Ngân sách', (e) => e.toHaveValue(KN.lv));   // lĩnh vực chi tiết ngoài phạm vi kiêm nhiệm: vẫn lĩnh vực kiêm nhiệm
+      await expect(page.locator('#gvPhamViGhiChu')).toContainText('chỉ giao được lĩnh vực đang kiêm nhiệm: Tài chính');
+      await expect(conThieu(page)).not.toContainText('ngành/lĩnh vực');
+      await page.locator('#klThNganh').selectOption('');
+      await expect(lv(page)).toHaveValue('');
+      await thieuNganh(page, loai);
+      await expect(conThieu(page)).toContainText('ngành/lĩnh vực trong phạm vi đồng chí kiêm nhiệm ở Phòng Tổng hợp');
       await expect(page.locator('#klThLuu')).toBeDisabled();
     }
     const v = await giaoThat(page, 'PCVP2', 'KL_BTV', { owner: 'dv:TONG_HOP', nganh: KN.nganh, lv: KN.lv });
@@ -96,7 +110,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
     await page.context().close();
   });
 
-  test('PCVP phụ trách cả Tổng hợp: lĩnh vực PCVP2 kiêm nhiệm không có trong danh sách (bị chặn); phòng không phụ trách không có; giao Công văn không lĩnh vực → được', async ({ browser }, testInfo) => {
+  test('PCVP phụ trách cả Tổng hợp: lĩnh vực PCVP2 kiêm nhiệm không bao giờ được tự chọn (kể cả lĩnh vực chi tiết ghi đúng tên); phòng không phụ trách không có; giao Công văn "Không thuộc" → được', async ({ browser }, testInfo) => {
     const page = await moTrang(browser, 'PCVP', testInfo);
     const owner = await giaTri(page, '#klThOwner');
     expect(owner).toContain('dv:TONG_HOP');
@@ -105,28 +119,29 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
       await chonLoai(page, loai);
       await page.locator('#klThOwner').selectOption('dv:TONG_HOP');
       await page.locator('#klThNganh').selectOption(KN.nganh);
-      const lv = await giaTri(page, '#klThLinhVuc');
-      expect(lv).toContain(KN.lvKhac);
-      expect(lv).not.toContain(KN.lv);
+      await expect(lv(page)).not.toHaveValue('');
+      await quaChiTiet(page, 'Tài chính', (e) => e.not.toHaveValue(KN.lv));
+      await quaChiTiet(page, 'Ngân sách', (e) => e.toHaveValue(KN.lvKhac));
       await expect(page.locator('#gvPhamViGhiChu')).toContainText('do lãnh đạo khác kiêm nhiệm');
       await page.locator('#klThNganh').selectOption('');
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành/lĩnh vực, lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
+      await thieuNganh(page, loai);   // v3.26: bắt buộc mọi loại
     }
     const v = await giaoThat(page, 'PCVP', 'CONG_VAN', { owner: 'dv:TONG_HOP' });
     expect([v.owner_don_vi_ma, v.linh_vuc_ma]).toEqual(['TONG_HOP', 'LV99_KHONG_THUOC']);   // v3.26: Công văn không thuộc ngành nào → "Không thuộc"
     await page.context().close();
   });
 
-  test('Chánh VP: mọi phòng, cả Văn phòng Tỉnh ủy, đủ lĩnh vực; Kết luận/Thông báo thiếu ngành → nút mờ; giao Nghị quyết TW cho phòng Quản trị không lĩnh vực → được', async ({ browser }, testInfo) => {
+  test('Chánh VP: mọi phòng, cả Văn phòng Tỉnh ủy, đủ lĩnh vực (theo lĩnh vực chi tiết); thiếu ngành → nút mờ; giao Nghị quyết TW cho phòng Quản trị "Không thuộc" → được', async ({ browser }, testInfo) => {
     const page = await moTrang(browser, 'A1', testInfo);
     expect(await giaTri(page, '#klThOwner')).toEqual(expect.arrayContaining(['dv:TONG_HOP', 'dv:QUAN_TRI', 'dv:VAN_PHONG_TINH_UY']));
     for (const loai of LOAI) {
       await chonLoai(page, loai);
       await page.locator('#klThOwner').selectOption('dv:TONG_HOP');
       await page.locator('#klThNganh').selectOption(KN.nganh);
-      expect(await giaTri(page, '#klThLinhVuc')).toEqual(expect.arrayContaining([KN.lv, KN.lvKhac]));
+      await quaChiTiet(page, 'Tài chính', (e) => e.toHaveValue(KN.lv));   // Chánh VP: mọi lĩnh vực
+      await quaChiTiet(page, 'Ngân sách', (e) => e.toHaveValue(KN.lvKhac));
       await page.locator('#klThNganh').selectOption('');
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành/lĩnh vực, lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
+      await thieuNganh(page, loai);   // v3.26: bắt buộc mọi loại
       await expect(page.locator('#klThLuu')).toBeDisabled();
     }
     const v = await giaoThat(page, 'A1', 'NQ_TW', { owner: 'dv:QUAN_TRI' });
@@ -143,7 +158,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
     for (const loai of LOAI) {
       await chonLoai(page, loai);
       await page.locator('#klThOwner').selectOption(`tk:${id.demo_cv1}`);
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành/lĩnh vực, lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26
+      await thieuNganh(page, loai);   // v3.26
     }
     const v = await giaoThat(page, 'A2', 'KHAC', { owner: `tk:${id.demo_cv1}` });
     expect(v.owner_don_vi_ma).toBe('TONG_HOP');

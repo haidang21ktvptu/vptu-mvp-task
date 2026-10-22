@@ -4,7 +4,7 @@
 // 4 xếp hạng (đơn vị chịu trách nhiệm / đồng chí Thường trực chỉ đạo), 5 tỷ lệ đúng hạn theo quý, vướng mắc chờ ý kiến, chất lượng dữ liệu.
 import { laXong, laMo, mucMo, xongTrongKy, soLieuChinh, chuaRoNgayXong } from './tong-quan.js';
 import { mucTieuCua, mucTieuThat, khongThuocMucTieu, chuaGanMucTieu, mucTieuTheoNhom, khoiCuaDong, KHONG_THUOC } from './muc-tieu.js';
-import { boSoThuTu } from './nhan.js';
+import { boSoThuTu, nhanTheoNguong, tenMucHoa } from './nhan.js';
 
 const tyLe = (a, b) => (b ? Math.round((a / b) * 100) : null);
 const pad = (n) => String(n).padStart(2, '0');
@@ -15,9 +15,9 @@ const laDo = (r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r));
 // (kể cả chờ xác nhận minh chứng), Vàng, quá hạn (Đỏ + Đỏ đặc biệt), chưa có hạn (không áp dụng cảnh báo, thường xuyên). Hoàn thành ngoài kỳ → null.
 // v3.26.1 (chủ dự án 19/10/2026): việc hoàn thành chưa có ngày hoàn thành / không có hạn (phần lớn nhập từ Excel thời chuyển tiếp) ghi "Hoàn thành",
 // màu xanh nhạt cạnh "Hoàn thành đúng hạn" — không còn "chưa đánh giá"; tỷ lệ đúng hạn vẫn chỉ tính việc có ngày hoàn thành.
-export const DOAN = [['dung', 'Hoàn thành đúng hạn', '--f-tot'], ['cdg', 'Hoàn thành', '--f-d'], ['cham', 'Hoàn thành chậm', '--f-tre'],
-  ['th', 'Đang làm trong hạn', '--du-lieu'], ['vang', 'Sắp đến hạn (Vàng)', '--f-vang'], ['qh', 'Quá hạn (Đỏ, Đỏ đặc biệt)', '--f-do'],
-  ['ch', 'Chưa có hạn, thường xuyên, chờ điều kiện', '--chu-mo']];
+export const DOAN = nhanTheoNguong([['dung', 'Hoàn thành đúng hạn', '--f-tot'], ['cdg', 'Hoàn thành', '--f-d'], ['cham', 'Hoàn thành chậm', '--f-tre'],
+  ['th', 'Đang làm trong hạn', '--du-lieu'], ['vang', '', '--f-vang'], ['qh', 'Quá hạn', '--f-do'],   // v3.29: ghi bằng nghĩa (số ngày theo cấu hình)
+  ['ch', 'Chưa có hạn, thường xuyên, chờ điều kiện', '--chu-mo']], 'vang', () => tenMucHoa('vang'));
 export function doanCua(r, k) {
   if (laXong(r)) return xongTrongKy(r, k) ? (r.ket_qua === 'DUNG_HAN' ? 'dung' : r.ket_qua === 'TRE' ? 'cham' : 'cdg') : null;
   if (!laMo(r)) return 'ch';
@@ -144,13 +144,9 @@ export function theoChuTri(rows, k) {
     return { ma: g.ma, ten: g.ten, xong: s.xong, dangLam: s.dangMo - qh, qh, tong: s.xong + s.dangMo, tyLe: s.tyLeDungHan, xetDuoc: s.dungHan + s.tre };
   }).filter((g) => g.tong > 0).sort((a, b) => b.tong - a.tong || b.qh - a.qh || a.ten.localeCompare(b.ten, 'vi'));
 }
-export const chatLuongDuLieu = (rows) => ({ chuaMucTieu: rows.filter(chuaGanMucTieu), chuaNganh: rows.filter((r) => !r.nganh_ma || !r.linh_vuc_ma),
-  xongChuaNgay: rows.filter(chuaRoNgayXong) });
-// v3.26 (kiểm staging 19/10): việc chưa đủ ngành, lĩnh vực = chưa có ngành (dòng "Chưa phân loại" của khối 3 — chưa xếp được vào khối) + có ngành nhưng
-// chưa có lĩnh vực (vẫn tính theo ngành). Một câu chung cho khối 3, Chất lượng dữ liệu (cùng số với ô "Chưa có ngành, lĩnh vực" của màn Rà soát).
-export const thieuNganh = (rows) => {
-  const khongNganh = rows.filter((r) => !r.nganh_ma).length; const thieuLv = rows.filter((r) => r.nganh_ma && !r.linh_vuc_ma).length;
-  return { tong: khongNganh + thieuLv, khongNganh, thieuLv };
-};
-export const chuThieuNganh = ({ tong, khongNganh, thieuLv }) => (!thieuLv ? `${tong} nhiệm vụ chưa có ngành, lĩnh vực`
-  : !khongNganh ? `${tong} nhiệm vụ đã có ngành nhưng chưa có lĩnh vực` : `${tong} nhiệm vụ chưa có ngành, lĩnh vực (${khongNganh} chưa có ngành, ${thieuLv} chưa có lĩnh vực)`);
+export const chatLuongDuLieu = (rows) => ({ chuaMucTieu: rows.filter(chuaGanMucTieu), chuaNganh: rows.filter((r) => !r.nganh_ma), xongChuaNgay: rows.filter(chuaRoNgayXong) });
+// v3.26 (kiểm staging 19/10): việc chưa có ngành = dòng "Chưa phân loại" của khối 3 (chưa xếp được vào khối). v3.29: bỏ ô Lĩnh vực (lĩnh vực tự xác định
+// theo ngành; việc cũ có ngành mà chưa có lĩnh vực vẫn tính theo ngành) — chỉ còn "chưa có ngành/lĩnh vực". Một câu chung cho khối 3, Chất lượng dữ liệu
+// (cùng số với ô "Chưa có ngành/lĩnh vực" của màn Rà soát).
+export const thieuNganh = (rows) => { const khongNganh = rows.filter((r) => !r.nganh_ma).length; return { tong: khongNganh, khongNganh, thieuLv: 0 }; };
+export const chuThieuNganh = ({ tong }) => `${tong} nhiệm vụ chưa có ngành/lĩnh vực`;

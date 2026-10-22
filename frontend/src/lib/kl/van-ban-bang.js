@@ -22,7 +22,7 @@ export function raSoatVanBan(x, y, rs) {
 export const O_SO_VB = [
   ['tat', 'Tất cả văn bản', () => true],
   ['qua', 'Có việc quá hạn', (d) => d.t.qua > 0],
-  ['sap', 'Có việc sắp đến hạn', (d) => d.t.sap > 0],
+  ['sap', 'Có việc sắp đến hạn (còn ≤ 7 ngày)', (d) => d.t.sap > 0],
   ['thieu', 'Chưa nhập đủ, chưa rà soát', (d) => d.rs.canhBao],
   ['mo', 'Còn việc đang thực hiện', (d) => d.t.mo > 0],
   ['xong', 'Hoàn thành toàn bộ', (d) => d.t.n > 0 && d.t.xong === d.t.n],

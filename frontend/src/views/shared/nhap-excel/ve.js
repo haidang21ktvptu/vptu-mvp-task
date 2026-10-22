@@ -25,7 +25,7 @@ export const khungNhapHtml = () => `
       <button type="button" class="nut" data-action="nxTaiMau">Tải mẫu nhập chuẩn</button>
     </div>
     <ul class="nx-muc"><li class="nx-m1"><b>Điền đủ cột B–M là nhập ngay</b> số hội nghị, số TB/KL, ngày ban hành, chủ trì theo dõi, ngành/lĩnh vực, cơ quan/đơn vị trình, nội dung,
-      loại thời hạn, hạn xử lý, tiến độ, kết quả thực hiện; sản phẩm, lĩnh vực theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
+      loại thời hạn, hạn xử lý, tiến độ, kết quả thực hiện; sản phẩm theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
       <li class="nx-m2"><b>Đang thực hiện</b> giao cho người chủ trì; cột M ghi tiến độ thì vào ghi chú.</li>
       <li class="nx-m3"><b>Hoàn thành</b> chọn "Đã xong ngoài hệ thống" (cột M thành minh chứng) hoặc "Ghi minh chứng".</li></ul>
   </section>
@@ -98,7 +98,7 @@ const tuGanHtml = (s) => `<div class="nx-tu-gan"><label><input type="checkbox" i
   <small class="chu-phu" id="nxTuGanTom" aria-live="polite">${escapeHtml(s.tuGanTom || '')}</small></div>`;
 const hienO = (d, k) => (d.o[k] && !d.o[k].loi ? d.o[k].hien : '');
 // v3.27: ô trống điền theo quy tắc ghi rõ giá trị ở từng dòng ("tự điền: …"); cột Hạn là hạn sẽ ghi (kể cả hạn tự điền).
-const MD_HIEN = { san_pham: 'sanPham', linh_vuc: 'linhVuc', han_xu_ly: '', loai_thoi_han: 'loaiThoiHan', co_quan_trinh: 'donVi' };
+const MD_HIEN = { san_pham: 'sanPham', han_xu_ly: '', loai_thoi_han: 'loaiThoiHan', co_quan_trinh: 'donVi' };   // v3.29: lĩnh vực tự xác định, không ghi
 const tenMa = (k, v, dm = {}) => (k === 'han_xu_ly' ? formatNgay(v) : (dm[MD_HIEN[k]] || []).find((x) => x.ma === v)?.ten || v);
 function dongXemHtml(x, d, duKien = '', dm = {}) {
   const chuTri = hienO(d, 'can_bo') || hienO(d, 'chu_tri') || hienO(d, 'don_vi') || (x.gt.don_vi ? '(theo cán bộ)' : '');
@@ -121,25 +121,18 @@ function khopHtml(s, ctx) {
         ${ds.length ? `<select class="o-nhap" data-nx-khop="${i}" aria-label="Chọn mục đúng cho ${escapeHtml(nhanTruong(g.k))} «${escapeHtml(String(g.v).slice(0, 40))}»">${opt('', 'Chọn mục đúng…', !g.ma)}${ds.map((x) => opt(x.ma, x.ten, x.ma === g.ma)).join('')}</select>`
           : '<span class="chu-phu">sửa trong tệp rồi chọn lại tệp</span>'}</div>`; }).join('')}</div>`;
 }
-// Lĩnh vực (điền hàng loạt): nhóm theo ngành; ngành có dòng còn thiếu lĩnh vực lên đầu, kèm số dòng.
-function lvTheoNganh(s, ctx) {
-  const dem = {}; s.dg.forEach((x) => { if (x.ket_qua === 'CHO_HOAN_THIEN' && x.thieu.includes('linh_vuc')) dem[x.gt.nganh || ''] = (dem[x.gt.nganh || ''] || 0) + 1; });
-  return [...(ctx.dm.nganh || [])].sort((a, b) => Boolean(dem[b.ma]) - Boolean(dem[a.ma])).map((n) => `<optgroup label="${escapeHtml(`${n.ten}${dem[n.ma] ? ` — thiếu ở ${dem[n.ma]} dòng` : ''}`)}">${
-    (ctx.dm.linhVuc || []).filter((l) => l.nganh_ma === n.ma).map((l) => opt(l.ma, l.ten)).join('')}</optgroup>`).join('');
-}
 function hangLoatHtml(thieuDem, s, ctx) {
-  const ks = Object.keys(thieuDem).filter((k) => truong(k)?.kieu && truong(k).kieu !== 'so');
+  const ks = Object.keys(thieuDem).filter((k) => k !== 'linh_vuc' && truong(k)?.kieu && truong(k).kieu !== 'so');   // v3.29: lĩnh vực theo ngành, không điền tay
   const the = Object.entries(s.hangLoat).flatMap(([x, v]) => [].concat(v).map((g) => [x, g]));
   if (!ks.length && !the.length) return '';
   const k = s.hlTruong && ks.includes(s.hlTruong) ? s.hlTruong : ks[0];
   const kieu = truong(k)?.kieu;
   const oGt = !k ? '' : kieu === 'ngay' ? '<input type="date" id="nxHlGt" class="o-nhap" aria-label="Giá trị điền">'
-    : `<select id="nxHlGt" class="o-nhap" aria-label="Giá trị điền">${opt('', 'Chọn giá trị…', true)}${k === 'linh_vuc' ? lvTheoNganh(s, ctx) : luaChon(kieu, ctx, [], k).map((x) => opt(x.ma, x.ten)).join('')}</select>`;
+    : `<select id="nxHlGt" class="o-nhap" aria-label="Giá trị điền">${opt('', 'Chọn giá trị…', true)}${luaChon(kieu, ctx, [], k).map((x) => opt(x.ma, x.ten)).join('')}</select>`;
   const ten = (x, v) => (truong(x)?.kieu === 'ngay' ? hienGoc(v) : luaChon(truong(x)?.kieu, ctx, [], x).find((d) => d.ma === v)?.ten || v);
   return `<div class="nx-hang-loat"><h3>Điền hàng loạt cho ô còn trống</h3>${ks.length ? `<div class="nx-hang">
       <select id="nxHlTruong" class="o-nhap" aria-label="Trường cần điền">${ks.map((x) => opt(x, `${nhanTruong(x)} — thiếu ở ${thieuDem[x]} dòng`, x === k)).join('')}</select>${oGt}
       <button type="button" class="nut" data-action="nxHangLoat">Điền</button></div>` : ''}
-    ${k === 'linh_vuc' ? '<p class="chu-phu nx-goi-y">Lĩnh vực điền theo ngành của từng dòng: chọn một lĩnh vực cho mỗi ngành. Dòng chưa có ngành chỉ được điền khi chỉ chọn một lĩnh vực.</p>' : ''}
     ${the.map(([x, v]) => `<span class="nx-the">${escapeHtml(nhanTruong(x))} = ${escapeHtml(ten(x, v))}
       <button type="button" class="nut nho" data-action="nxBoHangLoat" data-truong="${x}" data-gia-tri="${escapeHtml(v)}" aria-label="Bỏ điền hàng loạt ${escapeHtml(nhanTruong(x))}: ${escapeHtml(ten(x, v))}">×</button></span>`).join('')}</div>`;
 }
@@ -149,11 +142,11 @@ const QUY_TAC = { loai_van_ban: 'có số hội nghị → Kết luận Hội ng
   loai_thoi_han: 'Có hạn cụ thể (việc mới ghi "thường xuyên" / "chờ quyết định" cũng chuyển thành Có hạn cụ thể — loại gốc ghi ở ghi chú)',
   han_xu_ly: 'việc đang làm còn trống hạn: 1 tháng kể từ hôm nay', san_pham: 'theo nội dung ("ban hành Kế hoạch…" → Kế hoạch; "Ký ban hành" → Dự thảo văn bản), còn lại Báo cáo',
   co_quan_trinh: 'đơn vị ngoài Văn phòng ghi ở cột đơn vị chủ trì', nganh: 'ngành của lĩnh vực',
-  linh_vuc: 'ngành chỉ có một lĩnh vực; không thì theo lĩnh vực chi tiết, nội dung (ví dụ "kiểm tra, giám sát" → Kiểm tra Đảng); không nhận ra → lĩnh vực đầu của ngành (dòng ghi "kiểm tra lại")', lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)',
+  lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)',
   theo_doi: 'cán bộ chủ trì; không có → Trưởng phòng chủ trì (việc của Văn phòng) hoặc lãnh đạo giao' };
 function macDinhHtml(s) {
   const dem = {}; s.dg.forEach((x) => x.macDinh.forEach((k) => { dem[k] = (dem[k] || 0) + 1; }));
-  const ks = Object.keys(dem); if (!ks.length) return '';
+  const ks = Object.keys(dem).filter((k) => k !== 'linh_vuc'); if (!ks.length) return '';   // v3.29: lĩnh vực tự xác định — không liệt kê
   return `<details class="nx-mac-dinh"><summary>Ô trống tự điền theo quy tắc: ${escapeHtml(ks.map((k) => `${nhanTruong(k).toLowerCase()} ${dem[k]} dòng`).join(' · '))}</summary>
     <ul>${ks.map((k) => `<li><b>${escapeHtml(nhanTruong(k))}</b>: ${escapeHtml(QUY_TAC[k] || 'mặc định')}</li>`).join('')}</ul></details>`;
 }

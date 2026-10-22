@@ -9,7 +9,7 @@ import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows } from '../../lib/kl/du-lieu.js';
 import { calculateGroupKPI, laOwnerPhong } from './kpi.js';
-import { CHAT_LUONG } from '../../lib/kl/nhan.js';
+import { CHAT_LUONG, tenMuc } from '../../lib/kl/nhan.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { datNapLai } from './dieu-hanh/hanh-dong.js';
 import { nganNguoiHtml, moNgan, dongNgan } from './ngan-viec.js';
@@ -34,7 +34,7 @@ function nguoiHtml(a, rows, tatCa = rows) {
   const xong = rows.filter((r) => r.owner_tai_khoan === a.id && !mo(r));   // PR-3: việc đã hoàn thành theo chất lượng nghiệm thu
   const clChu = CHAT_LUONG.map(([m, ten]) => [xong.filter((r) => r.chat_luong === m).length, ten]).filter(([n]) => n).map(([n, ten]) => `${n} ${ten}`).join(', ');
   const soChu = tong === 0 ? (theoDoi ? `${theoDoi} đang theo dõi` : 'rảnh, có thể nhận thêm')
-    : [dem.do ? `<b>${dem.do}</b> Đỏ` : '', dem.vang ? `${dem.vang} Vàng` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
+    : [dem.do ? `<b>${dem.do}</b> quá hạn` : '', dem.vang ? `${dem.vang} ${tenMuc('vang')}` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
   return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}">
       <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc theo dõi` : ''}${clChu ? ` · <span data-truong="kpi-chat-luong">hoàn thành: ${clChu}</span>` : ''}</small></div>
       <div class="tai"><span class="t-do" style="width:${pct(dem.do)}%"></span><span class="t-vang" style="width:${pct(dem.vang)}%"></span><span class="t-lam" style="width:${pct(lam)}%"></span></div>
@@ -47,7 +47,7 @@ function phongHtml(ma, rows) {
   const cuaPhong = rows.filter((r) => laOwnerPhong(r, ma) || canBo.some((a) => a.id === r.owner_tai_khoan));
   const k = calculateGroupKPI(canBo.map((a) => a.id), rows, ma);
   const phongOwner = rows.filter((r) => laOwnerPhong(r, ma) && mo(r)).length;
-  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì theo dõi: việc cán bộ trong phòng hoặc chính phòng chủ trì theo dõi. Đỏ: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì theo dõi.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì theo dõi đang mở · ${k.quaHan} Đỏ (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là chủ trì theo dõi` : ''}</span></div>
+  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì theo dõi: việc cán bộ trong phòng hoặc chính phòng chủ trì theo dõi. Quá hạn: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì theo dõi.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì theo dõi đang mở · ${k.quaHan} quá hạn (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là chủ trì theo dõi` : ''}</span></div>
     ${canBo.map((a) => nguoiHtml(a, cuaPhong, rows)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
 }
 
@@ -62,7 +62,7 @@ function danhSachPhong(me, rows) {
 function ve() {
   const me = state.user; const phong = danhSachPhong(me, rowsHienTai);
   $('viewCanBo').innerHTML = `
-    <div class="dau"><h1>${TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>tải việc theo người: Đỏ / Vàng / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
+    <div class="dau"><h1>${TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>tải việc theo người: quá hạn / sắp đến hạn / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
       <div class="phai-dau"><button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
     <div class="hai-ngan${nguoiDangMo ? ' mo' : ''}"><div class="cb">${phong.length ? phong.map((p) => phongHtml(p, rowsHienTai)).join('') : '<p class="trong">Không có phòng nào trong phạm vi của đồng chí.</p>'}</div>
       <aside class="ngan-ben${nguoiDangMo ? '' : ' hidden'}" id="cbNgan" aria-label="Chi tiết cán bộ đang chọn"></aside></div>`;

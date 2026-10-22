@@ -2,13 +2,16 @@
 // bốn khâu nghẽn (v_ngoai_le.khau, 0033). Màu là thông tin (mockup): đỏ = phải can thiệp, vàng = sắp/chưa rõ, lục = xong, lam = cấu trúc.
 // Tên lớp khai báo NGUYÊN VĂN (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 import { soNgay } from './ngay.js';
+// Ngưỡng ngày của nhãn (v3.29 — đặt theo kl_cau_hinh khi nạp, datNguongCanhBao bên dưới; mặc định như DB).
+const NGUONG = { vang: 3, khan: 5, ddb: 3, sap: 7 };
 
 export const NHOM = {
   QUA_HAN:        { ten: 'Quá hạn',                     lop: 'do',   stat: 's-do',   thuTu: 2, mo: true },
   // PR-2b (0058): dòng 5 — đã nộp minh chứng, quá hạn ở bước NGHIỆM THU (chậm tính cho lãnh đạo nghiệm thu, không cho người nộp — Mới 2)
   QUA_HAN_NGHIEM_THU: { ten: 'Quá hạn, chờ xác nhận minh chứng', lop: 'do', stat: 's-do', thuTu: 2.5, mo: true },
   DANG_DINH_CHINH:{ ten: 'Quá hạn — đang đính chính',   lop: 'vang', stat: 's-vang', thuTu: 3, mo: true },
-  SAP_DEN_HAN:    { ten: 'Sắp đến hạn',                 lop: 'vang', stat: 's-vang', thuTu: 4, mo: true },
+  // v3.29: nhóm xem "Sắp đến hạn" (còn ≤ nguong_sap_den_han_ngay = 7 ngày — CH-10b) ghi kèm số ngày, khác mức cảnh báo Vàng (còn ≤ 3 ngày, tenMuc).
+  SAP_DEN_HAN:    { get ten() { return `Sắp đến hạn (còn ≤ ${NGUONG.sap} ngày)`; }, lop: 'vang', stat: 's-vang', thuTu: 4, mo: true },
   CHO_NGHIEM_THU: { ten: 'Chờ xác nhận minh chứng',     lop: 'lam',  stat: 's-lam',  thuTu: 4.5, mo: true },
   CAN_DIEN_HAN:   { ten: 'Cần điền hạn',                lop: 'vang', stat: 's-vang', thuTu: 5, mo: true },
   DANG_THUC_HIEN: { ten: 'Đang thực hiện',              lop: 'lam',  stat: 's-lam',  thuTu: 6, mo: true },
@@ -23,14 +26,36 @@ export const MOC_RA_SOAT = { THUONG_XUYEN: 'thường xuyên', CHO_DIEU_KIEN: 'c
 export const nhomCua = (ma) => NHOM[ma] || { ten: ma, lop: '', stat: '', thuTu: 99, mo: true };
 export const tenNhom = (ma) => nhomCua(ma).ten;
 
-// Bốn mức cảnh báo 1400 (NT-5, CN-4) → lớp mép trái (the/hang-nv/muc) và tên.
+// Bốn mức cảnh báo 1400 (NT-5, CN-4) → lớp mép trái (the/hang-nv/muc) và tên (chú giải — tên mức theo Công văn 1400 trong ngoặc).
 export const MUC_CANH_BAO = {
-  XANH:          { ten: 'Xanh — trong hạn',                     lop: 'lam' },
-  VANG:          { ten: 'Vàng — còn ≤ 3 ngày tới hạn, chưa có sản phẩm', lop: 'vang' },
-  DO:            { ten: 'Đỏ — quá hạn',                         lop: 'do' },
-  DO_DAC_BIET:   { ten: 'Đỏ đặc biệt — quá hạn ≥ 3 ngày',       lop: 'dac-biet' },
-  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo',               lop: '' },
+  XANH:          { ten: 'Trong hạn',                                                 lop: 'lam' },
+  VANG:          { ten: 'Sắp đến hạn — còn ≤ 3 ngày, chưa có minh chứng (mức Vàng)', lop: 'vang' },
+  DO:            { ten: 'Quá hạn dưới 3 ngày (mức Đỏ)',                              lop: 'do' },
+  DO_DAC_BIET:   { ten: 'Quá hạn từ 3 ngày trở lên (mức Đỏ đặc biệt)',               lop: 'dac-biet' },
+  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo',                                   lop: '' },
 };
+// v3.29 (chủ dự án 22/10/2026 — "ghi đúng quy tắc", mọi màn hình, giữ màu): ba mức cảnh báo ghi bằng nghĩa; tên Vàng / Đỏ / Đỏ đặc biệt chỉ còn ở
+// chú giải. Ngưỡng theo kl_cau_hinh (du-lieu.js gọi datNguongCanhBao khi nạp; mặc định 3 / 5 / 3 như DB — trang_thai_dong, 0077).
+export function datNguongCanhBao(ch = {}) {
+  NGUONG.vang = ch.nguong_vang_ngay ?? 3; NGUONG.khan = ch.do_khan_KHAN_vang ?? 5; NGUONG.ddb = ch.nguong_do_dac_biet_ngay ?? 3; NGUONG.sap = ch.nguong_sap_den_han_ngay ?? 7;
+}
+export const tenSapDenHan = () => `sắp đến hạn (còn ≤ ${NGUONG.sap} ngày)`;   // nhóm xem SAP_DEN_HAN, ghi giữa câu
+export const nguongCanhBao = () => ({ ...NGUONG });
+const MA_MUC = { VANG: 'vang', DO: 'do', DO_DAC_BIET: 'ddb' };
+// m: 'vang' | 'do' | 'ddb' (hoặc mã DB VANG / DO / DO_DAC_BIET); gon: nhãn ngắn, chữ đầu hoa (chip, ô hẹp); mặc định để ghi giữa câu.
+export function tenMuc(m, gon = false) {
+  const k = MA_MUC[m] || m; const { vang, ddb } = NGUONG;
+  if (k === 'vang') return gon ? 'Sắp đến hạn' : `sắp đến hạn (còn ≤ ${vang} ngày)`;
+  if (k === 'do') return gon ? `Quá hạn < ${ddb} ngày` : `quá hạn dưới ${ddb} ngày`;
+  if (k === 'ddb') return gon ? `Quá hạn ≥ ${ddb} ngày` : `quá hạn từ ${ddb} ngày trở lên`;
+  return '';
+}
+export const tenMucHoa = (m) => { const t = tenMuc(m); return t && t[0].toUpperCase() + t.slice(1); };   // đầu nhãn, ô số
+// Bảng nhãn tĩnh [khoá, tên, …] (ô số, đoạn, lựa chọn lọc) có ô tên theo ngưỡng cấu hình: ô tên thành getter — đọc lúc vẽ, sau khi đã nạp cấu hình.
+export function nhanTheoNguong(ds, khoa, ten) { Object.defineProperty(ds.find(([k]) => k === khoa), 1, { get: ten, enumerable: true }); return ds; }
+// Chú giải màu dùng chung (bảng, Tổng quan): nghĩa trước, tên mức theo Công văn 1400 sau.
+export const chuGiaiMuc = () => [['vang', `Sắp đến hạn: còn ≤ ${NGUONG.vang} ngày, chưa có minh chứng (việc khẩn trở lên ≤ ${NGUONG.khan} ngày) — mức Vàng`],
+  ['do', `Quá hạn dưới ${NGUONG.ddb} ngày — mức Đỏ`], ['ddb', `Quá hạn từ ${NGUONG.ddb} ngày trở lên — mức Đỏ đặc biệt`]];
 export const mucCua = (muc) => MUC_CANH_BAO[muc] || MUC_CANH_BAO.KHONG_AP_DUNG;
 // Góc nhìn NGƯỜI NỘP (Mới 2): chủ trì tài khoản hoặc người đã nộp minh chứng đang chờ thấy nhãn trung tính "Đã nộp — chờ nghiệm thu", kể cả khi
 // việc đã quá hạn ở bước nghiệm thu (chậm thuộc về lãnh đạo nghiệm thu). me = id người đang xem (tuỳ chọn).
@@ -46,7 +71,7 @@ export const KHAU = {
   BI_TU_CHOI:     { ten: 'Bị từ chối, chờ giao lại',  phu: 'đề nghị từ chối đã duyệt',  mau: 'do' },
   CHO_QUYET:      { ten: 'Chờ cấp trên quyết',        phu: 'đã trình, chưa có ý kiến',  mau: 'cam' },
   CHUA_SAN_PHAM:  { ten: 'Chưa có sản phẩm',          phu: 'đang làm, đã quá hạn',      mau: 'cam' },
-  CHO_MINH_CHUNG: { ten: 'Việc Đỏ chờ xác nhận minh chứng', phu: 'đã nộp, chờ Văn phòng',     mau: 'lam' },
+  CHO_MINH_CHUNG: { ten: 'Việc quá hạn chờ xác nhận minh chứng', phu: 'đã nộp, chờ Văn phòng', mau: 'lam' },
   CHO_NGHIEM_THU: { ten: 'Chờ xác nhận minh chứng',   phu: 'nộp trước v3.20, quá hạn chưa xác nhận', mau: 'lam' },
   CHUA_NHAN:      { ten: 'Chưa nhận việc',            phu: 'giao rồi, chưa xác nhận',   mau: 'cam' },
 };
@@ -62,6 +87,7 @@ export function nhanTrangThai(r, me) {
     case 'QUA_HAN': return `Quá hạn · ${r.so_ngay_qua} ngày`;
     case 'DANG_DINH_CHINH': return `Quá hạn · ${r.so_ngay_qua} ngày · đang đính chính`;
     case 'CAN_DIEN_HAN': return `Cần điền hạn · ${r.tuoi_ngay} ngày tuổi`;
+    case 'SAP_DEN_HAN': return 'Sắp đến hạn';   // nhãn dòng: ô Hạn đã ghi "còn n ngày"
     case 'HOAN_THANH':
       if (r.ket_qua === 'DUNG_HAN') return 'Hoàn thành đúng hạn';
       if (r.ket_qua === 'TRE') return `Hoàn thành trễ ${r.so_ngay_tre} ngày`;
@@ -92,7 +118,7 @@ export const TEN_COT = {
   muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan/đơn vị trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
   tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển người theo dõi',   // 0090, 0092
   gan_muc_tieu: 'Mục tiêu then chốt',   // 0105
-  ra_soat_phan_loai: 'Rà soát phân loại (ngành, lĩnh vực, mục tiêu then chốt)',   // 0116
+  ra_soat_phan_loai: 'Rà soát phân loại (ngành/lĩnh vực, mục tiêu then chốt)',   // 0116
   giai_ngan: 'Giải ngân vốn',   // 0119: nhập / xoá kỳ số liệu, gắn / đổi / bỏ theo dõi
   van_ban_trich_yeu: 'Trích yếu văn bản',   // 0046 dat_trich_yeu_van_ban — trước đây diễn biến hiện tên cột thô (kiểm tay 18/10)
 };

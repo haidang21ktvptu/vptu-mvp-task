@@ -3,6 +3,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { tongHop } from '../../../lib/kl/tong-hop.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
+import { tenSapDenHan } from '../../../lib/kl/nhan.js';
 import { dh, viecDo, viecTuChoi, ttCho, canToiQuyet, xuHuong, chuXuHuong } from './du-lieu.js';
 
 // Ô có `action` riêng (sắp đến hạn → danh sách việc trong ngăn chi tiết, v9 đợt 2) không phải bộ lọc trang, không có aria-pressed.
@@ -41,7 +42,7 @@ export function kpiTuChoi() {
 // Việc sắp đến hạn (nhóm Vàng SAP_DEN_HAN trong phạm vi, từ dòng đã tải) — A1 v8 (mockup 03); bấm mở danh sách trong ngăn chi tiết.
 export function kpiSapHan() {
   const n = dh.rows.filter((r) => r.nhom_dem === 'SAP_DEN_HAN').length;
-  return { lop: 'vang', loc: JSON.stringify({ nhom: 'SAP_DEN_HAN' }), action: 'moKlDanhSach', so: n, nhan: 'việc sắp đến hạn', phu: n ? 'bấm để xem danh sách và nhắc' : 'không có việc nào sắp đến hạn' };
+  return { lop: 'vang', loc: JSON.stringify({ nhom: 'SAP_DEN_HAN' }), action: 'moKlDanhSach', so: n, nhan: `việc ${tenSapDenHan()}`, phu: n ? 'bấm để xem danh sách và nhắc' : 'không có việc nào sắp đến hạn' };
 }
 // Kết quả nộp trong 7 ngày (A1/A2 — Đợt D 0090: nộp là hoàn thành): số việc; bấm mở danh sách — đánh giá / trả lại ở khối cuối trang, không bắt buộc.
 export function kpiMinhChung() {

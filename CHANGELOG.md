@@ -912,3 +912,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Tổng quan: ô lọc "Đơn vị chịu trách nhiệm" (thực ra lọc cơ quan trình) nay ghi "Cơ quan/đơn vị trình". Xuất Excel chỉ đổi tên cột. Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột).
 - DESIGN mục 12 (bảng tên ô), SPEC GV-26, CAU-HOI nhóm N; unit `ten-o-phu-luc` (4 kịch bản) + sửa các bài so chữ cũ.
 
+
+## 84. v3.29.0 — bỏ ô Lĩnh vực, Báo cáo theo phòng chuyên môn / chuyên viên, mức cảnh báo ghi bằng nghĩa (22/10/2026, chủ dự án duyệt kế hoạch; PR 1 chỉ giao diện)
+- Bỏ ô "Lĩnh vực" (bảng Phụ lục chỉ có Ngành/lĩnh vực, Lĩnh vực chi tiết) ở Giao việc, Sửa thông tin giao, bộ lọc, Nhập Excel, tệp rà soát; lĩnh vực trong danh mục (kiêm nhiệm, khối) tự xác định trong phạm vi được giao — ngành một lĩnh vực, gợi ý AI / Excel, Lĩnh vực chi tiết, nội dung, việc vừa giao ("Giao, nhập tiếp"), rồi lĩnh vực mang tên phần đầu của ngành.
+- Báo cáo: bảng "Theo phòng chuyên môn", "Theo chuyên viên thực hiện"; mọi bảng sáu cột Tổng số · Quá hạn · Sắp đến hạn (còn ≤ 3 ngày) · Đang thực hiện · Hoàn thành · Trước hạn, cộng đủ tổng, xếp mức như Tổng quan; bỏ 4 cột chất lượng (cả tệp Excel, nay 4 sheet).
+- Mức cảnh báo ghi bằng nghĩa ở mọi màn hình ("sắp đến hạn (còn ≤ 3 ngày)", "quá hạn dưới 3 ngày", "quá hạn từ 3 ngày trở lên"), giữ màu, tên mức Công văn 1400 chỉ ở chú giải; nhóm xem 7 ngày ghi "Sắp đến hạn (còn ≤ 7 ngày)". Tổng quan: các ô ghi đủ "nhiệm vụ", phần cộng đủ số, câu "Cách tính".
+- Kiểm thử: unit `bao-cao`, `muc-canh-bao` (mới) + `nhap-excel-v327`, `phan-loai`, `tong-quan-lanh-dao`; e2e `bao-cao-phong` (mới), `chonPhanLoai` và các kịch bản giao việc / nhập Excel / rà soát theo lĩnh vực tự xác định, `tong-quan` kiểm câu cảnh báo. DESIGN mục 12–13, SPEC GV-27 · CB-8 · DB-12, CAU-HOI nhóm O, HDSD (chữ).

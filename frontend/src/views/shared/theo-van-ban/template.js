@@ -13,7 +13,7 @@ export function nhanPhamViTvb(user, xemPhong = false) {
 }
 
 const COT = [['STT', 'bnv-c-stt'], ['Văn bản'], ['Ngày nhận'], ['Người giao'], ['Nhiệm vụ'], ['Tiến độ'], ['Cảnh báo']];
-const CHU_GIAI = '<span><i class="dac-biet"></i>Có việc Đỏ đặc biệt</span><span><i class="do"></i>Có việc quá hạn</span><span><i class="vang"></i>Có việc sắp đến hạn</span>'
+const CHU_GIAI = '<span><i class="dac-biet"></i>Có việc quá hạn từ 3 ngày trở lên</span><span><i class="do"></i>Có việc quá hạn dưới 3 ngày</span><span><i class="vang"></i>Có việc sắp đến hạn (còn ≤ 7 ngày)</span>'
   + '<span><i class="lam"></i>Đang thực hiện, trong hạn</span><span><i class="luc"></i>Hoàn thành toàn bộ</span>';
 
 export const theoVanBanTemplate = `

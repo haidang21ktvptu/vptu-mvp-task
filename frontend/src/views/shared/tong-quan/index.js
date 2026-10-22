@@ -13,7 +13,8 @@ import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, cauHinhKl, xemToanBo, chuyenVienXemPhong, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
+import { nguongCanhBao } from '../../../lib/kl/nhan.js';
+import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, xemToanBo, chuyenVienXemPhong, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { loadKetQuaChiTieu } from '../../../lib/kl/muc-tieu-db.js';
 import { locTheoViec, chiXem } from '../../../lib/kl/pham-vi.js';
 import { LOC_TRONG, coLoc, locTongQuan, tuyChonLoc, theoLoaiVanBan, theoLanhDaoVP, lanhDaoPhuTrach, CHUA_LDVP } from '../../../lib/kl/tong-quan-them.js';
@@ -78,7 +79,8 @@ const dongDaLoc = () => locTongQuan(coSo(), tq.loc, ctxLoc());
 const cdsCoSo = () => (toanVP() ? tq.cds : locTheoViec(tq.cds, tq.rows));   // chỉ đạo đọc theo RLS (0103: mọi việc) → đúng tập việc đang xem
 const cdsLoc = () => locTheoViec(cdsCoSo(), dongDaLoc());   // khối 7 theo thanh lọc như mọi khối (rà soát 18/10: số đếm trước đây bỏ qua bộ lọc)
 const kyHienTai = (homNay) => (tq.loc.tu || tq.loc.den ? khoangTuyChon(tq.loc.tu, tq.loc.den, homNay) : khoangKy(tq.ky, homNay));
-const quyTac = () => `Quy tắc: Vàng = còn ≤ ${cauHinhKl('nguong_vang_ngay', 3)} ngày tới hạn mà chưa có minh chứng (Khẩn trở lên ≤ ${cauHinhKl('do_khan_KHAN_vang', 5)} ngày); Đỏ = quá hạn; Đỏ đặc biệt = quá hạn ≥ ${cauHinhKl('nguong_do_dac_biet_ngay', 3)} ngày; đúng hạn tính trên việc hoàn thành có hạn và ngày hoàn thành; việc hoàn thành chưa rõ ngày tính theo ngày giao.`;
+// v3.29: câu "Cách tính" ghi rõ quy tắc (ngưỡng theo cấu hình — cùng số DB tính); tên mức theo Công văn 1400 ghi trong ngoặc.
+const quyTac = () => { const n = nguongCanhBao(); return `Cách tính: nhiệm vụ của kỳ = hoàn thành trong kỳ + đang thực hiện; sắp đến hạn = còn ≤ ${n.vang} ngày tới hạn xử lý mà chưa có minh chứng (việc khẩn trở lên ≤ ${n.khan} ngày); quá hạn dưới ${n.ddb} ngày; quá hạn từ ${n.ddb} ngày trở lên (ba mức trên tương ứng mức cảnh báo Vàng, Đỏ, Đỏ đặc biệt của Công văn 1400); đúng hạn chỉ xét nhiệm vụ có đủ hạn và ngày hoàn thành; nhiệm vụ hoàn thành chưa ghi ngày tính theo ngày giao.`; };
 // Nút "Chỉ đạo" ở khối 1: Thường trực, lãnh đạo Văn phòng, Trưởng phòng với việc trong phạm vi xử lý (còn lại "Xem"); quyền thật ở hàm chỉ đạo.
 const duocChiDaoViec = (r) => ['A0', 'A1', 'A2'].includes(vai()) && !chiXem(r);
 

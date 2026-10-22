@@ -81,7 +81,7 @@ test.describe.serial('Giao việc ba bước một trang (quan_tri_kl)', () => {
     await expect(page.locator('#klThCapNhan')).toHaveValue('TRUONG_PHONG'); // cấp trên Owner tự điền
     await expect(page.locator('#klThNgayNhan')).toHaveValue(homNayVN());   // ngày nhận mặc định hôm nay VN
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
-    await page.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+    await page.locator('#klThLvct').fill('Tài chính');   // v3.29: không còn ô Lĩnh vực — lĩnh vực tự xác định theo lĩnh vực chi tiết
     await chonPhanLoai(page);   // v3.26: mục tiêu then chốt bắt buộc ("Không thuộc")
     await page.locator('#klThHan').fill('2026-12-31');
     await page.locator('#klThThayMat').selectOption(TRUONG_PHONG_ID);          // thay mặt Trưởng phòng Tổng hợp (cùng phòng Owner)

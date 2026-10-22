@@ -24,7 +24,7 @@ function dongSuaHtml(n, d, i, dm) {
   const hanGy = d.han_goi_y && !d.han && d.loai !== 'KY_BAN_HANH'
     ? `<button type="button" class="nut nho" data-action="gvDocBangHan" data-i="${i}" title="${esc(`Văn bản nêu: “${d.han_trich}” — chưa đối chiếu được ngày`)}">Dùng ${esc(formatNgay(d.han_goi_y))}</button>` : '';
   const phu = [n.trang ? `Trang ${esc(n.trang)}` : '', n.don_vi_chu_tri?.gia_tri ? `Chủ trì theo văn bản: ${esc(n.don_vi_chu_tri.gia_tri)}` : '',
-    n.nganh?.gia_tri ? `Ngành/lĩnh vực: ${esc(ten(dm.nganh, n.nganh.gia_tri))}` : '', n.linh_vuc?.gia_tri ? `Lĩnh vực: ${esc(ten(dm.linhVuc, n.linh_vuc.gia_tri))}` : ''].filter(Boolean).join(' · ');
+    n.nganh?.gia_tri ? `Ngành/lĩnh vực: ${esc(ten(dm.nganh, n.nganh.gia_tri))}` : ''].filter(Boolean).join(' · ');   // v3.29: lĩnh vực không hiện (tự xác định)
   return `<li class="gv-doc-nv gv-db" data-i="${i}">
     <div class="gv-db-dau"><b>Nhiệm vụ ${i + 1}</b>${nhanNd}<span class="gv-db-nut"><button type="button" class="nut nho chinh" data-action="gvDocDien" data-i="${i}">Điền vào thẻ</button>
       <button type="button" class="nut nho" data-action="gvDocBoDong" data-i="${i}" aria-label="Bỏ nhiệm vụ ${i + 1}">× Bỏ</button></span></div>

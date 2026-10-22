@@ -9,15 +9,15 @@ const CHUNG = `
 
 const THEO_VAI = {
   A0: `<h3>Thường trực Tỉnh ủy</h3>
-    <ul><li><b>Trung tâm điều hành</b>: việc Đỏ cần quyết, chỉ đạo đang chờ Văn phòng phản hồi, đề nghị từ chối chờ duyệt.</li>
+    <ul><li><b>Trung tâm điều hành</b>: việc quá hạn cần quyết, chỉ đạo đang chờ Văn phòng phản hồi, đề nghị từ chối chờ duyệt.</li>
     <li><b>Giao việc</b>: giao thẳng cho Chánh Văn phòng (ưu tiên Thường trực, có thể Hỏa tốc).</li>
     <li><b>Chỉ đạo đã gửi</b>: theo dõi phản hồi từng chỉ đạo. <b>Bản gọn</b> (bánh răng): ẩn xu hướng và thanh trái để đọc nhanh trên điện thoại.</li></ul>`,
   A1: `<h3>Lãnh đạo Văn phòng</h3>
-    <ul><li><b>Điều hành hôm nay</b>: việc Đỏ trong phạm vi phụ trách, chỉ đạo Thường trực chờ mình, đề nghị từ chối chờ duyệt.</li>
+    <ul><li><b>Điều hành hôm nay</b>: việc quá hạn trong phạm vi phụ trách, chỉ đạo Thường trực chờ mình, đề nghị từ chối chờ duyệt.</li>
     <li><b>Giao việc</b> ba bước: văn bản → nội dung, chủ trì theo dõi, hạn xử lý → xác nhận. Người nhận phải bấm "Đã nhận" (Hỏa tốc: trong 2 giờ làm việc).</li>
     <li><b>Phân công phụ trách</b> (Chánh Văn phòng, bánh răng): Phó Chánh Văn phòng phụ trách phòng nào, hiệu lực theo ngày. <b>Ngưỡng cảnh báo</b>: số ngày "sắp đến hạn", hạn phản hồi mặc định…</li></ul>`,
   A2: `<h3>Trưởng phòng</h3>
-    <ul><li><b>Phòng tôi hôm nay</b>: việc của phòng theo khâu, việc Đỏ cần quyết, đề nghị từ chối của chuyên viên chờ duyệt.</li>
+    <ul><li><b>Phòng tôi hôm nay</b>: việc của phòng theo khâu, việc quá hạn cần quyết, đề nghị từ chối của chuyên viên chờ duyệt.</li>
     <li><b>Giao việc trong phòng</b>: giao cho chuyên viên phòng mình; theo dõi kết quả nộp, trả lại nếu chưa đạt.</li></ul>`,
   A3: `<h3>Chuyên viên</h3>
     <ul><li><b>Việc của tôi</b>: việc mới cần bấm "Đã nhận", việc sắp đến hạn / quá hạn, chỉ đạo cần phản hồi.</li>

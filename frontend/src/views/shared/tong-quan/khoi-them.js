@@ -1,12 +1,13 @@
 // Tổng quan cho lãnh đạo (v3.24): khối 4 "Xếp hạng thực hiện" (theo đơn vị chịu trách nhiệm / theo đồng chí Thường trực chỉ đạo), khối 9 "Quản lý
 // nội bộ Văn phòng" (KPI theo phòng, cán bộ chủ trì, theo lãnh đạo VP phụ trách — gập mặc định với Thường trực / lãnh đạo Văn phòng, mở sẵn với Trưởng
-// phòng, chuyên viên xem phòng) và ghi chú chất lượng dữ liệu (việc chưa gắn mục tiêu, chưa có ngành / lĩnh vực). Chỉ dựng HTML từ số đã tính.
+// phòng, chuyên viên xem phòng) và ghi chú chất lượng dữ liệu (việc chưa gắn mục tiêu, chưa có ngành/lĩnh vực). Chỉ dựng HTML từ số đã tính.
 import { escapeHtml } from '../../../lib/dom.js';
 import { mo, dauKhoi, nhomNut, thuoc } from './template.js';
+import { tenMuc } from '../../../lib/kl/nhan.js';
 import { thieuNganh, chuThieuNganh } from '../../../lib/kl/tong-quan-lanh-dao.js';   // v3.26: cùng câu với khối 3
 
-const pillsXh = (d, cach) => [[d.ddb, 'ddb', 'Đỏ đặc biệt'], [d.do, 'do', 'Đỏ']].filter(([n]) => n)
-  .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} việc ${ten}" ${mo({ t: 'xh', cach, ma: d.ma, ten: d.ten, m: lop })}>${n}<span class="sr"> việc ${ten}</span></button>`).join('')
+const pillsXh = (d, cach) => [[d.ddb, 'ddb'], [d.do, 'do']].filter(([n]) => n).map(([n, lop]) => [n, lop, tenMuc(lop)])   // v3.29: ghi bằng nghĩa
+  .map(([n, lop, ten]) => `<button type="button" class="muc-tq ${lop}" title="${n} nhiệm vụ ${ten}" ${mo({ t: 'xh', cach, ma: d.ma, ten: d.ten, m: lop })}>${n}<span class="sr"> nhiệm vụ ${ten}</span></button>`).join('')
   || '<span class="muc-tq tot">Không</span>';
 // ds: xepHang(rows, k, cach); cach: 'dv' | 'tt'.
 export function xepHangHtml(ds, cach, k) {

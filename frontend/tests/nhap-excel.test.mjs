@@ -142,7 +142,7 @@ test('Đánh giá: mặc định (Kết luận BTV khi có số hội nghị, ng
 
 test('Đánh giá: thiếu mức 1 → CHO_HOAN_THIEN; điền hàng loạt lấp chỗ trống; Hoàn thành theo chế độ lô; cán bộ khác phòng chặn; ô tuỳ chọn sai bỏ qua', () => {
   const thieu = danhGia(dong({ ...DU, san_pham: undefined, nganh: undefined, linh_vuc: undefined }), DG);
-  assert.equal(thieu.ket_qua, 'CHO_HOAN_THIEN'); assert.deepEqual(thieu.du_lieu.thieu, ['nganh', 'linh_vuc'], 'v3.27: sản phẩm điền theo quy tắc');
+  assert.equal(thieu.ket_qua, 'CHO_HOAN_THIEN'); assert.deepEqual(thieu.du_lieu.thieu, ['nganh'], 'v3.27: sản phẩm điền theo quy tắc; v3.29: chưa có ngành chỉ báo thiếu ngành (lĩnh vực theo ngành)');
   assert.equal(thieu.du_lieu.san_pham_loai, 'BAO_CAO'); assert.ok(thieu.macDinh.has('san_pham'));
   const hl = danhGia(dong({ ...DU, san_pham: undefined }), { ...DG, hangLoat: { san_pham: 'TO_TRINH' } });
   assert.equal(hl.ket_qua, 'GIAO'); assert.equal(hl.du_lieu.san_pham_loai, 'TO_TRINH');
@@ -191,20 +191,19 @@ test('v3.18: cột "Lãnh đạo giao" nhận nhóm (Lãnh đạo Văn phòng / 
   assert.equal(ttCvp.ket_qua, 'GIAO'); assert.equal(ttCvp.du_lieu.owner_tai_khoan, 'cvp');
 });
 
-test('Đánh giá: ngành ↔ lĩnh vực suy ra nhau khi xác định; điền hàng loạt lĩnh vực theo ngành của từng dòng', () => {
+test('Đánh giá: ngành ↔ lĩnh vực suy ra nhau khi xác định; v3.29: lĩnh vực luôn tự xác định — không điền hàng loạt, cột Lĩnh vực mẫu cũ ghi sai thì bỏ qua', () => {
   const coLv = danhGia(dong({ ...DU, nganh: undefined, linh_vuc: 'Tư pháp' }), DG);
   assert.equal(coLv.gt.nganh, 'NOI_CHINH'); assert.ok(coLv.macDinh.has('nganh')); assert.equal(coLv.ket_qua, 'GIAO');
   const motLv = danhGia(dong({ ...DU, nganh: '3. Nội chính - ANQP - Tư pháp', linh_vuc: undefined }), DG);
   assert.equal(motLv.gt.linh_vuc, 'LV_TP', 'ngành chỉ có một lĩnh vực'); assert.ok(motLv.macDinh.has('linh_vuc'));
-  const hl = { linh_vuc: ['LV_DT', 'LV_TP'] };
-  const kt = danhGia(dong({ ...DU, linh_vuc: undefined }), { ...DG, hangLoat: hl });
-  assert.equal(kt.gt.linh_vuc, 'LV_DT'); assert.ok(kt.dienHL.has('linh_vuc')); assert.ok(!kt.macDinh.has('linh_vuc')); assert.equal(kt.ket_qua, 'GIAO');
-  const chuaNganh = danhGia(dong({ ...DU, nganh: undefined, linh_vuc: undefined }), { ...DG, hangLoat: hl });
-  assert.equal(chuaNganh.ket_qua, 'CHO_HOAN_THIEN', 'chưa có ngành, chọn nhiều lĩnh vực → không đoán');
-  const mot = danhGia(dong({ ...DU, nganh: undefined, linh_vuc: undefined }), { ...DG, hangLoat: { linh_vuc: ['LV_TC'] } });
-  assert.equal(mot.gt.linh_vuc, 'LV_TC'); assert.equal(mot.gt.nganh, 'KTTH'); assert.equal(mot.ket_qua, 'GIAO');
-  const cn = danhGia(dong({ ma: 'nv-9', nganh: '3. Nội chính - ANQP - Tư pháp' }), { ...DG, hangLoat: hl });
-  assert.equal(cn.du_lieu.linh_vuc_ma, null, 'cập nhật theo mã: không suy, không điền hàng loạt');
+  const kt = danhGia(dong({ ...DU, linh_vuc: undefined }), { ...DG, hangLoat: { linh_vuc: ['LV_DT', 'LV_TP'] } });
+  assert.ok(kt.gt.linh_vuc && !kt.dienHL.has('linh_vuc') && kt.macDinh.has('linh_vuc'), 'tự xác định, không điền hàng loạt'); assert.equal(kt.ket_qua, 'GIAO');
+  const chuaNganh = danhGia(dong({ ...DU, nganh: undefined, linh_vuc: undefined }), DG);
+  assert.equal(chuaNganh.ket_qua, 'CHO_HOAN_THIEN'); assert.ok(chuaNganh.thieu.includes('nganh') && !chuaNganh.thieu.includes('linh_vuc'));
+  const sai = danhGia(dong({ ...DU, linh_vuc: 'Lĩnh vực không có trong danh mục' }), DG);
+  assert.ok(!sai.loi.includes('linh_vuc') && sai.gt.linh_vuc, 'giá trị sai bỏ qua, lĩnh vực tự xác định'); assert.equal(sai.ket_qua, 'GIAO');
+  const cn = danhGia(dong({ ma: 'nv-9', nganh: '3. Nội chính - ANQP - Tư pháp' }), DG);
+  assert.equal(cn.du_lieu.linh_vuc_ma, null, 'cập nhật theo mã: không suy (DB dùng gợi ý khi đổi ngành)');
 });
 
 test('Đánh giá: mã đã có → CAP_NHAT chỉ ô có trong tệp (không mặc định, không điền hàng loạt); mã chưa có → việc mới kèm cảnh báo', () => {

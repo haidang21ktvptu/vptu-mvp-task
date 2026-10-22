@@ -57,7 +57,6 @@ export const klTemplate = `
       <select id="klLocMucTieu" aria-label="Lọc theo mục tiêu then chốt"><option value="">Mọi mục tiêu then chốt</option></select>
       <select id="klLocHoiNghi" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
       <select id="klLocNganh" aria-label="Lọc theo ngành/lĩnh vực"><option value="">Mọi ngành/lĩnh vực</option></select>
-      <select id="klLocLinhVuc" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>
       <select id="klLocNguon" aria-label="Lọc theo nguồn nhiệm vụ"><option value="">Mọi nguồn nhiệm vụ</option></select>
     </div></details>
   </div>

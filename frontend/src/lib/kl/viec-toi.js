@@ -3,6 +3,7 @@
 // sắp xếp, nhóm theo văn bản giao (giữ thứ tự đang sắp). ctx = { me, chiDao(id) → chỉ đạo đang chờ tôi trả lời, deNghi(id) → đề nghị từ chối
 // của tôi đang chờ duyệt }. Quyền thật ở DB — vị từ ở đây chỉ để đếm và hiện nút.
 import { sapXepMoiNhap, sapXepHan } from './loc-them.js';
+import { nhanTheoNguong, tenMucHoa } from './nhan.js';
 
 export const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 export const GAP = ['VANG', 'DO', 'DO_DAC_BIET'];   // Vàng / Đỏ / Đỏ đặc biệt
@@ -19,7 +20,7 @@ const can = (r, c) => laCuaToi(r, c.me) && mo(r) && (Boolean(r.bi_tu_choi) || ch
 
 // Tám ô số theo mẫu: [khoá, tên, vị từ(dòng, ctx)]. "Cần xử lý" (mặc định): việc của tôi đang mở mà chưa nhận, có chỉ đạo chờ trả lời, minh
 // chứng bị trả lại, Vàng / Đỏ / Đỏ đặc biệt, hoặc bị từ chối chờ giao lại.
-export const O_SO = [
+export const O_SO = nhanTheoNguong([
   ['can', 'Cần xử lý', can],
   ['nhan', 'Chưa xác nhận nhận việc', (r, c) => chuaNhan(r, c.me)],
   ['chiDao', 'Chỉ đạo chờ trả lời', coChiDao],
@@ -28,7 +29,7 @@ export const O_SO = [
   ['mo', 'Đang thực hiện', (r) => mo(r)],
   ['xong', 'Đã hoàn thành', (r) => !mo(r)],
   ['tat', 'Tất cả', () => true],
-];
+], 'sap', () => tenMucHoa('vang'));   // v3.29: "Sắp đến hạn (còn ≤ 3 ngày)" — mức Vàng, số ngày theo cấu hình
 const VI_TU = Object.fromEntries(O_SO.map(([k, , f]) => [k, f]));
 export const locO = (rows, khoa, c) => rows.filter((r) => (VI_TU[khoa] || VI_TU.tat)(r, c));
 export const demO = (rows, c) => Object.fromEntries(O_SO.map(([k, , f]) => [k, rows.filter((r) => f(r, c)).length]));

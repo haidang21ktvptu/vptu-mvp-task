@@ -12,6 +12,7 @@ import { tenCapDuyet } from '../../../lib/kl/thay-mat.js';
 import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
 import { dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';   // v3.27 (0117): cơ quan trình = đơn vị ngoài Văn phòng + Văn phòng Tỉnh ủy
+import { linhVucMacDinh } from '../../../lib/kl/nhap/mac-dinh.js';
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
@@ -110,16 +111,16 @@ export const suaTangTemplate = `
 </div>`;
 
 const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
-const linhVucOpts = (nganh, chon) => opt('', '(để trống)', !chon) + (danhMucKl().linhVuc || []).filter((l) => !nganh || l.nganh_ma === nganh).map((l) => opt(l.ma, l.ten, l.ma === chon)).join('');
+// v3.29: bỏ ô Lĩnh vực (bảng Phụ lục chỉ có Ngành/lĩnh vực, Lĩnh vực chi tiết) — đổi ngành thì lĩnh vực tự xác định (giữ lĩnh vực đang có nếu thuộc
+// ngành mới; không thì theo lĩnh vực chi tiết, nội dung — lib/kl/nhap/mac-dinh.js). DB kiểm lĩnh vực thuộc ngành; việc từ kết luận phải có cả hai.
+const O_CHON = O_GIAO.filter(([c]) => c !== 'linh_vuc_ma');
+const linhVucTheo = (nganh, r) => (nganh ? linhVucMacDinh({ nganh, chiTiet: r.linh_vuc_chi_tiet, noiDung: r.noi_dung, goiY: r.linh_vuc_ma }, danhMucKl())?.ma || null : null);
 function oMoiHtml(cot, r) {
   const k = kieuCua(cot); const v = r[cot] ?? ''; const nhan = `<label for="stMoi" class="nhan">Giá trị mới</label>`;
-  // Đổi ngành kéo theo chọn lại lĩnh vực trong ngành mới (DB kiểm lĩnh vực thuộc ngành; việc từ kết luận phải có cả hai).
   if (k === 'nganh') {
     const kl = ['KL_BTV', 'TB_THUONG_TRUC'].includes(r.van_ban_loai);   // v3.26: kết luận / thông báo không chọn "Không thuộc" (DB chặn — 0116)
-    return `${nhan}<select id="stMoi" class="o-nhap">${opt('', '(để trống)', !v)}${(danhMucKl().nganh || []).filter((d) => !kl || d.ma !== KHONG_THUOC).map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>
-      <label for="stMoi2" class="nhan mt-3">Lĩnh vực trong ngành</label><select id="stMoi2" class="o-nhap">${linhVucOpts(v, r.linh_vuc_ma)}</select>`;
+    return `${nhan}<select id="stMoi" class="o-nhap">${opt('', '(để trống)', !v)}${(danhMucKl().nganh || []).filter((d) => !kl || d.ma !== KHONG_THUOC).map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>`;
   }
-  if (k === 'linhVuc') return `${nhan}<select id="stMoi" class="o-nhap">${linhVucOpts(r.nganh_ma, v)}</select>`;
   if (k === 'vb') return `${nhan}<textarea id="stMoi" class="o-nhap" rows="3" maxlength="2000">${escapeHtml(v)}</textarea>`;
   if (k === 'chu') return `${nhan}<input type="text" id="stMoi" class="o-nhap" maxlength="${cot === 'don_vi_phoi_hop' ? 300 : 1000}" value="${escapeHtml(v)}">`;
   const dm = danhMucKl();
@@ -134,9 +135,8 @@ function oMoiHtml(cot, r) {
 function veO() {
   const r = dongViec($('stId').value); const cot = $('stCot').value;
   if (!r) return;
-  $('stCu').textContent = giaTriO(cot, r[cot]) + (cot === 'nganh_ma' ? ` · lĩnh vực ${giaTriO('linh_vuc_ma', r.linh_vuc_ma)}` : '');
+  $('stCu').textContent = giaTriO(cot, r[cot]);
   $('stMoiWrap').innerHTML = oMoiHtml(cot, r);
-  if (cot === 'nganh_ma') $('stMoi').addEventListener('change', () => { $('stMoi2').innerHTML = linhVucOpts($('stMoi').value, ''); if ($('stMoi').value && $('stMoi2').options.length === 2) $('stMoi2').selectedIndex = 1; });
 }
 function moHop(cheDo, { id, cot }) {
   const r = dongViec(id);
@@ -146,7 +146,7 @@ function moHop(cheDo, { id, cot }) {
   $('stTieuDe').textContent = sua ? `Sửa thông tin giao · ${r.ma}` : `Đề nghị sửa · ${r.ma}`;
   $('stMoTa').textContent = sua ? 'Đồng chí là cấp giao việc: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì và người theo dõi được báo.'
     : `Ô này do ${nguoiGiao(r)} điền. Đề nghị được gửi tới người duyệt; việc vẫn chạy trong lúc chờ.`;
-  $('stCot').innerHTML = O_GIAO.map(([c, ten]) => opt(c, ten, c === (cot || 'noi_dung'))).join('');
+  $('stCot').innerHTML = O_CHON.map(([c, ten]) => opt(c, ten, c === (cot || 'noi_dung'))).join('');
   $('stLyDo').value = ''; $('stLuu').disabled = false;
   $('stLuu').textContent = sua ? 'Lưu thay đổi' : 'Gửi đề nghị';
   veO();
@@ -158,7 +158,7 @@ const dongSuaTang = () => show('stModal', false);
 async function luuSuaTang() {
   const id = $('stId').value; const cot = $('stCot').value; const lyDo = $('stLyDo').value.trim();
   const moi = $('stMoi').value.trim();
-  const thay = cot === 'nganh_ma' ? { nganh_ma: moi || null, linh_vuc_ma: $('stMoi2').value || null } : { [cot]: moi || null };
+  const thay = cot === 'nganh_ma' ? { nganh_ma: moi || null, linh_vuc_ma: linhVucTheo(moi, dongViec(id) || {}) } : { [cot]: moi || null };
   if (!lyDo) { notifyError('Ghi lý do (bắt buộc).'); $('stLyDo').focus(); return; }
   if (['noi_dung', 'do_khan'].includes(cot) && !moi) { notifyError(`${tenOGiao(cot)} không được để trống.`); return; }
   $('stLuu').disabled = true;

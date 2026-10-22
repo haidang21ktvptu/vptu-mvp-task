@@ -33,7 +33,8 @@ function noiDung(d) {
   return escapeHtml(d.noi_dung || '');
 }
 
-export function dienBienHtml(rows) {
+export function dienBienHtml(tatCa) {
+  const rows = tatCa.filter((d) => !(d.nguon === 'lich_su' && d.loai === 'linh_vuc_ma'));   // v3.29: lĩnh vực tự đổi theo ngành (không còn ô Lĩnh vực) — dòng ngành đã đủ
   if (!rows.length) return '<p class="chu-phu">Chưa có diễn biến nào.</p>';
   return `<ul class="dien-bien">${rows.map((d) => `<li class="${LOP_NGUON[d.nguon] || ''}" data-nguon="${escapeHtml(d.nguon)}">
       <span class="db-luc">${formatDateTime(d.luc)}</span><span class="db-nguoi">${escapeHtml(d.nguoi_ten || 'Hệ thống')}</span>

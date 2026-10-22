@@ -52,6 +52,7 @@ export function danhGia(dong, ctx) {
   const { me, dm, accounts } = ctx;
   const gt = {}; const loi = []; const macDinh = new Set(); const dienHL = new Set(); const canhBao = []; let ngoaiPhong = false;
   Object.entries(dong.o).forEach(([k, x]) => { if (x?.loi) loi.push(k); else if (x && x.ma !== undefined && x.ma !== '') gt[k] = x.ma; });
+  if (loi.includes('linh_vuc')) loi.splice(loi.indexOf('linh_vuc'), 1);   // v3.29: lĩnh vực tự xác định — cột Lĩnh vực của mẫu cũ ghi sai thì bỏ qua
   const ma = gt.ma ? String(gt.ma).trim().toUpperCase() : '';
   const capNhat = Boolean(ma && ctx.maDaCo?.has(ma));
   if (!HIEN_MUC_TIEU) { delete gt.muc_tieu; if (loi.includes('muc_tieu')) loi.splice(loi.indexOf('muc_tieu'), 1); }   // v3.27: mục tiêu tạm ẩn — bỏ cột
@@ -69,15 +70,10 @@ export function danhGia(dong, ctx) {
     md('nganh', lvDm.find((l) => l.ma === gt.linh_vuc)?.nganh_ma);   // có lĩnh vực, thiếu ngành → ngành của lĩnh vực (xác định, trước điền hàng loạt)
     const hl = ctx.hangLoat || {};
     Object.entries(hl).forEach(([k, v]) => { if (k !== 'linh_vuc' && v && !gt[k] && !loi.includes(k)) { gt[k] = v; dienHL.add(k); } });
-    // Lĩnh vực điền hàng loạt theo ngành của từng dòng (mỗi ngành một lĩnh vực); dòng chưa có ngành chỉ nhận khi chọn đúng một lĩnh vực.
-    const lvHl = [].concat(hl.linh_vuc || []);
-    if (lvHl.length && !gt.linh_vuc && !loi.includes('linh_vuc') && !loi.includes('nganh')) {
-      const lv = gt.nganh ? lvDm.find((l) => lvHl.includes(l.ma) && l.nganh_ma === gt.nganh) : lvHl.length === 1 ? lvDm.find((l) => l.ma === lvHl[0]) : null;
-      if (lv) { gt.linh_vuc = lv.ma; dienHL.add('linh_vuc'); md('nganh', lv.nganh_ma); }
-    }
-    // Lĩnh vực: ngành một lĩnh vực / từ khoá lĩnh vực chi tiết, nội dung / mặc định theo ngành (mac-dinh.js — v3.27; trước chỉ ngành một lĩnh vực).
-    const lv = !loi.includes('linh_vuc') ? linhVucMacDinh({ nganh: gt.nganh, chiTiet: gt.linh_vuc_chi_tiet, noiDung: gt.noi_dung }, dm) : null;
-    if (lv && !gt.linh_vuc) { md('linh_vuc', lv.ma); if (!lv.chac) canhBao.push('lĩnh vực lấy theo ngành (chưa nhận ra từ nội dung) — kiểm tra lại'); }
+    // Lĩnh vực: ngành một lĩnh vực / từ khoá lĩnh vực chi tiết, nội dung / mặc định theo ngành (mac-dinh.js — v3.27). v3.29: luôn tự xác định (không
+    // còn ô, không điền hàng loạt, không nhắc "kiểm tra lại").
+    const lv = linhVucMacDinh({ nganh: gt.nganh, chiTiet: gt.linh_vuc_chi_tiet, noiDung: gt.noi_dung }, dm);
+    if (lv && !gt.linh_vuc) md('linh_vuc', lv.ma);
     md('loai_van_ban', doanLoaiVanBan(gt.so_hoi_nghi, gt.so_ket_luan));
     const tt = me?.role_group === 'A3' && tachThayMat(gt.lanh_dao_giao).thay_mat_nhom === 'THUONG_TRUC';   // v3.18: thay mặt Thường trực = Thường trực giao
     md('do_khan', tt ? 'KHAN' : 'THUONG'); md('tien_do', 'DANG_THUC_HIEN'); md('loai_thoi_han', 'CO_HAN_CU_THE');
@@ -118,11 +114,11 @@ export function danhGia(dong, ctx) {
       // Đợt F (0095): chuyên viên không ghi Lãnh đạo giao (không suy được mặc định) mà chủ trì là chuyên viên → giao thẳng (người theo dõi = người nhập).
       can('don_vi'); can('lanh_dao_giao', me?.role_group === 'A3' && accounts.find((a) => a.id === gt.can_bo)?.role_group !== 'A3'); can('san_pham'); can('nguon');
       can('han_xu_ly', gt.loai_thoi_han === 'CO_HAN_CU_THE');
-      can('nganh', CAN_NGANH.has(gt.loai_van_ban)); can('linh_vuc', CAN_NGANH.has(gt.loai_van_ban));
+      can('nganh', CAN_NGANH.has(gt.loai_van_ban)); can('linh_vuc', CAN_NGANH.has(gt.loai_van_ban) && Boolean(gt.nganh));   // v3.29: chưa có ngành → chỉ báo thiếu ngành
       if (gt.loai_thoi_han && !LOAI_HAN_MOI.has(gt.loai_thoi_han)) { thieu.push('loai_thoi_han'); canhBao.push('việc mới chỉ nhận "Có hạn cụ thể" hoặc "Ký ban hành"'); }
     }
     if (CAN_NGANH.has(gt.loai_van_ban) && gt.nganh === KHONG_THUOC) {   // 0116: DB chặn (trigger) — báo ngay ở bản xem trước
-      thieu.push('nganh'); canhBao.push('kết luận / thông báo phải có ngành, lĩnh vực cụ thể — không chọn "Không thuộc"');
+      thieu.push('nganh'); canhBao.push('kết luận / thông báo phải có ngành/lĩnh vực cụ thể — không chọn "Không thuộc"');
     }
     if (loi.includes('can_bo') && !thieu.includes('can_bo')) thieu.push('can_bo');
     if (loi.includes('chu_tri') && !gt.don_vi && !gt.can_bo && !thieu.includes('chu_tri')) thieu.push('chu_tri');   // v3.27: chọn đúng người ở "chưa khớp"

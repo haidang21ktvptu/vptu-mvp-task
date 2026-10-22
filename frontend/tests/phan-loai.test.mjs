@@ -104,7 +104,7 @@ describe('Mục tiêu của dòng, khối 2–3 Tổng quan', () => {
     assert.deepEqual(phanLoaiMucTieu(ROWS), { gan: 1, khong: 2, chua: 1 });
     const c = chatLuongDuLieu(ROWS);
     assert.deepEqual(c.chuaMucTieu.map((x) => x.id), [3], '"Không thuộc" là đã phân loại');
-    assert.deepEqual(c.chuaNganh.map((x) => x.id), [3, 4]);
+    assert.deepEqual(c.chuaNganh.map((x) => x.id), [3], 'v3.29: chỉ việc chưa có ngành (có ngành mà chưa có lĩnh vực vẫn tính theo ngành)');
   });
   test('khối 3: dòng "Không thuộc lĩnh vực trọng tâm" riêng, không nằm trong 5 khối; chưa phân loại riêng; tổng đủ', () => {
     const k = khoangKy('nam', '2026-10-16');
@@ -114,14 +114,13 @@ describe('Mục tiêu của dòng, khối 2–3 Tổng quan', () => {
     assert.deepEqual(dongCuaKhoi(ROWS, KHONG_THUOC, { nganh: NGANH, linhVuc: [] }).map((x) => x.id), [2]);
     assert.equal(theoKhoi([ROWS[0]], k, { khoi: KHOI, nganh: NGANH }).khongThuoc, null);
   });
-  test('kiểm staging 19/10: số "chưa có ngành, lĩnh vực" của khối 3 = Chất lượng dữ liệu; dòng Chưa phân loại = phần chưa có ngành', () => {
+  test('kiểm staging 19/10 (v3.29: bỏ ô Lĩnh vực): số "chưa có ngành/lĩnh vực" của khối 3 = Chất lượng dữ liệu = dòng Chưa phân loại (chưa có ngành)', () => {
     const th = thieuNganh(ROWS); const k = khoangKy('nam', '2026-10-16');
-    assert.deepEqual(th, { tong: 2, khongNganh: 1, thieuLv: 1 });
+    assert.deepEqual(th, { tong: 1, khongNganh: 1, thieuLv: 0 });
     assert.equal(th.tong, chatLuongDuLieu(ROWS).chuaNganh.length);
     assert.equal(th.khongNganh, theoKhoi(ROWS, k, { khoi: KHOI, nganh: NGANH, linhVuc: [] }).chuaNganh.tong);
-    assert.equal(chuThieuNganh(th), '2 nhiệm vụ chưa có ngành, lĩnh vực (1 chưa có ngành, 1 chưa có lĩnh vực)');
-    assert.equal(chuThieuNganh(thieuNganh([ROWS[2]])), '1 nhiệm vụ chưa có ngành, lĩnh vực');
-    assert.equal(chuThieuNganh(thieuNganh([ROWS[3], ROWS[0]])), '1 nhiệm vụ đã có ngành nhưng chưa có lĩnh vực');
+    assert.equal(chuThieuNganh(th), '1 nhiệm vụ chưa có ngành/lĩnh vực');
+    assert.equal(thieuNganh([ROWS[3], ROWS[0]]).tong, 0, 'có ngành mà chưa có lĩnh vực: không còn nhắc');
   });
   test('bộ lọc mục tiêu: có "Không thuộc" và "Chưa phân loại"', () => {
     const g = tuyChonMucTieu(ROWS, [{ ma: 'DP_A', nhom: 'DOT_PHA', ten_ngan: 'Đột phá A' }, { ma: KHONG_THUOC, nhom: KHONG_THUOC, ten_ngan: 'Không thuộc mục tiêu then chốt' }],
@@ -177,21 +176,30 @@ describe('Tệp rà soát phân loại', () => {
     assert.deepEqual(b.gui.map((x) => x.ma), ['NV-1']); assert.equal(b.trung, 1); assert.equal(b.loi.length, 2);
     assert.deepEqual(thamSo(b.gui[0]), { ma: 'NV-1', nganh: 'VAN_PHONG_TINH_UY', linh_vuc: '', muc_tieu: [], ly_do: '' });
   });
-  test('bảng xuất: cột cố định, giá trị tên (đọc lại khớp), sheet Danh mục có ô chọn ngành, lĩnh vực', () => {
-    const [s, d] = bangRaSoat([{ ma: 'NV-9', noi_dung: 'Việc', so_ket_luan: '1-KL/TU', ngay_ban_hanh: '2026-01-02', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_DAU_TU',
-      muc_tieu: ['NQ_57', 'DP_HA_TANG'], nhom_dem: 'HOAN_THANH' }], DM);
-    assert.deepEqual(s.cot.map((c) => c.nhan), ['Mã nhiệm vụ', 'Nội dung nhiệm vụ', 'Văn bản', 'Chủ trì', 'Tiến độ', 'Ngành', 'Lĩnh vực', 'Mục tiêu then chốt', 'Lý do rà soát']);
+  test('bảng xuất (v3.29: một cột Ngành/lĩnh vực như bảng Phụ lục): cột cố định, giá trị tên (đọc lại khớp), sheet Danh mục có ô chọn ngành', () => {
+    const viec = { ma: 'NV-9', noi_dung: 'Việc', so_ket_luan: '1-KL/TU', ngay_ban_hanh: '2026-01-02', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_DAU_TU',
+      muc_tieu: ['NQ_57', 'DP_HA_TANG'], nhom_dem: 'HOAN_THANH' };
+    const [s, d] = bangRaSoat([viec], DM);
+    assert.deepEqual(s.cot.map((c) => c.nhan), ['Mã nhiệm vụ', 'Nội dung nhiệm vụ', 'Văn bản', 'Chủ trì', 'Tiến độ', 'Ngành/lĩnh vực', 'Mục tiêu then chốt', 'Lý do rà soát']);
     assert.equal(s.dong[0][2], '1-KL/TU ngày 02/01/2026');
-    assert.equal(s.dong[0][7], 'Đột phá hạ tầng giao thông, đô thị, môi trường; Nghị quyết 57-NQ/TW');
-    const k = khopDong({ so: 2, ma: s.dong[0][0], nganh: s.dong[0][5], linhVuc: s.dong[0][6], mucTieu: s.dong[0][7] }, DM);
-    assert.deepEqual([k.nganh, k.linh_vuc, k.muc_tieu, k.loi], ['KINH_TE_TONG_HOP', 'LV08_DAU_TU', ['DP_HA_TANG', 'NQ_57'], []]);
-    assert.equal(d.ten, 'Danh mục'); assert.ok(d.dong.some((x) => x[2] === 'Không thuộc mục tiêu then chốt'));
-    assert.deepEqual(s.kiemTra.map((x) => x.cot), [5, 6]);
+    assert.equal(s.dong[0][6], 'Đột phá hạ tầng giao thông, đô thị, môi trường; Nghị quyết 57-NQ/TW');
+    const k = khopDong({ so: 2, ma: s.dong[0][0], nganh: s.dong[0][5], mucTieu: s.dong[0][6] }, DM, viec);
+    assert.deepEqual([k.nganh, k.linh_vuc, k.muc_tieu, k.loi], ['KINH_TE_TONG_HOP', null, ['DP_HA_TANG', 'NQ_57'], []], 'ngành giữ nguyên → lĩnh vực giữ nguyên');
+    assert.equal(d.ten, 'Danh mục'); assert.ok(d.dong.some((x) => x[1] === 'Không thuộc mục tiêu then chốt'));
+    assert.deepEqual(s.kiemTra.map((x) => x.cot), [5]);
     // v3.27: mục tiêu tạm ẩn (coMt = false) — không cột mục tiêu; tệp đọc vào bỏ qua cột mục tiêu (kể cả tệp cũ còn cột)
     const [s2, d2] = bangRaSoat([{ ma: 'NV-9', nganh_ma: 'KINH_TE_TONG_HOP', muc_tieu: ['NQ_57'] }], DM, false);
-    assert.ok(!s2.cot.some((c) => c.nhan === 'Mục tiêu then chốt')); assert.equal(s2.dong[0].length, 8); assert.equal(d2.cot.length, 2);
+    assert.ok(!s2.cot.some((c) => c.nhan === 'Mục tiêu then chốt')); assert.equal(s2.dong[0].length, 7); assert.equal(d2.cot.length, 1);
     const b2 = docBangRaSoat([{ ten: 'R', dong: [s.cot.map((c) => c.nhan), s.dong[0]] }], false);
     assert.deepEqual([b2.coCot.mucTieu, b2.dong[0].mucTieu, b2.dong[0].nganh !== ''], [false, '', true]);
+  });
+  test('v3.29: tệp cũ (cột "Ngành", "Lĩnh vực") vẫn đọc được; đổi ngành → lĩnh vực tự xác định theo nội dung của việc', () => {
+    const b = docBangRaSoat([{ ten: 'R', dong: [['Mã nhiệm vụ', 'Ngành', 'Lĩnh vực'], ['NV-1', 'VAN_PHONG_TINH_UY', '']] }]);
+    assert.deepEqual([b.coCot.nganh, b.coCot.linhVuc, b.dong[0].nganh], [true, true, 'VAN_PHONG_TINH_UY']);
+    const viec = { ma: 'NV-1', nganh_ma: 'VAN_PHONG_TINH_UY', linh_vuc_ma: 'LV12_VP', noi_dung: 'Thẩm định dự án đầu tư công' };
+    const doi = khopBang([{ so: 2, ma: 'NV-1', nganh: 'KINH_TE_TONG_HOP' }], DM, (ma) => (ma === 'NV-1' ? viec : null)).gui[0];
+    assert.equal(doi.nganh, 'KINH_TE_TONG_HOP'); assert.ok(DM.linhVuc.some((l) => l.ma === doi.linh_vuc && l.nganh_ma === 'KINH_TE_TONG_HOP'), String(doi.linh_vuc));
+    assert.equal(khopBang([{ so: 2, ma: 'NV-9', nganh: 'KINH_TE_TONG_HOP' }], DM).gui[0].linh_vuc, null, 'không biết việc → giữ cách của DB');
   });
   test('tóm tắt kết quả máy chủ; chuẩn hoá chữ', () => {
     const t = tomTat([{ ket_qua: 'DOI', doi: ['nganh_ma', 'muc_tieu'], canh_bao: 'x', da_xong: true }, { ket_qua: 'DOI', doi: ['muc_tieu'] }, { ket_qua: 'GIU' }, { ket_qua: 'LOI' }]);

@@ -1,7 +1,8 @@
 // PR-3 (A, D, F, G) — hiển thị: (1) Trưởng phòng xác nhận minh chứng cũ còn chờ (nộp trước v3.20) rồi đánh giá chất lượng ở ngăn chi tiết (Đợt D:
 // tuỳ chọn — nút Lưu mờ tới khi chọn mức), DB lưu chat_luong, ngăn chi tiết hiện "Đạt tốt"; hàng việc đã đóng trước hạn hiện "Trước hạn 3 ngày" + chất lượng; Xuất Excel đúng danh sách đang lọc
 // (bắt sự kiện tải, đọc tệp bằng lib/doc-xlsx.mjs: số dòng = số dòng danh sách + tiêu đề, có cột "Chất lượng"). (2) Chánh VP: Báo cáo có cột
-// Trước hạn + chất lượng, bảng theo nguồn; Theo văn bản: "đã nhập 2 / dự kiến 3" nhãn vàng → sửa tại chỗ (dự kiến 2 + đã rà soát) → nhãn đổi.
+// Trước hạn (v3.29: bỏ 4 cột chất lượng; thêm bảng theo chuyên viên thực hiện), bảng theo nguồn; Theo văn bản: "đã nhập 2 / dự kiến 3" nhãn vàng →
+// sửa tại chỗ (dự kiến 2 + đã rà soát) → nhãn đổi.
 // Tuần tự, mỗi lúc một phiên. Dữ liệu chèn bằng service_role theo khoá riêng; tự dọn.
 import { test, expect } from '@playwright/test';
 import { NAP, nav, moViec } from './lib/app.js';
@@ -52,11 +53,12 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
     });
   });
 
-  test('2. Chánh VP: Báo cáo có cột Trước hạn + chất lượng và bảng theo nguồn; Theo văn bản: dự kiến 3 nhập 2 → nhãn vàng → rà soát → nhãn đổi', async ({ browser }, testInfo) => {
+  test('2. Chánh VP: Báo cáo có cột Trước hạn, không còn cột chất lượng, có bảng theo chuyên viên và theo nguồn; Theo văn bản: dự kiến 3 nhập 2 → nhãn vàng → rà soát → nhãn đổi', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'A1', testInfo, async (p) => {
       await nav(p, 'navBaoCao');
       await expect(p.locator('#bcTheoPhong thead')).toContainText('Trước hạn', NAP);
-      await expect(p.locator('#bcTheoPhong thead')).toContainText('Đạt tốt');
+      for (const t of ['Không đạt', 'Đạt tốt', 'Đạt xuất sắc']) await expect(p.locator('#bcTheoPhong thead')).not.toContainText(t);   // v3.29
+      await expect(p.locator('#bcTheoChuyenVien thead')).toContainText(/Sắp đến hạn \(còn ≤ \d+ ngày\)/);
       await expect(p.locator('#bcTheoNguon')).toContainText('Chương trình công tác năm');
       await nav(p, 'navTheoVanBan');
       await expect(p.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);
