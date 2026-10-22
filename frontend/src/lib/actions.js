@@ -18,6 +18,13 @@ function dispatch(name, el, event) {
   handler(el.dataset, el, event);
 }
 
+// Gọi một hành động đã đăng ký theo tên (v3.29: mở chức năng theo đường dẫn — views/shell/duong-dan.js). Trả về kết quả của handler (Promise nếu có).
+export function goiHanhDong(name, dataset = {}) {
+  const handler = registry[name];
+  if (!handler) { console.warn(`Chưa đăng ký hành động: ${name}`); return undefined; }
+  return handler(dataset, null, null);
+}
+
 export function initActionDelegation(root = document.body) {
   root.addEventListener('click', (event) => {
     const el = event.target.closest('[data-action]');

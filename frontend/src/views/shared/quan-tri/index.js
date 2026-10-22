@@ -8,7 +8,8 @@ import { state, isChief } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { loadAccountsCache } from '../../../auth/session.js';
 import { notifyError } from '../../../components/toast.js';
-import { setActiveNav, showSection } from '../../shell/index.js';
+import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
+import { ghiDuongDan, dangKyQuyenDuongDan, dangKyTheQuanTri } from '../../shell/duong-dan.js';   // v3.29: "/Quan-tri/<thẻ>"
 import { quanTriTemplate } from './template.js';
 import { mountLyDoModal } from './ly-do-modal.js';
 import { loadDanhMuc } from './danh-muc.js';
@@ -52,6 +53,7 @@ function chonTabQuanTri({ tab }, veKhiMo = true) {
   tabDangChon = tab;
   Object.entries(KHU).forEach(([k, d]) => { show(k, k === tab); $(d.tab).setAttribute('aria-selected', String(k === tab)); });
   if (veKhiMo && KHU[tab]?.khiMo) KHU[tab].ve();
+  if (sectionDangHien('viewQuanTri')) ghiDuongDan('navQuanTri', { thay: !veKhiMo });   // bấm thẻ: thêm bước lịch sử; tự chọn lại: sửa tại chỗ
 }
 
 // Nạp lại danh bạ (cờ mới nhất) + danh mục rồi vẽ các khu theo quyền của chính người đang đăng nhập.
@@ -90,6 +92,7 @@ export function registerQuanTriView() {
   mountThongKe();   // v3.24 (0104)
   mountMucTieu(); mountCauHinhAi();   // v3.25
   $('qtTimTaiKhoan').addEventListener('input', (e) => filterRowsByKeyword('qtTaiKhoanBody', e.target.value));
+  dangKyQuyenDuongDan('quanTri', coQuyenQuanTri); dangKyTheQuanTri(() => tabDangChon);
   registerActions({
     openQuanTri, loadQuanTri, chonTabQuanTri,
     toggleQuanTriHeThong: (ds) => toggleQuanTriHeThong(ds, loadQuanTri),

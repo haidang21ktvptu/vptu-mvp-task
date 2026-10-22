@@ -9,6 +9,7 @@ import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { registerView } from '../registry.js';
+import { moManDau } from '../shell/duong-dan.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { openTongQuan } from '../shared/tong-quan/index.js';
@@ -110,7 +111,7 @@ export function registerA2View() {
           </aside>
         </div>`;
       datNapLai(loadPhongToi);
-      openTongQuan();
+      moManDau(openTongQuan);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },
     reload() { if (sectionDangHien('viewTongQuan')) openTongQuan(); else openDieuHanh(); },
   });

@@ -37,7 +37,7 @@ export async function handleLogout() {
     // Tự xoá khoá phiên để máy dùng chung không còn đăng nhập.
     localStorage.removeItem(sessionStorageKey());
   }
-  location.reload();
+  location.replace(import.meta.env?.BASE_URL || '/');   // v3.29: về địa chỉ gốc — người đăng nhập sau không vào thẳng chức năng của người trước
 }
 
 // Khôi phục phiên do Supabase Auth lưu (localStorage) khi tải lại trang.

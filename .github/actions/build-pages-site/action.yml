@@ -86,6 +86,25 @@ runs:
           "${{ inputs.staging-ref }}" "$STAGING_SHA" "$NOW" > site/staging/phien-ban.json
         echo "Production: ${{ inputs.prod-version }} ($PROD_SHA) — Staging: ${{ inputs.staging-ref }} ($STAGING_SHA)"
         cat site/phien-ban.json site/staging/phien-ban.json
+        # v3.29 (đường dẫn riêng từng chức năng — docs/kien-truc.md mục 8): Pages chỉ dùng MỘT trang 404 ở gốc site cho cả hai bản. Đường dẫn
+        # không có tệp (gõ sai chữ hoa, chức năng lạ) → chuyển về đúng bản (staging trước, production sau) kèm ?p=<phần sau base>; app đặt lại
+        # thanh địa chỉ rồi tự chọn chức năng (không thuộc vai → trang đầu). Bản build chưa biết ?p= thì chỉ mở trang đầu.
+        cat > site/404.html <<'HTML'
+        <!DOCTYPE html>
+        <html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="referrer" content="same-origin">
+        <title>Hệ thống quản trị nhiệm vụ — Tỉnh ủy Cao Bằng</title>
+        <script>
+        (function () {
+          var p = location.pathname, ds = ['/vptu-mvp-task/staging/', '/vptu-mvp-task/'];
+          for (var i = 0; i < ds.length; i++) {
+            if (p.toLowerCase().indexOf(ds[i]) === 0) { location.replace(ds[i] + '?p=' + encodeURIComponent(p.slice(ds[i].length)) + location.hash); return; }
+          }
+          location.replace(ds[1]);
+        })();
+        </script></head>
+        <body><p>Đang mở Hệ thống quản trị nhiệm vụ… <a href="/vptu-mvp-task/">Mở trang đầu</a></p></body></html>
+        HTML
+        test -s site/404.html && grep -q "vptu-mvp-task/staging/" site/404.html
 
     - uses: actions/upload-pages-artifact@v3
       with:

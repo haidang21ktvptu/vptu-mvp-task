@@ -4,6 +4,7 @@
 import { $, show, setText, escapeHtml } from '../../lib/dom.js';
 import { menuCuaVai } from './menu.js';
 import { chuyenVienXemPhong, xemToanBo } from '../../lib/kl/du-lieu.js';
+import { ghiDuongDan, datMenuDuongDan } from './duong-dan.js';   // v3.29: đường dẫn riêng từng chức năng
 
 let items = [];
 const NHOM = ['Điều hành', 'Theo dõi', 'Hệ thống'];   // v3.23: bỏ nhóm Trao đổi (Nhắn tin)
@@ -37,6 +38,7 @@ function duoiHtml(it) {
 export function renderNav(user) {
   // 0086: Tổng quan phòng, Nhiệm vụ của phòng cho chuyên viên; 0103: Tổng quan chung, Toàn bộ nhiệm vụ (cấu hình xem toàn bộ)
   items = menuCuaVai(user, { xemPhong: user?.role_group === 'A3' && chuyenVienXemPhong(), xemToanBo: xemToanBo() });
+  datMenuDuongDan(items);
   $('mainNav').innerHTML = NHOM.map((n) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? `<div class="menu-nhom">${n}</div>${ds.map(pillHtml).join('')}` : ''; }).join('')
     + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>';
   veChanMenu();
@@ -58,6 +60,7 @@ export function setActiveNav(id) {
   show('thanhKhac', false);
   $('navKhacDuoi')?.setAttribute('aria-expanded', 'false');
   if (document.body.classList.contains('menu-mo')) toggleMenuDoc();
+  ghiDuongDan(id);   // v3.29: thanh địa chỉ theo màn (mọi màn đều gọi setActiveNav)
 }
 
 // Ngăn kéo menu dọc trên điện thoại (nút ☰ hoặc lớp mờ .menu-nen); chọn một mục (setActiveNav) thì đóng.

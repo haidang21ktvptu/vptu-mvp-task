@@ -151,3 +151,23 @@ Cảnh báo:
 - **Không gắn tag khi đang ở `main`** (commit đã lên main thì deploy-staging đã deploy sha đó — `kiem-tra` sẽ chặn; nếu lọt, bản live không đổi như sự cố rc1).
 - **Sau khi đã gắn tag, KHÔNG push thêm commit lên nhánh đó cho tới khi phát hành xong** — nếu không, commit được phát hành (tag) sẽ khác commit được merge, và bản production dựng từ tag `production` sẽ không khớp với `main`. Cần sửa gì thì huỷ phát hành (từ chối ở Review deployments), push, đợi CI, tag số mới.
 - Tag đã đẩy thì không xoá/đổi; sai thì tag số mới.
+
+## 8. Đường dẫn chức năng, trang 404, chính sách nội dung (v3.29 — chủ dự án quyết 22/10/2026, CAU-HOI O-7)
+
+- **Đường dẫn:** mỗi mục menu (và Rà soát phân loại, Cá nhân, Trợ giúp, từng thẻ Quản trị) có một đường dẫn sau base: `/Tong-quan`, `/Can-xu-ly`
+  (chuyên viên `/Viec-cua-toi`), `/Giao-viec`, `/Nhiem-vu`, `/Bao-cao`, `/Quan-tri/Tai-khoan`… — bảng ở `frontend/src/lib/tuyen.js` (DESIGN mục 14).
+  Đổi màn → `history.pushState` (móc ở `setActiveNav`); Quay lại / Tiến tới → `popstate` mở lại chức năng; vào app → `moManDau` của từng vai mở theo
+  đường dẫn nếu mục đó có trong menu (hoặc quyền) của người dùng, không thì trang đầu kèm thông báo (`views/shell/duong-dan.js`). Đường dẫn chỉ chọn
+  màn để vẽ — dữ liệu vẫn chỉ theo RLS. Đăng xuất về địa chỉ gốc; hết phiên nạp lại tại chỗ (đăng nhập lại vào đúng chức năng).
+- **Tệp dựng sẵn:** plugin trong `frontend/vite.config.js` chép `index.html` thành `Tong-quan.html`, `Quan-tri/Tai-khoan.html`… (danh sách `DS_TEP`) —
+  Pages trả `/Tong-quan` từ `Tong-quan.html` (mã 200, không chuyển hướng). Thêm mục menu mới thì thêm dòng vào `TUYEN`.
+- **Trang 404 chung:** bước "Ghép hai bản" của `.github/actions/build-pages-site` ghi `site/404.html` (Pages chỉ dùng một trang 404 ở gốc site): đường
+  dẫn không có tệp (sai chữ hoa, chức năng lạ) → chuyển về đúng bản (`/vptu-mvp-task/staging/` trước, `/vptu-mvp-task/` sau) kèm `?p=<phần sau base>`;
+  `main.js` đặt lại thanh địa chỉ trước khi chạy (`khoiPhucTu404`). Bản build chưa biết `?p=` chỉ mở trang đầu.
+- **Chính sách nội dung (CSP):** chỉ ở bản build, thẻ meta ngay sau `charset` (`src/lib/csp.js`): `script-src 'self'` + mã băm sha256 của đoạn nội tuyến
+  nhớ kiểu giao diện (tính lúc build — sửa đoạn đó thì mã băm tự đổi); `connect-src`/`img-src` chỉ thêm máy chủ dữ liệu của bản đó (`VITE_SUPABASE_URL`,
+  https + wss); `object-src 'none'`, `frame-src 'none'`, `base-uri`/`form-action 'self'`. Thêm dịch vụ ngoài (ảnh, API, phông) thì phải thêm vào
+  `csp.js` — không thì trình duyệt chặn và e2e / smoke báo lỗi console. `frame-ancestors` không dùng được trong thẻ meta → `main.js` không chạy khi bị
+  nhúng trong khung; `<meta name="referrer" content="same-origin">` không gửi đường dẫn trang cho trang ngoài.
+- **Kiểm:** unit `tuyen` (bảng, tách, chọn theo menu, CSP); e2e `duong-dan.spec.js` (bản build có CSP: menu, Quay lại / Tiến tới, tải lại, chữ thường,
+  đường dẫn không thuộc vai, không lỗi console); smoke sau deploy (staging, production) mở thẳng `/Tong-quan` và một đường dẫn lạ trước khi đăng nhập.

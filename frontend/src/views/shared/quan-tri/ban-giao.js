@@ -17,7 +17,7 @@ let ketQua = null;          // { rows, luc, boQua } — chỉ sống khi hộp k
 let daXuat = false;
 let motNguoi = null;        // { username, matKhau } của hộp "Mật khẩu tạm"
 
-const urlApp = () => `${location.origin}${location.pathname}`.replace(/index\.html$/, '');
+const urlApp = () => `${location.origin}${import.meta.env?.BASE_URL || '/'}`;   // v3.29: địa chỉ gốc của app, không theo đường dẫn chức năng đang mở
 const thongTinChung = (luc) => ({ url: urlApp(), luc: formatDateTime(luc), nguoi: `${state.user.full_name} (${state.user.username})` });
 
 function tuyChon() {
