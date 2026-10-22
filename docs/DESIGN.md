@@ -305,7 +305,8 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 - Chi tiết một nhiệm vụ (chủ dự án 22/10/2026 17:02): mở việc ở bất kỳ màn nào (danh sách, ngăn chi tiết dùng chung, chuông, Theo văn bản…) → thanh
   địa chỉ thêm mã việc sau đường dẫn của màn; đổi sang việc khác không thêm bước; Đóng / Quay lại trong ngăn / Esc → về đường dẫn của màn; Quay lại /
   Tiến tới của trình duyệt đóng / mở lại việc (không vẽ lại màn); tải lại, đánh dấu, gửi đường dẫn → mở đúng màn và đúng việc (chưa đăng nhập thì qua
-  `/Dang-nhap`). Danh sách lọc (bấm số ở Tổng quan, Báo cáo), cán bộ, văn bản không có đường dẫn riêng.
+  `/Dang-nhap`; tự đăng xuất vì hết phiên thì chỉ giữ chức năng, bỏ mã việc). Danh sách lọc (bấm số ở Tổng quan, Báo cáo), cán bộ, văn bản không có
+  đường dẫn riêng.
 - Đường dẫn chỉ gồm tên chức năng và mã nhiệm vụ (`NV-<số>`) — không nội dung việc, tên người, tên đăng nhập hay mã định danh nội bộ. Mở bằng đường
   dẫn vẫn qua đăng nhập và RLS; việc không có và việc ngoài phạm vi báo cùng một câu "Không có nhiệm vụ NV-… trong phạm vi của đồng chí." (không lộ việc có
   tồn tại hay không), mã bị bỏ khỏi đường dẫn.

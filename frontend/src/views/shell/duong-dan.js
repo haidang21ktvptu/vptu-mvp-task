@@ -25,7 +25,8 @@ let cho = null;              // lần ghi đang chờ của lượt hiện tại
 let manDangHien = '';        // đường dẫn chức năng (không mã việc) app ghi gần nhất — Quay lại / Tiến tới so để biết chỉ đổi việc hay đổi màn
 let maDangMo = '';           // mã việc đang mở ở chi tiết (đang trên thanh địa chỉ)
 let thayViecToi = false;     // lần mở việc kế tiếp sửa bước hiện tại (mở việc theo đường dẫn / Quay lại / Tiến tới)
-let dangTroLui = false;      // history.back() của chính app sau khi người dùng đóng việc: popstate tới chỉ là bước đó, giao diện đã đúng
+let choLui = '';             // đường dẫn bước trước mà history.back() của app sẽ tới (người dùng vừa đóng việc): popstate tới đó không vẽ lại gì
+let luot = 0;                // lượt điều hướng: người dùng đổi màn / mở việc, mở theo đường dẫn → tăng; lượt mở việc theo đường dẫn còn chờ thì bỏ
 let viecTrongMan = () => '';  // mã việc đang mở NGAY TRONG màn vừa hiện (màn Nhiệm vụ giữ ngăn của nó khi đổi màn rồi quay lại) — kl/chi-tiet.js đăng ký
 const quyen = {};            // quyền mở màn ngoài menu: { quanTri, raSoat, nhapExcel } (u) => bool — màn tự đăng ký (tránh import vòng)
 const theCua = {};           // thẻ đang chọn của màn có thẻ: { navQuanTri: () => 'qtKhuTaiKhoan', navGiaoViec: () => 'nhap' }
@@ -34,6 +35,9 @@ export const datMenuDuongDan = (ds) => { menu = ds || []; };
 export const dangKyQuyenDuongDan = (ten, fn) => { quyen[ten] = fn; };
 export const dangKyThe = (navId, fn) => { theCua[navId] = fn; };
 export const dangKyViecTrongMan = (fn) => { viecTrongMan = fn; };
+export const conLuot = (l) => !Number.isFinite(l) || l === luot;
+// Thay bước hiện tại: giữ dấu "bước do mở việc thêm" (chiTiet) — đóng việc ở bước đó vẫn lùi đúng một bước.
+const giuDau = () => (history.state?.chiTiet ? { chiTiet: true } : null);
 const manRiengDangHien = () => MAN_RIENG.find((id) => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); }) || '';
 
 function ghiCho() {
@@ -44,12 +48,14 @@ function ghiCho() {
   const cungMan = duong.toLowerCase() === manDangHien.toLowerCase();
   if (!cungMan) maDangMo = laMaViec(viecTrongMan()) ? viecTrongMan() : '';   // sang màn khác: ngăn dùng chung đã đóng
   manDangHien = duong;
+  if (!c.thay) { luot += 1; thayViecToi = false; }   // người dùng đổi màn: bỏ lượt mở việc theo đường dẫn còn chờ
   const t = tachViec(tachDuong(location.pathname, BASE));
-  if (cungMan && t?.ma && duongChucNang(t).toLowerCase() === duong.toLowerCase() && !location.search) return;   // màn vẽ lại khi đang mở việc
+  if (cungMan && maDangMo && t?.ma && duongChucNang(t).toLowerCase() === duong.toLowerCase() && !location.search) return;   // màn vẽ lại khi đang mở việc
   const url = `${BASE}${duong}${maDangMo ? `/${maDangMo}` : ''}`;
-  if (dangTroLui && url === `${BASE}${duong}`) return;   // đang lùi bước mở việc (người dùng vừa đóng việc): bước trước chính là đường dẫn này
+  if (choLui && url === choLui) return;   // đang lùi bước mở việc: bước trước chính là đường dẫn này
   if (location.pathname === url && !location.search) return;
-  history[c.thay ? 'replaceState' : 'pushState'](null, '', `${url}${location.hash}`);
+  if (c.thay) history.replaceState(giuDau(), '', `${url}${location.hash}`);
+  else history.pushState(null, '', `${url}${location.hash}`);
 }
 // Ghi đường dẫn của màn đang hiện nếu khác thanh địa chỉ (bỏ cả ?p= còn lại). navId: mục menu vừa sáng ('' = màn ngoài menu); thay: sửa bước lịch sử
 // hiện tại thay vì thêm bước (màn tự chọn lại thẻ khác thẻ trong đường dẫn).
@@ -65,11 +71,12 @@ export function ghiDuongDan(navId, { thay = false } = {}) {
 export function ghiViec(ma) {
   if (!state.user || !manDangHien || !laMaViec(ma)) return;
   const thay = thayViecToi || dangMoTheoDuong || Boolean(maDangMo);
+  if (!thayViecToi && !dangMoTheoDuong) luot += 1;   // người dùng mở việc: lượt mở theo đường dẫn còn chờ (nếu có) thôi
   thayViecToi = false;
   maDangMo = String(ma).toUpperCase();
   const url = `${BASE}${manDangHien}/${maDangMo}`;
   if (location.pathname === url) return;
-  if (thay) history.replaceState(history.state, '', `${url}${location.hash}`);
+  if (thay) history.replaceState(giuDau(), '', `${url}${location.hash}`);
   else history.pushState({ chiTiet: true }, '', `${url}${location.hash}`);
 }
 // Đóng chi tiết việc. nguoiDung (Đóng, Quay lại, Esc trong ngăn) và bước này do mở việc thêm vào → lùi đúng một bước (Tiến tới mở lại việc); còn lại
@@ -78,7 +85,7 @@ export function boViec({ nguoiDung = false } = {}) {
   if (!maDangMo) return;
   maDangMo = '';
   if (!state.user || !manDangHien) return;
-  if (nguoiDung && history.state?.chiTiet) { dangTroLui = true; history.back(); return; }
+  if (nguoiDung && history.state?.chiTiet) { choLui = `${BASE}${manDangHien}`; history.back(); return; }
   history.replaceState(null, '', `${BASE}${manDangHien}${location.hash}`);
 }
 // Đổi màn (ngăn dùng chung tự đóng): quên việc đang mở, không đụng lịch sử — bước "…/<mã>" giữ lại để Quay lại mở lại việc; màn mới tự ghi đường dẫn.
@@ -87,6 +94,12 @@ export const quenViec = () => { maDangMo = ''; };
 export function boMaTrenDuong() {
   thayViecToi = false; maDangMo = '';
   if (state.user && manDangHien) history.replaceState(null, '', `${BASE}${manDangHien}${location.hash}`);
+}
+// Tự đăng xuất vì hết phiên (nạp lại tại chỗ): bỏ mã việc khỏi đường dẫn — người đăng nhập sau (máy dùng chung) không mở thẳng việc của người trước;
+// đường dẫn chức năng giữ như trước (đăng nhập lại vào đúng chức năng).
+export function boMaTruocKhiThoat() {
+  const t = tachViec(tachDuong(location.pathname, BASE));
+  if (t?.ma) history.replaceState(null, '', `${BASE}${duongChucNang(t)}${location.hash}`);
 }
 
 // Màn đăng nhập: "/Dang-nhap" (giữ chức năng của đường dẫn đang mở — hoặc của lần trước — trong history.state.tiep).
@@ -109,6 +122,7 @@ function moTheoDuong(macDinh) {
   const q = Object.fromEntries(['quanTri', 'raSoat', 'nhapExcel'].map((k) => [k, Boolean(quyen[k]?.(u))]));
   const kq = t?.duong ? chonMo(t, { vai: u?.role_group, menu, quyen: q }) : null;
   let p;
+  const l = (luot += 1);
   dangMoTheoDuong = true; maDangMo = '';
   try {
     if (kq?.action) p = goiHanhDong(kq.action, kq.ds);
@@ -117,7 +131,10 @@ function moTheoDuong(macDinh) {
       p = macDinh?.();
     }
   } finally { dangMoTheoDuong = false; }
-  if (t?.ma) { thayViecToi = true; Promise.resolve(p).then(() => goiHanhDong('moViecTheoMa', { ma: t.ma })); }   // màn mở xong rồi mở việc
+  if (t?.ma) {   // màn mở xong rồi mở việc — trừ khi người dùng đã chuyển đi trong lúc chờ
+    thayViecToi = true;
+    Promise.resolve(p).catch(() => null).then(() => { if (l === luot) goiHanhDong('moViecTheoMa', { ma: t.ma, luot: String(l) }); });
+  }
   return p;
 }
 
@@ -129,11 +146,11 @@ export function moManDau(macDinh) {
 
 // Quay lại / Tiến tới: cùng màn đang hiện thì chỉ mở / đóng việc theo mã (không vẽ lại màn); khác màn thì mở màn (rồi việc nếu có).
 export function khiLichSuDoi() {
-  if (dangTroLui) { dangTroLui = false; return; }
+  if (choLui) { const cua = location.pathname === choLui; choLui = ''; if (cua) return; }   // bước lùi của chính app: giao diện đã đúng
   if (!state.user || !macDinhVai) return;
   const t = tachViec(tachDuong(location.pathname, BASE));
   if (t && !laDangNhap(t.duong) && manDangHien && duongChucNang(t).toLowerCase() === manDangHien.toLowerCase()) {
-    if (t.ma && t.ma !== maDangMo) { thayViecToi = true; goiHanhDong('moViecTheoMa', { ma: t.ma }); }
+    if (t.ma && t.ma !== maDangMo) { thayViecToi = true; goiHanhDong('moViecTheoMa', { ma: t.ma, luot: String((luot += 1)) }); }
     else if (!t.ma && maDangMo) { maDangMo = ''; goiHanhDong('dongViecTheoDuong'); }
     return;
   }

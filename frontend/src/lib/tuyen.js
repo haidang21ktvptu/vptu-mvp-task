@@ -1,7 +1,8 @@
 // Đường dẫn riêng cho từng chức năng (v3.29 — chủ dự án 22/10/2026, CAU-HOI O-7): "…/vptu-mvp-task/Tong-quan", "…/Quan-tri/Tai-khoan". Phần THUẦN
 // (không DOM, không mạng; unit test frontend/tests/tuyen.test.mjs; vite.config.js đọc DS_TEP để dựng sẵn tệp cho GitHub Pages): bảng đường dẫn ↔ mục
-// menu / màn, tách và chuẩn hoá đường dẫn (chữ hoa / thường, gạch chéo cuối, ".html"), chọn chức năng được mở. Đường dẫn chỉ gồm tên chức năng — không
-// chứa mã việc hay dữ liệu. Mở được hay không do menu của người đang đăng nhập quyết định (menuCuaVai) — và dữ liệu vẫn chỉ theo RLS.
+// menu / màn, tách và chuẩn hoá đường dẫn (chữ hoa / thường, gạch chéo cuối, ".html"), chọn chức năng được mở. Đường dẫn gồm tên chức năng và — khi
+// mở chi tiết một việc — mã việc NV-<số> (chủ dự án 22/10/2026 17:02); không nội dung, tên người hay dữ liệu khác. Mở được hay không do menu của
+// người đang đăng nhập quyết định (menuCuaVai) — và dữ liệu vẫn chỉ theo RLS.
 export const TUYEN = [
   { duong: 'Tong-quan', nav: 'navTongQuan' },
   { duong: 'Can-xu-ly', nav: 'navDieuHanh' },

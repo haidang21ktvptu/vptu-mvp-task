@@ -6,7 +6,7 @@
 // → nạp lại việc đó (kl-realtime datNghePhu). Ghi xong trong ngăn (kl/index.js phát 'viec-da-ghi') → màn hình không có realtime tự nạp lại
 // (khiGhiTrongNgan), quay lại danh sách thấy trạng thái mới của việc vừa xử lý.
 // v3.29 (chủ dự án 22/10/2026 17:02): mở việc → "…/<chức năng>/NV-…" (kl/chi-tiet.js ghiViec); người dùng đóng / Quay lại / Esc → bỏ mã, lùi đúng bước
-// đã thêm (boViec); mở danh sách khác → bỏ mã tại chỗ; Quay lại / Tiến tới của trình duyệt (cùng màn) → dongViecTheoDuong, không ghi lịch sử.
+// đã thêm (boViec); mở danh sách khác → cũng bỏ mã như vậy; Quay lại / Tiến tới của trình duyệt (cùng màn) → dongViecTheoDuong, không ghi lịch sử.
 import { $, escapeHtml, show, setText } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -80,7 +80,7 @@ function veDanhSach() {
 // Tầng danh sách. nhom = [{ ten, rows }] (tuỳ chọn, ví dụ "Giao mới" / "Hoàn thành" của một tháng); dauHtml = khối đầu (tuỳ chọn).
 // onDong: màn hình bên dưới bỏ chọn khi ngăn đóng.
 export function moNganDanhSach({ tieuDe, phu = '', rows = [], nhom = null, dauHtml = '', onDong = null }) {
-  boViecDangMo(); boViec();
+  boViecDangMo(); boViec({ nguoiDung: true });   // việc đang mở do người dùng mở (bước có dấu) → lùi bước đó, không để hai bước trùng
   const phan = (nhom || [{ ten: '', rows }]).map((n) => ({ ten: n.ten, rows: sapXep(n.rows || []) }));
   const tong = new Set(phan.flatMap((p) => p.rows.map((r) => r.id))).size;
   ngan.rows = new Map(phan.flatMap((p) => p.rows.map((r) => [r.id, r])));

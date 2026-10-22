@@ -20,7 +20,7 @@ globalThis.document = {
   getElementById: (id) => (id === 'toastContainer' ? { appendChild: (el) => thongBao.push(el) } : null),
   createElement: phanTu, body: { appendChild() {} },
 };
-const { ghiDuongDan, moManDau, datMenuDuongDan, dangKyThe, dangKyQuyenDuongDan, ghiDangNhap, ghiViec, boViec, boMaTrenDuong, khiLichSuDoi } =
+const { ghiDuongDan, moManDau, datMenuDuongDan, dangKyThe, dangKyQuyenDuongDan, ghiDangNhap, ghiViec, boViec, boMaTrenDuong, khiLichSuDoi, quenViec } =
   await import('../src/views/shell/duong-dan.js');
 const { state } = await import('../src/lib/state.js');
 const { registerActions } = await import('../src/lib/actions.js');
@@ -191,14 +191,57 @@ test('Mở thẳng / tải lại "/Bao-cao/NV-7": mở màn rồi mở việc, c
   assert.deepEqual(goi, ['NV-9']); assert.deepEqual(buoc, [['replace', '/Tong-quan'], ['replace', '/Tong-quan/NV-9']]);
 });
 
-test('Màn Nhiệm vụ vẽ lại khi mở việc (Tiến tới, mở từ màn khác): không thêm bước "/Nhiem-vu" chen vào, giữ đường dẫn việc', async () => {
+test('Mở việc theo đường dẫn không vẽ lại màn; màn vẽ lại (lọc, nạp lại) khi việc vẫn mở không chen bước; việc đã đóng (đổi màn) thì ghi đường dẫn màn', async () => {
   state.user = { id: 'cvp', role_group: 'A1', is_chief: true };
   datMenuDuongDan(menuCuaVai(state.user));
   await moMan('/Nhiem-vu', 'navKl');
-  registerActions({ moViecTheoMa: ({ ma }) => { ghiDuongDan('navKl'); return Promise.resolve().then(() => ghiViec(ma)); } });   // như moNhiemVu: openKl rồi mở việc
+  registerActions({ moViecTheoMa: ({ ma }) => { ghiViec(ma); } });   // như kl/mo-theo-ma.js: mở ngăn trong màn, không openKl
   viTri.pathname = '/Nhiem-vu/NV-40'; globalThis.history.state = { chiTiet: true }; khiLichSuDoi();   // Tiến tới
-  await xongLuot(); await choXong();
+  await xongLuot();
   assert.deepEqual(buoc, [], 'thanh địa chỉ đã đúng: không ghi');
-  ghiDuongDan('navKl'); await xongLuot();   // màn vẽ lại (lọc, nạp lại) khi việc vẫn mở
+  ghiDuongDan('navKl'); await xongLuot();   // màn vẽ lại khi việc vẫn mở
   assert.deepEqual(buoc, []);
+  quenViec(); ghiDuongDan('navKl'); await xongLuot();   // "Lọc chi tiết, in" của chuyên viên: ngăn dùng chung đóng, cùng đường dẫn màn
+  assert.deepEqual(buoc, [['push', '/Nhiem-vu']], 'việc không còn mở: không giữ mã trên đường dẫn');
+});
+
+test('Lượt mở việc theo đường dẫn còn chờ (màn đang nạp) bị bỏ khi người dùng chuyển màn', async () => {
+  state.user = { id: 'cvp', role_group: 'A1', is_chief: true };
+  datMenuDuongDan(menuCuaVai(state.user));
+  const goi = []; let xongBaoCao;
+  registerActions({
+    moViecTheoMa: ({ ma }) => { goi.push(ma); ghiViec(ma); },
+    openBaoCao: () => { ghiDuongDan('navBaoCao'); return new Promise((r) => { xongBaoCao = r; }); },
+    openTongQuan: () => { ghiDuongDan('navTongQuan'); },
+  });
+  await moMan('/Tong-quan', 'navTongQuan');
+  datLai('/Bao-cao/NV-7');
+  moManDau(() => { ghiDuongDan('navTongQuan'); });
+  await xongLuot();
+  ghiDuongDan('navTheoVanBan'); await xongLuot();   // người dùng bấm menu khi Báo cáo còn nạp
+  xongBaoCao(); await choXong();
+  assert.deepEqual(goi, [], 'không mở việc trên màn người dùng vừa chuyển tới');
+  assert.deepEqual(buoc.at(-1), ['push', '/Theo-van-ban']);
+  ghiViec('NV-8');
+  assert.deepEqual(buoc.at(-1), ['push', '/Theo-van-ban/NV-8'], 'lượt "thay bước" đã bỏ: mở việc của người dùng thêm bước');
+});
+
+test('Quay lại qua màn khác tới bước việc: giữ dấu bước do mở việc thêm — đóng việc vẫn lùi đúng một bước; bước lùi chỉ bỏ qua đúng đích', async () => {
+  state.user = { id: 'cvp', role_group: 'A1', is_chief: true };
+  datMenuDuongDan(menuCuaVai(state.user));
+  registerActions({ moViecTheoMa: ({ ma }) => { ghiViec(ma); }, openTongQuan: () => { ghiDuongDan('navTongQuan'); }, openBaoCao: () => { ghiDuongDan('navBaoCao'); } });
+  moManDau(() => { ghiDuongDan('navTongQuan'); });
+  await moMan('/Tong-quan', 'navTongQuan');
+  ghiViec('NV-1');   // bước có dấu
+  quenViec(); ghiDuongDan('navBaoCao'); await xongLuot();   // đổi màn
+  buoc.length = 0;
+  viTri.pathname = '/Tong-quan/NV-1'; globalThis.history.state = { chiTiet: true }; khiLichSuDoi();   // Quay lại
+  await xongLuot(); await choXong();
+  assert.deepEqual(buoc, [['replace', '/Tong-quan'], ['replace', '/Tong-quan/NV-1']]);
+  assert.deepEqual(globalThis.history.state, { chiTiet: true }, 'thay bước vẫn giữ dấu');
+  boViec({ nguoiDung: true });
+  assert.deepEqual(buoc.at(-1), ['back'], 'đóng việc: lùi đúng bước, không để hai bước "/Tong-quan" trùng');
+  ghiDuongDan('navBaoCao'); await xongLuot();   // người dùng bấm menu trước khi trình duyệt lùi xong
+  assert.deepEqual(buoc.at(-1), ['push', '/Bao-cao'], 'chỉ bỏ qua lần ghi đúng đích của bước lùi');
+  viTri.pathname = '/Tong-quan'; globalThis.history.state = null; khiLichSuDoi();   // popstate của bước lùi
 });

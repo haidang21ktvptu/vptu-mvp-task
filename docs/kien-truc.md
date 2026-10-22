@@ -165,10 +165,13 @@ Cảnh báo:
 - **Chi tiết một nhiệm vụ:** `…/<chức năng>/NV-<số>` (`tachViec` / `laMaViec` ở `tuyen.js` — chỉ nhận đúng dạng mã do CSDL sinh). Mở việc
   (`toggleKlChiTiet`) → `ghiViec`: chưa mở việc nào thì `pushState` kèm `{ chiTiet: true }`, đang mở việc khác / mở theo đường dẫn thì `replaceState`;
   người dùng đóng (Đóng ngăn, Quay lại trong ngăn, Esc) → `boViec({ nguoiDung: true })`: bước do mở việc thêm vào thì `history.back()` (popstate tới bỏ
-  qua), không thì sửa bước; mở danh sách khác trong ngăn → sửa bước; đổi màn không đụng (màn mới tự ghi). `popstate` cùng màn → hành động
-  `moViecTheoMa` / `dongViecTheoDuong` (không vẽ lại màn); khác màn → mở màn rồi `moViecTheoMa` (`kl/mo-theo-ma.js`: tìm trong dữ liệu đã nạp, không có
-  thì `v_nhiem_vu` theo mã — RLS quyết định; không có / ngoài phạm vi cùng một câu, bỏ mã). Màn vẽ lại khi đang mở việc không chen bước. Không dựng tệp
-  cho từng việc (không đưa mã / dữ liệu lên trang công khai): Pages trả `404.html` → app (`?p=`).
+  qua — `choLui` ghi đúng đích), không thì sửa bước; mở danh sách khác trong ngăn → như đóng; đổi màn không đụng (màn mới tự ghi; `quenViec`). Thay bước
+  giữ dấu `chiTiet`. `popstate` cùng màn → hành động `moViecTheoMa` / `dongViecTheoDuong` (không vẽ lại màn); khác màn → mở màn rồi `moViecTheoMa`
+  (`kl/mo-theo-ma.js`: tìm trong dữ liệu đã nạp, không có thì `v_nhiem_vu` theo mã — RLS quyết định; không có / ngoài phạm vi cùng một câu, bỏ mã; màn
+  Nhiệm vụ đang có việc đó → mở ngay trong màn, giữ bộ lọc và mục menu; còn lại → ngăn dùng chung). Lượt điều hướng (`luot`): người dùng đổi màn / mở
+  việc trong lúc màn còn nạp → lượt mở việc theo đường dẫn đang chờ bị bỏ. Màn vẽ lại khi việc vẫn mở không chen bước. Tự đăng xuất vì hết phiên bỏ mã
+  việc khỏi đường dẫn trước khi nạp lại (`boMaTruocKhiThoat` — máy dùng chung). Không dựng tệp cho từng việc (không đưa mã / dữ liệu lên trang công
+  khai): Pages trả `404.html` → app (`?p=`).
 - **Tệp dựng sẵn:** plugin trong `frontend/vite.config.js` chép `index.html` thành `Dang-nhap.html`, `Tong-quan.html`, `Quan-tri/Tai-khoan.html`… (danh sách `DS_TEP`) và
   `Quan-tri/index.html` (Pages chọn `Quan-tri.html` hay thư mục `Quan-tri/` đều vào app) — Pages trả `/Tong-quan` từ `Tong-quan.html` (mã 200, không
   chuyển hướng). Thêm mục menu mới thì thêm dòng vào `TUYEN`. Build dừng nếu thiếu `VITE_SUPABASE_URL` (biến môi trường hoặc `frontend/.env`, đọc bằng

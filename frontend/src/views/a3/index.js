@@ -72,7 +72,7 @@ function openDieuHanh() {
   loadViecCuaToi();
   batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadViecCuaToi, ve); }, (m) => hienKetNoi('dhKetNoi', m));
 }
-const openTheoDoi = () => { openKl({ theoDoiCuaToi: state.user.id }); setActiveNav('navTheoDoi'); };
+const openTheoDoi = () => { const p = openKl({ theoDoiCuaToi: state.user.id }); setActiveNav('navTheoDoi'); return p; };   // v3.29: trả lời hứa — mở việc theo đường dẫn chờ danh sách nạp xong
 
 // Xác nhận đã nhận việc (GV-5): chỉ ghi lịch sử, hạn/trạng thái không đổi (CN-2.2).
 async function xacNhanNhanThe({ id }) {

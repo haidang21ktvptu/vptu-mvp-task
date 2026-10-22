@@ -153,7 +153,7 @@ export function registerKlView() {
   registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
     klTrang: doiKlTrang, klTdLoc: locKlTd, klTdQh: doiKlQh,
     dongKlChiTiet: () => { dongKlChiTiet(); boViec({ nguoiDung: true }); },   // nút "Đóng ngăn" của màn Nhiệm vụ: bỏ mã việc khỏi đường dẫn
-    moViecTheoMa: (ds) => moViecTheoMa(ds, moNhiemVu) });
+    moViecTheoMa });
   // v3.25: In / lưu PDF (nút hoặc Ctrl+P) in đủ danh sách đang lọc, không chỉ trang 50 dòng đang xem.
   window.addEventListener('beforeprint', () => { if (sectionDangHien('viewKl')) inKlDayDu(true); });
   window.addEventListener('afterprint', () => inKlDayDu(false));

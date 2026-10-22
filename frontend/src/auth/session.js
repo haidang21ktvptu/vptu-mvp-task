@@ -7,7 +7,7 @@ import { initUserInterface } from '../views/shell/index.js';
 import { loadCauHinhKl } from '../lib/kl/du-lieu.js';
 import { batDemPhien, tatDemPhien, phienDaQuaHan, soPhut } from './het-phien.js';
 import { CAU_HET_PHIEN } from '../lib/het-phien.js';
-import { ghiDangNhap } from '../views/shell/duong-dan.js';
+import { ghiDangNhap, boMaTruocKhiThoat } from '../views/shell/duong-dan.js';
 import { DUONG_DANG_NHAP } from '../lib/tuyen.js';
 
 // Hook cho các tính năng gắn thêm khi phiên bắt đầu/kết thúc (realtime ở PR c của GĐ4).
@@ -49,7 +49,7 @@ export async function restoreSession(startSession) {
   if (phienDaQuaHan()) {   // treo qua đêm rồi mở lại: coi như hết phiên, không vào app, giải thích ngay trên màn đăng nhập
     tatDemPhien();
     await supabase.auth.signOut({ scope: 'local' });
-    ghiDangNhap();
+    boMaTruocKhiThoat(); ghiDangNhap();   // như tự đăng xuất: giữ chức năng, không giữ mã việc
     showInlineError('loginError', CAU_HET_PHIEN(soPhut()));
     return;
   }

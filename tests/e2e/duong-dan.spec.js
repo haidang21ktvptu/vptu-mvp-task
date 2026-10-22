@@ -83,21 +83,25 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     await context.close();
   });
 
-  test('Đường dẫn tới một nhiệm vụ (Chánh VP): mở thẳng, Đóng, bấm dòng thêm bước, Quay lại / Tiến tới; "/Tong-quan/NV-…" mở ngăn trên Tổng quan, tải lại vẫn mở', async ({ browser }, testInfo) => {
+  test('Đường dẫn tới một nhiệm vụ (Chánh VP): mở thẳng, Đóng, bấm dòng thêm bước, Quay lại / Tiến tới không đổi danh sách; "/Tong-quan/NV-…" mở ngăn, tải lại vẫn mở', async ({ browser }, testInfo) => {
     const v = await viecSeed('đang thực hiện, còn thời gian');
     const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
     const ct = page.locator(`#klChiTiet-${v.id}`);
     await page.goto(`./Nhiem-vu/${v.ma.toLowerCase()}`);
     await expect(ct).toBeVisible(NAP);
     await expect.poll(() => duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
+    await expect(page.locator('#klTimKiem')).toHaveValue('');   // mở theo đường dẫn: không lọc danh sách theo mã
     await ct.locator('[data-action="dongKlChiTiet"]').click();
     await expect(ct).toBeHidden(); await expect.poll(() => duong(page)).toBe('/Nhiem-vu');
+    await page.locator('#klTimKiem').fill(v.ma);   // người dùng tìm rồi bấm dòng
     await page.locator(`#klRow-${v.id}`).click();
     await expect(ct).toBeVisible(NAP); await expect.poll(() => duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
     await page.goBack();
     await expect(ct).toBeHidden(NAP); expect(duong(page)).toBe('/Nhiem-vu');
     await page.goForward();
     await expect(ct).toBeVisible(NAP); expect(duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
+    await expect(page.locator('#klTimKiem')).toHaveValue(v.ma);   // Quay lại / Tiến tới chỉ đóng / mở việc, danh sách giữ nguyên
+    await expect(page.locator('#navKl')).toHaveAttribute('aria-selected', 'true');
     await page.goto(`./Tong-quan/${v.ma}`);
     await expect(page.locator('#viewTongQuan')).toBeVisible(NAP);
     await expect(page.locator(`#nganCT #klChiTiet-${v.id}`)).toBeVisible(NAP);
@@ -136,6 +140,9 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     await page.goto(`./Viec-cua-toi/${cuaMinh.ma}`);
     await expect(page.locator(`#nganCT #klChiTiet-${cuaMinh.id}`)).toBeVisible(NAP);
     await expect.poll(() => duong(page)).toBe(`/Viec-cua-toi/${cuaMinh.ma}`);
+    await page.locator('#nganCT [data-action="nganDong"]').click();
+    await expect(page.locator('#nganCT')).toBeHidden(); await expect.poll(() => duong(page)).toBe('/Viec-cua-toi');
+    await expect(page.locator('#viewDieuHanh')).toBeVisible();
     await page.context().close();
   });
 
