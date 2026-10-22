@@ -21,11 +21,13 @@ import { tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { oMucTieuHtml, khoiMucTieuHtml, tenMucTieuViec, napMucTieu } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt
 import { khoiGiaiNganHtml, hangGiaiNganHtml, napGiaiNgan } from './giai-ngan.js';   // v3.28 (0119): giải ngân vốn
+import { nutQuyenHtml, khoiQuyenHtml } from './nut-quyen.js';   // v3.29 (0123–0126): điều chỉnh hạn, đổi chủ trì, quyền tài khoản quản trị
+import { chiXemVoi } from '../../../lib/kl/quyen-them.js';
 
 const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
   san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu', co_quan_trinh: 'donVi' };
 const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban', 'han_nop_minh_chung'];   // han_nop: chỉ còn ở lịch sử cũ (0077)
-const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan', 'thuong_truc_chi_dao'];
+const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan', 'thuong_truc_chi_dao', 'giao_thay_mat_cho'];
 
 export function hienGiaTri(cot, v) {
   if (v === null || v === undefined || v === '') return '(trống)';
@@ -56,8 +58,8 @@ function capQuyetHtml(r) {
 
 // Nút hành động trong ngăn (ẩn/hiện cho đẹp; hàm DB / policy là chốt).
 function hanhDongHtml(r, nhanViec = []) {
-  // 0103: việc ngoài phạm vi xử lý (cấu hình xem toàn bộ) — chỉ xem, không nút ghi nào.
-  if (chiXem(r)) {
+  // 0103: việc ngoài phạm vi xử lý (cấu hình xem toàn bộ) — chỉ xem, không nút ghi nào; v3.29 (0124): trừ thư ký Thường trực ở việc chưa hoàn thành.
+  if (chiXemVoi(r, state.user)) {
     return `<div class="hanh-dong"><p class="chu-phu ct-chi-xem" data-chi-xem="1">Chỉ xem — việc ngoài phạm vi xử lý của đồng chí. Cần trao đổi, đồng chí liên hệ cán bộ chủ trì hoặc lãnh đạo phụ trách.</p>
       <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>`;
   }
@@ -81,8 +83,8 @@ function hanhDongHtml(r, nhanViec = []) {
     ${duocDong(r) && mo && duocDongTay ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
     ${giaoTiep ? nut('giaoTiepXuong', 'Giao tiếp xuống', '', `id="klGiaoTiep-${r.id}"`) : ''}
     ${nutGiaoThemHtml(r)}
-    ${nutHanhDongTang(r)}
-    <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>
+    ${nutHanhDongTang(r)}${nutQuyenHtml(r)}
+    <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>${khoiQuyenHtml(r)}
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
       <small>Lý do chỉ người xử lý đề nghị (người giao việc) và lãnh đạo cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
       <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
@@ -109,7 +111,7 @@ export function chiTietHtml(r, ls, dc) {
       <dl class="ct-luoi">${o('Chủ trì theo dõi', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
         ${o('Người theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
         ${o('Sản phẩm đầu ra', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}
-        ${o('Hạn xử lý', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
+        ${o('Hạn xử lý', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.so_lan_gia_han ? ` <span class="chu-phu" data-truong="so-lan-gia-han">· đã gia hạn ${r.so_lan_gia_han} lần</span>` : ''}${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
         ${o('Cấp nhận sản phẩm', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'), 'cap_nhan_san_pham')}
         ${oLuoiPr3Html(r, o)}${oLuoiNguonHtml(r, o)}${oMucTieuHtml(r)}</dl>

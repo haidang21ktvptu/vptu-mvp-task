@@ -1,7 +1,8 @@
 // 0047 — thư ký Thường trực (cờ accounts.thu_ky_thuong_truc): chỉ quan_tri_he_thong cấp/thu qua admin_dat_co (quyen_lich_su + nhat_ky_he_thong);
-// thư ký ĐỌC nhiệm vụ có ≥ 1 CHI_DAO_TT (không thấy việc không có), ĐÓNG được CHI_DAO_TT thay mặt (vết "Đóng thay mặt Thường trực — <họ tên>",
-// dong_boi), KHÔNG gửi CHI_DAO_TT / loại khác, KHÔNG đóng DON_DOC / Y_KIEN, KHÔNG ghi gì khác (nop_minh_chung, giao_viec, xac_nhan_nhan_viec,
-// cập nhật tiến độ). A1/A2/A3 thường không đóng CHI_DAO_TT; A0 người gửi vẫn đóng được. Thư ký = demo_e2e_kl (A3 Tổng hợp, không là Owner/theo dõi việc mẫu → ngoài phạm vi).
+// thư ký ĐỌC nhiệm vụ có ≥ 1 CHI_DAO_TT — từ 0124 (v3.29) đọc MỌI nhiệm vụ, việc ngoài phạm vi cũ trong_pham_vi = false; ĐÓNG được CHI_DAO_TT thay mặt
+// (vết "Đóng thay mặt Thường trực — <họ tên>", dong_boi), KHÔNG gửi CHI_DAO_TT / loại khác, KHÔNG đóng DON_DOC / Y_KIEN, không giao việc, không xác
+// nhận nhận việc thay chủ trì; từ 0124 nộp minh chứng, cập nhật tiến độ được (kl-0124). A1/A2/A3 thường không đóng CHI_DAO_TT; A0 người gửi vẫn đóng
+// được. Thư ký = demo_e2e_kl (A3 Tổng hợp, không là Owner/theo dõi việc mẫu → ngoài phạm vi cũ).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, LA_PRODUCTION, BO_QUA_PRODUCTION, songSong } from './lib.mjs';
@@ -53,10 +54,11 @@ describe('0047 — thư ký Thường trực: cấp cờ, phạm vi đọc, đó
     assert.equal(n.data.length, 1); assert.equal(n.data[0].chi_tiet.co, 'thu_ky_thuong_truc');
   });
 
-  test('2. Phạm vi đọc: thư ký thấy NV-T95 (có CHI_DAO_TT) và luồng chỉ đạo của nó; KHÔNG thấy NV-T96', async () => {
+  test('2. Phạm vi đọc: thư ký thấy NV-T95 (có CHI_DAO_TT — trong phạm vi) và luồng chỉ đạo của nó; 0124: thấy cả NV-T96 (ngoài phạm vi cũ, trong_pham_vi = false)', async () => {
     const c = await userClient('demo_e2e_kl');
-    const nv = await c.from('v_nhiem_vu').select('id').in('id', [id['NV-T95'], id['NV-T96']]);
-    assertOk(nv, 'v_nhiem_vu'); assert.deepEqual(nv.data.map((r) => r.id), [id['NV-T95']]);
+    const nv = await c.from('v_nhiem_vu').select('id, trong_pham_vi').in('id', [id['NV-T95'], id['NV-T96']]);
+    assertOk(nv, 'v_nhiem_vu');
+    assert.deepEqual(Object.fromEntries(nv.data.map((r) => [r.id, r.trong_pham_vi])), { [id['NV-T95']]: true, [id['NV-T96']]: false });
     const cd = await c.from('chi_dao').select('id').eq('nhiem_vu_id', id['NV-T95']);
     assert.equal(cd.data.length, 4, 'thấy 4 dòng chỉ đạo của NV-T95');
     const tt = await c.from('v_chi_dao_tt').select('id').eq('nhiem_vu_id', id['NV-T95']);
@@ -67,15 +69,14 @@ describe('0047 — thư ký Thường trực: cấp cờ, phạm vi đọc, đó
     await db().from('accounts').update({ thu_ky_thuong_truc: true }).eq('id', TK_ID);
   });
 
-  test('3. Thư ký KHÔNG ghi gì khác: chi_dao_gui mọi loại, nop_minh_chung, giao_viec, xac_nhan_nhan_viec, cập nhật tiến độ', async () => {
+  test('3. Thư ký không chỉ đạo (chi_dao_gui mọi loại), không giao việc, không xác nhận nhận việc thay chủ trì (0124: nộp minh chứng, cập nhật được — kl-0124)', async () => {
     const LOAI = ['CHI_DAO_TT', 'DON_DOC', 'Y_KIEN', 'GIA_HAN'];
     (await songSong(LOAI.map((loai) => () => rpc('demo_e2e_kl', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T95'], loai, noi_dung: 'x' } })))).forEach((r, i) => assertDenied(r, `thư ký gửi ${LOAI[i]}`));
-    assertDenied(await rpc('demo_e2e_kl', 'nop_minh_chung', { p: { nhiem_vu_id: id['NV-T95'], so_hieu: '1/BC', ngay_van_ban: '2026-08-20', cap_nhan: 'CHANH_VAN_PHONG', trich_yeu: 'x', mo_ta_ket_qua: 'x' } }), 'nộp minh chứng');
     // 0085: thư ký vẫn là chuyên viên — giao thẳng cho chuyên viên được như mọi A3; cờ thư ký không mở thêm quyền giao cho phòng
     assertDenied(await rpc('demo_e2e_kl', 'giao_viec', { p: { van_ban_id: fx.hn, noi_dung: 'x', owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.cv1, san_pham_loai: 'BAO_CAO', loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31', nhiem_vu_cha: id['NV-T95'] } }), 'giao việc cho phòng');
     assertDenied(await rpc('demo_e2e_kl', 'xac_nhan_nhan_viec', { p_id: id['NV-T95'] }), 'xác nhận nhận việc');
     const up = await (await userClient('demo_e2e_kl')).from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH' }).eq('id', id['NV-T95']).select('id');
-    assert.ok(up.error || up.data.length === 0, 'cập nhật tiến độ phải bị RLS chặn');
+    assert.ok(up.error, 'Hoàn thành không qua minh chứng vẫn bị chặn (trigger 0090) — kể cả thư ký (0124 cho cập nhật tiến độ)');
   });
 
   test('4. Đóng: thư ký KHÔNG đóng DON_DOC của Chánh VP / Y_KIEN của A0; A1, A2, A3 thường KHÔNG đóng CHI_DAO_TT', async () => {

@@ -46,7 +46,7 @@ describe('0057 — nghiệm thu thay mặt Thường trực (Q8)', { skip: SKIP 
     await co(true, false);
     const tk = await userClient('demo_e2e_tk');
     assert.equal((await tk.from('v_nhiem_vu').select('id').eq('id', nv.CVP)).data.length, 1, 'thư ký thấy việc Chánh VP');
-    assert.equal((await tk.from('nhiem_vu').select('id').eq('id', nv.PCVP)).data.length, 0, 'thư ký không thấy việc PCVP');
+    assert.equal((await tk.from('nhiem_vu').select('id').eq('id', nv.PCVP)).data.length, 1, '0124: thư ký thấy mọi việc (cả việc PCVP) — nhưng không nghiệm thu');
     chan(await xac('demo_e2e_tk', m2, true), 'thư ký nghiệm thu việc PCVP');
     chan(await xac('demo_cvp', m1, true), 'Chánh VP tự đánh giá');
     assert.equal((await db().from('nhiem_vu').select('tien_do_ma').eq('id', nv.CVP).single()).data.tien_do_ma, 'HOAN_THANH', 'nộp là hoàn thành');

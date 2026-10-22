@@ -7,6 +7,7 @@ import { homNayVN } from './ngay.js';
 import { toiTrongNhom, duyetThayNhom } from './thay-mat.js';
 import { laToanQuyen } from '../toan-quyen.js';
 import { chiXem } from './pham-vi.js';
+import { thuKyGhi } from './quyen-them.js';
 
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
 export const O_GIAO = [['noi_dung', 'Nội dung kết luận / Văn bản trình', 'vb'], ['san_pham_loai', 'Sản phẩm đầu ra', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
@@ -36,9 +37,11 @@ export function laTangGiao(r) {
 }
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
-// 'sua' = bút (sửa ngay), 'de-nghi' = khoá (đề nghị sửa), '' = chỉ xem.
+// 'sua' = bút (sửa ngay), 'de-nghi' = khoá (đề nghị sửa), '' = chỉ xem. v3.29 (0124): thư ký Thường trực sửa ngay mọi việc chưa hoàn thành (không
+// duyệt đề nghị sửa — laTangGiao không đổi); việc đã hoàn thành: tài khoản toàn quyền sửa được (sua_thong_tin_giao).
 export function cheDoTang(r) {
-  if (laTangGiao(r) && (mo(r) || qtklConHan())) return 'sua';
+  if (thuKyGhi(r, state.user)) return 'sua';
+  if (laTangGiao(r) && (mo(r) || qtklConHan() || laToanQuyen(state.user))) return 'sua';
   if (mo(r) && laBenTrong(r) && state.user?.role_group !== 'A0') return 'de-nghi';
   return '';
 }

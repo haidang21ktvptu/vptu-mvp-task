@@ -18,6 +18,7 @@ import { tuyChonMucTieu } from '../../../lib/kl/tq-bo-loc.js';   // v3.24 (0105)
 import { phanTrang, chuHienThi } from '../../../lib/kl/bang-o.js';
 import { dauBangHtml, nutTrangHtml, giuTieuDiem, veChuGiai } from '../bang/khung.js';
 import { dongHtml } from './dong.js';
+import { laThuKyTT } from '../../../lib/kl/quyen-them.js';
 import { veLaiChiTiet, idDangMo, dongBoNgan } from './chi-tiet.js';
 import { td, laTheoDoi, locTheoDoi, veTheoDoi } from './theo-doi.js';
 
@@ -168,7 +169,8 @@ export function render(veLaiNgan = false) {
   $('klTrang').innerHTML = kl.inDayDu ? '' : nutTrangHtml(p, 'klTrang');
   const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi theo dõi' : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
   setText('klPhuDe', theoDoi ? 'việc đồng chí theo dõi hoặc đã giao, do cán bộ, cơ quan khác chủ trì — cột Tình hình cho biết việc cần đôn đốc'
-    : kl.loc.toanBo ? 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết'
+    : kl.loc.toanBo ? (laThuKyTT(state.user) ? 'toàn Văn phòng — thư ký Thường trực xử lý được mọi việc chưa hoàn thành; việc đã hoàn thành ngoài phạm vi ghi "Chỉ xem"'
+      : 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết')
       : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
   dongBoNgan();
   if (kl.inDayDu) document.querySelector('#viewKl .md')?.classList.remove('co-ct');   // in: bảng đủ khổ giấy (ngăn chi tiết không in)

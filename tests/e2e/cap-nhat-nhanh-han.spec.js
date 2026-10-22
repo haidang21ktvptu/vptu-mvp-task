@@ -1,4 +1,5 @@
-// PR-2a Q7 (0052): Cập nhật nhanh của Owner / người theo dõi — việc ĐÃ có hạn không còn ô hạn (chỉ dòng "đã chốt… đề nghị gia hạn"); việc
+// PR-2a Q7 (0052): Cập nhật nhanh của Owner / người theo dõi — việc ĐÃ có hạn không còn ô hạn (chỉ dòng "đã chốt…"; v3.29 (0123): chủ trì theo dõi
+// đổi hạn bằng nút "Điều chỉnh hạn" ở ngăn chi tiết — câu trong hộp trỏ tới nút đó khi việc chưa quá hạn); việc
 // "Cần điền hạn" (Có hạn cụ thể, chưa có hạn) vẫn điền được hạn và lưu. Người quản trị KL không bị khoá (test RLS kl-pq-q7 phủ phía DB).
 // Dữ liệu riêng: 2 việc của demo_e2e_nv theo khoá E2E-TEST-CNH-<project>; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
@@ -28,14 +29,14 @@ test.describe.serial('Cập nhật nhanh: khoá hạn khi việc đã có hạn 
   });
   test.afterAll(async () => { await page?.context().close(); if (db) await donVanBan(db, khoa); });
 
-  test('việc đã có hạn: không có ô hạn, chỉ dòng "đã chốt — đề nghị gia hạn"; lưu tiến độ không đổi hạn', async () => {
+  test('việc đã có hạn: không có ô hạn, chỉ dòng "đã chốt" trỏ tới "Điều chỉnh hạn"; lưu tiến độ không đổi hạn', async () => {
     await moViec(page, v.coHan.id, v.coHan.ma);
     await page.locator(`#klChiTiet-${v.coHan.id} [data-action="openKlCapNhat"]`).click();
     await expect(page.locator('#klCapNhatModal')).toBeVisible();
     await expect(page.locator('#klCnHanWrap')).toBeHidden();
     await expect(page.locator('#klCnChuaCoHanWrap')).toBeHidden();
     await expect(page.locator('#klCnHanKhoa')).toContainText('31/12/2026');
-    await expect(page.locator('#klCnHanKhoa')).toContainText('đề nghị gia hạn');
+    await expect(page.locator('#klCnHanKhoa')).toContainText('Điều chỉnh hạn');
     await page.locator('#klCnGhiChu').fill(`${khoa} ghi chú`);
     await page.locator('#klCnLuu').click();
     await expect(page.locator('#klCapNhatModal')).toBeHidden(NAP);

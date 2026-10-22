@@ -66,7 +66,7 @@ test.describe.serial('Thư ký Thường trực — cấp cờ, mục Chỉ đ�
     await page.context().close();
   });
 
-  test('Thư ký: mục "Chỉ đạo Thường trực" có dòng của A0 (xác nhận một bước tại dòng); Mở việc → ngăn chỉ đọc có nút Đóng thay mặt → đóng → luồng + diễn biến ghi "Đóng thay mặt Thường trực — Demo E2E Thư ký TT"; dòng rời danh sách', async ({ browser }, testInfo) => {
+  test('Thư ký: mục "Chỉ đạo Thường trực" có dòng của A0 (xác nhận một bước tại dòng); Mở việc → ngăn (không ô gửi chỉ đạo, có Nộp minh chứng — 0124) có nút Đóng thay mặt → đóng → luồng + diễn biến ghi "Đóng thay mặt Thường trực — Demo E2E Thư ký TT"; dòng rời danh sách', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_TK', testInfo);
     await nav(page, 'navChiDaoTTThuKy');
     await expect(page.locator('#cdtkDanhSach')).toHaveAttribute('data-nap', /./, NAP);
@@ -81,12 +81,13 @@ test.describe.serial('Thư ký Thường trực — cấp cờ, mục Chỉ đ�
     await expect(page.locator(`#tkXn-${cdId}`)).toBeVisible();
     await page.locator(`#tkXn-${cdId} [data-action="huyDongThayMatTT"]`).click();
     await expect(page.locator(`#tkXn-${cdId}`)).toBeHidden();
-    // Mở việc → ngăn chi tiết (thư ký chỉ đọc): không ô gửi chỉ đạo / nộp minh chứng; luồng TT có nút Đóng thay mặt → đóng tại ngăn
+    // Mở việc → ngăn chi tiết: thư ký không có ô gửi chỉ đạo; v3.29 (0124): thư ký nộp được minh chứng của mọi việc chưa hoàn thành; luồng TT có
+    // nút Đóng thay mặt → đóng tại ngăn
     await dong.locator('[data-action="moChiDaoViec"]').click();
     const ngan = page.locator(`#klChiTiet-${nvId}`);
     await expect(ngan).toBeVisible(NAP);
     await expect(ngan.locator('form.cd-form')).toHaveCount(0);
-    await expect(ngan.getByRole('button', { name: 'Nộp minh chứng' })).toHaveCount(0);
+    await expect(ngan.getByRole('button', { name: 'Nộp minh chứng' })).toHaveCount(1, NAP);
     const nutNgan = ngan.locator(`#cd-${cdId} [data-action="dongChiDao"][data-thay-mat="1"]`);
     await expect(nutNgan).toHaveText('Đóng thay mặt Thường trực', NAP);
     await nutNgan.click();

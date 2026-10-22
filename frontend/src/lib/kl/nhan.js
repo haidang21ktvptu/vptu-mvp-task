@@ -122,6 +122,8 @@ export const TEN_COT = {
   ra_soat_phan_loai: 'Rà soát phân loại (ngành/lĩnh vực, mục tiêu then chốt)',   // 0116
   giai_ngan: 'Giải ngân vốn',   // 0119: nhập / xoá kỳ số liệu, gắn / đổi / bỏ theo dõi
   van_ban_trich_yeu: 'Trích yếu văn bản',   // 0046 dat_trich_yeu_van_ban — trước đây diễn biến hiện tên cột thô (kiểm tay 18/10)
+  dieu_chinh_han: 'Điều chỉnh hạn', doi_chu_tri: 'Đổi chủ trì theo dõi', sua_toan_bo: 'Tài khoản quản trị sửa thông tin', mo_lai: 'Mở lại nhiệm vụ',   // 0123–0125
+  van_ban_sua: 'Sửa văn bản giao', sua_minh_chung: 'Sửa minh chứng', go_minh_chung: 'Gỡ minh chứng',   // 0126
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 

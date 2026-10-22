@@ -17,7 +17,7 @@ const db = () => adminClient();
 const KHOA = 'KL-PQ-TD';
 const BANG = ['nhiem_vu', 'v_nhiem_vu', 'v_ngoai_le', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'minh_chung', 'canh_bao', 'dinh_chinh', 'tu_choi'];
 const VIEC = ['nhiem_vu', 'v_nhiem_vu', 'van_ban_giao_viec', 'canh_bao'];   // tình huống kiêm nhiệm / quan_tri_kl
-const THU_KY = ['nhiem_vu', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'minh_chung', 'canh_bao', 'dinh_chinh'];
+const THU_KY = ['nhiem_vu', 'v_nhiem_vu', 'van_ban_giao_viec', 'lich_su', 'chi_dao', 'minh_chung', 'canh_bao', 'dinh_chinh'];   // 0124: thư ký đọc mọi việc
 let fx; let homNay; const id = {};
 const cong = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 
@@ -100,9 +100,11 @@ describe('PR-2a — policy tập hợp tương đương quy tắc gốc (hiệu 
     await kiemNhiem(null);
   });
 
-  test('3. Thư ký Thường trực bật (A3 cv2): thấy thêm việc có CHI_DAO_TT và việc A0 giao cho Chánh VP (Q8) ở nhiem_vu/lich_su/chi_dao/minh_chung, KHÔNG ở canh_bao/dinh_chinh', async () => {
+  test('3. Thư ký Thường trực bật (A3 cv2): 0124 — đọc MỌI việc ở cả 9 bảng / view đọc theo kl_xem_tat_ca (chuẩn đối chiếu cập nhật cùng); thấy việc có CHI_DAO_TT, việc A0 giao cho Chánh VP (Q8)', async () => {
     assertOk(await db().from('accounts').update({ thu_ky_thuong_truc: true }).eq('id', IDS.cv2), 'bật thư ký');
     await doiChieu('demo_cv2', THU_KY);
+    const tong = (await db().from('nhiem_vu').select('id', { count: 'exact', head: true })).count;
+    assert.equal((await (await userClient('demo_cv2')).from('nhiem_vu').select('id', { count: 'exact', head: true })).count, tong, 'thư ký đọc mọi việc');
     const r = await (await userClient('demo_cv2')).from('nhiem_vu').select('id').eq('id', id.TT1);
     assert.equal(r.data.length, 1, 'thư ký thấy TT1');
     const q8 = await (await userClient('demo_cv2')).from('minh_chung').select('id').eq('nhiem_vu_id', id.CVP1);

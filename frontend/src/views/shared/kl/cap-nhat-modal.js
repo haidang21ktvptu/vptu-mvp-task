@@ -19,6 +19,7 @@ import { batBuocTep, taiLenTep, xoaTepChuaGan } from '../../../lib/kl/tep-minh-c
 import { ganSuKienTep, tepDangChon, datLaiTep } from './minh-chung-tep.js';
 import { klCapNhatTemplate } from './cap-nhat-template.js';
 import { timKlRow } from './danh-sach.js';
+import { cheDoDieuChinhHan } from '../../../lib/kl/quyen-them.js';
 
 let afterSave = () => {};
 let row = null;
@@ -27,6 +28,14 @@ let homNay = homNayVN();
 const laHT = () => $('klCnTienDo').value === 'HOAN_THANH';
 const coMcNhanh = () => Boolean(row?.theo_1400) && row.tien_do_ma !== 'HOAN_THANH' && duocNopMinhChung(row);
 const khoaHan = () => Boolean(row?.han_xu_ly) && !state.user?.quan_tri_kl;
+// v3.29 (0123): đổi hạn đã có = nút "Điều chỉnh hạn" ở ngăn chi tiết (chủ trì theo dõi khi việc chưa quá hạn, thư ký Thường trực, tài khoản quản trị).
+function chuKhoaHan(r) {
+  const dau = `Hạn xử lý: ${formatNgay(r.han_xu_ly)} — đã chốt khi giao.`;
+  const che = cheDoDieuChinhHan(r, state.user, homNay);
+  if (che === 'duoc') return `${dau} Đổi hạn: bấm "Điều chỉnh hạn" ở ngăn chi tiết (ghi lý do; người giao việc, lãnh đạo phụ trách được báo).`;
+  if (che === 'qua-han') return `${dau} Việc đã quá hạn — đồng chí đề nghị lãnh đạo giao việc gia hạn hoặc báo thư ký Thường trực.`;
+  return `${dau} Muốn đổi hạn, đồng chí đề nghị gia hạn với lãnh đạo giao việc.`;
+}
 const trong = (s) => !s || !s.trim();
 
 function capNhatHienThi() {
@@ -61,7 +70,7 @@ export async function openKlCapNhat({ id, rows }) {
   $('klCnHan').value = row.han_xu_ly || '';
   show('klCnHanWrap', !khoaHan());
   show('klCnHanKhoa', khoaHan());
-  setText('klCnHanKhoa', khoaHan() ? `Hạn xử lý: ${formatNgay(row.han_xu_ly)} — đã chốt khi giao. Muốn đổi hạn, đồng chí đề nghị gia hạn với lãnh đạo giao việc.` : '');
+  setText('klCnHanKhoa', khoaHan() ? chuKhoaHan(row) : '');
   $('klCnHan').min = row.ngay_ban_hanh;
   setText('klCnHanLoai', row.loai_thoi_han_ma === 'KY_BAN_HANH' ? '(tự tính = ngày ban hành + 10, không sửa)' : row.loai_thoi_han_ma === 'CO_HAN_CU_THE' ? '' : '(không bắt buộc với loại này)');
   $('klCnChuaCoHan').checked = row.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !row.han_xu_ly && row.tien_do_ma !== 'HOAN_THANH';

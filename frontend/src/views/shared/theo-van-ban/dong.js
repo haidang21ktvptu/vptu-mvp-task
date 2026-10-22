@@ -8,8 +8,10 @@ import { state, findAccount } from '../../../lib/state.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { lopMep, tenMuc, tenSapDenHan } from '../../../lib/kl/nhan.js';
 import { hanO, trangThaiO, gioVN, vanBanNgan } from '../../../lib/kl/bang-o.js';
-import { chiXem, nguoiGiaoVanBan, nguoiGiaoText } from '../../../lib/kl/pham-vi.js';
+import { nguoiGiaoVanBan, nguoiGiaoText } from '../../../lib/kl/pham-vi.js';
 import { ownerText, NHAN_CHI_XEM } from '../kl/dong.js';
+import { chiXemVoi } from '../../../lib/kl/quyen-them.js';
+import { laToanQuyen } from '../../../lib/toan-quyen.js';
 
 const xacNhan = (m) => (m.hop_le === null ? '<span class="tt-cho">chưa xác nhận</span>' : m.hop_le ? `<span class="tt-xong">hợp lệ — ${escapeHtml(m.xac_nhan_boi_ten || '')}</span>`
   : `<span class="tt-qua">không hợp lệ — ${escapeHtml(m.xac_nhan_boi_ten || '')}</span>`);
@@ -22,7 +24,7 @@ export function nhanhHtml(r, cap, { con, mc, mo, homNay }) {
     <div class="tvb-hang">
       ${coCon ? `<button type="button" class="tvb-gap" data-action="tvbGap" data-khoa="nv-${r.id}" aria-expanded="${mo}" aria-label="${mo ? 'Thu gọn' : 'Mở rộng'} ${escapeHtml(r.ma)}"></button>` : '<i class="tvb-gap trong"></i>'}
       <button type="button" class="tvb-nut" data-action="tvbMoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" title="Bấm để xem chi tiết">
-        <span class="bnv-c bnv-c-nv"><span class="ma">${cap > 1 ? '↳ ' : ''}${escapeHtml(r.ma)}${r.stt_van_ban ? `<small class="tvb-stt" title="Số thứ tự trong văn bản">·${String(r.stt_van_ban).padStart(2, '0')}</small>` : ''}</span><span class="nd">${escapeHtml(r.noi_dung)}${chiXem(r) ? NHAN_CHI_XEM : ''}</span></span>
+        <span class="bnv-c bnv-c-nv"><span class="ma">${cap > 1 ? '↳ ' : ''}${escapeHtml(r.ma)}${r.stt_van_ban ? `<small class="tvb-stt" title="Số thứ tự trong văn bản">·${String(r.stt_van_ban).padStart(2, '0')}</small>` : ''}</span><span class="nd">${escapeHtml(r.noi_dung)}${chiXemVoi(r, state.user) ? NHAN_CHI_XEM : ''}</span></span>
         <span class="bnv-c chu-tri" data-nhan="Chủ trì theo dõi">${escapeHtml(ownerText(r))}</span>
         <span class="bnv-c han" data-nhan="Hạn xử lý"><b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span></span>
         <span class="bnv-c bnv-c-tt" data-nhan="Trạng thái"><span class="trang-thai ${tt.lop}">${escapeHtml(tt.chu)}</span>${mc.map(laHtml).join('')}</span></button>
@@ -37,10 +39,12 @@ function canhBaoHtml(t) {
     t.sap ? `<span class="trang-thai tt-cho">${t.sap} ${tenSapDenHan()}</span>` : '', t.n && t.xong === t.n ? '<span class="trang-thai tt-xong">Hoàn thành toàn bộ</span>' : ''].filter(Boolean);
   return ds.length ? ds.join('') : '<span class="bnv-phu">Trong hạn</span>';
 }
-// Cuối bảng con: + Giao thêm (mọi vai giao được — quyền thật ở giao_viec), rà soát + Sửa (người tạo văn bản, A1, quan_tri_kl — van_ban_dat_ra_soat).
+// Cuối bảng con: + Giao thêm (mọi vai giao được — quyền thật ở giao_viec), Sửa văn bản giao (v3.29 — tài khoản quản trị, van_ban_sua 0126), rà soát +
+// Sửa (người tạo văn bản, A1, quan_tri_kl — van_ban_dat_ra_soat).
 function chanConHtml(d, sua) {
   const id = d.vb.van_ban_id; const y = d.h.so_nhiem_vu_du_kien;
-  const giao = state.user?.role_group && !state.user?.bi_khoa && id ? `<button type="button" class="nut nho tvb-giao-them" data-action="giaoThemTuVanBan" data-vb="${escapeHtml(id)}">+ Giao thêm nhiệm vụ từ văn bản này</button>` : '';
+  const giao = (state.user?.role_group && !state.user?.bi_khoa && id ? `<button type="button" class="nut nho tvb-giao-them" data-action="giaoThemTuVanBan" data-vb="${escapeHtml(id)}">+ Giao thêm nhiệm vụ từ văn bản này</button>` : '')
+    + (laToanQuyen(state.user) && id ? `<button type="button" class="nut nho tvb-sua-vb" data-action="moSuaVanBan" data-vb="${escapeHtml(id)}">Sửa văn bản giao</button>` : '');
   const rs = `<span class="trang-thai ${d.rs.canhBao ? 'tt-cho' : 'tt-xong'} tvb-ra-soat" data-canh-bao="${d.rs.canhBao ? '1' : '0'}">${escapeHtml(d.rs.dong)}</span>`;
   const nut = sua ? `<button type="button" class="nut nho" data-action="moO" data-o="oRs-${id}">Sửa</button>` : '';
   const form = sua ? `<form class="o" id="oRs-${id}" data-submit="tvbRaSoat" data-id="${id}"><input type="number" name="so" min="0" step="1" value="${y ?? ''}" placeholder="Số nhiệm vụ dự kiến" aria-label="Số nhiệm vụ dự kiến">

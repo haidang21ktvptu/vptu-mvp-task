@@ -18,6 +18,7 @@ import { duocChiDao } from './chi-dao.js';
 import { oDanhGiaHtml, chatLuongCuaForm } from '../chat-luong.js';
 import { laQtklConHan } from './thong-tin-giao.js';
 import { tepHtml, nutGanTepHtml, ganSuKienTep, tepDangChon, datLaiTep, hanhDongTep } from './minh-chung-tep.js';
+import { nutSuaMcHtml, oGoMcHtml } from './minh-chung-sua.js';   // v3.29 (0126): tài khoản quản trị sửa / gỡ minh chứng
 
 // Tên lớp nguyên văn (Tailwind cắt lớp ghép chuỗi khỏi bản build).
 const LOP_LOAI = { so_hieu: 'mc-loai', chu_cu: 'mc-loai mc-loai-cu', tep: 'mc-loai' };
@@ -49,7 +50,7 @@ function mcHtml(m, r) {
         <b>${escapeHtml(dau)}</b>${chiTiet ? ` <span>${escapeHtml(chiTiet)}</span>` : ''}
         <span class="chu-phu">nộp bởi ${escapeHtml(tenNguoi(m.nop_boi))}, ${formatDateTime(m.nop_luc)}</span>
         <span class="${LOP_TRANG_THAI[k]}">${TEN_TRANG_THAI[k]}</span>
-        <span class="mc-nut">${nutGanTepHtml(r, m)}${nutXemLaiHtml(r, m)}</span>
+        <span class="mc-nut">${nutGanTepHtml(r, m)}${nutXemLaiHtml(r, m)}${nutSuaMcHtml(r, m)}</span>
       </div>
       ${m.loai === 'chu_cu' ? `<p class="mc-chu">${escapeHtml(m.noi_dung_chu || '')}</p>` : ''}
       ${bonYeuTo}${tepHtml(m)}
@@ -58,7 +59,7 @@ function mcHtml(m, r) {
       <form class="mc-form-ly-do hidden" id="mcBac-${m.id}" data-submit="bacMinhChung" data-id="${m.id}" data-nv="${r.id}">
         <input type="text" name="ly_do" required class="o-nhap nho" placeholder="Lý do trả lại (bắt buộc)" aria-label="Lý do trả lại">
         <button type="submit" class="nut lam nho">Trả lại minh chứng</button>
-      </form>
+      </form>${oGoMcHtml(r, m)}
     </div>`;
 }
 

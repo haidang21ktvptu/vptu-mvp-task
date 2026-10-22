@@ -91,4 +91,12 @@
   .dns-ds { margin: 4px 0 6px; padding-left: 18px; font-size: 13.5px; }
   .dns-ds li + li { margin-top: 2px; }
   .st-cu { font-weight: 600; font-size: 14.5px; padding: 8px 0; color: var(--chu); overflow-wrap: anywhere; }
+
+  /* v3.29 — hộp "Sửa toàn bộ thông tin" (tài khoản quản trị, 0125): hai nhóm ô, lưới hai cột (ô chữ dài trọn dòng). */
+  .stb-nhom { font-size: 14px; font-weight: 600; color: var(--chu); margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--vien); }
+  .stb-luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  .stb-o { min-width: 0; }
+  .stb-o small { display: block; margin-top: 2px; }
+  .stb-o-rong { grid-column: 1 / -1; }
+  @media (max-width: 860px) { .stb-luoi { grid-template-columns: minmax(0, 1fr); } }
 }
