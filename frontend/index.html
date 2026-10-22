@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#15395F">
+  <!-- v3.29: không gửi đường dẫn trang cho trang ngoài; chính sách nội dung (CSP) do vite.config.js chèn lúc build. -->
+  <meta name="referrer" content="same-origin">
   <title>Hệ thống quản trị nhiệm vụ — Tỉnh ủy Cao Bằng</title>
   <!-- Kiểu giao diện nhớ theo máy (shell/kieu-giao-dien.js): đặt trước khi vẽ để không chớp kiểu mặc định. -->
   <script>try { if (localStorage.getItem('vptu.kieu') === 'trang-nghiem') document.documentElement.setAttribute('data-kieu', 'trang-nghiem'); if (localStorage.getItem('vptu.nen-toi') === '1') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { /* trình duyệt chặn lưu trữ: dùng mặc định */ }</script>

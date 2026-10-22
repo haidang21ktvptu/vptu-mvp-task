@@ -3,6 +3,7 @@
 // chờ xác nhận (một bấm). Menu: Giao việc, Nhiệm vụ, Cán bộ thuộc quyền, Báo cáo, Nhắn tin, Quản trị (cờ).
 import { $, show } from '../../lib/dom.js';
 import { registerView } from '../registry.js';
+import { moManDau } from '../shell/duong-dan.js';
 import { sectionDangHien } from '../shell/index.js';
 import { openTongQuan } from '../shared/tong-quan/index.js';
 import { khungHtml, datCauHinhDieuHanh, openDieuHanh, ngayDaiVN, dangKyDieuHanhVai } from '../shared/dieu-hanh/man-hinh.js';
@@ -46,7 +47,7 @@ export function registerA1View() {
         phuDe: () => 'mỗi thẻ đúng bốn điều: ai chậm, chậm bao nhiêu ngày, thiếu sản phẩm gì, cấp nào phải quyết — hành động ngay tại thẻ',
         veThem,
       });
-      openTongQuan();
+      moManDau(openTongQuan);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },
     reload() { if (sectionDangHien('viewTongQuan')) openTongQuan(); else openDieuHanh(); },
   });

@@ -8,6 +8,7 @@ import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
 import { registerView } from '../registry.js';
+import { moManDau } from '../shell/duong-dan.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { xacNhanNhanViec, loadVanBan } from '../../lib/kl/du-lieu.js';
 import { nopMinhChung, loiMinhChung } from '../../lib/kl/minh-chung.js';
@@ -128,7 +129,7 @@ export function registerA3View() {
       datNapLai(loadViecCuaToi);
       datCauHinhDieuHanh({ kpi: () => [], phuDe: () => '', veThem: ve }); // napLaiViec → veDieuHanh → vẽ lại bảng ngay sau mỗi hành động ghi
       onSoChuaXuLy(lamMoiDnsThe);   // hàm cấp module: đăng nhập lại không đăng ký trùng (Set)
-      openDieuHanh();
+      moManDau(openDieuHanh);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },
     reload() { openDieuHanh(); },
   });

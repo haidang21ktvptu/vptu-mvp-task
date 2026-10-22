@@ -17,7 +17,7 @@ let ketQua = null;          // { rows, luc, boQua } — chỉ sống khi hộp k
 let daXuat = false;
 let motNguoi = null;        // { username, matKhau } của hộp "Mật khẩu tạm"
 
-const urlApp = () => `${location.origin}${location.pathname}`.replace(/index\.html$/, '');
+const urlApp = () => `${location.origin}${import.meta.env.BASE_URL}`;   // v3.29: địa chỉ gốc của app, không theo đường dẫn chức năng đang mở
 const thongTinChung = (luc) => ({ url: urlApp(), luc: formatDateTime(luc), nguoi: `${state.user.full_name} (${state.user.username})` });
 
 function tuyChon() {
@@ -73,10 +73,12 @@ async function taiExcel(rows, luc, hauTo) {
   taiXuong(tenTepBanGiao(new Date(luc), 'xlsx', hauTo), taoXlsx(sheetsBanGiao(rows, thongTinChung(luc))));
   notifySuccess(`Đã tải tệp bàn giao ${rows.length} tài khoản.`);
 }
+// v3.29: cửa sổ in nhận chính sách nội dung (CSP) của app — đoạn script tự in trong trang không chạy; app (cùng nguồn) gọi in cho cửa sổ đó.
 function inPhieu(rows, luc) {
   const w = window.open('', '_blank');
   if (!w) { notifyError('Trình duyệt chặn cửa sổ mới — cho phép cửa sổ bật lên rồi bấm lại.'); return; }
-  w.document.open(); w.document.write(htmlPhieuBanGiao(rows, thongTinChung(luc))); w.document.close();
+  w.document.open(); w.document.write(htmlPhieuBanGiao(rows, { ...thongTinChung(luc), tuIn: false })); w.document.close();
+  w.focus(); setTimeout(() => { try { w.print(); } catch { /* cửa sổ đã đóng */ } }, 300);
 }
 const choPhepDong = () => { daXuat = true; $('qtBgKqDong').disabled = false; };
 

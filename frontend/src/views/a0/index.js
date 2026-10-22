@@ -3,6 +3,7 @@
 // nhiệm vụ" (màn hình dùng chung, chỉ đọc + Ý kiến/Chỉ đạo). Quyền thật: hàm 0030/0032 từ chối A0 ở mọi thao tác ghi khác.
 import { $, show } from '../../lib/dom.js';
 import { registerView } from '../registry.js';
+import { moManDau } from '../shell/duong-dan.js';
 import { sectionDangHien } from '../shell/index.js';
 import { openTongQuan } from '../shared/tong-quan/index.js';
 import { khungHtml, datCauHinhDieuHanh, openDieuHanh, ngayDaiVN, dangKyDieuHanhVai } from '../shared/dieu-hanh/man-hinh.js';
@@ -33,7 +34,7 @@ export function registerA0View() {
         phuDe: () => 'xếp theo độ khẩn, việc Thường trực giao, rồi số ngày trễ; việc cần Thường trực quyết đứng đầu',
         veThem,
       });
-      openTongQuan();
+      moManDau(openTongQuan);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },
     reload() { if (sectionDangHien('viewTongQuan')) openTongQuan(); else openDieuHanh(); },
   });

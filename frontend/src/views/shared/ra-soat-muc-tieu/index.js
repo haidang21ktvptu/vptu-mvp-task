@@ -25,6 +25,7 @@ import { taoTrangThai, choXuLy, nhomGoiY, coThayDoi } from './ke-hoach.js';
 import { luuViec, chuKetQua } from './luu.js';
 import { ganTep } from './nhap-tep.js';
 import { loadGanMucTieu } from '../../../lib/kl/muc-tieu-db.js';
+import { dangKyQuyenDuongDan } from '../../shell/duong-dan.js';
 
 const MOI_TRANG = 50; const PHAN = 200; const PHONG_KHAC = '__khac__';
 const rs = { rows: [], tt: new Map(), kq: new Map(), thaoTac: new Set(), daLuu: new Set(), loc: { che: 'chua', phong: '', vb: '', nhom: '', tim: '' },
@@ -208,6 +209,7 @@ function moXacNhan() {
 
 let henTim = null;
 export function registerRaSoatMucTieu() {
+  dangKyQuyenDuongDan('raSoat', coRaSoat);   // v3.29: đường dẫn "/Ra-soat-phan-loai" mở được khi có quyền vào màn
   $('viewRaSoatMucTieu').innerHTML = raSoatTemplate(coMucTieu());
   ganTep({ dsLoc, timMa: (ma) => rs.rows.find((r) => r.ma === ma) || null, sauApDung: async () => { await loadGanMucTieu().catch(() => null); await nap(); } });
   [['rsPhong', 'phong'], ['rsVanBan', 'vb'], ['rsNhom', 'nhom']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { rs.loc[k] = e.target.value; rs.trang = 0; an(); ve(); }));

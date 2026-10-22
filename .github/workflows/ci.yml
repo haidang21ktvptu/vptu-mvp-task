@@ -151,6 +151,14 @@ jobs:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: ci-placeholder
         run: npm run build
+      - name: Bản build có tệp đường dẫn và chính sách nội dung (v3.29)
+        working-directory: frontend/dist
+        run: |
+          for f in index.html Tong-quan.html Nhap-Excel.html Quan-tri.html Quan-tri/index.html Quan-tri/Tai-khoan.html; do
+            test -f "$f" || { echo "::error::Thiếu dist/$f"; exit 1; }
+            grep -q 'http-equiv="Content-Security-Policy"' "$f" || { echo "::error::dist/$f thiếu chính sách nội dung"; exit 1; }
+          done
+          grep -q "connect-src 'self' https://example.supabase.co wss://example.supabase.co" index.html || { echo "::error::connect-src không theo VITE_SUPABASE_URL"; exit 1; }
       - name: Unit test module thuần KL (frontend/tests, node:test)
         working-directory: frontend
         run: npm test
