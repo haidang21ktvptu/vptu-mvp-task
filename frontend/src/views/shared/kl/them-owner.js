@@ -38,7 +38,7 @@ export function ownerOptionsHtml(dm, accounts, me, nhuA0 = false, thayMat = '') 
     .map((a) => opt(`tk:${a.id}`, `${a.full_name}${laToi(a) ? ' (chính tôi)' : ''} — ${tenPhong(a.department) || 'Lãnh đạo Văn phòng'}`));
   const trongVp = a0 ? dm.donVi.filter((d) => d.trong_van_phong && d.phong).map((d) => opt(`dv:${d.ma}`, d.ten))
     : !thang && (laQtkl(me) || a3ThayMat(me, thayMat) || me?.role_group === 'A1') ? dm.donVi.filter((d) => d.trong_van_phong).map((d) => opt(`dv:${d.ma}`, d.ten)) : [];
-  return opt('', a0 ? 'Chọn lãnh đạo Văn phòng hoặc phòng nhận việc' : thang ? 'Chọn chuyên viên thực hiện (hoặc chính tôi)' : 'Chọn phòng hoặc cán bộ chịu trách nhiệm')
+  return opt('', a0 ? 'Chọn lãnh đạo Văn phòng hoặc phòng nhận việc' : thang ? 'Chọn chuyên viên thực hiện (hoặc chính tôi)' : 'Chọn phòng hoặc cán bộ chủ trì theo dõi')
     + nhomOpt(a0 ? 'Lãnh đạo Văn phòng' : thang ? 'Chuyên viên' : 'Cán bộ', canBo) + nhomOpt(a0 ? 'Các phòng' : 'Văn phòng và các phòng', trongVp);
 }
 

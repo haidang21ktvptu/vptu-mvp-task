@@ -52,17 +52,17 @@ export function ketQuaHtml(s, dm) {
       <small class="chu-phu">${esc(s.ncc || 'Trợ lý AI')}${s.moHinh ? ` (${esc(s.moHinh)})` : ''} · ${esc(chuThongKe(s.kq?.thong_ke))}${s.banChup ? ' · tệp là bản chụp: chưa đối chiếu tự động được, đồng chí kiểm tra từng giá trị' : ''}</small></div>
     <button type="button" class="nut nho" data-action="gvDocBo">Bỏ tất cả</button></div>
     ${vanBanHtml(s)}
-    ${ds.length ? `<div class="gv-doc-nv-dau"><div><b>Văn bản giao ${ds.length} nhiệm vụ</b><small class="chu-phu">Sửa ngay trong bảng: nội dung, chịu trách nhiệm, sản phẩm, hạn, cơ quan trình; nhiệm vụ không giao thì bấm “× Bỏ”.</small></div>${nut}</div>
+    ${ds.length ? `<div class="gv-doc-nv-dau"><div><b>Văn bản giao ${ds.length} nhiệm vụ</b><small class="chu-phu">Sửa ngay trong bảng: nội dung, chủ trì theo dõi, sản phẩm đầu ra, hạn xử lý, cơ quan/đơn vị trình; nhiệm vụ không giao thì bấm “× Bỏ”.</small></div>${nut}</div>
       ${con > 20 ? '<small class="chu-phu">Mỗi lượt giao tối đa 20 nhiệm vụ: giao lượt đầu xong, bấm "Điền tiếp" để điền phần còn lại vào văn bản vừa tạo.</small>' : ''}
       ${bo ? `<small class="chu-phu">${bo} nhiệm vụ đã bỏ (việc trùng được bỏ sẵn) — cần giao thì bấm “Lấy lại”.</small>` : ''}
       ${nhanhHtml(con)}
       <ol class="gv-doc-ds gv-db-ds">${ds.map((n, i) => dongHtml(s, n, i, dm)).join('')}</ol>` : '<p class="chu-phu">Không tách được nhiệm vụ nào — đồng chí nhập ở khối 2.</p>'}
     ${sotHtml(s.kq)}
-    <small class="chu-phu gv-doc-chan">Chỉ điền vào ô còn trống; giá trị nguyên văn (số hiệu, ngày, trích yếu, nội dung, hạn) chỉ tự điền khi đã đối chiếu được trong tệp và điền đúng chữ của tệp — chưa đối chiếu được, hoặc nội dung chưa trọn câu, thì hiện để đồng chí bấm dùng (bản chụp: nội dung điền kèm cảnh báo); số hiệu, ngày, loại văn bản chỉ lấy ở phần đầu trang 1; hạn, đơn vị phối hợp phải nằm trong chính nhiệm vụ; sản phẩm, ngành, lĩnh vực, cơ quan trình${mt} là đề xuất của trợ lý AI (sản phẩm AI không đề xuất thì theo từ khoá nội dung). Đồng chí kiểm tra trước khi bấm Giao việc. Tệp và nội dung không lưu vào hệ thống.</small>`;
+    <small class="chu-phu gv-doc-chan">Chỉ điền vào ô còn trống; giá trị nguyên văn (số hiệu, ngày, trích yếu, nội dung, hạn) chỉ tự điền khi đã đối chiếu được trong tệp và điền đúng chữ của tệp — chưa đối chiếu được, hoặc nội dung chưa trọn câu, thì hiện để đồng chí bấm dùng (bản chụp: nội dung điền kèm cảnh báo); số hiệu, ngày, loại văn bản chỉ lấy ở phần đầu trang 1; hạn, đơn vị phối hợp phải nằm trong chính nhiệm vụ; sản phẩm đầu ra, ngành/lĩnh vực, lĩnh vực, cơ quan/đơn vị trình${mt} là đề xuất của trợ lý AI (sản phẩm AI không đề xuất thì theo từ khoá nội dung). Đồng chí kiểm tra trước khi bấm Giao việc. Tệp và nội dung không lưu vào hệ thống.</small>`;
 }
 // Ghi chú đầu thẻ sau khi điền (thay ghi chú cũ). kh: keHoachBang; i: số thứ tự trong văn bản / tong. v3.27: nội dung, hạn đã chốt ở bảng đề xuất (nút
 // "Dùng trọn câu", "Dùng ngày" ở bảng) — ghi chú chỉ còn nguồn, đề xuất cần kiểm tra và cảnh báo.
-const TEN_DE_XUAT = { san_pham: 'sản phẩm', nganh: 'ngành', linh_vuc: 'lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan trình' };
+const TEN_DE_XUAT = { san_pham: 'sản phẩm đầu ra', nganh: 'ngành/lĩnh vực', linh_vuc: 'lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan/đơn vị trình' };
 export function ghiChuTheHtml(kh, i, tong) {
   const deXuat = [...new Set(kh.deXuat)].map((c) => TEN_DE_XUAT[c]).filter(Boolean);
   const phan = [`Điền từ văn bản (nhiệm vụ ${i + 1}/${tong})`, kh.goiY.chuTri ? `chủ trì theo văn bản: ${esc(kh.goiY.chuTri)}` : '',

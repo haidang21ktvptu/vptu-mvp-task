@@ -47,4 +47,4 @@ export const canNgayNhan = () => !laA0() || canNganhHienTai();
 // không trích nội dung, mỗi ô có nhãn; khung xem trước ghi "chưa chọn" thay cho "…". o: { so, owner, han, sp } (chuỗi rỗng = chưa chọn).
 const hoac = (v) => v || 'chưa chọn';
 export const chuSanSang = ({ so, owner, han, sp, dk }) => `Sẵn sàng giao ${so > 1 ? `${so} nhiệm vụ — nhiệm vụ 1: ` : '— '}Chủ trì theo dõi: ${hoac(owner)} · Hạn xử lý: ${hoac(han)} · Sản phẩm đầu ra: ${hoac(sp)}${dk ? ` · Độ khẩn: ${dk}` : ''}`;
-export const chuXemTruoc = ({ so, owner, han, sp }) => `Chủ trì: ${hoac(owner)} · Hạn: ${hoac(han)} · Sản phẩm: ${hoac(sp)}${so > 1 ? ` · và ${so - 1} nhiệm vụ khác` : ''}`;
+export const chuXemTruoc = ({ so, owner, han, sp }) => `Chủ trì theo dõi: ${hoac(owner)} · Hạn xử lý: ${hoac(han)} · Sản phẩm đầu ra: ${hoac(sp)}${so > 1 ? ` · và ${so - 1} nhiệm vụ khác` : ''}`;

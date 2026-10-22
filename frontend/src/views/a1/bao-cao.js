@@ -68,7 +68,7 @@ function bangTheoVanBan(rows) {
 function bangCanQuyet(rows) {
   const ds = sapXep(rows.filter((r) => r.tien_do_ma !== 'HOAN_THANH' && (r.vuong_mac || r.cap_quyet_dinh)));
   if (!ds.length) return '<p class="trong-nho">Không có việc nào cần lãnh đạo quyết định.</p>';
-  return `<table><thead><tr><th>Mã</th><th>Nội dung</th><th>Chủ trì</th><th>Cấp cần quyết</th><th>Vướng mắc / đề nghị</th><th>Hạn</th><th></th></tr></thead><tbody>${ds.map((r) => `<tr data-id="${r.id}">
+  return `<table><thead><tr><th>Mã nhiệm vụ</th><th>Nội dung kết luận / Văn bản trình</th><th>Chủ trì theo dõi</th><th>Cấp cần quyết</th><th>Vướng mắc / đề nghị</th><th>Hạn xử lý</th><th></th></tr></thead><tbody>${ds.map((r) => `<tr data-id="${r.id}">
     <td><b>${escapeHtml(r.ma)}</b></td><td>${escapeHtml(r.noi_dung)}</td><td>${escapeHtml(r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '')}</td>
     <td>${escapeHtml(r.cap_quyet_dinh_ten || '—')}</td><td data-truong="vuong-mac">${escapeHtml(r.vuong_mac || '—')}</td><td>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</td>
     <td><button type="button" class="nut nho" data-action="nganMoViec" data-id="${r.id}">Xem</button></td></tr>`).join('')}</tbody></table>`;
@@ -92,10 +92,10 @@ function ve() {
       ${o(t.nhom.QUA_HAN + t.nhom.DANG_DINH_CHINH, 'quá hạn', 's-do')}${o(t.nhom.SAP_DEN_HAN, 'sắp đến hạn', 's-vang')}
       ${o(t.nhom.DANG_THUC_HIEN, 'đang thực hiện', 's-lam')}${o(t.nhom.HOAN_THANH, `hoàn thành · ${t.tyLeHoanThanh}%`, 's-luc')}
       ${o(t.nhom.CHO_NGHIEM_THU, 'chờ xác nhận minh chứng', 's-lam')}${o(t.nhom.QUA_HAN_NGHIEM_THU, 'quá hạn, chờ xác nhận minh chứng', 's-do')}
-      ${tyLe(rowsHienTai, 'nop_dung_han', 'nộp minh chứng trước hạn hoàn thành')}</div>
+      ${tyLe(rowsHienTai, 'nop_dung_han', 'nộp minh chứng trước hạn xử lý')}</div>
     <div>
       ${khoi('bcCanQuyet', 'Việc cần lãnh đạo quyết định', 'việc đang mở có vướng mắc hoặc đã xác định cấp cần quyết định', bangCanQuyet(rowsHienTai))}
-      ${khoi('bcTheoPhong', 'Theo phòng, đơn vị chịu trách nhiệm', 'bấm một số hoặc một dòng để xem việc ngay dưới', bangNhom('Đơn vị / văn bản', nhomOwner(rowsHienTai), (d) => ({ donVi: d.ma })))}
+      ${khoi('bcTheoPhong', 'Theo phòng, đơn vị chủ trì theo dõi', 'bấm một số hoặc một dòng để xem việc ngay dưới', bangNhom('Đơn vị / văn bản', nhomOwner(rowsHienTai), (d) => ({ donVi: d.ma })))}
       ${khoi('bcTheoNguon', 'Theo nguồn nhiệm vụ', '', bangNhom('Nguồn nhiệm vụ', nhomNguon(rowsHienTai), (d) => ({ nguon: d.ma })))}
       ${khoi('bcTheoVanBan', 'Theo kết luận, văn bản giao việc', '', bangTheoVanBan(rowsHienTai))}</div>`;
 }

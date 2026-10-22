@@ -17,24 +17,24 @@ const trangThai = (r) => `${tenNhom(r.nhom_dem)}${r.so_ngay_qua ? ` (trễ ${r.s
 
 // Cột màn Nhiệm vụ (thứ tự theo prompt PR-3; C2 thêm 4 cột nguồn ở cuối).
 export const COT_NHIEM_VU = [
-  { nhan: 'Mã', rong: 10, gt: (r) => r.ma },
-  { nhan: 'Nội dung', rong: 60, gt: (r) => r.noi_dung },
-  { nhan: 'Văn bản', rong: 22, gt: (r) => r.so_ket_luan || '' },
+  { nhan: 'Mã nhiệm vụ', rong: 12, gt: (r) => r.ma },
+  { nhan: 'Nội dung kết luận / Văn bản trình', rong: 60, gt: (r) => r.noi_dung },
+  { nhan: 'Số TB/KL', rong: 22, gt: (r) => r.so_ket_luan || '' },
   { nhan: 'Nguồn nhiệm vụ', rong: 24, gt: (r) => r.nguon_nhiem_vu_ten || '' },
-  { nhan: 'Chủ trì', rong: 26, gt: chuTri },
+  { nhan: 'Chủ trì theo dõi', rong: 26, gt: chuTri },
   { nhan: 'Người theo dõi', rong: 22, gt: (r) => r.nguoi_theo_doi_ten || '' },
   { nhan: 'Phòng', rong: 22, gt: phong },
-  { nhan: 'Hạn hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.han_xu_ly },
+  { nhan: 'Hạn xử lý', rong: 13, kieu: 'ngay', gt: (r) => r.han_xu_ly },
   { nhan: 'Trạng thái', rong: 24, gt: trangThai },
   { nhan: 'Chất lượng', rong: 13, gt: (r) => tenChatLuong(r.chat_luong) },
   { nhan: 'Tiến độ hoàn thành', rong: 18, gt: tenTienDoHoanThanh },
   { nhan: 'Vướng mắc', rong: 40, gt: (r) => r.vuong_mac || '' },
-  { nhan: 'Sản phẩm', rong: 30, gt: sanPham },
-  { nhan: 'Cấp nhận', rong: 20, gt: (r) => r.cap_nhan_san_pham_ten || '' },
+  { nhan: 'Sản phẩm đầu ra', rong: 30, gt: sanPham },
+  { nhan: 'Cấp nhận sản phẩm', rong: 20, gt: (r) => r.cap_nhan_san_pham_ten || '' },
   // Đợt C2 (0087): thêm cuối — mẫu cũ đọc theo tên cột không lệch
   { nhan: 'Mã theo nguồn', rong: 20, gt: maTheoNguon },
   { nhan: 'Mức quan trọng', rong: 12, gt: (r) => r.muc_quan_trong || '' },
-  { nhan: 'Cơ quan trình', rong: 28, gt: (r) => boSoThuTu(r.co_quan_trinh_ten) || '' },
+  { nhan: 'Cơ quan/đơn vị trình', rong: 28, gt: (r) => boSoThuTu(r.co_quan_trinh_ten) || '' },
   { nhan: 'Thường trực chỉ đạo', rong: 24, gt: (r) => r.thuong_truc_chi_dao_ten || '' },
 ];
 const bang = (ten, cot, rows) => ({ ten, cot, dong: rows.map((r) => cot.map((c) => c.gt(r))) });
@@ -56,11 +56,11 @@ export function xuatBaoCao({ theoPhong, theoNguon, rowsDo }) {
 
 // v3.16: xuất theo kỳ (tuần / tháng / quý / năm — lib/kl/ky.js). k = khoangKyChon(...); rows = toàn bộ việc trong phạm vi (hoặc danh sách đang lọc).
 // 6 sheet: Kỳ (thông tin), Tổng hợp theo phòng / đơn vị, Giao trong kỳ, Hoàn thành trong kỳ, Đến hạn trong kỳ, Còn mở cuối kỳ (15 cột + Ngày giao, Ngày hoàn thành).
-const COT_KY = [COT_NHIEM_VU[0], { nhan: 'Ngày giao', rong: 13, kieu: 'ngay', gt: ngayGiao }, { nhan: 'Ngày hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.ngay_hoan_thanh || '' }, ...COT_NHIEM_VU.slice(1)];
+const COT_KY = [COT_NHIEM_VU[0], { nhan: 'Ngày giao nhiệm vụ', rong: 13, kieu: 'ngay', gt: ngayGiao }, { nhan: 'Ngày hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.ngay_hoan_thanh || '' }, ...COT_NHIEM_VU.slice(1)];
 export function xuatTheoKy(rows, k, { phamVi = 'Toàn bộ việc trong phạm vi', nguoi = '' } = {}) {
   const pl = phanLoaiTheoKy(rows, k); const th = tongHopTheoKy(rows, k);
   const thongTin = [['Kỳ', k.ten], ['Từ ngày', k.tu], ['Đến ngày', k.den], ['Phạm vi', phamVi], ['Người xuất', nguoi], ['Xuất lúc', new Date().toLocaleString('vi-VN')],
-    ['Quy ước', 'Giao = ngày giao nhiệm vụ (hoặc ngày ban hành, ngày tạo); Hoàn thành = ngày hoàn thành; Đến hạn = hạn hoàn thành; Còn mở cuối kỳ = giao không sau ngày cuối kỳ và chưa xong (hoặc xong sau kỳ); Quá hạn = hạn trước ngày cuối kỳ.']];
+    ['Quy ước', 'Giao = ngày giao nhiệm vụ (hoặc ngày ban hành, ngày tạo); Hoàn thành = ngày hoàn thành; Đến hạn = hạn xử lý; Còn mở cuối kỳ = giao không sau ngày cuối kỳ và chưa xong (hoặc xong sau kỳ); Quá hạn = hạn trước ngày cuối kỳ.']];
   const ten = `vptu-nhiem-vu-${k.ma}.xlsx`;
   taiXuong(ten, taoXlsx([
     { ten: 'Kỳ', cot: [{ nhan: 'Mục', rong: 14 }, { nhan: 'Giá trị', rong: 110 }], dong: thongTin },

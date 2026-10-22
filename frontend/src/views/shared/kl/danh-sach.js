@@ -24,8 +24,8 @@ import { td, laTheoDoi, locTheoDoi, veTheoDoi } from './theo-doi.js';
 // v3.23 (0103): kl.rows = mọi dòng đọc được (cấu hình xem toàn bộ: cả việc chỉ xem); danh sách mặc định chỉ việc trong phạm vi xử lý, nút
 // "Toàn Văn phòng" (kl.loc.toanBo) mở cả việc chỉ xem. Ngăn chi tiết tìm dòng trong kl.rows nên mở được mọi việc đọc được (ngoài phạm vi: chỉ xem).
 const kl = { rows: [], luc: null, loc: {}, phanCong: [], sx: 'moi', trang: 1, inDayDu: false };
-const COT_NV = [['STT', 'bnv-c-stt'], ['Thời gian nhập', 'bnv-c-tg'], ['Nhiệm vụ'], ['Văn bản giao'], ['Chủ trì'], ['Hạn xử lý'], ['Trạng thái']];
-const COT_TD = [['STT', 'bnv-c-stt'], ['Nhiệm vụ'], ['Chủ trì'], ['Văn bản giao'], ['Hạn xử lý'], ['Trạng thái'], ['Tình hình']];
+const COT_NV = [['STT', 'bnv-c-stt'], ['Thời gian nhập', 'bnv-c-tg'], ['Nhiệm vụ'], ['Văn bản giao'], ['Chủ trì theo dõi'], ['Hạn xử lý'], ['Trạng thái']];
+const COT_TD = [['STT', 'bnv-c-stt'], ['Nhiệm vụ'], ['Chủ trì theo dõi'], ['Văn bản giao'], ['Hạn xử lý'], ['Trạng thái'], ['Tình hình']];
 const SAP_XEP_HAM = { moi: sapXepMoiNhap, han: sapXepHan, 'canh-bao': sapXep };
 let sauKhiNap = null;
 export const setKlSauKhiNap = (fn) => { sauKhiNap = fn; };
@@ -37,8 +37,8 @@ const coSo = () => (kl.loc.toanBo ? kl.rows : trongPhamVi(kl.rows));
 const NHAN_CHIP = {
   nguoiTheoDoi: (v) => `Người theo dõi: ${kl.rows.find((r) => r.nguoi_theo_doi === v)?.nguoi_theo_doi_ten || v}`,
   canBo: (v) => `Cán bộ: ${state.accounts.find((a) => a.id === v)?.full_name || v}`,
-  cuaToi: () => 'Việc của tôi (chịu trách nhiệm hoặc theo dõi)',
-  theoDoiCuaToi: () => 'Việc tôi theo dõi (không phải Owner)',
+  cuaToi: () => 'Việc của tôi (chủ trì theo dõi hoặc người theo dõi)',
+  theoDoiCuaToi: () => 'Việc tôi là người theo dõi (không phải chủ trì theo dõi)',
   chiMo: () => 'Chỉ việc đang mở',
   thieuMinhChung: () => 'Hoàn thành chưa có minh chứng',
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
@@ -100,24 +100,24 @@ const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected
 function dienBoLoc() {
   const rows = coSo();
   const kls = [...new Set(rows.map((r) => r.so_ket_luan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi', { numeric: true }));
-  $('klLocKetLuan').innerHTML = opt('', 'Mọi kết luận') + kls.map((k) => opt(k, k, kl.loc.ketLuan === k)).join('');
+  $('klLocKetLuan').innerHTML = opt('', 'Mọi số TB/KL') + kls.map((k) => opt(k, k, kl.loc.ketLuan === k)).join('');
   const hn = [...new Set(rows.map((r) => r.so_hoi_nghi).filter(Boolean))].sort((a, b) => b - a);
   $('klLocHoiNghi').innerHTML = opt('', 'Mọi hội nghị') + hn.map((s) => opt(s, `Hội nghị ${s}`, String(kl.loc.hoiNghi) === String(s))).join('');
   const coNganhTrong = rows.some((r) => !r.nganh_ma);
-  $('klLocNganh').innerHTML = opt('', 'Mọi ngành') + danhMucKl().nganh.map((n) => opt(n.ma, n.ten, kl.loc.nganh === n.ma)).join('')
-    + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa phân loại ngành', kl.loc.nganh === CHUA_CO_NGANH) : '');
+  $('klLocNganh').innerHTML = opt('', 'Mọi ngành/lĩnh vực') + danhMucKl().nganh.map((n) => opt(n.ma, n.ten, kl.loc.nganh === n.ma)).join('')
+    + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa phân loại ngành/lĩnh vực', kl.loc.nganh === CHUA_CO_NGANH) : '');
   dienLinhVuc();
-  $('klLocNguon').innerHTML = opt('', 'Mọi nguồn') + (danhMucKl().nguonNhiemVu || []).map((d) => opt(d.ma, d.ten, kl.loc.nguon === d.ma)).join('')
+  $('klLocNguon').innerHTML = opt('', 'Mọi nguồn nhiệm vụ') + (danhMucKl().nguonNhiemVu || []).map((d) => opt(d.ma, d.ten, kl.loc.nguon === d.ma)).join('')
     + (rows.some((r) => !r.nguon_nhiem_vu_ma) ? opt(CHUA_CO_NGUON, 'Chưa xác định nguồn', kl.loc.nguon === CHUA_CO_NGUON) : '');
   // Ô chọn Đơn vị chịu trách nhiệm (có đếm), nhiều việc trước; A2/A3 thường chỉ một đơn vị → ẩn ô.
   const dv = new Map(); rows.forEach((r) => { if (!r.owner_don_vi_ma) return; const c = dv.get(r.owner_don_vi_ma) || { ten: boSoThuTu(r.owner_don_vi_ten), n: 0 }; c.n++; dv.set(r.owner_don_vi_ma, c); });
   const ds = [...dv].sort((a, b) => b[1].n - a[1].n || a[1].ten.localeCompare(b[1].ten, 'vi'));
-  $('klLocDonVi').innerHTML = opt('', `Đơn vị (${dv.size})`) + ds.map(([ma, c]) => opt(ma, `${c.ten} (${c.n})`, kl.loc.donVi === ma)).join('');
+  $('klLocDonVi').innerHTML = opt('', `Đơn vị chủ trì theo dõi (${dv.size})`) + ds.map(([ma, c]) => opt(ma, `${c.ten} (${c.n})`, kl.loc.donVi === ma)).join('');
   show('klLocDonVi', dv.size > 1 || Boolean(kl.loc.donVi));
   // v3.23: ba ô lọc theo cán bộ (có đếm, trên dòng của phạm vi đang xem); ô chỉ một lựa chọn và chưa chọn thì ẩn.
   const tc = tuyChonCanBo(rows, { ten: (id) => state.accounts.find((a) => a.id === id)?.full_name, phanCong: kl.phanCong,
     lanhDaoVP: state.accounts.filter((a) => a.role_group === 'A1' && !a.is_chief && !a.is_system) });
-  [['klLocChuTri', 'chuTri', 'Cán bộ chủ trì'], ['klLocTheoDoi', 'theoDoi', 'Người theo dõi'], ['klLocLdvp', 'ldvp', 'Lãnh đạo VP phụ trách']].forEach(([id, k, nhan]) => {
+  [['klLocChuTri', 'chuTri', 'Chủ trì theo dõi'], ['klLocTheoDoi', 'theoDoi', 'Người theo dõi'], ['klLocLdvp', 'ldvp', 'Lãnh đạo VP phụ trách']].forEach(([id, k, nhan]) => {
     $(id).innerHTML = opt('', `${nhan} (${tc[k].length})`) + tc[k].map((o) => opt(o.ma, `${o.ten} (${o.n})`, kl.loc[k] === o.ma)).join('');
     show(id, tc[k].length > 1 || Boolean(kl.loc[k]));
   });

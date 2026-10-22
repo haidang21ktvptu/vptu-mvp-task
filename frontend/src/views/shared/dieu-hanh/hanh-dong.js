@@ -84,11 +84,11 @@ async function mcKhongHopLeThe(ds, form) {
 // Giao lại tại chỗ (GIAO_LAI, 0045): đổi CHỦ TRÌ + người theo dõi (tuỳ chọn, gợi ý theo chủ trì mới) + một dòng lý do; cờ bị từ chối tự xoá (0034).
 async function giaoLaiThe(ds, form) {
   const f = new FormData(form); const moi = f.get('chu_tri_moi'); const theoDoi = f.get('nguoi_theo_doi_moi') || ''; const nd = noiDung(form);
-  if (!moi) { notifyError('Chọn chủ trì mới.'); return; }
+  if (!moi) { notifyError('Chọn chủ trì theo dõi mới.'); return; }
   if (!nd) { notifyError('Cần một dòng lý do giao lại.'); return; }
   try {
     await chiDaoGui({ nhiem_vu_id: ds.id, loai: 'GIAO_LAI', noi_dung: nd, chu_tri_moi: moi, nguoi_theo_doi_moi: theoDoi });
-    await thanhCong(form, `Đã giao lại ${ds.ma} cho ${findAccount(moi)?.full_name || 'chủ trì mới'} chủ trì. Người cũ và người mới nhận thông báo; chủ trì mới xác nhận nhận việc lại.`, ds.id);
+    await thanhCong(form, `Đã giao lại ${ds.ma}: chủ trì theo dõi mới là ${findAccount(moi)?.full_name || 'cán bộ được chọn'}. Người cũ và người mới nhận thông báo; chủ trì theo dõi mới xác nhận nhận việc lại.`, ds.id);
   } catch (e) { notifyError(e.message); }
 }
 // Chọn chủ trì mới trong ô Giao lại (mọi màn hình) → ô người theo dõi gợi ý theo cấp quản lý của chủ trì mới; người dùng sửa được.

@@ -47,8 +47,8 @@ export const daGuiVuongMacHtml = (r) => (r?.vuong_mac && r.vuong_mac_gui_cho
 // Ô lưới (dt/dd) của ngăn: Nguồn, Phối hợp (khi có), Kết quả (việc đã hoàn thành). o(nhãn, giá trị, cột) — cột: ô tầng giao có bút / khoá (0070).
 export function oLuoiPr3Html(r, o) {
   const ketQua = r.tien_do_ma === 'HOAN_THANH' ? `${escapeHtml(tenTienDoHoanThanh(r) || 'không đánh giá tiến độ')} ${nhanChatLuongHtml(r.chat_luong) || '<span class="chu-phu">chưa đánh giá chất lượng</span>'}` : '';
-  return `${o('Nguồn', `<span data-truong="nguon">${escapeHtml(r.nguon_nhiem_vu_ten || 'chưa xác định')}</span>`, 'nguon_nhiem_vu_ma')}
-    ${r.don_vi_phoi_hop ? o('Phối hợp', `<span data-truong="phoi-hop">${escapeHtml(r.don_vi_phoi_hop)}</span>`, 'don_vi_phoi_hop') : ''}
+  return `${o('Nguồn nhiệm vụ', `<span data-truong="nguon">${escapeHtml(r.nguon_nhiem_vu_ten || 'chưa xác định')}</span>`, 'nguon_nhiem_vu_ma')}
+    ${r.don_vi_phoi_hop ? o('Đơn vị phối hợp', `<span data-truong="phoi-hop">${escapeHtml(r.don_vi_phoi_hop)}</span>`, 'don_vi_phoi_hop') : ''}
     ${ketQua ? o('Kết quả', ketQua) : ''}`;
 }
 

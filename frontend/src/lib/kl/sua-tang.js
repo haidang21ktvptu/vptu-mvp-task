@@ -9,10 +9,10 @@ import { laToanQuyen } from '../toan-quyen.js';
 import { chiXem } from './pham-vi.js';
 
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
-export const O_GIAO = [['noi_dung', 'Nội dung', 'vb'], ['san_pham_loai', 'Sản phẩm', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
-  ['cap_nhan_san_pham', 'Cấp nhận sản phẩm', 'cap'], ['do_khan', 'Độ khẩn', 'doKhan'], ['nganh_ma', 'Ngành', 'nganh'], ['linh_vuc_ma', 'Lĩnh vực', 'linhVuc'],
+export const O_GIAO = [['noi_dung', 'Nội dung kết luận / Văn bản trình', 'vb'], ['san_pham_loai', 'Sản phẩm đầu ra', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
+  ['cap_nhan_san_pham', 'Cấp nhận sản phẩm', 'cap'], ['do_khan', 'Độ khẩn', 'doKhan'], ['nganh_ma', 'Ngành/lĩnh vực', 'nganh'], ['linh_vuc_ma', 'Lĩnh vực', 'linhVuc'],
   ['linh_vuc_chi_tiet', 'Lĩnh vực chi tiết', 'chu'], ['nguon_nhiem_vu_ma', 'Nguồn nhiệm vụ', 'nguonNhiemVu'], ['don_vi_phoi_hop', 'Đơn vị phối hợp', 'chu'],
-  ['muc_quan_trong', 'Mức quan trọng', 'mucQT'], ['co_quan_trinh', 'Cơ quan trình', 'donViNgoai'], ['thuong_truc_chi_dao', 'Thường trực chỉ đạo', 'thuongTruc']];   // 0087
+  ['muc_quan_trong', 'Mức quan trọng', 'mucQT'], ['co_quan_trinh', 'Cơ quan/đơn vị trình', 'donViNgoai'], ['thuong_truc_chi_dao', 'Thường trực chỉ đạo', 'thuongTruc']];   // 0087
 export const tenOGiao = (cot) => O_GIAO.find(([c]) => c === cot)?.[1] || cot;
 
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN())

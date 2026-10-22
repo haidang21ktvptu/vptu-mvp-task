@@ -34,7 +34,7 @@ export function dongViecHtml(r, o) {
   const kieuKhoi = KIEU_KHOI[v.ma]; const mo = Boolean(kieuKhoi) && o.khoi?.id === r.id && o.khoi?.kieu === kieuKhoi;
   const lop = lopMep(r, me); const tt = trangThaiO(r, me); const han = hanO(r, o.homNay); const g = gioVN(r.created_at); const vb = vanBanNgan(r);
   const vai = vaiCua(r, me); const nguoiGiao = findAccount(r.tao_boi)?.full_name;
-  const dau = [`<span class="ma">${escapeHtml(r.ma)}</span>`, vai ? `<span class="bnv-nhan ${vai === 'Chủ trì' ? 'vai' : 'xam'}">${vai}</span>` : '',
+  const dau = [`<span class="ma">${escapeHtml(r.ma)}</span>`, vai ? `<span class="bnv-nhan ${vai === 'Chủ trì theo dõi' ? 'vai' : 'xam'}">${vai}</span>` : '',
     nhanDoKhanHtml(r.do_khan), r.uu_tien === 'THUONG_TRUC' ? '<span class="nhan-tt">Thường trực giao</span>' : '',
     laViecMoi(r, o.now) ? '<span class="bnv-nhan moi" title="Giao trong 24 giờ qua">Mới</span>' : '', ro ? NHAN_CHI_XEM : ''].join('');
   const trangThai = r.bi_tu_choi && r.tien_do_ma !== 'HOAN_THANH'
@@ -46,7 +46,7 @@ export function dongViecHtml(r, o) {
       <span class="bnv-c bnv-c-stt">${o.stt}</span>
       <div class="bnv-c bnv-c-nv"><span class="bnv-dong1">${dau}</span>
         <button type="button" class="bnv-nd${chuaNhan(r, me) ? ' dam' : ''}" data-action="nganMoViec" data-id="${r.id}" title="Bấm để xem chi tiết">${escapeHtml(r.noi_dung)}</button>
-        ${sp ? `<span class="bnv-phu">Sản phẩm: ${escapeHtml(sp)}</span>` : ''}<span class="bnv-phu bnv-chi-gon">Giao ${g.gio} ${g.ngay}</span></div>
+        ${sp ? `<span class="bnv-phu">Sản phẩm đầu ra: ${escapeHtml(sp)}</span>` : ''}<span class="bnv-phu bnv-chi-gon">Giao ${g.gio} ${g.ngay}</span></div>
       <div class="bnv-c" data-nhan="Văn bản giao"><span class="bnv-vb">${escapeHtml(vb.ten)}</span>${nguoiGiao ? `<span class="bnv-phu">${escapeHtml(nguoiGiao)} giao</span>` : ''}</div>
       <div class="bnv-c bnv-c-tg" data-nhan="Thời gian giao"><span>${g.ngay}</span><span class="bnv-phu">${g.gio}</span></div>
       <div class="bnv-c han" data-nhan="Hạn xử lý"><b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span></div>

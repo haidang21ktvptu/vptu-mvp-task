@@ -77,10 +77,10 @@ export const TEN_NGUON = { excel: 'Nhập từ Excel', app: 'Nhập trên hệ t
 export const TEN_COT = {
   han_xu_ly: 'Hạn xử lý', loai_thoi_han_ma: 'Loại thời hạn', tien_do_ma: 'Tiến độ', ngay_hoan_thanh: 'Ngày hoàn thành',
   minh_chung: 'Minh chứng', van_ban_trien_khai: 'Văn bản triển khai', ly_do_chua_co_han: 'Lý do chưa có hạn',
-  ghi_chu: 'Ghi chú', nganh_ma: 'Ngành', linh_vuc_ma: 'Lĩnh vực', owner_don_vi_ma: 'Đơn vị chịu trách nhiệm',
-  owner_tai_khoan: 'Cán bộ chịu trách nhiệm', nguoi_theo_doi: 'Người theo dõi', noi_dung: 'Nội dung',
+  ghi_chu: 'Ghi chú', nganh_ma: 'Ngành/lĩnh vực', linh_vuc_ma: 'Lĩnh vực', owner_don_vi_ma: 'Chủ trì theo dõi (phòng, đơn vị)',
+  owner_tai_khoan: 'Chủ trì theo dõi (cán bộ)', nguoi_theo_doi: 'Người theo dõi', noi_dung: 'Nội dung kết luận / Văn bản trình',
   linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn', van_ban_id: 'Văn bản giao việc',
-  san_pham_loai: 'Loại sản phẩm', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
+  san_pham_loai: 'Sản phẩm đầu ra', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',
   ngay_nhan_van_ban: 'Ngày giao nhiệm vụ', ngay_nhan_uoc_tinh: 'Ngày giao ước tính', nhiem_vu_cha: 'Nhiệm vụ cha', theo_1400: 'Theo quy tắc 1400',
   xac_nhan_nhan_viec: 'Xác nhận đã nhận việc', chi_dao: 'Chỉ đạo', '*': 'Tạo dòng', tu_choi: 'Từ chối nhận việc', bi_tu_choi: 'Bị từ chối, chờ giao lại',
   minh_chung_nop: 'Nộp minh chứng', minh_chung_xac_nhan: 'Xác nhận / trả lại minh chứng', dong_nhiem_vu: 'Hoàn thành nhiệm vụ',
@@ -89,7 +89,7 @@ export const TEN_COT = {
   chat_luong: 'Chất lượng hoàn thành', nguon_nhiem_vu_ma: 'Nguồn nhiệm vụ', vuong_mac: 'Vướng mắc / đề nghị lãnh đạo quyết định',
   sua_thong_tin_giao: 'Sửa thông tin giao', de_nghi_sua: 'Đề nghị sửa', nhap_excel: 'Nhập Excel',
   don_vi_phoi_hop: 'Đơn vị phối hợp', van_ban_ra_soat: 'Rà soát văn bản (số nhiệm vụ dự kiến)',
-  muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
+  muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan/đơn vị trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
   tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển người theo dõi',   // 0090, 0092
   gan_muc_tieu: 'Mục tiêu then chốt',   // 0105
   ra_soat_phan_loai: 'Rà soát phân loại (ngành, lĩnh vực, mục tiêu then chốt)',   // 0116

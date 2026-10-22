@@ -46,7 +46,7 @@ async function chonTep(f) {
     const [{ docXlsx }] = await Promise.all([import('../../../lib/xlsx-doc.js'), loadDanhMucKl(), napChung()]);
     nx.sheets = await docXlsx(await f.arrayBuffer()); nx.tenTep = f.name;
     const t = timTieuDe(nx.sheets, nx.hoSoDs);
-    if (!t) throw new Error('Không nhận ra dòng tiêu đề nào (cần ít nhất 2 cột như "Nội dung", "Hạn hoàn thành"). Kiểm tra lại tệp hoặc dùng mẫu nhập chuẩn.');
+    if (!t) throw new Error('Không nhận ra dòng tiêu đề nào (cần ít nhất 2 cột như "Nội dung kết luận / Văn bản trình", "Hạn xử lý"). Kiểm tra lại tệp hoặc dùng mẫu nhập chuẩn.');
     const loDo = await loDoCuaTep(f.name, state.user?.id).catch(() => null);   // cùng tệp, lô lần trước nhập dở → nhập tiếp đúng lô đó, đúng chế độ của lô
     const doan = doanLoaiTuTieuDe(nx.sheets[t.sheet], t.dongTieuDe);
     Object.assign(nx, { sheet: t.sheet, dongTieuDe: t.dongTieuDe, anhXa: t.anhXa, hoSoTen: t.hoSo?.ten || '', mau: t.hoSo?.mau || 'TU_GHEP', hangLoat: {}, loc: '', soHien: 100,

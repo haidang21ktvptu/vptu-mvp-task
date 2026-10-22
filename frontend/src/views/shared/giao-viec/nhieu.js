@@ -76,8 +76,8 @@ export function thieuNhieu() {
     const i = the.dataset.dong; const v = (c) => o(the, c).value;
     const owner = v('owner'); const han = v('han'); const kyBH = v('loai') === 'KY_BAN_HANH'; const nganh = v('nganh'); const lv = v('linh_vuc');
     const pv = owner ? thongBaoPhamVi(phongCuaGiaTri(owner), nganh, lv, dm.linhVuc) : { thieu: null };
-    return [[!v('noi_dung').trim(), 'nội dung'], [!owner, 'người chịu trách nhiệm'], [!a0 && !v('theo_doi'), 'người theo dõi'], [!v('san_pham'), 'sản phẩm'],
-      [!kyBH && !han, 'hạn hoàn thành'], [Boolean(han && bh) && han < bh, 'hạn sau ngày ban hành'], [cn && !nganh, mucThieuNganh()], [cn && !lv, 'lĩnh vực'],
+    return [[!v('noi_dung').trim(), 'nội dung'], [!owner, 'chủ trì theo dõi'], [!a0 && !v('theo_doi'), 'người theo dõi'], [!v('san_pham'), 'sản phẩm đầu ra'],
+      [!kyBH && !han, 'hạn xử lý'], [Boolean(han && bh) && han < bh, 'hạn sau ngày ban hành'], [cn && !nganh, mucThieuNganh()], [cn && !lv, 'lĩnh vực'],
       [thieuMucTieu(khoaThe(the)), MUC_THIEU_MT],
       [Boolean(pv.thieu), pv.thieu], [!a0 && !theoDoiHopLe(v('theo_doi'), tm, nganh, lv), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']]
       .filter(([t]) => t).map(([, n]) => `nhiệm vụ ${i}: ${n}`);

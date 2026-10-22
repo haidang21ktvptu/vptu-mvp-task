@@ -39,10 +39,10 @@ export const klTemplate = `
       ${THU_TU_NHOM.map(oSo).join('')}
     </div>
     <label class="kl-tim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="search" id="klTimKiem" placeholder="Tìm mã, nội dung, số kết luận, người" aria-label="Tìm nhiệm vụ"></label>
-    <select id="klLocDonVi" aria-label="Đơn vị chịu trách nhiệm"><option value="">Đơn vị</option></select>
-    <select id="klLocKetLuan" aria-label="Kết luận / văn bản"><option value="">Mọi kết luận</option></select>
-    <select id="klLocChuTri" aria-label="Lọc theo cán bộ chủ trì"><option value="">Cán bộ chủ trì</option></select>
+      <input type="search" id="klTimKiem" placeholder="Tìm mã nhiệm vụ, nội dung, số TB/KL, người" aria-label="Tìm nhiệm vụ"></label>
+    <select id="klLocDonVi" aria-label="Lọc theo đơn vị chủ trì theo dõi"><option value="">Đơn vị chủ trì theo dõi</option></select>
+    <select id="klLocKetLuan" aria-label="Lọc theo số TB/KL"><option value="">Mọi số TB/KL</option></select>
+    <select id="klLocChuTri" aria-label="Lọc theo chủ trì theo dõi"><option value="">Chủ trì theo dõi</option></select>
     <select id="klLocTheoDoi" aria-label="Lọc theo người theo dõi"><option value="">Người theo dõi</option></select>
     <select id="klLocLdvp" aria-label="Lọc theo lãnh đạo Văn phòng phụ trách"><option value="">Lãnh đạo VP phụ trách</option></select>
     <button type="button" id="klXoaLoc" class="nut nho hidden" data-action="klXoaLoc" title="Bỏ mọi bộ lọc đã chọn ở hàng này (giữ phạm vi xem)">Xoá bộ lọc</button>
@@ -56,9 +56,9 @@ export const klTemplate = `
       <select id="klLocDoKhan" aria-label="Lọc theo độ khẩn"><option value="">Mọi độ khẩn</option></select>
       <select id="klLocMucTieu" aria-label="Lọc theo mục tiêu then chốt"><option value="">Mọi mục tiêu then chốt</option></select>
       <select id="klLocHoiNghi" aria-label="Lọc theo hội nghị"><option value="">Mọi hội nghị</option></select>
-      <select id="klLocNganh" aria-label="Lọc theo ngành"><option value="">Mọi ngành</option></select>
+      <select id="klLocNganh" aria-label="Lọc theo ngành/lĩnh vực"><option value="">Mọi ngành/lĩnh vực</option></select>
       <select id="klLocLinhVuc" aria-label="Lọc theo lĩnh vực"><option value="">Mọi lĩnh vực</option></select>
-      <select id="klLocNguon" aria-label="Lọc theo nguồn nhiệm vụ"><option value="">Mọi nguồn</option></select>
+      <select id="klLocNguon" aria-label="Lọc theo nguồn nhiệm vụ"><option value="">Mọi nguồn nhiệm vụ</option></select>
     </div></details>
   </div>
   <div id="klChipLoc" class="chip-loc hidden" role="status"></div>

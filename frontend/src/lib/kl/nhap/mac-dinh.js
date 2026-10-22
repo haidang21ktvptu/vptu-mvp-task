@@ -1,7 +1,7 @@
 // Quy tắc điền mặc định cho ô hệ thống cần mà bảng Phụ lục không có (v3.27 — chủ dự án 20/10/2026: "khi dữ liệu được điền đầy đủ từ cột B tới cột M
 // thì import được ngay"). Dùng chung: nhập Excel (danh-gia.js), danh sách "Chờ hoàn thiện" (thiếu còn lại) và biểu mẫu Hoàn thiện (điền sẵn). Quy tắc
 // cố định theo từ khoá — không gọi trợ lý AI; bản xem trước / dải nhắc ghi rõ ô nào điền theo quy tắc để người nhập sửa. Thuần (không DOM, không mạng).
-import { chuanChu, nhanTruong } from './truong.js';
+import { chuanChu, nhanTruong, chuThuong } from './truong.js';
 
 // Sản phẩm đầu ra: văn bản kết luận đồng ý "ban hành / xây dựng <loại văn bản>" → sản phẩm cùng loại; "Ký ban hành" (văn bản trình ký) → Dự thảo văn
 // bản; còn lại → Báo cáo (báo cáo kết quả thực hiện kết luận). Chỉ trả mã có trong danh mục.
@@ -89,9 +89,9 @@ export function dienSanCho({ thieu = [], du = {}, goc = {} }, dm = {}, homNay = 
 }
 // Chữ "thiếu" / "điền sẵn" dùng chung cho danh sách "Chờ hoàn thiện" và dải nhắc của biểu mẫu Hoàn thiện. x: dienSanCho. Đơn vị chủ trì đọc là "chủ trì
 // theo dõi" (một ô của biểu mẫu); lĩnh vực chỉ đoán theo ngành (chưa chắc) nằm ở "thiếu" kèm lời nhắc, không nhắc lại ở "điền sẵn".
-const TEN_DIEN = { loai_thoi_han_ma: 'loại thời hạn', san_pham_loai: 'sản phẩm đầu ra', linh_vuc_ma: 'lĩnh vực', han_xu_ly: 'hạn xử lý', co_quan_trinh: 'cơ quan trình' };
+const TEN_DIEN = { loai_thoi_han_ma: 'loại thời hạn', san_pham_loai: 'sản phẩm đầu ra', linh_vuc_ma: 'lĩnh vực', han_xu_ly: 'hạn xử lý', co_quan_trinh: 'cơ quan/đơn vị trình' };
 export function chuDienSan(x) {
   const goiYLv = Boolean(x.dien?.linh_vuc_ma) && !x.lvChac;
-  return { thieu: (x.thieu || []).map((k) => (k === 'don_vi' ? 'chủ trì theo dõi' : k === 'linh_vuc' && goiYLv ? 'lĩnh vực (đã gợi ý theo ngành — kiểm tra lại)' : nhanTruong(k).toLowerCase())),
+  return { thieu: (x.thieu || []).map((k) => (k === 'don_vi' ? 'chủ trì theo dõi' : k === 'linh_vuc' && goiYLv ? 'lĩnh vực (đã gợi ý theo ngành — kiểm tra lại)' : chuThuong(nhanTruong(k)))),
     dien: Object.keys(x.dien || {}).filter((k) => !(goiYLv && k === 'linh_vuc_ma')).map((k) => TEN_DIEN[k]).filter(Boolean) };
 }

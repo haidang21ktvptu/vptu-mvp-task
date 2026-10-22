@@ -52,7 +52,7 @@ export const klCapNhatTemplate = `
       <div id="klCnMcTruong" class="hidden"><div class="cot-3">
         <div><label for="klCnMcSoHieu" class="nhan">Số hiệu văn bản</label><input type="text" id="klCnMcSoHieu" class="o-nhap" placeholder="Ví dụ: 15/BC-VPTU" autocomplete="off"></div>
         <div><label for="klCnMcNgay" class="nhan">Ngày văn bản</label><input type="date" id="klCnMcNgay" class="o-nhap"></div>
-        <div><label for="klCnMcCap" class="nhan">Cấp nhận <span class="chu-phu">mặc định theo việc</span></label><select id="klCnMcCap" class="o-nhap"></select></div>
+        <div><label for="klCnMcCap" class="nhan">Cấp nhận sản phẩm <span class="chu-phu">mặc định theo việc</span></label><select id="klCnMcCap" class="o-nhap"></select></div>
       </div>
       <div class="cot-2 mt-2">
         <div><label for="klCnMcTrichYeu" class="nhan">Trích yếu <span class="chu-phu">không bắt buộc</span></label><input type="text" id="klCnMcTrichYeu" class="o-nhap" maxlength="300" autocomplete="off"></div>

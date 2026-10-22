@@ -99,7 +99,7 @@ function capNhatNganh() {   // bắt buộc theo vai, loại văn bản (phan-lo
 // Ngành / lĩnh vực: chỉ các mục trong phạm vi giao ở phòng của Owner (C3); giữ lựa chọn cũ nếu vẫn hợp lệ.
 function dienNganh() {
   const cho = nganhDuocChon(phongOwner()); const cu = $('klThNganh').value;
-  $('klThNganh').innerHTML = opt('', 'Chọn ngành') + danhMucKl().nganh.filter((n) => (!cho || cho.has(n.ma)) && nganhChoPhep(n)).map((n) => opt(n.ma, n.ten, n.ma === cu)).join('');
+  $('klThNganh').innerHTML = opt('', 'Chọn ngành/lĩnh vực') + danhMucKl().nganh.filter((n) => (!cho || cho.has(n.ma)) && nganhChoPhep(n)).map((n) => opt(n.ma, n.ten, n.ma === cu)).join('');
   dienLinhVuc();
 }
 function dienLinhVuc() {
@@ -153,8 +153,8 @@ export function trangThaiPhan() {
 function conThieu() {
   return [[thieuSoHN(), 'số hội nghị'], [bhTuongLai(), 'ngày ban hành không ở tương lai'], [!vanBanOk() && !thieuSoHN() && !bhTuongLai(), 'văn bản'], [thieuNguon(), 'nguồn nhiệm vụ'],
     [canNgayNhan() && !$('klThNgayNhan').value, 'ngày giao nhiệm vụ'],
-    [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'người chịu trách nhiệm'], [!anTheoDoi() && !$('klThNguoiTheoDoi').value, 'người theo dõi'],
-    [!$('klThSanPham').value, 'sản phẩm'], [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn hoàn thành'], [hanTruocBH(), 'hạn sau ngày ban hành'],
+    [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'chủ trì theo dõi'], [!anTheoDoi() && !$('klThNguoiTheoDoi').value, 'người theo dõi'],
+    [!$('klThSanPham').value, 'sản phẩm đầu ra'], [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn xử lý'], [hanTruocBH(), 'hạn sau ngày ban hành'],
     [canNganhBatBuoc() && !$('klThNganh').value, mucThieuNganh()], [canNganhBatBuoc() && !$('klThLinhVuc').value, 'lĩnh vực'], [thieuMucTieu(KHOA_1), MUC_THIEU_MT],
     [Boolean(phamViThieu().thieu), phamViThieu().thieu], [theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
     .concat(thieuNhieu());
@@ -177,7 +177,7 @@ function capNhatTomTat() {
   setText('gvPhamViGhiChu', phamViThieu().chuThich || 'theo ngành đã chọn');
   // Xem trước thẻ việc (cột phụ) đọc lại các ô của thẻ 1
   setText('gvXtDoKhan', dk); $('gvXtDoKhan').className = `tag ${['THUONG_KHAN', 'HOA_TOC'].includes(maDk) ? 'do' : maDk === 'KHAN' ? 'vang' : ''}`;
-  setText('gvXtNoiDung', nd || 'Nội dung nhiệm vụ (chưa nhập)');
+  setText('gvXtNoiDung', nd || 'Nội dung kết luận / Văn bản trình (chưa nhập)');
   setText('gvXtPhu', chuXemTruoc(o));
 }
 
@@ -199,7 +199,7 @@ export async function openGiaoViec(opts = {}) {
   if (lan !== luotMo) return;   // đã mở lại biểu mẫu: lượt mới khởi tạo
   const dm = danhMucKl(); const a0 = laA0(); const homNay = getHomNay();
   AN_A0.forEach((id) => show(id, !a0)); anHienTheoDoi();
-  setText('gvBuoc1', tuNhanViec() ? 'Người chịu trách nhiệm được báo ngay và việc tính là đã nhận, không cần xác nhận; cần đổi người thì người giao giao lại.' : 'Chuyên viên nhận việc tự xác nhận đã nhận trong 1 ngày làm việc (lãnh đạo, người tự giao cho chính mình được tính đã nhận ngay); từ chối cần lý do, cấp trên duyệt.');
+  setText('gvBuoc1', tuNhanViec() ? 'Chủ trì theo dõi được báo ngay và việc tính là đã nhận, không cần xác nhận; cần đổi người thì người giao giao lại.' : 'Chuyên viên nhận việc tự xác nhận đã nhận trong 1 ngày làm việc (lãnh đạo, người tự giao cho chính mình được tính đã nhận ngay); từ chối cần lý do, cấp trên duyệt.');
   show('klThThayMatWrap', canThayMat());
   // Kiểm tay 18/10: mở biểu mẫu luôn ở "Văn bản mới" (trước đây chọn sẵn văn bản mới nhất của người khác — nhập tay dễ giao nhầm văn bản).
   const vbGiu = cha?.van_ban_id || opts.vanBan; if (vbGiu && timTrongDs(vbGiu)) $('klThVanBan').value = vbGiu; // giao tiếp xuống / giao thêm từ văn bản: đúng văn bản đó
@@ -212,7 +212,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThNguoiTheoDoi').innerHTML = nguoiTheoDoiOptionsHtml(state.accounts, state.user); $('klThNguoiTheoDoi').value = state.user?.id || '';
   $('klThThayMat').innerHTML = opt('', 'Không — giao thẳng cho chuyên viên') + thayMatOptionsHtml(state.accounts); tim.thayMat?.apLai();
   datLaiNguon(); dienThongTinNguon();
-  $('klThSanPham').innerHTML = opt('', 'Chọn loại sản phẩm') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
+  $('klThSanPham').innerHTML = opt('', 'Chọn sản phẩm đầu ra') + dm.sanPham.map((s) => opt(s.ma, s.ten)).join('');
   $('klThCapNhan').innerHTML = dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThCapQD').innerHTML = opt('', 'Chưa xác định') + dm.cap.map((c) => opt(c.ma, c.ten)).join('');
   $('klThNganh').innerHTML = '';

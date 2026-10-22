@@ -33,21 +33,21 @@ export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo
   const nhanh = NHANH.filter(([k]) => k !== 'dp' || coMucTieu()).map(([k, ten]) =>   // v3.27: "Nhiệm vụ đột phá" là nhóm mục tiêu — tạm ẩn
     `<button type="button" class="nhanh-tq" data-action="tqNhanh" data-n="${k}" aria-pressed="${String(dsNhanh(loc).includes(k))}">${ten}</button>`).join('');
   const nguoi = [ldvp && tc.ldvp.length ? { nhom: 'Lãnh đạo Văn phòng phụ trách', ds: [...tc.ldvp.map((o) => ({ ...o, ma: `LD:${o.ma}` })), { ma: `LD:${CHUA_LDVP}`, ten: 'Chưa có lãnh đạo phụ trách', n: null }] } : null,
-    phong && tc.phong.length ? { nhom: 'Phòng, đơn vị chủ trì', ds: tc.phong.map((o) => ({ ...o, ma: `P:${o.ma}` })) } : null,
-    tc.canBo.length ? { nhom: 'Cán bộ chủ trì', ds: tc.canBo.map((o) => ({ ...o, ma: `CB:${o.ma}` })) } : null].filter(Boolean);
+    phong && tc.phong.length ? { nhom: 'Đơn vị chủ trì theo dõi', ds: tc.phong.map((o) => ({ ...o, ma: `P:${o.ma}` })) } : null,
+    tc.canBo.length ? { nhom: 'Chủ trì theo dõi', ds: tc.canBo.map((o) => ({ ...o, ma: `CB:${o.ma}` })) } : null].filter(Boolean);
   const luoi = `<div class="tq-luoi-loc" id="tqLocLuoi"${moLuoi ? '' : ' hidden'}>
       ${oChon('tqLocMucTieu', 'mucTieu', 'Mục tiêu then chốt', coMucTieu() ? tc.mucTieu : [], loc.mucTieu, 'Mọi mục tiêu')}
       ${oChon('tqLocCachGan', 'cachGan', 'Cách gắn mục tiêu', coMucTieu() ? tc.cachGan || [] : [], loc.cachGan, 'Mọi cách gắn')}
       ${oChon('tqLocKhoi', 'khoi', 'Khối lĩnh vực', tc.khoi, loc.khoi, 'Mọi khối')}
-      ${oChon('tqLocNganh', 'nganh', 'Ngành, lĩnh vực', tc.nganh, loc.nganh, 'Mọi ngành, lĩnh vực')}
+      ${oChon('tqLocNganh', 'nganh', 'Ngành/lĩnh vực', tc.nganh, loc.nganh, 'Mọi ngành/lĩnh vực')}
       ${oChon('tqLocLoai', 'loai', 'Văn bản chỉ đạo', tc.loai, loc.loai, 'Mọi loại văn bản')}
-      ${oChon('tqLocCoQuan', 'coQuan', 'Đơn vị chịu trách nhiệm', tc.coQuan, loc.coQuan, 'Mọi đơn vị')}
+      ${oChon('tqLocCoQuan', 'coQuan', 'Cơ quan/đơn vị trình', tc.coQuan, loc.coQuan, 'Mọi cơ quan/đơn vị trình')}
       ${oChon('tqLocThuongTruc', 'thuongTruc', 'Đồng chí Thường trực chỉ đạo', tc.thuongTruc, loc.thuongTruc, 'Mọi đồng chí')}
-      ${oChon('tqLocNguoi', 'nguoi', ldvp ? 'Lãnh đạo VP phụ trách, phòng, cán bộ' : phong ? 'Phòng, cán bộ chủ trì' : 'Cán bộ chủ trì', nguoi, loc.nguoi, 'Mọi lãnh đạo, phòng, cán bộ')}
+      ${oChon('tqLocNguoi', 'nguoi', ldvp ? 'Lãnh đạo VP phụ trách, phòng, cán bộ' : phong ? 'Chủ trì theo dõi (phòng, cán bộ)' : 'Chủ trì theo dõi', nguoi, loc.nguoi, 'Mọi lãnh đạo, phòng, cán bộ')}
       ${oChon('tqLocTrangThai', 'trangThai', 'Trạng thái', tc.trangThai, loc.trangThai, 'Mọi trạng thái')}
       ${oChon('tqLocMucQT', 'mucQT', 'Mức quan trọng', tc.mucQT, loc.mucQT, 'Mọi mức')}
       ${oChon('tqLocDoKhan', 'doKhan', 'Độ khẩn', tc.doKhan, loc.doKhan, 'Mọi độ khẩn')}
-      ${oChon('tqLocNguon', 'nguon', 'Nguồn nhiệm vụ', tc.nguon, loc.nguon, 'Mọi nguồn')}
+      ${oChon('tqLocNguon', 'nguon', 'Nguồn nhiệm vụ', tc.nguon, loc.nguon, 'Mọi nguồn nhiệm vụ')}
       <div class="o-loc"><span>Kỳ tùy chọn (thay kỳ ở đầu trang)</span><div class="hai-o">
         <input type="date" id="tqLocTu" data-loc="tu" min="2000-01-01" max="2100-12-31" value="${escapeHtml(loc.tu || '')}" aria-label="Từ ngày"><input type="date" id="tqLocDen" data-loc="den" min="2000-01-01" max="2100-12-31" value="${escapeHtml(loc.den || '')}" aria-label="Đến ngày"></div></div></div>`;
   const chips = chip.map((c) => `<span class="chip-tq">${escapeHtml(c.ten)}<button type="button" data-action="tqChipBo" data-k="${c.k}" data-v="${escapeHtml(c.v || '')}" aria-label="Bỏ điều kiện: ${escapeHtml(c.ten)}">${ICON_X}</button></span>`).join('');

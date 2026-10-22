@@ -21,7 +21,7 @@ function formMinhChung(r, homNay) {
   return `<form class="mc-inline" id="oMcNop-${r.id}" data-submit="nopMinhChungThe" data-id="${r.id}">
       ${oMc(r.id, 'so-hieu', 'Số hiệu văn bản', '<input name="so_hieu" placeholder="Số hiệu văn bản" autocomplete="off"')}
       ${oMc(r.id, 'ngay-van-ban', 'Ngày văn bản', `<input type="date" name="ngay_van_ban" max="${homNay}"`)}
-      ${oMc(r.id, 'cap-nhan', 'Cấp nhận', '<select name="cap_nhan"', `<option value="">Cấp nhận</option>${cap}</select>`)}
+      ${oMc(r.id, 'cap-nhan', 'Cấp nhận sản phẩm', '<select name="cap_nhan"', `<option value="">Cấp nhận sản phẩm</option>${cap}</select>`)}
       ${oMc(r.id, 'trich-yeu', 'Trích yếu văn bản', '<input name="trich_yeu" placeholder="Trích yếu văn bản" autocomplete="off" maxlength="300" class="mc-rong"')}
       ${oMc(r.id, 'mo-ta', 'Mô tả kết quả', '<textarea name="mo_ta_ket_qua" rows="2" placeholder="Mô tả kết quả (khoảng 100 chữ: đã làm gì, kết quả, gửi ai)" class="mc-rong"', '</textarea>')}
       <span class="mc-rong o-tep-hang mc-tep-the"><input type="file" name="tep" id="mc-${r.id}-tep" class="an-tep" accept="${NHAN_TEP}"><label class="nut nho" for="mc-${r.id}-tep">Đính kèm tệp…</label><span class="ten-tep" id="mc-${r.id}-tep-ten">Chưa chọn tệp (PDF, Word, Excel, ảnh; tối đa 10 MB)</span></span>

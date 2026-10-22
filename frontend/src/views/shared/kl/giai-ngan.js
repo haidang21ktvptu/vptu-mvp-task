@@ -131,7 +131,7 @@ async function gnMoTheoDoi({ id }) {
   $('gnTdNam').value = nam; $('gnTdTen').value = g?.ten || ''; $('gnTdMt').value = g?.muc_tieu_pt ?? 100; $('gnTdMoc').value = g?.muc_tieu_ngay || mocMacDinh(nam);
   $('gnTdBo').classList.toggle('hidden', !g); $('gnTdXacNhan').hidden = true;
   $('gnTdLuu').disabled = false; $('gnTdBoThat').disabled = false;
-  $('gnTdGoiY').textContent = `${doiMt ? 'Mặc định 100% kế hoạch vốn trước 31/12.' : 'Mục tiêu do lãnh đạo trong phạm vi hoặc người giao việc (không phải người chủ trì) đặt; mặc định 100% trước 31/12.'} Số của nhiệm vụ lấy từ kỳ số liệu mới nhất có tên này, không cộng dồn giữa các nhiệm vụ; mỗi năm chỉ một nhiệm vụ "Số liệu toàn tỉnh".`;
+  $('gnTdGoiY').textContent = `${doiMt ? 'Mặc định 100% kế hoạch vốn trước 31/12.' : 'Mục tiêu do lãnh đạo trong phạm vi hoặc người giao việc (không phải chủ trì theo dõi) đặt; mặc định 100% trước 31/12.'} Số của nhiệm vụ lấy từ kỳ số liệu mới nhất có tên này, không cộng dồn giữa các nhiệm vụ; mỗi năm chỉ một nhiệm vụ "Số liệu toàn tỉnh".`;
   veTen(); $('gnTdModal').classList.remove('hidden'); $('gnTdLoai').focus();
   napTen(nam);
 }

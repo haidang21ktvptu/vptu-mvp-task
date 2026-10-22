@@ -21,7 +21,7 @@ export const klMinhChungTemplate = `
         <input type="date" id="klMcNgay" class="o-nhap">
       </div>
       <div>
-        <label for="klMcCap" class="nhan">Cấp nhận</label>
+        <label for="klMcCap" class="nhan">Cấp nhận sản phẩm</label>
         <select id="klMcCap" class="o-nhap"></select>
       </div>
     </div>

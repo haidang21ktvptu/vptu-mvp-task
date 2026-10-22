@@ -62,7 +62,7 @@ test.describe.serial('Nhập theo tầng — khoá / bút, Đề nghị sửa v�
     await expect(ngan.locator('.nut-tang.khoa').first()).toBeVisible();
     await expect(ngan.locator('.nut-tang:not(.khoa)')).toHaveCount(0);
     const khoi = ngan.locator(`#klDns-${nv.id}`);
-    await expect(khoi).toContainText('Sản phẩm: Báo cáo → Tờ trình', NAP);
+    await expect(khoi).toContainText('Sản phẩm đầu ra: Báo cáo → Tờ trình', NAP);
     await expect(khoi.getByRole('button', { name: 'Rút đề nghị' })).toBeVisible();
     await expect(khoi.getByRole('button', { name: 'Chấp nhận' })).toHaveCount(0);
     await page.context().close();
@@ -75,7 +75,7 @@ test.describe.serial('Nhập theo tầng — khoá / bút, Đề nghị sửa v�
     await muc.click();
     const dong = page.locator(`#cx-dnsua-${dnsId}`);
     await expect(dong).toBeVisible(NAP);
-    await expect(dong).toContainText('Sản phẩm: Báo cáo → Tờ trình');
+    await expect(dong).toContainText('Sản phẩm đầu ra: Báo cáo → Tờ trình');
     await expect(dong).toContainText(LY_DO);
     await dong.getByRole('button', { name: 'Chấp nhận' }).click();
     await expect(toast(page)).toContainText('Đã chấp nhận đề nghị sửa');

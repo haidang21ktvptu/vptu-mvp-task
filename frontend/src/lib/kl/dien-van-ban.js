@@ -50,7 +50,7 @@ export function keHoachThe(n, hienTai = {}, { banChup = false } = {}) {
     else goiY.noiDung = nd;
   }
   if (Number.isInteger(n?.trung_voi)) canhBao.push(`trùng với nhiệm vụ ${n.trung_voi + 1} của văn bản — đồng chí xem có cần giao riêng không`);
-  if (n?.tu_ra_soat) canhBao.push('đoạn do hệ thống rà thấy (trợ lý AI chưa tách) — đồng chí kiểm tra nội dung, chọn người chịu trách nhiệm, hạn, sản phẩm');
+  if (n?.tu_ra_soat) canhBao.push('đoạn do hệ thống rà thấy (trợ lý AI chưa tách) — đồng chí kiểm tra nội dung, chọn chủ trì theo dõi, hạn xử lý, sản phẩm đầu ra');
   const han = n?.han?.gia_tri || '';
   if (han && trong(hienTai.han)) { if (n.han.xac_minh) dien.han = han; else goiY.han = { gia_tri: han, trich: n.han.trich || '' }; }
   if (n?.loai_thoi_han?.gia_tri === 'KY_BAN_HANH' && (trong(hienTai.loai) || hienTai.loai === 'CO_HAN_CU_THE') && trong(hienTai.han) && !dien.han) { dien.loai = 'KY_BAN_HANH'; deXuat.push('loai'); }

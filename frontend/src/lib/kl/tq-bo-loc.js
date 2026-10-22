@@ -93,11 +93,11 @@ export function chipLoc(loc, tc, { mucTieuDm = [], nhomDm = null, phamViNhan = '
   dsNhanh(loc).forEach((k) => c.push({ k: 'nhanh', v: k, ten: NHANH.find(([x]) => x === k)[1] }));
   const them = (k, nhan, gt) => { if (loc[k]) c.push({ k, ten: `${nhan}: ${gt}` }); };
   them('mucTieu', 'Mục tiêu', nhanLocMucTieu(loc.mucTieu, mucTieuDm, nhomDm)); them('cachGan', 'Cách gắn', ten(tc.cachGan, loc.cachGan)); them('khoi', 'Khối', ten(tc.khoi, loc.khoi));
-  them('nganh', 'Ngành, lĩnh vực', ten(tc.nganh, loc.nganh)); them('loai', 'Văn bản', tenLoai(loc.loai));
-  them('coQuan', 'Đơn vị', ten(tc.coQuan, loc.coQuan)); them('thuongTruc', 'Thường trực chỉ đạo', ten(tc.thuongTruc, loc.thuongTruc));
+  them('nganh', 'Ngành/lĩnh vực', ten(tc.nganh, loc.nganh)); them('loai', 'Văn bản', tenLoai(loc.loai));
+  them('coQuan', 'Cơ quan/đơn vị trình', ten(tc.coQuan, loc.coQuan)); them('thuongTruc', 'Thường trực chỉ đạo', ten(tc.thuongTruc, loc.thuongTruc));
   if (loc.nguoi) c.push({ k: 'nguoi', ten: nguoi() });
   them('trangThai', 'Trạng thái', ten(tc.trangThai, loc.trangThai)); them('mucQT', 'Mức', ten(tc.mucQT, loc.mucQT));
-  them('doKhan', 'Độ khẩn', tenDoKhan(loc.doKhan)); them('nguon', 'Nguồn', ten(tc.nguon, loc.nguon));
+  them('doKhan', 'Độ khẩn', tenDoKhan(loc.doKhan)); them('nguon', 'Nguồn nhiệm vụ', ten(tc.nguon, loc.nguon));
   ['phong', 'canBo', 'ldvp'].forEach((k) => { if (loc[k]) c.push({ k, ten: ten(tc[k], loc[k]) }); });   // khoá cũ (chưa dùng ở thanh lọc mới)
   return c;
 }

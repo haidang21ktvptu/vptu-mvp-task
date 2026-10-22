@@ -110,7 +110,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
       expect(lv).not.toContain(KN.lv);
       await expect(page.locator('#gvPhamViGhiChu')).toContainText('do lãnh đạo khác kiêm nhiệm');
       await page.locator('#klThNganh').selectOption('');
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành, lĩnh vực' : 'ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
+      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành/lĩnh vực, lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
     }
     const v = await giaoThat(page, 'PCVP', 'CONG_VAN', { owner: 'dv:TONG_HOP' });
     expect([v.owner_don_vi_ma, v.linh_vuc_ma]).toEqual(['TONG_HOP', 'LV99_KHONG_THUOC']);   // v3.26: Công văn không thuộc ngành nào → "Không thuộc"
@@ -126,7 +126,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
       await page.locator('#klThNganh').selectOption(KN.nganh);
       expect(await giaTri(page, '#klThLinhVuc')).toEqual(expect.arrayContaining([KN.lv, KN.lvKhac]));
       await page.locator('#klThNganh').selectOption('');
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành, lĩnh vực' : 'ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
+      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành/lĩnh vực, lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc mọi loại
       await expect(page.locator('#klThLuu')).toBeDisabled();
     }
     const v = await giaoThat(page, 'A1', 'NQ_TW', { owner: 'dv:QUAN_TRI' });
@@ -143,7 +143,7 @@ test.describe.serial('Giao việc theo phạm vi kiêm nhiệm (C3) — vai × l
     for (const loai of LOAI) {
       await chonLoai(page, loai);
       await page.locator('#klThOwner').selectOption(`tk:${id.demo_cv1}`);
-      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành, lĩnh vực' : 'ngành (hoặc "Không thuộc"), lĩnh vực');   // v3.26
+      await expect(conThieu(page)).toContainText(BAT_BUOC.has(loai) ? 'ngành/lĩnh vực, lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26
     }
     const v = await giaoThat(page, 'A2', 'KHAC', { owner: `tk:${id.demo_cv1}` });
     expect(v.owner_don_vi_ma).toBe('TONG_HOP');

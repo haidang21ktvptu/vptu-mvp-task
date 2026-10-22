@@ -26,7 +26,7 @@ export const coToanVP = () => dh.tatCa.length > dh.rows.length;   // có việc 
 const toanVP = () => vct.pham === 'toan' && coToanVP();
 const cuaToi = () => dh.rows.filter((r) => laCuaToi(r, me()));
 const MAU = { sap: 'vang', qua: 'do', xong: 'luc' };
-const VAI = [['tat', 'Mọi vai trò'], ['chu', 'Tôi chủ trì'], ['theo', 'Tôi theo dõi']];
+const VAI = [['tat', 'Mọi vai trò'], ['chu', 'Chủ trì theo dõi'], ['theo', 'Người theo dõi']];
 const ten = (id) => findAccount(id)?.full_name || '';
 
 // Trước ô số: phạm vi → tìm → vai trò / cán bộ.
@@ -34,7 +34,7 @@ function daLoc() {
   let ds = toanVP() ? dh.tatCa : cuaToi();
   if (vct.tuKhoa) ds = locRows(ds, { tuKhoa: vct.tuKhoa });
   if (toanVP()) return locCanBo(ds, vct.canBo);
-  return vct.vai === 'tat' ? ds : ds.filter((r) => vaiCua(r, me()) === (vct.vai === 'chu' ? 'Chủ trì' : 'Theo dõi'));
+  return vct.vai === 'tat' ? ds : ds.filter((r) => vaiCua(r, me()) === (vct.vai === 'chu' ? 'Chủ trì theo dõi' : 'Người theo dõi'));
 }
 // Nhóm ưu tiên của từng việc của tôi (data-kieu): tu-choi | moi | chi-dao | minh-chung | dang-lam | theo-doi | xong; việc khác: xem.
 function kieuCua() {
@@ -52,7 +52,7 @@ function veLoc() {
   show('vctVai', !toanVP());
   // Ô chọn cán bộ chỉ dựng lại khi danh sách đổi (chọn bằng phím mũi tên không mất ô đang chọn); giá trị đặt sau.
   const tc = toanVP() ? tuyChonCanBo(dh.tatCa, { ten }) : null;
-  const html = tc ? [['chuTri', 'Cán bộ chủ trì'], ['theoDoi', 'Người theo dõi']].map(([k, nhan]) => `<select data-vct-loc="${k}" aria-label="Lọc theo ${nhan.toLowerCase()}"><option value="">${nhan} (${tc[k].length})</option>${tc[k].map((o) =>
+  const html = tc ? [['chuTri', 'Chủ trì theo dõi'], ['theoDoi', 'Người theo dõi']].map(([k, nhan]) => `<select data-vct-loc="${k}" aria-label="Lọc theo ${nhan.toLowerCase()}"><option value="">${nhan} (${tc[k].length})</option>${tc[k].map((o) =>
     `<option value="${escapeHtml(o.ma)}">${escapeHtml(o.ten)} (${o.n})</option>`).join('')}</select>`).join('') : '';
   if (html !== vct.canBoHtml) { $('vctCanBo').innerHTML = html; vct.canBoHtml = html; }
   $('vctCanBo').querySelectorAll('select[data-vct-loc]').forEach((o) => { o.value = vct.canBo[o.dataset.vctLoc] || ''; });

@@ -56,7 +56,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
   const me = state.user?.id; const ro = chiXem(r);   // 0103: việc chỉ xem — không ô / nút ghi
   const phu = [
     g.loai === 'GIA_HAN' && g.han_moi ? `Hạn mới: ${formatNgay(g.han_moi)}` : '',
-    g.loai === 'GIAO_LAI' && g.chu_tri_moi ? `Chủ trì mới: ${escapeHtml(tenNguoi(g.chu_tri_moi))}` : '',
+    g.loai === 'GIAO_LAI' && g.chu_tri_moi ? `Chủ trì theo dõi mới: ${escapeHtml(tenNguoi(g.chu_tri_moi))}` : '',
     g.loai === 'CHI_DAO_TT' ? `Người nhận: ${(g.nguoi_nhan || []).map((u) => escapeHtml(tenNguoi(u))).join(', ')}` : '',
     g.han_phan_hoi ? `Hạn phản hồi: ${formatNgay(g.han_phan_hoi)}` : '',
     g.loai !== 'CHI_DAO_TT' && g.tra_loi_cho ? 'Theo chỉ đạo Thường trực' : '',
@@ -106,8 +106,8 @@ function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
         </select>
         <input type="date" name="han_moi" class="o-nhap nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
         <input type="date" name="han_phan_hoi" class="o-nhap nho hidden" aria-label="Hạn phản hồi (mặc định 2 ngày làm việc)" title="Hạn phản hồi — để trống = 2 ngày làm việc">
-        <select name="chu_tri_moi" class="o-nhap nho hidden" aria-label="Chủ trì mới"><option value="">— Chọn chủ trì mới —</option>${chuTriMoiOptions(r)}</select>
-        <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi (gợi ý theo chủ trì mới, sửa được)"><option value="">— Người theo dõi: giữ như hiện tại —</option>${nguoiTheoDoiOptions(r)}</select>
+        <select name="chu_tri_moi" class="o-nhap nho hidden" aria-label="Chủ trì theo dõi mới"><option value="">— Chọn chủ trì theo dõi mới —</option>${chuTriMoiOptions(r)}</select>
+        <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi (gợi ý theo chủ trì theo dõi mới, sửa được)"><option value="">— Người theo dõi: giữ như hiện tại —</option>${nguoiTheoDoiOptions(r)}</select>
       </div>
       <div class="cd-form-hang">
         <input type="text" name="noi_dung" required class="o-nhap nho" placeholder="${traLoiCho ? 'Nội dung chỉ đạo điều hành theo chỉ đạo Thường trực' : a0 ? 'Nội dung ý kiến / chỉ đạo Thường trực' : 'Nội dung chỉ đạo (lý do nếu gia hạn/giao lại)'}" aria-label="Nội dung chỉ đạo">

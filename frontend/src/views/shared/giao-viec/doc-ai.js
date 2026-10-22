@@ -135,7 +135,7 @@ async function docTep(f) {
     document.querySelectorAll('#giaoViecForm [data-ai-ghi]').forEach((x) => x.remove());
     await apVanBan(cu); if (cu()) return;
     const n = r.ket_qua?.nhiem_vu?.length || 0; const sot = r.ket_qua?.tong_bo_sot || 0;
-    notifySuccess(`Đã đọc văn bản${da.vbCo ? ' (đã có trên hệ thống — đã chọn)' : da.giuVb ? ' (giữ văn bản đồng chí đã chọn)' : ''}: ${n} nhiệm vụ.${sot ? ` Có ${sot} đoạn có thể còn sót — đồng chí xem cuối danh sách.` : ''} Đồng chí sửa, chọn người chịu trách nhiệm, hạn ngay trong bảng rồi bấm "Điền" để đưa vào các thẻ.`);
+    notifySuccess(`Đã đọc văn bản${da.vbCo ? ' (đã có trên hệ thống — đã chọn)' : da.giuVb ? ' (giữ văn bản đồng chí đã chọn)' : ''}: ${n} nhiệm vụ.${sot ? ` Có ${sot} đoạn có thể còn sót — đồng chí xem cuối danh sách.` : ''} Đồng chí sửa, chọn chủ trì theo dõi, hạn xử lý ngay trong bảng rồi bấm "Điền" để đưa vào các thẻ.`);
   } catch (e) { if (!cu()) notifyError(`Chưa đọc được văn bản: ${e.message}`); } finally {
     if (!cu()) { da.dang = false; $('gvDocNut').disabled = false; tt(''); veKq(); }
   }
@@ -172,7 +172,7 @@ async function dienTatCa() {
   let n = 0; let het = false; let chuaOwner = 0;   // dòng đã bỏ (kể cả việc trùng bỏ sẵn) không điền
   conDien(da.sua, khoaDong).forEach((i) => { if (het) return; if (dienVao(i)) { n += 1; if (!da.sua[i].owner) chuaOwner += 1; } else het = true; });
   veKq();
-  if (n) notifySuccess(`Đã điền ${n} nhiệm vụ vào các thẻ${chuaOwner ? ` (${chuaOwner} thẻ chưa chọn người chịu trách nhiệm)` : ''} — đồng chí kiểm tra từng thẻ rồi bấm Giao.`);
+  if (n) notifySuccess(`Đã điền ${n} nhiệm vụ vào các thẻ${chuaOwner ? ` (${chuaOwner} thẻ chưa chọn chủ trì theo dõi)` : ''} — đồng chí kiểm tra từng thẻ rồi bấm Giao.`);
   if (het) notifyError(`Biểu mẫu đã đủ ${TOI_DA} nhiệm vụ — giao lượt này trước rồi bấm "Điền tiếp".`);
   $('gvPhan2')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
@@ -201,7 +201,7 @@ export function mountDocAi() {
     gvDocBangHan: ({ i }) => { const d = da.sua[Number(i)]; if (d?.han_goi_y && !d.han) { d.han = d.han_goi_y; d.sua.add('han'); veKq(); } },
     gvDocDienNhanh: () => {
       const owner = $('gvDbOwner')?.value || ''; const han = $('gvDbHan')?.value || '';
-      if (!owner && !han) { notifyError('Chọn người chịu trách nhiệm hoặc hạn hoàn thành chung trước.'); return; }
+      if (!owner && !han) { notifyError('Chọn chủ trì theo dõi hoặc hạn xử lý chung trước.'); return; }
       const n = dienNhanh(da.sua, { owner, han }, khoaDong); veKq();
       notifySuccess(n ? `Đã điền chung cho ${n} nhiệm vụ còn trống — các dòng đã có giá trị giữ nguyên.` : 'Các dòng đều đã có giá trị — không đổi dòng nào.');
     },
@@ -211,7 +211,7 @@ export function mountDocAi() {
       da.kq = { ...da.kq, nhiem_vu: [...(da.kq.nhiem_vu || []), nv], nghi_bo_sot: ds.filter((_, k) => k !== Number(j)),
         tong_bo_sot: Math.max(0, (da.kq.tong_bo_sot || ds.length) - 1) };
       da.sua = [...da.sua, dongBanDau(nv, danhMucKl().sanPham || [])];
-      veKq(); notifySuccess(`Đã thêm vào bảng thành nhiệm vụ ${da.kq.nhiem_vu.length} — đồng chí sửa, chọn người chịu trách nhiệm, hạn rồi bấm "Điền vào thẻ".`);
+      veKq(); notifySuccess(`Đã thêm vào bảng thành nhiệm vụ ${da.kq.nhiem_vu.length} — đồng chí sửa, chọn chủ trì theo dõi, hạn xử lý rồi bấm "Điền vào thẻ".`);
     },
   });
 }

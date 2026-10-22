@@ -17,7 +17,7 @@ export const canMucTieuBatBuoc = () => !laA0() && coMucTieu();   // v3.27: mục
 export const thieuMucTieu = (khoa) => canMucTieuBatBuoc() && Boolean(layO(khoa)) && soDaChon(layO(khoa).tt) === 0;
 // Ô ngành: Kết luận / Thông báo không có "Không thuộc".
 export const nganhChoPhep = (n) => n.ma !== KHONG_THUOC || !canNganhHienTai();
-export const mucThieuNganh = () => (canNganhHienTai() ? 'ngành' : 'ngành (hoặc "Không thuộc")');   // kết luận / thông báo: không có "Không thuộc"
+export const mucThieuNganh = () => (canNganhHienTai() ? 'ngành/lĩnh vực' : 'ngành/lĩnh vực (hoặc "Không thuộc")');   // kết luận / thông báo: không có "Không thuộc"
 export const MUC_THIEU_MT = 'mục tiêu then chốt (hoặc "Không thuộc")';
 // Dòng nhắc (ẩn với Thường trực): kết luận / thông báo không có ngành "Không thuộc". v3.27: mục tiêu then chốt tạm ẩn — câu nhắc chỉ còn ngành – lĩnh vực.
 const NHAC_DAU = () => (coMucTieu() ? 'Ngành – lĩnh vực và mục tiêu then chốt là căn cứ số liệu "Thực hiện các mục tiêu then chốt", "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan — bắt buộc chọn ở mọi thẻ.'

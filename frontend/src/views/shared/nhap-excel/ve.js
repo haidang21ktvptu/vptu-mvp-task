@@ -2,7 +2,7 @@
 // dự kiến từng dòng, chế độ cho việc đã hoàn thành, giá trị chưa khớp → chọn đúng mục (lưu từ điển dùng chung), điền hàng loạt ô còn trống) → Nhập.
 // Thuần chuỗi HTML; mọi chữ người dùng đều escape. Tên lớp ghi nguyên văn (Tailwind giữ lớp có trong mã).
 import { escapeHtml } from '../../../lib/dom.js';
-import { TRUONG, TEN_MUC, nhanTruong, truong } from '../../../lib/kl/nhap/truong.js';
+import { TRUONG, TEN_MUC, nhanTruong, truong, chuThuong } from '../../../lib/kl/nhap/truong.js';
 import { LOAI_VB, DO_KHAN, TIEN_DO, CHAT_LUONG, dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';
 import { hienGoc } from '../../../lib/kl/nhap/bang.js';
 import { HIEN_MUC_TIEU } from '../../../lib/kl/muc-tieu.js';
@@ -24,8 +24,8 @@ export const khungNhapHtml = () => `
       <span id="nxTenTep" class="chu-phu" aria-live="polite">Mẫu chuẩn hoặc bảng Phụ lục đang dùng (tiêu đề ở dòng nào cũng được) — hệ thống tự nhận dòng tiêu đề và cột.</span>
       <button type="button" class="nut" data-action="nxTaiMau">Tải mẫu nhập chuẩn</button>
     </div>
-    <ul class="nx-muc"><li class="nx-m1"><b>Điền đủ cột B–M là nhập ngay</b> số hội nghị, số TB/KL, ngày ban hành, chủ trì theo dõi, ngành/lĩnh vực, cơ quan trình, nội dung,
-      loại thời hạn, hạn, tiến độ, kết quả; sản phẩm, lĩnh vực theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
+    <ul class="nx-muc"><li class="nx-m1"><b>Điền đủ cột B–M là nhập ngay</b> số hội nghị, số TB/KL, ngày ban hành, chủ trì theo dõi, ngành/lĩnh vực, cơ quan/đơn vị trình, nội dung,
+      loại thời hạn, hạn xử lý, tiến độ, kết quả thực hiện; sản phẩm, lĩnh vực theo danh mục, hạn còn trống điền theo quy tắc (xem trước ghi rõ). Thiếu → "Chờ hoàn thiện", không mất dòng.</li>
       <li class="nx-m2"><b>Đang thực hiện</b> giao cho người chủ trì; cột M ghi tiến độ thì vào ghi chú.</li>
       <li class="nx-m3"><b>Hoàn thành</b> chọn "Đã xong ngoài hệ thống" (cột M thành minh chứng) hoặc "Ghi minh chứng".</li></ul>
   </section>
@@ -83,7 +83,7 @@ export function xemTruocHtml(s, ctx) {
       <label><input type="radio" name="nxCheDo" value="DA_XONG_NGOAI"${s.cheDoXong === 'DA_XONG_NGOAI' ? ' checked' : ''}> Đã xong ngoài hệ thống — đóng ngay, không tính tỷ lệ đúng hạn (dữ liệu cũ)</label>
       <label><input type="radio" name="nxCheDo" value="CHO_NGHIEM_THU"${s.cheDoXong === 'CHO_NGHIEM_THU' ? ' checked' : ''}> Ghi minh chứng — giao như thường kèm minh chứng, việc hoàn thành theo ngày văn bản (lãnh đạo xem, đánh giá chất lượng khi muốn)</label></fieldset>` : ''}
     ${s.coCotLoai ? '' : loaiVbHtml(s)}${s.coTuGan ? tuGanHtml(s) : ''}${khopHtml(s, ctx)}${hangLoatHtml(thieuDem, s, ctx)}${macDinhHtml(s)}
-    <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung</th><th scope="col">Chủ trì</th><th scope="col">Hạn</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
+    <div class="bang-cuon"><table class="nx-bang nx-xem"><thead><tr><th scope="col">Dòng</th><th scope="col">Dự kiến</th><th scope="col">Nội dung kết luận / Văn bản trình</th><th scope="col">Chủ trì theo dõi</th><th scope="col">Hạn xử lý</th><th scope="col">Thiếu / ghi chú</th></tr></thead>
       <tbody>${hien.slice(0, s.soHien).map(([x, d]) => dongXemHtml(x, d, s.duKien?.(x) || '', ctx.dm)).join('') || '<tr><td colspan="6" class="trong">Không có dòng nào.</td></tr>'}</tbody></table></div>
     ${hien.length > s.soHien ? `<button type="button" class="nut nho" data-action="nxXemThem">Xem thêm ${Math.min(100, hien.length - s.soHien)} dòng (còn ${hien.length - s.soHien})</button>` : ''}</section>
     <div class="nx-chan"><span id="nxThongBao" class="chu-phu" aria-live="polite">${escapeHtml(s.thongBao || '')}</span>
@@ -103,7 +103,7 @@ const tenMa = (k, v, dm = {}) => (k === 'han_xu_ly' ? formatNgay(v) : (dm[MD_HIE
 function dongXemHtml(x, d, duKien = '', dm = {}) {
   const chuTri = hienO(d, 'can_bo') || hienO(d, 'chu_tri') || hienO(d, 'don_vi') || (x.gt.don_vi ? '(theo cán bộ)' : '');
   const tuDien = Object.keys(MD_HIEN).filter((k) => x.macDinh.has(k) && x.gt[k]).map((k) => `${nhanTruong(k).toLowerCase()} ${tenMa(k, x.gt[k], dm)}`);
-  const ghi = [...x.thieu.map((k) => `thiếu ${nhanTruong(k).toLowerCase()}${d.o[k]?.loi ? ` (${d.o[k].loi})` : ''}`), ...(tuDien.length ? [`tự điền: ${tuDien.join(', ')}`] : []), ...x.canhBao];
+  const ghi = [...x.thieu.map((k) => `thiếu ${chuThuong(nhanTruong(k))}${d.o[k]?.loi ? ` (${d.o[k].loi})` : ''}`), ...(tuDien.length ? [`tự điền: ${tuDien.join(', ')}`] : []), ...x.canhBao];
   const han = hienO(d, 'han_xu_ly') || (x.gt.loai_thoi_han === 'KY_BAN_HANH' ? 'ký ban hành' : x.gt.han_xu_ly ? formatNgay(x.gt.han_xu_ly) : '');
   return `<tr data-dong="${d.soDong}"><td>${d.soDong}</td><td>${chipKq(x.ket_qua)}</td><td class="nx-nd">${escapeHtml(String(x.gt.noi_dung || x.gt.ma || '').slice(0, 140))}</td>
     <td>${escapeHtml(chuTri)}</td><td>${escapeHtml(han)}</td>
