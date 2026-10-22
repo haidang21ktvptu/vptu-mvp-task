@@ -87,7 +87,7 @@ test.describe.serial('Đợt D — nộp minh chứng là hoàn thành; trả l�
     const v = (await db.from('v_nhiem_vu').select('trang_thai, nguoi_chiu_cham, phong_chiu_cham').eq('id', Q.id).single()).data;
     expect(v).toEqual({ trang_thai: 'QUA_HAN_NGHIEM_THU', nguoi_chiu_cham: ID.e2eTp, phong_chiu_cham: 'E2E_RT' });
     await tp.locator('#navCanBo').click();
-    await expect(tp.locator(`#viewCanBo [data-action="moNganNguoi"][data-id="${ID.e2eTp}"]`)).toContainText('Đỏ', NAP);
+    await expect(tp.locator(`#viewCanBo [data-action="moNganNguoi"][data-id="${ID.e2eTp}"]`)).toContainText('quá hạn', NAP);   // v3.29: ghi theo nghĩa (mức Đỏ)
   });
 
   test('5. Việc Thường trực giao cho Chánh VP: thư ký xác nhận minh chứng cũ thay mặt Thường trực → hoàn thành', async ({ browser }, testInfo) => {

@@ -6,7 +6,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { lopMep } from '../../../lib/kl/nhan.js';
+import { lopMep, tenMuc, tenSapDenHan } from '../../../lib/kl/nhan.js';
 import { hanO, trangThaiO, gioVN, vanBanNgan } from '../../../lib/kl/bang-o.js';
 import { chiXem, nguoiGiaoVanBan, nguoiGiaoText } from '../../../lib/kl/pham-vi.js';
 import { ownerText, NHAN_CHI_XEM } from '../kl/dong.js';
@@ -30,10 +30,11 @@ export function nhanhHtml(r, cap, { con, mc, mo, homNay }) {
     <div class="tvb-con">${con || ''}</div></div>`;
 }
 
-// Cảnh báo của văn bản: n Đỏ đặc biệt · n quá hạn · n sắp đến hạn · Hoàn thành toàn bộ · Trong hạn.
+// Cảnh báo của văn bản: n quá hạn từ 3 ngày trở lên · n quá hạn dưới 3 ngày · n sắp đến hạn (còn ≤ 7 ngày — nhóm xem) · Hoàn thành toàn bộ · Trong hạn
+// (v3.29: ghi bằng nghĩa).
 function canhBaoHtml(t) {
-  const ds = [t.ddb ? `<span class="trang-thai tt-ddb">${t.ddb} Đỏ đặc biệt</span>` : '', t.quaThuong ? `<span class="trang-thai tt-qua">${t.quaThuong} quá hạn</span>` : '',
-    t.sap ? `<span class="trang-thai tt-cho">${t.sap} sắp đến hạn</span>` : '', t.n && t.xong === t.n ? '<span class="trang-thai tt-xong">Hoàn thành toàn bộ</span>' : ''].filter(Boolean);
+  const ds = [t.ddb ? `<span class="trang-thai tt-ddb">${t.ddb} ${tenMuc('ddb')}</span>` : '', t.quaThuong ? `<span class="trang-thai tt-qua">${t.quaThuong} ${tenMuc('do')}</span>` : '',
+    t.sap ? `<span class="trang-thai tt-cho">${t.sap} ${tenSapDenHan()}</span>` : '', t.n && t.xong === t.n ? '<span class="trang-thai tt-xong">Hoàn thành toàn bộ</span>' : ''].filter(Boolean);
   return ds.length ? ds.join('') : '<span class="bnv-phu">Trong hạn</span>';
 }
 // Cuối bảng con: + Giao thêm (mọi vai giao được — quyền thật ở giao_viec), rà soát + Sửa (người tạo văn bản, A1, quan_tri_kl — van_ban_dat_ra_soat).

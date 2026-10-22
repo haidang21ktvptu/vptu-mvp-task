@@ -7,16 +7,16 @@
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, linhVucCuaNganh, tenTrongDanhMuc, loadPhanCongHieuLuc, xemToanBo, coMucTieu } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, loadPhanCongHieuLuc, xemToanBo, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { trongPhamVi, locCanBo, tuyChonCanBo, chiXem } from '../../../lib/kl/pham-vi.js';
-import { tongHop, sapXep, locRows, kiemBatBien, CHUA_PHAN_LOAI, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
-import { THU_TU_NHOM, tenNhom, boSoThuTu } from '../../../lib/kl/nhan.js';
+import { tongHop, sapXep, locRows, kiemBatBien, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
+import { THU_TU_NHOM, tenNhom, boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { giaiLocThem, sapXepMoiNhap, sapXepHan, demLocThem } from '../../../lib/kl/loc-them.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tuyChonMucTieu } from '../../../lib/kl/tq-bo-loc.js';   // v3.24 (0105): ô lọc mục tiêu then chốt
 import { phanTrang, chuHienThi } from '../../../lib/kl/bang-o.js';
-import { dauBangHtml, nutTrangHtml, giuTieuDiem } from '../bang/khung.js';
+import { dauBangHtml, nutTrangHtml, giuTieuDiem, veChuGiai } from '../bang/khung.js';
 import { dongHtml } from './dong.js';
 import { veLaiChiTiet, idDangMo, dongBoNgan } from './chi-tiet.js';
 import { td, laTheoDoi, locTheoDoi, veTheoDoi } from './theo-doi.js';
@@ -44,11 +44,11 @@ const NHAN_CHIP = {
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
   khongCapNhatQua: (v) => `Đang mở, không cập nhật quá ${v} ngày`,
   dangDinhChinh: () => 'Có đề nghị đính chính đang chờ duyệt',
-  muc: (v) => `Mức cảnh báo: ${v === 'DO_DAC_BIET' ? 'Đỏ đặc biệt' : v}`,
+  muc: (v) => `Cảnh báo: ${tenMuc(v) || v}`,
   chuaCapQuyetDinh: () => 'Đang mở, chưa xác định cấp cần quyết định',
   nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
-const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocLinhVuc: 'linhVuc', klLocNguon: 'nguon', klTimKiem: 'tuKhoa',
+const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocNguon: 'nguon', klTimKiem: 'tuKhoa',
   klLocChuTri: 'chuTri', klLocTheoDoi: 'theoDoi', klLocLdvp: 'ldvp',   // v3.23: lọc theo cán bộ chủ trì, người theo dõi, lãnh đạo VP phụ trách
   klLocNhap: 'nhapKy', klLocNhapTu: 'nhapTuNgay', klLocNhapDen: 'nhapDenNgay', klLocNguoiNhap: 'nguoiNhap', klLocCapGiao: 'capGiao',   // v3.24
   klLocHan: 'hanKy', klLocHanTu: 'hanTuNgay', klLocHanDen: 'hanDenNgay', klLocDoKhan: 'doKhan', klLocMucTieu: 'mucTieu' };   // ô ngày: khoá *Ngay, locRows nhận khoá đã giải
@@ -105,8 +105,7 @@ function dienBoLoc() {
   $('klLocHoiNghi').innerHTML = opt('', 'Mọi hội nghị') + hn.map((s) => opt(s, `Hội nghị ${s}`, String(kl.loc.hoiNghi) === String(s))).join('');
   const coNganhTrong = rows.some((r) => !r.nganh_ma);
   $('klLocNganh').innerHTML = opt('', 'Mọi ngành/lĩnh vực') + danhMucKl().nganh.map((n) => opt(n.ma, n.ten, kl.loc.nganh === n.ma)).join('')
-    + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa phân loại ngành/lĩnh vực', kl.loc.nganh === CHUA_CO_NGANH) : '');
-  dienLinhVuc();
+    + (coNganhTrong ? opt(CHUA_CO_NGANH, 'Chưa phân loại ngành/lĩnh vực', kl.loc.nganh === CHUA_CO_NGANH) : '');   // v3.29: bỏ ô lọc lĩnh vực (không còn ô Lĩnh vực)
   $('klLocNguon').innerHTML = opt('', 'Mọi nguồn nhiệm vụ') + (danhMucKl().nguonNhiemVu || []).map((d) => opt(d.ma, d.ten, kl.loc.nguon === d.ma)).join('')
     + (rows.some((r) => !r.nguon_nhiem_vu_ma) ? opt(CHUA_CO_NGUON, 'Chưa xác định nguồn', kl.loc.nguon === CHUA_CO_NGUON) : '');
   // Ô chọn Đơn vị chịu trách nhiệm (có đếm), nhiều việc trước; A2/A3 thường chỉ một đơn vị → ẩn ô.
@@ -133,18 +132,14 @@ function dienBoLoc() {
   $('klLocMucTieu').innerHTML = opt('', 'Mọi mục tiêu then chốt') + mt.join('');
   show('klLocMucTieu', coMucTieu());   // v3.27: mục tiêu tạm ẩn
   show('klRaSoatMt', state.user?.role_group !== 'A0' && !state.user?.bi_khoa);   // v3.25: lối vào Rà soát (v3.27: phân loại ngành – lĩnh vực, nhập tệp rà soát)
-  if (!coMucTieu()) $('klRaSoatMt').title = 'Ngành, lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — chọn từng việc hoặc sửa hàng loạt bằng tệp Excel';
-}
-function dienLinhVuc() {
-  const ds = kl.loc.nganh && kl.loc.nganh !== CHUA_CO_NGANH ? linhVucCuaNganh(kl.loc.nganh) : danhMucKl().linhVuc;
-  $('klLocLinhVuc').innerHTML = opt('', 'Mọi lĩnh vực') + ds.map((l) => opt(l.ma, kl.loc.nganh ? l.ten : `${l.ten} (${tenTrongDanhMuc('nganh', l.nganh_ma).split('.')[0]})`, kl.loc.linhVuc === l.ma)).join('')
-    + opt(CHUA_PHAN_LOAI, 'Chưa phân loại', kl.loc.linhVuc === CHUA_PHAN_LOAI);
+  if (!coMucTieu()) $('klRaSoatMt').title = 'Ngành/lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — chọn từng việc hoặc sửa hàng loạt bằng tệp Excel';
 }
 
 // Vẽ dải số (theo lọc ngữ cảnh) và danh sách (theo lọc ngữ cảnh + nhóm). veLaiNgan: chỉ khi dữ liệu vừa nạp lại (không nạp lại căn cứ
 // của ngăn đang mở mỗi lần gõ ô tìm / đổi bộ lọc).
 export function render(veLaiNgan = false) {
   const traTd = giuTieuDiem($('viewKl'));   // ô số, nút trang, nút quan hệ, dòng đang chọn giữ con trỏ bàn phím qua lần vẽ lại
+  veChuGiai();   // chú giải mức theo ngưỡng cấu hình (mẫu HTML chèn trước khi đọc cấu hình)
   const { nhom, ...nguCanh } = kl.loc;
   const goc = coSo();
   const homNay = homNayVN();
@@ -209,7 +204,6 @@ function veChip() {
 export function ganBoLoc() {
   Object.entries(MAP_O).forEach(([id, khoa]) => $(id).addEventListener(id === 'klTimKiem' ? 'input' : 'change', (e) => {
     kl.loc[khoa] = e.target.value;
-    if (khoa === 'nganh') { kl.loc.linhVuc = ''; dienLinhVuc(); }
     // v3.24: rời "khoảng ngày…" thì bỏ hai ô ngày (không để khoá cũ treo lại)
     if ((khoa === 'nhapKy' || khoa === 'hanKy') && e.target.value !== 'tuy-chon') {
       const [o1, o2] = khoa === 'nhapKy' ? ['klLocNhapTu', 'klLocNhapDen'] : ['klLocHanTu', 'klLocHanDen'];
@@ -228,7 +222,7 @@ export const doiKlSapXep = ({ sx }) => { if (SAP_XEP_HAM[sx]) { kl.sx = sx; kl.t
 export function xoaKlLoc() {
   Object.entries(MAP_O).forEach(([id, khoa]) => { delete kl.loc[khoa]; if ($(id)) $(id).value = ''; });
   delete kl.loc.nhom;
-  kl.trang = 1; dienLinhVuc(); render();
+  kl.trang = 1; render();
 }
 // v3.25: trang (‹ / ›, cuộn về đầu bảng); ô số và quan hệ của "Việc tôi theo dõi"; In / lưu PDF vẽ tạm mọi dòng đang lọc (beforeprint / afterprint).
 export function doiKlTrang({ trang }) { kl.trang = Number(trang) || 1; render(); $('klBang')?.scrollIntoView({ block: 'start' }); }

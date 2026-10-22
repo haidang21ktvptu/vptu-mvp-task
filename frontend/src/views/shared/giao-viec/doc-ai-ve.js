@@ -58,11 +58,11 @@ export function ketQuaHtml(s, dm) {
       ${nhanhHtml(con)}
       <ol class="gv-doc-ds gv-db-ds">${ds.map((n, i) => dongHtml(s, n, i, dm)).join('')}</ol>` : '<p class="chu-phu">Không tách được nhiệm vụ nào — đồng chí nhập ở khối 2.</p>'}
     ${sotHtml(s.kq)}
-    <small class="chu-phu gv-doc-chan">Chỉ điền vào ô còn trống; giá trị nguyên văn (số hiệu, ngày, trích yếu, nội dung, hạn) chỉ tự điền khi đã đối chiếu được trong tệp và điền đúng chữ của tệp — chưa đối chiếu được, hoặc nội dung chưa trọn câu, thì hiện để đồng chí bấm dùng (bản chụp: nội dung điền kèm cảnh báo); số hiệu, ngày, loại văn bản chỉ lấy ở phần đầu trang 1; hạn, đơn vị phối hợp phải nằm trong chính nhiệm vụ; sản phẩm đầu ra, ngành/lĩnh vực, lĩnh vực, cơ quan/đơn vị trình${mt} là đề xuất của trợ lý AI (sản phẩm AI không đề xuất thì theo từ khoá nội dung). Đồng chí kiểm tra trước khi bấm Giao việc. Tệp và nội dung không lưu vào hệ thống.</small>`;
+    <small class="chu-phu gv-doc-chan">Chỉ điền vào ô còn trống; giá trị nguyên văn (số hiệu, ngày, trích yếu, nội dung, hạn) chỉ tự điền khi đã đối chiếu được trong tệp và điền đúng chữ của tệp — chưa đối chiếu được, hoặc nội dung chưa trọn câu, thì hiện để đồng chí bấm dùng (bản chụp: nội dung điền kèm cảnh báo); số hiệu, ngày, loại văn bản chỉ lấy ở phần đầu trang 1; hạn, đơn vị phối hợp phải nằm trong chính nhiệm vụ; sản phẩm đầu ra, ngành/lĩnh vực, cơ quan/đơn vị trình${mt} là đề xuất của trợ lý AI (sản phẩm AI không đề xuất thì theo từ khoá nội dung). Đồng chí kiểm tra trước khi bấm Giao việc. Tệp và nội dung không lưu vào hệ thống.</small>`;
 }
 // Ghi chú đầu thẻ sau khi điền (thay ghi chú cũ). kh: keHoachBang; i: số thứ tự trong văn bản / tong. v3.27: nội dung, hạn đã chốt ở bảng đề xuất (nút
 // "Dùng trọn câu", "Dùng ngày" ở bảng) — ghi chú chỉ còn nguồn, đề xuất cần kiểm tra và cảnh báo.
-const TEN_DE_XUAT = { san_pham: 'sản phẩm đầu ra', nganh: 'ngành/lĩnh vực', linh_vuc: 'lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan/đơn vị trình' };
+const TEN_DE_XUAT = { san_pham: 'sản phẩm đầu ra', nganh: 'ngành/lĩnh vực', loai: 'loại thời hạn', co_quan_trinh: 'cơ quan/đơn vị trình' };   // v3.29: lĩnh vực tự xác định
 export function ghiChuTheHtml(kh, i, tong) {
   const deXuat = [...new Set(kh.deXuat)].map((c) => TEN_DE_XUAT[c]).filter(Boolean);
   const phan = [`Điền từ văn bản (nhiệm vụ ${i + 1}/${tong})`, kh.goiY.chuTri ? `chủ trì theo văn bản: ${esc(kh.goiY.chuTri)}` : '',

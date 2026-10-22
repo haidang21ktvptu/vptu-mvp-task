@@ -9,6 +9,7 @@ import { getHomNay } from './trang-thai.js';
 import { giaTriNhom } from '../../../lib/kl/thay-mat.js';
 import { napVanBan, MOI } from './van-ban.js';
 import { datMucTieuGv } from './muc-tieu.js';
+import { goiYLinhVuc } from './phan-loai.js';
 
 let dang = null;   // dòng đang hoàn thiện: { id, so_dong, lo_ma, ten_tep, du_lieu, thieu, ghi_chu }
 // Gửi kèm dòng chờ: vướng mắc và ghi chú của tệp (biểu mẫu không có hai ô này) — giao_viec ghi cùng lúc tạo việc.
@@ -46,7 +47,7 @@ export async function apDienSan(dong, { nhanMoi }) {
   if (!$('klThThayMatWrap').classList.contains('hidden') && chon('klThThayMat', d.thay_mat_nhom ? giaTriNhom(d.thay_mat_nhom) : d.thay_mat_cho)) { await cho(() => $('gvKhoa').disabled); await cho(() => !$('gvKhoa').disabled); }
   // 3. Owner (cán bộ, không thì đơn vị) → ngành → lĩnh vực → người theo dõi.
   if (!(d.owner_tai_khoan && chon('klThOwner', `tk:${d.owner_tai_khoan}`))) chon('klThOwner', d.owner_don_vi_ma ? `dv:${d.owner_don_vi_ma}` : '');
-  chon('klThNganh', d.nganh_ma); chon('klThLinhVuc', d.linh_vuc_ma); chon('klThNguoiTheoDoi', d.nguoi_theo_doi);
+  chon('klThNganh', d.nganh_ma); goiYLinhVuc($('klThLinhVuc'), d.linh_vuc_ma); chon('klThNguoiTheoDoi', d.nguoi_theo_doi);   // v3.29: lĩnh vực của dòng = gợi ý
   // 4. Các ô còn lại.
   go('klThNoiDung', d.noi_dung); chon('klThSanPham', d.san_pham_loai); chon('klThCapNhan', d.cap_nhan_san_pham);
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);
@@ -54,7 +55,6 @@ export async function apDienSan(dong, { nhanMoi }) {
   go('klThPhoiHop', d.don_vi_phoi_hop); go('klThVanBanTK', d.van_ban_trien_khai); go('klThLvct', d.linh_vuc_chi_tiet); chon('klThCoQuanTrinh', d.co_quan_trinh);
   // v3.27: ô trống điền theo quy tắc (sau ô của tệp; loại hạn trước hạn)
   if (ds.dien.loai_thoi_han_ma) chon('klThLoai', ds.dien.loai_thoi_han_ma);
-  if (ds.dien.linh_vuc_ma && !$('klThLinhVuc').value) chon('klThLinhVuc', ds.dien.linh_vuc_ma);
   if (ds.dien.san_pham_loai && !$('klThSanPham').value) chon('klThSanPham', ds.dien.san_pham_loai);
   if (ds.dien.han_xu_ly && !$('klThHan').value) go('klThHan', ds.dien.han_xu_ly);
   if (ds.dien.co_quan_trinh && !$('klThCoQuanTrinh').value) chon('klThCoQuanTrinh', ds.dien.co_quan_trinh);

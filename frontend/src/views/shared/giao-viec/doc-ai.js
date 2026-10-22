@@ -22,6 +22,7 @@ import { o as oThe } from './nhieu-the.js';
 import { apAiVanBan, apAiThe, khoaThe, khiDaGiao } from './muc-tieu.js';
 import { dauHtml, ketQuaHtml, ghiChuTheHtml } from './doc-ai-ve.js';
 import { ganBang, napLuaChon } from './doc-ai-bang.js';
+import { goiYLinhVuc } from './phan-loai.js';
 
 const da = { kq: null, sua: [], tep: '', soTrang: 0, moHinh: '', ncc: '', banChup: false, vbCo: null, vbDaDien: new Set(), the: new Map(), daGiao: new Set(), vbId: null,
   dang: false, luot: 0, vbTay: false, giuVb: false };   // luot: lượt đọc (mở lại biểu mẫu / bỏ kết quả → kết quả lượt cũ bỏ); vbTay: người dùng tự chọn văn bản có
@@ -151,6 +152,7 @@ function theDeDien(i) {
 }
 function datOThe(the, cot, gt) {
   const el = oCua(the, cot); if (!el) return;
+  if (cot === 'linh_vuc') { goiYLinhVuc(el, gt); return; }   // v3.29: ô ẩn — đề xuất của AI là gợi ý, biểu mẫu tự xác định trong phạm vi
   if (el.tagName === 'SELECT' && ![...el.options].some((x) => x.value === String(gt))) return;
   el.value = String(gt); phat(el, el.tagName === 'SELECT' ? 'change' : 'input');
 }

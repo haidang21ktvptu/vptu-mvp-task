@@ -93,7 +93,7 @@ describe('khối lĩnh vực, điểm nghẽn, xếp hạng, quý', () => {
       [['VP', 'Văn phòng Tỉnh ủy'], ['VP', 'Văn phòng Tỉnh ủy']]);
     const tt = xepHang(ROWS, K, 'tt'); assert.deepEqual(tt.map((d) => d.ma), ['KHONG', 'tt1']);
     const q = dungHanQuy(ROWS, HOM); assert.deepEqual(q.map((x) => [x.ten, x.dung, x.dg]), [['quý III', 0, 1], ['quý IV (đến nay)', 0, 0]]);
-    assert.deepEqual(ids(vuongMacCho(ROWS)), [1]); assert.deepEqual(ids(chatLuongDuLieu(ROWS).chuaNganh), [3, 5]);
+    assert.deepEqual(ids(vuongMacCho(ROWS)), [1]); assert.deepEqual(ids(chatLuongDuLieu(ROWS).chuaNganh), [5], 'v3.29: chỉ việc chưa có ngành');
   });
   test('kỳ nhiệm kỳ và kỳ tuỳ chọn (đảo ngược → đổi chỗ, trống đầu → từ đầu dữ liệu)', () => {
     assert.deepEqual([khoangKy('nhiem-ky', HOM).tu, khoangKy('nhiem-ky', HOM).ten], ['2025-09-15', 'Nhiệm kỳ 2025–2030']);
@@ -122,7 +122,7 @@ describe('bộ lọc chi tiết', () => {
     assert.deepEqual(tc.mucTieu[0].ds.map((o) => [o.ma, o.n]), [['NHOM:DOT_PHA', 4], ['DP_A', 1], ['DP_B', 2], ['DP_CU', 1]]);
     assert.equal(tc.mucTieu.at(-1).ds[0].ma, CHUA_GAN);
     assert.deepEqual(tc.khoi.map((o) => [o.ma, o.n]), [['XD', 1], ['KT', 4], ['CHUA', 1]]);
-    assert.deepEqual(tc.nganh.find((g) => g.nhom === '9. Xây dựng giao thông').ds.map((o) => o.ma), ['N:XDGT', 'L:LV9']);
+    const maNganh = tc.nganh.flatMap((g) => g.ds.map((o) => o.ma)); assert.ok(maNganh.includes('N:XDGT') && !maNganh.some((m) => m.startsWith('L:')), 'v3.29: chỉ còn ngành');
     assert.deepEqual(tc.coQuan.map((o) => o.ma), ['UBND', 'VP']);
     const c = chipLoc({ ...LOC_TRONG, nhanh: 'tt,vm', khoi: 'KT', mucTieu: 'NQ_57' }, { ...tc, ldvp: [], phong: [], canBo: [] }, { mucTieuDm: MT });
     assert.deepEqual(c.map((x) => x.ten), ['Việc Thường trực giao', 'Vướng mắc chờ ý kiến', 'Mục tiêu: Nghị quyết 57-NQ/TW', 'Khối: Kinh tế']);
@@ -142,7 +142,7 @@ describe('bộ lọc chi tiết', () => {
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'quy', tu: '2026-07-01', den: '2026-09-30' }, K, o).nhom[0].rows), [4]);
     assert.deepEqual(ids(locChiTieu(ROWS, { t: 'vm' }, K, o).rows), [1]);
     assert.deepEqual(locChiTieu(ROWS, { t: 'cldl' }, K, o).nhom.map((p) => [p.ten, p.rows.length]),   // + hoàn thành chưa có ngày (18/10); v3.27: mục tiêu tạm ẩn
-      [...(HIEN_MUC_TIEU ? [['Chưa phân loại mục tiêu then chốt', 2]] : []), ['Chưa có ngành, lĩnh vực', 2], ['Hoàn thành chưa có ngày hoàn thành', 0]]);
+      [...(HIEN_MUC_TIEU ? [['Chưa phân loại mục tiêu then chốt', 2]] : []), ['Chưa có ngành/lĩnh vực', 1], ['Hoàn thành chưa có ngày hoàn thành', 0]]);
     assert.equal(locChiTieu(ROWS, { t: 'loc' }, K, o).nhom.reduce((s, p) => s + p.rows.length, 0), 6);
   });
 });

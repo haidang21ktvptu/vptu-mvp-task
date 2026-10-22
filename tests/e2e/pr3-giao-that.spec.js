@@ -11,7 +11,9 @@ import { ID, dbAdmin, homNay, cong, taoViec, datCo, voiPhien } from './lib/pr2b.
 const QTHT = '00000000-0000-4000-8000-000000000008';
 const NGUON = { KL_BTV: 'VAN_BAN_CAN_THEO_DOI', TB_THUONG_TRUC: 'VAN_BAN_CAN_THEO_DOI', NQ_TW: 'VAN_BAN_CAN_THEO_DOI', CONG_VAN: 'NHIEM_VU_PHAT_SINH', KHAC: 'NHIEM_VU_PHAT_SINH' };
 const KN = { nganh: 'KINH_TE_TONG_HOP', lv: 'LV08_TAI_CHINH', lvKhac: 'LV08_NGAN_SACH' };
-// vb: 'KL' = Kết luận có sẵn (KL_BTV) của spec; còn lại = văn bản mới loại đó. nganh: lĩnh vực cần chọn (KL / Thông báo bắt buộc; PCVP2 chỉ lĩnh vực kiêm nhiệm).
+const TEN_LV = { [KN.lv]: 'Tài chính', [KN.lvKhac]: 'Ngân sách' };
+// vb: 'KL' = Kết luận có sẵn (KL_BTV) của spec; còn lại = văn bản mới loại đó. lv: lĩnh vực mong đợi (KL / Thông báo bắt buộc; PCVP2 chỉ lĩnh vực kiêm
+// nhiệm) — v3.29: không còn ô Lĩnh vực, ghi tên lĩnh vực vào ô Lĩnh vực chi tiết rồi kiểm lĩnh vực tự xác định.
 const CA = [
   { role: 'A0', vb: 'KL', owner: `tk:${ID.cvp}`, lv: KN.lvKhac },
   { role: 'A1', vb: 'CONG_VAN', owner: `tk:${ID.cv1}`, phoiHop: 'Sở Tài chính; Sở Nội vụ', duKien: 2 },
@@ -41,7 +43,10 @@ async function giaoMot(page, ca) {
   await expect(page.locator('#klThNguon'), `${ca.role}: mặc định theo ${loai}`).toHaveValue(NGUON[loai]);
   if (ca.chon) await page.locator('#klThNguon').selectOption(ca.chon);
   await page.locator('#klThNoiDung').fill(`${khoa} giao ${ca.role}`); await page.locator('#klThOwner').selectOption(ca.owner);
-  if (ca.lv) { await page.locator('#klThNganh').selectOption(KN.nganh); await page.locator('#klThLinhVuc').selectOption(ca.lv); }
+  if (ca.lv) {
+    await page.locator('#klThNganh').selectOption(KN.nganh); await page.locator('#klThLvct').fill(TEN_LV[ca.lv]);
+    await expect(page.locator('#klThLinhVuc'), ca.role).toHaveValue(ca.lv);
+  }
   await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
   if (ca.phoiHop) { await moThem(page); await page.locator('#klThPhoiHop').fill(ca.phoiHop); }   // v3.27: mục gập "Thêm" của thẻ
   await chonPhanLoai(page, { mucTieu: ca.role !== 'A0' });   // v3.26: ngành trống → "Không thuộc"; mục tiêu (trừ Thường trực) → "Không thuộc"

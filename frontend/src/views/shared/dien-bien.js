@@ -33,7 +33,11 @@ function noiDung(d) {
   return escapeHtml(d.noi_dung || '');
 }
 
-export function dienBienHtml(rows) {
+// v3.29: lĩnh vực tự đổi theo ngành (không còn ô Lĩnh vực) — dòng lĩnh vực ghi CÙNG LẦN đổi ngành thì ẩn (dòng ngành đã đủ); lĩnh vực đổi riêng
+// (rà soát bằng tệp, sửa lĩnh vực chi tiết) vẫn hiện — lĩnh vực quyết định lãnh đạo Văn phòng phụ trách theo kiêm nhiệm.
+export function dienBienHtml(tatCa) {
+  const doiNganh = new Set(tatCa.filter((d) => d.nguon === 'lich_su' && d.loai === 'nganh_ma').map((d) => d.luc));
+  const rows = tatCa.filter((d) => !(d.nguon === 'lich_su' && d.loai === 'linh_vuc_ma' && doiNganh.has(d.luc)));
   if (!rows.length) return '<p class="chu-phu">Chưa có diễn biến nào.</p>';
   return `<ul class="dien-bien">${rows.map((d) => `<li class="${LOP_NGUON[d.nguon] || ''}" data-nguon="${escapeHtml(d.nguon)}">
       <span class="db-luc">${formatDateTime(d.luc)}</span><span class="db-nguoi">${escapeHtml(d.nguoi_ten || 'Hệ thống')}</span>

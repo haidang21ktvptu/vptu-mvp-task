@@ -19,7 +19,7 @@ import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNhiemVu } from '../kl/index.js';
 import { ownerText } from '../kl/dong.js';
-import { oSoHtml, giuTieuDiem } from '../bang/khung.js';
+import { oSoHtml, giuTieuDiem, veChuGiai } from '../bang/khung.js';
 import { theoVanBanTemplate, nhanPhamViTvb } from './template.js';
 import { nhanhHtml, vanBanHtml } from './dong.js';
 
@@ -67,7 +67,7 @@ function render() {
     const html = g.viec.map((r) => nhanh(r, con, vbKhop ? '' : kw, 1, homNay)).filter(Boolean).join('');
     return { ...g, tatCa: tatCaVb, h, x, t: tongHopVanBan(tatCaVb), rs: raSoatVanBan(x, h.so_nhiem_vu_du_kien, h.da_ra_soat_toan_van), html };
   }).filter((d) => d.html);
-  $('tvbSo').innerHTML = oSoHtml(O_SO_VB, demOVb(ds), tvb.loc, 'tvbLocVb', MAU);
+  $('tvbSo').innerHTML = oSoHtml(O_SO_VB, demOVb(ds), tvb.loc, 'tvbLocVb', MAU); veChuGiai();   // chú giải theo ngưỡng cấu hình
   const hien = sapXepVanBan(locOVb(ds, tvb.loc), $('tvbSapXep').value);
   const traNhap = giuONhap(o);   // ô sửa rà soát đang mở giữ qua lần vẽ lại (realtime)
   o.innerHTML = hien.length ? hien.map((d, i) => vanBanHtml(d, { stt: i + 1, lop: lopVanBan(d.t), mo: moVb(d.vb.van_ban_id, Boolean(kw)), nhanh: d.html, sua: duocSua(d.h, d.tatCa) })).join('')

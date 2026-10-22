@@ -1,7 +1,8 @@
 // Giao việc v8 (đợt 3, mockup 07; v9: dải 1-1-1-1-3, chọn nhanh, kế thừa khi giao tiếp xuống, văn bản đang nhập — v9.js). v3.18 (quyết định 8/10/2026,
 // gộp bố cục): biểu mẫu HAI khối trong một tấm — (1) Văn bản và mốc giao: văn bản (chọn có sẵn / tạo mới), nguồn nhiệm vụ, ngày giao nhiệm vụ, Thay
 // mặt (khi người giao không phải lãnh đạo); (2) Nhiệm vụ: luôn là các THẺ — thẻ "Nhiệm vụ 1" là bộ ô chính (id klTh*: nội dung, chịu trách nhiệm,
-// người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành, lĩnh vực — kèm chọn nhanh), thẻ 2…20 dựng bằng
+// người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành/lĩnh vực — kèm chọn nhanh; v3.29: lĩnh vực là ô ẩn
+// tự xác định, phan-loai.js), thẻ 2…20 dựng bằng
 // nhieu-the.js (+ Thêm nhiệm vụ); cuối tấm "Thông tin thêm (không bắt buộc)" thu gọn: cấp cần quyết định, văn bản triển khai, ghi chú — dùng chung
 // cả lượt (Đợt C2: + mức quan trọng, cơ quan trình, Thường trực chỉ đạo — thong-tin-nguon.js). Không còn công tắc "Một việc / Nhiều nhiệm vụ": một thẻ → giao_viec (kể cả hoàn thiện dòng Excel, giao tiếp xuống), nhiều thẻ → giao_viec_nhieu.
 // Chấm 1-2 sáng khi khối điền đủ; chân tấm: "Còn thiếu: …" cạnh nút Giao việc / Giao N việc + Huỷ + Giao, nhập tiếp (chỉ khi một thẻ). Cột phụ 340px:
@@ -77,13 +78,13 @@ export const giaoViecTemplate = `
           <div class="cot-3 gv-hang-nhanh">
             ${truong('klThOwner', `Chủ trì theo dõi${BB}`, selTim('klThOwner'), '', 'phòng hoặc cán bộ chịu trách nhiệm theo dõi việc — lãnh đạo có thể giao cho chính mình')}
             <div class="gv-nhanh" id="gvNhanhOwner" aria-label="Chọn nhanh chủ trì theo dõi"></div>
-            ${truong('klThNganh', 'Ngành/lĩnh vực<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThNganh'), '', '<span id="klThNganhGhiChu"></span>')}
-            ${truong('klThLinhVuc', 'Lĩnh vực<b id="klThLinhVucBatBuoc" class="gv-bb" aria-hidden="true">*</b>', sel('klThLinhVuc'), '', '<span id="gvPhamViGhiChu" aria-live="polite">theo ngành đã chọn</span>')}
+            ${truong('klThNganh', 'Ngành/lĩnh vực<b id="klThNganhBatBuoc" class="gv-bb" aria-hidden="true">*</b>', `${sel('klThNganh')}<input type="hidden" id="klThLinhVuc">`, '',
+    '<span id="klThNganhGhiChu"></span><span id="gvPhamViGhiChu" aria-live="polite"></span>')}
+            ${truong('klThCoQuanTrinh', 'Cơ quan/đơn vị trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
           </div>
           <div class="cot-3">
-            ${truong('klThCoQuanTrinh', 'Cơ quan/đơn vị trình', sel('klThCoQuanTrinh'), '', 'cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ')}
             ${truong('klThLvct', 'Lĩnh vực chi tiết', inp('klThLvct', 'text', ' maxlength="200" placeholder="Ví dụ: Đầu tư công" autocomplete="off"'), '', 'không bắt buộc')}
-            <div></div>
+            <div></div><div></div>
           </div>
           <div class="cot-3 gv-hang-nhanh" id="gvHanWrap">
             ${truong('klThLoai', 'Loại thời hạn', sel('klThLoai'))}
@@ -116,7 +117,7 @@ export const giaoViecTemplate = `
       <details class="gv-them" id="gvThemWrap">
         <summary>Thông tin thêm (không bắt buộc) — dùng chung cho mọi nhiệm vụ của lượt này</summary>
         <div class="cot-3" id="gvPhuWrap">
-          ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc Đỏ')}
+          ${truong('klThCapQD', 'Cấp cần quyết định', sel('klThCapQD'), '', 'để mở, điền khi việc quá hạn')}
           ${truong('klThVanBanTK', 'Văn bản triển khai', inp('klThVanBanTK'))}
           <div></div>
         </div>
@@ -145,7 +146,7 @@ export const giaoViecTemplate = `
     <section class="tam"><div class="tam-dau"><h2>Ba bước sau khi giao</h2></div>
       <ol class="gv-buoc-sau">
         <li><i>1</i><span id="gvBuoc1">Chủ trì theo dõi và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
-        <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn chuyển Vàng, quá hạn chuyển Đỏ và tự nhắc người liên quan.</span></li>
+        <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn, quá hạn thì tự cảnh báo và nhắc người liên quan.</span></li>
         <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản; có thể kèm tệp) trước hạn xử lý — nộp là việc hoàn thành; người giao việc, lãnh đạo xem kết quả và trả lại nếu chưa đạt.</span></li>
       </ol></section>
   </aside>

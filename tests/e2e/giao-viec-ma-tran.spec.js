@@ -92,7 +92,7 @@ test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (kh
       await p.locator('#klThSoKL').fill(`${khoa}-GV`); await p.locator('#klThNgayBH').fill(cong(homNay(), -1));
       await p.locator('#klThNoiDung').fill(`${khoa} giao thật A2`); await p.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await p.locator('#klThSanPham').selectOption('BAO_CAO');
-      await chonPhanLoai(p);   // v3.26: ngành, lĩnh vực, mục tiêu then chốt bắt buộc — "Không thuộc"
+      await chonPhanLoai(p);   // v3.26: ngành/lĩnh vực, mục tiêu then chốt bắt buộc — "Không thuộc"
       await expect(conThieu(p)).toHaveText('Còn thiếu: hạn xử lý', NAP); await expect(p.locator('#klThLuu')).toBeDisabled();
       await p.locator('#klThHan').fill(H);
       await expect(conThieu(p)).toHaveText('', NAP);
@@ -104,7 +104,7 @@ test.describe.serial('Giao việc — ma trận 7 vai × 7 loại văn bản (kh
       await chonVanBan(a0, `${khoa}-KL`, vbKL);
       await a0.locator('#klThNoiDung').fill(`${khoa} giao thật A0 từ Kết luận`); await a0.locator('#klThOwner').selectOption(`tk:${ID.cvp}`);
       await a0.locator('#klThSanPham').selectOption('BAO_CAO'); await a0.locator('#klThHan').fill(H);
-      await a0.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await a0.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+      await a0.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');   // v3.29: lĩnh vực tự xác định (không còn ô chọn)
       await expect(a0.locator('#klThHanNopWrap')).toHaveCount(0);
       await expect(a0.locator('#klThLuu')).toBeEnabled(NAP); await a0.locator('#klThLuu').click();
       await expect(a0.locator('#toastContainer')).toContainText('Đã giao việc NV-');

@@ -3,6 +3,7 @@
 // khác chủ trì (locRows theoDoiCuaToi, tong-hop.js). Lớp th-* viết nguyên văn (Tailwind giữ lớp).
 import { ngayNgan, gioVN } from './bang-o.js';
 import { mo, GAP, choNghiemThu } from './viec-toi.js';   // một định nghĩa dùng chung với "Việc của tôi"
+import { nhanTheoNguong, tenMucHoa } from './nhan.js';
 
 const chuaNhan = (r) => mo(r) && Boolean(r.theo_1400) && !r.da_xac_nhan_nhan && !r.bi_tu_choi;   // CHỦ TRÌ chưa xác nhận nhận việc (khác chuaNhan của tôi)
 const chuaSanPham = (r) => mo(r) && GAP.includes(r.muc_canh_bao) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r);
@@ -32,7 +33,7 @@ export const QUAN_HE = [['', 'Mọi việc'], ['giao', 'Tôi đã giao'], ['theo
 export const khopQuanHe = (r, me, qh) => !qh || (qh === 'giao' ? r.tao_boi === me : r.nguoi_theo_doi === me);
 
 // Tám ô số (mặc định "Cần đôn đốc": việc đang mở chưa nhận, có vướng mắc, chỉ đạo chờ trả lời, đề nghị từ chối, hoặc đã Vàng / Đỏ).
-export const O_SO_TD = [
+export const O_SO_TD = nhanTheoNguong([
   ['don', 'Cần đôn đốc', (r) => mo(r) && (chuaNhan(r) || Boolean(r.vuong_mac) || (r.so_chi_dao_cho_phan_hoi || 0) > 0 || Boolean(r.tu_choi_cho)
     || Boolean(r.bi_tu_choi) || GAP.includes(r.muc_canh_bao))],
   ['nhan', 'Chưa nhận việc', chuaNhan],
@@ -42,7 +43,7 @@ export const O_SO_TD = [
   ['mo', 'Đang thực hiện', mo],
   ['xong', 'Đã hoàn thành', (r) => !mo(r)],
   ['tat', 'Tất cả', () => true],
-];
+], 'sap', () => tenMucHoa('vang'));   // v3.29: "Sắp đến hạn (còn ≤ 3 ngày)" — mức Vàng, số ngày theo cấu hình
 const VI_TU = Object.fromEntries(O_SO_TD.map(([k, , f]) => [k, f]));
 export const locOTd = (rows, khoa) => rows.filter(VI_TU[khoa] || VI_TU.tat);
 export const demOTd = (rows) => Object.fromEntries(O_SO_TD.map(([k, , f]) => [k, rows.filter(f).length]));

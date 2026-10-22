@@ -133,7 +133,7 @@ export function chiTietHtml(r, ls, dc) {
           ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày giao nhiệm vụ)` : ''}`, canCu('ngay_hoan_thanh', ls))}
           ${r.minh_chung ? hang('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hang('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
-          ${hang('Ngành/lĩnh vực · Lĩnh vực', `${boSoThuTu(r.nganh_ten) || '(chưa có ngành/lĩnh vực)'} · ${r.linh_vuc_ten || 'Chưa phân loại'}`, canCu('linh_vuc_ma', ls))}
+          ${hang('Ngành/lĩnh vực', boSoThuTu(r.nganh_ten) || '(chưa có ngành/lĩnh vực)', canCu('nganh_ma', ls))}
           ${coMucTieu() ? hang('Mục tiêu then chốt', tenMucTieuViec(r), canCu('gan_muc_tieu', ls)) : ''}
           ${hang('Nguồn dòng · Đính chính', `${nguonDong}${r.theo_1400 ? ' · theo quy tắc 1400' : ' · dữ liệu chuyển đổi'} · ${dinhChinh}`, '')}
           ${hangGiaiNganHtml(r)}

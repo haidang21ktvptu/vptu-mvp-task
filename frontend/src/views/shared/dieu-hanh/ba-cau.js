@@ -2,7 +2,7 @@
 // khâu nghẽn nhiều nhất) và số, cùng nguồn với thanh trái (theoDonVi, theoKhau) và số-lọc (canToiQuyet); bấm một ô = lọc danh sách như bấm ở
 // thanh trái / ô số (A0/A1). A2 (màn hình phòng không có thanh trái) chỉ hiện câu trả lời.
 import { escapeHtml } from '../../../lib/dom.js';
-import { KHAU, boSoThuTu } from '../../../lib/kl/nhan.js';
+import { KHAU, boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
 import { dh, theoKhau, theoDonVi, viecDo, canToiQuyet } from './du-lieu.js';
 
 // [lớp màu (viết nguyên văn để Tailwind giữ), hình] — không dùng .cham / .nghen: trùng lớp cũ của dieu-hanh.css.
@@ -29,7 +29,7 @@ export function baCauHtml(coLoc = true) {
   const dv = (coLoc ? theoDonVi(tre) : theoNguoi(tre)).slice(0, 2); const khau = theoKhau().filter((x) => x.so > 0).sort((a, b) => b.so - a.so)[0];
   const quyet = tre.filter(canToiQuyet).length;
   const ai = tre.length
-    ? o('cham', 'Ai đang chậm?', `<b>${tre.length}</b> việc quá hạn${ddb ? ` <em class="ddb">${ddb} Đỏ đặc biệt</em>` : ''}`, escapeHtml(dv.map((d) => `${d.ten} ${d.so}`).join(', ')),
+    ? o('cham', 'Ai đang chậm?', `<b>${tre.length}</b> việc quá hạn${ddb ? ` <em class="ddb">${ddb} ${tenMuc('ddb')}</em>` : ''}`, escapeHtml(dv.map((d) => `${d.ten} ${d.so}`).join(', ')),
       `data-action="locKpi" data-loc="nghen" aria-pressed="${String(dh.loc.kpi === 'nghen')}"`, coLoc)
     : o('cham', 'Ai đang chậm?', '<b>0</b> việc quá hạn', 'Mọi việc trong phạm vi đang trong hạn', '', false);
   const nghen = khau

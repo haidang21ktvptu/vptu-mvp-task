@@ -12,8 +12,8 @@ import { tenTap } from './ke-hoach.js';
 export const khoaO = (id) => `rs-${id}`;
 const vanBan = (r) => (r.van_ban_id ? `${tenLoaiVanBan(r.van_ban_loai)} ${r.so_ket_luan || '(không số)'}` : 'Không gắn văn bản');
 const chuTri = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định';
-// v3.26: ngành – lĩnh vực đang ghi (khối 3 Tổng quan); sửa hàng loạt bằng tệp rà soát (nhap-tep.js), việc đang mở sửa ở ngăn chi tiết.
-const nganhChu = (r) => (r.nganh_ma ? `Ngành: ${boSoThuTu(r.nganh_ten || r.nganh_ma)}${r.linh_vuc_ten ? ` — ${r.linh_vuc_ten}` : ' — chưa có lĩnh vực'}` : 'Chưa phân loại ngành, lĩnh vực');
+// v3.26: ngành/lĩnh vực đang ghi (khối 3 Tổng quan); sửa hàng loạt bằng tệp rà soát (nhap-tep.js), việc đang mở sửa ở ngăn chi tiết. v3.29: không ghi lĩnh vực.
+const nganhChu = (r) => (r.nganh_ma ? `Ngành/lĩnh vực: ${boSoThuTu(r.nganh_ten || r.nganh_ma)}` : 'Chưa phân loại ngành/lĩnh vực');
 // "Đang tính: …" — đúng phần Tổng quan đang đếm cho việc này.
 export function hienChu(r, dm) {
   const ds = mucTieuCua(r);

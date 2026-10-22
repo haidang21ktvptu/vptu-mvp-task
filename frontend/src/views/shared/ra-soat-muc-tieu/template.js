@@ -8,14 +8,14 @@ import { tepHtml } from './nhap-tep.js';
 const AN = (coMt) => (coMt ? '' : ' hidden');
 export const raSoatTemplate = (coMt = true) => `
   <div class="dau"><h1>Rà soát phân loại nhiệm vụ</h1>
-    <span${coMt ? '' : ' hidden'}>mục tiêu then chốt (khối "Thực hiện các mục tiêu then chốt" của Tổng quan) và ngành, lĩnh vực (khối "Thực hiện theo lĩnh vực trọng tâm") — hệ thống tự nhận diện mục tiêu theo văn bản, nội dung, ngành, lĩnh vực; mục tích sẵn có căn cứ chắc, mục gợi ý bấm để thêm; việc không phục vụ mục tiêu nào tích "Không thuộc"; đồng chí kiểm tra rồi bấm Chấp nhận</span>${coMt ? '' : '<span>ngành, lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — việc đang mở sửa ở ngăn chi tiết, việc đã hoàn thành sửa hàng loạt bằng tệp rà soát</span>'}
+    <span${coMt ? '' : ' hidden'}>mục tiêu then chốt (khối "Thực hiện các mục tiêu then chốt" của Tổng quan) và ngành/lĩnh vực (khối "Thực hiện theo lĩnh vực trọng tâm") — hệ thống tự nhận diện mục tiêu theo văn bản, nội dung, ngành, lĩnh vực; mục tích sẵn có căn cứ chắc, mục gợi ý bấm để thêm; việc không phục vụ mục tiêu nào tích "Không thuộc"; đồng chí kiểm tra rồi bấm Chấp nhận</span>${coMt ? '' : '<span>ngành/lĩnh vực của các việc đã giao (số liệu "Thực hiện theo lĩnh vực trọng tâm" của Tổng quan) — việc đang mở sửa ở ngăn chi tiết, việc đã hoàn thành sửa hàng loạt bằng tệp rà soát</span>'}
     <div class="phai-dau"><button type="button" class="nut nho" data-action="rsNapLai">Tải lại</button>
       <button type="button" class="nut nho" data-action="openKl">Về danh sách nhiệm vụ</button></div></div>
   <div class="kl-loc rs-loc">
     <div id="rsChe" class="pham-vi" role="group" aria-label="Việc cần rà soát">
       <button type="button" data-action="rsChe" data-che="chua" aria-pressed="true"${AN(coMt)}>Chưa phân loại mục tiêu <b id="rsDem-chua">0</b></button>
       <button type="button" data-action="rsChe" data-che="cho" aria-pressed="false"${AN(coMt)}>Có gợi ý chưa xử lý <b id="rsDem-cho">…</b></button>
-      <button type="button" data-action="rsChe" data-che="nganh" aria-pressed="false">Chưa có ngành, lĩnh vực <b id="rsDem-nganh">0</b></button>
+      <button type="button" data-action="rsChe" data-che="nganh" aria-pressed="false">Chưa có ngành/lĩnh vực <b id="rsDem-nganh">0</b></button>
       <button type="button" data-action="rsChe" data-che="khong" aria-pressed="false">Không thuộc <b id="rsDem-khong">0</b></button>
       <button type="button" data-action="rsChe" data-che="tat" aria-pressed="false">Tất cả <b id="rsDem-tat">0</b></button></div>
     <label class="kl-tim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>

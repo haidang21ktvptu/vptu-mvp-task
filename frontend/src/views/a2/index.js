@@ -13,6 +13,7 @@ import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { openTongQuan } from '../shared/tong-quan/index.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
+import { tenMuc } from '../../lib/kl/nhan.js';
 import { dh, napDieuHanh, viecDo } from '../shared/dieu-hanh/du-lieu.js';
 import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
@@ -41,7 +42,7 @@ function taiViecHtml() {
   const pc = (n) => `${Math.round((n / max) * 100)}%`;
   const dongChua = chua ? `<div class="tai-nguoi tai-chua"><span class="av">–</span><span><small>${coViec.length ? 'và ' : ''}${chua} cán bộ chưa có việc đang mở</small></span></div>` : '';
   return coViec.map(({ a, n, doN, vangN }) => `<div class="tai-nguoi" data-cb="${a.id}"><span class="av">${escapeHtml((a.full_name.trim().split(/\s+/).pop() || '?').charAt(0).toUpperCase())}</span>
-      <span><b>${escapeHtml(a.full_name)}</b><small>${n} việc${doN ? ` · ${doN} Đỏ` : ''}${vangN ? ` · ${vangN} Vàng` : ''}</small></span>
+      <span><b>${escapeHtml(a.full_name)}</b><small>${n} việc${doN ? ` · ${doN} quá hạn` : ''}${vangN ? ` · ${vangN} ${tenMuc('vang')}` : ''}</small></span>
       <span class="tai"><span class="t-do" style="width:${pc(doN)}"></span><span class="t-vang" style="width:${pc(vangN)}"></span><span class="t-lam" style="width:${pc(n - doN - vangN)}"></span></span></div>`).join('') + dongChua;
 }
 
@@ -56,7 +57,7 @@ function viecCuaToiHtml() {
 function ve() {
   const rows = dh.rows; const moN = rows.filter(mo).length;
   const doN = viecDo().length; const vangN = rows.filter((r) => r.muc_canh_bao === 'VANG').length;
-  setText('ptTom', `${moN} việc mở · ${doN} Đỏ · ${vangN} Vàng`);
+  setText('ptTom', `${moN} việc mở · ${doN} quá hạn · ${vangN} ${tenMuc('vang')}`);
   const traNhap = giuONhap($('viewDieuHanh')); // ô đang mở / đang gõ giữ qua lần vẽ lại (nạp lại nền, realtime — PR-2a lỗi đua)
   $('dhBaCau').innerHTML = baCauHtml(false);
   $('dhCanXuLy').innerHTML = canXuLyHtml();
@@ -99,7 +100,7 @@ export function registerA2View() {
         <div class="hai-cot" style="--rong-phu:360px">
           <div class="cot-chinh">
             <section class="tam hidden" id="ptChiDao"></section>
-            <section class="tam"><div class="tam-dau"><h2>Việc Đỏ và sắp đến hạn trong phòng</h2><span id="ptTom"></span></div><div id="ptDo"></div><div id="ptVang"></div>
+            <section class="tam"><div class="tam-dau"><h2>Việc quá hạn và sắp đến hạn trong phòng</h2><span id="ptTom"></span></div><div id="ptDo"></div><div id="ptVang"></div>
               <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem đủ nhiệm vụ của phòng</button></div></section>
             <section class="tam hidden" id="ptMc"></section>
           </div>

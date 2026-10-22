@@ -238,6 +238,7 @@ Việc của tôi, Cần xử lý, Báo cáo, Nhập / Xuất Excel, Diễn bi�
 |---|---|
 | người, phòng chịu trách nhiệm (Owner) | **Chủ trì theo dõi** (cột E) — phòng của chủ trì: **Đơn vị chủ trì theo dõi**; Diễn biến: "Chủ trì theo dõi (cán bộ)", "Chủ trì theo dõi (phòng, đơn vị)" |
 | ngành | **Ngành/lĩnh vực** (cột F) |
+| lĩnh vực (danh mục) | **không có ô** (v3.29 — bảng Phụ lục không có cột "Lĩnh vực"): hệ thống tự xác định trong ngành theo phạm vi kiêm nhiệm, gợi ý AI / Excel, Lĩnh vực chi tiết, nội dung (`lib/kl/nhap/mac-dinh.js` `linhVucMacDinh`); chỉ còn ở Quản trị (Kiêm nhiệm lĩnh vực, Danh mục lĩnh vực) |
 | cơ quan trình | **Cơ quan/đơn vị trình** (cột G) |
 | nội dung | **Nội dung kết luận / Văn bản trình** (cột I) |
 | hạn | **Hạn xử lý** (cột K) |
@@ -250,4 +251,27 @@ Việc của tôi, Cần xử lý, Báo cáo, Nhập / Xuất Excel, Diễn bi�
 Không dùng "Chủ trì", "Theo dõi", "Chịu trách nhiệm", "Hạn hoàn thành", "Cơ quan trình" hay chữ "Owner" làm tên ô (thông báo lỗi do cơ sở dữ liệu
 trả về còn chữ "Owner" — sửa bằng migration ở đợt sau). Giữ nguyên vì nghĩa khác cột Excel: "Trạng thái" (tính theo hạn — khác cột "Tiến độ");
 "Số hiệu" của văn bản ở Giao việc (mọi loại văn bản); cột "Nhiệm vụ" của bảng (mã + nội dung); các ô riêng của minh chứng (số hiệu, ngày, trích yếu,
-mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại theo tiêu đề cũ); chữ "Theo dõi" ở nhóm menu và hộp "Theo dõi giải ngân".
+mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại theo tiêu đề cũ — v3.29: cột ngành ghi "Ngành/lĩnh vực", bỏ cột "Lĩnh vực", tệp cũ có cột
+"Ngành", "Lĩnh vực" vẫn đọc được); chữ "Theo dõi" ở nhóm menu và hộp "Theo dõi giải ngân".
+
+## 13. Mức cảnh báo ghi bằng nghĩa (v3.29 — chủ dự án quyết 22/10/2026)
+
+"Ghi đúng quy tắc" ở **mọi màn hình**, giữ nguyên màu (mục 2, 10). Một chỗ đặt tên: `lib/kl/nhan.js` `tenMuc` — số ngày đọc theo `kl_cau_hinh`
+(`nguong_vang_ngay`, `nguong_do_dac_biet_ngay`, `do_khan_KHAN_vang`; mặc định 3 · 3 · 5, cùng số hàm trạng thái của cơ sở dữ liệu dùng).
+
+| Mức (Công văn 1400) | Ghi đầy đủ (giữa câu, tiêu đề) | Ghi gọn (chip, ô hẹp) |
+|---|---|---|
+| Vàng | sắp đến hạn (còn ≤ 3 ngày) | Sắp đến hạn |
+| Đỏ | quá hạn dưới 3 ngày | Quá hạn < 3 ngày |
+| Đỏ đặc biệt | quá hạn từ 3 ngày trở lên | Quá hạn ≥ 3 ngày |
+
+- Tên Vàng / Đỏ / Đỏ đặc biệt chỉ còn ở **chú giải màu** và câu "Cách tính", luôn sau nghĩa: "Quá hạn dưới 3 ngày (mức Đỏ)".
+- Con số luôn kèm danh từ: "8 nhiệm vụ sắp đến hạn (còn ≤ 3 ngày), 0 nhiệm vụ quá hạn dưới 3 ngày, 5 nhiệm vụ quá hạn từ 3 ngày trở lên"; tỷ lệ ghi mẫu
+  số ("21% số nhiệm vụ đang thực hiện"); các phần của một ô cộng đủ số của ô.
+- Nơi gộp Đỏ + Đỏ đặc biệt (tải việc cán bộ, nhãn văn bản, Báo cáo) ghi "quá hạn".
+- Nhóm xem "Sắp đến hạn" (còn ≤ 7 ngày — `nguong_sap_den_han_ngay`, CH-10b; khác mức Vàng) ghi kèm số ngày: "Sắp đến hạn (còn ≤ 7 ngày)" ở ô số Nhiệm vụ,
+  Cần xử lý, Theo văn bản, Trưởng phòng; nhãn trạng thái trên dòng việc giữ "Sắp đến hạn" (ô Hạn đã ghi "còn n ngày").
+- Nhãn trong bảng tĩnh (ô số, lựa chọn lọc, đoạn biểu đồ) lấy số ngày lúc vẽ (`nhanTheoNguong`); chú giải màu của bảng (`bang/khung.js`: Nhiệm vụ,
+  Việc của tôi, Theo văn bản — khối `data-chu-giai`) vẽ lại mỗi lần vẽ bảng (`veChuGiai`), nên đổi ngưỡng ở Quản trị thì mọi nơi cùng một số.
+- Báo cáo (mọi bảng, dải đầu, tệp Excel): Tổng số nhiệm vụ · Quá hạn · Sắp đến hạn (còn ≤ 3 ngày) · Đang thực hiện · Hoàn thành · Trước hạn; xếp mức như
+  Tổng quan (`lib/kl/bao-cao.js`); không còn cột chất lượng (Không đạt … Đạt xuất sắc — vẫn ghi ở ngăn chi tiết, hàng việc, Cán bộ).

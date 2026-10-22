@@ -76,7 +76,7 @@ async function tinhLai() {
   nx.dg = nx.dong.map((d) => danhGia(d, { me: state.user, dm: c.dm, accounts: c.accounts, cheDoXong: nx.cheDoXong || 'CHO_NGHIEM_THU', hangLoat: hangLoatDg(), maDaCo: nx.ma, homNay: homNayVN() }));
   const xong = nx.dg.some((x) => x.gt.tien_do === 'HOAN_THANH' && x.ket_qua !== 'CAP_NHAT');   // chỉ việc MỚI đã hoàn thành phải chọn cách xử lý
   const nhom = new Map();   // giá trị cần người nhập chọn: chưa khớp (loi) và khớp gần đúng (ma = mục đã khớp, chọn sẵn)
-  nx.dong.forEach((d) => Object.entries(d.o).forEach(([k, x]) => { const gan = x?.gan === 'gan_dung'; if (!(x?.loi || gan) || !LOAI_TU_DIEN[truong(k)?.kieu]) return;
+  nx.dong.forEach((d) => Object.entries(d.o).forEach(([k, x]) => { const gan = x?.gan === 'gan_dung'; if (!(x?.loi || gan) || !LOAI_TU_DIEN[truong(k)?.kieu] || k === 'linh_vuc') return;   // v3.29: lĩnh vực tự xác định
     const g = `${k}|${chuanChu(d.raw[k])}`;
     if (!nhom.has(g)) nhom.set(g, { k, v: d.raw[k], loi: gan ? `khớp gần đúng: ${x.hien}` : x.loi, chon: x.chon || [], ma: gan ? x.ma : '', n: 0 });
     nhom.get(g).n += 1; }));
@@ -214,8 +214,7 @@ export function mountNhapExcel() {
     nxHangLoat: () => {
       const k = $('nxHlTruong')?.value; const v = $('nxHlGt')?.value;
       if (!k || !v) { notifyError('Chọn trường và giá trị cần điền.'); return; }
-      const nganh = (ma) => danhMucKl().linhVuc?.find((l) => l.ma === ma)?.nganh_ma;   // lĩnh vực: mỗi ngành một mục, chọn lại trong cùng ngành thì thay
-      nx.hangLoat[k] = k === 'linh_vuc' ? [...[].concat(nx.hangLoat.linh_vuc || []).filter((x) => nganh(x) !== nganh(v)), v] : v;
+      nx.hangLoat[k] = v;   // v3.29: lĩnh vực không còn điền hàng loạt (tự xác định theo ngành)
       ve('#nxHlTruong');
     },
     nxBoHangLoat: ({ truong: k, giaTri }) => {

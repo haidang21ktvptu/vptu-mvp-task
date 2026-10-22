@@ -2,7 +2,8 @@
 // trong bảng theo phòng (cùng một lần vẽ); v9 đợt 2: bấm một số → danh sách đúng số việc đó trong ngăn chi tiết NGAY TẠI CHỖ → chi tiết → quay
 // lại → đóng (không đổi mục, #klChiTiet không trùng id, trả về màn Nhiệm vụ khi đóng); đổi kỳ tại chỗ; sang "Cần xử lý" (ba câu hỏi đầu
 // trang) rồi quay lại; A2 thấy bảng theo cán bộ; A3 không có mục Tổng quan; Trang nghiêm / Nền tối đổi tại chỗ và nhớ theo máy sau khi tải
-// lại. Chỉ đọc — không tạo dữ liệu.
+// lại. v3.29 (chủ dự án 22/10/2026): dải đầu ghi mức cảnh báo bằng nghĩa ("N nhiệm vụ sắp đến hạn (còn ≤ 3 ngày), N nhiệm vụ quá hạn dưới 3 ngày,
+// N nhiệm vụ quá hạn từ 3 ngày trở lên"), các phần cộng đủ số của ô. Chỉ đọc — không tạo dữ liệu.
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP } from './lib/app.js';
 
@@ -16,10 +17,17 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
     const so = await tq.evaluate((el) => {
       const gia = (k) => Number(el.querySelector(`#tqSo [data-so="${k}"] .gia`).textContent);
       const muc = [...el.querySelectorAll('#tqTheoNhom .muc-tq')].reduce((s, p) => s + Number(p.firstChild.textContent), 0);
-      return { canh: gia('canh'), mo: gia('mo'), muc };
+      const phu = (k) => el.querySelector(`#tqSo [data-so="${k}"] .phu-h`).textContent;
+      return { canh: gia('canh'), mo: gia('mo'), muc, phuCanh: phu('canh'), phuMo: phu('mo') };
     });
     expect(so.muc, 'tổng mức cảnh báo trong bảng = số cảnh báo dải đầu').toBe(so.canh);
     expect(so.mo).toBeGreaterThanOrEqual(so.canh);
+    const ba = so.phuCanh.match(/^(\d+) nhiệm vụ sắp đến hạn \(còn ≤ \d+ ngày\), (\d+) nhiệm vụ quá hạn dưới \d+ ngày, (\d+) nhiệm vụ quá hạn từ \d+ ngày trở lên$/);
+    if (so.canh) expect(ba?.slice(1).reduce((t, x) => t + Number(x), 0), `ô cảnh báo ghi bằng nghĩa, cộng đủ: "${so.phuCanh}"`).toBe(so.canh);
+    else expect(so.phuCanh).toBe('không có nhiệm vụ sắp đến hạn hoặc quá hạn');
+    const mo = so.phuMo.match(/^(\d+) trong hạn · (\d+) có cảnh báo(?: · (\d+) chưa có hạn, thường xuyên)?$/);
+    expect(mo, `ô đang thực hiện: "${so.phuMo}"`).toBeTruthy();
+    expect([Number(mo[2]), Number(mo[1]) + Number(mo[2]) + Number(mo[3] || 0)], 'có cảnh báo = ô cảnh báo; các phần cộng đủ').toEqual([so.canh, so.mo]);
 
     // Bấm một số → danh sách đúng các việc làm nên số đó, mở ngay trên Tổng quan; bấm việc → chi tiết; Quay lại; Đóng. Đọc số và bấm trong
     // cùng một lượt JS (worker kia có thể thêm việc, realtime vẽ lại số) — đủ bộ số / vai ở ngan-chi-tiet.spec.js.

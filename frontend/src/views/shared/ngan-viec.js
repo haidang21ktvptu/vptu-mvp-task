@@ -6,7 +6,7 @@ import { $, escapeHtml, show } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
-import { lopMep, boSoThuTu, MOC_RA_SOAT } from '../../lib/kl/nhan.js';
+import { lopMep, boSoThuTu, MOC_RA_SOAT, tenMuc } from '../../lib/kl/nhan.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 
@@ -54,7 +54,7 @@ export function nganNguoiHtml(a, rows, dongAction = 'dongNganCanBo') {
       <div class="ngan-dau"><div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</small></div>
         <button type="button" class="nut nho" data-action="${dongAction}">Đóng</button></div>
       <div class="tai"><span class="t-do" style="width:${pct(dem.do)}%"></span><span class="t-vang" style="width:${pct(dem.vang)}%"></span><span class="t-lam" style="width:${pct(lam)}%"></span></div>
-      <p class="chu-phu">${owner.length} việc mở là chủ trì theo dõi: <b>${dem.do}</b> Đỏ, ${dem.vang} Vàng, ${lam} đang làm${theoDoi.length ? ` · ${theoDoi.length} việc là người theo dõi` : ''}</p>
+      <p class="chu-phu">${owner.length} việc mở là chủ trì theo dõi: <b>${dem.do}</b> quá hạn, ${dem.vang} ${tenMuc('vang')}, ${lam} đang làm${theoDoi.length ? ` · ${theoDoi.length} việc là người theo dõi` : ''}</p>
       <h4>Việc đang mở (${owner.length})</h4>
       ${owner.length ? owner.map((r) => `${dongViecHtml(r, homNay)}${hanhDongViecHtml(r, 'oNg')}`).join('') : '<p class="trong-nho">Không có việc mở nào cán bộ này là chủ trì theo dõi.</p>'}
       ${theoDoi.length ? `<h4>Việc là người theo dõi (${theoDoi.length})</h4>${theoDoi.map((r) => dongViecHtml(r, homNay)).join('')}` : ''}

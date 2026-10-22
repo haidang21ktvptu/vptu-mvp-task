@@ -5,14 +5,14 @@
 // (lib/kl/tong-quan-lanh-dao.js); mọi số / thẻ / dòng mở danh sách việc trong ngăn chi tiết dùng chung (tqMo).
 import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
-import { boSoThuTu } from '../../../lib/kl/nhan.js';
+import { boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
 import { NHOM_MUC_TIEU } from '../../../lib/kl/muc-tieu.js';
 import { DOAN, tenKy, chuThieuNganh } from '../../../lib/kl/tong-quan-lanh-dao.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { mo, dauKhoi, nhomNut, thuoc } from './template.js';
 
 const SO_DONG_NGHEN = 8;
-const tenMuc = (r) => (r.muc_canh_bao === 'DO_DAC_BIET' ? ['ddb', 'Đỏ đặc biệt'] : ['do', 'Đỏ']);
+const mucCuaViec = (r) => (r.muc_canh_bao === 'DO_DAC_BIET' ? ['ddb', tenMuc('ddb', true)] : ['do', tenMuc('do', true)]);   // v3.29: ghi bằng nghĩa
 // Sản phẩm còn thiếu theo khâu nghẽn (v_nhiem_vu.khau, 0033): đã nộp chờ xác nhận / chưa nhận việc / bị từ chối; còn lại = sản phẩm đầu ra chưa có.
 function sanPhamThieu(r) {
   if (r.khau === 'CHO_MINH_CHUNG' || r.khau === 'CHO_NGHIEM_THU') return 'Đã nộp minh chứng — chờ xác nhận';
@@ -33,15 +33,15 @@ function coQuanCanBo(r) {
 export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   const chon = chonUi && cap.some((c) => c.ma === chonUi) ? chonUi : '';   // cấp đang chọn hết việc (đổi bộ lọc / kỳ) → "Mọi cấp"
   const hien = chon ? ds.filter((r) => (r.cap_quyet_dinh || 'CHUA') === chon) : ds;
-  const phu = ds.length ? `${ds.length} việc Đỏ và Đỏ đặc biệt, nặng nhất trước — ai đang chậm, chậm bao nhiêu ngày, sản phẩm còn thiếu, cấp nào cần quyết định.`
-    : 'Không có việc Đỏ, Đỏ đặc biệt.';
+  const phu = ds.length ? `${ds.length} nhiệm vụ quá hạn, quá hạn lâu nhất trước — ai đang chậm, chậm bao nhiêu ngày, sản phẩm còn thiếu, cấp nào cần quyết định.`
+    : 'Không có nhiệm vụ quá hạn.';
   const nut = ds.length ? nhomNut('tqCap', 'cap', [['', `Mọi cấp (${ds.length})`], ...cap.map((c) => [c.ma, `${c.ten} (${c.n})`])], chon, 'Lọc theo cấp cần quyết định') : '';
   if (!ds.length) {
     return `<article class="the-bd n12" id="tqNghen">${dauKhoi(1, 'Điểm nghẽn cần chỉ đạo', phu)}<div class="bao-dong yen" role="note"><span class="bieu-bd" aria-hidden="true">✓</span>
-      <div class="noi-bd"><b>Không có việc Đỏ</b><span>Mọi việc đang mở trong phạm vi đều trong hạn hoặc mới ở mức Vàng.</span></div></div></article>`;
+      <div class="noi-bd"><b>Không có nhiệm vụ quá hạn</b><span>Mọi nhiệm vụ đang thực hiện trong phạm vi đều còn trong hạn hoặc mới sắp đến hạn.</span></div></div></article>`;
   }
   const dong = (r) => {
-    const [lop, muc] = tenMuc(r); const [dv, cb] = coQuanCanBo(r);
+    const [lop, muc] = mucCuaViec(r); const [dv, cb] = coQuanCanBo(r);
     const vb = [tenLoaiVanBan(r.van_ban_loai), r.so_ket_luan].filter(Boolean).join(' ');
     return `<tr><td data-n="Mức"><span class="muc-tq ${lop}">${muc}</span></td>
       <td class="c-ten"><button type="button" class="ten-bam" data-action="tqMoViec" data-id="${r.id}"><span class="ma-ng">${escapeHtml(r.ma)}</span><b>${escapeHtml(r.noi_dung)}</b><small>${escapeHtml(vb)}</small></button></td>
@@ -58,8 +58,8 @@ export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
     <div class="chan-ng"><span>${chan}</span><button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
 }
 
-const pills = (m) => [[m.ddb, 'ddb', 'Đỏ đặc biệt'], [m.do, 'do', 'Đỏ'], [m.vang, 'vang', 'Vàng']].filter(([n]) => n).map(([n, lop, ten]) => `<span class="muc-tq ${lop}">${n} ${ten}</span>`).join('')
-  || (m.tong ? '<span class="muc-tq tot">Không có việc chậm</span>' : '<span class="chu-phu">Chưa có nhiệm vụ gắn mục tiêu này</span>');
+const pills = (m) => [[m.ddb, 'ddb'], [m.do, 'do'], [m.vang, 'vang']].filter(([n]) => n).map(([n, lop]) => `<span class="muc-tq ${lop}">${n} ${tenMuc(lop)}</span>`).join('')
+  || (m.tong ? '<span class="muc-tq tot">Không có nhiệm vụ chậm</span>' : '<span class="chu-phu">Chưa có nhiệm vụ gắn mục tiêu này</span>');
 const theMt = (m, i, n) => `<button type="button" class="the-mt${m.ddb + m.do ? ' nguy' : ''}" ${mo({ t: 'mt', ma: m.ma, ten: m.ten_ngan })}>
     <span class="nhom-mt">${m.nhom === 'DOT_PHA' ? `Đột phá ${i + 1}` : escapeHtml(n?.ten || '')}</span><span class="tieu-mt">${escapeHtml(m.ten)}</span>
     <span class="can-cu-mt">${escapeHtml([m.can_cu, m.vanBan.length ? `văn bản: ${m.vanBan.slice(0, 2).join(', ')}${m.vanBan.length > 2 ? '…' : ''}` : ''].filter(Boolean).join(' · '))}</span>
@@ -113,7 +113,7 @@ function hangKv(d, { ten, ct, lop = '', dau = '' }) {
     <span class="kv-so an-dt">${qh(d.qh, { ...ct, d: 'qh' })}</span></div>`;
 }
 // v3.26: dòng "Không thuộc lĩnh vực trọng tâm" (ngành "Không thuộc") và "Chưa phân loại — cần rà soát" (chưa có ngành); o: { raSoat, soNganh, soKhoi,
-// thieu: thieuNganh(rows) — câu dưới bảng cùng số với Chất lượng dữ liệu và ô "Chưa có ngành, lĩnh vực" của màn Rà soát }.
+// thieu: thieuNganh(rows) — câu dưới bảng cùng số với Chất lượng dữ liệu và ô "Chưa có ngành/lĩnh vực" của màn Rà soát }.
 export function linhVucHtml(t, mo2, sap, k, { raSoat = false, soNganh = 12, soKhoi = t.khoi.length, thieu = null } = {}) {
   const khoi = t.khoi.map((d) => {
     const moKhoi = mo2.has(d.ma);

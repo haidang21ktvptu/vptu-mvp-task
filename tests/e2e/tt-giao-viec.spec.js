@@ -62,8 +62,9 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await context.close();
   });
 
-  // v3.8.1: A0 giao từ Kết luận BTV → giao_viec bắt buộc ngành + lĩnh vực → biểu mẫu phải hiện Ngành/Lĩnh vực/Ngày nhận/Loại hạn và tính vào "Còn thiếu".
-  test('A0 giao việc từ Kết luận BTV: thiếu ngành → nút mờ, "Còn thiếu" ghi ngành; chọn ngành + lĩnh vực → giao thành công', async ({ browser }, testInfo) => {
+  // v3.8.1: A0 giao từ Kết luận BTV → giao_viec bắt buộc ngành + lĩnh vực → biểu mẫu phải hiện Ngành/lĩnh vực, Ngày nhận, Loại hạn và tính vào "Còn
+  // thiếu". v3.29: không còn ô Lĩnh vực — lĩnh vực tự xác định theo ngành và ô Lĩnh vực chi tiết.
+  test('A0 giao việc từ Kết luận BTV: thiếu ngành → nút mờ, "Còn thiếu" ghi ngành; chọn ngành (lĩnh vực theo lĩnh vực chi tiết) → giao thành công', async ({ browser }, testInfo) => {
     const context = await contextAs(browser, 'A0', testInfo);
     const page = await context.newPage();
     const soKL = `E2E-TEST-TTKL-${duAn}`; const nd = `${E2E_TAG} TT giao ${duAn} từ KL ${Date.now()}`;
@@ -78,7 +79,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThNganhBatBuoc')).toBeVisible();        // dấu * động: kết luận → ngành/lĩnh vực bắt buộc
     await page.locator('#klThSoHN').fill('99');
     await expect(page.locator('#gvConThieu')).not.toContainText('số hội nghị');
-    await expect(page.locator('#klThNganhWrap')).toBeVisible(); await expect(page.locator('#klThLinhVucWrap')).toBeVisible();
+    await expect(page.locator('#klThNganhWrap')).toBeVisible(); await expect(page.locator('#klThLinhVucWrap')).toHaveCount(0);
     await expect(page.locator('#klThNgayNhanWrap')).toBeVisible();
     await expect(page.locator('#klThLoaiWrap')).toBeVisible();
     await page.locator('#klThNoiDung').fill(nd);
@@ -88,7 +89,8 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThLuu')).toBeDisabled();
     await expect(page.locator('#gvConThieu')).toContainText('ngành');
     await page.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP');
-    await page.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH');
+    await page.locator('#klThLvct').fill('Tài chính');
+    await expect(page.locator('#klThLinhVuc')).toHaveValue('LV08_TAI_CHINH');
     await expect(page.locator('#gvConThieu')).toHaveText('');
     await expect(page.locator('#klThLuu')).toBeEnabled();
     await page.locator('#klThLuu').click();

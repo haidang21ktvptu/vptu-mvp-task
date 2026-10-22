@@ -81,6 +81,21 @@ test('Quy tắc mặc định: sản phẩm theo nội dung, lĩnh vực theo l�
   assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tổ chức hội nghị' }, DM), { ma: 'LV_TC', chac: false }, 'không nhận ra: lĩnh vực đầu, nhắc kiểm tra');
   assert.deepEqual(linhVucMacDinh({ nganh: 'NOI_CHINH' }, DM), { ma: 'LV_TP', chac: true }, 'ngành một lĩnh vực');
   assert.equal(linhVucMacDinh({ nganh: '' }, DM), null);
+  // v3.29 (bỏ ô Lĩnh vực — dùng chung cho Giao việc, Sửa thông tin giao, Rà soát): chỉ trong phạm vi được giao (kiêm nhiệm), gợi ý hợp lệ trước từ khoá
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'Đầu tư công', cho: new Set(['LV_TC']) }, DM), { ma: 'LV_TC', chac: true }, 'chỉ còn một lĩnh vực trong phạm vi');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tổ chức hội nghị', goiY: 'LV_DT' }, DM), { ma: 'LV_DT', chac: true }, 'gợi ý (AI, Excel, lĩnh vực đang có)');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'Đầu tư công', goiY: 'LV_TP' }, DM), { ma: 'LV_DT', chac: true }, 'gợi ý không thuộc ngành → bỏ qua');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'Đầu tư công', goiY: 'LV_DT', cho: new Set(['LV_TC', 'LV_TP']) }, DM), { ma: 'LV_TC', chac: true }, 'gợi ý ngoài phạm vi → bỏ qua');
+  assert.equal(linhVucMacDinh({ nganh: 'KTTH', cho: new Set(['LV_TP']) }, DM), null, 'ngành không còn lĩnh vực nào trong phạm vi');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tổ chức hội nghị', truoc: 'LV_DT' }, DM), { ma: 'LV_DT', chac: false }, '"Giao, nhập tiếp": không nhận ra → lĩnh vực việc vừa giao');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Rà soát thu thuế', truoc: 'LV_DT' }, DM), { ma: 'LV_TC', chac: true }, 'nhận ra từ nội dung thì theo nội dung');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tổ chức hội nghị', truoc: 'LV_TP' }, DM), { ma: 'LV_TC', chac: false }, 'việc trước khác ngành → bỏ qua');
+  // Rà soát PR 1: lĩnh vực chi tiết ghi đúng tên lĩnh vực thắng gợi ý (AI / mặc định dòng Excel); "thuế" xét cả dấu — "thuê" không thành Tài chính
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'Tài chính', goiY: 'LV_DT' }, DM), { ma: 'LV_TC', chac: true }, 'đúng tên ở lĩnh vực chi tiết trước gợi ý');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'thu chi tài chính', goiY: 'LV_DT' }, DM), { ma: 'LV_DT', chac: true }, 'chỉ trúng từ khoá: gợi ý vẫn trước');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Rà soát hợp đồng thuê trụ sở' }, DM), { ma: 'LV_TC', chac: false }, '"thuê" không phải từ khoá Tài chính');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Rà soát hợp đồng thuê trụ sở', truoc: 'LV_DT' }, DM), { ma: 'LV_DT', chac: false });
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tăng thu thuế nội địa' }, DM), { ma: 'LV_TC', chac: true }, '"thuế" (có dấu) → Tài chính');
   assert.deepEqual([congThang('2026-01-31', 1), congThang('2026-12-15', 1), congThang('2028-01-31', 1)], ['2026-02-28', '2027-01-15', '2028-02-29']);
   assert.deepEqual([hanMacDinh('2026-10-20', '2026-09-01'), hanMacDinh('2026-10-20', '2026-10-25')], ['2026-11-20', '2026-11-25']);
 });
@@ -94,11 +109,13 @@ test('"Chờ hoàn thiện" tính lại (lỗi lô LO-0003): có cán bộ chủ
     { ...DM, donVi: [...DM.donVi, { ma: 'KHAC', ten: '13. Các cơ quan, đơn vị khác', trong_van_phong: false }] }, '2026-10-20');
   assert.equal(khac.dien.co_quan_trinh, 'KHAC'); assert.deepEqual(khac.thieu, []);
   const chuaRo = dienSanCho({ thieu: ['linh_vuc', 'don_vi'], du: { nganh_ma: 'KTTH', noi_dung: 'Tổ chức hội nghị' } }, DM, '2026-10-20');
-  assert.deepEqual(chuaRo.thieu, ['linh_vuc', 'don_vi'], 'lĩnh vực chưa chắc vẫn nhắc; chưa có cán bộ vẫn thiếu đơn vị');
-  const chu = chuDienSan(chuaRo);   // chữ hiện: lĩnh vực đoán theo ngành ở "thiếu" kèm lời nhắc (không lặp ở "điền sẵn"); đơn vị → chủ trì theo dõi
-  assert.deepEqual(chu.thieu, ['lĩnh vực (đã gợi ý theo ngành — kiểm tra lại)', 'chủ trì theo dõi']);
+  assert.equal(chuaRo.dien.linh_vuc_ma, 'LV_TC', 'v3.29: lĩnh vực tự xác định theo ngành (không nhận ra → lĩnh vực đầu)');
+  assert.deepEqual(chuaRo.thieu, ['don_vi'], 'v3.29: không còn nhắc lĩnh vực; chưa có cán bộ vẫn thiếu đơn vị');
+  const chu = chuDienSan(chuaRo);   // đơn vị → chủ trì theo dõi; lĩnh vực không hiện ở "điền sẵn" (không còn là ô của biểu mẫu)
+  assert.deepEqual(chu.thieu, ['chủ trì theo dõi']);
   assert.ok(!chu.dien.includes('lĩnh vực') && chu.dien.includes('sản phẩm đầu ra'), chu.dien.join(', '));
-  assert.deepEqual(chuDienSan(x), { thieu: [], dien: ['loại thời hạn', 'sản phẩm đầu ra', 'lĩnh vực', 'hạn xử lý', 'cơ quan/đơn vị trình'] });
+  assert.deepEqual(chuDienSan(x), { thieu: [], dien: ['loại thời hạn', 'sản phẩm đầu ra', 'hạn xử lý', 'cơ quan/đơn vị trình'] });
+  assert.deepEqual(chuDienSan({ thieu: ['nganh', 'linh_vuc'] }).thieu, ['ngành/lĩnh vực'], 'thiếu ngành, lĩnh vực → một mục "ngành/lĩnh vực"');
 });
 
 test('Cột M khi xuất theo mẫu: minh chứng → số hiệu · ngày · trích yếu · mô tả; minh chứng chữ giữ nguyên', () => {

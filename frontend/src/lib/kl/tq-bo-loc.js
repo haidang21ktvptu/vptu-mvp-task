@@ -6,7 +6,7 @@
 import { laXong, laMo, mucMo } from './tong-quan.js';
 import { khopMucTieu, nhanLocMucTieu, mucTieuCua, dsNhom, CHUA_GAN, KHONG_THUOC, khongThuocMucTieu, chuaGanMucTieu, khoiCuaDong, cachGanCua, CACH_GAN } from './muc-tieu.js';
 import { khoaXepHang } from './tong-quan-lanh-dao.js';
-import { boSoThuTu } from './nhan.js';
+import { boSoThuTu, nhanTheoNguong, tenMucHoa } from './nhan.js';
 
 export const NHANH = [['tt', 'Việc Thường trực giao'], ['dp', 'Nhiệm vụ đột phá'], ['qh30', 'Quá hạn trên 30 ngày'], ['hk', 'Hỏa tốc, thượng khẩn'], ['vm', 'Vướng mắc chờ ý kiến']];
 const KHOP_NHANH = {
@@ -22,8 +22,8 @@ export function doiNhanh(loc, k) {
   return { ...loc, nhanh: NHANH.map(([x]) => x).filter((x) => s.has(x)).join(',') };
 }
 
-export const TRANG_THAI = [['dung', 'Hoàn thành đúng hạn'], ['cdg', 'Hoàn thành'], ['cham', 'Hoàn thành chậm'], ['th', 'Đang thực hiện trong hạn'],
-  ['vang', 'Sắp đến hạn (Vàng)'], ['qh', 'Quá hạn (Đỏ, Đỏ đặc biệt)'], ['ch', 'Chưa có hạn, thường xuyên, chờ điều kiện']];
+export const TRANG_THAI = nhanTheoNguong([['dung', 'Hoàn thành đúng hạn'], ['cdg', 'Hoàn thành'], ['cham', 'Hoàn thành chậm'], ['th', 'Đang thực hiện trong hạn'],
+  ['vang', ''], ['qh', 'Quá hạn'], ['ch', 'Chưa có hạn, thường xuyên, chờ điều kiện']], 'vang', () => tenMucHoa('vang'));   // v3.29: ghi bằng nghĩa
 export const trangThaiCua = (r) => (laXong(r) ? (r.ket_qua === 'DUNG_HAN' ? 'dung' : r.ket_qua === 'TRE' ? 'cham' : 'cdg')
   : !laMo(r) ? 'ch' : ({ vang: 'vang', do: 'qh', ddb: 'qh', khac: 'ch' }[mucMo(r)] || 'th'));
 export const MUC_QT = [['A', 'Mức A'], ['B', 'Mức B'], ['C', 'Mức C'], ['CHUA', 'Chưa xếp mức']];
@@ -66,9 +66,8 @@ export function tuyChonLocMoi(rows, { mucTieuDm = [], nhomDm = null, khoiDm = []
   const kh = dem(rows, (r) => (r.nganh_ma && khoiCuaDong(r, nganhDm, linhVucDm)) || 'CHUA');
   const cg = dem(rows, cachGanCua);
   const khoi = [...khoiDm.filter((k) => kh.has(k.ma)).map((k) => ({ ma: k.ma, ten: k.ten, n: kh.get(k.ma) })), ...(kh.has('CHUA') ? [{ ma: 'CHUA', ten: 'Chưa phân loại', n: kh.get('CHUA') }] : [])];
-  const ng = dem(rows, (r) => r.nganh_ma); const lv = dem(rows, (r) => r.linh_vuc_ma);
-  const nganh = nganhDm.filter((n) => ng.has(n.ma)).map((n) => ({ nhom: n.ten, ds: [{ ma: `N:${n.ma}`, ten: `Cả ngành (${boSoThuTu(n.ten)})`, n: ng.get(n.ma) },
-    ...linhVucDm.filter((l) => l.nganh_ma === n.ma && lv.has(l.ma)).map((l) => ({ ma: `L:${l.ma}`, ten: l.ten, n: lv.get(l.ma) }))] }));
+  const ng = dem(rows, (r) => r.nganh_ma);   // v3.29: ô chỉ còn ngành (bỏ ô Lĩnh vực — bảng Phụ lục chỉ có cột Ngành/lĩnh vực); khoá 'L:' cũ vẫn lọc được
+  const nganh = nganhDm.filter((n) => ng.has(n.ma)).map((n) => ({ nhom: '', ds: [{ ma: `N:${n.ma}`, ten: boSoThuTu(n.ten), n: ng.get(n.ma) }] }));
   if (rows.some((r) => !r.nganh_ma)) nganh.push({ nhom: '', ds: [{ ma: 'CHUA', ten: 'Chưa phân loại ngành', n: rows.filter((r) => !r.nganh_ma).length }] });
   const nhom = (cach) => { const m = new Map(); rows.forEach((r) => { const [ma, ten] = khoaXepHang(cach)(r); if (!m.has(ma)) m.set(ma, { ma, ten, n: 0 }); m.get(ma).n++; }); return [...m.values()]; };
   const coQuan = nhom('dv').sort((a, b) => (a.ma === 'VP') - (b.ma === 'VP') || a.ten.localeCompare(b.ten, 'vi'));

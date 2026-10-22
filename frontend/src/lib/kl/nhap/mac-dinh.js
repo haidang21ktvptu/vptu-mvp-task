@@ -15,9 +15,13 @@ export function sanPhamMacDinh(noiDung, loaiThoiHan, dsSanPham = []) {
   return theoTu || (loaiThoiHan === 'KY_BAN_HANH' && co('DU_THAO_VAN_BAN')) || co('BAO_CAO') || null;
 }
 
-// Lĩnh vực (danh mục) trong ngành: (1) ngành chỉ có một lĩnh vực; (2) lĩnh vực chi tiết / nội dung chứa từ khoá của một lĩnh vực trong ngành (theo
-// tên lĩnh vực — không phụ thuộc mã); (3) không nhận ra → lĩnh vực mang tên phần đầu của ngành ("3. Nội chính - ANQP…" → Nội chính), không có thì
-// lĩnh vực đầu. → { ma, chac } (chac = false: lấy mặc định, bản xem trước nhắc kiểm tra) | null (ngành không có lĩnh vực).
+// Lĩnh vực (danh mục) trong ngành — v3.29 dùng chung cho mọi nơi giao / sửa việc (ô Lĩnh vực bỏ khỏi giao diện: bảng Phụ lục chỉ có Ngành/lĩnh vực,
+// Lĩnh vực chi tiết): chỉ xét lĩnh vực trong phạm vi được giao (cho: Set mã — kiêm nhiệm, pham-vi.js; null = không lọc); (1) chỉ còn một lĩnh vực;
+// (2) lĩnh vực chi tiết ghi đúng tên một lĩnh vực (người nhập chỉ rõ — trước cả gợi ý); (3) gợi ý hợp lệ (trợ lý AI, dòng Excel, lĩnh vực đang có
+// của việc); (4) lĩnh vực chi tiết / nội dung chứa từ khoá của một lĩnh vực trong ngành (theo tên lĩnh vực — không phụ thuộc mã; "thuế" xét cả dấu
+// để không lẫn "thuê"); (5) không nhận ra → lĩnh vực của việc vừa giao cùng ngành (truoc — "Giao, nhập tiếp": như ô chọn cũ giữ lựa chọn), rồi
+// lĩnh vực mang tên phần đầu của ngành ("3. Nội chính - ANQP…" → Nội chính), không có thì lĩnh vực đầu. → { ma, chac } (chac = false: lấy mặc
+// định) | null (ngành không có lĩnh vực trong phạm vi).
 const TU_KHOA = {
   'kiem tra dang': /kiem tra|giam sat|ky luat|uy ban kiem tra|ubkt|kt ?gs/,
   'xay dung chinh quyen': /chinh quyen|noi vu|don vi hanh chinh|don vi su nghiep|bien che|cong chuc|vien chuc|khen thuong|thi dua|thon,? to dan pho/,
@@ -36,22 +40,27 @@ const TU_KHOA = {
   'tai nguyen': /dat dai|tai nguyen|khoang san|chuyen muc dich su dung|thu hoi dat|giao dat|\brung\b/,
   'ngan sach': /ngan sach|du toan|du phong|thu chi|ke hoach von/,
   'dau tu': /dau tu|chu truong dau tu|nha dau tu|du an|von dau tu/,
-  'tai chinh': /tai chinh|tai san|thue|ngan hang|tin dung|kinh phi/,
+  'tai chinh': /tai chinh|tai san|ngan hang|tin dung|kinh phi/,
   'du an giao thong trong diem': /cao toc|giao thong trong diem|dong dang|tra linh/,
   'giao thong': /giao thong|quoc lo|duong bo|cau duong|tuyen duong/,
   'chuyen doi so': /chuyen doi so|so hoa|cong nghe thong tin|du lieu so|chinh phu so/,
   khcn: /khoa hoc|cong nghe|doi moi sang tao|khcn/,
   'xa hoi': /giao duc|y te|lao dong|viec lam|an sinh|giam ngheo|ngheo|truong hoc|benh vien|bao hiem|noi tru|nha tam/,
 };
-export function linhVucMacDinh({ nganh, chiTiet, noiDung }, dm = {}) {
-  const ds = (dm.linhVuc || []).filter((l) => l.nganh_ma === nganh);
+const TU_KHOA_DAU = { 'tai chinh': /thuế/ };   // xét trên chữ có dấu: "thuế" (Tài chính) khác "thuê" (đất cho thuê — Tài nguyên)
+export function linhVucMacDinh({ nganh, chiTiet, noiDung, goiY = null, cho = null, truoc = null }, dm = {}) {
+  const ds = (dm.linhVuc || []).filter((l) => l.nganh_ma === nganh && (!cho || cho.has(l.ma)));
   if (!nganh || !ds.length) return null;
   if (ds.length === 1) return { ma: ds[0].ma, chac: true };
   const ten = (l) => chuanChu(l.ten);
-  for (const chu of [chuanChu(chiTiet), chuanChu(noiDung)].filter(Boolean)) {
+  const dungTen = chiTiet && ds.find((l) => chuanChu(chiTiet) === ten(l)); if (dungTen) return { ma: dungTen.ma, chac: true };
+  if (goiY && ds.some((l) => l.ma === goiY)) return { ma: goiY, chac: true };
+  for (const goc of [chiTiet, noiDung].filter(Boolean)) {
+    const chu = chuanChu(goc); const coDau = String(goc).normalize('NFC').toLowerCase();
     const dung = ds.find((l) => chu === ten(l)); if (dung) return { ma: dung.ma, chac: true };
-    const theoTu = ds.find((l) => TU_KHOA[ten(l)]?.test(chu)); if (theoTu) return { ma: theoTu.ma, chac: true };
+    const theoTu = ds.find((l) => TU_KHOA[ten(l)]?.test(chu) || TU_KHOA_DAU[ten(l)]?.test(coDau)); if (theoTu) return { ma: theoTu.ma, chac: true };
   }
+  if (truoc && ds.some((l) => l.ma === truoc)) return { ma: truoc, chac: false };
   const dau = chuanChu((dm.nganh || []).find((n) => n.ma === nganh)?.ten).replace(/^\d+[.)]\s*/, '').split(/\s+-\s+/)[0];
   return { ma: (ds.find((l) => ten(l) === dau) || ds[0]).ma, chac: false };
 }
@@ -84,14 +93,13 @@ export function dienSanCho({ thieu = [], du = {}, goc = {} }, dm = {}, homNay = 
   if (du.owner_tai_khoan) bo.add('don_vi');
   if (dien.san_pham_loai) bo.add('san_pham');
   if (dien.han_xu_ly) bo.add('han_xu_ly');
-  if (lv?.chac && dien.linh_vuc_ma) bo.add('linh_vuc');
+  if (dien.linh_vuc_ma) bo.add('linh_vuc');   // v3.29: lĩnh vực luôn tự xác định theo ngành — không còn là ô người dùng điền
   return { dien, lvChac: Boolean(lv?.chac), thieu: thieu.filter((k) => !bo.has(k)) };
 }
 // Chữ "thiếu" / "điền sẵn" dùng chung cho danh sách "Chờ hoàn thiện" và dải nhắc của biểu mẫu Hoàn thiện. x: dienSanCho. Đơn vị chủ trì đọc là "chủ trì
-// theo dõi" (một ô của biểu mẫu); lĩnh vực chỉ đoán theo ngành (chưa chắc) nằm ở "thiếu" kèm lời nhắc, không nhắc lại ở "điền sẵn".
-const TEN_DIEN = { loai_thoi_han_ma: 'loại thời hạn', san_pham_loai: 'sản phẩm đầu ra', linh_vuc_ma: 'lĩnh vực', han_xu_ly: 'hạn xử lý', co_quan_trinh: 'cơ quan/đơn vị trình' };
+// theo dõi" (một ô của biểu mẫu); v3.29: lĩnh vực không còn là ô của biểu mẫu (tự xác định) — không nhắc ở "điền sẵn"; còn thiếu thì là thiếu ngành/lĩnh vực.
+const TEN_DIEN = { loai_thoi_han_ma: 'loại thời hạn', san_pham_loai: 'sản phẩm đầu ra', han_xu_ly: 'hạn xử lý', co_quan_trinh: 'cơ quan/đơn vị trình' };
 export function chuDienSan(x) {
-  const goiYLv = Boolean(x.dien?.linh_vuc_ma) && !x.lvChac;
-  return { thieu: (x.thieu || []).map((k) => (k === 'don_vi' ? 'chủ trì theo dõi' : k === 'linh_vuc' && goiYLv ? 'lĩnh vực (đã gợi ý theo ngành — kiểm tra lại)' : chuThuong(nhanTruong(k)))),
-    dien: Object.keys(x.dien || {}).filter((k) => !(goiYLv && k === 'linh_vuc_ma')).map((k) => TEN_DIEN[k]).filter(Boolean) };
+  const thieu = [...new Set((x.thieu || []).map((k) => (k === 'don_vi' ? 'chủ trì theo dõi' : k === 'linh_vuc' ? chuThuong(nhanTruong('nganh')) : chuThuong(nhanTruong(k)))))];
+  return { thieu, dien: Object.keys(x.dien || {}).map((k) => TEN_DIEN[k]).filter(Boolean) };
 }

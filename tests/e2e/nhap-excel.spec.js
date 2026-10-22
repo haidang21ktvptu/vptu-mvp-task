@@ -2,12 +2,13 @@
 // lúc chạy (tests/e2e/lib/xlsx-gia.mjs — không dữ liệu thật) có thêm cột "Cán bộ chủ trì": (1) nhận hồ sơ Phụ lục 2 ở dòng 3, cột chèn thêm tự
 // ghép; xem trước: đơn vị chưa khớp → chọn mục (lưu từ điển), điền hàng loạt sản phẩm, chọn "Đã xong ngoài hệ thống" → Nhập → lô; DB: việc
 // giao (thay mặt Trưởng phòng, lĩnh vực theo quy tắc ngành một lĩnh vực), việc đã xong (nguồn excel), một dòng chờ; (2) Chờ hoàn thiện → Hoàn
-// thiện (biểu mẫu điền sẵn, chỉ chọn ngành / lĩnh vực) → việc mới, dòng DA_HOAN_THIEN; (3) chủ trì (demo_e2e_cv) mở việc → khối "Dữ liệu gốc";
+// thiện (biểu mẫu điền sẵn, chỉ chọn ngành) → việc mới, dòng DA_HOAN_THIEN; (3) chủ trì (demo_e2e_cv) mở việc → khối "Dữ liệu gốc";
 // (4) Hoàn tác lô → việc đã xong (chưa ai đụng) bị xoá. Project chưa áp 0072 → skip. Chạy ở project riêng SAU v9-dot2 (tin tổng hợp tới
 // demo_e2e_cv / demo_e2e_tp — realtime.spec đếm huy hiệu tin của các tài khoản này). Dữ liệu theo khoá riêng, tự dọn trước và sau.
 // v3.27 (chủ dự án 20/10/2026): tệp đúng cột bảng Phụ lục = mẫu nhập chuẩn (hồ sơ "bảng Phụ lục"); cột G là CƠ QUAN TRÌNH (giá trị chưa khớp → chọn
 // trong danh sách cơ quan trình, lưu từ điển); sản phẩm, lĩnh vực theo quy tắc (không còn bước điền hàng loạt); DB ghi cơ quan trình, lĩnh vực chi tiết
-// (cả việc đã xong — 0117); dòng chờ chỉ thiếu ngành, lĩnh vực; Hoàn thiện điền sẵn cơ quan trình.
+// (cả việc đã xong — 0117); dòng chờ chỉ thiếu ngành, lĩnh vực; Hoàn thiện điền sẵn cơ quan trình. v3.29 (chủ dự án 22/10/2026): không còn ô / cột
+// Lĩnh vực — lĩnh vực luôn tự xác định theo ngành, dòng thiếu ngành chỉ ghi thiếu "ngành/lĩnh vực".
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { moViec, nav, NAP, chonPhanLoai } from './lib/app.js';
@@ -82,7 +83,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#nxKetQua h2')).toHaveText(`Đã nhập lô ${lo.ma}`);
       dong = (await db.from('dong_nhap').select('id, so_dong, ket_qua, nhiem_vu_id, thieu').eq('lo_id', lo.id).order('so_dong')).data;
       expect(dong.map((d) => [d.so_dong, d.ket_qua])).toEqual([[4, 'GIAO'], [5, 'DA_XONG'], [6, 'CHO_HOAN_THIEN']]);
-      expect(dong[2].thieu).toEqual(['nganh', 'linh_vuc']);
+      expect(dong[2].thieu).toEqual(['nganh']);   // v3.29: lĩnh vực tự xác định khi có ngành
       const g = (await db.from('nhiem_vu').select('owner_don_vi_ma, owner_tai_khoan, nguoi_theo_doi, giao_thay_mat_cho, san_pham_loai, nganh_ma, linh_vuc_ma, nguon, tao_boi, han_xu_ly, co_quan_trinh, linh_vuc_chi_tiet')
         .eq('id', dong[0].nhiem_vu_id).single()).data;
       expect(g).toEqual({ owner_don_vi_ma: 'E2E_RT', owner_tai_khoan: ID.e2eCv, nguoi_theo_doi: ID.e2eCv, giao_thay_mat_cho: ID.e2eTp, san_pham_loai: 'BAO_CAO',
@@ -100,7 +101,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
       await page.locator('#gvTabCho').click();
       const the = page.locator(`#nxCho-${dong[2].id}`);
-      await expect(the).toContainText('thiếu: ngành/lĩnh vực, lĩnh vực', NAP);
+      await expect(the).toContainText('thiếu: ngành/lĩnh vực', NAP); await expect(the).not.toContainText('ngành/lĩnh vực, lĩnh vực');
       await expect(page.locator(`#nxLo-${lo.id}`)).toContainText(`Lô ${lo.ma}`);
       await the.getByRole('button', { name: 'Hoàn thiện' }).click();
       await expect(page.locator('#gvHoanThien')).toContainText(`Hoàn thiện dòng 6 của lô ${lo.ma}`, NAP);
@@ -111,7 +112,7 @@ test.describe.serial('Nhập Excel — Phụ lục 2 hư cấu: xem trước, nh
       await expect(page.locator('#klThSanPham')).toHaveValue('BAO_CAO');
       await expect(page.locator('#klThCoQuanTrinh')).toHaveValue('DANG_UY_UBND');   // v3.27: cơ quan trình của dòng
       await page.locator('#klThNganh').selectOption('THAM_MUU_TONG_HOP');
-      if (await page.locator('#klThLinhVuc').inputValue() !== 'LV01_THAM_MUU_TONG_HOP') await page.locator('#klThLinhVuc').selectOption('LV01_THAM_MUU_TONG_HOP');
+      await expect(page.locator('#klThLinhVuc')).toHaveValue('LV01_THAM_MUU_TONG_HOP');   // ngành một lĩnh vực: tự xác định
       await chonPhanLoai(page);   // v3.26: mục tiêu then chốt bắt buộc ("Không thuộc")
       await expect(page.locator('#gvConThieu')).toHaveText('', NAP);
       await page.locator('#klThLuu').click();

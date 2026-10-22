@@ -7,6 +7,8 @@
 // → Áp dụng: việc đang mở và việc ĐÃ HOÀN THÀNH đổi phân loại (mục tiêu nguồn RA_SOAT), diễn biến có lý do, không gửi tin. Dữ liệu theo khoá riêng,
 // tự dọn. Chạy một mình (project v326-phan-loai, nối sau v325-ra-soat) vì đọc số toàn Văn phòng và ghi phân loại.
 // v3.27: mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) — phần mục tiêu chỉ chạy khi bật; tệp rà soát không có cột mục tiêu.
+// v3.29 (chủ dự án 22/10/2026): không còn ô / cột Lĩnh vực — "Còn thiếu" chỉ ghi ngành/lĩnh vực; tệp rà soát một cột "Ngành/lĩnh vực", đổi ngành
+// thì lĩnh vực tự xác định (ngành Văn hóa – Xã hội, nội dung không có từ khoá → lĩnh vực mang tên phần đầu của ngành: Văn hóa).
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { pageAs, moGiaoViec, nav, NAP, HIEN_MUC_TIEU } from './lib/app.js';
@@ -16,7 +18,7 @@ import { docXlsx } from '../../frontend/src/lib/xlsx-doc.js';
 import { taoXlsx } from '../../frontend/src/lib/xlsx.js';
 
 const KT_NGANH = 'Không thuộc ngành, lĩnh vực nào'; const KT_MT = 'Không thuộc mục tiêu then chốt';
-const TIEU_DE = ['Mã nhiệm vụ', 'Nội dung nhiệm vụ', 'Văn bản', 'Chủ trì', 'Tiến độ', 'Ngành', 'Lĩnh vực', ...(HIEN_MUC_TIEU ? ['Mục tiêu then chốt'] : []), 'Lý do rà soát'];
+const TIEU_DE = ['Mã nhiệm vụ', 'Nội dung nhiệm vụ', 'Văn bản', 'Chủ trì', 'Tiến độ', 'Ngành/lĩnh vực', ...(HIEN_MUC_TIEU ? ['Mục tiêu then chốt'] : []), 'Lý do rà soát'];
 const ab = (b) => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 
 test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Không thuộc", rà soát bằng tệp (v3.26)', () => {
@@ -33,8 +35,7 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
     vXong = await taoViec(db, vbRs, `${khoa} việc đã hoàn thành`, { linh_vuc_ma: 'LV08_TAI_CHINH', han_xu_ly: cong(homNay(), -5), tien_do_ma: 'HOAN_THANH',
       ngay_hoan_thanh: cong(homNay(), -6), minh_chung: `${khoa}/cũ`, theo_1400: false, ngay_nhan_van_ban: cong(homNay(), -30) });
     const t = async (bang, cot, ma) => (await db.from(bang).select(cot).eq('ma', ma).single()).data[cot];
-    ten = { ktth: await t('dm_nganh', 'ten', 'KINH_TE_TONG_HOP'), lv08: await t('dm_linh_vuc', 'ten', 'LV08_TAI_CHINH'), vhxh: await t('dm_nganh', 'ten', 'VAN_HOA_XA_HOI'),
-      lv10: await t('dm_linh_vuc', 'ten', 'LV10_VAN_HOA'), nq80: await t('dm_muc_tieu', 'ten_ngan', 'NQ_80') };
+    ten = { ktth: await t('dm_nganh', 'ten', 'KINH_TE_TONG_HOP'), vhxh: await t('dm_nganh', 'ten', 'VAN_HOA_XA_HOI'), nq80: await t('dm_muc_tieu', 'ten_ngan', 'NQ_80') };
   });
   test.afterAll(async () => { if (db && khoa) await don(); });
 
@@ -47,11 +48,11 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
       await p.locator('#klThSanPham').selectOption('BAO_CAO'); await p.locator('#klThHan').fill(cong(homNay(), 20));
       const thieu = p.locator('#gvConThieu'); const luu = p.locator('#klThLuu');
       await expect(p.locator('#gvNhacPhanLoai')).toContainText('bắt buộc chọn');
-      await expect(thieu).toContainText('ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực', NAP);
+      await expect(thieu).toContainText('ngành/lĩnh vực (hoặc "Không thuộc")', NAP); await expect(thieu).not.toContainText('"Không thuộc"), lĩnh vực');
       if (HIEN_MUC_TIEU) await expect(thieu).toContainText('mục tiêu then chốt (hoặc "Không thuộc")');
       await expect(luu).toBeDisabled();
 
-      // Ngành "Không thuộc" → lĩnh vực duy nhất tự chọn
+      // Ngành "Không thuộc" → lĩnh vực duy nhất tự xác định
       await p.locator('#klThNganh').selectOption('KHONG_THUOC');
       await expect(p.locator('#klThLinhVuc')).toHaveValue('LV99_KHONG_THUOC');
       await expect(thieu).toHaveText(HIEN_MUC_TIEU ? 'Còn thiếu: mục tiêu then chốt (hoặc "Không thuộc")' : '', NAP);
@@ -73,7 +74,7 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
       await p.locator('#klThLoaiVB').selectOption('KL_BTV');
       await expect(p.locator('#klThNganh option[value="KHONG_THUOC"]')).toHaveCount(0);
       await expect(p.locator('#klThNganh')).toHaveValue('');
-      await expect(thieu).toContainText('ngành/lĩnh vực, lĩnh vực'); await expect(thieu).not.toContainText('ngành/lĩnh vực (hoặc');
+      await expect(thieu).toContainText('ngành/lĩnh vực'); await expect(thieu).not.toContainText('ngành/lĩnh vực (hoặc'); await expect(p.locator('#klThLinhVuc')).toHaveValue('');
       await p.locator('#klThLoaiVB').selectOption('CONG_VAN');
       await expect(p.locator('#klThNganh option[value="KHONG_THUOC"]')).toHaveCount(1);
       await p.locator('#klThNganh').selectOption('KHONG_THUOC'); await expect(p.locator('#klThLinhVuc')).toHaveValue('LV99_KHONG_THUOC');
@@ -107,8 +108,8 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
     await expect(page.locator('#rsDs')).toHaveAttribute('data-nap', /./, NAP);
     await expect(page.locator('#rsChe [data-che="nganh"]')).toHaveAttribute('aria-pressed', 'true');
     await page.locator('#rsVanBan').selectOption(vbRs);
-    await expect(page.locator(`#rsDong-${vMo.id} .rs-nganh`)).toHaveText('Chưa phân loại ngành, lĩnh vực', NAP);
-    await expect(page.locator(`#rsDong-${vXong.id}`), 'việc đã có ngành, lĩnh vực không ở ô này').toHaveCount(0);
+    await expect(page.locator(`#rsDong-${vMo.id} .rs-nganh`)).toHaveText('Chưa phân loại ngành/lĩnh vực', NAP);
+    await expect(page.locator(`#rsDong-${vXong.id}`), 'việc đã có ngành/lĩnh vực không ở ô này').toHaveCount(0);
     await page.context().close();
   });
 
@@ -136,13 +137,13 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
       expect([...theoMa.keys()].sort()).toEqual([vMo.ma, vXong.ma].sort());
       const hMo = theoMa.get(vMo.ma); const hXong = theoMa.get(vXong.ma); const iMt = TIEU_DE.indexOf('Mục tiêu then chốt');
       expect([hMo[5], iMt >= 0 ? hMo[iMt] : '']).toEqual(['', '']);
-      expect([hXong[5], hXong[6]]).toEqual([ten.ktth, ten.lv08]);
+      expect(hXong[5]).toBe(ten.ktth);
 
       // Điền theo TÊN (như cán bộ chọn ở ô danh sách của tệp); thêm một mã không có và một dòng sai ngành
-      const sua = (h, ng, lv, mt, ly) => [...h.slice(0, 5), ng, lv, ...(iMt >= 0 ? [mt] : []), ly];
-      const dong = [sua(hMo, KT_NGANH, '', KT_MT, 'không phục vụ lĩnh vực trọng tâm'), sua(hXong, ten.vhxh, ten.lv10, ten.nq80, 'chủ đề văn hoá'),
-        sua(['NV-KHONG-CO-0116', `${khoa} mã không có`, '', '', ''], HIEN_MUC_TIEU ? '' : KT_NGANH, '', KT_MT, ''),
-        sua(['NV-LOI-TEP-0116', `${khoa} ngành sai`, '', '', ''], 'Ngành không có 0116', '', '', '')];
+      const sua = (h, ng, mt, ly) => [...h.slice(0, 5), ng, ...(iMt >= 0 ? [mt] : []), ly];
+      const dong = [sua(hMo, KT_NGANH, KT_MT, 'không phục vụ lĩnh vực trọng tâm'), sua(hXong, ten.vhxh, ten.nq80, 'chủ đề văn hoá'),
+        sua(['NV-KHONG-CO-0116', `${khoa} mã không có`, '', '', ''], HIEN_MUC_TIEU ? '' : KT_NGANH, KT_MT, ''),
+        sua(['NV-LOI-TEP-0116', `${khoa} ngành sai`, '', '', ''], 'Ngành không có 0116', '', '')];
       const buffer = Buffer.from(taoXlsx([{ ten: 'Rà soát phân loại', cot: TIEU_DE.map((nhan) => ({ nhan })), dong }]));
       await p.locator('#rsTepFile').setInputFiles({ name: `${khoa}.xlsx`, mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer });
       const kq = p.locator('#rsTepKq'); const tom = kq.locator('.rs-tep-tom');
@@ -160,7 +161,7 @@ test.describe.serial('Phân loại nhiệm vụ — bắt buộc khi giao, "Khô
     const n = async (id) => (await db.from('nhiem_vu').select('nganh_ma, linh_vuc_ma, tien_do_ma').eq('id', id).single()).data;
     const mt = async (id) => (await db.from('nhiem_vu_muc_tieu').select('muc_tieu_ma, nguon').eq('nhiem_vu_id', id)).data;
     expect(await n(vMo.id)).toMatchObject({ nganh_ma: 'KHONG_THUOC', linh_vuc_ma: 'LV99_KHONG_THUOC' });
-    expect(await n(vXong.id)).toEqual({ nganh_ma: 'VAN_HOA_XA_HOI', linh_vuc_ma: 'LV10_VAN_HOA', tien_do_ma: 'HOAN_THANH' });
+    expect(await n(vXong.id)).toEqual({ nganh_ma: 'VAN_HOA_XA_HOI', linh_vuc_ma: 'LV10_VAN_HOA', tien_do_ma: 'HOAN_THANH' });   // lĩnh vực tự xác định (v3.29)
     expect(await mt(vMo.id)).toEqual(HIEN_MUC_TIEU ? [{ muc_tieu_ma: 'KHONG_THUOC', nguon: 'RA_SOAT' }] : []);
     expect(await mt(vXong.id)).toEqual(HIEN_MUC_TIEU ? [{ muc_tieu_ma: 'NQ_80', nguon: 'RA_SOAT' }] : []);
     for (const v of [vMo, vXong]) {

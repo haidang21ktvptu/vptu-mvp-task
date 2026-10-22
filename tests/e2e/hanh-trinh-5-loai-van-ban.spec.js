@@ -30,16 +30,20 @@ test.describe.serial('PR-2b / Đợt D — hành trình 5 loại văn bản: gia
       if (loai === 'KL_BTV') await tp.locator('#klThSoHN').fill('9');
       await tp.locator('#klThNoiDung').fill(`${khoa} ${loai} hành trình`); await tp.locator('#klThOwner').selectOption(`tk:${ID.e2eCv}`);
       await tp.locator('#klThSanPham').selectOption('BAO_CAO'); await tp.locator('#klThHan').fill(cong(homNay(), 20));
-      if (CAN_NGANH.has(loai)) { await tp.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await tp.locator('#klThLinhVuc').selectOption('LV08_TAI_CHINH'); }
+      if (CAN_NGANH.has(loai)) { await tp.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await tp.locator('#klThLvct').fill('Tài chính'); }   // v3.29: lĩnh vực theo lĩnh vực chi tiết
       await chonPhanLoai(tp);   // v3.26: loại khác kết luận / thông báo cũng bắt buộc ngành ("Không thuộc"); mục tiêu then chốt "Không thuộc"
       await expect(tp.locator('#gvConThieu'), loai).toHaveText('');
       await tp.locator('#klThLuuTiep').click();
       await expect(tp.locator('#toastContainer'), loai).toContainText('Đã giao việc NV-', NAP);
       await expect(tp.locator('#klThNoiDung')).toHaveValue('');
     }
-    const { data } = await db.from('nhiem_vu').select('id, ma, han_nop_minh_chung, van_ban_giao_viec!inner(loai, so_ket_luan)').like('van_ban_giao_viec.so_ket_luan', `${khoa}-%`);
+    const { data } = await db.from('nhiem_vu').select('id, ma, han_nop_minh_chung, nganh_ma, linh_vuc_ma, van_ban_giao_viec!inner(loai, so_ket_luan)').like('van_ban_giao_viec.so_ket_luan', `${khoa}-%`);
     expect(data.map((x) => x.van_ban_giao_viec.loai).sort()).toEqual([...LOAI].sort());
-    data.forEach((x) => { expect(x.han_nop_minh_chung).toBeNull(); viec[x.van_ban_giao_viec.loai] = x; });
+    data.forEach((x) => {
+      expect(x.han_nop_minh_chung).toBeNull(); viec[x.van_ban_giao_viec.loai] = x;
+      // v3.29: lĩnh vực tự xác định — "Giao, nhập tiếp" giữ ngành (Kinh tế tổng hợp từ việc kết luận) và lĩnh vực của việc vừa giao khi nội dung không nhận ra lĩnh vực khác
+      expect([x.nganh_ma, x.linh_vuc_ma], x.van_ban_giao_viec.loai).toEqual(['KINH_TE_TONG_HOP', 'LV08_TAI_CHINH']);
+    });
   });
 
   test('2. Chủ trì A3 xác nhận nhận việc trên "Việc của tôi" rồi nộp minh chứng 4 yếu tố ở ngăn chi tiết → hoàn thành', async () => {

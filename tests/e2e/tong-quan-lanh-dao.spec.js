@@ -130,7 +130,7 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
       await oVb.locator('input[data-mtg-chon][value="CTR_DU_LICH"]').check();
       await expect(oVb.locator('.mtg-chip')).toContainText('Du lịch bền vững');
       await expect(p.locator('#gvThe1 .mtg-chip[data-nguon="VAN_BAN"]')).toContainText('Du lịch bền vững', NAP);
-      await expect(p.locator('#gvConThieu')).toContainText('ngành/lĩnh vực (hoặc "Không thuộc"), lĩnh vực');   // v3.26: bắt buộc phân loại
+      await expect(p.locator('#gvConThieu')).toContainText('ngành/lĩnh vực (hoặc "Không thuộc")');   // v3.26: bắt buộc phân loại (v3.29: lĩnh vực tự xác định)
       await chonPhanLoai(p);   // công văn: ngành "Không thuộc"; mục tiêu đã có (theo văn bản) — không tích "Không thuộc"
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await p.locator('#klThLuu').click();

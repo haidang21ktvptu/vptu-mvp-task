@@ -34,7 +34,7 @@ function veQuyTac() {
   const han = kyBH ? 'theo kỳ ban hành' : $('klThHan').value ? formatNgay($('klThHan').value) : 'chưa đặt';
   dat('gvQuyTac', oQuyTac(1, 'chủ trì theo dõi', owner, Boolean($('klThOwner').value)) + oQuyTac(1, 'sản phẩm đầu ra', sp, Boolean($('klThSanPham').value))
     + oQuyTac(1, 'hạn xử lý', han, kyBH || Boolean($('klThHan').value)) + oQuyTac(1, 'minh chứng', 'nộp trước hạn xử lý — nộp là hoàn thành', kyBH || Boolean($('klThHan').value))
-    + oQuyTac(3, 'mức cảnh báo', 'Vàng, Đỏ, Đỏ đặc biệt tự bật theo hạn', Boolean($('klThHan').value) || kyBH));
+    + oQuyTac(3, 'mức cảnh báo', 'sắp đến hạn, quá hạn tự bật theo hạn xử lý', Boolean($('klThHan').value) || kyBH));   // v3.29: ghi bằng nghĩa
 }
 
 // Nút chọn nhanh: data-o = id ô, data-gt = giá trị.
@@ -67,7 +67,7 @@ function veKeThua() {
   const dong = (nhan, gt) => (gt ? `<div><dt>${nhan}</dt><dd>${escapeHtml(gt)}</dd></div>` : '');
   dat('gvKeThua', `<p class="kt-dau"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
     Kế thừa từ ${escapeHtml(c.ma)} — phần cấp trên đã giao, cấp dưới chỉ xem</p><dl>${dong('Nội dung kết luận / Văn bản trình', c.noi_dung)}${dong('Số TB/KL', c.so_ket_luan)}
-    ${dong('Hạn của cấp trên', c.han_xu_ly ? formatNgay(c.han_xu_ly) : '')}${dong('Sản phẩm đầu ra', c.san_pham_ten)}${dong('Lĩnh vực', c.linh_vuc_ten || c.nganh_ten)}</dl>`);
+    ${dong('Hạn của cấp trên', c.han_xu_ly ? formatNgay(c.han_xu_ly) : '')}${dong('Sản phẩm đầu ra', c.san_pham_ten)}${dong('Ngành/lĩnh vực', c.nganh_ten)}</dl>`);
 }
 
 // Cột phải: văn bản đang chọn (đọc lại ô mỗi lần vẽ), số việc đã nhập (kl_van_ban_so_viec — tổng thật, đọc lại khi mở biểu mẫu và sau mỗi

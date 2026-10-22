@@ -11,7 +11,7 @@ import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { loadDanhMucKl, danhMucKl, linhVucCuaNganh, cauHinhKl, tuNhanViec, homNayTheoDb, giaoViec, giaoViecNhieu, datTrichYeuVanBan } from '../../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, danhMucKl, cauHinhKl, tuNhanViec, homNayTheoDb, giaoViec, giaoViecNhieu, datTrichYeuVanBan } from '../../../lib/kl/du-lieu.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { ganTimChon } from '../../../lib/tim-chon.js';
 import { laThayMatThuongTruc } from '../../../lib/kl/thay-mat.js';
@@ -29,7 +29,7 @@ import { hienTabGiaoViec } from '../nhap-excel/tab.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, LOAI_CO_HOI_NGHI } from '../kl/them-owner.js';
 import { dienThongTinNguon } from './thong-tin-nguon.js';   // Đợt C2: mức quan trọng, cơ quan trình, Thường trực chỉ đạo
 import { ganSauGiao, vanBanDoiMucTieu, datLaiMucTieuGv, datLaiTheMot, ganSuKienMucTieu, khoaCacThe, khiMucTieuDoi, KHOA_1 } from './muc-tieu.js';   // v3.25: mục tiêu then chốt theo thẻ
-import { canNganhBatBuoc, thieuMucTieu, nganhChoPhep, chuThichNganh, linhVucDuyNhat, mucThieuNganh, MUC_THIEU_MT, nhacPhanLoai } from './phan-loai.js';   // v3.26: phân loại bắt buộc
+import { canNganhBatBuoc, thieuMucTieu, nganhChoPhep, chuThichNganh, linhVucTuDong, nhoLinhVuc, mucThieuNganh, MUC_THIEU_MT, nhacPhanLoai, boGoiYLinhVuc } from './phan-loai.js';   // v3.26: phân loại bắt buộc
 import { dongNganCT } from '../ngan-chi-tiet.js';
 import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan, canNganhHienTai, canNgayNhan, chuSanSang, chuXemTruoc } from './trang-thai.js';
 import { datLaiDocAi, mountDocAi } from './doc-ai.js';   // v3.25: đọc văn bản gốc (PDF) bằng trợ lý AI
@@ -51,7 +51,7 @@ function datDoKhanChinh(ma) { $('klThDoKhan').value = ma; $('klThDoKhanWrap').qu
 const AN_A0 = ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo', 'gvPhuWrap', 'klThLuuTiep'];   // A0: không người theo dõi, không "Giao, nhập tiếp"; "Thông tin thêm" chỉ ba ô nguồn (Đợt D)
 const anHienTheoDoi = () => ['klThNguoiTheoDoiWrap', 'gvGoiYCanBo'].forEach((id) => show(id, !anTheoDoi()));   // ẩn khi Thường trực giao / chuyên viên giao thẳng (0085)
 // A0 với văn bản kết luận / thông báo: giao_viec bắt buộc ngành + lĩnh vực (và ngày giao, loại hạn như A1) → hiện các ô này theo loại văn bản.
-const THEO_LOAI_A0 = ['klThNganhWrap', 'klThLinhVucWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];   // v3.27: ngành, lĩnh vực cùng hàng với chủ trì
+const THEO_LOAI_A0 = ['klThNganhWrap', 'klThNgayNhanWrap', 'klThLoaiWrap'];   // v3.27: ngành cùng hàng với chủ trì (v3.29: lĩnh vực là ô ẩn trong khung ngành)
 const vanBanChon = () => timTrongDs($('klThVanBan').value);
 // C3: tổ hợp (phòng Owner, ngành, lĩnh vực) đang chọn có trong phạm vi giao (kl_pham_vi_giao) không; người theo dõi: pham-vi.js (3.4, F).
 const phamViThieu = () => thongBaoPhamVi(phongOwner(), $('klThNganh').value, $('klThLinhVuc').value, danhMucKl().linhVuc);
@@ -92,21 +92,21 @@ function capNhatHienThi() {
 let nganhKl = null;   // v3.26: loại văn bản đổi giữa kết luận / thông báo và loại khác → lọc lại mục "Không thuộc" của ô ngành
 function capNhatNganh() {   // bắt buộc theo vai, loại văn bản (phan-loai.js): dấu *, chú thích, dòng nhắc
   const bb = canNganhBatBuoc();
-  show('klThNganhBatBuoc', bb); show('klThLinhVucBatBuoc', bb); show('gvNhacPhanLoai', bb && !laA0()); setText('gvNhacPhanLoai', nhacPhanLoai());
+  show('klThNganhBatBuoc', bb); show('gvNhacPhanLoai', bb && !laA0()); setText('gvNhacPhanLoai', nhacPhanLoai());
   setText('klThNganhGhiChu', chuThichNganh());
   if (nganhKl !== canNganhHienTai()) { nganhKl = canNganhHienTai(); if (danhMucKl().nganh) { dienNganh(); lamMoiLuaChonLuoi(); } }   // cả các thẻ thêm
 }
-// Ngành / lĩnh vực: chỉ các mục trong phạm vi giao ở phòng của Owner (C3); giữ lựa chọn cũ nếu vẫn hợp lệ.
+// Ngành: chỉ mục trong phạm vi giao ở phòng của chủ trì (C3), giữ lựa chọn cũ nếu còn hợp lệ. v3.29: bỏ ô Lĩnh vực — lĩnh vực tự xác định trong phạm vi
+// (kiêm nhiệm) theo gợi ý AI / Excel, lĩnh vực chi tiết, nội dung, việc vừa giao (phan-loai.js); chiKhiDoi (đang gõ): vẽ lại người theo dõi khi lĩnh vực đổi.
 function dienNganh() {
   const cho = nganhDuocChon(phongOwner()); const cu = $('klThNganh').value;
   $('klThNganh').innerHTML = opt('', 'Chọn ngành/lĩnh vực') + danhMucKl().nganh.filter((n) => (!cho || cho.has(n.ma)) && nganhChoPhep(n)).map((n) => opt(n.ma, n.ten, n.ma === cu)).join('');
   dienLinhVuc();
 }
-function dienLinhVuc() {
-  const cho = linhVucDuocChon(phongOwner()); const cu = $('klThLinhVuc').value;
-  $('klThLinhVuc').innerHTML = opt('', 'Chọn lĩnh vực') + linhVucCuaNganh($('klThNganh').value).filter((l) => !cho || cho.has(l.ma)).map((l) => opt(l.ma, l.ten, l.ma === cu)).join('');
-  if (!$('klThLinhVuc').value) $('klThLinhVuc').value = linhVucDuyNhat($('klThNganh').value, cho);   // ngành một lĩnh vực ("Không thuộc", Văn phòng…): tự chọn
-  dienTheoDoi();
+function dienLinhVuc(chiKhiDoi = false) {
+  const lv = $('klThLinhVuc'); const cu = lv.value;
+  lv.value = linhVucTuDong({ nganh: $('klThNganh').value, chiTiet: $('klThLvct').value, noiDung: $('klThNoiDung').value, goiY: lv.dataset.goiY, truoc: lv.dataset.truoc, cho: linhVucDuocChon(phongOwner()) });
+  if (!chiKhiDoi || lv.value !== cu) dienTheoDoi();
 }
 function vanBanDoi() { $('klThNgayNhan').value = vanBanChon()?.ngay_nhan || getHomNay(); capNhatHienThi(); vanBanDoiMucTieu(); }
 // Đổi lãnh đạo được thay mặt → phạm vi của người đó; lọc lại Owner / ngành / lĩnh vực. Khoá biểu mẫu khi đọc; lỗi → trả ô Thay mặt về người cũ.
@@ -155,7 +155,7 @@ function conThieu() {
     [canNgayNhan() && !$('klThNgayNhan').value, 'ngày giao nhiệm vụ'],
     [!$('klThNoiDung').value.trim(), 'nội dung'], [!$('klThOwner').value, 'chủ trì theo dõi'], [!anTheoDoi() && !$('klThNguoiTheoDoi').value, 'người theo dõi'],
     [!$('klThSanPham').value, 'sản phẩm đầu ra'], [$('klThLoai').value !== 'KY_BAN_HANH' && !$('klThHan').value, 'hạn xử lý'], [hanTruocBH(), 'hạn sau ngày ban hành'],
-    [canNganhBatBuoc() && !$('klThNganh').value, mucThieuNganh()], [canNganhBatBuoc() && !$('klThLinhVuc').value, 'lĩnh vực'], [thieuMucTieu(KHOA_1), MUC_THIEU_MT],
+    [canNganhBatBuoc() && !$('klThNganh').value, mucThieuNganh()], [canNganhBatBuoc() && Boolean($('klThNganh').value) && !$('klThLinhVuc').value, 'ngành/lĩnh vực trong phạm vi giao'], [thieuMucTieu(KHOA_1), MUC_THIEU_MT],
     [Boolean(phamViThieu().thieu), phamViThieu().thieu], [theoDoiNgoaiPhamVi(), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']].filter(([t]) => t).map(([, n]) => n)
     .concat(thieuNhieu());
 }
@@ -174,7 +174,7 @@ function capNhatTomTat() {
   const thieu = conThieu(); setText('gvConThieu', thieu.length ? `Còn thiếu: ${thieu.join(', ')}` : '');
   setText('gvTomTatChu', thieu.length ? '' : chuSanSang(o));   // v3.27 (mục 2): không trích nội dung; chỉ khi đủ — "Sẵn sàng giao …"
   if (!anTheoDoi() && (!$('klThNguoiTheoDoi').value || theoDoiNgoaiPhamVi())) $('gvThe1Them').open = true;   // ô bắt buộc trong mục "Thêm"
-  setText('gvPhamViGhiChu', phamViThieu().chuThich || 'theo ngành đã chọn');
+  setText('gvPhamViGhiChu', phamViThieu().chuThich ? ` · ${phamViThieu().chuThich}` : '');   // v3.29: phạm vi kiêm nhiệm ghi dưới ô Ngành/lĩnh vực
   // Xem trước thẻ việc (cột phụ) đọc lại các ô của thẻ 1
   setText('gvXtDoKhan', dk); $('gvXtDoKhan').className = `tag ${['THUONG_KHAN', 'HOA_TOC'].includes(maDk) ? 'do' : maDk === 'KHAN' ? 'vang' : ''}`;
   setText('gvXtNoiDung', nd || 'Nội dung kết luận / Văn bản trình (chưa nhập)');
@@ -218,6 +218,7 @@ export async function openGiaoViec(opts = {}) {
   $('klThNganh').innerHTML = '';
   $('klThLoai').innerHTML = dm.loaiThoiHan.filter((l) => l.cho_phep_tao_moi).map((l) => opt(l.ma, l.ten, l.ma === 'CO_HAN_CU_THE')).join('');
   ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThLvct', 'klThSoHN', 'klThSoKL', 'klThNgayBH', 'klThNgayNhanVB', 'klThTrichYeu', 'klThSanPhamMoTa'].forEach((id) => { $(id).value = ''; });
+  nhoLinhVuc($('klThLinhVuc'), false);
   $('klThNgayNhan').value = homNay;
   datDoKhanChinh(a0 ? 'KHAN' : 'THUONG');
   datLaiNhieu(); datLaiMucTieuGv();
@@ -268,7 +269,7 @@ async function luu(nhapTiep) {
     if (!nhapTiep) { await openGiaoViec(); await moNhiemVu(kq.id, kq.ma); return; } // v9 đợt 2: ở lại Giao việc (biểu mẫu mở lại sạch), việc vừa giao hiện trong ngăn chi tiết
     $('klThVanBan').value = p.van_ban_id || kq.van_ban_id;
     ['klThNoiDung', 'klThHan', 'klThVanBanTK', 'klThLvct', 'klThSanPhamMoTa', 'klThPhoiHop'].forEach((id) => { $(id).value = ''; });
-    $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; dienNganh(); datLaiTheMot();
+    $('klThOwner').value = ''; $('klThSanPham').value = ''; $('klThCapQD').value = ''; nhoLinhVuc($('klThLinhVuc'), true); dienNganh(); datLaiTheMot();
     capNhatHienThi(); window.scrollTo({ top: 0 }); $('klThNoiDung').focus(); $('giaoViecForm').dispatchEvent(new Event('gv-da-giao'));   // v9.js: số đã nhập
   } catch (e) {
     notifyError('Không giao được việc: ' + loiDeHieu(e));
@@ -283,8 +284,8 @@ export function registerGiaoViec() {
   $('klThVanBanTim').addEventListener('input', () => timKhiGo(nhanMoi()));   // tự chọn kết quả đầu → phát change của ô văn bản (vanBanDoi, v9)
   $('klThThayMat').addEventListener('change', thayMatDoi);
   $('klThHan').addEventListener('input', capNhatHienThi);
-  $('klThNganh').addEventListener('change', dienLinhVuc);
-  $('klThLinhVuc').addEventListener('change', dienTheoDoi); $('klThNguon').addEventListener('input', nguonDoi);   // 'input' tới ô trước khi nổi lên form (capNhatTomTat)
+  $('klThNganh').addEventListener('change', () => dienLinhVuc()); $('klThLinhVuc').addEventListener('change', () => dienLinhVuc());   // ô ẩn: gợi ý AI / Excel
+  ['klThNoiDung', 'klThLvct'].forEach((id) => $(id).addEventListener('input', () => { if (id === 'klThLvct') boGoiYLinhVuc($('klThLinhVuc')); dienLinhVuc(true); })); $('klThNguon').addEventListener('input', nguonDoi);   // gõ lĩnh vực chi tiết: bỏ gợi ý AI / Excel
   $('klThOwner').addEventListener('change', ownerDoi);
   tim.owner = ganTimChon($('klThOwnerTim'), $('klThOwner')); tim.theoDoi = ganTimChon($('klThNguoiTheoDoiTim'), $('klThNguoiTheoDoi')); tim.thayMat = ganTimChon($('klThThayMatTim'), $('klThThayMat'));
   ganSuKienNhieu(); ganSuKienMucTieu(); khiMucTieuDoi(capNhatTomTat); mountDocAi();   // ô trong thẻ: Owner → ngành → lĩnh vực → người theo dõi; mục tiêu đổi → "Còn thiếu" (v3.26)

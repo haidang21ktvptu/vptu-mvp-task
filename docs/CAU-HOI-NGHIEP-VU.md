@@ -328,3 +328,22 @@ ngành/lĩnh vực, Cơ quan/đơn vị trình,... Phải giống như các cộ
 | N-2 | Ô không có trong bảng Phụ lục? | Theo tên ở màn Giao việc: Người theo dõi (thay "Theo dõi"), Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm (cả trong hộp nộp minh chứng). | unit `ten-o-phu-luc` |
 | N-3 | Chỗ nào giữ nguyên? | Nghĩa khác cột Excel: "Trạng thái" (tính theo hạn), "Số hiệu" văn bản ở Giao việc (mọi loại văn bản), cột "Nhiệm vụ" của bảng, các ô riêng của minh chứng (số hiệu, ngày, trích yếu, mô tả kết quả), màn và tệp rà soát phân loại (tệp đọc lại theo tiêu đề cũ), chữ "Theo dõi" ở nhóm menu và hộp "Theo dõi giải ngân". Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột). Thông báo lỗi do cơ sở dữ liệu trả về còn chữ "Owner" — cần migration, để sau. | unit `ten-o-phu-luc` (mẫu cũ) |
 
+
+## Nhóm O — Quyết định 22/10/2026: bỏ ô Lĩnh vực, ghi rõ mức cảnh báo, Báo cáo theo phòng / chuyên viên, đường dẫn riêng, quyền điều chỉnh hạn và sửa (v3.29)
+
+Chủ dự án (22/10/2026, 10:50) yêu cầu năm việc: (1) khung 2 Nhiệm vụ còn ô Lĩnh vực — "kiểm tra lại cột trong file excel xem có nội dung này không,
+nếu không có thì bỏ đi"; (2) chủ trì theo dõi điều chỉnh, gia hạn được thời hạn, có nhật ký; tài khoản quản trị của chủ dự án sửa được mọi thông tin;
+thư ký Thường trực nộp minh chứng, gia hạn, đổi chủ trì theo dõi… với mọi nhiệm vụ; (3) Báo cáo theo phòng chuyên môn và theo chuyên viên của mỗi phòng
+(Tổng số, quá hạn, sắp đến hạn, đang thực hiện, hoàn thành, trước hạn), bỏ "Không đạt, đạt, đạt tốt, đạt xuất sắc"; (4) mỗi chức năng một đường dẫn
+(ví dụ `…/vptu-mvp-task/Tong-quan`), chuyên nghiệp và tăng bảo mật; (5) Tổng quan ghi "13 cảnh báo, 8 nhiệm vụ gần tới hạn, … 5 nhiệm vụ quá hạn" thay
+cho "8 vàng, 0 đỏ, 5 đỏ đặc biệt", các thông tin khác cũng tường minh. Trả lời các câu hỏi và duyệt kế hoạch cùng ngày.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| O-1 | Ô "Lĩnh vực" ở Giao việc? | Bảng Phụ lục chỉ có **Ngành/lĩnh vực** (cột F) và **Lĩnh vực chi tiết** (cột H) → **bỏ ô Lĩnh vực** ở mọi màn hình; lĩnh vực trong danh mục (dùng cho kiêm nhiệm, khối lĩnh vực) hệ thống tự xác định trong phạm vi được giao (SPEC GV-27). Giữ ở Quản trị: Kiêm nhiệm lĩnh vực, Danh mục lĩnh vực. | unit `nhap-excel-v327`, `phan-loai`; e2e `giao-viec-kiem-nhiem`, `pr3-giao-that`, `hanh-trinh-5-loai-van-ban` |
+| O-2 | Ghi mức cảnh báo thế nào? | **Ghi đúng quy tắc**: "sắp đến hạn (còn ≤ 3 ngày)", "quá hạn dưới 3 ngày", "quá hạn từ 3 ngày trở lên"; ở **mọi màn hình**, giữ màu; chú giải vẫn ghi tên mức Vàng / Đỏ / Đỏ đặc biệt theo Công văn 1400 (DESIGN mục 13). Nhóm xem "Sắp đến hạn" 7 ngày (CH-10b) ghi kèm "(còn ≤ 7 ngày)" để khỏi lẫn. | unit `muc-canh-bao`, `tong-quan-lanh-dao`; e2e `tong-quan`, `cv-xem-phong` |
+| O-3 | Cột "Sắp đến hạn" ở Báo cáo? | **Như Tổng quan**: còn ≤ 3 ngày (mức Vàng); Tổng = Quá hạn + Sắp đến hạn + Đang thực hiện + Hoàn thành; Trước hạn thuộc Hoàn thành; bỏ 4 cột chất lượng ở màn và tệp Excel của Báo cáo (SPEC DB-12). | unit `bao-cao`; e2e `bao-cao-phong`, `pr3-hien-thi` |
+| O-4 | Chủ trì theo dõi điều chỉnh hạn? | **Tự điều chỉnh, bắt buộc ghi lý do**, mỗi lần lưu nhật ký, báo người giao và lãnh đạo phụ trách; **chỉ khi việc chưa quá hạn** (đã quá hạn: lãnh đạo, thư ký Thường trực hoặc tài khoản quản trị gia hạn); áp dụng **mọi loại văn bản**, kể cả Kết luận BTV, Thông báo Thường trực. | RLS `kl-0123` (PR 3 của v3.29) |
+| O-5 | Thư ký Thường trực làm gì với mọi nhiệm vụ? | Nộp minh chứng, gia hạn, đổi chủ trì theo dõi, **cập nhật tiến độ / kết quả, ghi vướng mắc, sửa thông tin giao** — với **mọi** nhiệm vụ; không thêm quyền chỉ đạo, xác nhận minh chứng, đóng việc. | RLS `kl-0124` (PR 3) |
+| O-6 | Tài khoản quản trị (toàn quyền) sửa được gì? | **Mọi ô của nhiệm vụ** (kể cả việc đã hoàn thành), **thông tin văn bản giao**, **minh chứng đã nộp** (sửa / gỡ), **mở lại việc đã hoàn thành**; mọi thay đổi ghi nhật ký. | RLS `kl-0125`, `kl-0126` (PR 3) |
+| O-7 | Đường dẫn riêng từng chức năng? | Mỗi mục menu một đường dẫn (`/Tong-quan`, `/Giao-viec`, `/Bao-cao`…); chỉ mở được chức năng thuộc vai của người đăng nhập; kèm chính sách nội dung (CSP), chống nhúng khung, không gửi đường dẫn ra trang ngoài. Đường dẫn không chứa dữ liệu nhiệm vụ. | e2e `duong-dan` (PR 2) |

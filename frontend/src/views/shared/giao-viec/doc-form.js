@@ -26,7 +26,8 @@ export function kiemTra(p) {
   if (!p.san_pham_loai) return 'Chọn loại sản phẩm đầu ra — mỗi việc phải định nghĩa sản phẩm ngay từ đầu.';
   if (p.loai_thoi_han_ma === 'CO_HAN_CU_THE' && !p.han_xu_ly) return 'Nhập hạn xử lý — mỗi việc phải có một hạn cụ thể.';
   if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
-  if (canNganhHienTai() && (!p.nganh_ma || !p.linh_vuc_ma)) return 'Chọn ngành/lĩnh vực và lĩnh vực trong ngành (bắt buộc với việc từ kết luận / thông báo).';
+  if (canNganhHienTai() && !p.nganh_ma) return 'Chọn ngành/lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
+  if (canNganhHienTai() && !p.linh_vuc_ma) return 'Ngành/lĩnh vực đã chọn không thuộc phạm vi đồng chí được giao ở phòng chủ trì — chọn ngành khác hoặc báo lãnh đạo phụ trách.';   // v3.29: lĩnh vực tự xác định
   if (!anTheoDoi() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
   return loiNguon();
 }

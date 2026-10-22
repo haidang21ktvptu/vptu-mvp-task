@@ -15,7 +15,7 @@ export const SAP_XEP = [['moi', 'Mới nhập trước', 'Việc nhập lên h�
   ['han', 'Hạn gần trước', 'Việc đang mở theo hạn xử lý tăng dần — quá hạn lên đầu; việc chưa có hạn, việc đã hoàn thành ở cuối'],
   ['canh-bao', 'Mức cảnh báo', 'Hỏa tốc, Thường trực giao, chỉ đạo chờ phản hồi, quá hạn lên trước (thứ tự cũ)']];
 // Khoá lọc nằm trong "Thêm bộ lọc" (đếm số đang áp dụng ở nhãn).
-export const KHOA_THEM = ['nhapKy', 'nguoiNhap', 'capGiao', 'hanKy', 'doKhan', 'mucTieu', 'hoiNghi', 'nganh', 'linhVuc', 'nguon'];
+export const KHOA_THEM = ['nhapKy', 'nguoiNhap', 'capGiao', 'hanKy', 'doKhan', 'mucTieu', 'hoiNghi', 'nganh', 'nguon'];   // v3.29: bỏ lĩnh vực
 export const demLocThem = (loc = {}) => KHOA_THEM.filter((k) => loc[k]).length;
 
 const ngay = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s : '');

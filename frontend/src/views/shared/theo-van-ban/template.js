@@ -2,7 +2,7 @@
 // + ô số đếm văn bản (#tvbSo) + thanh lọc (phạm vi, tìm, loại văn bản, sắp xếp, mở / thu gọn tất cả, tóm tắt) + chú giải + bảng văn bản #tvbCay
 // (data-nap đặt khi nạp xong — e2e chờ). Dòng và bảng con do dong.js vẽ. Lớp viết nguyên văn (Tailwind giữ lớp).
 import { LOAI_VAN_BAN } from '../kl/them-owner.js';
-import { dauBangHtml } from '../bang/khung.js';
+import { dauBangHtml, CHU_GIAI_VB } from '../bang/khung.js';
 
 // v3.22.1: chú thích phạm vi trên dòng tóm tắt (Trưởng phòng / chuyên viên chỉ thấy việc trong phạm vi; Thường trực, lãnh đạo VP: không ghi thêm).
 export function nhanPhamViTvb(user, xemPhong = false) {
@@ -13,8 +13,6 @@ export function nhanPhamViTvb(user, xemPhong = false) {
 }
 
 const COT = [['STT', 'bnv-c-stt'], ['Văn bản'], ['Ngày nhận'], ['Người giao'], ['Nhiệm vụ'], ['Tiến độ'], ['Cảnh báo']];
-const CHU_GIAI = '<span><i class="dac-biet"></i>Có việc Đỏ đặc biệt</span><span><i class="do"></i>Có việc quá hạn</span><span><i class="vang"></i>Có việc sắp đến hạn</span>'
-  + '<span><i class="lam"></i>Đang thực hiện, trong hạn</span><span><i class="luc"></i>Hoàn thành toàn bộ</span>';
 
 export const theoVanBanTemplate = `
   <div class="dau"><h1>Theo văn bản</h1><span>mỗi văn bản một dòng — bấm tên văn bản để xem nhiệm vụ giao từ văn bản và việc giao tiếp xuống; bấm một việc để mở ngăn chi tiết</span></div>
@@ -32,7 +30,7 @@ export const theoVanBanTemplate = `
     <span class="chu-phu" id="tvbTomTat"></span>
   </div>
   <p class="chu-phu tvb-ket-noi"><span id="tvbKetNoi" class="ket-noi" role="status"></span></p>
-  <div class="bnv-chu-giai">${CHU_GIAI}</div>
+  <div class="bnv-chu-giai">${CHU_GIAI_VB}</div>
   <div class="bnv cot-vb" role="region" aria-label="Danh sách văn bản giao việc">
     <div class="bnv-dau" aria-hidden="true">${dauBangHtml(COT)}</div>
     <div id="tvbCay" class="bnv-than" aria-live="polite"><p class="bnv-trong">Đang nạp văn bản…</p></div>

@@ -2,13 +2,23 @@
 // một ô một lúc; số đếm trên cùng mảng với bảng), hàng tiêu đề cột, chú giải màu mức, nút trang, giữ nút đang focus qua lần vẽ lại (realtime /
 // sau hành động). Tên lớp viết nguyên văn (Tailwind giữ lớp).
 import { escapeHtml } from '../../../lib/dom.js';
+import { nguongCanhBao } from '../../../lib/kl/nhan.js';
 
 // ds: [[khoá, tên, …]]; so: { khoá: số }; mau: { khoá: lớp màu của số — vang | do | luc | canh }.
 export const oSoHtml = (ds, so, chon, action, mau = {}) => ds.map(([k, ten]) => `<button type="button" class="o-so${mau[k] ? ` ${mau[k]}` : ''}" data-action="${action}" data-loc="${k}" aria-pressed="${String(chon === k)}"><span>${escapeHtml(ten)}</span><b>${so[k] ?? 0}</b></button>`).join('');
 // cot: [[tên cột, lớp]] — hàng tiêu đề chỉ để nhìn (mỗi ô của dòng có nhãn riêng — data-nhan — khi bảng thành thẻ).
 export const dauBangHtml = (cot) => cot.map(([ten, lop]) => `<span${lop ? ` class="${lop}"` : ''}>${ten}</span>`).join('');
-export const CHU_GIAI_MUC = '<span><i class="dac-biet"></i>Đỏ đặc biệt: quá hạn từ 3 ngày</span><span><i class="do"></i>Đỏ: quá hạn</span>'
-  + '<span><i class="vang"></i>Vàng: còn không quá 3 ngày</span><span><i class="lam"></i>Trong hạn</span><span><i class="luc"></i>Hoàn thành</span>';
+// v3.29: chú giải ghi nghĩa trước, tên mức theo Công văn 1400 trong ngoặc; số ngày theo cấu hình (kl_cau_hinh — như nhãn ở lib/kl/nhan.js tenMuc).
+// Mẫu HTML của màn chèn lúc khởi động (trước khi đọc cấu hình) → khối chú giải mang data-chu-giai, veChuGiai() vẽ lại mỗi lần màn vẽ bảng.
+export const chuGiaiMucHtml = () => { const { ddb, vang } = nguongCanhBao(); return `<span><i class="dac-biet"></i>Quá hạn từ ${ddb} ngày trở lên (mức Đỏ đặc biệt)</span>`
+  + `<span><i class="do"></i>Quá hạn dưới ${ddb} ngày (mức Đỏ)</span><span><i class="vang"></i>Sắp đến hạn: còn ≤ ${vang} ngày (mức Vàng)</span><span><i class="lam"></i>Trong hạn</span><span><i class="luc"></i>Hoàn thành</span>`; };
+// Theo văn bản: màu của văn bản theo việc xấu nhất (lib/kl/van-ban-bang.js lopVanBan — "sắp đến hạn" của văn bản là nhóm còn ≤ 7 ngày).
+export const chuGiaiVbHtml = () => { const { ddb, sap } = nguongCanhBao(); return `<span><i class="dac-biet"></i>Có việc quá hạn từ ${ddb} ngày trở lên</span>`
+  + `<span><i class="do"></i>Có việc quá hạn dưới ${ddb} ngày</span><span><i class="vang"></i>Có việc sắp đến hạn (còn ≤ ${sap} ngày)</span><span><i class="lam"></i>Đang thực hiện, trong hạn</span><span><i class="luc"></i>Hoàn thành toàn bộ</span>`; };
+const CHU_GIAI = { muc: chuGiaiMucHtml, vb: chuGiaiVbHtml };
+export const CHU_GIAI_MUC = `<span class="cg-muc" data-chu-giai="muc">${chuGiaiMucHtml()}</span>`;
+export const CHU_GIAI_VB = `<span class="cg-muc" data-chu-giai="vb">${chuGiaiVbHtml()}</span>`;
+export const veChuGiai = () => document.querySelectorAll('[data-chu-giai]').forEach((el) => { const f = CHU_GIAI[el.dataset.chuGiai]; if (f) el.innerHTML = f(); });
 
 // Nút trang (chỉ khi nhiều hơn một trang): ‹ Trang trước · Trang x/y · Trang sau › (data-huong để giữ con trỏ bàn phím khi sang trang).
 export function nutTrangHtml(p, action) {

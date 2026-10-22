@@ -99,21 +99,20 @@ export async function moGiaoViec(page, mo = () => nav(page, 'navGiaoViec')) {
   await expect(page.locator('#giaoViecForm')).toHaveAttribute('data-san-sang', '1', NAP);
 }
 
-// v3.26 (0116): Giao việc bắt buộc phân loại MỌI thẻ — ngành + lĩnh vực, và mục tiêu then chốt hoặc "Không thuộc". the: số thẻ (data-dong, 1 = thẻ
-// chính). Ô đã có giá trị (kịch bản tự chọn, AI / tệp điền sẵn, ngành chỉ một lĩnh vực) giữ nguyên. Ngành trống → nganh (mặc định "Không thuộc
-// ngành, lĩnh vực nào"; kết luận / thông báo phải truyền ngành cụ thể); lĩnh vực trống → linhVuc hoặc mục đầu danh sách. Ô mục tiêu chưa có mục nào
-// (kể cả mục theo văn bản) → tích "Không thuộc mục tiêu then chốt nào"; mucTieu: false = không đụng (kịch bản tự chọn mục tiêu). Ô ngành đang ẩn
-// (Thường trực giao loại không bắt buộc) → bỏ qua ngành, lĩnh vực. v3.27: mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) → chỉ ngành, lĩnh vực.
-export async function chonPhanLoai(page, { the = 1, nganh = 'KHONG_THUOC', linhVuc = null, mucTieu = true } = {}) {
+// v3.26 (0116): Giao việc bắt buộc phân loại MỌI thẻ — ngành/lĩnh vực, và mục tiêu then chốt hoặc "Không thuộc". the: số thẻ (data-dong, 1 = thẻ
+// chính). Ô đã có giá trị (kịch bản tự chọn, AI / tệp điền sẵn) giữ nguyên. Ngành trống → nganh (mặc định "Không thuộc ngành, lĩnh vực nào"; kết
+// luận / thông báo phải truyền ngành cụ thể). v3.29: không còn ô Lĩnh vực — lĩnh vực (danh mục) tự xác định vào ô ẩn (#klThLinhVuc /
+// [data-cot=linh_vuc]) theo ngành, phạm vi kiêm nhiệm, lĩnh vực chi tiết, nội dung; ở đây chỉ kiểm ô ẩn đã có giá trị. Kịch bản cần một lĩnh vực cụ
+// thể (ngành nhiều lĩnh vực) thì điền ô Lĩnh vực chi tiết đúng tên lĩnh vực. Ô mục tiêu chưa có mục nào (kể cả mục theo văn bản) → tích "Không thuộc
+// mục tiêu then chốt nào"; mucTieu: false = không đụng (kịch bản tự chọn mục tiêu). Ô ngành đang ẩn (Thường trực giao loại không bắt buộc) → bỏ qua
+// ngành. v3.27: mục tiêu then chốt tạm ẩn (HIEN_MUC_TIEU) → chỉ ngành.
+export async function chonPhanLoai(page, { the = 1, nganh = 'KHONG_THUOC', mucTieu = true } = {}) {
   const goc = the === 1 ? page.locator('#gvThe1') : page.locator(`#gvLuoiThan .gv-nv[data-dong="${the}"]`);
   const sNganh = the === 1 ? page.locator('#klThNganh') : goc.locator('[data-cot="nganh"]');
   const sLv = the === 1 ? page.locator('#klThLinhVuc') : goc.locator('[data-cot="linh_vuc"]');
   const hien = await sNganh.isVisible();
   if (hien && nganh && !(await sNganh.inputValue())) await sNganh.selectOption(nganh);
-  if (hien && await sNganh.inputValue() && !(await sLv.inputValue())) {
-    const ds = await sLv.locator('option').evaluateAll((os) => os.map((x) => x.value).filter(Boolean));
-    await sLv.selectOption(linhVuc || ds[0]);
-  }
+  if (hien && await sNganh.inputValue()) await expect(sLv, `thẻ ${the}: lĩnh vực tự xác định theo ngành`).not.toHaveValue('');
   if (!mucTieu || !HIEN_MUC_TIEU) return;
   const o = goc.locator('.mtg').first();
   await expect(o.locator('[data-mtg-khong]')).toBeVisible(NAP);
