@@ -51,6 +51,7 @@ export async function napLaiViec(id, { nemLoi = false, veLai = true, chiKhiDoi =
     thay(dh.ngoaiLe, id, trong ? ngoaiLe : null);
     dh.ngoaiLe.sort(soSanhNgoaiLe);
     dh.tuChoiCho = [...(dh.tuChoiCho || []).filter((t) => t.nhiem_vu_id !== id), ...tuChoi.filter((t) => t.trang_thai === 'CHO_DUYET')];
+    if (doi) document.dispatchEvent(new CustomEvent('viec-doc-lai', { detail: id }));   // v3.29: ngăn dùng chung cập nhật dòng tiêu đề (chủ trì · hạn)
     if (!veLai || (chiKhiDoi && !doi)) return;
     if (sectionDangHien('viewKl') || document.querySelector('#nganCT:not(.hidden) #klChiTiet')) render(true);   // v9 đợt 2: ngăn chi tiết dùng chung
     if (sectionDangHien('viewDieuHanh')) veDieuHanh();

@@ -1,5 +1,6 @@
 // v3.29 (0123–0126, chủ dự án quyết 22/10/2026 — CAU-HOI O-4…O-6): mỗi vai một luồng trên giao diện thật.
-// 1. Chủ trì theo dõi (demo_e2e_nv): "Điều chỉnh hạn" việc còn hạn — lùi hạn = gia hạn lần 1, lý do bắt buộc, Diễn biến; việc đã quá hạn: không có nút,
+// 1. Chủ trì theo dõi (demo_e2e_nv): "Điều chỉnh hạn" việc còn hạn (mở bằng đường dẫn, ngăn dùng chung) — lùi hạn = gia hạn lần 1, lý do bắt buộc,
+//    Diễn biến, tiêu đề ngăn theo hạn mới; việc đã quá hạn: không có nút,
 //    có câu nhắc đề nghị lãnh đạo gia hạn.
 // 2. Thư ký Thường trực (demo_e2e_tk, cờ tạm): việc ngoài phạm vi cũ không còn "Chỉ xem"; nộp minh chứng → hoàn thành; đổi chủ trì theo dõi.
 // 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa văn bản giao" (trích yếu), "Sửa toàn bộ thông tin" (ghi chú),
@@ -46,7 +47,8 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
   test('1. Chủ trì: điều chỉnh hạn việc còn hạn (gia hạn lần 1, lý do, Diễn biến); việc quá hạn chỉ có câu nhắc', async ({ browser }, testInfo) => {
     const moi = cong(homNay(), 35);
     await voiPhien(browser, 'E2E_NV', testInfo, async (p) => {
-      await moViec(p, v.CON_HAN.id, v.CON_HAN.ma);
+      await p.goto(`./Viec-cua-toi/${v.CON_HAN.ma}`);   // mở bằng đường dẫn → ngăn chi tiết dùng chung (dòng tiêu đề phụ phải theo hạn mới sau khi lưu)
+      await expect(p.locator(`#nganCT #klChiTiet-${v.CON_HAN.id}`)).toBeVisible(NAP);
       await p.locator(`#klChiTiet-${v.CON_HAN.id} [data-action="moDieuChinhHan"]`).click();
       await expect(p.locator('#dchModal')).toBeVisible();
       await p.locator('#dchHan').fill(moi);
@@ -59,6 +61,8 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
       await expect.poll(async () => doc('CON_HAN', 'han_xu_ly, so_lan_gia_han'), NAP).toEqual({ han_xu_ly: moi, so_lan_gia_han: 1 });
       await expect(p.locator(`#klDienBien-${v.CON_HAN.id}`)).toContainText('Điều chỉnh hạn', NAP);
       await expect(p.locator(`#klChiTiet-${v.CON_HAN.id} [data-truong="so-lan-gia-han"]`)).toContainText('đã gia hạn 1 lần', NAP);
+      const [y, m, d] = moi.split('-').map(Number);
+      await expect(p.locator('#nganCTPhu')).toContainText(`hạn ${d}/${m}/${y}`, NAP);   // tiêu đề ngăn theo dòng vừa đọc lại (kiểm tay staging 22/10/2026)
       await moViec(p, v.QUA_HAN.id, v.QUA_HAN.ma);
       await expect(p.locator(`#klChiTiet-${v.QUA_HAN.id} [data-truong="nhac-gia-han"]`)).toBeVisible(NAP);
       await expect(p.locator(`#klChiTiet-${v.QUA_HAN.id} [data-action="moDieuChinhHan"]`)).toHaveCount(0);

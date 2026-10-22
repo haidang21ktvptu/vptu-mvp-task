@@ -7,6 +7,7 @@
 // (khiGhiTrongNgan), quay lại danh sách thấy trạng thái mới của việc vừa xử lý.
 // v3.29 (chủ dự án 22/10/2026 17:02): mở việc → "…/<chức năng>/NV-…" (kl/chi-tiet.js ghiViec); người dùng đóng / Quay lại / Esc → bỏ mã, lùi đúng bước
 // đã thêm (boViec); mở danh sách khác → cũng bỏ mã như vậy; Quay lại / Tiến tới của trình duyệt (cùng màn) → dongViecTheoDuong, không ghi lịch sử.
+// Dòng tiêu đề phụ (chủ trì · hạn) theo dòng mới mỗi khi việc đang mở được đọc lại (điều chỉnh hạn, đổi chủ trì, gia hạn, realtime — 'viec-doc-lai').
 import { $, escapeHtml, show, setText } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -30,6 +31,7 @@ const laMo = () => !$('nganCT')?.classList.contains('hidden');
 export const nganDangMoViec = () => laMo() && Boolean($('klChiTiet')?.closest('#nganCT'));
 export const datNguonDong = (fn) => { nguon.add(fn); };
 const ownerText = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định chủ trì';
+const phuViec = (r) => `${ownerText(r)} · ${hanNgan(r, homNayVN())}`;
 const dongCua = (id) => ngan.rows.get(id) || dh.rows.find((r) => r.id === id) || [...nguon].map((f) => f(id)).find(Boolean) || null;
 
 // Màn hình không có realtime: ghi thành công trong ngăn khi đang xem màn hình đó → nạp lại màn hình (giữ hàng / người đang mở của màn).
@@ -109,7 +111,7 @@ export async function moNganViec(id, { cheDo = 'chi-tiet', tuDs = false, row = n
   ngan.daMo.add(id); ngan.viecVua = id;
   dieuHost();
   show('nganCTDs', false); show('nganCTViec', true); show('nganCTLui', ngan.tuDs);
-  moKhung(r.ma, `${ownerText(r)} · ${hanNgan(r, homNayVN())}`);
+  moKhung(r.ma, phuViec(r));
   await toggleKlChiTiet({ id, cheDo });
   if (!daDoc) napLaiViec(id, { chiKhiDoi: true });   // dòng của màn hình gọi có thể cũ vài phút: đọc lại đúng việc này, khác thì vẽ lại
   datNghePhu((su) => {
@@ -153,6 +155,10 @@ export function mountNganChiTiet() {
     nganLui: () => nganLui({ url: true }), nganDong: () => dongNganCT({ url: true }), dongViecTheoDuong,
   });
   document.addEventListener('doi-man', () => { quenViec(); dongNganCT(); });   // chọn mục khác ở menu (shell/index.js showSection)
+  document.addEventListener('viec-doc-lai', (e) => {   // việc đang mở vừa đọc lại khác dòng cũ (nap-lai-viec.js): tiêu đề phụ theo dòng mới
+    const r = nganDangMoViec() && idDangMo() === e.detail ? timKlRow(e.detail) : null;
+    if (r) setText('nganCTPhu', phuViec(r));
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !laMo() || document.querySelector('.modal-nen:not(.hidden)') || e.target.closest?.('input, textarea, select')) return;   // đang gõ: không mất chữ
     dongNganCT({ url: true });
