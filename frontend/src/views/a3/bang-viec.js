@@ -26,7 +26,7 @@ export const coToanVP = () => dh.tatCa.length > dh.rows.length;   // có việc 
 const toanVP = () => vct.pham === 'toan' && coToanVP();
 const cuaToi = () => dh.rows.filter((r) => laCuaToi(r, me()));
 const MAU = { sap: 'vang', qua: 'do', xong: 'luc' };
-const VAI = [['tat', 'Mọi vai trò'], ['chu', 'Tôi chủ trì theo dõi'], ['theo', 'Tôi là người theo dõi']];
+const VAI = [['tat', 'Mọi vai trò'], ['chu', 'Chủ trì theo dõi'], ['theo', 'Người theo dõi']];
 const ten = (id) => findAccount(id)?.full_name || '';
 
 // Trước ô số: phạm vi → tìm → vai trò / cán bộ.
