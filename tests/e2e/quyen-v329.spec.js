@@ -1,6 +1,6 @@
 // v3.29 (0123–0126, chủ dự án quyết 22/10/2026 — CAU-HOI O-4…O-6): mỗi vai một luồng trên giao diện thật.
 // 1. Chủ trì theo dõi (demo_e2e_nv): "Điều chỉnh hạn" việc còn hạn (mở bằng đường dẫn, ngăn dùng chung) — lùi hạn = gia hạn lần 1, lý do bắt buộc,
-//    Diễn biến, tiêu đề ngăn theo hạn mới; việc đã quá hạn: không có nút,
+//    Diễn biến, tiêu đề ngăn theo hạn mới, chuông của chủ trì không có tin mình gửi; việc đã quá hạn: không có nút,
 //    có câu nhắc đề nghị lãnh đạo gia hạn.
 // 2. Thư ký Thường trực (demo_e2e_tk, cờ tạm): việc ngoài phạm vi cũ không còn "Chỉ xem"; nộp minh chứng → hoàn thành; đổi chủ trì theo dõi.
 // 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa văn bản giao" (trích yếu), "Sửa toàn bộ thông tin" (ghi chú),
@@ -63,6 +63,21 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
       await expect(p.locator(`#klChiTiet-${v.CON_HAN.id} [data-truong="so-lan-gia-han"]`)).toContainText('đã gia hạn 1 lần', NAP);
       const [y, m, d] = moi.split('-').map(Number);
       await expect(p.locator('#nganCTPhu')).toContainText(`hạn ${d}/${m}/${y}`, NAP);   // tiêu đề ngăn theo dòng vừa đọc lại (kiểm tay staging 22/10/2026)
+      // Chuông của người vừa thao tác chỉ có tin gửi TỚI mình — các tin báo người giao việc, Trưởng phòng, lãnh đạo phụ trách không hiện (kiểm tay
+      // staging 22/10/2026). Một tin tới chủ trì để nhóm của việc có mặt; chuông đọc lại với điều kiện người nhận, nhóm chỉ có đúng tin đó.
+      await p.locator('#nganCT [data-action="nganDong"]').click();
+      const tinToi = await db.from('direct_messages').insert({ sender_id: ID.tp, receiver_id: ID.e2eNv, content: `Đôn đốc · ${v.CON_HAN.ma}: ${khoa} thử chuông`,
+        is_read: false, loai: 'he_thong', nhiem_vu_id: v.CON_HAN.id });
+      expect(tinToi.error, tinToi.error?.message).toBeNull();
+      const docChuong = p.waitForRequest((r) => r.url().includes('/rest/v1/direct_messages') && r.url().includes('loai=eq.he_thong'));
+      await p.locator('#chuongBtn').click();
+      const yc = await docChuong;
+      expect(yc.url(), 'chuông chỉ đọc tin gửi tới mình').toContain(`receiver_id=eq.${ID.e2eNv}`);
+      await (await yc.response())?.finished();
+      const nhomTin = p.locator(`#thongBaoList [data-nv="${v.CON_HAN.id}"]`);
+      await expect(nhomTin).toContainText(`${v.CON_HAN.ma} · mới`, NAP);   // trước bản sửa: "có 4 diễn biến, 4 mới" (1 tin nhận + 3 tin mình gửi)
+      await expect(nhomTin).not.toContainText('diễn biến');
+      await p.locator('#chuongBtn').click();
       await moViec(p, v.QUA_HAN.id, v.QUA_HAN.ma);
       await expect(p.locator(`#klChiTiet-${v.QUA_HAN.id} [data-truong="nhac-gia-han"]`)).toBeVisible(NAP);
       await expect(p.locator(`#klChiTiet-${v.QUA_HAN.id} [data-action="moDieuChinhHan"]`)).toHaveCount(0);
