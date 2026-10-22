@@ -28,6 +28,7 @@
   .bnv-chu-giai i.dac-biet { background: var(--ddb); } .bnv-chu-giai i.do { background: var(--do); } .bnv-chu-giai i.vang { background: var(--vang); }
   .bnv-chu-giai i.lam { background: var(--lam); } .bnv-chu-giai i.luc { background: var(--luc); }
   .bnv-chu-giai b { color: var(--chu); }
+  .bnv-chu-giai .cg-muc { display: contents; }   /* v3.29: khối chú giải vẽ lại theo ngưỡng cấu hình — các mục vẫn là phần tử của hàng flex */
 
   /* ---- Khung bảng, hàng tiêu đề, dòng ---- */
   .bnv { margin-top: 12px; background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; box-shadow: var(--bong-the); }

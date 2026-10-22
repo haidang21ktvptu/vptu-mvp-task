@@ -156,9 +156,13 @@ describe('Tệp rà soát phân loại', () => {
     assert.deepEqual([kt.nganh, kt.linh_vuc, kt.muc_tieu], [KHONG_THUOC, LV_KHONG_THUOC, [KHONG_THUOC]]);
     assert.equal(khopDong({ so: 6, ma: 'NV-5', mucTieu: '57-NQ/TW' }, DM).muc_tieu[0], 'NQ_57', 'số hiệu nghị quyết');
   });
-  test('giá trị không khớp, lĩnh vực khác ngành, "Không thuộc" kèm mục khác → lỗi của dòng; không đoán gần đúng', () => {
+  test('giá trị không khớp, "Không thuộc" kèm mục khác → lỗi của dòng; không đoán gần đúng; v3.29: lĩnh vực (tệp cũ) chỉ là gợi ý', () => {
     assert.match(khopDong({ so: 2, ma: 'NV-1', nganh: 'Kinh tế' }, DM).loi[0], /không có trong danh mục/);
-    assert.match(khopDong({ so: 2, ma: 'NV-1', nganh: 'VAN_PHONG_TINH_UY', linhVuc: 'Đầu tư' }, DM).loi[0], /lĩnh vực/);
+    const cu = { ma: 'NV-1', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_DAU_TU', noi_dung: 'Việc' };   // tệp cũ: chỉ sửa cột Ngành, cột Lĩnh vực còn giá trị cũ
+    const khac = khopDong({ so: 2, ma: 'NV-1', nganh: 'VAN_PHONG_TINH_UY', linhVuc: 'Đầu tư' }, DM, cu);
+    assert.deepEqual([khac.loi, khac.nganh, khac.linh_vuc], [[], 'VAN_PHONG_TINH_UY', 'LV12_VAN_PHONG_TINH_UY'], 'lĩnh vực khác ngành → bỏ qua, tự xác định theo ngành mới');
+    assert.deepEqual(khopDong({ so: 2, ma: 'NV-1', nganh: 'VAN_PHONG_TINH_UY', linhVuc: 'Đầu tư' }, DM).loi, [], 'việc ngoài danh sách đang tải: không lỗi phía tệp (DB quyết)');
+    assert.match(khopDong({ so: 2, ma: 'NV-1', linhVuc: 'Lĩnh vực không có' }, DM).loi[0], /lĩnh vực "Lĩnh vực không có" không có trong danh mục/);
     assert.match(khopDong({ so: 2, ma: 'NV-1', mucTieu: 'Không thuộc; NQ_57' }, DM).loi.join(' '), /không ghi cùng/);
     assert.match(khopDong({ so: 2, ma: 'NV-1', mucTieu: 'Nghị quyết 99' }, DM).loi[0], /không có trong danh mục/);
   });
@@ -200,6 +204,9 @@ describe('Tệp rà soát phân loại', () => {
     const doi = khopBang([{ so: 2, ma: 'NV-1', nganh: 'KINH_TE_TONG_HOP' }], DM, (ma) => (ma === 'NV-1' ? viec : null)).gui[0];
     assert.equal(doi.nganh, 'KINH_TE_TONG_HOP'); assert.ok(DM.linhVuc.some((l) => l.ma === doi.linh_vuc && l.nganh_ma === 'KINH_TE_TONG_HOP'), String(doi.linh_vuc));
     assert.equal(khopBang([{ so: 2, ma: 'NV-9', nganh: 'KINH_TE_TONG_HOP' }], DM).gui[0].linh_vuc, null, 'không biết việc → giữ cách của DB');
+    const thieu = { ma: 'NV-2', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: null, noi_dung: 'Thẩm định dự án đầu tư công' };   // việc cũ có ngành, chưa có lĩnh vực
+    const dien = khopBang([{ so: 2, ma: 'NV-2', nganh: 'KINH_TE_TONG_HOP' }], DM, () => thieu).gui[0];
+    assert.ok(DM.linhVuc.some((l) => l.ma === dien.linh_vuc && l.nganh_ma === 'KINH_TE_TONG_HOP'), `ngành giữ nguyên, việc chưa có lĩnh vực → điền: ${dien.linh_vuc}`);
   });
   test('tóm tắt kết quả máy chủ; chuẩn hoá chữ', () => {
     const t = tomTat([{ ket_qua: 'DOI', doi: ['nganh_ma', 'muc_tieu'], canh_bao: 'x', da_xong: true }, { ket_qua: 'DOI', doi: ['muc_tieu'] }, { ket_qua: 'GIU' }, { ket_qua: 'LOI' }]);

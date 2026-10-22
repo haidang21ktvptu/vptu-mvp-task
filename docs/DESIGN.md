@@ -271,7 +271,7 @@ mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại
 - Nơi gộp Đỏ + Đỏ đặc biệt (tải việc cán bộ, nhãn văn bản, Báo cáo) ghi "quá hạn".
 - Nhóm xem "Sắp đến hạn" (còn ≤ 7 ngày — `nguong_sap_den_han_ngay`, CH-10b; khác mức Vàng) ghi kèm số ngày: "Sắp đến hạn (còn ≤ 7 ngày)" ở ô số Nhiệm vụ,
   Cần xử lý, Theo văn bản, Trưởng phòng; nhãn trạng thái trên dòng việc giữ "Sắp đến hạn" (ô Hạn đã ghi "còn n ngày").
-- Nhãn trong bảng tĩnh (ô số, lựa chọn lọc, đoạn biểu đồ) lấy số ngày lúc vẽ (`nhanTheoNguong`); chú giải màu dựng sẵn (`bang/khung.js`, Theo văn bản) ghi
-  số mặc định — đổi ngưỡng (bằng migration) thì sửa cùng.
+- Nhãn trong bảng tĩnh (ô số, lựa chọn lọc, đoạn biểu đồ) lấy số ngày lúc vẽ (`nhanTheoNguong`); chú giải màu của bảng (`bang/khung.js`: Nhiệm vụ,
+  Việc của tôi, Theo văn bản — khối `data-chu-giai`) vẽ lại mỗi lần vẽ bảng (`veChuGiai`), nên đổi ngưỡng ở Quản trị thì mọi nơi cùng một số.
 - Báo cáo (mọi bảng, dải đầu, tệp Excel): Tổng số nhiệm vụ · Quá hạn · Sắp đến hạn (còn ≤ 3 ngày) · Đang thực hiện · Hoàn thành · Trước hạn; xếp mức như
   Tổng quan (`lib/kl/bao-cao.js`); không còn cột chất lượng (Không đạt … Đạt xuất sắc — vẫn ghi ở ngăn chi tiết, hàng việc, Cán bộ).

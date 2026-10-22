@@ -1,6 +1,8 @@
 // "Theo văn bản" dạng bảng (v3.25, mẫu TheoVanBan 16/10/2026) — phần THUẦN (unit test trong frontend/tests/tinh-hinh.test.mjs): tổng hợp một văn bản
 // trên mọi việc của nó trong phạm vi đang xem (số việc, hoàn thành, quá hạn, Đỏ đặc biệt, sắp đến hạn, còn mở), lớp mức của dòng văn bản, cờ
 // "chưa nhập đủ / chưa rà soát" (đã nhập x / dự kiến y — x là tổng thật của văn bản, kl_van_ban_so_viec), sáu ô số đếm VĂN BẢN, hai cách sắp xếp.
+import { nhanTheoNguong, tenSapDenHan } from './nhan.js';
+
 export const NHOM_QUA = ['QUA_HAN', 'DANG_DINH_CHINH', 'QUA_HAN_NGHIEM_THU'];
 
 export function tongHopVanBan(rows = []) {
@@ -19,14 +21,14 @@ export function raSoatVanBan(x, y, rs) {
 }
 
 // Sáu ô số (đếm văn bản; d = { t: tongHopVanBan, rs: raSoatVanBan }).
-export const O_SO_VB = [
+export const O_SO_VB = nhanTheoNguong([
   ['tat', 'Tất cả văn bản', () => true],
   ['qua', 'Có việc quá hạn', (d) => d.t.qua > 0],
-  ['sap', 'Có việc sắp đến hạn (còn ≤ 7 ngày)', (d) => d.t.sap > 0],
+  ['sap', '', (d) => d.t.sap > 0],
   ['thieu', 'Chưa nhập đủ, chưa rà soát', (d) => d.rs.canhBao],
   ['mo', 'Còn việc đang thực hiện', (d) => d.t.mo > 0],
   ['xong', 'Hoàn thành toàn bộ', (d) => d.t.n > 0 && d.t.xong === d.t.n],
-];
+], 'sap', () => `Có việc ${tenSapDenHan()}`);   // số ngày theo cấu hình (nhom SAP_DEN_HAN — nguong_sap_den_han_ngay)
 const VI_TU = Object.fromEntries(O_SO_VB.map(([k, , f]) => [k, f]));
 export const locOVb = (ds, khoa) => ds.filter(VI_TU[khoa] || VI_TU.tat);
 export const demOVb = (ds) => Object.fromEntries(O_SO_VB.map(([k, , f]) => [k, ds.filter(f).length]));

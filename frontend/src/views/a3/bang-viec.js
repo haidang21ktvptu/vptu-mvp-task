@@ -12,7 +12,7 @@ import { locCanBo, tuyChonCanBo } from '../../lib/kl/pham-vi.js';
 import { O_SO, locO, demO, laCuaToi, sapXepViec, nhomGiuThuTu, vaiCua } from '../../lib/kl/viec-toi.js';
 import { phanTrang, chuHienThi } from '../../lib/kl/bang-o.js';
 import { dh, deNghiCuaToi } from '../shared/dieu-hanh/du-lieu.js';
-import { oSoHtml, nutTrangHtml, giuTieuDiem } from '../shared/bang/khung.js';
+import { oSoHtml, nutTrangHtml, giuTieuDiem, veChuGiai } from '../shared/bang/khung.js';
 import { chiDaoCua, nhomViecCuaToi } from './viec-cua-toi.js';
 import { dongViecHtml, nhomHtml } from './dong-viec.js';
 
@@ -69,7 +69,7 @@ export function veBangViec() {
   const tom = demO(cuaToi(), c);
   setText('vctTom', `${tom.can} việc cần làm ngay · ${tom.mo} việc đang thực hiện của đồng chí`);
   const goc = daLoc(); const so = demO(goc, c);
-  $('vctSo').innerHTML = oSoHtml(O_SO, so, vct.loc, 'vctLoc', MAU);
+  $('vctSo').innerHTML = oSoHtml(O_SO, so, vct.loc, 'vctLoc', MAU); veChuGiai();   // chú giải theo ngưỡng cấu hình
   veLoc();
   const sx = sapXepViec(locO(goc, vct.loc, c), vct.sx);
   const nhom = vct.nhomVb ? nhomGiuThuTu(sx) : null;

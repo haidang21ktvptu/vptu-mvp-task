@@ -16,7 +16,7 @@ import { giaiLocThem, sapXepMoiNhap, sapXepHan, demLocThem } from '../../../lib/
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
 import { tuyChonMucTieu } from '../../../lib/kl/tq-bo-loc.js';   // v3.24 (0105): ô lọc mục tiêu then chốt
 import { phanTrang, chuHienThi } from '../../../lib/kl/bang-o.js';
-import { dauBangHtml, nutTrangHtml, giuTieuDiem } from '../bang/khung.js';
+import { dauBangHtml, nutTrangHtml, giuTieuDiem, veChuGiai } from '../bang/khung.js';
 import { dongHtml } from './dong.js';
 import { veLaiChiTiet, idDangMo, dongBoNgan } from './chi-tiet.js';
 import { td, laTheoDoi, locTheoDoi, veTheoDoi } from './theo-doi.js';
@@ -139,6 +139,7 @@ function dienBoLoc() {
 // của ngăn đang mở mỗi lần gõ ô tìm / đổi bộ lọc).
 export function render(veLaiNgan = false) {
   const traTd = giuTieuDiem($('viewKl'));   // ô số, nút trang, nút quan hệ, dòng đang chọn giữ con trỏ bàn phím qua lần vẽ lại
+  veChuGiai();   // chú giải mức theo ngưỡng cấu hình (mẫu HTML chèn trước khi đọc cấu hình)
   const { nhom, ...nguCanh } = kl.loc;
   const goc = coSo();
   const homNay = homNayVN();

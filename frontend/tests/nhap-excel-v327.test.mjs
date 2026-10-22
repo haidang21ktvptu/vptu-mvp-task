@@ -90,6 +90,12 @@ test('Quy tắc mặc định: sản phẩm theo nội dung, lĩnh vực theo l�
   assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tổ chức hội nghị', truoc: 'LV_DT' }, DM), { ma: 'LV_DT', chac: false }, '"Giao, nhập tiếp": không nhận ra → lĩnh vực việc vừa giao');
   assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Rà soát thu thuế', truoc: 'LV_DT' }, DM), { ma: 'LV_TC', chac: true }, 'nhận ra từ nội dung thì theo nội dung');
   assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tổ chức hội nghị', truoc: 'LV_TP' }, DM), { ma: 'LV_TC', chac: false }, 'việc trước khác ngành → bỏ qua');
+  // Rà soát PR 1: lĩnh vực chi tiết ghi đúng tên lĩnh vực thắng gợi ý (AI / mặc định dòng Excel); "thuế" xét cả dấu — "thuê" không thành Tài chính
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'Tài chính', goiY: 'LV_DT' }, DM), { ma: 'LV_TC', chac: true }, 'đúng tên ở lĩnh vực chi tiết trước gợi ý');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', chiTiet: 'thu chi tài chính', goiY: 'LV_DT' }, DM), { ma: 'LV_DT', chac: true }, 'chỉ trúng từ khoá: gợi ý vẫn trước');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Rà soát hợp đồng thuê trụ sở' }, DM), { ma: 'LV_TC', chac: false }, '"thuê" không phải từ khoá Tài chính');
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Rà soát hợp đồng thuê trụ sở', truoc: 'LV_DT' }, DM), { ma: 'LV_DT', chac: false });
+  assert.deepEqual(linhVucMacDinh({ nganh: 'KTTH', noiDung: 'Tăng thu thuế nội địa' }, DM), { ma: 'LV_TC', chac: true }, '"thuế" (có dấu) → Tài chính');
   assert.deepEqual([congThang('2026-01-31', 1), congThang('2026-12-15', 1), congThang('2028-01-31', 1)], ['2026-02-28', '2027-01-15', '2028-02-29']);
   assert.deepEqual([hanMacDinh('2026-10-20', '2026-09-01'), hanMacDinh('2026-10-20', '2026-10-25')], ['2026-11-20', '2026-11-25']);
 });

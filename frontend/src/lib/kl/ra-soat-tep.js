@@ -86,7 +86,8 @@ export function timMucTieuTen(v, mucTieu = []) {
   return null;
 }
 // d: một dòng docBangRaSoat; dm: danh mục; viec: dòng việc đang có (theo mã — nội dung, lĩnh vực chi tiết, ngành, lĩnh vực hiện tại; không có = null).
-// → { so, ma, nganh, linh_vuc, muc_tieu (mảng | null = giữ), ly_do, loi: [chữ] }. v3.29: ngành đổi (hoặc tệp cũ có cột Lĩnh vực) → lĩnh vực tự xác định.
+// → { so, ma, nganh, linh_vuc, muc_tieu (mảng | null = giữ), ly_do, loi: [chữ] }. v3.29: lĩnh vực tự xác định khi ngành đổi, khi việc chưa có lĩnh
+// vực, hoặc tệp cũ có cột Lĩnh vực — lĩnh vực ghi trong tệp cũ chỉ là gợi ý: không thuộc ngành đã ghi thì bỏ qua (người dùng chỉ sửa cột Ngành).
 export function khopDong(d, dm = {}, viec = null) {
   const loi = []; const nganh = dm.nganh || []; const linhVuc = dm.linhVuc || [];
   let ng = null; let lv = null; let mt = null;
@@ -94,11 +95,11 @@ export function khopDong(d, dm = {}, viec = null) {
   if (d.nganh) { ng = timNganh(d.nganh, nganh); if (!ng) loi.push(`ngành "${d.nganh}" không có trong danh mục`); }
   if (d.linhVuc) {
     lv = timLinhVuc(d.linhVuc, linhVuc, ng);
-    if (!lv) loi.push(`lĩnh vực "${d.linhVuc}" không có trong danh mục${ng ? ' của ngành đã ghi' : ''}`);
-    else if (ng && linhVuc.find((l) => l.ma === lv)?.nganh_ma !== ng) loi.push(`lĩnh vực "${d.linhVuc}" không thuộc ngành "${d.nganh}"`);
-    else if (!ng && !d.nganh) ng = linhVuc.find((l) => l.ma === lv)?.nganh_ma || null;   // chỉ ghi lĩnh vực: ngành theo lĩnh vực
+    if (ng && lv && linhVuc.find((l) => l.ma === lv)?.nganh_ma !== ng) lv = null;   // gợi ý không thuộc ngành → bỏ qua
+    else if (!d.nganh && lv) ng = linhVuc.find((l) => l.ma === lv)?.nganh_ma || null;   // chỉ ghi lĩnh vực: ngành theo lĩnh vực
+    else if (!d.nganh && !lv) loi.push(`lĩnh vực "${d.linhVuc}" không có trong danh mục`);
   }
-  if (ng && !loi.length && (lv || (viec && ng !== viec.nganh_ma))) {   // không biết việc (ngoài danh sách đang tải): giữ cách của DB (ô trống = giữ)
+  if (ng && !loi.length && (lv || (viec && (ng !== viec.nganh_ma || !viec.linh_vuc_ma)))) {   // việc ngoài danh sách đang tải: như DB (ô trống = giữ)
     lv = linhVucMacDinh({ nganh: ng, chiTiet: viec?.linh_vuc_chi_tiet, noiDung: viec?.noi_dung, goiY: lv || viec?.linh_vuc_ma }, dm)?.ma || null;
   }
   if (d.mucTieu) {

@@ -27,12 +27,13 @@ export const nhomCua = (ma) => NHOM[ma] || { ten: ma, lop: '', stat: '', thuTu: 
 export const tenNhom = (ma) => nhomCua(ma).ten;
 
 // Bốn mức cảnh báo 1400 (NT-5, CN-4) → lớp mép trái (the/hang-nv/muc) và tên (chú giải — tên mức theo Công văn 1400 trong ngoặc).
+// Tên đọc lúc dùng (getter): số ngày theo cấu hình đã nạp (datNguongCanhBao).
 export const MUC_CANH_BAO = {
-  XANH:          { ten: 'Trong hạn',                                                 lop: 'lam' },
-  VANG:          { ten: 'Sắp đến hạn — còn ≤ 3 ngày, chưa có minh chứng (mức Vàng)', lop: 'vang' },
-  DO:            { ten: 'Quá hạn dưới 3 ngày (mức Đỏ)',                              lop: 'do' },
-  DO_DAC_BIET:   { ten: 'Quá hạn từ 3 ngày trở lên (mức Đỏ đặc biệt)',               lop: 'dac-biet' },
-  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo',                                   lop: '' },
+  XANH:          { ten: 'Trong hạn', lop: 'lam' },
+  VANG:          { get ten() { return `Sắp đến hạn — còn ≤ ${NGUONG.vang} ngày, chưa có minh chứng (mức Vàng)`; }, lop: 'vang' },
+  DO:            { get ten() { return `Quá hạn dưới ${NGUONG.ddb} ngày (mức Đỏ)`; }, lop: 'do' },
+  DO_DAC_BIET:   { get ten() { return `Quá hạn từ ${NGUONG.ddb} ngày trở lên (mức Đỏ đặc biệt)`; }, lop: 'dac-biet' },
+  KHONG_AP_DUNG: { ten: 'Không áp dụng cảnh báo', lop: '' },
 };
 // v3.29 (chủ dự án 22/10/2026 — "ghi đúng quy tắc", mọi màn hình, giữ màu): ba mức cảnh báo ghi bằng nghĩa; tên Vàng / Đỏ / Đỏ đặc biệt chỉ còn ở
 // chú giải. Ngưỡng theo kl_cau_hinh (du-lieu.js gọi datNguongCanhBao khi nạp; mặc định 3 / 5 / 3 như DB — trang_thai_dong, 0077).
@@ -103,7 +104,7 @@ export const TEN_NGUON = { excel: 'Nhập từ Excel', app: 'Nhập trên hệ t
 export const TEN_COT = {
   han_xu_ly: 'Hạn xử lý', loai_thoi_han_ma: 'Loại thời hạn', tien_do_ma: 'Tiến độ', ngay_hoan_thanh: 'Ngày hoàn thành',
   minh_chung: 'Minh chứng', van_ban_trien_khai: 'Văn bản triển khai', ly_do_chua_co_han: 'Lý do chưa có hạn',
-  ghi_chu: 'Ghi chú', nganh_ma: 'Ngành/lĩnh vực', linh_vuc_ma: 'Lĩnh vực', owner_don_vi_ma: 'Chủ trì theo dõi (phòng, đơn vị)',
+  ghi_chu: 'Ghi chú', nganh_ma: 'Ngành/lĩnh vực', linh_vuc_ma: 'Lĩnh vực (tự xác định)', owner_don_vi_ma: 'Chủ trì theo dõi (phòng, đơn vị)',
   owner_tai_khoan: 'Chủ trì theo dõi (cán bộ)', nguoi_theo_doi: 'Người theo dõi', noi_dung: 'Nội dung kết luận / Văn bản trình',
   linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', so_lan_gia_han: 'Số lần gia hạn', van_ban_id: 'Văn bản giao việc',
   san_pham_loai: 'Sản phẩm đầu ra', san_pham_mo_ta: 'Mô tả sản phẩm', cap_nhan_san_pham: 'Cấp nhận sản phẩm', cap_quyet_dinh: 'Cấp cần quyết định',

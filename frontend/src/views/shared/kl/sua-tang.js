@@ -12,7 +12,7 @@ import { tenCapDuyet } from '../../../lib/kl/thay-mat.js';
 import { MUC_QUAN_TRONG, tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
 import { dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';   // v3.27 (0117): cơ quan trình = đơn vị ngoài Văn phòng + Văn phòng Tỉnh ủy
-import { linhVucMacDinh } from '../../../lib/kl/nhap/mac-dinh.js';
+import { napPhamViSua, lvSauSua, ghiChuLv } from './sua-tang-lv.js';   // v3.29: lĩnh vực tự xác định trong phạm vi người sửa
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
@@ -103,7 +103,7 @@ export const suaTangTemplate = `
       <div><label for="stCot" class="nhan">Ô cần sửa</label><select id="stCot" class="o-nhap"></select></div>
       <div><p class="nhan">Đang ghi</p><p id="stCu" class="st-cu"></p></div>
     </div>
-    <div class="mt-3" id="stMoiWrap"></div>
+    <div class="mt-3" id="stMoiWrap"></div><p id="stLv" class="chu-phu mt-2" aria-live="polite"></p>
     <div class="mt-3"><label for="stLyDo" class="nhan">Lý do <span class="chu-phu">bắt buộc, tối đa 500 ký tự</span></label>
       <input type="text" id="stLyDo" class="o-nhap" maxlength="500" placeholder="Một câu, ví dụ: theo kết luận giao ban ngày 2/10"></div>
     <div class="modal-chan"><button type="button" class="nut" data-action="dongSuaTang">Huỷ</button><button type="submit" id="stLuu" class="nut chinh">Lưu</button></div>
@@ -111,10 +111,10 @@ export const suaTangTemplate = `
 </div>`;
 
 const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
-// v3.29: bỏ ô Lĩnh vực (bảng Phụ lục chỉ có Ngành/lĩnh vực, Lĩnh vực chi tiết) — đổi ngành thì lĩnh vực tự xác định (giữ lĩnh vực đang có nếu thuộc
-// ngành mới; không thì theo lĩnh vực chi tiết, nội dung — lib/kl/nhap/mac-dinh.js). DB kiểm lĩnh vực thuộc ngành; việc từ kết luận phải có cả hai.
+// v3.29: bỏ ô Lĩnh vực (bảng Phụ lục chỉ có Ngành/lĩnh vực, Lĩnh vực chi tiết) — đổi ngành / lĩnh vực chi tiết thì lĩnh vực tự xác định trong phạm
+// vi người sửa (sua-tang-lv.js), dòng ghi chú nói rõ lĩnh vực và lãnh đạo phụ trách. DB kiểm lĩnh vực thuộc ngành; việc từ kết luận phải có cả hai.
 const O_CHON = O_GIAO.filter(([c]) => c !== 'linh_vuc_ma');
-const linhVucTheo = (nganh, r) => (nganh ? linhVucMacDinh({ nganh, chiTiet: r.linh_vuc_chi_tiet, noiDung: r.noi_dung, goiY: r.linh_vuc_ma }, danhMucKl())?.ma || null : null);
+const capNhatLv = () => { const r = dongViec($('stId').value); $('stLv').textContent = r && $('stMoi') ? ghiChuLv($('stCot').value, $('stMoi').value.trim(), r) : ''; };
 function oMoiHtml(cot, r) {
   const k = kieuCua(cot); const v = r[cot] ?? ''; const nhan = `<label for="stMoi" class="nhan">Giá trị mới</label>`;
   if (k === 'nganh') {
@@ -137,6 +137,7 @@ function veO() {
   if (!r) return;
   $('stCu').textContent = giaTriO(cot, r[cot]);
   $('stMoiWrap').innerHTML = oMoiHtml(cot, r);
+  capNhatLv();
 }
 function moHop(cheDo, { id, cot }) {
   const r = dongViec(id);
@@ -150,6 +151,7 @@ function moHop(cheDo, { id, cot }) {
   $('stLyDo').value = ''; $('stLuu').disabled = false;
   $('stLuu').textContent = sua ? 'Lưu thay đổi' : 'Gửi đề nghị';
   veO();
+  napPhamViSua(r).then(capNhatLv).catch(() => {});   // phạm vi giao + phân công: ghi chú lĩnh vực chính xác hơn khi đọc xong
   show('stModal', true);
   $('stMoi')?.focus();
 }
@@ -158,7 +160,8 @@ const dongSuaTang = () => show('stModal', false);
 async function luuSuaTang() {
   const id = $('stId').value; const cot = $('stCot').value; const lyDo = $('stLyDo').value.trim();
   const moi = $('stMoi').value.trim();
-  const thay = cot === 'nganh_ma' ? { nganh_ma: moi || null, linh_vuc_ma: linhVucTheo(moi, dongViec(id) || {}) } : { [cot]: moi || null };
+  const lv = lvSauSua(cot, moi, dongViec(id) || {});
+  const thay = { [cot]: moi || null, ...(cot === 'nganh_ma' || lv?.doi ? { linh_vuc_ma: lv?.ma ?? null } : {}) };
   if (!lyDo) { notifyError('Ghi lý do (bắt buộc).'); $('stLyDo').focus(); return; }
   if (['noi_dung', 'do_khan'].includes(cot) && !moi) { notifyError(`${tenOGiao(cot)} không được để trống.`); return; }
   $('stLuu').disabled = true;
@@ -192,5 +195,6 @@ export function mountSuaTang(registerActions, napLai) {
   sauHanhDong = napLai;
   $('modalRoot').insertAdjacentHTML('beforeend', suaTangTemplate);
   $('stCot').addEventListener('change', veO);
+  ['input', 'change'].forEach((ev) => $('stMoiWrap').addEventListener(ev, capNhatLv));
   registerActions({ moSuaTang: (d) => moHop('sua', d), moDeNghiSua: (d) => moHop('de-nghi', d), dongSuaTang, luuSuaTang, dnsChapNhan, dnsGiuNguyen, dnsRut });
 }

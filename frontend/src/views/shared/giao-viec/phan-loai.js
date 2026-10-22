@@ -36,6 +36,8 @@ export const linhVucTuDong = (x) => linhVucMacDinh(x, danhMucKl())?.ma || '';
 // Biểu mẫu mở mới: bỏ gợi ý; "Giao, nhập tiếp" (giu): nhớ lĩnh vực việc vừa giao (data-truoc) — việc sau cùng ngành mà lĩnh vực chi tiết, nội
 // dung không nhận ra lĩnh vực thì lấy lại lĩnh vực đó (như ô chọn cũ giữ lựa chọn khi nhập tiếp).
 export function nhoLinhVuc(o, giu) { delete o.dataset.goiY; if (giu && o.value) o.dataset.truoc = o.value; else delete o.dataset.truoc; }
+// Người nhập gõ "Lĩnh vực chi tiết" → bỏ gợi ý (AI, dòng Excel): chữ người nhập ghi quyết định lĩnh vực (rà soát PR 1, v3.29).
+export const boGoiYLinhVuc = (o) => { if (o) delete o.dataset.goiY; };
 // Gợi ý lĩnh vực (trợ lý AI, dòng chờ nhập Excel) cho ô ẩn: ghi data-goi-y rồi phát change → biểu mẫu tính lại (gợi ý chỉ dùng khi hợp lệ).
 export function goiYLinhVuc(o, ma) {
   if (!o) return;

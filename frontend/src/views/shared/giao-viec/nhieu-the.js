@@ -15,7 +15,7 @@ import { nguoiTheoDoiOptionsHtml, goiYTheoDoi, parseOwner } from '../kl/them-own
 import { locTheoDoi, lanhDaoLoc, nganhDuocChon, linhVucDuocChon, thongBaoPhamVi } from './pham-vi.js';
 import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, canNganhHienTai, getHomNay } from './trang-thai.js';
 import { ganTheMucTieu } from './muc-tieu.js';   // v3.25: ô mục tiêu then chốt có gợi ý của thẻ
-import { canNganhBatBuoc, nganhChoPhep, chuThichNganh, linhVucTuDong } from './phan-loai.js';   // v3.26: phân loại bắt buộc
+import { canNganhBatBuoc, nganhChoPhep, chuThichNganh, linhVucTuDong, boGoiYLinhVuc } from './phan-loai.js';   // v3.26: phân loại bắt buộc
 
 const BB = '<b class="gv-bb" aria-hidden="true">*</b>';
 const opt = (v, t) => `<option value="${escapeHtml(v)}">${escapeHtml(t)}</option>`;
@@ -142,6 +142,6 @@ export function suKienThe(e) {
     else if (cot === 'linh_vuc') dienLinhVucThe(the);   // ô ẩn: gợi ý AI (goiYLinhVuc)
     else if (cot === 'loai') capNhatHanThe(the);
   } else if (cot === 'han') capNhatHanThe(the);
-  else if (cot === 'noi_dung' || cot === 'lvct') dienLinhVucThe(the, true);
+  else if (cot === 'noi_dung' || cot === 'lvct') { if (cot === 'lvct') boGoiYLinhVuc(o(the, 'linh_vuc')); dienLinhVucThe(the, true); }   // gõ lĩnh vực chi tiết: bỏ gợi ý
   anHienThe(the);
 }

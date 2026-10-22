@@ -2,12 +2,14 @@
 // đặc biệt chỉ còn ở chú giải. Nhóm xem "Sắp đến hạn" (còn ≤ 7 ngày — CH-10b) ghi kèm số ngày để khỏi lẫn với mức Vàng (còn ≤ 3 ngày).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tenMuc, tenMucHoa, chuGiaiMuc, datNguongCanhBao, nguongCanhBao, tenNhom, nhanTrangThai, tenSapDenHan, nhanTheoNguong } from '../src/lib/kl/nhan.js';
+import { tenMuc, tenMucHoa, chuGiaiMuc, datNguongCanhBao, nguongCanhBao, tenNhom, nhanTrangThai, tenSapDenHan, nhanTheoNguong, mucCua } from '../src/lib/kl/nhan.js';
 import { O_SO } from '../src/lib/kl/viec-toi.js';
 import { O_SO_TD } from '../src/lib/kl/tinh-hinh.js';
 import { TRANG_THAI } from '../src/lib/kl/tq-bo-loc.js';
 import { DOAN } from '../src/lib/kl/tong-quan-lanh-dao.js';
 import { cotBaoCao } from '../src/lib/kl/bao-cao.js';
+import { O_SO_VB } from '../src/lib/kl/van-ban-bang.js';
+import { chuGiaiMucHtml, chuGiaiVbHtml } from '../src/views/shared/bang/khung.js';
 
 const ten = (ds, k) => ds.find(([x]) => x === k)[1];
 
@@ -31,6 +33,11 @@ test('Ngưỡng theo cấu hình: mọi nhãn (ô số, lựa chọn lọc, đo�
   assert.equal(cotBaoCao(nguongCanhBao().vang)[2][1], 'Sắp đến hạn (còn ≤ 4 ngày)');
   assert.deepEqual([tenNhom('SAP_DEN_HAN'), tenSapDenHan()], ['Sắp đến hạn (còn ≤ 10 ngày)', 'sắp đến hạn (còn ≤ 10 ngày)']);
   assert.match(chuGiaiMuc()[0][1], /còn ≤ 4 ngày.*khẩn trở lên ≤ 6 ngày/);
+  // Rà soát PR 1: chú giải của bảng (mẫu HTML chèn trước khi đọc cấu hình — vẽ lại lúc vẽ bảng), tên mức (mucCua), ô số Theo văn bản
+  assert.match(chuGiaiMucHtml(), /Quá hạn từ 5 ngày trở lên \(mức Đỏ đặc biệt\).*Quá hạn dưới 5 ngày \(mức Đỏ\).*còn ≤ 4 ngày \(mức Vàng\)/);
+  assert.match(chuGiaiVbHtml(), /quá hạn từ 5 ngày trở lên.*quá hạn dưới 5 ngày.*sắp đến hạn \(còn ≤ 10 ngày\)/);
+  assert.deepEqual(['VANG', 'DO', 'DO_DAC_BIET'].map((m) => mucCua(m).ten.match(/\d+/)[0]), ['4', '5', '5']);
+  assert.equal(ten(O_SO_VB, 'sap'), 'Có việc sắp đến hạn (còn ≤ 10 ngày)');
   datNguongCanhBao({});
   assert.equal(ten(O_SO, 'sap'), 'Sắp đến hạn (còn ≤ 3 ngày)');
   assert.deepEqual(nhanTheoNguong([['a', 'x'], ['b', 'y']], 'b', () => 'z').map(([, t]) => t), ['x', 'z']);

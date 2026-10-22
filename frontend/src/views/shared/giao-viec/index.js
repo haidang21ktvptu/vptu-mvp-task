@@ -29,7 +29,7 @@ import { hienTabGiaoViec } from '../nhap-excel/tab.js';
 import { ownerOptionsHtml, parseOwner, nguoiTheoDoiOptionsHtml, thayMatOptionsHtml, goiYTheoDoi, LOAI_VAN_BAN, LOAI_CO_HOI_NGHI } from '../kl/them-owner.js';
 import { dienThongTinNguon } from './thong-tin-nguon.js';   // Đợt C2: mức quan trọng, cơ quan trình, Thường trực chỉ đạo
 import { ganSauGiao, vanBanDoiMucTieu, datLaiMucTieuGv, datLaiTheMot, ganSuKienMucTieu, khoaCacThe, khiMucTieuDoi, KHOA_1 } from './muc-tieu.js';   // v3.25: mục tiêu then chốt theo thẻ
-import { canNganhBatBuoc, thieuMucTieu, nganhChoPhep, chuThichNganh, linhVucTuDong, nhoLinhVuc, mucThieuNganh, MUC_THIEU_MT, nhacPhanLoai } from './phan-loai.js';   // v3.26: phân loại bắt buộc
+import { canNganhBatBuoc, thieuMucTieu, nganhChoPhep, chuThichNganh, linhVucTuDong, nhoLinhVuc, mucThieuNganh, MUC_THIEU_MT, nhacPhanLoai, boGoiYLinhVuc } from './phan-loai.js';   // v3.26: phân loại bắt buộc
 import { dongNganCT } from '../ngan-chi-tiet.js';
 import { getHomNay, datHomNay, laA0, nhuA0, anTheoDoi, laThayMatTT, canThayMat, nhanMoi, phongOwner, laMoi, thieuSoHN, bhTuongLai, vanBanOk, hanTruocBH, ngayBH, loaiVanBan, canNganhHienTai, canNgayNhan, chuSanSang, chuXemTruoc } from './trang-thai.js';
 import { datLaiDocAi, mountDocAi } from './doc-ai.js';   // v3.25: đọc văn bản gốc (PDF) bằng trợ lý AI
@@ -285,7 +285,7 @@ export function registerGiaoViec() {
   $('klThThayMat').addEventListener('change', thayMatDoi);
   $('klThHan').addEventListener('input', capNhatHienThi);
   $('klThNganh').addEventListener('change', () => dienLinhVuc()); $('klThLinhVuc').addEventListener('change', () => dienLinhVuc());   // ô ẩn: gợi ý AI / Excel
-  ['klThNoiDung', 'klThLvct'].forEach((id) => $(id).addEventListener('input', () => dienLinhVuc(true))); $('klThNguon').addEventListener('input', nguonDoi);   // trước form (capNhatTomTat)
+  ['klThNoiDung', 'klThLvct'].forEach((id) => $(id).addEventListener('input', () => { if (id === 'klThLvct') boGoiYLinhVuc($('klThLinhVuc')); dienLinhVuc(true); })); $('klThNguon').addEventListener('input', nguonDoi);   // gõ lĩnh vực chi tiết: bỏ gợi ý AI / Excel
   $('klThOwner').addEventListener('change', ownerDoi);
   tim.owner = ganTimChon($('klThOwnerTim'), $('klThOwner')); tim.theoDoi = ganTimChon($('klThNguoiTheoDoiTim'), $('klThNguoiTheoDoi')); tim.thayMat = ganTimChon($('klThThayMatTim'), $('klThThayMat'));
   ganSuKienNhieu(); ganSuKienMucTieu(); khiMucTieuDoi(capNhatTomTat); mountDocAi();   // ô trong thẻ: Owner → ngành → lĩnh vực → người theo dõi; mục tiêu đổi → "Còn thiếu" (v3.26)
