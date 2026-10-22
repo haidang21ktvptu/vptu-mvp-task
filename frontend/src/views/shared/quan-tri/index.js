@@ -9,7 +9,7 @@ import { registerActions } from '../../../lib/actions.js';
 import { loadAccountsCache } from '../../../auth/session.js';
 import { notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { ghiDuongDan, dangKyQuyenDuongDan, dangKyTheQuanTri } from '../../shell/duong-dan.js';   // v3.29: "/Quan-tri/<thẻ>"
+import { ghiDuongDan, dangKyQuyenDuongDan, dangKyThe } from '../../shell/duong-dan.js';   // v3.29: "/Quan-tri/<thẻ>"
 import { quanTriTemplate } from './template.js';
 import { mountLyDoModal } from './ly-do-modal.js';
 import { loadDanhMuc } from './danh-muc.js';
@@ -92,7 +92,7 @@ export function registerQuanTriView() {
   mountThongKe();   // v3.24 (0104)
   mountMucTieu(); mountCauHinhAi();   // v3.25
   $('qtTimTaiKhoan').addEventListener('input', (e) => filterRowsByKeyword('qtTaiKhoanBody', e.target.value));
-  dangKyQuyenDuongDan('quanTri', coQuyenQuanTri); dangKyTheQuanTri(() => tabDangChon);
+  dangKyQuyenDuongDan('quanTri', coQuyenQuanTri); dangKyThe('navQuanTri', () => tabDangChon);
   registerActions({
     openQuanTri, loadQuanTri, chonTabQuanTri,
     toggleQuanTriHeThong: (ds) => toggleQuanTriHeThong(ds, loadQuanTri),

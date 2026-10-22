@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { DS_TEP } from './src/lib/tuyen.js';
 import { chinhSachNoiDung, doanScriptNoiTuyen } from './src/lib/csp.js';
 
@@ -12,33 +13,45 @@ import { chinhSachNoiDung, doanScriptNoiTuyen } from './src/lib/csp.js';
 //   tới máy chủ dữ liệu của bản đó (VITE_SUPABASE_URL), không nhúng đối tượng ngoài, biểu mẫu không gửi ra ngoài (src/lib/csp.js);
 // - mỗi đường dẫn chức năng (src/lib/tuyen.js DS_TEP) có sẵn một bản sao index.html (Tong-quan.html, Quan-tri/Tai-khoan.html…): Pages trả "/Tong-quan"
 //   từ Tong-quan.html, không chuyển hướng; đường dẫn lạ / sai chữ hoa do 404.html chung của site (.github/actions/build-pages-site) chuyển về app.
-const OUT = resolve(import.meta.dirname, 'dist');
+const GOC = fileURLToPath(new URL('.', import.meta.url));   // thư mục frontend/ (Vite thay import.meta.url khi gói tệp cấu hình)
+const OUT = join(GOC, 'dist');
 const bam = (s) => createHash('sha256').update(s, 'utf8').digest('base64');
 
-const chinhSach = () => ({
+const META = '<meta charset="UTF-8">';
+// supabaseUrl: VITE_SUPABASE_URL của bản build (biến môi trường của CI / deploy, hoặc frontend/.env — loadEnv đọc cả hai). Thiếu địa chỉ hay thiếu thẻ
+// charset thì dừng build: bản có connect-src 'self' chặn mọi lời gọi tới máy chủ dữ liệu (lỗi lặng lẽ, khó thấy).
+const chinhSach = (supabaseUrl) => ({
   name: 'vptu-chinh-sach-noi-dung',
   apply: 'build',
   transformIndexHtml: {
     order: 'post',
     handler(html) {
-      const csp = chinhSachNoiDung(process.env.VITE_SUPABASE_URL, { bamScript: doanScriptNoiTuyen(html).map(bam) });
-      return html.replace('<meta charset="UTF-8">', `<meta charset="UTF-8">\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`);
+      if (!supabaseUrl) throw new Error('Thiếu VITE_SUPABASE_URL: chính sách nội dung cần địa chỉ máy chủ dữ liệu (biến môi trường hoặc frontend/.env).');
+      if (!html.includes(META)) throw new Error(`index.html thiếu ${META} — không chèn được chính sách nội dung.`);
+      const csp = chinhSachNoiDung(supabaseUrl, { bamScript: doanScriptNoiTuyen(html).map(bam) });
+      return html.replace(META, `${META}\n  <meta http-equiv="Content-Security-Policy" content="${csp}">`);
     },
   },
 });
-const tepDuongDan = () => ({
+// Bản sao index.html cho mỗi đường dẫn; thư mục của đường dẫn có cấp con ("Quan-tri/") có thêm index.html — Pages chuyển "/Quan-tri" sang "/Quan-tri/"
+// hay trả "Quan-tri.html" thì cũng vào được app.
+const tepDuongDan = (out) => ({
   name: 'vptu-tep-duong-dan',
   apply: 'build',
   closeBundle() {
-    const goc = readFileSync(join(OUT, 'index.html'), 'utf8');
-    DS_TEP.forEach((d) => { const f = join(OUT, `${d}.html`); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, goc); });
+    const goc = readFileSync(join(out, 'index.html'), 'utf8');
+    const thuMuc = [...new Set(DS_TEP.filter((d) => d.includes('/')).map((d) => `${d.split('/')[0]}/index`))];
+    [...DS_TEP, ...thuMuc].forEach((d) => { const f = join(out, `${d}.html`); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, goc); });
   },
 });
 
-export default defineConfig({
-  base: process.env.BASE_PATH || '/vptu-mvp-task/',
-  build: { outDir: OUT, emptyOutDir: true },
-  plugins: [chinhSach(), tepDuongDan()],
-  server: { host: '127.0.0.1', port: 5173, strictPort: true },
-  preview: { host: '127.0.0.1', port: 4173, strictPort: true },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, GOC, 'VITE_');
+  return {
+    base: process.env.BASE_PATH || '/vptu-mvp-task/',
+    build: { outDir: OUT, emptyOutDir: true },
+    plugins: [chinhSach(env.VITE_SUPABASE_URL), tepDuongDan(OUT)],
+    server: { host: '127.0.0.1', port: 5173, strictPort: true },
+    preview: { host: '127.0.0.1', port: 4173, strictPort: true },
+  };
 });

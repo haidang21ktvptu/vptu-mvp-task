@@ -18,6 +18,10 @@ test('Bản live: đăng nhập 1 tài khoản vào app rồi đăng xuất', as
   const mo = await page.goto('./Tong-quan');
   expect(mo?.status(), 'Pages trả tệp Tong-quan.html').toBe(200);
   await expect(page.locator('#loginSection')).toBeVisible();
+  for (const d of ['./Quan-tri', './Quan-tri/Tai-khoan']) {   // có cả Quan-tri.html lẫn thư mục Quan-tri/ (index.html): đường nào Pages chọn cũng vào app
+    expect((await page.goto(d))?.status(), `Pages trả ${d}`).toBe(200);
+    await expect(page.locator('#loginSection')).toBeVisible();
+  }
   await page.goto('./khong-co-chuc-nang-nay');
   await expect(page.locator('#loginSection')).toBeVisible();
   await expect.poll(() => new URL(page.url()).pathname).toMatch(/\/khong-co-chuc-nang-nay$/);

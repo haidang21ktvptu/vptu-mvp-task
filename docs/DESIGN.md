@@ -278,14 +278,14 @@ mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại
 
 ## 14. Đường dẫn chức năng (v3.29 — chủ dự án quyết 22/10/2026, CAU-HOI O-7)
 
-Mỗi chức năng một đường dẫn sau địa chỉ gốc (`…/vptu-mvp-task/`), viết như tên mục menu bỏ dấu, nối bằng gạch ngang, chữ đầu mỗi tiếng viết hoa;
-gõ chữ thường, thừa gạch chéo cuối hay đuôi `.html` vẫn vào được, thanh địa chỉ tự sửa lại cho đúng. Bảng ở `frontend/src/lib/tuyen.js`.
+Mỗi chức năng một đường dẫn sau địa chỉ gốc (`…/vptu-mvp-task/`), viết như tên mục menu bỏ dấu, nối bằng gạch ngang, viết hoa chữ đầu (và tên riêng:
+Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đuôi `.html` vẫn vào được, thanh địa chỉ tự sửa lại cho đúng. Bảng ở `frontend/src/lib/tuyen.js`.
 
 | Chức năng | Đường dẫn |
 |---|---|
 | Tổng quan | `/Tong-quan` |
 | Cần xử lý / Việc của tôi (chuyên viên) | `/Can-xu-ly`, `/Viec-cua-toi` |
-| Giao việc / Nhập từ Excel | `/Giao-viec`, `/Nhap-Excel` |
+| Giao việc và hai thẻ nhập liệu: Nhập từ Excel, Chờ hoàn thiện | `/Giao-viec`, `/Nhap-Excel`, `/Cho-hoan-thien` |
 | Nhiệm vụ (mọi tên theo vai) / Việc tôi theo dõi | `/Nhiem-vu`, `/Viec-toi-theo-doi` |
 | Theo văn bản / Cán bộ / Báo cáo | `/Theo-van-ban`, `/Can-bo`, `/Bao-cao` |
 | Chỉ đạo đã gửi / Chỉ đạo Thường trực | `/Chi-dao-da-gui`, `/Chi-dao-Thuong-truc` |
@@ -293,7 +293,8 @@ gõ chữ thường, thừa gạch chéo cuối hay đuôi `.html` vẫn vào đ
 | Quản trị và từng thẻ | `/Quan-tri`, `/Quan-tri/Tai-khoan`, `/Quan-tri/Phan-cong-phu-trach`, `/Quan-tri/Nguong-canh-bao`… |
 | Cá nhân / Trợ giúp | `/Ca-nhan`, `/Tro-giup` |
 
-- Đổi màn (menu, nút trong màn, thẻ Quản trị) → đường dẫn đổi theo; Quay lại / Tiến tới của trình duyệt mở đúng chức năng; tải lại trang giữ chức năng.
+- Đổi màn (menu, nút trong màn, thẻ Quản trị, thẻ Giao việc) → đường dẫn đổi theo, mỗi lần bấm một bước lịch sử; Quay lại / Tiến tới của trình duyệt
+  mở đúng chức năng; tải lại trang giữ chức năng. Danh sách "Lọc chi tiết, in" của chuyên viên, Nhắn tin giữ đường dẫn của màn đang mở.
 - Mở thẳng một đường dẫn: chưa đăng nhập thì đăng nhập tại chỗ rồi vào đúng chức năng; chức năng không thuộc menu của vai (hoặc đường dẫn lạ) → trang
   đầu của vai, thông báo "Đường dẫn không thuộc chức năng của tài khoản đồng chí — đã mở trang đầu." Dữ liệu vẫn chỉ theo đăng nhập và RLS.
 - Đường dẫn chỉ gồm tên chức năng — không mã việc, không dữ liệu.

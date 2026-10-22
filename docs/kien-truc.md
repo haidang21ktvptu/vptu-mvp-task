@@ -156,11 +156,14 @@ Cảnh báo:
 
 - **Đường dẫn:** mỗi mục menu (và Rà soát phân loại, Cá nhân, Trợ giúp, từng thẻ Quản trị) có một đường dẫn sau base: `/Tong-quan`, `/Can-xu-ly`
   (chuyên viên `/Viec-cua-toi`), `/Giao-viec`, `/Nhiem-vu`, `/Bao-cao`, `/Quan-tri/Tai-khoan`… — bảng ở `frontend/src/lib/tuyen.js` (DESIGN mục 14).
-  Đổi màn → `history.pushState` (móc ở `setActiveNav`); Quay lại / Tiến tới → `popstate` mở lại chức năng; vào app → `moManDau` của từng vai mở theo
+  Đổi màn → `history.pushState` (móc ở `setActiveNav` và khi đổi thẻ Quản trị / Giao việc; các lần sáng mục trong cùng một lượt gộp làm một bước,
+  ghi ở microtask); mở theo đường dẫn / Quay lại → `replaceState` (chỉ phần đồng bộ của lượt mở); `popstate` mở lại chức năng; vào app → `moManDau` của từng vai mở theo
   đường dẫn nếu mục đó có trong menu (hoặc quyền) của người dùng, không thì trang đầu kèm thông báo (`views/shell/duong-dan.js`). Đường dẫn chỉ chọn
   màn để vẽ — dữ liệu vẫn chỉ theo RLS. Đăng xuất về địa chỉ gốc; hết phiên nạp lại tại chỗ (đăng nhập lại vào đúng chức năng).
-- **Tệp dựng sẵn:** plugin trong `frontend/vite.config.js` chép `index.html` thành `Tong-quan.html`, `Quan-tri/Tai-khoan.html`… (danh sách `DS_TEP`) —
-  Pages trả `/Tong-quan` từ `Tong-quan.html` (mã 200, không chuyển hướng). Thêm mục menu mới thì thêm dòng vào `TUYEN`.
+- **Tệp dựng sẵn:** plugin trong `frontend/vite.config.js` chép `index.html` thành `Tong-quan.html`, `Quan-tri/Tai-khoan.html`… (danh sách `DS_TEP`) và
+  `Quan-tri/index.html` (Pages chọn `Quan-tri.html` hay thư mục `Quan-tri/` đều vào app) — Pages trả `/Tong-quan` từ `Tong-quan.html` (mã 200, không
+  chuyển hướng). Thêm mục menu mới thì thêm dòng vào `TUYEN`. Build dừng nếu thiếu `VITE_SUPABASE_URL` (biến môi trường hoặc `frontend/.env`, đọc bằng
+  `loadEnv`) hay thiếu thẻ `charset`; job Frontend của CI kiểm `dist/` có đủ tệp đường dẫn và thẻ CSP.
 - **Trang 404 chung:** bước "Ghép hai bản" của `.github/actions/build-pages-site` ghi `site/404.html` (Pages chỉ dùng một trang 404 ở gốc site): đường
   dẫn không có tệp (sai chữ hoa, chức năng lạ) → chuyển về đúng bản (`/vptu-mvp-task/staging/` trước, `/vptu-mvp-task/` sau) kèm `?p=<phần sau base>`;
   `main.js` đặt lại thanh địa chỉ trước khi chạy (`khoiPhucTu404`). Bản build chưa biết `?p=` chỉ mở trang đầu.
@@ -168,6 +171,8 @@ Cảnh báo:
   nhớ kiểu giao diện (tính lúc build — sửa đoạn đó thì mã băm tự đổi); `connect-src`/`img-src` chỉ thêm máy chủ dữ liệu của bản đó (`VITE_SUPABASE_URL`,
   https + wss); `object-src 'none'`, `frame-src 'none'`, `base-uri`/`form-action 'self'`. Thêm dịch vụ ngoài (ảnh, API, phông) thì phải thêm vào
   `csp.js` — không thì trình duyệt chặn và e2e / smoke báo lỗi console. `frame-ancestors` không dùng được trong thẻ meta → `main.js` không chạy khi bị
-  nhúng trong khung; `<meta name="referrer" content="same-origin">` không gửi đường dẫn trang cho trang ngoài.
-- **Kiểm:** unit `tuyen` (bảng, tách, chọn theo menu, CSP); e2e `duong-dan.spec.js` (bản build có CSP: menu, Quay lại / Tiến tới, tải lại, chữ thường,
-  đường dẫn không thuộc vai, không lỗi console); smoke sau deploy (staging, production) mở thẳng `/Tong-quan` và một đường dẫn lạ trước khi đăng nhập.
+  nhúng trong khung; `<meta name="referrer" content="same-origin">` không gửi đường dẫn trang cho trang ngoài. Cửa sổ mở bằng `window.open('')` (phiếu bàn
+  giao tài khoản) nhận cùng CSP → app gọi `print()` cho cửa sổ đó, trang in không có script.
+- **Kiểm:** unit `tuyen` (bảng, tách, chọn theo menu, CSP), `duong-dan` (lịch sử giả: một bấm một bước, mở theo đường dẫn sửa tại chỗ, thẻ Giao việc);
+  e2e `duong-dan.spec.js` (bản build có CSP: menu, Quay lại / Tiến tới, tải lại, chữ thường, thẻ Quản trị / Nhập từ Excel, đường dẫn không thuộc vai,
+  không vi phạm CSP); smoke sau deploy (staging, production) mở thẳng `/Tong-quan`, `/Quan-tri`, `/Quan-tri/Tai-khoan` và một đường dẫn lạ trước khi đăng nhập.

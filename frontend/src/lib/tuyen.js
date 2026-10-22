@@ -7,7 +7,8 @@ export const TUYEN = [
   { duong: 'Can-xu-ly', nav: 'navDieuHanh' },
   { duong: 'Viec-cua-toi', nav: 'navDieuHanh', vai: 'A3' },   // chuyên viên: mục "Việc của tôi" (cùng màn Cần xử lý)
   { duong: 'Giao-viec', nav: 'navGiaoViec' },
-  { duong: 'Nhap-Excel', nav: 'navNhapExcel' },
+  { duong: 'Nhap-Excel', nav: 'navGiaoViec', theGv: 'nhap' },   // thẻ của Giao việc (người nhập liệu); mục menu riêng "Nhập từ Excel" cũng về đây
+  { duong: 'Cho-hoan-thien', nav: 'navGiaoViec', theGv: 'cho' },
   { duong: 'Nhiem-vu', nav: 'navKl' },
   { duong: 'Viec-toi-theo-doi', nav: 'navTheoDoi' },
   { duong: 'Theo-van-ban', nav: 'navTheoVanBan' },
@@ -50,31 +51,35 @@ export function timThe(duong) {
   const k = Object.keys(THE_QUAN_TRI).find((x) => thuong(THE_QUAN_TRI[x]) === thuong(duong));
   return k || null;
 }
-// Đường dẫn (không base) của màn đang hiện: màn ngoài menu (Rà soát, Cá nhân, Trợ giúp) theo section; còn lại theo mục menu đang sáng; Quản trị kèm thẻ.
-export function duongCua({ nav = '', man = '', vai = null, theQt = '' } = {}) {
+// Đường dẫn (không base) của màn đang hiện: màn ngoài menu (Rà soát, Cá nhân, Trợ giúp) theo section; còn lại theo mục menu đang sáng; the = thẻ đang
+// chọn của màn có thẻ (Quản trị: "/Quan-tri/<thẻ>"; Giao việc: thẻ Nhập từ Excel / Chờ hoàn thiện có đường dẫn riêng ở cấp đầu).
+export function duongCua({ nav = '', man = '', vai = null, the = '' } = {}) {
   const theoMan = TUYEN.find((t) => t.man && t.man === man);
   if (theoMan) return theoMan.duong;
+  if (nav === 'navNhapExcel') return duongCua({ nav: 'navGiaoViec', the: the && the !== 'giao' ? the : 'nhap' });   // người chỉ nhập liệu (không có Giao việc)
   const ds = TUYEN.filter((t) => t.nav && t.nav === nav);
+  if (nav === 'navGiaoViec') return (ds.find((x) => x.theGv && x.theGv === the) || ds.find((x) => !x.theGv))?.duong || '';
   const t = ds.find((x) => x.vai === vai) || ds.find((x) => !x.vai);
   if (!t) return '';
-  return t.nav === 'navQuanTri' && THE_QUAN_TRI[theQt] ? `${t.duong}/${THE_QUAN_TRI[theQt]}` : t.duong;
+  return t.nav === 'navQuanTri' && THE_QUAN_TRI[the] ? `${t.duong}/${THE_QUAN_TRI[the]}` : t.duong;
 }
-// Chọn chức năng mở từ đường dẫn: menu = mục menu của người dùng ([{ id, action }]); quyen = { quanTri, raSoat } (màn ngoài menu theo quyền).
-// → { action, ds: dataset, chuan: đường dẫn chuẩn } | { tuChoi: true } (đường dẫn lạ / không thuộc vai) | null (không có đường dẫn — mở trang đầu).
+// Chọn chức năng mở từ đường dẫn: menu = mục menu của người dùng ([{ id, action }]); quyen = { quanTri, raSoat, nhapExcel } (màn / thẻ theo quyền).
+// → { action, ds: dataset } | { tuChoi: true } (đường dẫn lạ / không thuộc vai) | null (không có đường dẫn — mở trang đầu). Đường dẫn chuẩn (chữ hoa,
+// tên theo vai) do màn ghi lại khi mở (setActiveNav → views/shell/duong-dan.js).
 export function chonMo({ duong, the }, { vai = null, menu = [], quyen = {} } = {}) {
   if (!duong) return null;
   const t = timTuyen(duong, vai);
   if (!t) return { tuChoi: true };
-  if (t.man) {
-    const ok = t.man !== 'viewRaSoatMucTieu' || quyen.raSoat;
-    return ok ? { action: t.action, ds: {}, chuan: t.duong } : { tuChoi: true };
+  if (t.man) return t.man !== 'viewRaSoatMucTieu' || quyen.raSoat ? { action: t.action, ds: {} } : { tuChoi: true };
+  if (t.theGv) {   // thẻ nhập liệu của Giao việc: người nhập liệu có Giao việc hoặc mục "Nhập từ Excel"
+    const co = menu.some((m) => m.id === 'navGiaoViec' || m.id === 'navNhapExcel');
+    return co && quyen.nhapExcel ? { action: 'openNhapExcel', ds: { tab: t.theGv } } : { tuChoi: true };
   }
   const muc = menu.find((m) => m.id === t.nav);
   if (t.nav === 'navQuanTri') {
     if (!muc && !quyen.quanTri) return { tuChoi: true };
     const k = the ? timThe(the) : null;
-    return { action: 'openQuanTri', ds: k ? { tab: k } : {}, chuan: k ? `${t.duong}/${THE_QUAN_TRI[k]}` : t.duong };
+    return { action: 'openQuanTri', ds: k ? { tab: k } : {} };
   }
-  if (!muc) return { tuChoi: true };
-  return { action: muc.action, ds: {}, chuan: duongCua({ nav: t.nav, vai }) };
+  return muc ? { action: muc.action, ds: {} } : { tuChoi: true };
 }

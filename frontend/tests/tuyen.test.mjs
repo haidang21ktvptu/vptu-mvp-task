@@ -28,7 +28,12 @@ test('Bảng đường dẫn: tên không trùng; tìm không phân biệt hoa /
   assert.equal(duongCua({ nav: 'navDieuHanh', vai: 'A3' }), 'Viec-cua-toi');
   assert.equal(duongCua({ nav: 'navDieuHanh', vai: 'A1' }), 'Can-xu-ly');
   assert.equal(duongCua({ nav: 'navKl', man: 'viewRaSoatMucTieu' }), 'Ra-soat-phan-loai', 'màn ngoài menu theo section');
-  assert.equal(duongCua({ nav: 'navQuanTri', theQt: 'qtKhuTaiKhoan' }), 'Quan-tri/Tai-khoan');
+  assert.equal(duongCua({ nav: 'navQuanTri', the: 'qtKhuTaiKhoan' }), 'Quan-tri/Tai-khoan');
+  assert.equal(duongCua({ nav: 'navGiaoViec', the: 'nhap' }), 'Nhap-Excel', 'thẻ Nhập từ Excel của Giao việc');
+  assert.equal(duongCua({ nav: 'navGiaoViec', the: 'cho' }), 'Cho-hoan-thien');
+  assert.equal(duongCua({ nav: 'navGiaoViec', the: 'giao' }), 'Giao-viec');
+  assert.equal(duongCua({ nav: 'navNhapExcel' }), 'Nhap-Excel', 'mục menu riêng của người chỉ nhập liệu');
+  assert.equal(duongCua({ nav: 'navNhapExcel', the: 'cho' }), 'Cho-hoan-thien');
   assert.equal(duongCua({ nav: '' }), '');
   assert.ok(DS_TEP.includes('Tong-quan') && DS_TEP.includes('Quan-tri/Thong-ke-su-dung'));
   assert.equal(DS_TEP.length, new Set(TUYEN.map((t) => t.duong)).size + Object.keys(THE_QUAN_TRI).length);
@@ -38,18 +43,22 @@ test('Bảng đường dẫn: tên không trùng; tìm không phân biệt hoa /
 test('Chỉ mở chức năng có trong menu của vai; đường dẫn lạ / không thuộc vai → từ chối (mở trang đầu); chuẩn hoá chữ hoa', () => {
   const menu = (u, o) => menuCuaVai(u, o);
   const a1 = { role_group: 'A1', is_chief: true }; const a3 = { role_group: 'A3' };
-  assert.deepEqual(chonMo({ duong: 'bao-cao', the: '' }, { vai: 'A1', menu: menu(a1) }), { action: 'openBaoCao', ds: {}, chuan: 'Bao-cao' });
+  assert.deepEqual(chonMo({ duong: 'bao-cao', the: '' }, { vai: 'A1', menu: menu(a1) }), { action: 'openBaoCao', ds: {} });
   assert.deepEqual(chonMo({ duong: 'Bao-cao', the: '' }, { vai: 'A3', menu: menu(a3) }), { tuChoi: true }, 'chuyên viên không có Báo cáo');
-  assert.deepEqual(chonMo({ duong: 'Viec-cua-toi', the: '' }, { vai: 'A3', menu: menu(a3) }), { action: 'openDieuHanh', ds: {}, chuan: 'Viec-cua-toi' });
-  assert.equal(chonMo({ duong: 'Can-xu-ly', the: '' }, { vai: 'A3', menu: menu(a3) }).chuan, 'Viec-cua-toi', 'cùng màn — đổi về tên của vai');
+  assert.deepEqual(chonMo({ duong: 'Viec-cua-toi', the: '' }, { vai: 'A3', menu: menu(a3) }), { action: 'openDieuHanh', ds: {} });
+  assert.equal(chonMo({ duong: 'Can-xu-ly', the: '' }, { vai: 'A3', menu: menu(a3) }).action, 'openDieuHanh', 'cùng màn (màn ghi lại tên của vai)');
   assert.deepEqual(chonMo({ duong: 'Nhiem-vu', the: '' }, { vai: 'A3', menu: menu(a3, { xemPhong: true }) }).action, 'openKlPhong', 'mục theo cấu hình của chuyên viên');
   assert.deepEqual(chonMo({ duong: 'xyz', the: '' }, { vai: 'A1', menu: menu(a1) }), { tuChoi: true });
   assert.equal(chonMo({ duong: '', the: '' }, { vai: 'A1', menu: menu(a1) }), null);
   assert.deepEqual(chonMo({ duong: 'Quan-tri', the: 'tai-khoan' }, { vai: 'A1', menu: menu(a1), quyen: { quanTri: true } }),
-    { action: 'openQuanTri', ds: { tab: 'qtKhuTaiKhoan' }, chuan: 'Quan-tri/Tai-khoan' });
+    { action: 'openQuanTri', ds: { tab: 'qtKhuTaiKhoan' } });
   assert.deepEqual(chonMo({ duong: 'Quan-tri', the: '' }, { vai: 'A3', menu: menu(a3), quyen: { quanTri: false } }), { tuChoi: true });
   assert.deepEqual(chonMo({ duong: 'Ra-soat-phan-loai', the: '' }, { vai: 'A0', menu: [], quyen: { raSoat: false } }), { tuChoi: true });
-  assert.deepEqual(chonMo({ duong: 'Tro-giup', the: '' }, { vai: 'A0', menu: [] }), { action: 'openTroGiup', ds: {}, chuan: 'Tro-giup' });
+  assert.deepEqual(chonMo({ duong: 'Tro-giup', the: '' }, { vai: 'A0', menu: [] }), { action: 'openTroGiup', ds: {} });
+  assert.deepEqual(chonMo({ duong: 'nhap-excel', the: '' }, { vai: 'A1', menu: menu(a1), quyen: { nhapExcel: true } }), { action: 'openNhapExcel', ds: { tab: 'nhap' } });
+  assert.deepEqual(chonMo({ duong: 'Cho-hoan-thien', the: '' }, { vai: 'A3', menu: menu(a3), quyen: { nhapExcel: true } }), { action: 'openNhapExcel', ds: { tab: 'cho' } });
+  assert.deepEqual(chonMo({ duong: 'Nhap-Excel', the: '' }, { vai: 'A1', menu: menu(a1), quyen: { nhapExcel: false } }), { tuChoi: true }, 'không phải người nhập liệu');
+  assert.deepEqual(chonMo({ duong: 'Nhap-Excel', the: '' }, { vai: 'A0', menu: [], quyen: { nhapExcel: true } }), { tuChoi: true }, 'menu không có Giao việc / Nhập từ Excel');
 });
 
 test('Chính sách nội dung: chỉ mã của hệ thống, chỉ máy chủ dữ liệu của bản đó (https + wss), không nhúng đối tượng ngoài', () => {
