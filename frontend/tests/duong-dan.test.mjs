@@ -11,20 +11,21 @@ const thongBao = [];
 const viTri = { pathname: '/', search: '', hash: '' };
 globalThis.location = viTri;
 globalThis.history = {
-  pushState: (_s, _t, url) => { buoc.push(['push', url]); viTri.pathname = url; },
-  replaceState: (_s, _t, url) => { buoc.push(['replace', url]); viTri.pathname = url; },
+  state: null,
+  pushState: (s, _t, url) => { buoc.push(['push', url]); viTri.pathname = url; globalThis.history.state = s ?? null; },
+  replaceState: (s, _t, url) => { buoc.push(['replace', url]); viTri.pathname = url; globalThis.history.state = s ?? null; },
 };
 globalThis.document = {
   getElementById: (id) => (id === 'toastContainer' ? { appendChild: (el) => thongBao.push(el) } : null),
   createElement: phanTu, body: { appendChild() {} },
 };
-const { ghiDuongDan, moManDau, datMenuDuongDan, dangKyThe, dangKyQuyenDuongDan } = await import('../src/views/shell/duong-dan.js');
+const { ghiDuongDan, moManDau, datMenuDuongDan, dangKyThe, dangKyQuyenDuongDan, ghiDangNhap } = await import('../src/views/shell/duong-dan.js');
 const { state } = await import('../src/lib/state.js');
 const { registerActions } = await import('../src/lib/actions.js');
 const { menuCuaVai } = await import('../src/views/shell/menu.js');
 
 const xongLuot = () => new Promise((r) => setTimeout(r, 0));   // chờ microtask ghi đường dẫn
-const datLai = (pathname) => { buoc.length = 0; viTri.pathname = pathname; };
+const datLai = (pathname, trangThai = null) => { buoc.length = 0; viTri.pathname = pathname; globalThis.history.state = trangThai; };
 
 test('Một lượt bấm sáng hai mục (chuyên viên: "Việc tôi theo dõi" mở danh sách rồi đổi mục) → một bước lịch sử, đường dẫn của mục cuối', async () => {
   state.user = { id: 'cv', role_group: 'A3' };
@@ -84,4 +85,31 @@ test('Thẻ Giao việc: "Nhập từ Excel" / "Chờ hoàn thiện" có đườ
   moManDau(() => { the = 'giao'; ghiDuongDan('navDieuHanh'); });
   await xongLuot();
   assert.equal(moThe, null, 'không có quyền nhập liệu: không mở thẻ'); assert.deepEqual(buoc, [['replace', '/Can-xu-ly']]);
+});
+
+test('Chưa đăng nhập: thanh địa chỉ "/Dang-nhap", chức năng đang mở giữ trong history.state (không lên đường dẫn); gốc, chữ thường cũng về "/Dang-nhap"', () => {
+  state.user = null;
+  datLai('/Bao-cao'); ghiDangNhap();
+  assert.deepEqual(buoc, [['replace', '/Dang-nhap']]); assert.deepEqual(globalThis.history.state, { tiep: 'Bao-cao' });
+  datLai('/Quan-tri/Tai-khoan'); ghiDangNhap();
+  assert.deepEqual(globalThis.history.state, { tiep: 'Quan-tri/Tai-khoan' });
+  datLai('/'); ghiDangNhap();
+  assert.deepEqual(buoc, [['replace', '/Dang-nhap']]); assert.equal(globalThis.history.state, null, 'địa chỉ gốc: không nhớ chức năng');
+  datLai('/dang-nhap', { tiep: 'Bao-cao' }); ghiDangNhap();
+  assert.deepEqual(buoc, [['replace', '/Dang-nhap']]); assert.deepEqual(globalThis.history.state, { tiep: 'Bao-cao' }, 'tải lại trang đăng nhập: giữ chức năng đã nhớ');
+});
+
+test('Đăng nhập xong ở "/Dang-nhap": mở chức năng đã nhớ (thay bước đăng nhập, không thêm bước); không nhớ gì → trang đầu, không thông báo', async () => {
+  state.user = { id: 'cvp', role_group: 'A1', is_chief: true };
+  datMenuDuongDan(menuCuaVai(state.user));
+  let mo = '';
+  registerActions({ openBaoCao: () => { mo = 'bao-cao'; ghiDuongDan('navBaoCao'); }, openTongQuan: () => { mo = 'tong-quan'; ghiDuongDan('navTongQuan'); } });
+  datLai('/Dang-nhap', { tiep: 'Bao-cao' }); thongBao.length = 0;
+  moManDau(() => { mo = 'mac-dinh'; ghiDuongDan('navTongQuan'); });
+  await xongLuot();
+  assert.equal(mo, 'bao-cao'); assert.deepEqual(buoc, [['replace', '/Bao-cao']]); assert.equal(globalThis.history.state, null);
+  datLai('/Dang-nhap');
+  moManDau(() => { mo = 'mac-dinh'; ghiDuongDan('navTongQuan'); });
+  await xongLuot();
+  assert.equal(mo, 'mac-dinh'); assert.deepEqual(buoc, [['replace', '/Tong-quan']]); assert.equal(thongBao.length, 0);
 });

@@ -2,7 +2,7 @@
 // sẵn cho GitHub Pages; chính sách nội dung (CSP) của bản build.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TUYEN, THE_QUAN_TRI, DS_TEP, tachDuong, timTuyen, duongCua, chonMo } from '../src/lib/tuyen.js';
+import { TUYEN, THE_QUAN_TRI, DS_TEP, tachDuong, timTuyen, duongCua, chonMo, laDangNhap, DUONG_DANG_NHAP } from '../src/lib/tuyen.js';
 import { chinhSachNoiDung, doanScriptNoiTuyen } from '../src/lib/csp.js';
 import { menuCuaVai } from '../src/views/shell/menu.js';
 
@@ -36,7 +36,8 @@ test('Bảng đường dẫn: tên không trùng; tìm không phân biệt hoa /
   assert.equal(duongCua({ nav: 'navNhapExcel', the: 'cho' }), 'Cho-hoan-thien');
   assert.equal(duongCua({ nav: '' }), '');
   assert.ok(DS_TEP.includes('Tong-quan') && DS_TEP.includes('Quan-tri/Thong-ke-su-dung'));
-  assert.equal(DS_TEP.length, new Set(TUYEN.map((t) => t.duong)).size + Object.keys(THE_QUAN_TRI).length);
+  assert.equal(DS_TEP.length, 1 + new Set(TUYEN.map((t) => t.duong)).size + Object.keys(THE_QUAN_TRI).length, 'gồm cả "Dang-nhap"');
+  assert.equal(DS_TEP[0], 'Dang-nhap');
   DS_TEP.forEach((d) => assert.match(d, /^[A-Za-z]+(-[A-Za-z]+)*(\/[A-Za-z]+(-[A-Za-z]+)*)?$/, `${d}: chỉ chữ không dấu và gạch nối`));
 });
 
@@ -72,4 +73,12 @@ test('Chính sách nội dung: chỉ mã của hệ thống, chỉ máy chủ d�
   assert.match(chinhSachNoiDung('https://x.supabase.co', { bamScript: ['QUJD'] }), /script-src 'self' 'sha256-QUJD'(;|$)/, 'đoạn nội tuyến đã biết (băm lúc build)');
   const html = '<head><script>var a = 1;</script><script type="module" crossorigin src="/vptu-mvp-task/assets/index.js"></script><script defer>b()</script></head>';
   assert.deepEqual(doanScriptNoiTuyen(html), ['var a = 1;', 'b()'], 'chỉ đoạn không có src');
+});
+
+test('Màn đăng nhập "/Dang-nhap": nhận cả chữ thường; không phải chức năng của menu (mở theo đường dẫn → từ chối, app tự xử lý trước)', () => {
+  assert.equal(DUONG_DANG_NHAP, 'Dang-nhap');
+  for (const d of ['Dang-nhap', 'dang-nhap', 'DANG-NHAP']) assert.equal(laDangNhap(d), true, d);
+  for (const d of ['', 'Tong-quan', 'Dang-nhap-x']) assert.equal(laDangNhap(d), false, d);
+  assert.deepEqual(tachDuong('/vptu-mvp-task/staging/Dang-nhap', '/vptu-mvp-task/staging/'), { duong: 'Dang-nhap', the: '' });
+  assert.deepEqual(chonMo({ duong: 'Dang-nhap', the: '' }, { vai: 'A1', menu: [{ id: 'navTongQuan', action: 'openTongQuan' }] }), { tuChoi: true });
 });

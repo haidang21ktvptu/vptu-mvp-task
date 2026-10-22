@@ -283,6 +283,7 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 
 | Chức năng | Đường dẫn |
 |---|---|
+| Đăng nhập (chưa có phiên) | `/Dang-nhap` |
 | Tổng quan | `/Tong-quan` |
 | Cần xử lý / Việc của tôi (chuyên viên) | `/Can-xu-ly`, `/Viec-cua-toi` |
 | Giao việc và hai thẻ nhập liệu: Nhập từ Excel, Chờ hoàn thiện | `/Giao-viec`, `/Nhap-Excel`, `/Cho-hoan-thien` |
@@ -295,8 +296,11 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 
 - Đổi màn (menu, nút trong màn, thẻ Quản trị, thẻ Giao việc) → đường dẫn đổi theo, mỗi lần bấm một bước lịch sử; Quay lại / Tiến tới của trình duyệt
   mở đúng chức năng; tải lại trang giữ chức năng. Danh sách "Lọc chi tiết, in" của chuyên viên, Nhắn tin giữ đường dẫn của màn đang mở.
-- Mở thẳng một đường dẫn: chưa đăng nhập thì đăng nhập tại chỗ rồi vào đúng chức năng; chức năng không thuộc menu của vai (hoặc đường dẫn lạ) → trang
-  đầu của vai, thông báo "Đường dẫn không thuộc chức năng của tài khoản đồng chí — đã mở trang đầu." Dữ liệu vẫn chỉ theo đăng nhập và RLS.
+- Chưa đăng nhập (mở một đường dẫn, địa chỉ gốc, sau đăng xuất, hết phiên): thanh địa chỉ ghi `/Dang-nhap` (chủ dự án 22/10/2026); chức năng đang mở
+  được nhớ ngầm (không ghi lên đường dẫn) — đăng nhập xong vào đúng chức năng đó, bước `/Dang-nhap` được thay nên Quay lại không về trang đăng nhập.
+  Đã đăng nhập mà mở `/Dang-nhap` → trang đầu của vai.
+- Mở thẳng một đường dẫn: chức năng không thuộc menu của vai (hoặc đường dẫn lạ) → trang đầu của vai, thông báo "Đường dẫn không thuộc chức năng của
+  tài khoản đồng chí — đã mở trang đầu." Dữ liệu vẫn chỉ theo đăng nhập và RLS.
 - Đường dẫn chỉ gồm tên chức năng — không mã việc, không dữ liệu.
 
 ## 15. Hộp sửa có lý do (v3.29 — chủ dự án quyết 22/10/2026, CAU-HOI O-4…O-6)

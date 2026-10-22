@@ -4,10 +4,12 @@
 // quy tắc chọn ở lib/tuyen.js (thuần). Đây chỉ chọn màn để vẽ — quyền thật vẫn ở RLS / hàm DB.
 // Một lượt bấm có thể sáng nhiều mục liên tiếp (chuyên viên: "Việc tôi theo dõi" mở danh sách rồi đổi mục) → các lần ghi trong cùng lượt gộp làm một
 // (mục cuối, ghi ở microtask). Mở theo đường dẫn / Quay lại (đồng bộ, trước await đầu tiên của màn) → sửa bước lịch sử hiện tại, không thêm bước.
+// Chưa có phiên (mở đường dẫn, hết phiên, đăng xuất): thanh địa chỉ ghi "/Dang-nhap" (chủ dự án 22/10/2026); chức năng đang mở giữ trong
+// history.state.tiep — không ghi lên đường dẫn — để đăng nhập xong mở đúng chức năng, bước "/Dang-nhap" được thay bằng đường dẫn chức năng.
 import { state } from '../../lib/state.js';
 import { goiHanhDong } from '../../lib/actions.js';
 import { notify } from '../../components/toast.js';
-import { tachDuong, chonMo, duongCua } from '../../lib/tuyen.js';
+import { tachDuong, chonMo, duongCua, laDangNhap, DUONG_DANG_NHAP } from '../../lib/tuyen.js';
 
 // Gốc của app ("/vptu-mvp-task/", staging "/vptu-mvp-task/staging/") — Vite thay import.meta.env.BASE_URL lúc build; chạy trong Node (unit test): "/".
 const goc = () => { try { return import.meta.env.BASE_URL || '/'; } catch { return '/'; } };
@@ -43,9 +45,23 @@ export function ghiDuongDan(navId, { thay = false } = {}) {
   if (dau) queueMicrotask(ghiCho);
 }
 
+// Màn đăng nhập: "/Dang-nhap" (giữ chức năng của đường dẫn đang mở — hoặc của lần trước — trong history.state.tiep).
+export function ghiDangNhap() {
+  const t = tachDuong(location.pathname, BASE);
+  const tiep = t?.duong && !laDangNhap(t.duong) ? [t.duong, t.the].filter(Boolean).join('/') : String(history.state?.tiep || '');
+  history.replaceState(tiep ? { tiep } : null, '', `${BASE}${DUONG_DANG_NHAP}${location.hash}`);
+}
+// Đường dẫn để chọn màn: đang ở "/Dang-nhap" (vừa đăng nhập) → chức năng đã mở trước khi đăng nhập, không có thì trang đầu.
+function duongCanMo() {
+  const t = tachDuong(location.pathname, BASE);
+  if (!t || !laDangNhap(t.duong)) return t;
+  const tiep = String(history.state?.tiep || '');
+  return tiep ? tachDuong(`${BASE}${tiep}`, BASE) : null;
+}
+
 function moTheoDuong(macDinh) {
   const u = state.user;
-  const t = tachDuong(location.pathname, BASE);
+  const t = duongCanMo();
   const q = Object.fromEntries(['quanTri', 'raSoat', 'nhapExcel'].map((k) => [k, Boolean(quyen[k]?.(u))]));
   const kq = t ? chonMo(t, { vai: u?.role_group, menu, quyen: q }) : null;
   dangMoTheoDuong = true;

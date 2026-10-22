@@ -27,10 +27,13 @@ export const THE_QUAN_TRI = {
   qtKhuCauHinh: 'Nguong-canh-bao', qtKhuAi: 'Cau-hinh-AI', qtKhuNgayNghi: 'Ngay-nghi', qtKhuNhatKy: 'Nhat-ky', qtKhuDonDuLieu: 'Don-du-lieu',
   qtKhuNhatKyHeThong: 'Nhat-ky-he-thong', qtKhuThongKe: 'Thong-ke-su-dung',
 };
-// Mọi tệp cần dựng sẵn trên GitHub Pages (bản sao index.html): "Tong-quan", …, "Quan-tri/Tai-khoan".
-export const DS_TEP = [...new Set(TUYEN.map((t) => t.duong)), ...Object.values(THE_QUAN_TRI).map((d) => `Quan-tri/${d}`)];
+// Màn đăng nhập (chủ dự án 22/10/2026): chưa có phiên thì thanh địa chỉ ghi "/Dang-nhap" — không phải chức năng của menu (chonMo không nhận).
+export const DUONG_DANG_NHAP = 'Dang-nhap';
+// Mọi tệp cần dựng sẵn trên GitHub Pages (bản sao index.html): "Dang-nhap", "Tong-quan", …, "Quan-tri/Tai-khoan".
+export const DS_TEP = [DUONG_DANG_NHAP, ...new Set(TUYEN.map((t) => t.duong)), ...Object.values(THE_QUAN_TRI).map((d) => `Quan-tri/${d}`)];
 
 const thuong = (s) => String(s || '').toLowerCase();
+export const laDangNhap = (duong) => thuong(duong) === thuong(DUONG_DANG_NHAP);
 // pathname + base ("/vptu-mvp-task/" hoặc "/vptu-mvp-task/staging/") → { duong, the } (phần sau base, đã bỏ ".html", gạch chéo, giải mã); ngoài base → null.
 export function tachDuong(pathname, base = '/') {
   let p = String(pathname || '');

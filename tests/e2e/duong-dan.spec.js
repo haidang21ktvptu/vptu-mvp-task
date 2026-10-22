@@ -1,9 +1,11 @@
 // v3.29 (chủ dự án 22/10/2026 — CAU-HOI O-7): mỗi chức năng một đường dẫn. Chánh VP: vào app → "/Tong-quan"; bấm menu đổi đường dẫn; Quay lại /
 // Tiến tới mở đúng chức năng; tải lại giữ chức năng; gõ chữ thường → tự sửa đúng chữ hoa; thẻ Quản trị, thẻ "Nhập từ Excel" có đường dẫn riêng.
 // Chuyên viên: "/Viec-cua-toi"; một lần bấm "Việc tôi theo dõi" chỉ thêm một bước lịch sử; gõ đường dẫn không thuộc vai (Báo cáo) → về trang đầu kèm
-// thông báo. Bản build có chính sách nội dung (CSP) — không bị chặn nhầm (không thông báo vi phạm CSP, không lỗi chưa bắt). Chỉ đọc.
+// thông báo. Bản build có chính sách nội dung (CSP) — không bị chặn nhầm (không thông báo vi phạm CSP, không lỗi chưa bắt). Chưa đăng nhập: thanh địa
+// chỉ "/Dang-nhap" (gốc, chữ thường, đường dẫn chức năng), có phiên thì vào đúng chức năng đã mở (phiên đặt sẵn rồi tải lại — không tốn lượt đăng nhập,
+// không đăng xuất: đăng xuất huỷ phiên dùng chung của vai). Chỉ đọc.
 import { test, expect } from '@playwright/test';
-import { pageAs, nav, NAP } from './lib/app.js';
+import { pageAs, nav, NAP, phienMoi, storageKey } from './lib/app.js';
 
 const duong = (page) => new URL(page.url()).pathname.replace(/^.*\/vptu-mvp-task\/(staging\/)?/, '/');
 
@@ -48,6 +50,29 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     expect(await page.locator('meta[name="referrer"]').getAttribute('content')).toBe('same-origin');
     expect(loi, 'CSP không chặn nhầm, không lỗi chưa bắt').toEqual([]);
     await page.context().close();
+  });
+
+  test('Chưa đăng nhập: gốc, "/dang-nhap", "/Bao-cao" → "/Dang-nhap" (ô đăng nhập); có phiên → vào đúng "/Bao-cao" thay bước đăng nhập (không thêm bước)', async ({ browser }, testInfo) => {
+    const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
+    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale });
+    const page = await context.newPage();
+    for (const d of ['./', './dang-nhap', './Bao-cao']) {
+      await page.goto(d);
+      await expect(page.locator('#loginSection')).toBeVisible();
+      await expect.poll(() => duong(page), d).toBe('/Dang-nhap');
+    }
+    const session = await phienMoi('A1');
+    await page.evaluate(([k, v]) => globalThis.localStorage.setItem(k, v), [storageKey(), JSON.stringify(session)]);
+    const soBuoc = await page.evaluate(() => globalThis.history.length);
+    await page.reload();   // như vừa đăng nhập: có phiên, đang ở "/Dang-nhap", chức năng đã mở nằm trong history.state
+    await expect(page.locator('#viewBaoCao')).toBeVisible(NAP);
+    await expect.poll(() => duong(page)).toBe('/Bao-cao');
+    expect(await page.evaluate(() => globalThis.history.length), 'bước "/Dang-nhap" được thay, Quay lại không về trang đăng nhập').toBe(soBuoc);
+    await nav(page, 'navTheoVanBan');
+    await expect.poll(() => duong(page)).toBe('/Theo-van-ban');
+    await page.goBack();
+    await expect(page.locator('#viewBaoCao')).toBeVisible(NAP); expect(duong(page)).toBe('/Bao-cao');
+    await context.close();
   });
 
   test('Chuyên viên: trang đầu "/Viec-cua-toi"; một bấm một bước lịch sử; đường dẫn không thuộc vai → về trang đầu, có thông báo', async ({ browser }, testInfo) => {

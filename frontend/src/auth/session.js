@@ -7,6 +7,8 @@ import { initUserInterface } from '../views/shell/index.js';
 import { loadCauHinhKl } from '../lib/kl/du-lieu.js';
 import { batDemPhien, tatDemPhien, phienDaQuaHan, soPhut } from './het-phien.js';
 import { CAU_HET_PHIEN } from '../lib/het-phien.js';
+import { ghiDangNhap } from '../views/shell/duong-dan.js';
+import { DUONG_DANG_NHAP } from '../lib/tuyen.js';
 
 // Hook cho các tính năng gắn thêm khi phiên bắt đầu/kết thúc (realtime ở PR c của GĐ4).
 const hooks = { onEnter: [], onLeave: [] };
@@ -37,16 +39,17 @@ export async function handleLogout() {
     // Tự xoá khoá phiên để máy dùng chung không còn đăng nhập.
     localStorage.removeItem(sessionStorageKey());
   }
-  location.replace(import.meta.env.BASE_URL);   // v3.29: về địa chỉ gốc — người đăng nhập sau không vào thẳng chức năng của người trước
+  location.replace(`${import.meta.env.BASE_URL}${DUONG_DANG_NHAP}`);   // v3.29: về "/Dang-nhap" — người đăng nhập sau không vào chức năng của người trước
 }
 
 // Khôi phục phiên do Supabase Auth lưu (localStorage) khi tải lại trang.
 export async function restoreSession(startSession) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
+  if (!session) { ghiDangNhap(); return; }   // v3.29: chưa đăng nhập → "/Dang-nhap" (nhớ chức năng đang mở)
   if (phienDaQuaHan()) {   // treo qua đêm rồi mở lại: coi như hết phiên, không vào app, giải thích ngay trên màn đăng nhập
     tatDemPhien();
     await supabase.auth.signOut({ scope: 'local' });
+    ghiDangNhap();
     showInlineError('loginError', CAU_HET_PHIEN(soPhut()));
     return;
   }
