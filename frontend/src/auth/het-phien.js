@@ -5,6 +5,7 @@
 import { supabase, sessionStorageKey } from '../lib/supabase.js';
 import { notify } from '../components/toast.js';
 import { KHOA_LAN_CUOI, KHOA_GHI_DE_PHUT, KHOA_LY_DO_THOAT, phutHetPhien, trangThaiPhien, CAU_HET_PHIEN, CAU_SAP_HET } from '../lib/het-phien.js';
+import { boMaTruocKhiThoat } from '../views/shell/duong-dan.js';
 
 const SU_KIEN = ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll'];
 const CHU_KY_MS = 15_000;
@@ -35,6 +36,7 @@ async function thoatVi(lyDo) {
   try { sessionStorage.setItem(KHOA_LY_DO_THOAT, lyDo); } catch { /* bỏ qua */ }
   const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error) { try { localStorage.removeItem(sessionStorageKey()); } catch { /* bỏ qua */ } }
+  boMaTruocKhiThoat();   // v3.29: không giữ mã việc qua lần đăng nhập sau (máy dùng chung)
   location.reload();
 }
 

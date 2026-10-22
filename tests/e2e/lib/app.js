@@ -127,7 +127,18 @@ export async function moThem(page, the = 1) {
   await expect(d).toHaveAttribute('open', '');
 }
 
+// v3.29: ngăn chi tiết dùng chung đang mở (mở việc rồi tải lại: đường dẫn "…/NV-…" mở lại việc) che nút trong màn → đóng như người dùng, chờ thanh
+// địa chỉ bỏ mã việc (bước lùi của app xong) rồi mới bấm menu.
+async function dongNganNeuMo(page) {
+  const ngan = page.locator('#nganCT');
+  if (!(await ngan.isVisible())) return;
+  await ngan.locator('[data-action="nganDong"]').click();
+  await expect(ngan).toBeHidden();
+  await expect(page).not.toHaveURL(/\/NV-\d+(?:[?#].*)?$/i);
+}
+
 export async function nav(page, id) {
+  await dongNganNeuMo(page);
   const pill = page.locator(`#${id}`);
   if (await pill.count() === 0) {
     if (id !== 'navKl') throw new Error(`Menu không có mục ${id}`);

@@ -154,7 +154,7 @@ jobs:
       - name: Bản build có tệp đường dẫn và chính sách nội dung (v3.29)
         working-directory: frontend/dist
         run: |
-          for f in index.html Tong-quan.html Nhap-Excel.html Quan-tri.html Quan-tri/index.html Quan-tri/Tai-khoan.html; do
+          for f in index.html Dang-nhap.html Tong-quan.html Nhap-Excel.html Quan-tri.html Quan-tri/index.html Quan-tri/Tai-khoan.html; do
             test -f "$f" || { echo "::error::Thiếu dist/$f"; exit 1; }
             grep -q 'http-equiv="Content-Security-Policy"' "$f" || { echo "::error::dist/$f thiếu chính sách nội dung"; exit 1; }
           done

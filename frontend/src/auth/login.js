@@ -9,6 +9,7 @@ import { loadAccountsCache, enterApp } from './session.js';
 import { datMatKhauTam, moTrangDoiMatKhau } from './change-password.js';
 import { cauLyDoThoat } from './het-phien.js';
 import { ghiNhanDangNhap } from '../features/nhat-ky-dang-nhap.js';
+import { ghiDangNhap } from '../views/shell/duong-dan.js';
 
 function loginErrorMessage(error) {
   // Giới hạn theo IP của Supabase (30 lượt/5 phút): cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm.
@@ -54,11 +55,13 @@ export async function startSession(session) {
   if (error?.code === 'PGRST116' || (!error && !profile)) {
     // Có tài khoản Auth nhưng không có dòng accounts tương ứng: không cho vào.
     await supabase.auth.signOut();
+    ghiDangNhap();
     showInlineError('loginError', 'Tài khoản chưa được khai báo trong danh mục cán bộ. Đồng chí liên hệ Văn phòng để được hỗ trợ.');
     return;
   }
   if (error) {
-    // Lỗi mạng/máy chủ tạm thời: giữ phiên, chỉ báo để thử lại.
+    // Lỗi mạng/máy chủ tạm thời: giữ phiên, chỉ báo để thử lại (màn đăng nhập → "/Dang-nhap"; tải lại vẫn vào đúng chức năng).
+    ghiDangNhap();
     showInlineError('loginError', 'Không tải được hồ sơ cán bộ. Đồng chí vui lòng tải lại trang hoặc thử lại sau.');
     return;
   }

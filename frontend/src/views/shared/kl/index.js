@@ -30,6 +30,8 @@ import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { moNganViec } from '../ngan-chi-tiet.js';
 import { laNguoiNhap } from '../../../lib/kl/nhap/du-lieu.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
+import { boViec } from '../../shell/duong-dan.js';
+import { moViecTheoMa } from './mo-theo-ma.js';   // v3.29: "…/<chức năng>/NV-…" (chủ dự án 22/10/2026 17:02)
 
 export const duocGiaoViec = () => ['A1', 'A2', 'A3'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);   // 0085: cả chuyên viên (giao thẳng)
 // Chuyên viên thường: màn này là "Việc của tôi" (mặc định lọc việc mình chủ trì / theo dõi). Chuyên viên giữ quyền quản trị nhiệm vụ vào
@@ -148,8 +150,10 @@ export function registerKlView() {
   const klXuatExcel = async () => {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
-  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, dongKlChiTiet, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
-    klTrang: doiKlTrang, klTdLoc: locKlTd, klTdQh: doiKlQh });
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
+    klTrang: doiKlTrang, klTdLoc: locKlTd, klTdQh: doiKlQh,
+    dongKlChiTiet: () => { dongKlChiTiet(); boViec({ nguoiDung: true }); },   // nút "Đóng ngăn" của màn Nhiệm vụ: bỏ mã việc khỏi đường dẫn
+    moViecTheoMa });
   // v3.25: In / lưu PDF (nút hoặc Ctrl+P) in đủ danh sách đang lọc, không chỉ trang 50 dòng đang xem.
   window.addEventListener('beforeprint', () => { if (sectionDangHien('viewKl')) inKlDayDu(true); });
   window.addEventListener('afterprint', () => inKlDayDu(false));

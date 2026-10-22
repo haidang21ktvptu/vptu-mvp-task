@@ -283,6 +283,7 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 
 | Chức năng | Đường dẫn |
 |---|---|
+| Đăng nhập (chưa có phiên) | `/Dang-nhap` |
 | Tổng quan | `/Tong-quan` |
 | Cần xử lý / Việc của tôi (chuyên viên) | `/Can-xu-ly`, `/Viec-cua-toi` |
 | Giao việc và hai thẻ nhập liệu: Nhập từ Excel, Chờ hoàn thiện | `/Giao-viec`, `/Nhap-Excel`, `/Cho-hoan-thien` |
@@ -292,12 +293,23 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 | Rà soát phân loại | `/Ra-soat-phan-loai` |
 | Quản trị và từng thẻ | `/Quan-tri`, `/Quan-tri/Tai-khoan`, `/Quan-tri/Phan-cong-phu-trach`, `/Quan-tri/Nguong-canh-bao`… |
 | Cá nhân / Trợ giúp | `/Ca-nhan`, `/Tro-giup` |
+| Chi tiết một nhiệm vụ (mở ở màn nào thì theo màn đó) | `/<chức năng>/<mã việc>`, ví dụ `/Nhiem-vu/NV-9601`, `/Tong-quan/NV-9601` |
 
 - Đổi màn (menu, nút trong màn, thẻ Quản trị, thẻ Giao việc) → đường dẫn đổi theo, mỗi lần bấm một bước lịch sử; Quay lại / Tiến tới của trình duyệt
   mở đúng chức năng; tải lại trang giữ chức năng. Danh sách "Lọc chi tiết, in" của chuyên viên, Nhắn tin giữ đường dẫn của màn đang mở.
-- Mở thẳng một đường dẫn: chưa đăng nhập thì đăng nhập tại chỗ rồi vào đúng chức năng; chức năng không thuộc menu của vai (hoặc đường dẫn lạ) → trang
-  đầu của vai, thông báo "Đường dẫn không thuộc chức năng của tài khoản đồng chí — đã mở trang đầu." Dữ liệu vẫn chỉ theo đăng nhập và RLS.
-- Đường dẫn chỉ gồm tên chức năng — không mã việc, không dữ liệu.
+- Chưa đăng nhập (mở một đường dẫn, địa chỉ gốc, sau đăng xuất, hết phiên): thanh địa chỉ ghi `/Dang-nhap` (chủ dự án 22/10/2026); chức năng đang mở
+  được nhớ ngầm (không ghi lên đường dẫn) — đăng nhập xong vào đúng chức năng đó, bước `/Dang-nhap` được thay nên Quay lại không về trang đăng nhập.
+  Đã đăng nhập mà mở `/Dang-nhap` → trang đầu của vai.
+- Mở thẳng một đường dẫn: chức năng không thuộc menu của vai (hoặc đường dẫn lạ) → trang đầu của vai, thông báo "Đường dẫn không thuộc chức năng của
+  tài khoản đồng chí — đã mở trang đầu." Dữ liệu vẫn chỉ theo đăng nhập và RLS.
+- Chi tiết một nhiệm vụ (chủ dự án 22/10/2026 17:02): mở việc ở bất kỳ màn nào (danh sách, ngăn chi tiết dùng chung, chuông, Theo văn bản…) → thanh
+  địa chỉ thêm mã việc sau đường dẫn của màn; đổi sang việc khác không thêm bước; Đóng / Quay lại trong ngăn / Esc → về đường dẫn của màn; Quay lại /
+  Tiến tới của trình duyệt đóng / mở lại việc (không vẽ lại màn); tải lại, đánh dấu, gửi đường dẫn → mở đúng màn và đúng việc (chưa đăng nhập thì qua
+  `/Dang-nhap`; tự đăng xuất vì hết phiên thì chỉ giữ chức năng, bỏ mã việc). Danh sách lọc (bấm số ở Tổng quan, Báo cáo), cán bộ, văn bản không có
+  đường dẫn riêng.
+- Đường dẫn chỉ gồm tên chức năng và mã nhiệm vụ (`NV-<số>`) — không nội dung việc, tên người, tên đăng nhập hay mã định danh nội bộ. Mở bằng đường
+  dẫn vẫn qua đăng nhập và RLS; việc không có và việc ngoài phạm vi báo cùng một câu "Không có nhiệm vụ NV-… trong phạm vi của đồng chí." (không lộ việc có
+  tồn tại hay không), mã bị bỏ khỏi đường dẫn.
 
 ## 15. Hộp sửa có lý do (v3.29 — chủ dự án quyết 22/10/2026, CAU-HOI O-4…O-6)
 

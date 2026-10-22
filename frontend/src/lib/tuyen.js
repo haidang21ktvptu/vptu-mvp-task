@@ -1,7 +1,8 @@
 // Đường dẫn riêng cho từng chức năng (v3.29 — chủ dự án 22/10/2026, CAU-HOI O-7): "…/vptu-mvp-task/Tong-quan", "…/Quan-tri/Tai-khoan". Phần THUẦN
 // (không DOM, không mạng; unit test frontend/tests/tuyen.test.mjs; vite.config.js đọc DS_TEP để dựng sẵn tệp cho GitHub Pages): bảng đường dẫn ↔ mục
-// menu / màn, tách và chuẩn hoá đường dẫn (chữ hoa / thường, gạch chéo cuối, ".html"), chọn chức năng được mở. Đường dẫn chỉ gồm tên chức năng — không
-// chứa mã việc hay dữ liệu. Mở được hay không do menu của người đang đăng nhập quyết định (menuCuaVai) — và dữ liệu vẫn chỉ theo RLS.
+// menu / màn, tách và chuẩn hoá đường dẫn (chữ hoa / thường, gạch chéo cuối, ".html"), chọn chức năng được mở. Đường dẫn gồm tên chức năng và — khi
+// mở chi tiết một việc — mã việc NV-<số> (chủ dự án 22/10/2026 17:02); không nội dung, tên người hay dữ liệu khác. Mở được hay không do menu của
+// người đang đăng nhập quyết định (menuCuaVai) — và dữ liệu vẫn chỉ theo RLS.
 export const TUYEN = [
   { duong: 'Tong-quan', nav: 'navTongQuan' },
   { duong: 'Can-xu-ly', nav: 'navDieuHanh' },
@@ -27,10 +28,26 @@ export const THE_QUAN_TRI = {
   qtKhuCauHinh: 'Nguong-canh-bao', qtKhuAi: 'Cau-hinh-AI', qtKhuNgayNghi: 'Ngay-nghi', qtKhuNhatKy: 'Nhat-ky', qtKhuDonDuLieu: 'Don-du-lieu',
   qtKhuNhatKyHeThong: 'Nhat-ky-he-thong', qtKhuThongKe: 'Thong-ke-su-dung',
 };
-// Mọi tệp cần dựng sẵn trên GitHub Pages (bản sao index.html): "Tong-quan", …, "Quan-tri/Tai-khoan".
-export const DS_TEP = [...new Set(TUYEN.map((t) => t.duong)), ...Object.values(THE_QUAN_TRI).map((d) => `Quan-tri/${d}`)];
+// Màn đăng nhập (chủ dự án 22/10/2026): chưa có phiên thì thanh địa chỉ ghi "/Dang-nhap" — không phải chức năng của menu (chonMo không nhận).
+export const DUONG_DANG_NHAP = 'Dang-nhap';
+// Mọi tệp cần dựng sẵn trên GitHub Pages (bản sao index.html): "Dang-nhap", "Tong-quan", …, "Quan-tri/Tai-khoan".
+export const DS_TEP = [DUONG_DANG_NHAP, ...new Set(TUYEN.map((t) => t.duong)), ...Object.values(THE_QUAN_TRI).map((d) => `Quan-tri/${d}`)];
 
 const thuong = (s) => String(s || '').toLowerCase();
+export const laDangNhap = (duong) => thuong(duong) === thuong(DUONG_DANG_NHAP);
+// Mã nhiệm vụ trên đường dẫn (chủ dự án 22/10/2026 17:02): "…/<Chức năng>/NV-9601" — chỉ nhận đúng dạng NV-<số> (mã do CSDL sinh); chuỗi khác không
+// phải mã. Không có tệp dựng sẵn cho từng việc (không đưa mã / dữ liệu lên trang công khai): Pages trả 404.html → app (?p=).
+const MA_VIEC = /^NV-\d{1,9}$/i;
+export const laMaViec = (s) => MA_VIEC.test(String(s || ''));
+// { duong, the } (tachDuong) → thêm ma: đoạn cuối là mã việc thì tách ra (chữ hoa), phần còn lại là chức năng; "/NV-9601" → trang đầu + việc.
+export function tachViec(t) {
+  if (!t) return t;
+  const phan = [t.duong, ...String(t.the || '').split('/')].filter(Boolean);
+  if (!laMaViec(phan.at(-1))) return { ...t, ma: '' };
+  return { duong: phan[0] && phan.length > 1 ? phan[0] : '', the: phan.slice(1, -1).join('/'), ma: phan.at(-1).toUpperCase() };
+}
+// Đường dẫn chức năng (không mã việc) của { duong, the } để so màn: "Quan-tri/Tai-khoan", "Tong-quan".
+export const duongChucNang = (t) => [t?.duong, t?.the].filter(Boolean).join('/');
 // pathname + base ("/vptu-mvp-task/" hoặc "/vptu-mvp-task/staging/") → { duong, the } (phần sau base, đã bỏ ".html", gạch chéo, giải mã); ngoài base → null.
 export function tachDuong(pathname, base = '/') {
   let p = String(pathname || '');

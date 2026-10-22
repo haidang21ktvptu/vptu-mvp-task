@@ -159,8 +159,21 @@ Cảnh báo:
   Đổi màn → `history.pushState` (móc ở `setActiveNav` và khi đổi thẻ Quản trị / Giao việc; các lần sáng mục trong cùng một lượt gộp làm một bước,
   ghi ở microtask); mở theo đường dẫn / Quay lại → `replaceState` (chỉ phần đồng bộ của lượt mở); `popstate` mở lại chức năng; vào app → `moManDau` của từng vai mở theo
   đường dẫn nếu mục đó có trong menu (hoặc quyền) của người dùng, không thì trang đầu kèm thông báo (`views/shell/duong-dan.js`). Đường dẫn chỉ chọn
-  màn để vẽ — dữ liệu vẫn chỉ theo RLS. Đăng xuất về địa chỉ gốc; hết phiên nạp lại tại chỗ (đăng nhập lại vào đúng chức năng).
-- **Tệp dựng sẵn:** plugin trong `frontend/vite.config.js` chép `index.html` thành `Tong-quan.html`, `Quan-tri/Tai-khoan.html`… (danh sách `DS_TEP`) và
+  màn để vẽ — dữ liệu vẫn chỉ theo RLS. Chưa có phiên (`restoreSession`, hồ sơ lỗi) → `ghiDangNhap()`: thanh địa chỉ `/Dang-nhap`, chức năng đang mở giữ
+  trong `history.state.tiep`; vào app ở `/Dang-nhap` → mở `tiep` (không có thì trang đầu) và thay bước. Đăng xuất về `/Dang-nhap`; hết phiên nạp lại tại
+  chỗ → `/Dang-nhap`, đăng nhập lại vào đúng chức năng.
+- **Chi tiết một nhiệm vụ:** `…/<chức năng>/NV-<số>` (`tachViec` / `laMaViec` ở `tuyen.js` — chỉ nhận đúng dạng mã do CSDL sinh). Mở việc
+  (`toggleKlChiTiet`) → `ghiViec`: chưa mở việc nào thì `pushState` kèm `{ chiTiet: true }`, đang mở việc khác / mở theo đường dẫn thì `replaceState`;
+  người dùng đóng (Đóng ngăn, Quay lại trong ngăn, Esc) → `boViec({ nguoiDung: true })`: bước do mở việc thêm vào thì `history.back()` (popstate tới bỏ
+  qua — `choLui` ghi đúng đích; người dùng đổi màn / mở việc ngay lúc trình duyệt còn lùi, lần ghi đó bị bước lùi đè → ghi lại), không thì sửa bước; bước
+  do `pushState` thêm dùng chung tài liệu với bước trước nên sau tải lại vẫn lùi trong trang; mở danh sách khác trong ngăn → như đóng; đổi màn không đụng
+  (màn mới tự ghi; `quenViec`). Thay bước giữ dấu `chiTiet`. `popstate` cùng màn → hành động `moViecTheoMa` / `dongViecTheoDuong` (không vẽ lại màn); khác màn → mở màn rồi `moViecTheoMa`
+  (`kl/mo-theo-ma.js`: tìm trong dữ liệu đã nạp, không có thì `v_nhiem_vu` theo mã — RLS quyết định; không có / ngoài phạm vi cùng một câu, bỏ mã; màn
+  Nhiệm vụ đang có việc đó → mở ngay trong màn, giữ bộ lọc và mục menu; còn lại → ngăn dùng chung). Lượt điều hướng (`luot`): người dùng đổi màn / mở
+  việc trong lúc màn còn nạp → lượt mở việc theo đường dẫn đang chờ bị bỏ. Màn vẽ lại khi việc vẫn mở không chen bước. Tự đăng xuất vì hết phiên bỏ mã
+  việc khỏi đường dẫn trước khi nạp lại (`boMaTruocKhiThoat` — máy dùng chung). Không dựng tệp cho từng việc (không đưa mã / dữ liệu lên trang công
+  khai): Pages trả `404.html` → app (`?p=`).
+- **Tệp dựng sẵn:** plugin trong `frontend/vite.config.js` chép `index.html` thành `Dang-nhap.html`, `Tong-quan.html`, `Quan-tri/Tai-khoan.html`… (danh sách `DS_TEP`) và
   `Quan-tri/index.html` (Pages chọn `Quan-tri.html` hay thư mục `Quan-tri/` đều vào app) — Pages trả `/Tong-quan` từ `Tong-quan.html` (mã 200, không
   chuyển hướng). Thêm mục menu mới thì thêm dòng vào `TUYEN`. Build dừng nếu thiếu `VITE_SUPABASE_URL` (biến môi trường hoặc `frontend/.env`, đọc bằng
   `loadEnv`) hay thiếu thẻ `charset`; job Frontend của CI kiểm `dist/` có đủ tệp đường dẫn và thẻ CSP.
@@ -175,4 +188,5 @@ Cảnh báo:
   giao tài khoản) nhận cùng CSP → app gọi `print()` cho cửa sổ đó, trang in không có script.
 - **Kiểm:** unit `tuyen` (bảng, tách, chọn theo menu, CSP), `duong-dan` (lịch sử giả: một bấm một bước, mở theo đường dẫn sửa tại chỗ, thẻ Giao việc);
   e2e `duong-dan.spec.js` (bản build có CSP: menu, Quay lại / Tiến tới, tải lại, chữ thường, thẻ Quản trị / Nhập từ Excel, đường dẫn không thuộc vai,
-  không vi phạm CSP); smoke sau deploy (staging, production) mở thẳng `/Tong-quan`, `/Quan-tri`, `/Quan-tri/Tai-khoan` và một đường dẫn lạ trước khi đăng nhập.
+  không vi phạm CSP, chưa đăng nhập → `/Dang-nhap` rồi vào đúng chức năng); smoke sau deploy (staging, production) mở thẳng `/Tong-quan`, `/Quan-tri`,
+  `/Quan-tri/Tai-khoan` và một đường dẫn lạ trước khi đăng nhập (thanh địa chỉ `/Dang-nhap`), đăng xuất về `/Dang-nhap`.
