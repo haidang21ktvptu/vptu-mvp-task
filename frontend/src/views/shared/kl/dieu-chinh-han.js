@@ -2,8 +2,10 @@
 // khoản quản trị. Hạn hiện tại + số lần đã gia hạn, hạn mới (không trước ngày ban hành), lý do bắt buộc; lùi hạn = gia hạn lần n, rút ngắn không
 // tính. Hàm dieu_chinh_han là chốt (quyền, quá hạn, ngày, việc cha – con); người giao việc, Trưởng phòng, lãnh đạo Văn phòng phụ trách được báo.
 import { $, show, setText } from '../../../lib/dom.js';
+import { state } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
-import { formatNgay } from '../../../lib/kl/ngay.js';
+import { formatNgay, homNayVN } from '../../../lib/kl/ngay.js';
+import { laToanQuyen } from '../../../lib/toan-quyen.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { dieuChinhHan } from '../../../lib/kl/quyen-them-db.js';
 import { ghiChuHanMoi } from '../../../lib/kl/quyen-them.js';
@@ -11,7 +13,9 @@ import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
 
 let sauHanhDong = async () => {};
+let homNay = homNayVN();
 const dongViec = (id) => timKlRow(id) || dh.rows.find((x) => x.id === id);
+const choQuaKhu = () => laToanQuyen(state.user);   // tài khoản toàn quyền đính chính được hạn đã qua; người khác: từ hôm nay (dieu_chinh_han)
 
 const template = `
 <div id="dchModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="dchTieuDe">
@@ -31,7 +35,7 @@ const template = `
   </form>
 </div>`;
 
-const capNhatGhiChu = () => { const r = dongViec($('dchId').value); setText('dchGhiChu', r ? ghiChuHanMoi(r, $('dchHan').value) : ''); };
+const capNhatGhiChu = () => { const r = dongViec($('dchId').value); setText('dchGhiChu', r ? ghiChuHanMoi(r, $('dchHan').value, { homNay, choQuaKhu: choQuaKhu() }) : ''); };
 
 function moDieuChinhHan({ id }) {
   const r = dongViec(id);
@@ -40,7 +44,9 @@ function moDieuChinhHan({ id }) {
   setText('dchTieuDe', `Điều chỉnh hạn · ${r.ma}`);
   setText('dchMoTa', r.noi_dung || '');
   setText('dchCu', `${formatNgay(r.han_xu_ly)}${r.so_lan_gia_han ? ` (đã gia hạn ${r.so_lan_gia_han} lần)` : ''}`);
-  $('dchHan').value = ''; $('dchHan').min = r.ngay_ban_hanh || '';
+  homNay = homNayVN();
+  const banHanh = r.ngay_ban_hanh || '';
+  $('dchHan').value = ''; $('dchHan').min = choQuaKhu() || banHanh > homNay ? banHanh : homNay;
   $('dchLyDo').value = ''; $('dchLuu').disabled = false;
   capNhatGhiChu();
   show('dchModal', true);
@@ -52,6 +58,7 @@ async function luuDieuChinhHan() {
   const id = $('dchId').value; const r = dongViec(id); const han = $('dchHan').value; const lyDo = $('dchLyDo').value.trim();
   if (!han) { notifyError('Chọn hạn mới.'); $('dchHan').focus(); return; }
   if (r && han === r.han_xu_ly) { notifyError('Hạn mới trùng hạn hiện tại.'); return; }
+  if (!choQuaKhu() && han < homNay) { notifyError('Hạn mới không được trước hôm nay.'); $('dchHan').focus(); return; }
   if (!lyDo) { notifyError('Ghi lý do điều chỉnh hạn (bắt buộc).'); $('dchLyDo').focus(); return; }
   $('dchLuu').disabled = true;
   try {

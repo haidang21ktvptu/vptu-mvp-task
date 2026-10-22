@@ -58,10 +58,13 @@ const template = `
   </form>
 </div>`;
 
+// Việc do cơ quan, đơn vị ngoài Văn phòng chủ trì: chọn chủ trì mới là chuyển việc về Văn phòng (số liệu tính theo đơn vị mới) — nói rõ trước khi lưu.
 function capNhatGhiChu() {
   const a = findAccount($('dctChuTri').value); const r = dongViec($('dctId').value);
   const dv = a && a.id !== r?.owner_tai_khoan ? donViMoi(a) : '';
-  setText('dctGhiChu', dv ? `Phòng, đơn vị chủ trì sau khi đổi: ${dv}.` : '');
+  const ngoai = dv && r?.owner_trong_van_phong === false ? ` Lưu ý: việc đang do ${boSoThuTu(r.owner_don_vi_ten) || 'cơ quan, đơn vị ngoài Văn phòng'} chủ trì — `
+    + 'đổi chủ trì là chuyển việc về Văn phòng (số liệu tính theo đơn vị mới); chỉ đổi cán bộ theo dõi thì để "Giữ nguyên chủ trì".' : '';
+  setText('dctGhiChu', dv ? `Phòng, đơn vị chủ trì sau khi đổi: ${dv}.${ngoai}` : '');
 }
 
 function moDoiChuTri({ id }) {

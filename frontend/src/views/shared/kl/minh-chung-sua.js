@@ -84,12 +84,14 @@ async function luuSuaMinhChung() {
 
 async function goMinhChungAction({ id, nv }, form) {
   const lyDo = String(new FormData(form).get('ly_do') || '').trim();
+  const nut = form.querySelector('button[type="submit"]');
   if (!lyDo) { notifyError('Ghi lý do gỡ (bắt buộc).'); return; }
+  if (nut) nut.disabled = true;   // bấm hai lần: lần sau báo "không có minh chứng" gây hiểu nhầm
   try {
     const kq = await goMinhChung(id, lyDo);
     notifySuccess(kq?.mo_lai ? 'Đã gỡ minh chứng — không còn minh chứng hợp lệ nên nhiệm vụ mở lại.' : 'Đã gỡ minh chứng. Bản cũ được lưu lại.');
     await sauHanhDong(nv);
-  } catch (e) { notifyError(loiDeHieu(e)); }
+  } catch (e) { notifyError(loiDeHieu(e)); if (nut) nut.disabled = false; }
 }
 
 export function mountMinhChungSua(registerActions, napLai) {

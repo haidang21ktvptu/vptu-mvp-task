@@ -20,6 +20,7 @@ import { ganSuKienTep, tepDangChon, datLaiTep } from './minh-chung-tep.js';
 import { klCapNhatTemplate } from './cap-nhat-template.js';
 import { timKlRow } from './danh-sach.js';
 import { cheDoDieuChinhHan } from '../../../lib/kl/quyen-them.js';
+import { capNhatChiNhoThuKy } from './dong.js';
 
 let afterSave = () => {};
 let row = null;
@@ -58,7 +59,8 @@ export async function openKlCapNhat({ id, rows }) {
   // GĐ16 (MC-3, MC-4): việc theo quy tắc 1400 đóng bằng nút "Đóng nhiệm vụ" sau khi nộp minh chứng có cấu trúc — modal này
   // không có ô chữ tự do và không chọn Hoàn thành (trigger 0028 là chốt); việc cũ giữ quy tắc chữ.
   const theo1400 = Boolean(row.theo_1400) && row.tien_do_ma !== 'HOAN_THANH';
-  $('klCnTienDo').innerHTML = danhMucKl().tienDo.filter((t) => !(theo1400 && t.ma === 'HOAN_THANH'))
+  const anHt = theo1400 || capNhatChiNhoThuKy(row);   // v3.29: thư ký Thường trực (chỉ nhờ cờ) không tự đóng việc
+  $('klCnTienDo').innerHTML = danhMucKl().tienDo.filter((t) => !(anHt && t.ma === 'HOAN_THANH'))
     .map((t) => `<option value="${t.ma}"${t.ma === row.tien_do_ma ? ' selected' : ''}>${t.ten}</option>`).join('');
   show('klCnMinhChungWrap', !row.theo_1400);
   show('klCnGhiChu1400', theo1400);

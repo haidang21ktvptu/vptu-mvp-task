@@ -5,7 +5,7 @@ import { notifyError } from '../../components/toast.js';
 import { loadDienBien, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
 import { tenCot } from '../../lib/kl/nhan.js';
 import { moNhiemVu } from './kl/index.js';
-import { hienGiaTri } from './kl/chi-tiet.js';
+import { hienGiaTri } from '../../lib/kl/gia-tri.js';
 
 const NHAN_NGUON = { lich_su: '', canh_bao: 'Cảnh báo', tu_choi: 'Từ chối', tu_choi_ly_do: 'Lý do từ chối', chi_dao: 'Chỉ đạo', phan_hoi: 'Phản hồi', minh_chung: 'Minh chứng' };
 const LOP_NGUON = { lich_su: 'db-lich-su', canh_bao: 'db-canh-bao', tu_choi: 'db-tu-choi', tu_choi_ly_do: 'db-tu-choi', chi_dao: 'db-chi-dao', phan_hoi: 'db-phan-hoi', minh_chung: 'db-minh-chung' };

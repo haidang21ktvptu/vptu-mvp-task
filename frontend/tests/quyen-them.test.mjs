@@ -60,7 +60,7 @@ test('Đổi chủ trì: thư ký (việc chưa hoàn thành), quản trị (m�
   assert.equal(duocSuaToanBo(viec(), a0), false, 'Thường trực không bao giờ là toàn quyền');
 });
 
-test('Ghi chú hạn mới: lùi = gia hạn lần n + 1, rút ngắn không tính, trùng hạn, trước ngày ban hành', () => {
+test('Ghi chú hạn mới: lùi = gia hạn lần n + 1, rút ngắn không tính, trùng hạn, trước ngày ban hành, trước hôm nay (trừ tài khoản quản trị)', () => {
   const r = viec();
   assert.equal(ghiChuHanMoi(r, ''), '');
   assert.equal(ghiChuHanMoi(r, '2026-10-30'), 'Hạn mới trùng hạn hiện tại.');
@@ -68,4 +68,9 @@ test('Ghi chú hạn mới: lùi = gia hạn lần n + 1, rút ngắn không tí
   assert.equal(ghiChuHanMoi({ ...r, so_lan_gia_han: 0 }, '2026-11-15'), 'Lùi hạn: tính là gia hạn lần 1.');
   assert.equal(ghiChuHanMoi(r, '2026-10-25'), 'Rút ngắn hạn: không tính lần gia hạn.');
   assert.equal(ghiChuHanMoi(r, '2026-08-01'), 'Hạn mới không được trước ngày ban hành văn bản.');
+  assert.equal(ghiChuHanMoi(r, '2026-10-20', { homNay: HOM_NAY }), 'Hạn mới không được trước hôm nay.');
+  assert.equal(ghiChuHanMoi(r, HOM_NAY, { homNay: HOM_NAY }), 'Rút ngắn hạn: không tính lần gia hạn.', 'hạn mới đúng hôm nay: được');
+  assert.equal(ghiChuHanMoi(r, '2026-10-20', { homNay: HOM_NAY, choQuaKhu: true }), 'Rút ngắn hạn: không tính lần gia hạn.', 'quản trị: đính chính hạn đã qua');
+  assert.equal(ghiChuHanMoi(r, '2026-08-01', { homNay: HOM_NAY, choQuaKhu: true }), 'Hạn mới không được trước ngày ban hành văn bản.');
+  assert.equal(ghiChuHanMoi({ ...r, han_xu_ly: null }, '2026-11-15', { homNay: HOM_NAY }), '', 'việc chưa có hạn: không ghi chú gia hạn');
 });

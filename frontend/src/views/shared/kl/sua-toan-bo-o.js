@@ -20,7 +20,7 @@ const opt = (v, t, chon) => `<option value="${escapeHtml(v)}"${chon ? ' selected
 export const oCuaViec = (r) => [...O_TB_GIAO, ...O_TB_THUC_HIEN.filter(([c]) => c !== 'ngay_hoan_thanh' || r.tien_do_ma === 'HOAN_THANH')];
 
 const GOI_Y = {
-  han_xu_ly: 'Sửa ở đây là đính chính, không tính lần gia hạn (gia hạn: "Điều chỉnh hạn").',
+  han_xu_ly: 'Sửa ở đây là đính chính, không tính lần gia hạn (gia hạn: "Điều chỉnh hạn"). Việc "Ký ban hành" tự tính hạn — đổi Loại thời hạn trước.',
   ngay_hoan_thanh: 'Không để trống khi việc đã hoàn thành; muốn việc chạy lại: "Mở lại nhiệm vụ".',
 };
 function oThucHienHtml([cot, nhan, kieu], r) {
@@ -29,7 +29,7 @@ function oThucHienHtml([cot, nhan, kieu], r) {
   const goiY = GOI_Y[cot] ? `<small class="chu-phu">${escapeHtml(GOI_Y[cot])}</small>` : '';
   if (kieu === 'ngay') return `${lbl}<input type="date" id="${id}" class="o-nhap" value="${escapeHtml(v)}">${goiY}`;
   if (kieu === 'vb') return `${lbl}<textarea id="${id}" class="o-nhap" rows="2" maxlength="2000">${escapeHtml(v)}</textarea>`;
-  if (kieu === 'chu') return `${lbl}<input type="text" id="${id}" class="o-nhap" maxlength="1000" value="${escapeHtml(v)}">`;
+  if (kieu === 'chu') return `${lbl}<input type="text" id="${id}" class="o-nhap" maxlength="${cot === 'ly_do_chua_co_han' ? 500 : 1000}" value="${escapeHtml(v)}">`;
   const ds = (kieu === 'loaiThoiHan' ? danhMucKl().loaiThoiHan : danhMucKl().cap) || [];
   const trong = kieu === 'cap' ? opt('', '(chưa xác định)', !v) : '';
   return `${lbl}<select id="${id}" class="o-nhap">${trong}${ds.map((d) => opt(d.ma, d.ten, d.ma === v)).join('')}</select>${goiY}`;

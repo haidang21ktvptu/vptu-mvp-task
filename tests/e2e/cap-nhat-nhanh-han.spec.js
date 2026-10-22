@@ -7,6 +7,10 @@ import { createClient } from '@supabase/supabase-js';
 import { getKeys } from './lib/keys.mjs';
 import { pageAs, moViec, NAP } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
+import { homNay, cong, dd } from './lib/pr2b.mjs';
+
+const HAN = cong(homNay(), 60);   // hạn còn xa: chủ trì thấy câu trỏ tới "Điều chỉnh hạn" (việc quá hạn thì câu khác)
+const HAN_DIEN = cong(homNay(), 45);
 
 test.describe.serial('Cập nhật nhanh: khoá hạn khi việc đã có hạn (Q7)', () => {
   let db; let khoa; let page; const v = {};
@@ -19,7 +23,7 @@ test.describe.serial('Cập nhật nhanh: khoá hạn khi việc đã có hạn 
     const { data: nv } = await db.from('accounts').select('id').eq('username', 'demo_e2e_nv').single();
     const goc = { van_ban_id: vb, loai_thoi_han_ma: 'CO_HAN_CU_THE', theo_1400: true, ngay_nhan_van_ban: '2026-08-01', ngay_nhan_uoc_tinh: false,
       owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: nv.id, nguoi_theo_doi: nv.id, san_pham_loai: 'BAO_CAO', tao_boi: nv.id };
-    for (const [ten, them] of [['coHan', { han_xu_ly: '2026-12-31' }], ['canDien', { han_xu_ly: null, ly_do_chua_co_han: 'Chờ kế hoạch của tỉnh' }]]) {
+    for (const [ten, them] of [['coHan', { han_xu_ly: HAN }], ['canDien', { han_xu_ly: null, ly_do_chua_co_han: 'Chờ kế hoạch của tỉnh' }]]) {
       const r = await db.from('nhiem_vu').insert({ ...goc, ...them, noi_dung: `${khoa} ${ten}` }).select('id, ma').single();
       if (r.error) throw new Error(`Tạo việc mẫu: ${r.error.message}`);
       v[ten] = r.data;
@@ -35,13 +39,13 @@ test.describe.serial('Cập nhật nhanh: khoá hạn khi việc đã có hạn 
     await expect(page.locator('#klCapNhatModal')).toBeVisible();
     await expect(page.locator('#klCnHanWrap')).toBeHidden();
     await expect(page.locator('#klCnChuaCoHanWrap')).toBeHidden();
-    await expect(page.locator('#klCnHanKhoa')).toContainText('31/12/2026');
+    await expect(page.locator('#klCnHanKhoa')).toContainText(dd(HAN));
     await expect(page.locator('#klCnHanKhoa')).toContainText('Điều chỉnh hạn');
     await page.locator('#klCnGhiChu').fill(`${khoa} ghi chú`);
     await page.locator('#klCnLuu').click();
     await expect(page.locator('#klCapNhatModal')).toBeHidden(NAP);
     const r = await db.from('nhiem_vu').select('han_xu_ly, ghi_chu').eq('id', v.coHan.id).single();
-    expect(r.data).toEqual({ han_xu_ly: '2026-12-31', ghi_chu: `${khoa} ghi chú` });
+    expect(r.data).toEqual({ han_xu_ly: HAN, ghi_chu: `${khoa} ghi chú` });
   });
 
   test('việc "Cần điền hạn": ô hạn hiện, điền được và lưu', async () => {
@@ -50,9 +54,9 @@ test.describe.serial('Cập nhật nhanh: khoá hạn khi việc đã có hạn 
     await expect(page.locator('#klCnHanWrap')).toBeVisible();
     await expect(page.locator('#klCnHanKhoa')).toBeHidden();
     await page.locator('#klCnChuaCoHan').uncheck();
-    await page.locator('#klCnHan').fill('2026-11-30');
+    await page.locator('#klCnHan').fill(HAN_DIEN);
     await page.locator('#klCnLuu').click();
     await expect(page.locator('#klCapNhatModal')).toBeHidden(NAP);
-    await expect.poll(async () => (await db.from('nhiem_vu').select('han_xu_ly').eq('id', v.canDien.id).single()).data.han_xu_ly).toBe('2026-11-30');
+    await expect.poll(async () => (await db.from('nhiem_vu').select('han_xu_ly').eq('id', v.canDien.id).single()).data.han_xu_ly).toBe(HAN_DIEN);
   });
 });

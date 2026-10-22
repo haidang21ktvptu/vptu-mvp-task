@@ -34,7 +34,7 @@ export function khoiQuyenHtml(r) {
   const nhac = cheDoDieuChinhHan(r, u, homNayVN()) === 'qua-han'
     ? '<p class="chu-phu ct-nhac-han" data-truong="nhac-gia-han">Việc đã quá hạn nên chủ trì không tự điều chỉnh hạn — đồng chí đề nghị lãnh đạo giao việc gia hạn hoặc báo thư ký Thường trực.</p>' : '';
   const moLai = duocMoLai(r, u) ? `<form class="o" id="oMoLai-${r.id}" data-submit="moLaiNhiemVu" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
-      <small>Nhiệm vụ chuyển về "Đang thực hiện"; ngày hoàn thành, đánh giá chất lượng tự xoá; minh chứng giữ nguyên. Chủ trì, người theo dõi, người giao việc được báo.</small>
+      <small>Nhiệm vụ chuyển về "Đang thực hiện"; ngày hoàn thành, đánh giá chất lượng tự xoá; minh chứng giữ để xem nhưng chuyển "Bị trả lại" — muốn hoàn thành lại phải nộp minh chứng mới. Chủ trì, người theo dõi, người giao việc, người nộp được báo.</small>
       <input name="ly_do" required maxlength="500" placeholder="Lý do mở lại (bắt buộc)" aria-label="Lý do mở lại nhiệm vụ">
       <button type="submit" class="nut chinh">Mở lại</button><button type="button" class="nut" data-action="dongO" data-o="oMoLai-${r.id}">Huỷ</button></form>` : '';
   return nhac + moLai;
@@ -42,12 +42,15 @@ export function khoiQuyenHtml(r) {
 
 async function moLaiAction({ id, ma }, form) {
   const lyDo = String(new FormData(form).get('ly_do') || '').trim();
+  const nut = form.querySelector('button[type="submit"]');
   if (!lyDo) { notifyError('Ghi lý do mở lại (bắt buộc).'); return; }
+  if (nut) nut.disabled = true;
   try {
-    await moLaiNhiemVu(id, lyDo);
-    notifySuccess(`Đã mở lại ${ma} — nhiệm vụ chuyển về Đang thực hiện; minh chứng giữ nguyên.`);
+    const kq = await moLaiNhiemVu(id, lyDo);
+    const n = kq?.so_minh_chung_tra_lai || 0;
+    notifySuccess(`Đã mở lại ${ma} — nhiệm vụ chuyển về Đang thực hiện${n ? `; ${n} minh chứng chuyển "Bị trả lại", cần nộp minh chứng mới để hoàn thành` : ''}.`);
     await sauHanhDong(id);
-  } catch (e) { notifyError(loiDeHieu(e)); }
+  } catch (e) { notifyError(loiDeHieu(e)); if (nut) nut.disabled = false; }
 }
 
 export function mountQuyenThem(registerActions, napLai) {

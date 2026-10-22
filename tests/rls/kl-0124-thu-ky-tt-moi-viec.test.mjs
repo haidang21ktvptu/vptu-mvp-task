@@ -1,8 +1,8 @@
 // 0124 (v3.29, chủ dự án quyết 22/10/2026 — CAU-HOI O-5; CLAUDE.md quy tắc 7, ngoại lệ thứ tư): thư ký Thường trực (cờ thu_ky_thuong_truc) xem MỌI
 // nhiệm vụ (v_nhiem_vu.trong_pham_vi = false ở việc ngoài phạm vi cũ; số liệu "Cần xử lý" theo phạm vi cũ) và làm với mọi việc chưa hoàn thành:
 // cập nhật tiến độ / kết quả (chốt cột như chủ trì), nộp minh chứng + tải tệp, ghi vướng mắc, sửa thông tin giao, đổi chủ trì / người theo dõi
-// (doi_chu_tri — cả tài khoản toàn quyền, kể cả việc đã hoàn thành). Vẫn không: chỉ đạo, trả lại minh chứng, sửa việc đã hoàn thành. Chuẩn đối
-// chiếu kl_tham_chieu_pham_vi: thư ký = mọi việc. Thư ký = demo_e2e_tk (A3 Tổng hợp); việc thử của cv2 (Quản trị). Khoá "KL-0124"; cờ khôi phục; tự dọn.
+// (doi_chu_tri — cả tài khoản toàn quyền, kể cả việc đã hoàn thành). Vẫn không: chỉ đạo, trả lại minh chứng, tự đóng việc (ghi thẳng Hoàn thành),
+// sửa việc đã hoàn thành. Chuẩn đối chiếu kl_tham_chieu_pham_vi: thư ký = mọi việc. Thư ký = demo_e2e_tk (A3 Tổng hợp); việc thử của cv2 (Quản trị). Khoá "KL-0124"; cờ khôi phục; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, homNayVN } from './lib.mjs';
@@ -39,6 +39,7 @@ describe('0124 — thư ký Thường trực trên mọi nhiệm vụ; đổi ch
     const r = await db().from('van_ban_giao_viec').insert({ loai: 'CONG_VAN', so_ket_luan: `${KHOA} vb`, ngay_ban_hanh: cong(-50), ngay_nhan: cong(-49) }).select('id').single();
     assertOk(r, 'văn bản'); vbId = r.data.id;
     await viec('X'); await viec('Y'); await viec('XONG', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-10), nguon: 'excel' });
+    await viec('CD', { theo_1400: false });   // việc chuyển đổi: không có trigger bắt minh chứng hợp lệ — chốt "không tự đóng việc" là RLS
   });
   after(don);
 
@@ -56,12 +57,16 @@ describe('0124 — thư ký Thường trực trên mọi nhiệm vụ; đổi ch
     assert.ok(ls.data.length >= 1, 'đọc được lịch sử');
   });
 
-  test('2. Cập nhật thẳng: ô của người thực hiện được; ô cấp giao, hạn đã chốt bị chặn; việc đã hoàn thành 0 dòng', async () => {
+  test('2. Cập nhật thẳng: ô của người thực hiện được; ô cấp giao, hạn đã chốt, tự đóng việc bị chặn; việc đã hoàn thành 0 dòng', async () => {
     const c = await userClient('demo_e2e_tk');
     const r = await c.from('nhiem_vu').update({ ghi_chu: `${KHOA} thư ký ghi`, van_ban_trien_khai: 'Số 1/KH' }).eq('id', v.X.id).select('id');
     assertOk(r, 'ghi tiến độ'); assert.equal(r.data.length, 1);
     assertDenied(await c.from('nhiem_vu').update({ noi_dung: `${KHOA} đổi` }).eq('id', v.X.id).select('id'), 'sửa thẳng ô cấp giao');
     assertDenied(await c.from('nhiem_vu').update({ han_xu_ly: cong(90) }).eq('id', v.X.id).select('id'), 'sửa thẳng hạn đã chốt');
+    const dong = await c.from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNayVN(), minh_chung: `${KHOA} báo cáo` }).eq('id', v.CD.id).select('id');
+    assertDenied(dong, 'thư ký tự đóng việc (ghi thẳng Hoàn thành)');
+    assert.notEqual((await doc('CD', 'tien_do_ma')).tien_do_ma, 'HOAN_THANH');
+    assertOk(await c.from('nhiem_vu').update({ ghi_chu: `${KHOA} thư ký ghi` }).eq('id', v.CD.id).select('id'), 'vẫn ghi tiến độ việc chuyển đổi');
     const xong = await c.from('nhiem_vu').update({ ghi_chu: 'x' }).eq('id', v.XONG.id).select('id');
     assertOk(xong, 'việc đã hoàn thành'); assert.equal(xong.data.length, 0);
   });

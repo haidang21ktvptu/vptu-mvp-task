@@ -12,7 +12,8 @@
 --    - thư ký Thường trực — mọi việc chưa hoàn thành, kể cả đã quá hạn;
 --    - tài khoản toàn quyền (0100) — mọi việc, kể cả đã hoàn thành.
 --    Lãnh đạo Văn phòng vẫn "Gia hạn" bằng chỉ đạo (chi_dao_gui GIA_HAN) như cũ; người khác bị chặn (42501).
---    Quy tắc: việc đã có hạn (chưa có hạn thì điền ở Cập nhật); hạn mới khác hạn cũ; lý do bắt buộc, tối đa 500 ký tự. Trigger giữ các ràng buộc cũ
+--    Quy tắc: việc đã có hạn (chưa có hạn thì điền ở Cập nhật); hạn mới khác hạn cũ, không trước hôm nay (trừ tài khoản toàn quyền — đính chính);
+--    lý do bắt buộc, tối đa 500 ký tự. Trigger giữ các ràng buộc cũ
 --    (không trước ngày ban hành; hạn việc con không sau hạn việc cha; không rút hạn việc cha xuống trước hạn việc con). Lùi hạn = gia hạn
 --    (so_lan_gia_han + 1); rút ngắn không cộng. "Theo ngày ký ban hành" chuyển thành "Có hạn cụ thể" (không thì trigger tính lại hạn).
 --    Nhật ký: trigger lịch sử ghi hạn cũ → mới (người, lúc); thêm dòng 'dieu_chinh_han' "30/10/2026 → 15/11/2026 (gia hạn lần 2) — lý do: …".
@@ -81,6 +82,9 @@ BEGIN
   END IF;
   IF "p_han_moi" IS NULL THEN RAISE EXCEPTION 'Chọn hạn mới.' USING ERRCODE = '22023'; END IF;
   IF "p_han_moi" = v."han_xu_ly" THEN RAISE EXCEPTION 'Hạn mới trùng hạn hiện tại (%).', to_char(v."han_xu_ly", 'DD/MM/YYYY') USING ERRCODE = '22023'; END IF;
+  IF NOT v_tq AND "p_han_moi" < "public"."kl_hom_nay"() THEN   -- hạn đã qua: chỉ tài khoản quản trị đính chính (gõ nhầm ngày làm việc quá hạn ngay)
+    RAISE EXCEPTION 'Hạn mới không được trước hôm nay (%).', to_char("public"."kl_hom_nay"(), 'DD/MM/YYYY') USING ERRCODE = '22023';
+  END IF;
   IF v_ly_do = '' OR char_length(v_ly_do) > 500 THEN RAISE EXCEPTION 'Lý do điều chỉnh hạn bắt buộc, tối đa 500 ký tự.' USING ERRCODE = '22023'; END IF;
   v_gia_han := "p_han_moi" > v."han_xu_ly";
   PERFORM set_config('kl.ghi_qua_ham', '1', true);   -- guard a3: đổi hạn qua hàm (như chi_dao_gui GIA_HAN); trigger 0015/0023 vẫn kiểm ngày

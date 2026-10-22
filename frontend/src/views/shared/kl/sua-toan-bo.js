@@ -32,9 +32,17 @@ const template = `
 </div>`;
 
 const doc = (cot) => { const el = $(idO(cot)); return el ? el.value.trim() : undefined; };
+// "Ký ban hành": hạn tự tính (ngày ban hành + 10) — khoá ô hạn, trả về giá trị lúc mở (DB báo lỗi nếu gửi hạn với loại này).
+function khoaHanKy() {
+  const han = $(idO('han_xu_ly')); const ky = $(idO('loai_thoi_han_ma'))?.value === 'KY_BAN_HANH';
+  if (!han) return;
+  if (ky) han.value = dau.han_xu_ly ?? '';
+  han.disabled = ky;
+}
 function capNhatDoi() {
   const r = dongViec($('stbId').value);
   if (!r) return;
+  khoaHanKy();
   const { ghiChu, ten } = thayDoiTuForm(r, doc, dau);
   setText('stbLv', ghiChu);
   setText('stbDoi', ten.length ? `Sẽ sửa: ${ten.join(', ')}.` : 'Chưa đổi ô nào.');

@@ -1,8 +1,9 @@
 // 0126 (v3.29, chủ dự án quyết 22/10/2026 — CAU-HOI O-6): tài khoản toàn quyền sửa văn bản giao việc (van_ban_sua — việc "theo ngày ký" tính lại hạn,
-// ngày nhận chép từ văn bản đổi theo, nhật ký mỗi việc + nhật ký hệ thống; chặn: ngày ban hành sau hạn của việc, Kết luận BTV thiếu số hội nghị,
-// đổi sang Thông báo khi còn việc "Không thuộc", trùng văn bản) và sửa / gỡ minh chứng đã nộp (bản chụp minh_chung_lich_su; sửa ngày văn bản →
-// ngày hoàn thành theo; gỡ minh chứng hợp lệ cuối cùng → việc mở lại). Chánh VP thật, chủ trì bị chặn; bản chụp đọc theo phạm vi, không ghi thẳng.
-// demo_e2e_tq bật cờ tạm. Khoá "KL-0126"; tự dọn.
+// ngày nhận chép từ văn bản đổi theo — không sau ngày hoàn thành của việc, xoá thì về ước tính; nhật ký mỗi việc + nhật ký hệ thống; chặn: ngày ban
+// hành sau hạn của việc, Kết luận BTV thiếu số hội nghị, đổi sang Thông báo khi còn việc "Không thuộc", trùng văn bản) và sửa / gỡ minh chứng đã nộp
+// (bản chụp minh_chung_lich_su; sửa ngày văn bản của minh chứng hợp lệ → ngày hoàn thành theo; gỡ minh chứng hợp lệ cuối cùng → việc mở lại, không
+// phải cuối cùng → ngày hoàn thành theo minh chứng còn lại; tệp của minh chứng đã gỡ người tải lên không xoá được). Chánh VP thật, chủ trì bị chặn;
+// bản chụp đọc theo phạm vi, không ghi thẳng. demo_e2e_tq bật cờ tạm. Khoá "KL-0126"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, homNayVN } from './lib.mjs';
@@ -16,6 +17,8 @@ const SKIP = !(await klSchemaReady()) ? 'Chưa có migration KL trên project n�
 const cong = (n) => { const d = new Date(`${homNayVN()}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const vn = (iso) => iso.split('-').reverse().join('/');
 const BH = cong(-50); const NHAN = cong(-49);
+const PDF = Buffer.from('%PDF-1.4\n1 0 obj <<>> endobj\ntrailer <<>>\n%%EOF\n');
+const kho = (c) => c.storage.from('minh-chung');
 const vb = {}; const v = {};
 const viec = async (k, b, them = {}) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: vb[b], noi_dung: `${KHOA} ${k}`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: cong(60), nganh_ma: 'KINH_TE_TONG_HOP',
@@ -26,8 +29,10 @@ const viec = async (k, b, them = {}) => {
 const vbs = async (u, b, p, lyDo = 'Nhập sai số hiệu') => (await userClient(u)).rpc('van_ban_sua', { p_id: vb[b], p_thay_doi: p, p_ly_do: lyDo });
 const doc = async (k, cot) => (await db().from('nhiem_vu').select(cot).eq('id', v[k].id).single()).data;
 const co = (bat) => db().from('accounts').update({ toan_quyen: bat }).eq('id', TQ);
+const tep = (ten) => `${v.M4?.id}/${KHOA}-${ten}.pdf`;
 const don = async () => {
   await co(false);
+  if (v.M4) await kho(db()).remove([tep('bc'), tep('khac')]).catch(() => null);
   await db().from('nhiem_vu').delete().like('noi_dung', `${KHOA}%`);
   await db().from('van_ban_giao_viec').delete().like('so_ket_luan', `${KHOA}%`);
   await db().from('nhat_ky_he_thong').delete().eq('hanh_dong', 'sua_van_ban').like('doi_tuong', `${KHOA}%`);
@@ -36,11 +41,13 @@ const don = async () => {
 describe('0126 — toàn quyền sửa văn bản giao, sửa / gỡ minh chứng', { skip: SKIP }, () => {
   before(async () => {
     await don();
-    for (const b of ['A', 'B']) {
+    for (const b of ['A', 'B', 'C', 'D']) {
       const r = await db().from('van_ban_giao_viec').insert({ loai: 'CONG_VAN', so_ket_luan: `${KHOA} ${b}`, ngay_ban_hanh: BH, ngay_nhan: NHAN }).select('id').single();
       assertOk(r, `văn bản ${b}`); vb[b] = r.data.id;
     }
     await viec('A', 'A'); await viec('KY', 'A', { loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: null }); await viec('KT', 'B', { nganh_ma: 'KHONG_THUOC', linh_vuc_ma: null });
+    await viec('H', 'C', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-40), nguon: 'excel' });
+    for (const k of ['M2', 'M3', 'M4']) await viec(k, 'D');
     assertOk(await co(true), 'bật toàn quyền');
   });
   after(don);
@@ -88,6 +95,41 @@ describe('0126 — toàn quyền sửa văn bản giao, sửa / gỡ minh chứn
     const doc2 = async (u) => ((await (await userClient(u)).from('minh_chung_lich_su').select('hanh_dong').eq('nhiem_vu_id', v.A.id)).data || []).map((x) => x.hanh_dong).sort();
     assert.deepEqual(await doc2('demo_cv1'), ['GO', 'SUA']); assert.deepEqual(await doc2('demo_cv2'), []);
     assertDenied(await (await userClient('demo_e2e_tq')).from('minh_chung_lich_su').insert({ minh_chung_id: v.mc, nhiem_vu_id: v.A.id, hanh_dong: 'GO', ban_cu: {}, ly_do: 'x' }), 'ghi thẳng bản chụp');
+  });
+
+  test('5. Ngày nhận văn bản: không dời sau ngày hoàn thành của việc theo văn bản; dời trong giới hạn → việc theo; xoá → việc về ước tính (= ngày ban hành)', async () => {
+    const r = await vbs('demo_e2e_tq', 'C', { ngay_nhan: cong(-35) }, 'Ngày nhận ghi nhầm');
+    assert.equal(r.error?.code, '22023', 'ngày nhận sau ngày hoàn thành'); assert.match(r.error.message, /Ngày nhận mới/);
+    assertOk(await vbs('demo_e2e_tq', 'C', { ngay_nhan: cong(-45) }, 'Ngày nhận ghi nhầm'), 'dời ngày nhận');
+    assert.deepEqual(await doc('H', 'ngay_nhan_van_ban, ngay_nhan_uoc_tinh'), { ngay_nhan_van_ban: cong(-45), ngay_nhan_uoc_tinh: false });
+    assertOk(await vbs('demo_e2e_tq', 'C', { ngay_nhan: null }, 'Không rõ ngày nhận'), 'xoá ngày nhận');
+    assert.deepEqual(await doc('H', 'ngay_nhan_van_ban, ngay_nhan_uoc_tinh'), { ngay_nhan_van_ban: BH, ngay_nhan_uoc_tinh: true });
+  });
+
+  test('6. Nhiều minh chứng: sửa ngày của minh chứng đã bị trả lại không đổi ngày hoàn thành; gỡ minh chứng (không phải cuối cùng) quyết định ngày hoàn thành → theo minh chứng còn lại', async () => {
+    const nop = async (k, so, ngay) => assertOk(await (await userClient('demo_cv1')).rpc('nop_minh_chung', { p: { nhiem_vu_id: v[k].id, so_hieu: `${so}/BC-${KHOA}`, ngay_van_ban: ngay } }), `nộp ${so}`);
+    const mcId = async (k, so) => (await db().from('minh_chung').select('id').eq('nhiem_vu_id', v[k].id).eq('so_hieu', `${so}/BC-${KHOA}`).single()).data.id;
+    await nop('M2', 21, cong(-6)); await nop('M2', 22, cong(-4));
+    assertOk(await (await userClient('demo_pcvp')).rpc('xac_nhan_minh_chung', { p_id: await mcId('M2', 21), p_hop_le: false, p_ly_do: 'Thiếu phụ lục' }), 'trả lại 21');
+    assertOk(await (await userClient('demo_e2e_tq')).rpc('sua_minh_chung', { p_id: await mcId('M2', 21), p_thay_doi: { ngay_van_ban: cong(-5) }, p_ly_do: 'Ghi sai ngày' }), 'sửa minh chứng bị trả lại');
+    assert.deepEqual(await doc('M2', 'tien_do_ma, ngay_hoan_thanh'), { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-6) });
+    await nop('M3', 31, cong(-6)); await nop('M3', 32, cong(-4));
+    const r = await (await userClient('demo_e2e_tq')).rpc('go_minh_chung', { p_id: await mcId('M3', 31), p_ly_do: 'Nộp nhầm' });
+    assertOk(r, 'gỡ 31'); assert.deepEqual(r.data, { mo_lai: false });
+    assert.deepEqual(await doc('M3', 'tien_do_ma, ngay_hoan_thanh'), { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-4) });
+    const tin = (await db().from('direct_messages').select('receiver_id').eq('nhiem_vu_id', v.M3.id).like('content', 'Gỡ minh chứng%')).data.map((x) => x.receiver_id);
+    assert.ok(tin.includes(IDS.cv1), 'người nộp được báo');
+  });
+
+  test('7. Tệp của minh chứng đã gỡ (còn trong bản chụp): người tải lên không xoá được; tệp chưa gắn xoá được', async () => {
+    const c = await userClient('demo_cv1');
+    for (const t of ['bc', 'khac']) assertOk(await kho(c).upload(tep(t), new Blob([PDF], { type: 'application/pdf' }), { contentType: 'application/pdf' }), `tải ${t}`);
+    assertOk(await c.rpc('nop_minh_chung', { p: { nhiem_vu_id: v.M4.id, so_hieu: `41/BC-${KHOA}`, ngay_van_ban: cong(-3), tep_path: tep('bc') } }), 'nộp kèm tệp');
+    const mc = (await db().from('minh_chung').select('id').eq('nhiem_vu_id', v.M4.id).single()).data.id;
+    assertOk(await (await userClient('demo_e2e_tq')).rpc('go_minh_chung', { p_id: mc, p_ly_do: 'Nộp nhầm tệp' }), 'gỡ');
+    await kho(c).remove([tep('bc'), tep('khac')]);
+    const con = ((await kho(db()).list(v.M4.id)).data || []).map((f) => f.name);
+    assert.deepEqual(con, [`${KHOA}-bc.pdf`], 'tệp của minh chứng đã gỡ còn, tệp chưa gắn đã xoá');
     assertOk(await co(false), 'tắt toàn quyền');
   });
 });

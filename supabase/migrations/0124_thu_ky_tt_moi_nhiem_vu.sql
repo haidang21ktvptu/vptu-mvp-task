@@ -6,7 +6,8 @@
 --    canh_bao, dinh_chinh, văn bản, tệp minh chứng); v_nhiem_vu.trong_pham_vi, kl_so_chua_xu_ly, kl_so_lieu_cac_moc vẫn tính PHẠM VI CŨ của thư ký
 --    (việc mình chủ trì / theo dõi / giao, việc có chỉ đạo Thường trực, việc Thường trực giao cho Chánh VP — 0047, 0057) ⇒ "Cần xử lý", số liệu không đổi.
 -- 2. Policy nhiem_vu_update (bản 0091) + nhánh thư ký với việc chưa hoàn thành; các trigger giữ nguyên chốt cột (guard a3: chỉ ô của người thực hiện;
---    hạn đã có thì đổi qua dieu_chinh_han; ô do cấp giao điền thì sửa qua sua_thong_tin_giao).
+--    hạn đã có thì đổi qua dieu_chinh_han; ô do cấp giao điền thì sửa qua sua_thong_tin_giao). Nhánh thư ký không cho dòng mới ở Hoàn thành: thư ký
+--    không tự đóng việc (việc theo 1400 hoàn thành khi nộp minh chứng — nop_minh_chung SECURITY DEFINER; việc chuyển đổi: người chủ trì / lãnh đạo đóng).
 -- 3. kl_duoc_nop_minh_chung (bản 0089: nop_minh_chung, policy tải tệp minh-chung) + thư ký với việc chưa hoàn thành.
 -- 4. dat_vuong_mac (bản 0103) + thư ký với việc chưa hoàn thành.
 -- 5. sua_thong_tin_giao (bản 0070) + thư ký với việc chưa hoàn thành; việc đã hoàn thành: tài khoản toàn quyền (0100) sửa được (B3 — trước đây chỉ
@@ -30,7 +31,8 @@ CREATE POLICY "nhiem_vu_update" ON "public"."nhiem_vu" FOR UPDATE TO "authentica
          OR (SELECT "public"."me_quan_tri_kl"()) OR "public"."kl_lanh_dao_pham_vi"("id")
          OR ((SELECT "public"."kl_la_thu_ky_tt"()) AND "tien_do_ma" <> 'HOAN_THANH'))
   WITH CHECK ("nguoi_theo_doi" = (SELECT "auth"."uid"()) OR "owner_tai_khoan" = (SELECT "auth"."uid"()) OR "tao_boi" = (SELECT "auth"."uid"())
-              OR (SELECT "public"."me_quan_tri_kl"()) OR "public"."kl_lanh_dao_pham_vi"("id") OR (SELECT "public"."kl_la_thu_ky_tt"()));
+              OR (SELECT "public"."me_quan_tri_kl"()) OR "public"."kl_lanh_dao_pham_vi"("id")
+              OR ((SELECT "public"."kl_la_thu_ky_tt"()) AND "tien_do_ma" <> 'HOAN_THANH'));   -- thư ký không tự đóng việc (hoàn thành qua nộp minh chứng)
 
 -- ---- 3 ----
 CREATE OR REPLACE FUNCTION "public"."kl_duoc_nop_minh_chung"("p_nhiem_vu" uuid) RETURNS boolean
@@ -97,7 +99,7 @@ BEGIN
   INSERT INTO "public"."direct_messages" ("sender_id", "receiver_id", "content", "is_read", "loai", "nhiem_vu_id")
   SELECT v_me, u.id, v_tin, false, 'he_thong', v."id"
   FROM (SELECT DISTINCT x AS id FROM unnest(ARRAY[v."owner_tai_khoan", v."nguoi_theo_doi", v."giao_thay_mat_cho", v."tao_boi"]) x WHERE x IS NOT NULL AND x <> v_me) u
-  JOIN "public"."accounts" a ON a."id" = u.id WHERE NOT a."is_system" AND a."role_group" <> 'A0';
+  JOIN "public"."accounts" a ON a."id" = u.id WHERE NOT a."is_system" AND a."role_group" <> 'A0' AND NOT coalesce(a."bi_khoa", false);
 END;
 $$;
 

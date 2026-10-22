@@ -1,7 +1,8 @@
 // 0125 (v3.29, chủ dự án quyết 22/10/2026 — CAU-HOI O-6): tài khoản toàn quyền sửa mọi thông tin nhiệm vụ (sua_toan_bo_nhiem_vu — ô thông tin giao +
-// ô thực hiện; chỉ ô đổi; đổi hạn ở đây là đính chính, không tính gia hạn), kể cả việc đã hoàn thành, và mở lại việc đã hoàn thành (mo_lai_nhiem_vu
-// — xoá ngày hoàn thành, lúc đóng, chất lượng; minh chứng giữ). Nhật ký có lý do, tin báo. Chánh VP thật, chủ trì, thư ký bị chặn; ô định danh,
-// dữ liệu sai bị chặn; ma trận loại văn bản: Kết luận BTV / Thông báo TT vẫn phải có ngành, lĩnh vực. demo_e2e_tq bật cờ tạm. Khoá "KL-0125"; tự dọn.
+// ô thực hiện; chỉ ô đổi; đổi hạn ở đây là đính chính, không tính gia hạn; việc "Ký ban hành" tự tính hạn; ngày giao không sau ngày hoàn thành), kể
+// cả việc đã hoàn thành, và mở lại việc đã hoàn thành (mo_lai_nhiem_vu — xoá ngày hoàn thành, lúc đóng, chất lượng; minh chứng hợp lệ chuyển "Bị trả
+// lại", việc hoàn thành lại khi nộp minh chứng mới). Nhật ký có lý do, tin báo. Chánh VP thật, chủ trì, thư ký bị chặn; ô định danh, dữ liệu sai bị
+// chặn; ma trận loại văn bản: Kết luận BTV / Thông báo TT vẫn phải có ngành, lĩnh vực. demo_e2e_tq bật cờ tạm. Khoá "KL-0125"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, homNayVN } from './lib.mjs';
@@ -41,6 +42,8 @@ describe('0125 — toàn quyền sửa toàn bộ thông tin nhiệm vụ, mở 
       await viec(loai, loai);
     }
     await viec('XONG', 'CONG_VAN', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-10), nguon: 'excel', chat_luong: 'DAT_TOT' });
+    await viec('XONG2', 'CONG_VAN', { tien_do_ma: 'HOAN_THANH', ngay_nhan_van_ban: cong(-30), ngay_hoan_thanh: cong(-10), nguon: 'excel' });
+    await viec('KY', 'CONG_VAN', { loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: null }); await viec('MC', 'CONG_VAN');
     assertOk(await co(TQ, 'toan_quyen', true), 'bật toàn quyền');
   });
   after(don);
@@ -83,7 +86,35 @@ describe('0125 — toàn quyền sửa toàn bộ thông tin nhiệm vụ, mở 
     assertOk(await co(TK, 'thu_ky_thuong_truc', false), 'thu cờ thư ký');
   });
 
-  test('5. Mở lại: việc chưa xong → 22023; việc đã hoàn thành → đang thực hiện, xoá ngày hoàn thành, chất lượng; nhật ký có lý do', async () => {
+  test('5. "Ký ban hành" tự tính hạn: sửa hạn → 22023, đổi loại thời hạn kèm hạn → được; ngày giao không sau ngày hoàn thành (sửa ô nào cũng kiểm)', async () => {
+    const ky = await sua('demo_e2e_tq', 'KY', { han_xu_ly: cong(30) });
+    assert.equal(ky.error?.code, '22023', 'sửa hạn việc Ký ban hành'); assert.match(ky.error.message, /Ký ban hành/);
+    assertOk(await sua('demo_e2e_tq', 'KY', { loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: cong(30) }), 'đổi loại thời hạn kèm hạn');
+    assert.deepEqual(await doc('KY', 'loai_thoi_han_ma, han_xu_ly'), { loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: cong(30) });
+    for (const p of [{ ngay_nhan_van_ban: cong(-5) }, { ngay_hoan_thanh: cong(-35) }]) {
+      const r = await sua('demo_e2e_tq', 'XONG2', p);
+      assert.equal(r.error?.code, '22023', JSON.stringify(p)); assert.match(r.error.message, /không được sau ngày hoàn thành/);
+    }
+    assertOk(await sua('demo_e2e_tq', 'XONG2', { ngay_nhan_van_ban: cong(-20) }), 'ngày giao trước ngày hoàn thành');
+    assert.equal((await doc('XONG2', 'ngay_nhan_van_ban')).ngay_nhan_van_ban, cong(-20));
+  });
+
+  test('6. Mở lại việc có minh chứng hợp lệ: minh chứng chuyển "Bị trả lại" (giữ để xem), việc không tự đóng lại; nộp minh chứng mới → hoàn thành lại', async () => {
+    const nop = async (so, ngay) => assertOk(await (await userClient('demo_cv1')).rpc('nop_minh_chung', { p: { nhiem_vu_id: v.MC.id, so_hieu: `${so}/BC-${KHOA}`, ngay_van_ban: ngay } }), `nộp ${so}`);
+    await nop(7, cong(-3));
+    assert.equal((await doc('MC', 'tien_do_ma')).tien_do_ma, 'HOAN_THANH');
+    const r = await (await userClient('demo_e2e_tq')).rpc('mo_lai_nhiem_vu', { p_id: v.MC.id, p_ly_do: 'Báo cáo chưa đủ nội dung' });
+    assertOk(r, 'mở lại'); assert.deepEqual(r.data, { so_minh_chung_tra_lai: 1 });
+    assert.deepEqual((await db().from('minh_chung').select('hop_le, ly_do_khong_hop_le').eq('nhiem_vu_id', v.MC.id)).data,
+      [{ hop_le: false, ly_do_khong_hop_le: 'Mở lại nhiệm vụ: Báo cáo chưa đủ nội dung' }]);
+    assert.equal((await doc('MC', 'tien_do_ma')).tien_do_ma, 'DANG_THUC_HIEN');
+    const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', v.MC.id).eq('cot', 'mo_lai')).data;
+    assert.match(ls[0]?.gia_tri_moi || '', /— 1 minh chứng chuyển "Bị trả lại", nộp minh chứng mới để hoàn thành — lý do: Báo cáo chưa đủ nội dung$/);
+    await nop(8, cong(-1));
+    assert.deepEqual(await doc('MC', 'tien_do_ma, ngay_hoan_thanh'), { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-1) });
+  });
+
+  test('7. Mở lại: việc chưa xong → 22023; việc đã hoàn thành → đang thực hiện, xoá ngày hoàn thành, chất lượng; nhật ký có lý do', async () => {
     const goi = async (k, lyDo) => (await userClient('demo_e2e_tq')).rpc('mo_lai_nhiem_vu', { p_id: v[k].id, p_ly_do: lyDo });
     assert.equal((await goi('CONG_VAN', 'x')).error?.code, '22023');
     assertOk(await goi('XONG', 'Kết quả chưa đạt yêu cầu'), 'mở lại');

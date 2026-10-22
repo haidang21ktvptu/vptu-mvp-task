@@ -28,9 +28,13 @@ export const duocSuaToanBo = (r, u) => Boolean(r) && laToanQuyen(u);
 export const duocMoLai = (r, u) => laToanQuyen(u) && daXong(r);
 export const duocSuaVanBan = (r, u) => Boolean(r?.van_ban_id) && laToanQuyen(u);
 export const duocSuaMinhChung = (u) => laToanQuyen(u);
-// Lần gia hạn tiếp theo nếu lùi hạn (đúng như hàm DB: lùi = so_lan_gia_han + 1, rút ngắn không cộng). → chữ ghi chú dưới ô hạn mới.
-export function ghiChuHanMoi(r, hanMoi) {
-  if (!hanMoi || !r?.han_xu_ly || hanMoi === r.han_xu_ly) return hanMoi ? 'Hạn mới trùng hạn hiện tại.' : '';
-  if (r.ngay_ban_hanh && hanMoi < r.ngay_ban_hanh) return 'Hạn mới không được trước ngày ban hành văn bản.';
+// Lần gia hạn tiếp theo nếu lùi hạn (đúng như hàm DB: lùi = so_lan_gia_han + 1, rút ngắn không cộng). → chữ ghi chú dưới ô hạn mới. homNay: hạn mới
+// không trước hôm nay (trừ tài khoản toàn quyền — choQuaKhu, đính chính).
+export function ghiChuHanMoi(r, hanMoi, { homNay = '', choQuaKhu = false } = {}) {
+  if (!hanMoi) return '';
+  if (hanMoi === r?.han_xu_ly) return 'Hạn mới trùng hạn hiện tại.';
+  if (r?.ngay_ban_hanh && hanMoi < r.ngay_ban_hanh) return 'Hạn mới không được trước ngày ban hành văn bản.';
+  if (!choQuaKhu && homNay && hanMoi < homNay) return 'Hạn mới không được trước hôm nay.';
+  if (!r?.han_xu_ly) return '';
   return hanMoi > r.han_xu_ly ? `Lùi hạn: tính là gia hạn lần ${(r.so_lan_gia_han || 0) + 1}.` : 'Rút ngắn hạn: không tính lần gia hạn.';
 }

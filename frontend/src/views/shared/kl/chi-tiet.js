@@ -6,7 +6,7 @@ import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
-import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, tenChatLuong, lopQuaHan } from '../../../lib/kl/nhan.js';
+import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, lopQuaHan } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { napDienBien } from '../dien-bien.js';
 import { timKlRow } from './danh-sach.js';
@@ -17,28 +17,13 @@ import { oLuoiPr3Html, khoiPr3Html } from './thong-tin-giao.js';
 import { nutTangHtml, nutHanhDongTang, khoiDeNghiSuaHtml, napDeNghiSua } from './sua-tang.js';
 import { coNhapExcel, khoiDuLieuGocHtml, napDuLieuGoc } from './du-lieu-goc.js';   // v9 đợt 2: dữ liệu gốc của lô nhập Excel
 import { maNguonHtml, nhanMucHtml, oLuoiNguonHtml, nutGiaoThemHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
-import { tenMucQuanTrong } from '../../../lib/kl/ma-nguon.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { oMucTieuHtml, khoiMucTieuHtml, tenMucTieuViec, napMucTieu } from './muc-tieu.js';   // v3.24 (0105): mục tiêu then chốt
 import { khoiGiaiNganHtml, hangGiaiNganHtml, napGiaiNgan } from './giai-ngan.js';   // v3.28 (0119): giải ngân vốn
 import { nutQuyenHtml, khoiQuyenHtml } from './nut-quyen.js';   // v3.29 (0123–0126): điều chỉnh hạn, đổi chủ trì, quyền tài khoản quản trị
 import { chiXemVoi } from '../../../lib/kl/quyen-them.js';
+import { hienGiaTri } from '../../../lib/kl/gia-tri.js';
 
-const DANH_MUC_COT = { tien_do_ma: 'tienDo', loai_thoi_han_ma: 'loaiThoiHan', nganh_ma: 'nganh', linh_vuc_ma: 'linhVuc', owner_don_vi_ma: 'donVi',
-  san_pham_loai: 'sanPham', cap_nhan_san_pham: 'cap', cap_quyet_dinh: 'cap', nguon_nhiem_vu_ma: 'nguonNhiemVu', co_quan_trinh: 'donVi' };
-const COT_NGAY = ['han_xu_ly', 'ngay_hoan_thanh', 'ngay_nhan_van_ban', 'han_nop_minh_chung'];   // han_nop: chỉ còn ở lịch sử cũ (0077)
-const COT_TAI_KHOAN = ['nguoi_theo_doi', 'owner_tai_khoan', 'thuong_truc_chi_dao', 'giao_thay_mat_cho'];
-
-export function hienGiaTri(cot, v) {
-  if (v === null || v === undefined || v === '') return '(trống)';
-  if (DANH_MUC_COT[cot]) return tenTrongDanhMuc(DANH_MUC_COT[cot], v);
-  if (cot === 'chat_luong') return tenChatLuong(v) || v;
-  if (cot === 'muc_quan_trong') return tenMucQuanTrong(v);   // C2 (0087)
-  if (COT_NGAY.includes(cot)) return formatNgay(v);
-  if (COT_TAI_KHOAN.includes(cot)) return findAccount(v)?.full_name || v;
-  if (cot === 'ngay_nhan_uoc_tinh' || cot === 'theo_1400' || cot === 'bi_tu_choi') return v === 'true' || v === true ? 'có' : 'không';
-  return String(v);
-}
 const tenNguoi = (l) => findAccount(l.nguoi_sua)?.full_name || l.nguoi_sua_ghi_chu || (l.nguon === 'excel' ? 'không xác định (nhật ký Excel)' : 'hệ thống');
 
 function canCu(cot, ls) {

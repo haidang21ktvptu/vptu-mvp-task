@@ -21,6 +21,9 @@ export const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner
 // v3.29 (0124): + thư ký Thường trực với mọi việc chưa hoàn thành (kể cả ngoài phạm vi cũ).
 export const duocCapNhat = (r) => !chiXemVoi(r, state.user) && (laBenTrong(r) || r.tao_boi === state.user?.id || ['A0', 'A1', 'A2'].includes(state.user?.role_group)
   || Boolean(state.user?.quan_tri_kl) || thuKyGhi(r, state.user));
+// v3.29 (0124): người chỉ cập nhật được nhờ cờ thư ký Thường trực không tự chuyển việc sang Hoàn thành (policy chặn — hoàn thành qua nộp minh chứng).
+export const capNhatChiNhoThuKy = (r) => thuKyGhi(r, state.user) && !(laBenTrong(r) || r.tao_boi === state.user?.id
+  || (!chiXem(r) && (['A0', 'A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl))));
 // GĐ16 (MC-4): ai được đóng nhiệm vụ — Owner/người theo dõi, lãnh đạo trong phạm vi (A1/A2), quan_tri_kl; hàm dong_nhiem_vu là chốt.
 export const duocDong = (r) => !chiXem(r) && (laBenTrong(r) || duocChiDao() || Boolean(state.user?.quan_tri_kl));
 // 0103: việc ngoài phạm vi xử lý của người xem (cấu hình xem toàn bộ) — nhãn trung tính, chỉ xem. v3.29: thư ký Thường trực không có nhãn này ở

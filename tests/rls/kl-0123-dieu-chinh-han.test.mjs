@@ -1,8 +1,9 @@
 // 0123 (v3.29, chủ dự án quyết 22/10/2026 — CAU-HOI O-4): điều chỉnh hạn ngay trên nhiệm vụ — chủ trì theo dõi (việc giao cho phòng: người
 // theo dõi) khi việc CHƯA quá hạn, mọi loại văn bản kể cả Kết luận BTV; thư ký Thường trực mọi việc chưa hoàn thành, kể cả quá hạn; tài khoản toàn
 // quyền mọi việc. Lùi hạn = gia hạn lần n, rút ngắn không cộng; "theo ngày ký" thành "có hạn cụ thể"; nhật ký (hạn cũ → mới + dòng có lý do), tin
-// báo người liên quan (không người làm, không Thường trực). Chặn: người khác, chủ trì khi đã quá hạn, việc đã hoàn thành, lỗi dữ liệu; sửa thẳng hạn
-// vẫn bị chặn (Q7). Ngày tính theo hôm nay (giờ Việt Nam). Khoá "KL-0123"; cờ tạm của demo_e2e_tk / demo_e2e_tq khôi phục ở before / after; tự dọn.
+// báo người liên quan (không người làm, không Thường trực). Chặn: người khác, chủ trì khi đã quá hạn, việc đã hoàn thành, lỗi dữ liệu (hạn mới
+// trước hôm nay — trừ toàn quyền đính chính, nhưng vẫn không trước ngày ban hành); sửa thẳng hạn vẫn bị chặn (Q7). Ngày tính theo hôm nay (giờ
+// Việt Nam). Khoá "KL-0123"; cờ tạm của demo_e2e_tk / demo_e2e_tq khôi phục ở before / after; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, homNayVN } from './lib.mjs';
@@ -85,8 +86,8 @@ describe('0123 — điều chỉnh hạn: chủ trì theo dõi (chưa quá hạn
     assertDenied(await dc('demo_e2e_tk', 'QH', cong(25)), 'hết cờ');
   });
 
-  test('5. Lỗi dữ liệu (22023): thiếu lý do, trùng hạn, trước ngày ban hành, hạn việc con sau việc cha, rút hạn cha trước con, việc đã hoàn thành', async () => {
-    const LOI = [['A', cong(90), ' ', /lý do/i], ['A', cong(70), 'x', /trùng/], ['A', cong(-80), 'x', /ngày ban hành/], ['CON', cong(45), 'x', /nhiệm vụ cha/],
+  test('5. Lỗi dữ liệu (22023): thiếu lý do, trùng hạn, trước hôm nay, hạn việc con sau việc cha, rút hạn cha trước con, việc đã hoàn thành', async () => {
+    const LOI = [['A', cong(90), ' ', /lý do/i], ['A', cong(70), 'x', /trùng/], ['A', cong(-3), 'x', /trước hôm nay/], ['CON', cong(45), 'x', /nhiệm vụ cha/],
       ['CHA', cong(20), 'x', /nhiệm vụ con/], ['XONG', cong(5), 'x', /hoàn thành/]];
     for (const [k, han, lyDo, re] of LOI) {
       const r = await dc('demo_cv1', k, han, lyDo);
@@ -94,11 +95,13 @@ describe('0123 — điều chỉnh hạn: chủ trì theo dõi (chưa quá hạn
     }
   });
 
-  test('6. Theo ngày ký ban hành → có hạn cụ thể; toàn quyền điều chỉnh cả việc đã hoàn thành; sửa thẳng hạn vẫn bị chặn (Q7)', async () => {
+  test('6. Theo ngày ký ban hành → có hạn cụ thể; toàn quyền điều chỉnh cả việc đã hoàn thành, hạn đã qua (không trước ngày ban hành); sửa thẳng hạn vẫn bị chặn', async () => {
     assertOk(await dc('demo_cv1', 'KY', cong(30)), 'việc theo ngày ký');
     assert.deepEqual(await doc('KY'), { han_xu_ly: cong(30), so_lan_gia_han: 1, loai_thoi_han_ma: 'CO_HAN_CU_THE' });
     assertOk(await co(TQ, 'toan_quyen', true), 'bật toàn quyền');
-    assertOk(await dc('demo_e2e_tq', 'XONG', cong(-12), 'Sửa hạn nhập sai'), 'toàn quyền, việc đã hoàn thành');
+    const bh = await dc('demo_e2e_tq', 'XONG', cong(-80), 'x');
+    assert.equal(bh.error?.code, '22023', 'toàn quyền: hạn trước ngày ban hành'); assert.match(bh.error.message, /ban hành/);
+    assertOk(await dc('demo_e2e_tq', 'XONG', cong(-12), 'Sửa hạn nhập sai'), 'toàn quyền, việc đã hoàn thành, hạn đã qua');
     assertOk(await co(TQ, 'toan_quyen', false), 'tắt toàn quyền');
     const r = await (await userClient('demo_cv1')).from('nhiem_vu').update({ han_xu_ly: cong(100) }).eq('id', v.A.id).select('id');
     assertDenied(r, 'chủ trì sửa thẳng hạn xử lý');

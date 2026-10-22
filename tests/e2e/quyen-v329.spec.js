@@ -2,17 +2,18 @@
 // 1. Chủ trì theo dõi (demo_e2e_nv): "Điều chỉnh hạn" việc còn hạn — lùi hạn = gia hạn lần 1, lý do bắt buộc, Diễn biến; việc đã quá hạn: không có nút,
 //    có câu nhắc đề nghị lãnh đạo gia hạn.
 // 2. Thư ký Thường trực (demo_e2e_tk, cờ tạm): việc ngoài phạm vi cũ không còn "Chỉ xem"; nộp minh chứng → hoàn thành; đổi chủ trì theo dõi.
-// 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa toàn bộ thông tin" (ghi chú), "Mở lại nhiệm vụ".
+// 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa văn bản giao" (trích yếu), "Sửa toàn bộ thông tin" (ghi chú),
+//    "Sửa" minh chứng (trích yếu), "Mở lại nhiệm vụ" (minh chứng chuyển "Bị trả lại").
 // Dữ liệu riêng theo khoá E2E-TEST-Q329-<project>; cờ thu lại ở afterAll. Chạy MỘT MÌNH (project v329-quyen, nối cuối chuỗi): đổi cờ tài khoản dùng chung.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { moViec, NAP } from './lib/app.js';
 import { storageStatePath } from './lib/roles.mjs';
 import { khoaRieng, taoVanBanRieng, donVanBan } from './lib/du-lieu.mjs';
-import { ID, dbAdmin, datCo, voiPhien, homNay, cong } from './lib/pr2b.mjs';
+import { ID, dbAdmin, datCo, voiPhien, homNay, cong, taoMinhChung } from './lib/pr2b.mjs';
 
 const TQ_ID = '00000000-0000-4000-8000-000000000020';   // demo_e2e_tq
-let db; let khoa; const v = {};
+let db; let khoa; let vbId; const v = {};
 const viec = async (vbId, k, them = {}) => {
   const r = await db.from('nhiem_vu').insert({ van_ban_id: vbId, noi_dung: `${khoa} ${k}`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: cong(homNay(), 20),
     owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: ID.e2eNv, nguoi_theo_doi: ID.e2eNv, tao_boi: ID.tp, nganh_ma: 'KINH_TE_TONG_HOP', theo_1400: true,
@@ -28,12 +29,13 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
     const co = await db.rpc('dieu_chinh_han', { p_id: ID.cvp, p_han_moi: homNay(), p_ly_do: 'x' });
     test.skip(co.error?.code === 'PGRST202', 'Project chưa có migration 0123.');
     khoa = khoaRieng('Q329', testInfo);
-    const vb = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN', ngay_nhan: '2026-08-01' });
-    await viec(vb, 'CON_HAN');
-    await viec(vb, 'QUA_HAN', { han_xu_ly: cong(homNay(), -2) });
-    await viec(vb, 'NGOAI_PV', { owner_tai_khoan: ID.e2eKl, nguoi_theo_doi: ID.e2eKl });
-    await viec(vb, 'DOI_CT', { owner_tai_khoan: ID.e2eKl, nguoi_theo_doi: ID.e2eKl });
-    await viec(vb, 'XONG', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(homNay(), -5), nguon: 'excel', chat_luong: 'DAT' });
+    vbId = await taoVanBanRieng(db, khoa, { loai: 'CONG_VAN', ngay_nhan: '2026-08-01' });
+    await viec(vbId, 'CON_HAN');
+    await viec(vbId, 'QUA_HAN', { han_xu_ly: cong(homNay(), -2) });
+    await viec(vbId, 'NGOAI_PV', { owner_tai_khoan: ID.e2eKl, nguoi_theo_doi: ID.e2eKl });
+    await viec(vbId, 'DOI_CT', { owner_tai_khoan: ID.e2eKl, nguoi_theo_doi: ID.e2eKl });
+    await viec(vbId, 'XONG', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(homNay(), -5), nguon: 'excel', chat_luong: 'DAT' });
+    v.mcXong = await taoMinhChung(db, v.XONG.id, ID.e2eNv, `${khoa}/MC`);
   });
   test.afterAll(async () => {
     if (!db) return;
@@ -88,12 +90,22 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
     await datCo(db, ID.e2eTk, { thu_ky_thuong_truc: false });
   });
 
-  test('3. Tài khoản quản trị: sửa toàn bộ thông tin việc đã hoàn thành (chỉ ô đổi), mở lại nhiệm vụ', async ({ browser }, testInfo) => {
+  test('3. Tài khoản quản trị, việc đã hoàn thành: sửa văn bản giao, sửa toàn bộ thông tin (chỉ ô đổi), sửa minh chứng, mở lại (minh chứng "Bị trả lại")', async ({ browser }, testInfo) => {
     test.skip(!existsSync(storageStatePath('E2E_TQ')), 'Chưa có demo_e2e_tq trên project này (seed-demo.mjs).');
     await datCo(db, TQ_ID, { toan_quyen: true });
     await voiPhien(browser, 'E2E_TQ', testInfo, async (p) => {
+      const ngan = p.locator(`#klChiTiet-${v.XONG.id}`);
       await moViec(p, v.XONG.id, v.XONG.ma);
-      await p.locator(`#klChiTiet-${v.XONG.id} [data-action="moSuaToanBo"]`).click();
+      await ngan.locator('[data-action="moSuaVanBan"]').click();
+      await expect(p.locator('#svbModal')).toBeVisible();
+      await p.locator('#svbTrichYeu').fill(`${khoa} về việc thử quyền quản trị`);
+      await expect(p.locator('#svbDoi')).toHaveText('Sẽ sửa: trích yếu.');
+      await p.locator('#svbLyDo').fill('Bổ sung trích yếu theo văn bản gốc');
+      await p.locator('#svbLuu').click(); await expect(p.locator('#svbModal')).toBeHidden(NAP);
+      await expect.poll(async () => (await db.from('van_ban_giao_viec').select('trich_yeu').eq('id', vbId).single()).data.trich_yeu, NAP)
+        .toBe(`${khoa} về việc thử quyền quản trị`);
+      await moViec(p, v.XONG.id, v.XONG.ma);
+      await ngan.locator('[data-action="moSuaToanBo"]').click();
       await expect(p.locator('#stbModal')).toBeVisible();
       await p.locator('#stb-ghi_chu').fill(`${khoa} đính chính`);
       await expect(p.locator('#stbDoi')).toHaveText('Sẽ sửa: Ghi chú.');
@@ -101,10 +113,20 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
       await p.locator('#stbLuu').click(); await expect(p.locator('#stbModal')).toBeHidden(NAP);
       await expect.poll(async () => (await doc('XONG', 'ghi_chu')).ghi_chu, NAP).toBe(`${khoa} đính chính`);
       await moViec(p, v.XONG.id, v.XONG.ma);
-      await p.locator(`#klChiTiet-${v.XONG.id} [data-action="moO"][data-o="oMoLai-${v.XONG.id}"]`).click();
+      await ngan.locator(`[data-action="moSuaMinhChung"][data-id="${v.mcXong}"]`).click();
+      await expect(p.locator('#smcModal')).toBeVisible();
+      await p.locator('#smcTrichYeu').fill(`${khoa} báo cáo (sửa)`);
+      await expect(p.locator('#smcDoi')).toHaveText('Sẽ sửa: trích yếu.');
+      await p.locator('#smcLyDo').fill('Ghi nhầm trích yếu');
+      await p.locator('#smcLuu').click(); await expect(p.locator('#smcModal')).toBeHidden(NAP);
+      await expect.poll(async () => (await db.from('minh_chung').select('trich_yeu').eq('id', v.mcXong).single()).data.trich_yeu, NAP).toBe(`${khoa} báo cáo (sửa)`);
+      await moViec(p, v.XONG.id, v.XONG.ma);
+      await ngan.locator(`[data-action="moO"][data-o="oMoLai-${v.XONG.id}"]`).click();
       await p.locator(`#oMoLai-${v.XONG.id} input[name="ly_do"]`).fill('Kết quả chưa đạt yêu cầu');
       await p.locator(`#oMoLai-${v.XONG.id} button[type="submit"]`).click();
+      await expect(p.locator('#toastContainer')).toContainText('1 minh chứng chuyển "Bị trả lại"', NAP);
       await expect.poll(async () => doc('XONG', 'tien_do_ma, ngay_hoan_thanh'), NAP).toEqual({ tien_do_ma: 'DANG_THUC_HIEN', ngay_hoan_thanh: null });
+      expect((await db.from('minh_chung').select('hop_le').eq('id', v.mcXong).single()).data.hop_le).toBe(false);
     });
     await datCo(db, TQ_ID, { toan_quyen: false });
   });

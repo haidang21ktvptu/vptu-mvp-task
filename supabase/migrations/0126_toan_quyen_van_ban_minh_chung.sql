@@ -3,24 +3,32 @@
 -- 1. van_ban_sua(p_id, p_thay_doi, p_ly_do): loại, số hội nghị, số / ký hiệu, ngày ban hành, ngày nhận, trích yếu. Kiểm: Kết luận BTV có số hội
 --    nghị; đổi sang Kết luận BTV / Thông báo Thường trực thì mọi việc của văn bản phải có ngành, lĩnh vực cụ thể; không trùng văn bản đã có; ngày ban
 --    hành không ở tương lai, không sau hạn / ngày hoàn thành / ngày nhận (đã chốt) của việc, ngày văn bản của minh chứng (trigger 0022 kiểm ngày nhận).
---    Ngày nhận của việc chép từ văn bản (bằng ngày nhận cũ của văn bản) đổi theo ngày nhận mới; trigger 0022 tính lại ngày nhận ước tính, hạn "theo
---    ngày ký ban hành" của các việc.
+--    Ngày nhận của việc chép từ văn bản (bằng ngày nhận cũ của văn bản) đổi theo ngày nhận mới (xoá ngày nhận của văn bản → ước tính = ngày ban
+--    hành); ngày nhận mới không sau ngày hoàn thành / ngày minh chứng của các việc đó (lead time không âm); trigger 0022 tính lại ngày nhận ước tính,
+--    hạn "theo ngày ký ban hành" của các việc. Không gửi tin (đổi thông tin văn bản — nhật ký từng việc + nhật ký hệ thống).
 -- 2. minh_chung_lich_su: bản chụp minh chứng trước / sau mỗi lần sửa, gỡ (đọc theo phạm vi như minh_chung; chỉ ghi qua hàm).
 -- 3. sua_minh_chung(p_id, p_thay_doi, p_ly_do): số hiệu, ngày văn bản, cấp nhận, trích yếu, mô tả kết quả, nội dung (minh chứng chữ cũ). Ngày kiểm
---    như khi nộp (minh_chung_kiem_ngay). Việc đã hoàn thành theo đúng minh chứng này (ngày hoàn thành = ngày văn bản cũ) → ngày hoàn thành theo ngày mới.
--- 4. go_minh_chung(p_id, p_ly_do): chụp bản cũ rồi gỡ; tệp đính kèm giữ trong kho (bản chụp còn đường dẫn). Gỡ minh chứng hợp lệ cuối cùng của việc
---    đã hoàn thành (việc theo 1400; việc chuyển đổi không còn minh chứng chữ) → mở lại việc như "Trả lại" (0090).
+--    như khi nộp (minh_chung_kiem_ngay). Minh chứng hợp lệ mà việc đã hoàn thành theo đúng nó (ngày hoàn thành = ngày văn bản cũ) → ngày hoàn thành
+--    theo ngày mới. Tin báo người liên quan và người nộp.
+-- 4. go_minh_chung(p_id, p_ly_do): chụp bản cũ rồi gỡ; tệp đính kèm giữ trong kho (bản chụp còn đường dẫn — kl_tep_mc_da_gan xét cả bản chụp nên
+--    người tải lên không xoá được). Gỡ minh chứng hợp lệ cuối cùng của việc đã hoàn thành (việc theo 1400; việc chuyển đổi không còn minh chứng chữ)
+--    → mở lại việc như "Trả lại" (0090); còn minh chứng hợp lệ khác mà ngày hoàn thành lấy theo minh chứng vừa gỡ → ngày hoàn thành theo minh chứng
+--    hợp lệ nộp sớm nhất còn lại. Tin báo người liên quan và người nộp.
 
 -- ---- 1 ----
-CREATE FUNCTION "public"."kl_van_ban_doi_ngay_nhan"("p_vb" uuid, "p_cu" date, "p_moi" date) RETURNS void
+-- p_uoc: văn bản không còn ngày nhận ⇒ ngày nhận của việc là ước tính (= ngày ban hành), như khi giao (trigger 0023 giữ cờ khi kl.tai_uoc_tinh = '1').
+CREATE FUNCTION "public"."kl_van_ban_doi_ngay_nhan"("p_vb" uuid, "p_cu" date, "p_moi" date, "p_uoc" boolean) RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   PERFORM set_config('kl.ghi_qua_ham', '1', true);
-  UPDATE "public"."nhiem_vu" SET "ngay_nhan_van_ban" = "p_moi" WHERE "van_ban_id" = "p_vb" AND NOT "ngay_nhan_uoc_tinh" AND "ngay_nhan_van_ban" = "p_cu";
+  PERFORM set_config('kl.tai_uoc_tinh', '1', true);
+  UPDATE "public"."nhiem_vu" SET "ngay_nhan_van_ban" = "p_moi", "ngay_nhan_uoc_tinh" = "p_uoc"
+  WHERE "van_ban_id" = "p_vb" AND NOT "ngay_nhan_uoc_tinh" AND "ngay_nhan_van_ban" = "p_cu";
+  PERFORM set_config('kl.tai_uoc_tinh', '', true);
   PERFORM set_config('kl.ghi_qua_ham', '', true);
 END;
 $$;
-REVOKE ALL ON FUNCTION "public"."kl_van_ban_doi_ngay_nhan"(uuid, date, date) FROM public, "anon", "authenticated";
+REVOKE ALL ON FUNCTION "public"."kl_van_ban_doi_ngay_nhan"(uuid, date, date, boolean) FROM public, "anon", "authenticated";
 
 CREATE FUNCTION "public"."van_ban_sua"("p_id" uuid, "p_thay_doi" jsonb, "p_ly_do" text) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -60,6 +68,15 @@ BEGIN
     END IF;
   END IF;
   v_nhan_cu := coalesce(v."ngay_nhan", v."ngay_ban_hanh"); v_nhan_moi := coalesce(m."ngay_nhan", m."ngay_ban_hanh");   -- ngày nhận việc chép từ văn bản
+  IF v_nhan_moi > v_nhan_cu THEN   -- việc theo ngày nhận của văn bản (chép hoặc ước tính) dời ngày giao: không sau ngày hoàn thành / minh chứng (DL-4)
+    SELECT least(min(n."ngay_hoan_thanh"), min(mc."ngay_van_ban")) INTO v_moc
+    FROM "public"."nhiem_vu" n LEFT JOIN "public"."minh_chung" mc ON mc."nhiem_vu_id" = n."id" AND "public"."minh_chung_la_hop_le"(mc)
+    WHERE n."van_ban_id" = v."id" AND (n."ngay_nhan_uoc_tinh" OR n."ngay_nhan_van_ban" = v_nhan_cu);
+    IF v_moc IS NOT NULL AND v_nhan_moi > v_moc THEN
+      RAISE EXCEPTION 'Ngày nhận mới (%) sau ngày hoàn thành hoặc ngày minh chứng của việc giao từ văn bản (sớm nhất %) — ngày giao không được sau ngày hoàn thành.',
+        to_char(v_nhan_moi, 'DD/MM/YYYY'), to_char(v_moc, 'DD/MM/YYYY') USING ERRCODE = '22023';
+    END IF;
+  END IF;
   IF m."ngay_ban_hanh" IS DISTINCT FROM v."ngay_ban_hanh" THEN
     SELECT least(min(n."han_xu_ly") FILTER (WHERE n."loai_thoi_han_ma" <> 'KY_BAN_HANH'), min(n."ngay_hoan_thanh"),
                  min(n."ngay_nhan_van_ban") FILTER (WHERE NOT n."ngay_nhan_uoc_tinh" AND n."ngay_nhan_van_ban" IS DISTINCT FROM v_nhan_cu),
@@ -72,14 +89,18 @@ BEGIN
   END IF;
   -- Việc chép ngày nhận của văn bản (chưa sửa riêng) theo ngày mới. Trigger 0023 kiểm ngày nhận của việc theo ngày ban hành ĐANG ghi ⇒ ngày nhận mới
   -- không trước ngày ban hành cũ thì đổi trước văn bản (văn bản dời ngày ban hành về sau — trigger 0022 ghi lại các việc), không thì đổi sau.
-  IF v_nhan_moi IS DISTINCT FROM v_nhan_cu AND v_nhan_moi >= v."ngay_ban_hanh" THEN PERFORM "public"."kl_van_ban_doi_ngay_nhan"(v."id", v_nhan_cu, v_nhan_moi); END IF;
+  IF v_nhan_moi IS DISTINCT FROM v_nhan_cu AND v_nhan_moi >= v."ngay_ban_hanh" THEN
+    PERFORM "public"."kl_van_ban_doi_ngay_nhan"(v."id", v_nhan_cu, v_nhan_moi, m."ngay_nhan" IS NULL);
+  END IF;
   BEGIN
     UPDATE "public"."van_ban_giao_viec" SET "loai" = m."loai", "so_hoi_nghi" = m."so_hoi_nghi", "so_ket_luan" = m."so_ket_luan", "ngay_ban_hanh" = m."ngay_ban_hanh",
       "ngay_nhan" = m."ngay_nhan", "trich_yeu" = m."trich_yeu" WHERE "id" = v."id";
   EXCEPTION WHEN unique_violation THEN
     RAISE EXCEPTION 'Đã có văn bản cùng loại, số / ký hiệu và ngày ban hành (hoặc cùng số hội nghị và số) — kiểm tra lại.' USING ERRCODE = '22023';
   END;
-  IF v_nhan_moi IS DISTINCT FROM v_nhan_cu AND v_nhan_moi < v."ngay_ban_hanh" THEN PERFORM "public"."kl_van_ban_doi_ngay_nhan"(v."id", v_nhan_cu, v_nhan_moi); END IF;
+  IF v_nhan_moi IS DISTINCT FROM v_nhan_cu AND v_nhan_moi < v."ngay_ban_hanh" THEN
+    PERFORM "public"."kl_van_ban_doi_ngay_nhan"(v."id", v_nhan_cu, v_nhan_moi, m."ngay_nhan" IS NULL);
+  END IF;
   SELECT string_agg(format('%s: %s → %s', CASE x WHEN 'loai' THEN 'loại' WHEN 'so_hoi_nghi' THEN 'số hội nghị' WHEN 'so_ket_luan' THEN 'số / ký hiệu'
            WHEN 'ngay_ban_hanh' THEN 'ngày ban hành' WHEN 'ngay_nhan' THEN 'ngày nhận' ELSE 'trích yếu' END,
            coalesce(CASE WHEN x LIKE 'ngay%' THEN to_char((v_cu ->> x)::date, 'DD/MM/YYYY') WHEN x = 'loai' THEN "public"."kl_ten_loai_van_ban"(v_cu ->> x) ELSE left(v_cu ->> x, 80) END, '(trống)'),
@@ -114,6 +135,12 @@ REVOKE ALL ON "public"."minh_chung_lich_su" FROM "anon", "authenticated";
 GRANT SELECT ON "public"."minh_chung_lich_su" TO "authenticated";
 CREATE POLICY "minh_chung_lich_su_select" ON "public"."minh_chung_lich_su" FOR SELECT TO "authenticated"
   USING ((SELECT "public"."kl_xem_tat_ca"()) OR "nhiem_vu_id" IN (SELECT "public"."kl_nhiem_vu_thay_duoc"(true)));   -- như minh_chung (0049)
+-- Tệp của minh chứng đã gỡ / đã sửa còn trong bản chụp: người tải lên không xoá được (policy minh_chung_tep_xoa — 0089).
+CREATE OR REPLACE FUNCTION "public"."kl_tep_mc_da_gan"("p_ten" text) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM "public"."minh_chung" m WHERE m."tep_path" = "p_ten")
+      OR EXISTS (SELECT 1 FROM "public"."minh_chung_lich_su" l WHERE l."ban_cu" ->> 'tep_path' = "p_ten");
+$$;
 
 -- ---- 3 ----
 -- Tính lại cờ thiếu minh chứng của việc đã hoàn thành (như minh_chung_ghi_vet 0028 — trigger 0028 tính khi ghi dòng nhiệm vụ). Nhật ký sửa / gỡ dùng
@@ -168,7 +195,8 @@ BEGIN
     "mo_ta_ket_qua" = m."mo_ta_ket_qua", "noi_dung_chu" = m."noi_dung_chu" WHERE "id" = c."id";
   INSERT INTO "public"."minh_chung_lich_su" ("minh_chung_id", "nhiem_vu_id", "hanh_dong", "ban_cu", "ban_moi", "ly_do", "nguoi")
   VALUES (c."id", c."nhiem_vu_id", 'SUA', v_cu, to_jsonb(m), v_ly_do, "auth"."uid"());
-  IF v_nv."tien_do_ma" = 'HOAN_THANH' AND v_doi ? 'ngay_van_ban' AND m."ngay_van_ban" IS NOT NULL AND v_nv."ngay_hoan_thanh" IS NOT DISTINCT FROM c."ngay_van_ban" THEN
+  IF v_nv."tien_do_ma" = 'HOAN_THANH' AND v_doi ? 'ngay_van_ban' AND m."ngay_van_ban" IS NOT NULL AND "public"."minh_chung_la_hop_le"(c)
+     AND v_nv."ngay_hoan_thanh" IS NOT DISTINCT FROM c."ngay_van_ban" THEN
     PERFORM set_config('kl.ghi_qua_ham', '1', true);   -- việc hoàn thành theo minh chứng này: ngày hoàn thành theo ngày văn bản mới
     UPDATE "public"."nhiem_vu" SET "ngay_hoan_thanh" = m."ngay_van_ban" WHERE "id" = v_nv."id";
     PERFORM set_config('kl.ghi_qua_ham', '', true);
@@ -176,7 +204,7 @@ BEGIN
   SELECT string_agg(CASE x WHEN 'so_hieu' THEN 'số hiệu' WHEN 'ngay_van_ban' THEN 'ngày văn bản' WHEN 'cap_nhan' THEN 'cấp nhận' WHEN 'trich_yeu' THEN 'trích yếu'
                       WHEN 'mo_ta_ket_qua' THEN 'mô tả kết quả' ELSE 'nội dung' END, ', ' ORDER BY array_position(v_cot, x)) INTO v_ten FROM jsonb_object_keys(v_doi) x;
   v_ten := format('%s (sửa %s) — lý do: %s', coalesce(m."so_hieu", left(m."noi_dung_chu", 60)), v_ten, v_ly_do);
-  PERFORM "public"."kl_ghi_vet_viec"(v_nv."id", 'sua_minh_chung', v_ten, format('Sửa minh chứng · %s: %s', v_nv."ma", left(v_ten, 300)));
+  PERFORM "public"."kl_ghi_vet_viec"(v_nv."id", 'sua_minh_chung', v_ten, format('Sửa minh chứng · %s: %s', v_nv."ma", left(v_ten, 300)), ARRAY[c."nop_boi"]);
   PERFORM "public"."kl_minh_chung_tinh_lai"(v_nv."id");
   RETURN v_doi;
 END;
@@ -187,7 +215,7 @@ GRANT EXECUTE ON FUNCTION "public"."sua_minh_chung"(uuid, jsonb, text) TO "authe
 -- ---- 4 ----
 CREATE FUNCTION "public"."go_minh_chung"("p_id" uuid, "p_ly_do" text) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE c "public"."minh_chung"; v_nv "public"."nhiem_vu"; v_ly_do text := btrim(coalesce("p_ly_do", '')); v_mo_lai boolean := false; v_nd text;
+DECLARE c "public"."minh_chung"; v_nv "public"."nhiem_vu"; v_ly_do text := btrim(coalesce("p_ly_do", '')); v_mo_lai boolean := false; v_nd text; v_ngay date;
 BEGIN
   SELECT * INTO c FROM "public"."minh_chung" WHERE "id" = "p_id" FOR UPDATE;
   IF c."id" IS NULL OR "auth"."uid"() IS NULL OR NOT "public"."me_toan_quyen"() THEN
@@ -204,10 +232,19 @@ BEGIN
     UPDATE "public"."nhiem_vu" SET "tien_do_ma" = 'DANG_THUC_HIEN' WHERE "id" = v_nv."id";
     PERFORM set_config('kl.ghi_qua_ham', '', true);
     v_mo_lai := true;
+  ELSIF v_nv."tien_do_ma" = 'HOAN_THANH' AND "public"."minh_chung_la_hop_le"(c) AND c."ngay_van_ban" IS NOT NULL
+        AND v_nv."ngay_hoan_thanh" IS NOT DISTINCT FROM c."ngay_van_ban" THEN   -- ngày hoàn thành lấy theo minh chứng vừa gỡ → theo minh chứng còn lại
+    SELECT mc."ngay_van_ban" INTO v_ngay FROM "public"."minh_chung" mc
+    WHERE mc."nhiem_vu_id" = v_nv."id" AND "public"."minh_chung_la_hop_le"(mc) AND mc."ngay_van_ban" IS NOT NULL ORDER BY mc."nop_luc", mc."id" LIMIT 1;
+    IF v_ngay IS NOT NULL AND v_ngay IS DISTINCT FROM v_nv."ngay_hoan_thanh" THEN
+      PERFORM set_config('kl.ghi_qua_ham', '1', true);
+      UPDATE "public"."nhiem_vu" SET "ngay_hoan_thanh" = v_ngay WHERE "id" = v_nv."id";
+      PERFORM set_config('kl.ghi_qua_ham', '', true);
+    END IF;
   END IF;
   v_nd := format('%s — lý do: %s%s', coalesce(c."so_hieu", left(c."noi_dung_chu", 60)), v_ly_do,
                  CASE WHEN v_mo_lai THEN ' — nhiệm vụ chưa hoàn thành, nộp minh chứng mới' ELSE '' END);
-  PERFORM "public"."kl_ghi_vet_viec"(v_nv."id", 'go_minh_chung', v_nd, format('Gỡ minh chứng · %s: %s', v_nv."ma", left(v_nd, 300)));
+  PERFORM "public"."kl_ghi_vet_viec"(v_nv."id", 'go_minh_chung', v_nd, format('Gỡ minh chứng · %s: %s', v_nv."ma", left(v_nd, 300)), ARRAY[c."nop_boi"]);
   PERFORM "public"."kl_minh_chung_tinh_lai"(v_nv."id");
   RETURN jsonb_build_object('mo_lai', v_mo_lai);
 END;
