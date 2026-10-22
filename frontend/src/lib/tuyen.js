@@ -34,6 +34,19 @@ export const DS_TEP = [DUONG_DANG_NHAP, ...new Set(TUYEN.map((t) => t.duong)), .
 
 const thuong = (s) => String(s || '').toLowerCase();
 export const laDangNhap = (duong) => thuong(duong) === thuong(DUONG_DANG_NHAP);
+// Mã nhiệm vụ trên đường dẫn (chủ dự án 22/10/2026 17:02): "…/<Chức năng>/NV-9601" — chỉ nhận đúng dạng NV-<số> (mã do CSDL sinh); chuỗi khác không
+// phải mã. Không có tệp dựng sẵn cho từng việc (không đưa mã / dữ liệu lên trang công khai): Pages trả 404.html → app (?p=).
+const MA_VIEC = /^NV-\d{1,9}$/i;
+export const laMaViec = (s) => MA_VIEC.test(String(s || ''));
+// { duong, the } (tachDuong) → thêm ma: đoạn cuối là mã việc thì tách ra (chữ hoa), phần còn lại là chức năng; "/NV-9601" → trang đầu + việc.
+export function tachViec(t) {
+  if (!t) return t;
+  const phan = [t.duong, ...String(t.the || '').split('/')].filter(Boolean);
+  if (!laMaViec(phan.at(-1))) return { ...t, ma: '' };
+  return { duong: phan[0] && phan.length > 1 ? phan[0] : '', the: phan.slice(1, -1).join('/'), ma: phan.at(-1).toUpperCase() };
+}
+// Đường dẫn chức năng (không mã việc) của { duong, the } để so màn: "Quan-tri/Tai-khoan", "Tong-quan".
+export const duongChucNang = (t) => [t?.duong, t?.the].filter(Boolean).join('/');
 // pathname + base ("/vptu-mvp-task/" hoặc "/vptu-mvp-task/staging/") → { duong, the } (phần sau base, đã bỏ ".html", gạch chéo, giải mã); ngoài base → null.
 export function tachDuong(pathname, base = '/') {
   let p = String(pathname || '');

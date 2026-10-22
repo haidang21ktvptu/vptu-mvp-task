@@ -5,6 +5,8 @@
 // Dữ liệu: mở ngay bằng dòng màn hình gọi đang có, rồi đọc lại đúng việc đó (3 truy vấn) — khác thì vẽ lại. Realtime: việc đang mở có sự kiện
 // → nạp lại việc đó (kl-realtime datNghePhu). Ghi xong trong ngăn (kl/index.js phát 'viec-da-ghi') → màn hình không có realtime tự nạp lại
 // (khiGhiTrongNgan), quay lại danh sách thấy trạng thái mới của việc vừa xử lý.
+// v3.29 (chủ dự án 22/10/2026 17:02): mở việc → "…/<chức năng>/NV-…" (kl/chi-tiet.js ghiViec); người dùng đóng / Quay lại / Esc → bỏ mã, lùi đúng bước
+// đã thêm (boViec); mở danh sách khác → bỏ mã tại chỗ; Quay lại / Tiến tới của trình duyệt (cùng màn) → dongViecTheoDuong, không ghi lịch sử.
 import { $, escapeHtml, show, setText } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -20,6 +22,7 @@ import { toggleKlChiTiet, dongKlChiTiet, idDangMo } from './kl/chi-tiet.js';
 import { napLaiViec } from './kl/nap-lai-viec.js';
 import { dh } from './dieu-hanh/du-lieu.js';
 import { hanNgan } from './ngan-viec.js';
+import { boViec, quenViec } from '../shell/duong-dan.js';
 
 const ngan = { ds: null, rows: new Map(), daMo: new Set(), tuDs: false, onDong: null, cha: null, sau: null, truoc: null, cuon: 0, viecVua: null };
 const nguon = new Set();   // hàm (id) → dòng của các màn hình tự đọc v_nhiem_vu (Báo cáo, Cán bộ): mở việc ngay, không chờ đọc
@@ -77,7 +80,7 @@ function veDanhSach() {
 // Tầng danh sách. nhom = [{ ten, rows }] (tuỳ chọn, ví dụ "Giao mới" / "Hoàn thành" của một tháng); dauHtml = khối đầu (tuỳ chọn).
 // onDong: màn hình bên dưới bỏ chọn khi ngăn đóng.
 export function moNganDanhSach({ tieuDe, phu = '', rows = [], nhom = null, dauHtml = '', onDong = null }) {
-  boViecDangMo();
+  boViecDangMo(); boViec();
   const phan = (nhom || [{ ten: '', rows }]).map((n) => ({ ten: n.ten, rows: sapXep(n.rows || []) }));
   const tong = new Set(phan.flatMap((p) => p.rows.map((r) => r.id))).size;
   ngan.rows = new Map(phan.flatMap((p) => p.rows.map((r) => [r.id, r])));
@@ -115,9 +118,11 @@ export async function moNganViec(id, { cheDo = 'chi-tiet', tuDs = false, row = n
   });
 }
 
-function nganLui() {
-  if (!ngan.ds) { dongNganCT(); return; }
+// url: người dùng bấm "Quay lại" (bỏ mã việc khỏi đường dẫn — lùi một bước); false: trình duyệt đã đổi đường dẫn (Quay lại / Tiến tới).
+function nganLui({ url = true } = {}) {
+  if (!ngan.ds) { dongNganCT({ url }); return; }
   boViecDangMo();
+  if (url) boViec({ nguoiDung: true });
   veDanhSach();
   show('nganCTDs', true); show('nganCTViec', false); show('nganCTLui', false);
   moKhung(ngan.ds.tieuDe, ngan.ds.phu);
@@ -125,9 +130,17 @@ function nganLui() {
   $('nganCTDs').querySelector(`[data-id="${ngan.viecVua}"]`)?.focus({ preventScroll: true });
 }
 
-export function dongNganCT() {
+// Quay lại / Tiến tới của trình duyệt bỏ mã việc (cùng màn): đóng việc như "Quay lại" của ngăn / "Đóng ngăn" của màn Nhiệm vụ, không ghi lịch sử.
+export function dongViecTheoDuong() {
+  if (nganDangMoViec()) nganLui({ url: false });
+  else if (idDangMo()) dongKlChiTiet();
+}
+
+// url: người dùng đóng (nút Đóng, Esc) — bỏ mã việc khỏi đường dẫn; mặc định không (đổi màn, mở màn khác: màn mới tự ghi đường dẫn).
+export function dongNganCT({ url = false } = {}) {
   if (!laMo()) return;
   boViecDangMo();
+  if (url) boViec({ nguoiDung: true });
   show('nganCT', false); document.body.classList.remove('co-ngan');
   const fn = ngan.onDong; Object.assign(ngan, { ds: null, rows: new Map(), daMo: new Set(), tuDs: false, onDong: null });
   if (fn) fn();
@@ -137,11 +150,11 @@ export function dongNganCT() {
 export function mountNganChiTiet() {
   registerActions({
     nganMoViec: ({ id, tuDs }) => moNganViec(id, { tuDs: tuDs === '1' }),
-    nganLui, nganDong: dongNganCT,
+    nganLui: () => nganLui({ url: true }), nganDong: () => dongNganCT({ url: true }), dongViecTheoDuong,
   });
-  document.addEventListener('doi-man', dongNganCT);   // chọn mục khác ở menu (shell/index.js showSection)
+  document.addEventListener('doi-man', () => { quenViec(); dongNganCT(); });   // chọn mục khác ở menu (shell/index.js showSection)
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !laMo() || document.querySelector('.modal-nen:not(.hidden)') || e.target.closest?.('input, textarea, select')) return;   // đang gõ: không mất chữ
-    dongNganCT();
+    dongNganCT({ url: true });
   });
 }

@@ -3,11 +3,19 @@
 // Chuyên viên: "/Viec-cua-toi"; một lần bấm "Việc tôi theo dõi" chỉ thêm một bước lịch sử; gõ đường dẫn không thuộc vai (Báo cáo) → về trang đầu kèm
 // thông báo. Bản build có chính sách nội dung (CSP) — không bị chặn nhầm (không thông báo vi phạm CSP, không lỗi chưa bắt). Chưa đăng nhập: thanh địa
 // chỉ "/Dang-nhap" (gốc, chữ thường, đường dẫn chức năng), có phiên thì vào đúng chức năng đã mở (phiên đặt sẵn rồi tải lại — không tốn lượt đăng nhập,
-// không đăng xuất: đăng xuất huỷ phiên dùng chung của vai). Chỉ đọc.
+// không đăng xuất: đăng xuất huỷ phiên dùng chung của vai). Đường dẫn tới một nhiệm vụ "…/<chức năng>/NV-…" (chủ dự án 22/10/2026 17:02): mở thẳng,
+// tải lại, Đóng, Quay lại / Tiến tới, chưa đăng nhập; chuyên viên mở mã việc ngoài phạm vi → một câu chung, không mở gì (việc E2E-SEED của seed).
+// Chỉ đọc.
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP, phienMoi, storageKey } from './lib/app.js';
+import { dbAdmin } from './lib/pr2b.mjs';
 
 const duong = (page) => new URL(page.url()).pathname.replace(/^.*\/vptu-mvp-task\/(staging\/)?/, '/');
+const viecSeed = async (dau) => {
+  const r = await dbAdmin().from('nhiem_vu').select('id, ma').like('noi_dung', `E2E-SEED ${dau}%`).limit(1).single();
+  if (r.error) throw new Error(`Không thấy việc E2E-SEED "${dau}": ${r.error.message}`);
+  return r.data;
+};
 
 test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
   test('Chánh VP: menu đổi đường dẫn; Quay lại / Tiến tới; tải lại giữ chức năng; chữ thường tự sửa; CSP, không lỗi console', async ({ browser }, testInfo) => {
@@ -73,6 +81,62 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     await page.goBack();
     await expect(page.locator('#viewBaoCao')).toBeVisible(NAP); expect(duong(page)).toBe('/Bao-cao');
     await context.close();
+  });
+
+  test('Đường dẫn tới một nhiệm vụ (Chánh VP): mở thẳng, Đóng, bấm dòng thêm bước, Quay lại / Tiến tới; "/Tong-quan/NV-…" mở ngăn trên Tổng quan, tải lại vẫn mở', async ({ browser }, testInfo) => {
+    const v = await viecSeed('đang thực hiện, còn thời gian');
+    const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
+    const ct = page.locator(`#klChiTiet-${v.id}`);
+    await page.goto(`./Nhiem-vu/${v.ma.toLowerCase()}`);
+    await expect(ct).toBeVisible(NAP);
+    await expect.poll(() => duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
+    await ct.locator('[data-action="dongKlChiTiet"]').click();
+    await expect(ct).toBeHidden(); await expect.poll(() => duong(page)).toBe('/Nhiem-vu');
+    await page.locator(`#klRow-${v.id}`).click();
+    await expect(ct).toBeVisible(NAP); await expect.poll(() => duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
+    await page.goBack();
+    await expect(ct).toBeHidden(NAP); expect(duong(page)).toBe('/Nhiem-vu');
+    await page.goForward();
+    await expect(ct).toBeVisible(NAP); expect(duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
+    await page.goto(`./Tong-quan/${v.ma}`);
+    await expect(page.locator('#viewTongQuan')).toBeVisible(NAP);
+    await expect(page.locator(`#nganCT #klChiTiet-${v.id}`)).toBeVisible(NAP);
+    await page.reload();
+    await expect(page.locator(`#nganCT #klChiTiet-${v.id}`)).toBeVisible(NAP); await expect.poll(() => duong(page)).toBe(`/Tong-quan/${v.ma}`);
+    await page.locator('#nganCT [data-action="nganDong"]').click();
+    await expect(page.locator('#nganCT')).toBeHidden(); await expect.poll(() => duong(page)).toBe('/Tong-quan');
+    await page.context().close();
+  });
+
+  test('Chưa đăng nhập mở đường dẫn một việc → "/Dang-nhap"; có phiên → đúng màn và đúng việc', async ({ browser }, testInfo) => {
+    const v = await viecSeed('đang thực hiện, còn thời gian');
+    const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
+    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale });
+    const page = await context.newPage();
+    await page.goto(`./Theo-van-ban/${v.ma}`);
+    await expect(page.locator('#loginSection')).toBeVisible(); await expect.poll(() => duong(page)).toBe('/Dang-nhap');
+    const session = await phienMoi('A1');
+    await page.evaluate(([k, val]) => globalThis.localStorage.setItem(k, val), [storageKey(), JSON.stringify(session)]);
+    await page.reload();
+    await expect(page.locator('#viewTheoVanBan')).toBeVisible(NAP);
+    await expect(page.locator(`#nganCT #klChiTiet-${v.id}`)).toBeVisible(NAP);
+    await expect.poll(() => duong(page)).toBe(`/Theo-van-ban/${v.ma}`);
+    await context.close();
+  });
+
+  test('Chuyên viên mở đường dẫn một việc: việc của mình → ngăn chi tiết; việc ngoài phạm vi → một câu chung, không mở gì, bỏ mã khỏi đường dẫn', async ({ browser }, testInfo) => {
+    const cuaMinh = await viecSeed('đang thực hiện, còn thời gian');
+    const ngoai = await viecSeed('việc mới giao, chưa xác nhận nhận');   // chủ trì demo_e2e_kl — ngoài phạm vi của demo_cv1
+    const page = await pageAs(browser, 'A3', testInfo);
+    await page.goto(`./Viec-cua-toi/${ngoai.ma}`);
+    await expect(page.locator('#toastContainer')).toContainText(`Không có nhiệm vụ ${ngoai.ma} trong phạm vi của đồng chí.`, NAP);
+    await expect.poll(() => duong(page)).toBe('/Viec-cua-toi');
+    await expect(page.locator('#nganCT')).toBeHidden();
+    await expect(page.locator(`#klChiTiet-${ngoai.id}`)).toHaveCount(0);
+    await page.goto(`./Viec-cua-toi/${cuaMinh.ma}`);
+    await expect(page.locator(`#nganCT #klChiTiet-${cuaMinh.id}`)).toBeVisible(NAP);
+    await expect.poll(() => duong(page)).toBe(`/Viec-cua-toi/${cuaMinh.ma}`);
+    await page.context().close();
   });
 
   test('Chuyên viên: trang đầu "/Viec-cua-toi"; một bấm một bước lịch sử; đường dẫn không thuộc vai → về trang đầu, có thông báo', async ({ browser }, testInfo) => {

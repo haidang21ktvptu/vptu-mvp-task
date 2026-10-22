@@ -1,6 +1,7 @@
 // Ngăn chi tiết bên phải (v8 đợt 3: cố định 520px — đầu mã + nhãn + nội dung + văn bản, lưới 2 cột, hàng nút, chỉ đạo, minh chứng, diễn biến nền màu; thứ tự của mọi vai: thông tin then chốt → hành động → khối chỉ đạo → minh chứng → chi tiết và lịch sử
 // gập). Căn cứ từng trường từ lich_su (RLS theo phạm vi thấy nhiệm vụ); đính chính đang chờ; nguồn dòng. Một ngăn cho cả danh sách:
 // #klChiTiet chứa <div id="klChiTiet-<id>"> của việc đang chọn; toggleKlChiTiet({id, cheDo}) mở việc (cheDo 'chi-dao' → con trỏ vào ô nhập).
+// v3.29: mở việc → thanh địa chỉ "…/<chức năng>/<mã>" (ghiViec); bấm "Đóng ngăn" → bỏ mã (hành động dongKlChiTiet đăng ký ở kl/index.js).
 import { $, escapeHtml, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
@@ -23,6 +24,7 @@ import { khoiGiaiNganHtml, hangGiaiNganHtml, napGiaiNgan } from './giai-ngan.js'
 import { nutQuyenHtml, khoiQuyenHtml } from './nut-quyen.js';   // v3.29 (0123–0126): điều chỉnh hạn, đổi chủ trì, quyền tài khoản quản trị
 import { chiXemVoi } from '../../../lib/kl/quyen-them.js';
 import { hienGiaTri } from '../../../lib/kl/gia-tri.js';
+import { ghiViec, dangKyViecTrongMan } from '../../shell/duong-dan.js';
 
 const tenNguoi = (l) => findAccount(l.nguoi_sua)?.full_name || l.nguoi_sua_ghi_chu || (l.nguon === 'excel' ? 'không xác định (nhật ký Excel)' : 'hệ thống');
 
@@ -171,6 +173,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
     return;
   }
   dangMo = id;
+  ghiViec(timKlRow(id)?.ma);   // v3.29: "…/<chức năng>/NV-…" (chủ dự án 22/10/2026 17:02)
   document.querySelectorAll('#klBody .hang-nv').forEach((el) => { const on = el.dataset.id === id; el.classList.toggle('dang', on); el.setAttribute('aria-pressed', String(on)); });
   $('klChiTiet').innerHTML = '<p class="trong-nho">Đang tải căn cứ…</p>';
   dongBoNgan();
@@ -190,3 +193,5 @@ export function dongKlChiTiet() {
   dongBoNgan();
 }
 export const chonKlRow = ({ id }) => toggleKlChiTiet({ id });
+// Màn Nhiệm vụ giữ ngăn của nó khi đổi sang màn khác rồi quay lại → đường dẫn "/Nhiem-vu/<mã>" theo việc còn mở trong màn (không phải ngăn dùng chung).
+dangKyViecTrongMan(() => (dangMo && $('klChiTiet')?.closest('#viewKl') && !$('viewKl')?.classList.contains('hidden') ? timKlRow(dangMo)?.ma || '' : ''));
