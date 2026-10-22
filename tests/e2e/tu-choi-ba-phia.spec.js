@@ -96,7 +96,11 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);   // v3.23: không còn mục Nhắn tin
     await expect(page.locator('#chuongBadge')).toHaveText(/^[1-9]\d*$/, NAP);
     await page.locator('#chuongBtn').click();
-    await expect(page.locator('#thongBaoList')).toContainText(`Duyệt đề nghị từ chối · ${ma}`, NAP);
+    // v3.29: chuông chỉ có tin gửi TỚI mình — nhóm của việc chỉ còn tin duyệt (bỏ các tin "Đề nghị từ chối" chuyên viên tự gửi), nhóm một tin ghi
+    // "<mã> · mới" và phần nội dung sau nhãn.
+    const nhom = page.locator(`#thongBaoList [data-nv="${id}"]`);
+    await expect(nhom).toContainText(`${ma} · mới`, NAP);
+    await expect(nhom).toContainText('đồng ý từ chối, chờ giao lại');
     await page.context().close();
   });
 });
