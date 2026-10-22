@@ -134,6 +134,7 @@ test('Mở việc: thêm một bước "/Tong-quan/NV-12"; đổi sang việc kh
   assert.deepEqual(buoc.at(-1), ['back']);
   viTri.pathname = '/Tong-quan'; globalThis.history.state = null; khiLichSuDoi();   // trình duyệt lùi xong
   assert.equal(dong, 0, 'bước lùi của chính app: giao diện đã đóng việc, không gọi lại');
+  assert.deepEqual(buoc.at(-1), ['back'], 'đường dẫn đã đúng: không ghi thêm');
   ghiViec('khong-phai-ma');
   assert.equal(buoc.length, 3, 'chuỗi không đúng dạng NV-<số>: bỏ qua');
 });
@@ -243,5 +244,24 @@ test('Quay lại qua màn khác tới bước việc: giữ dấu bước do m�
   assert.deepEqual(buoc.at(-1), ['back'], 'đóng việc: lùi đúng bước, không để hai bước "/Tong-quan" trùng');
   ghiDuongDan('navBaoCao'); await xongLuot();   // người dùng bấm menu trước khi trình duyệt lùi xong
   assert.deepEqual(buoc.at(-1), ['push', '/Bao-cao'], 'chỉ bỏ qua lần ghi đúng đích của bước lùi');
-  viTri.pathname = '/Tong-quan'; globalThis.history.state = null; khiLichSuDoi();   // popstate của bước lùi
+  const truoc = buoc.length;
+  viTri.pathname = '/Tong-quan'; globalThis.history.state = null; khiLichSuDoi();   // popstate của bước lùi — Chromium đã bỏ lần ghi "/Bao-cao"
+  assert.deepEqual(buoc.slice(truoc), [['push', '/Bao-cao']], 'bước lùi đè lần ghi của người dùng → ghi lại đường dẫn màn đang hiện');
+});
+
+test('Tải lại khi đang mở việc do bấm: mở lại việc, giữ dấu — đóng vẫn lùi đúng một bước (bước trước cùng tài liệu), không để lại bước thừa', async () => {
+  state.user = { id: 'cvp', role_group: 'A1', is_chief: true };
+  datMenuDuongDan(menuCuaVai(state.user));
+  const goi = [];
+  registerActions({ moViecTheoMa: ({ ma }) => { goi.push(ma); ghiViec(ma); }, openTongQuan: () => { ghiDuongDan('navTongQuan'); } });
+  await moMan('/Bao-cao', 'navBaoCao');
+  datLai('/Tong-quan/NV-50', { chiTiet: true });
+  moManDau(() => { ghiDuongDan('navTongQuan'); });
+  await xongLuot(); await choXong();
+  assert.deepEqual(goi, ['NV-50']); assert.deepEqual(buoc, [['replace', '/Tong-quan'], ['replace', '/Tong-quan/NV-50']]);
+  assert.deepEqual(globalThis.history.state, { chiTiet: true });
+  boViec({ nguoiDung: true });
+  assert.deepEqual(buoc.at(-1), ['back']);
+  viTri.pathname = '/Tong-quan'; globalThis.history.state = null; khiLichSuDoi();
+  assert.deepEqual(buoc.at(-1), ['back'], 'bước trước đúng màn: không ghi thêm');
 });

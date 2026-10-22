@@ -102,6 +102,12 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     await expect(ct).toBeVisible(NAP); expect(duong(page)).toBe(`/Nhiem-vu/${v.ma}`);
     await expect(page.locator('#klTimKiem')).toHaveValue(v.ma);   // Quay lại / Tiến tới chỉ đóng / mở việc, danh sách giữ nguyên
     await expect(page.locator('#navKl')).toHaveAttribute('aria-selected', 'true');
+    await page.reload();   // tải lại ở bước việc do bấm dòng: mở lại việc; Đóng lùi đúng một bước ngay trong trang (không nạp lại trang)
+    await expect(ct).toBeVisible(NAP);
+    await page.evaluate(() => { globalThis.vptuChuaNapLai = true; });
+    await ct.locator('[data-action="dongKlChiTiet"]').click();
+    await expect(ct).toBeHidden(); await expect.poll(() => duong(page)).toBe('/Nhiem-vu');
+    expect(await page.evaluate(() => globalThis.vptuChuaNapLai), 'không nạp lại trang').toBe(true);
     await page.goto(`./Tong-quan/${v.ma}`);
     await expect(page.locator('#viewTongQuan')).toBeVisible(NAP);
     await expect(page.locator(`#nganCT #klChiTiet-${v.id}`)).toBeVisible(NAP);

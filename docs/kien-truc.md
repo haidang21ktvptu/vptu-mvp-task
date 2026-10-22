@@ -165,8 +165,9 @@ Cảnh báo:
 - **Chi tiết một nhiệm vụ:** `…/<chức năng>/NV-<số>` (`tachViec` / `laMaViec` ở `tuyen.js` — chỉ nhận đúng dạng mã do CSDL sinh). Mở việc
   (`toggleKlChiTiet`) → `ghiViec`: chưa mở việc nào thì `pushState` kèm `{ chiTiet: true }`, đang mở việc khác / mở theo đường dẫn thì `replaceState`;
   người dùng đóng (Đóng ngăn, Quay lại trong ngăn, Esc) → `boViec({ nguoiDung: true })`: bước do mở việc thêm vào thì `history.back()` (popstate tới bỏ
-  qua — `choLui` ghi đúng đích), không thì sửa bước; mở danh sách khác trong ngăn → như đóng; đổi màn không đụng (màn mới tự ghi; `quenViec`). Thay bước
-  giữ dấu `chiTiet`. `popstate` cùng màn → hành động `moViecTheoMa` / `dongViecTheoDuong` (không vẽ lại màn); khác màn → mở màn rồi `moViecTheoMa`
+  qua — `choLui` ghi đúng đích; người dùng đổi màn / mở việc ngay lúc trình duyệt còn lùi, lần ghi đó bị bước lùi đè → ghi lại), không thì sửa bước; bước
+  do `pushState` thêm dùng chung tài liệu với bước trước nên sau tải lại vẫn lùi trong trang; mở danh sách khác trong ngăn → như đóng; đổi màn không đụng
+  (màn mới tự ghi; `quenViec`). Thay bước giữ dấu `chiTiet`. `popstate` cùng màn → hành động `moViecTheoMa` / `dongViecTheoDuong` (không vẽ lại màn); khác màn → mở màn rồi `moViecTheoMa`
   (`kl/mo-theo-ma.js`: tìm trong dữ liệu đã nạp, không có thì `v_nhiem_vu` theo mã — RLS quyết định; không có / ngoài phạm vi cùng một câu, bỏ mã; màn
   Nhiệm vụ đang có việc đó → mở ngay trong màn, giữ bộ lọc và mục menu; còn lại → ngăn dùng chung). Lượt điều hướng (`luot`): người dùng đổi màn / mở
   việc trong lúc màn còn nạp → lượt mở việc theo đường dẫn đang chờ bị bỏ. Màn vẽ lại khi việc vẫn mở không chen bước. Tự đăng xuất vì hết phiên bỏ mã

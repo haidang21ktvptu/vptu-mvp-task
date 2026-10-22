@@ -36,7 +36,8 @@ export const dangKyQuyenDuongDan = (ten, fn) => { quyen[ten] = fn; };
 export const dangKyThe = (navId, fn) => { theCua[navId] = fn; };
 export const dangKyViecTrongMan = (fn) => { viecTrongMan = fn; };
 export const conLuot = (l) => !Number.isFinite(l) || l === luot;
-// Thay bước hiện tại: giữ dấu "bước do mở việc thêm" (chiTiet) — đóng việc ở bước đó vẫn lùi đúng một bước.
+// Thay bước: giữ dấu "bước do mở việc thêm" (chiTiet) — đóng việc ở bước đó vẫn lùi đúng một bước. Bước do pushState thêm dùng chung tài liệu với bước
+// trước (chuẩn HTML) — kể cả sau tải lại, lùi vẫn trong trang, không nạp lại.
 const giuDau = () => (history.state?.chiTiet ? { chiTiet: true } : null);
 const manRiengDangHien = () => MAN_RIENG.find((id) => { const el = document.getElementById(id); return el && !el.classList.contains('hidden'); }) || '';
 
@@ -146,7 +147,7 @@ export function moManDau(macDinh) {
 
 // Quay lại / Tiến tới: cùng màn đang hiện thì chỉ mở / đóng việc theo mã (không vẽ lại màn); khác màn thì mở màn (rồi việc nếu có).
 export function khiLichSuDoi() {
-  if (choLui) { const cua = location.pathname === choLui; choLui = ''; if (cua) return; }   // bước lùi của chính app: giao diện đã đúng
+  if (choLui) { const cua = location.pathname === choLui; choLui = ''; if (cua) { ghiLaiNeuLech(); return; } }   // bước lùi của chính app: giao diện đã đúng
   if (!state.user || !macDinhVai) return;
   const t = tachViec(tachDuong(location.pathname, BASE));
   if (t && !laDangNhap(t.duong) && manDangHien && duongChucNang(t).toLowerCase() === manDangHien.toLowerCase()) {
@@ -155,6 +156,13 @@ export function khiLichSuDoi() {
     return;
   }
   moTheoDuong(macDinhVai);
+}
+// Bước lùi của app xong mà thanh địa chỉ khác màn / việc đang hiện: người dùng đổi màn, mở việc ngay lúc trình duyệt còn đang lùi — Chromium bỏ lần
+// ghi đó (bước lùi đè) → ghi lại. Bình thường bước lùi xong trước lần ghi kế tiếp: đường dẫn đã đúng, không ghi gì.
+function ghiLaiNeuLech() {
+  if (!state.user || !manDangHien) return;
+  const url = `${BASE}${manDangHien}${maDangMo ? `/${maDangMo}` : ''}`;
+  if (location.pathname !== url) history.pushState(maDangMo ? { chiTiet: true } : null, '', `${url}${location.hash}`);
 }
 if (typeof window !== 'undefined') window.addEventListener('popstate', khiLichSuDoi);
 
