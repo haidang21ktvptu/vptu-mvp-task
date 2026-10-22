@@ -156,6 +156,7 @@ async function nap(id, cheDo, giuBang) {
     if (dangMo !== id) return;
     const traNhap = giuONhap(o);   // PR-3: ô vướng mắc / nguồn đang mở, đang gõ giữ qua lần vẽ lại (realtime, sau hành động)
     o.innerHTML = chiTietHtml(r, ls, dc);
+    document.dispatchEvent(new CustomEvent('chi-tiet-da-ve', { detail: r }));   // v3.29: ngăn dùng chung — tiêu đề theo đúng dòng vừa vẽ
     traNhap();
     if (cheDo === 'chi-tiet' || giuBang) o.querySelector('.chi-tiet-them').open = true;
     await Promise.all([napChiDao(r), napMinhChung(r), napDienBien(o.querySelector(`#klDienBien-${id} > div`), id), napDeNghiSua(r), napDuLieuGoc(r), napMucTieu(r), napGiaiNgan(r)]);
