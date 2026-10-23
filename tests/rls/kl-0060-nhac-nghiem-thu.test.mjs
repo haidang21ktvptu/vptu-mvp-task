@@ -52,7 +52,7 @@ describe('0060 — nhắc nghiệm thu', { skip: SKIP || CHI_CUC_BO }, () => {
       them('CV', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.cvp, nguoi_theo_doi: IDS.cvp, tao_boi: IDS.a0 }, IDS.cvp),      // CVP → thư ký
       them('NG', { owner_don_vi_ma: 'DANG_UY_UBND', owner_tai_khoan: null, tao_boi: null }),        // đơn vị ngoài, không thay mặt → lãnh đạo trực tiếp theo dõi
       them('P1', { tao_boi: IDS.pcvp }),                                                              // PCVP giao cho cán bộ → PCVP
-      them('TD', { nguoi_theo_doi: IDS.truongphong })]);                                              // A2 giao, tự theo dõi → A2 (vẫn nhận khi quá hạn nghiệm thu)
+      them('TD', { nguoi_theo_doi: IDS.truongphong })]);                                              // v3.31 (0128): theo dõi (nội bộ) = chủ trì cv1 — như ca chuyên viên (lãnh đạo không được nhắc)
   });
   after(don);
 
