@@ -51,13 +51,13 @@ test.describe.serial('Chuyên viên xem cả phòng và cập nhật kèm minh c
   });
 
   // v3.24: thanh lọc (lọc nhanh, bộ lọc chi tiết, chip "Đang áp dụng") thay hàng chip loại; "Loại văn bản" là chế độ xem của khối 6.
-  test('2. Tổng quan phòng: thanh lọc, khối 6 xem theo loại văn bản lọc cả màn hình, chip bỏ được, cách tính mức cảnh báo', async ({ browser }, testInfo) => {
+  test('2. Tổng quan phòng: thanh lọc, khối 6 xem theo loại văn bản lọc cả màn hình, chip bỏ được, không còn dòng "Cách tính"', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await nav(p, 'navTongQuan');
       await expect(p.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
       await expect(p.locator('#viewTongQuan h1')).toContainText('Tổng quan');
-      await expect(p.locator('#tqQuyTac')).toContainText('Cách tính');   // v3.29: "Cách tính" thay cho "Quy tắc"
-      await expect(p.locator('#tqQuyTac')).toContainText(/sắp đến hạn = còn ≤ \d+ ngày/);
+      await expect(p.locator('#tqQuyTac')).toHaveCount(0);   // v3.30 (chủ dự án 23/10/2026): bỏ dòng "Cách tính" cho đỡ rối mắt
+      await expect(p.locator('#viewTongQuan')).not.toContainText('Cách tính');
       await p.locator('#tqLocChiTietNut').click();
       await expect(p.locator('#tqLocLuoi')).toBeVisible();
       await expect(p.locator('#tqLocNguoi optgroup[label="Đơn vị chủ trì theo dõi"]')).toHaveCount(0);   // chuyên viên không có lựa chọn theo phòng

@@ -2,8 +2,8 @@
 // Dữ liệu hư cấu.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cotBaoCao, cotCua, demCot, locBaoCao, phongCuaViec, theoPhongChuyenMon, theoChuyenVien, theoNguon, PHONG_CHUNG, PHONG_NGOAI } from '../src/lib/kl/bao-cao.js';
-import { soLieuChinh, khoangKy } from '../src/lib/kl/tong-quan.js';
+import { cotBaoCao, cotCua, demCot, locBaoCao, locTheoKy, phongCuaViec, theoPhongChuyenMon, theoChuyenVien, theoNguon, PHONG_CHUNG, PHONG_NGOAI } from '../src/lib/kl/bao-cao.js';
+import { soLieuChinh, khoangKy, khoangTuyChon } from '../src/lib/kl/tong-quan.js';
 
 const v = (o) => ({ nhom_dem: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH', owner_trong_van_phong: true, ...o });
 const ROWS = [
@@ -62,4 +62,24 @@ test('Bấm số: lọc theo phòng, cán bộ, nguồn, kết luận và cột 
   const nguon = theoNguon(ROWS, [{ ma: 'KL' }]);
   assert.deepEqual(nguon.map((n) => [n.ten === 'Chưa xác định nguồn' ? 'chua' : n.ma, n.rows.length]), [['KL', 1], ['chua', 10]], 'theo thứ tự danh mục, việc chưa có nguồn cuối');
   assert.equal(locBaoCao(ROWS, { nguon: nguon[1].ma, cot: 'qua' }).length, 2);
+});
+
+test('Theo kỳ (v3.30, như Tổng quan): việc chưa hoàn thành luôn có; hoàn thành chỉ khi trong kỳ (chưa rõ ngày → theo ngày giao); khoảng ngày trống một đầu', () => {
+  const k = khoangKy('quy', '2026-10-23');   // 1/10 – 31/12/2026
+  const rows = [
+    v({ id: 'mo', muc_canh_bao: 'DO', nhom_dem: 'QUA_HAN' }),
+    v({ id: 'xongTrong', nhom_dem: 'HOAN_THANH', ngay_hoan_thanh: '2026-10-05', tien_do_hoan_thanh: 'TRUOC_HAN' }),
+    v({ id: 'xongNgoai', nhom_dem: 'HOAN_THANH', ngay_hoan_thanh: '2026-03-02' }),
+    v({ id: 'xongChuaRo', nhom_dem: 'HOAN_THANH', ngay_nhan_van_ban: '2026-11-01' }),   // chưa rõ ngày hoàn thành → theo ngày giao
+    v({ id: 'xongChuaRoNgoai', nhom_dem: 'HOAN_THANH', ngay_nhan_van_ban: '2026-01-15' }),
+  ];
+  assert.deepEqual(locTheoKy(rows, k).map((r) => r.id), ['mo', 'xongTrong', 'xongChuaRo']);
+  assert.equal(locTheoKy(rows, null).length, 5, 'không có kỳ: mọi việc');
+  const d = demCot(locTheoKy(rows, k));
+  assert.deepEqual(d, { tong: 3, qua: 1, sap: 0, dang: 0, xong: 2, truoc: 1 });
+  assert.equal(d.qua + d.sap + d.dang + d.xong, d.tong);
+  const s = soLieuChinh(rows, k);   // khớp Tổng quan cùng kỳ
+  assert.equal(d.xong, s.xong); assert.equal(d.qua + d.sap + d.dang, s.dangMo);
+  assert.deepEqual(locTheoKy(rows, khoangTuyChon('', '2026-03-31', '2026-10-23')).map((r) => r.id), ['mo', 'xongNgoai', 'xongChuaRoNgoai'], 'trống "từ ngày": từ đầu dữ liệu');
+  assert.deepEqual(locTheoKy(rows, khoangTuyChon('2026-11-30', '2026-10-01', '2026-10-23')).map((r) => r.id), ['mo', 'xongTrong', 'xongChuaRo'], 'điền ngược: tự đổi chỗ');
 });

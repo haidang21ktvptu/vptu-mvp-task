@@ -19,14 +19,14 @@ export const nhomNut = (act, k, ds, chon, nhan) => `<div class="pham-vi" role="g
 const ICON_GIAO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
 export const KY = ['thang', 'quy', 'nam', 'nhiem-ky'];
 
-// Đợt C1: mỗi ô có dòng tỷ lệ và một câu quy tắc cảnh báo (quyTac). v3.27 (chủ dự án 20/10/2026 — Tổng quan chính xác tối đa với dữ liệu hiện có):
+// Đợt C1: mỗi ô có dòng tỷ lệ. v3.27 (chủ dự án 20/10/2026 — Tổng quan chính xác tối đa với dữ liệu hiện có):
 // vòng tròn là TỶ LỆ HOÀN THÀNH = hoàn thành trong kỳ / (hoàn thành trong kỳ + đang làm) — trước đây "đúng hạn" chỉ dựa trên vài việc có ngày hoàn
 // thành (dữ liệu nhập từ Excel chưa có ngày) nên ghi 100% gây hiểu nhầm; đúng hạn ghi kèm số việc xét được; % hoàn thành / đang làm cùng mẫu số đó.
 // kyChon null = đang dùng kỳ tuỳ chọn của bộ lọc chi tiết (không nút kỳ nào sáng). v3.29 (chủ dự án 22/10/2026 — "tường minh và dễ nắm thông tin"):
-// mỗi ô ghi đủ chữ "nhiệm vụ", các phần cộng đủ tổng; mức cảnh báo ghi bằng nghĩa (lib/kl/nhan.js tenMuc); câu "Cách tính" dưới dải (index.js).
+// mỗi ô ghi đủ chữ "nhiệm vụ", các phần cộng đủ tổng; mức cảnh báo ghi bằng nghĩa (lib/kl/nhan.js tenMuc). v3.30 (23/10/2026): bỏ câu "Cách tính".
 const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 const phan = (ds, ngan = ' · ') => ds.filter(([n, , luon]) => n || luon).map(([n, chu]) => `${n} ${chu}`).join(ngan);
-export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, coGiaoViec, tong = 0, quyTac = '' }) {
+export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, coGiaoViec, tong = 0 }) {
   const capNhat = luc ? `Số liệu cập nhật ${luc.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' })} ngày ${luc.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}` : 'Đang nạp số liệu…';
   const kyTong = s.xong + s.dangMo;
   const o = (khoa, so, nhan, phu, tyLe = '') => `<button type="button" class="o-hung" data-so="${khoa}" ${mo({ t: khoa })} aria-label="${escapeHtml(`${so} ${nhan} — xem danh sách`)}"><span class="gia">${so}</span><span class="nhan-so">${nhan}</span><span class="phu-h">${phu}</span>${tyLe ? `<span class="ty-le">${tyLe}</span>` : ''}</button>`;
@@ -40,7 +40,7 @@ export function dauTrangHtml({ tieuDe, phamVi, k, ten, kyChon, luc, s, coGiaoVie
       ${o('xong', s.xong, 'nhiệm vụ đã hoàn thành', phan([[s.dungHan, 'đúng hạn', true], [s.tre, 'trễ hạn', true], [s.chuaRoNgay, 'chưa ghi ngày hoàn thành'], [s.chuaDanhGia - s.chuaRoNgay, 'không có hạn để xét']]), `${pct(s.xong, kyTong)}% số nhiệm vụ của kỳ`)}
       ${o('mo', s.dangMo, 'nhiệm vụ đang thực hiện', phan([[s.mo.trongHan + s.mo.nt, 'trong hạn', true], [s.canhBao, 'có cảnh báo', true], [s.mo.khac, 'chưa có hạn, thường xuyên']]), `${pct(s.dangMo, kyTong)}% số nhiệm vụ của kỳ`)}
       ${o('canh', s.canhBao, 'cảnh báo', s.canhBao ? phan([['vang', 'vang'], ['do', 'do'], ['ddb', 'ddb']].map(([m]) => [s.mo[m], `nhiệm vụ ${tenMuc(m)}`, true]), ', ') : 'không có nhiệm vụ sắp đến hạn hoặc quá hạn', `${pct(s.canhBao, s.dangMo)}% số nhiệm vụ đang thực hiện`)}
-    </div>${quyTac ? `<p class="hung-quy-tac" id="tqQuyTac">${escapeHtml(quyTac)}</p>` : ''}</section>`;
+    </div></section>`;
 }
 
 // Khối 5: cột theo tháng (năm hiện tại) + tỷ lệ đúng hạn quý trước / quý này (dungHanQuy).
