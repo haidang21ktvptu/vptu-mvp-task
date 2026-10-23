@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cotBaoCao, cotCua, demCot, locBaoCao, locTheoKy, phongCuaViec, theoPhongChuyenMon, theoChuyenVien, theoNguon, PHONG_CHUNG, PHONG_NGOAI } from '../src/lib/kl/bao-cao.js';
 import { soLieuChinh, khoangKy, khoangTuyChon } from '../src/lib/kl/tong-quan.js';
+import { tenTepBaoCao, sheetKyBaoCao } from '../src/lib/kl/xuat.js';
 
 const v = (o) => ({ nhom_dem: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH', owner_trong_van_phong: true, ...o });
 const ROWS = [
@@ -82,4 +83,16 @@ test('Theo kỳ (v3.30, như Tổng quan): việc chưa hoàn thành luôn có; 
   assert.equal(d.xong, s.xong); assert.equal(d.qua + d.sap + d.dang, s.dangMo);
   assert.deepEqual(locTheoKy(rows, khoangTuyChon('', '2026-03-31', '2026-10-23')).map((r) => r.id), ['mo', 'xongNgoai', 'xongChuaRoNgoai'], 'trống "từ ngày": từ đầu dữ liệu');
   assert.deepEqual(locTheoKy(rows, khoangTuyChon('2026-11-30', '2026-10-01', '2026-10-23')).map((r) => r.id), ['mo', 'xongTrong', 'xongChuaRo'], 'điền ngược: tự đổi chỗ');
+});
+
+test('Xuất Excel theo kỳ (v3.30): tên tệp gồm ngày xuất + khoảng ngày; sheet "Kỳ báo cáo" ghi kỳ, ngày tính số liệu; chỉ điền "Đến ngày" → từ đầu dữ liệu', () => {
+  const nam = khoangKy('nam', '2026-10-23');
+  assert.equal(tenTepBaoCao({ ten: 'Năm 2026', tu: nam.tu, den: nam.den }, '2026-10-23'), 'vptu-bao-cao-20261023_20260101-20261231.xlsx');
+  assert.equal(tenTepBaoCao({ ten: 'Đến 30/6/2026', tu: '', den: '2026-06-30' }, '2026-10-23'), 'vptu-bao-cao-20261023_den-20260630.xlsx');
+  const s = sheetKyBaoCao({ ten: 'Năm 2026 (1/1/2026 – 31/12/2026)', tu: nam.tu, den: nam.den }, { phamVi: 'P', nguoi: 'N', ngayXuat: '2026-10-23', luc: 'L' });
+  assert.equal(s.ten, 'Kỳ báo cáo'); assert.deepEqual(s.cot.map((c) => c.nhan), ['Mục', 'Giá trị']);
+  assert.deepEqual(s.dong.map((d) => d[0]), ['Kỳ', 'Từ ngày', 'Đến ngày', 'Số liệu tính tới', 'Phạm vi', 'Người xuất', 'Xuất lúc']);
+  assert.deepEqual(s.dong.slice(1, 3).map((d) => d[1]), ['1/1/2026', '31/12/2026']);
+  assert.match(s.dong[3][1], /^23\/10\/2026 — quá hạn, sắp đến hạn, đang thực hiện tính tới ngày này/);
+  assert.equal(sheetKyBaoCao({ ten: 'Đến 30/6/2026', tu: '', den: '2026-06-30' }, { ngayXuat: '2026-10-23' }).dong[1][1], 'Từ đầu dữ liệu');
 });
