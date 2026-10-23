@@ -11,6 +11,12 @@ import { pageAs, nav, NAP, phienMoi, storageKey } from './lib/app.js';
 import { dbAdmin } from './lib/pr2b.mjs';
 
 const duong = (page) => new URL(page.url()).pathname.replace(/^.*\/vptu-mvp-task\/(staging\/)?/, '/');
+// Cấu hình nới phạm vi xem (staging có thể bật: xem toàn bộ / chuyên viên xem cả phòng) → việc của người khác vẫn mở được (chỉ xem): khi đó dùng
+// mã không có — câu báo y hệt việc ngoài phạm vi (không để lộ việc có tồn tại hay không). Kiểm thử đêm trên staging 23/10/2026.
+const noiPhamVi = async () => {
+  const { data } = await dbAdmin().from('kl_cau_hinh').select('khoa, gia_tri').in('khoa', ['xem_toan_bo', 'pham_vi_chuyen_vien']);
+  return (data || []).some((c) => Number(c.gia_tri) === 2);
+};
 const viecSeed = async (dau) => {
   const r = await dbAdmin().from('nhiem_vu').select('id, ma').like('noi_dung', `E2E-SEED ${dau}%`).limit(1).single();
   if (r.error) throw new Error(`Không thấy việc E2E-SEED "${dau}": ${r.error.message}`);
@@ -136,7 +142,8 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
 
   test('Chuyên viên mở đường dẫn một việc: việc của mình → ngăn chi tiết; việc ngoài phạm vi → một câu chung, không mở gì, bỏ mã khỏi đường dẫn', async ({ browser }, testInfo) => {
     const cuaMinh = await viecSeed('đang thực hiện, còn thời gian');
-    const ngoai = await viecSeed('việc mới giao, chưa xác nhận nhận');   // chủ trì demo_e2e_kl — ngoài phạm vi của demo_cv1
+    const ngoai = (await noiPhamVi()) ? { id: 'khong-co', ma: 'NV-999999999' }
+      : await viecSeed('việc mới giao, chưa xác nhận nhận');   // chủ trì demo_e2e_kl — ngoài phạm vi của demo_cv1
     const page = await pageAs(browser, 'A3', testInfo);
     await page.goto(`./Viec-cua-toi/${ngoai.ma}`);
     await expect(page.locator('#toastContainer')).toContainText(`Không có nhiệm vụ ${ngoai.ma} trong phạm vi của đồng chí.`, NAP);

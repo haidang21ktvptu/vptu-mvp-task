@@ -128,9 +128,15 @@ export async function moThem(page, the = 1) {
 }
 
 // v3.29: ngăn chi tiết dùng chung đang mở (mở việc rồi tải lại: đường dẫn "…/NV-…" mở lại việc) che nút trong màn → đóng như người dùng, chờ thanh
-// địa chỉ bỏ mã việc (bước lùi của app xong) rồi mới bấm menu.
+// địa chỉ bỏ mã việc (bước lùi của app xong) rồi mới bấm menu. Đường dẫn còn mã việc (vừa tải lại / mở thẳng) → app mở lại việc SAU khi màn nạp xong:
+// chờ lượt mở đó xong (ngăn hiện, chi tiết hiện ngay trong màn Nhiệm vụ, hoặc mã bị bỏ) — không thì ngăn mở ra giữa chừng, che nút sắp bấm.
 async function dongNganNeuMo(page) {
   const ngan = page.locator('#nganCT');
+  const coMa = () => /\/NV-\d+(?:[?#].*)?$/i.test(page.url());
+  if (coMa()) {
+    await expect.poll(async () => !coMa() || (await ngan.isVisible()) || (await page.locator('#viewKl:not(.hidden) [id^="klChiTiet-"]').count()) > 0,
+      { ...NAP, message: 'đường dẫn có mã việc: chờ app mở lại việc' }).toBe(true);
+  }
   if (!(await ngan.isVisible())) return;
   await ngan.locator('[data-action="nganDong"]').click();
   await expect(ngan).toBeHidden();
