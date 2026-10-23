@@ -3,7 +3,7 @@
 @layer utilities {
   @media print {
     .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc, .kl-sap,
-    .ray, .tb-panel { display: none !important; }
+    .ray, .tb-panel, .bc-ky { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề */
     body { background: #fff; }
     .than { background: none; } .dai::before { display: none; } .dai .ten { color: var(--chu); }   /* v9: dải màu thanh bên không in */
     .max { max-width: none; padding: 0; }

@@ -4,6 +4,9 @@
 // Sắp đến hạn (còn ≤ 3 ngày), Đang thực hiện, Hoàn thành, Trước hạn; cách xếp mức như Tổng quan; bỏ 4 cột chất lượng. Bấm một số / một dòng → danh
 // sách việc mở rộng ngay dưới dòng; "Xem chi tiết" → ngăn chi tiết dùng chung (đủ chỉ đạo, Giao lại, Nhắc, minh chứng, diễn biến) mở ngay trên
 // trang, KHÔNG chuyển sang mục Nhiệm vụ. Ghi xong trong ngăn → bảng tự nạp lại (giữ hàng đang mở rộng).
+// v3.30 (chủ dự án 23/10/2026): xem theo kỳ — Tháng / Quý / Năm (mặc định) / Nhiệm kỳ hoặc từ ngày đến ngày, tính như Tổng quan (locTheoKy): việc chưa
+// hoàn thành tính tới hôm nay + việc hoàn thành trong kỳ; dải số, bốn bảng, danh sách khi bấm, In, Xuất Excel theo kỳ; "Việc cần lãnh đạo quyết định"
+// luôn là việc đang mở. Kỳ đang chọn giữ trong phiên. Bỏ dòng "Cách tính" (cách tính ghi ở Hướng dẫn sử dụng).
 import { $, escapeHtml } from '../../lib/dom.js';
 import { registerActions } from '../../lib/actions.js';
 import { state } from '../../lib/state.js';
@@ -13,14 +16,19 @@ import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl } from '../../lib/k
 import { sapXep } from '../../lib/kl/tong-hop.js';
 import { boSoThuTu, nguongCanhBao } from '../../lib/kl/nhan.js';
 import { formatNgay, homNayVN } from '../../lib/kl/ngay.js';
-import { cotBaoCao, demCot, locBaoCao, theoPhongChuyenMon, theoChuyenVien, theoNguon, theoVanBanBc } from '../../lib/kl/bao-cao.js';
+import { cotBaoCao, demCot, locBaoCao, locTheoKy, theoPhongChuyenMon, theoChuyenVien, theoNguon, theoVanBanBc } from '../../lib/kl/bao-cao.js';
+import { khoangKy, khoangTuyChon } from '../../lib/kl/tong-quan.js';
 import { setActiveNav, showSection } from '../shell/index.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { dongViecHtml } from '../shared/ngan-viec.js';
 import { datNguonDong, khiGhiTrongNgan } from '../shared/ngan-chi-tiet.js';
 
-let rowsHienTai = []; let hangMo = null; let hangMoLoc = '{}'; // hàng đang mở rộng (khoá hàng + bộ lọc của ô đã bấm)
+let rowsHienTai = []; let rowsKy = []; let hangMo = null; let hangMoLoc = '{}'; // mọi việc trong phạm vi; việc của kỳ đang xem; hàng đang mở rộng
+let kyBc = { ky: 'nam', tu: '', den: '' };   // kỳ đang xem (giữ trong phiên): nút nhanh, hoặc từ ngày / đến ngày (điền thì thay nút nhanh)
+const KY_NUT = ['thang', 'quy', 'nam', 'nhiem-ky'];
+const kyHienTai = () => (kyBc.tu || kyBc.den ? khoangTuyChon(kyBc.tu, kyBc.den, homNayVN()) : khoangKy(kyBc.ky, homNayVN()));
+const moTaKy = (k) => (k.ky === 'tuy-chon' ? k.trong.charAt(0).toUpperCase() + k.trong.slice(1) : `${k.ten} (${formatNgay(k.tu)} – ${formatNgay(k.den)})`);
 
 const ctx = () => ({ phongCua: Object.fromEntries((state.accounts || []).map((a) => [a.id, a.department])), tenPhong: DEPT_NAMES });
 const COT = () => cotBaoCao(nguongCanhBao().vang);
@@ -34,7 +42,7 @@ const khoaHangCua = (loc) => JSON.stringify(['b', 'phong', 'canBo', 'nguon', 'ke
 
 // Hàng mở rộng ngay dưới dòng đang chọn: danh sách việc theo bộ lọc của ô số vừa bấm (hoặc cả dòng).
 function hangMoRongHtml(loc) {
-  const ds = sapXep(locBaoCao(rowsHienTai, loc, ctx())); const homNay = homNayVN();
+  const ds = sapXep(locBaoCao(rowsKy, loc, ctx())); const homNay = homNayVN();
   return `<tr class="mo-rong" id="bcMoRong"><td colspan="${SO_COT}"><div class="nv-ds">${ds.length ? ds.map((r) => dongViecHtml(r, homNay)).join('') : '<p class="trong-nho">Không có việc nào.</p>'}</div></td></tr>`;
 }
 function dong(ten, phu, loc, rows, lop = '') {
@@ -66,22 +74,56 @@ function tyLe(rows) {
 }
 const khoi = (id, tieuDe, phu, than) => `<div class="bang" id="${id}"><div class="bang-dau"><h2>${tieuDe}</h2>${phu ? `<span class="chu-phu">${phu}</span>` : ''}</div><div class="bang-cuon">${than}</div></div>`;
 
-function ve() {
-  const d = demCot(rowsHienTai); const n = nguongCanhBao();
-  const o = (so, nhan, lop) => `<span class="o-so ${lop}"><b>${so}</b> ${nhan}</span>`;
+// Thanh chọn kỳ: nút nhanh (sáng khi không điền ngày) + từ ngày / đến ngày (như màn Thống kê sử dụng).
+function kyHtml() {
+  const h = homNayVN(); const tuy = Boolean(kyBc.tu || kyBc.den);
+  const nutKy = KY_NUT.map((ky) => `<button type="button" data-action="bcKy" data-ky="${ky}" aria-pressed="${String(!tuy && kyBc.ky === ky)}">${escapeHtml(khoangKy(ky, h).ten)}</button>`).join('');
+  const oNgay = (k, nhan) => `<label>${nhan} <input type="date" id="bc${k === 'tu' ? 'Tu' : 'Den'}" class="o-nhap nho" data-bc-ngay="${k}" min="2000-01-01" max="2100-12-31" value="${escapeHtml(kyBc[k])}"></label>`;
+  return `<div class="bc-ky" id="bcKy"><div class="pham-vi" role="group" aria-label="Kỳ báo cáo">${nutKy}</div>${oNgay('tu', 'Từ ngày')}${oNgay('den', 'Đến ngày')}</div>`;
+}
+
+// Khung (tiêu đề, nút, thanh kỳ) dựng một lần, không bao giờ dựng lại; đổi kỳ, nạp lại (Tải lại, mở lại màn, ghi trong ngăn, realtime) chỉ thay dòng
+// phụ đề, nhãn và nút đang chọn, phần số liệu — ô ngày đang gõ không bị thay (Chromium báo "change" ngay sau mỗi phím cho ra ngày hợp lệ: thay ô
+// giữa chừng thì mất tiêu điểm, phím sau rơi sai chỗ).
+function veKhung() {
   $('viewBaoCao').innerHTML = `
-    <div class="dau"><h1>Báo cáo</h1><span>${ngayDaiVN()}, phạm vi phụ trách của đồng chí, ${d.tong} nhiệm vụ</span>
+    <div class="dau"><h1>Báo cáo</h1><span id="bcKyMoTa"></span>
       <div class="phai-dau"><button type="button" class="nut nho" data-action="openBaoCao">Tải lại</button><button type="button" class="nut nho" id="bcXuatExcel" data-action="bcXuatExcel">Xuất Excel</button><button type="button" class="nut nho lam" data-action="inBaoCao">In / PDF</button></div></div>
-    <div class="tq" role="group" aria-label="Tổng quan">${o(d.tong, 'nhiệm vụ trong phạm vi', '')}${o(d.qua, 'quá hạn', 's-do')}${o(d.sap, `sắp đến hạn (còn ≤ ${n.vang} ngày)`, 's-vang')}
-      ${o(d.dang, 'đang thực hiện', 's-lam')}${o(d.xong, `hoàn thành · ${d.tong ? Math.round((d.xong / d.tong) * 100) : 0}%`, 's-luc')}${o(d.truoc, 'trước hạn', 's-luc')}${tyLe(rowsHienTai)}</div>
-    <p class="chu-phu bc-cach-tinh">Cách tính: Tổng số nhiệm vụ = quá hạn + sắp đến hạn + đang thực hiện + hoàn thành. Quá hạn, sắp đến hạn tính như Tổng quan (sắp đến hạn = còn ≤ ${n.vang} ngày mà chưa có minh chứng; việc khẩn trở lên ≤ ${n.khan} ngày). Đang thực hiện = nhiệm vụ chưa hoàn thành còn lại (còn trong hạn, chưa có hạn, thường xuyên). Trước hạn = nhiệm vụ hoàn thành trước hạn xử lý.</p>
+    ${kyHtml()}<div id="bcThan"></div>`;
+}
+function dongBoKy() {
+  const tuy = Boolean(kyBc.tu || kyBc.den); const h = homNayVN();
+  $('bcKy').querySelectorAll('[data-action="bcKy"]').forEach((b) => { b.textContent = khoangKy(b.dataset.ky, h).ten; b.setAttribute('aria-pressed', String(!tuy && kyBc.ky === b.dataset.ky)); });
+  $('bcKy').querySelectorAll('[data-bc-ngay]').forEach((o) => { const v = kyBc[o.dataset.bcNgay]; if (o !== document.activeElement && o.value !== v) o.value = v; });
+}
+function ve() {
+  if (!$('bcKy')) veKhung();
+  const k = kyHienTai(); rowsKy = locTheoKy(rowsHienTai, k);
+  const d = demCot(rowsKy); const n = nguongCanhBao();
+  const o = (so, nhan, lop) => `<span class="o-so ${lop}"><b>${so}</b> ${nhan}</span>`;
+  $('bcKyMoTa').textContent = `${ngayDaiVN()} · ${moTaKy(k)} · phạm vi phụ trách của đồng chí · ${d.tong} nhiệm vụ của kỳ`;
+  dongBoKy();
+  $('bcThan').innerHTML = `
+    <div class="tq" role="group" aria-label="Tổng quan">${o(d.tong, 'nhiệm vụ của kỳ', '')}${o(d.qua, 'quá hạn', 's-do')}${o(d.sap, `sắp đến hạn (còn ≤ ${n.vang} ngày)`, 's-vang')}
+      ${o(d.dang, 'đang thực hiện', 's-lam')}${o(d.xong, `hoàn thành · ${d.tong ? Math.round((d.xong / d.tong) * 100) : 0}%`, 's-luc')}${o(d.truoc, 'trước hạn', 's-luc')}${tyLe(rowsKy)}</div>
     <div>
       ${khoi('bcCanQuyet', 'Việc cần lãnh đạo quyết định', 'việc đang mở có vướng mắc hoặc đã xác định cấp cần quyết định', bangCanQuyet(rowsHienTai))}
-      ${khoi('bcTheoPhong', 'Theo phòng chuyên môn', 'phòng của cán bộ chủ trì theo dõi · bấm một số hoặc một dòng để xem việc ngay dưới', bangPhong(rowsHienTai))}
-      ${khoi('bcTheoChuyenVien', 'Theo chuyên viên thực hiện', 'mỗi phòng chuyên môn, từng cán bộ chủ trì theo dõi', bangChuyenVien(rowsHienTai))}
-      ${khoi('bcTheoNguon', 'Theo nguồn nhiệm vụ', '', bangNguon(rowsHienTai))}
-      ${khoi('bcTheoVanBan', 'Theo kết luận, văn bản giao việc', '', bangVanBan(rowsHienTai))}</div>`;
+      ${khoi('bcTheoPhong', 'Theo phòng chuyên môn', 'phòng của cán bộ chủ trì theo dõi · bấm một số hoặc một dòng để xem việc ngay dưới', bangPhong(rowsKy))}
+      ${khoi('bcTheoChuyenVien', 'Theo chuyên viên thực hiện', 'mỗi phòng chuyên môn, từng cán bộ chủ trì theo dõi', bangChuyenVien(rowsKy))}
+      ${khoi('bcTheoNguon', 'Theo nguồn nhiệm vụ', '', bangNguon(rowsKy))}
+      ${khoi('bcTheoVanBan', 'Theo kết luận, văn bản giao việc', '', bangVanBan(rowsKy))}</div>`;
 }
+// Đổi kỳ: nút nhanh xoá hai ô ngày; điền một ô ngày thì tính theo khoảng (trống một đầu: từ đầu dữ liệu / đến hôm nay). Gập hàng đang mở rộng.
+const bcKy = ({ ky }) => { if (!KY_NUT.includes(ky)) return; kyBc = { ky, tu: '', den: '' }; hangMo = null; ve(); };
+const oNgayCua = (e) => e.target.closest?.('#viewBaoCao [data-bc-ngay]');
+function khiDoiNgay(e) {
+  const o = oNgayCua(e);
+  if (!o) return;
+  if (o.value && !/^2\d{3}-\d{2}-\d{2}$/.test(o.value)) return;   // đang gõ năm (0002, 0020…): chờ gõ đủ năm; dữ liệu không có trước năm 2000 (ô min)
+  kyBc = { ...kyBc, [o.dataset.bcNgay]: o.value || '' }; hangMo = null; ve();
+}
+// Rời ô ngày còn năm gõ dở (không được tính) → trả ô về ngày đang tính, khỏi hiểu nhầm báo cáo theo ngày trên ô.
+function khiRoiNgay(e) { const o = oNgayCua(e); if (o && o.value !== kyBc[o.dataset.bcNgay]) o.value = kyBc[o.dataset.bcNgay]; }
 
 async function napBaoCao() {
   try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); rowsHienTai = (await loadKlRows()).rows; } catch (e) { notifyError(e.message); return; }
@@ -108,16 +150,18 @@ async function bcXuatExcel() {
     const { xuatBaoCao } = await import('../../lib/kl/xuat.js');
     const tenCot = COT().map(([, t]) => t); const so = (rows) => { const d = demCot(rows); return COT().map(([k]) => d[k]); };
     const bangX = (ten, ds) => ({ cot: [ten, ...tenCot], dong: ds.map((x) => [x.ten, ...so(x.rows)]) });
-    const cv = theoChuyenVien(rowsHienTai, ctx()).flatMap((p) => [[p.ten, 'Cả phòng', ...so(p.rows)], ...p.canBo.map((c) => [p.ten, c.ten, ...so(c.rows)])]);
-    const rowsQua = sapXep(locBaoCao(rowsHienTai, { cot: 'qua' }));
-    const ten = xuatBaoCao({ theoPhong: bangX('Phòng chuyên môn', theoPhongChuyenMon(rowsHienTai, ctx())), theoChuyenVien: { cot: ['Phòng chuyên môn', 'Chuyên viên thực hiện', ...tenCot], dong: cv },
-      theoNguon: bangX('Nguồn nhiệm vụ', theoNguon(rowsHienTai, danhMucKl().nguonNhiemVu || [])), rowsQuaHan: rowsQua });
+    const cv = theoChuyenVien(rowsKy, ctx()).flatMap((p) => [[p.ten, 'Cả phòng', ...so(p.rows)], ...p.canBo.map((c) => [p.ten, c.ten, ...so(c.rows)])]);
+    const rowsQua = sapXep(locBaoCao(rowsKy, { cot: 'qua' })); const k = kyHienTai(); const tuTrong = Boolean(kyBc.den) && !kyBc.tu;   // chỉ điền "Đến ngày"
+    const ten = xuatBaoCao({ ky: { ten: moTaKy(k), tu: tuTrong ? '' : k.tu, den: k.den }, phamVi: 'Phạm vi phụ trách của người xuất', nguoi: `${state.user?.full_name || ''} (${state.user?.username || ''})`,
+      theoPhong: bangX('Phòng chuyên môn', theoPhongChuyenMon(rowsKy, ctx())), theoChuyenVien: { cot: ['Phòng chuyên môn', 'Chuyên viên thực hiện', ...tenCot], dong: cv },
+      theoNguon: bangX('Nguồn nhiệm vụ', theoNguon(rowsKy, danhMucKl().nguonNhiemVu || [])), rowsQuaHan: rowsQua });
     notifySuccess(`Đã xuất báo cáo ra tệp ${ten}.`);
   } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
 }
 
 export function registerBaoCao() {
-  registerActions({ openBaoCao, inBaoCao: () => window.print(), bcMoRong, bcXuatExcel });
+  registerActions({ openBaoCao, inBaoCao: () => window.print(), bcMoRong, bcXuatExcel, bcKy });
+  document.addEventListener('change', khiDoiNgay); document.addEventListener('focusout', khiRoiNgay);
   datNguonDong((id) => rowsHienTai.find((r) => r.id === id));
   khiGhiTrongNgan('viewBaoCao', napBaoCao);
 }

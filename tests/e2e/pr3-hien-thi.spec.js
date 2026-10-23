@@ -59,6 +59,8 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
       await expect(p.locator('#bcTheoPhong thead')).toContainText('Trước hạn', NAP);
       for (const t of ['Không đạt', 'Đạt tốt', 'Đạt xuất sắc']) await expect(p.locator('#bcTheoPhong thead')).not.toContainText(t);   // v3.29
       await expect(p.locator('#bcTheoChuyenVien thead')).toContainText(/Sắp đến hạn \(còn ≤ \d+ ngày\)/);
+      // v3.30: Báo cáo theo kỳ, mặc định năm — T1 hoàn thành 8 ngày trước (1–8/1 thì thuộc năm trước) → xem cả nhiệm kỳ.
+      await p.locator('#bcKy [data-ky="nhiem-ky"]').click();
       await expect(p.locator('#bcTheoNguon')).toContainText('Chương trình công tác năm');
       await nav(p, 'navTheoVanBan');
       await expect(p.locator('#tvbCay')).toHaveAttribute('data-nap', /./, NAP);

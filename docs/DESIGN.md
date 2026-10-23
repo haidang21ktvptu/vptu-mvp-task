@@ -265,7 +265,8 @@ mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại
 | Đỏ | quá hạn dưới 3 ngày | Quá hạn < 3 ngày |
 | Đỏ đặc biệt | quá hạn từ 3 ngày trở lên | Quá hạn ≥ 3 ngày |
 
-- Tên Vàng / Đỏ / Đỏ đặc biệt chỉ còn ở **chú giải màu** và câu "Cách tính", luôn sau nghĩa: "Quá hạn dưới 3 ngày (mức Đỏ)".
+- Tên Vàng / Đỏ / Đỏ đặc biệt chỉ còn ở **chú giải màu**, luôn sau nghĩa: "Quá hạn dưới 3 ngày (mức Đỏ)". v3.30 (chủ dự án 23/10/2026): **không ghi dòng "Cách tính"** trên màn hình (Tổng quan, khối Giải ngân vốn, Báo cáo) cho đỡ rối mắt — cách tính ghi ở Hướng dẫn sử dụng.
+- Báo cáo (v3.30): thanh **kỳ** dưới tiêu đề — nhóm nút `.pham-vi` (Tháng · Quý · Năm · Nhiệm kỳ, nút đang chọn nền xanh đậm) + "Từ ngày" / "Đến ngày" (ô ngày `o-nhap nho`, như màn Thống kê sử dụng); điền ngày thì không nút nào sáng; kỳ ghi ở dòng phụ đề (in cùng trang), thanh kỳ không in; màn ≤ 860 px nhóm nút xuống dòng.
 - Con số luôn kèm danh từ: "8 nhiệm vụ sắp đến hạn (còn ≤ 3 ngày), 0 nhiệm vụ quá hạn dưới 3 ngày, 5 nhiệm vụ quá hạn từ 3 ngày trở lên"; tỷ lệ ghi mẫu
   số ("21% số nhiệm vụ đang thực hiện"); các phần của một ô cộng đủ số của ô.
 - Nơi gộp Đỏ + Đỏ đặc biệt (tải việc cán bộ, nhãn văn bản, Báo cáo) ghi "quá hạn".

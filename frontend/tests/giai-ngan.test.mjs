@@ -5,6 +5,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { soVN, soCoDau, ptVN, tyLe, namHienThi, canDatTai, mucGiaiNgan, nhanMuc, moTaMuc, kiemTraKy, lechTong, tongHopNam, soCuaNhiemVu, mucCuaNhiemVu,
   dienBienDoiTuong, viecTheoDoi, duoiMucChung, nguoiNhap, duocNhapKy } from '../src/lib/kl/giai-ngan.js';
+import { giaiNganHtml } from '../src/views/shared/tong-quan/giai-ngan.js';
 import { docSo, doanKieuSo, bangTuChu, bangTuChuPdf, bangTuHtml, bangTuDan, doanCot, nhanCot, docBang, goiYDonVi, donViTheoChu, dongTong, tenGon, tenChuan, khopTen, laDongChiSo }
   from '../src/lib/kl/giai-ngan-bang.js';
 
@@ -140,6 +141,12 @@ describe('kiểm tra kỳ và tổng hợp năm', () => {
   test('năm chưa có kỳ: chưa có số liệu, không lỗi', () => {
     const th = tongHopNam({ nam: NAM, ky: [], dong: [], gan: [] }, '2026-10-21');
     assert.equal(th.moi, null); assert.equal(th.muc.muc, 'CHUA_CO'); assert.deepEqual(th.diem, []); assert.deepEqual(th.canhBao, []);
+  });
+  test('khối Tổng quan có số liệu: vẽ đủ bảng, nhiệm vụ theo dõi; v3.30 không còn dòng "Cách tính" (chủ dự án 23/10/2026)', () => {
+    const rows = [{ id: 'ban', ma: 'NV-2' }, { id: 'tt', ma: 'NV-1' }, { id: 'hoa-an', ma: 'NV-3' }];
+    const html = giaiNganHtml({ nam: NAM, ky: KY, dong: DONG, gan: GAN }, { rows, tatCa: rows, homNay: '2026-08-05', user: { role_group: 'A1' } });
+    assert.match(html, /Giải ngân vốn đầu tư công năm 2026/); assert.match(html, /Vốn kế hoạch năm 2026/); assert.match(html, /NV-3/);
+    assert.doesNotMatch(html, /Cách tính/);
   });
 });
 

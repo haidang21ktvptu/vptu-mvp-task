@@ -5,7 +5,8 @@
 // Tổng = Quá hạn + Sắp đến hạn + Đang thực hiện + Hoàn thành; Trước hạn thuộc Hoàn thành.
 // Phòng chuyên môn của một việc = phòng của cán bộ chủ trì theo dõi (danh bạ), không thì phòng của đơn vị chủ trì; việc giao chung cho Văn phòng và
 // việc do cơ quan, đơn vị ngoài Văn phòng chủ trì mỗi loại một dòng cuối.
-import { laXong, mucMo } from './tong-quan.js';
+// v3.30 (chủ dự án 23/10/2026): xem theo kỳ (tháng, quý, năm, nhiệm kỳ, từ ngày đến ngày) — tính NHƯ TỔNG QUAN (locTheoKy).
+import { laXong, laMo, mucMo, xongTrongKy } from './tong-quan.js';
 import { CHUA_CO_NGUON } from './tong-hop.js';
 
 export const cotBaoCao = (vang = 3) => [['tong', 'Tổng số nhiệm vụ'], ['qua', 'Quá hạn'], ['sap', `Sắp đến hạn (còn ≤ ${vang} ngày)`], ['dang', 'Đang thực hiện'],
@@ -22,6 +23,9 @@ export function demCot(rows) {
   rows.forEach((r) => { d[cotCua(r)] += 1; if (laTruocHan(r)) d.truoc += 1; });
   return d;
 }
+// Việc của kỳ, như Tổng quan: mọi việc chưa hoàn thành (quá hạn, sắp đến hạn, đang thực hiện — tính tới hôm nay) + việc hoàn thành trong kỳ (chưa rõ
+// ngày hoàn thành → theo ngày giao). k = khoangKy / khoangTuyChon (tong-quan.js); không có k → mọi việc.
+export const locTheoKy = (rows, k) => (k ? rows.filter((r) => laMo(r) || xongTrongKy(r, k)) : rows);
 export const locCot = (rows, cot) => (!cot || cot === 'tong' ? rows : cot === 'truoc' ? rows.filter(laTruocHan) : rows.filter((r) => cotCua(r) === cot));
 
 export const PHONG_CHUNG = 'VAN_PHONG'; export const PHONG_NGOAI = 'NGOAI';

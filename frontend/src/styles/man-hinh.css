@@ -34,10 +34,11 @@
   .nv-dong p { font-size: 14px; min-width: 0; } .nv-dong p b { font-weight: 700; } .nv-dong small { display: block; font-size: 12px; color: var(--chu-phu); }
   .nv-ds { padding: 4px 8px 8px; }
   .bc-hang { cursor: pointer; } .bc-hang:hover { background: var(--nen-phu); } .bc-hang.dang { background: var(--lam-nhat); }
-  /* v3.29: bảng "Theo chuyên viên thực hiện" — dòng phòng đậm, dòng cán bộ thụt vào; câu cách tính dưới dải số */
+  /* v3.29: bảng "Theo chuyên viên thực hiện" — dòng phòng đậm, dòng cán bộ thụt vào */
   .bc-hang.bc-phong td.tieude { font-weight: 700; } .bc-hang.bc-phong { background: var(--nen-phu); }
   .bc-hang.bc-con td.tieude { padding-left: 28px; }
-  .bc-cach-tinh { margin: 8px 0 0; }
+  .bc-ky { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }   /* v3.30: kỳ báo cáo (như .tk-loc, màn Thống kê) */
+  .bc-ky label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--chu-phu); white-space: nowrap; }
   .mo-rong > td { background: var(--nen-phu); padding: 6px 12px 10px; }
 
   /* ---- Nhắn tin ---- */
@@ -102,5 +103,6 @@
     .bang td[data-nhan]::before { content: attr(data-nhan) ": "; color: var(--chu-phu); font-size: 12px; }
     .bang td.so, .bang td.phai { text-align: left; }
     .thao-tac { justify-content: flex-start; padding-top: 6px; }
+    .bc-ky .pham-vi { flex-wrap: wrap; border-radius: 12px; max-width: 100%; }   /* 375px: nút kỳ xuống dòng, không tràn ngang */
   }
 }

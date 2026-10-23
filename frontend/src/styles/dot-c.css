@@ -17,9 +17,8 @@
   .tq-loc .tq-loc-bo:disabled { color: var(--chu-phu); text-decoration: none; }
   .tq-dang-loc { font-size: 12.5px; color: var(--chu-phu); flex-basis: 100%; }
 
-  /* Hero: tỷ lệ % nhỏ dưới số, dòng quy tắc một câu. */
+  /* Hero: tỷ lệ % nhỏ dưới số (v3.30: bỏ dòng quy tắc / "Cách tính"). */
   .hung-so .ty-le { font-size: 12.5px; font-weight: 600; opacity: .85; }
-  .hung-quy-tac { margin: 10px 0 0; font-size: 12.5px; opacity: .8; }
 
   /* Lưới khối: thêm khối n5 / n7 theo vai nên cho phép lấp chỗ trống (dense) — khối sau vừa chỗ thì lên lấp, không để ô trắng. */
   .luoi-tq { grid-auto-flow: row dense; }

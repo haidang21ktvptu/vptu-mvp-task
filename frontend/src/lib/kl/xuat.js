@@ -1,9 +1,9 @@
 // Xuất Excel (PR-3 G): cột TƯỜNG MINH, giá trị đọc từ chính dòng v_nhiem_vu đang hiện (RLS đã giới hạn — A3 chỉ xuất việc của mình).
-// Nạp động cùng lib/xlsx.js khi bấm nút (không tăng bundle lúc mở app). Tên tệp theo ngày Việt Nam: vptu-nhiem-vu-<yyyymmdd>.xlsx,
-// vptu-bao-cao-<yyyymmdd>.xlsx.
+// Nạp động cùng lib/xlsx.js khi bấm nút (không tăng bundle lúc mở app). Tên tệp theo ngày Việt Nam: vptu-nhiem-vu-<yyyymmdd>.xlsx;
+// Báo cáo theo kỳ: vptu-bao-cao-<ngày xuất>_<từ ngày>-<đến ngày>.xlsx (tenTepBaoCao).
 import { taoXlsx, taiXuong } from '../xlsx.js';
 import { DEPT_NAMES } from '../constants.js';
-import { homNayVN } from './ngay.js';
+import { homNayVN, formatNgay } from './ngay.js';
 import { tenNhom, tenChatLuong, tenTienDoHoanThanh, boSoThuTu } from './nhan.js';
 import { ngayGiao } from './tong-quan.js';
 import { phanLoaiTheoKy, tongHopTheoKy } from './ky.js';
@@ -49,10 +49,21 @@ export function xuatNhiemVu(rows) {
 // Báo cáo A1 (v3.29): theo phòng chuyên môn, theo chuyên viên (cột tên: phòng + cán bộ), theo nguồn (mỗi bảng: { cot: [tên cột], dong: [[...]] } đã tính ở
 // màn Báo cáo, cùng sáu cột số) + danh sách quá hạn (cột của màn Nhiệm vụ, bỏ cột Chất lượng — Báo cáo không còn xếp loại chất lượng).
 const COT_QUA_HAN = COT_NHIEM_VU.filter((c) => c.nhan !== 'Chất lượng');
-export function xuatBaoCao({ theoPhong, theoChuyenVien, theoNguon, rowsQuaHan }) {
+// v3.30 — Báo cáo theo kỳ. ky = { ten, tu, den } của kỳ đang xem (tu rỗng: chỉ điền "Đến ngày" — từ đầu dữ liệu). Tên tệp gồm ngày xuất và khoảng ngày
+// (cùng kỳ xuất ở hai ngày không trùng tên: quá hạn, đang thực hiện tính tới ngày xuất): vptu-bao-cao-<ngày xuất>_<từ>-<đến>.xlsx, không có "từ" →
+// …_den-<đến>.xlsx. Sheet đầu "Kỳ báo cáo" ghi kỳ, khoảng ngày, ngày tính số liệu, phạm vi, người xuất, giờ xuất.
+const soNgay = (d) => d.replace(/-/g, '');
+export const tenTepBaoCao = (ky, ngayXuat) => `vptu-bao-cao-${soNgay(ngayXuat)}_${ky.tu ? soNgay(ky.tu) : 'den'}-${soNgay(ky.den)}.xlsx`;
+export const sheetKyBaoCao = (ky, { phamVi = '', nguoi = '', ngayXuat, luc = '' }) => ({ ten: 'Kỳ báo cáo', cot: [{ nhan: 'Mục', rong: 18 }, { nhan: 'Giá trị', rong: 90 }],
+  dong: [['Kỳ', ky.ten], ['Từ ngày', ky.tu ? formatNgay(ky.tu) : 'Từ đầu dữ liệu'], ['Đến ngày', formatNgay(ky.den)],
+    ['Số liệu tính tới', `${formatNgay(ngayXuat)} — quá hạn, sắp đến hạn, đang thực hiện tính tới ngày này; hoàn thành tính trong kỳ`],
+    ['Phạm vi', phamVi], ['Người xuất', nguoi], ['Xuất lúc', luc]] });
+export function xuatBaoCao({ ky, phamVi = '', nguoi = '', theoPhong, theoChuyenVien, theoNguon, rowsQuaHan }) {
   const tuBang = (ten, b, soCotChu = 1) => ({ ten, cot: b.cot.map((nhan, i) => ({ nhan, rong: i < soCotChu ? 36 : 14 })), dong: b.dong });
-  const ten = `vptu-bao-cao-${ngayTep()}.xlsx`;
-  taiXuong(ten, taoXlsx([tuBang('Theo phòng chuyên môn', theoPhong), tuBang('Theo chuyên viên', theoChuyenVien, 2), tuBang('Theo nguồn', theoNguon),
+  const ngayXuat = homNayVN(); const luc = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const ten = ky ? tenTepBaoCao(ky, ngayXuat) : `vptu-bao-cao-${ngayTep()}.xlsx`;
+  const thongTin = ky ? [sheetKyBaoCao(ky, { phamVi, nguoi, ngayXuat, luc })] : [];
+  taiXuong(ten, taoXlsx([...thongTin, tuBang('Theo phòng chuyên môn', theoPhong), tuBang('Theo chuyên viên', theoChuyenVien, 2), tuBang('Theo nguồn', theoNguon),
     bang('Danh sách quá hạn', COT_QUA_HAN, rowsQuaHan)]));
   return ten;
 }
