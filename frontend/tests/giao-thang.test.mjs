@@ -2,7 +2,7 @@
 // Dữ liệu hư cấu. Chạy `npm test` trong frontend/ (node:test).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canBoOwner, ownerOptionsHtml, laGiaoThang } from '../src/views/shared/kl/them-owner.js';
+import { canBoOwner, ownerOptionsHtml, laGiaoThang, theoDoiTheoChuTri } from '../src/views/shared/kl/them-owner.js';
 
 const CVP = { id: 'cvp', full_name: 'Hoàng Văn Bình', role_group: 'A1', is_chief: true, department: 'LANH_DAO_VAN_PHONG' };
 const TP = { id: 'tp', full_name: 'Đàm Văn Khánh', role_group: 'A2', department: 'TONG_HOP' };
@@ -43,4 +43,15 @@ test('v3.21.1: chuyên viên KHÔNG có cờ quản trị KL (mọi tài khoản
 test('lãnh đạo không đổi: Trưởng phòng = chuyên viên phòng mình + chính mình; Chánh VP = mọi cán bộ', () => {
   assert.deepEqual(ids(canBoOwner(DS, TP)), ['cv', 'tp']);
   assert.deepEqual(ids(canBoOwner(DS, CVP)), ['cv', 'cv2', 'cvp', 'tp']);
+});
+
+test('v3.31 (0128): người đại diện gửi kèm khi giao cho phòng / Văn phòng — Trưởng phòng không khoá (theo tên đăng nhập), Chánh VP; cán bộ / đơn vị ngoài: không gửi', () => {
+  const tpKhoa = { id: 'tp0', username: 'a_tp_cu', role_group: 'A2', department: 'TONG_HOP', bi_khoa: true };
+  const ds = [{ ...CVP, username: 'cvp' }, { ...TP, username: 'tp' }, tpKhoa, CV, CV2, TT, HT];
+  const dm = { donVi: [...DM.donVi, { ma: 'QUAN_TRI', trong_van_phong: true, phong: 'QUAN_TRI' }, { ma: 'SO_TAI_CHINH', trong_van_phong: false, phong: null }] };
+  assert.equal(theoDoiTheoChuTri('dv:TONG_HOP', dm, ds), 'tp', 'bỏ tài khoản khoá dù tên đăng nhập xếp trước');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds), 'cvp');
+  assert.equal(theoDoiTheoChuTri('dv:QUAN_TRI', dm, ds), null, 'phòng chưa có Trưởng phòng: không gửi (người giao)');
+  assert.equal(theoDoiTheoChuTri('dv:SO_TAI_CHINH', dm, ds), null);
+  assert.equal(theoDoiTheoChuTri('tk:cv', dm, ds), null); assert.equal(theoDoiTheoChuTri('', dm, ds), null); assert.equal(theoDoiTheoChuTri(null, dm, ds), null);
 });

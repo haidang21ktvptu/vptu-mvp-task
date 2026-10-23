@@ -43,7 +43,7 @@ describe('0078 — giao cho chính mình, giao nhiều nhiệm vụ từ một v
     assertOk(await giao('demo_cvp', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', owner_tai_khoan: IDS.cvp }), 'Chánh VP tự giao');
   });
 
-  test('3. giao_viec_nhieu: 3 dòng (cv1, chính mình, cv1) — một văn bản mới, ba việc, dòng ghi đè phần chung, cấp nhận từng dòng, theo dõi chung', async () => {
+  test('3. giao_viec_nhieu: 3 dòng (cv1, chính mình, cv1) — một văn bản mới, ba việc, dòng ghi đè phần chung, cấp nhận từng dòng, theo dõi = chủ trì từng dòng (v3.31)', async () => {
     const r = await nhieu('demo_truongphong', { nguoi_theo_doi: IDS.cv1, do_khan: 'KHAN' }, [
       { noi_dung: `${KHOA} nhiều 1`, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, san_pham_loai: 'BAO_CAO', han_xu_ly: '2026-11-30' },
       { noi_dung: `${KHOA} nhiều 2 (tự)`, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.truongphong, cap_nhan_san_pham: 'PHO_CHANH_VAN_PHONG', han_xu_ly: '2026-12-15' },
@@ -51,7 +51,8 @@ describe('0078 — giao cho chính mình, giao nhiều nhiệm vụ từ một v
     assertOk(r, 'giao 3 việc');
     assert.equal(r.data.so, 3); assert.deepEqual(r.data.viec.map((x) => x.dong), [1, 2, 3]); assert.ok(r.data.viec.every((x) => /^NV-/.test(x.ma)));
     const vs = await Promise.all(r.data.viec.map((x) => doc(x.id)));
-    assert.ok(vs.every((v) => v.van_ban_id === r.data.van_ban_id && v.nguoi_theo_doi === IDS.cv1 && v.do_khan === 'KHAN'), 'cùng văn bản, theo dõi và độ khẩn chung');
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì từng dòng — tham số theo dõi chung (cv1) bị ghi đè; dòng 2 (Trưởng phòng tự giao) = Trưởng phòng
+    assert.ok(vs.every((v) => v.van_ban_id === r.data.van_ban_id && v.nguoi_theo_doi === v.owner_tai_khoan && v.do_khan === 'KHAN'), 'cùng văn bản, độ khẩn chung; theo dõi = chủ trì');
     assert.deepEqual(vs.map((v) => [v.owner_tai_khoan, v.san_pham_loai, v.han_xu_ly, v.cap_nhan_san_pham]),
       [[IDS.cv1, 'BAO_CAO', '2026-11-30', 'TRUONG_PHONG'], [IDS.truongphong, 'TO_TRINH', '2026-12-15', 'PHO_CHANH_VAN_PHONG'], [IDS.cv1, 'TO_TRINH', '2026-12-31', 'TRUONG_PHONG']]);
     const so = await db().from('van_ban_giao_viec').select('id').eq('so_ket_luan', `${KHOA} #${dem}`);

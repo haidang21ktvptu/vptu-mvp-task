@@ -5,7 +5,7 @@ import { $ } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { parseOwner } from '../kl/them-owner.js';
+import { parseOwner, theoDoiTheoChuTri } from '../kl/them-owner.js';
 import { loiNguon, docNguon, docVanBanThem } from './nguon.js';
 import { themHoanThien } from './dien-san.js';
 import { getHomNay, laA0, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
@@ -56,13 +56,15 @@ export function docForm(cha) {
     van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThLvct').value.trim() || null,   // v3.27: ô của thẻ 1
     ...docThongTinNguon(),   // Đợt C2: phần chung của lượt (tachDong để ở chung)
   });
+  const td = theoDoiTheoChuTri($('klThOwner').value, danhMucKl(), state.accounts);   // v3.31: giao cho phòng / Văn phòng — người nhận tin giao (không hiện)
+  if (td) p.nguoi_theo_doi = td;
   if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;
   return themHoanThien(p);
 }
 
 // Có thẻ thêm → giao_viec_nhieu(p_chung, p_dong): tách docForm thành phần chung (văn bản, nguồn, thay mặt, ngày giao, cấp quyết định, văn bản triển
 // khai, ghi chú, theo_1400) và dòng 1 = các khoá của thẻ nhiệm vụ (cùng khoá với nhieu.js docDong cho thẻ 2…n).
-const KHOA_DONG = ['noi_dung', 'owner_don_vi_ma', 'owner_tai_khoan', 'do_khan', 'san_pham_loai', 'san_pham_mo_ta', 'cap_nhan_san_pham',
+const KHOA_DONG = ['noi_dung', 'owner_don_vi_ma', 'owner_tai_khoan', 'nguoi_theo_doi', 'do_khan', 'san_pham_loai', 'san_pham_mo_ta', 'cap_nhan_san_pham',
   'loai_thoi_han_ma', 'han_xu_ly', 'nganh_ma', 'linh_vuc_ma', 'don_vi_phoi_hop', 'dong_nhap_id', 'vuong_mac', 'co_quan_trinh', 'linh_vuc_chi_tiet'];   // v3.27: + cơ quan trình, lĩnh vực chi tiết theo thẻ
 export function tachDong(p) {
   const chung = { ...p }; const dong1 = {};

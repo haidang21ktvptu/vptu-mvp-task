@@ -2,6 +2,7 @@
 // người giao, không áp GV-3, tin giao tới Owner; phòng / lãnh đạo / đơn vị ngoài bị chặn (0095: ghi thay mặt thành quyền chung — kl-0095); tầng giao = chuyên viên tạo việc (sửa thông tin
 // giao, cấp duyệt đề nghị sửa); phạm vi thấy việc của các vai; cấu hình xac_nhan_nhan_viec = 2 → trigger ghi "đã nhận" cho Owner và người theo dõi
 // (giao_viec, giao lại), viec_moi = 0, từ chối không còn. Khoá "KL-0085"; cấu hình và cờ quan_tri_kl (cv2, cấp tạm ở test 7) khôi phục; tự dọn.
+// v3.31 (0128): người theo dõi (nội bộ) luôn = chủ trì — không còn "ép = người giao"; các khẳng định liên quan đổi theo (ghi chú tại chỗ).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, IDS } from './lib.mjs';
@@ -33,13 +34,14 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
   after(async () => { await don(); await datCauHinh(cauHinhCu); });
   let nv1;
 
-  test('1. cv1 (Tổng hợp) giao thẳng cho cv2 (Quản trị — khác phòng, khác khối): theo dõi ép = cv1 dù gửi người khác; không thay mặt; cấp nhận Trưởng phòng; tin tới cv2; lich_su giao_viec', async () => {
+  test('1. cv1 (Tổng hợp) giao thẳng cho cv2 (Quản trị — khác phòng, khác khối): theo dõi (nội bộ) = chủ trì cv2, không theo người giao / tham số gửi kèm (v3.31); không thay mặt; cấp nhận Trưởng phòng; tin tới cv2; lich_su giao_viec', async () => {
     const r = await giao('demo_cv1', { owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.truongphong });
     assertOk(r, 'cv1 giao thẳng'); nv1 = r.data.id;
-    assert.deepEqual(await doc(nv1), { tao_boi: IDS.cv1, nguoi_theo_doi: IDS.cv1, owner_tai_khoan: IDS.cv2, owner_don_vi_ma: 'QUAN_TRI', giao_thay_mat_cho: null, giao_thay_mat_nhom: null, uu_tien: null, do_khan: 'THUONG', cap_nhan_san_pham: 'TRUONG_PHONG' });
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì cv2 — không còn ép = người giao cv1; tham số theo dõi (Trưởng phòng) bị ghi đè
+    assert.deepEqual(await doc(nv1), { tao_boi: IDS.cv1, nguoi_theo_doi: IDS.cv2, owner_tai_khoan: IDS.cv2, owner_don_vi_ma: 'QUAN_TRI', giao_thay_mat_cho: null, giao_thay_mat_nhom: null, uu_tien: null, do_khan: 'THUONG', cap_nhan_san_pham: 'TRUONG_PHONG' });
     assert.deepEqual(await nguoiNhanTin(nv1), [IDS.cv2], 'tin giao tới Owner (độ khẩn Thường vẫn báo)');
     const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', nv1).eq('cot', 'giao_viec').single()).data;
-    assert.match(ls.gia_tri_moi, /^Chuyên viên .* giao, người theo dõi là người giao$/);
+    assert.match(ls.gia_tri_moi, /^Chuyên viên .* giao, người theo dõi là người giao$/);   // câu lịch sử của giao_viec (0085) giữ nguyên — 0128 không sửa giao_viec
     assert.deepEqual(await daNhan(nv1), [], 'cấu hình 1: chưa ai nhận');
   });
 
@@ -58,8 +60,9 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
     ]) { const r = await giao('demo_cv1', p); ma(r, '42501', label); loi(r, re, label); }
   });
 
-  test('4. phạm vi: cv1 (theo dõi) và cv2 (Owner) thấy; Trưởng phòng Tổng hợp (phòng theo dõi) và PCVP2 (khối Quản trị, phòng Owner) thấy; PCVP khối Tổng hợp thấy (phòng theo dõi)', async () => {
-    for (const [u, mong] of [['demo_cv1', true], ['demo_cv2', true], ['demo_truongphong', true], ['demo_pcvp2', true], ['demo_pcvp', true]]) assert.equal(await thay(u, nv1), mong, `${u} thấy việc`);
+  test('4. phạm vi: cv1 (người giao — người nhập, 0096) và cv2 (Owner) thấy; PCVP2 (khối Quản trị, phòng Owner) thấy; v3.31: Trưởng phòng, PCVP khối Tổng hợp (phòng người giao) không thấy', async () => {
+    // v3.31 (0128): người theo dõi = chủ trì cv2 (Quản trị) — phòng Tổng hợp của người giao không còn là "phòng theo dõi"; cv1 thấy nhờ tao_boi (0096)
+    for (const [u, mong] of [['demo_cv1', true], ['demo_cv2', true], ['demo_truongphong', false], ['demo_pcvp2', true], ['demo_pcvp', false]]) assert.equal(await thay(u, nv1), mong, `${u} thấy việc`);
   });
 
   test('5. tầng giao: cv1 sửa thông tin giao được; cv2 (Owner) không; đề nghị sửa của cv2 → cấp duyệt = cv1, cv1 được đếm và duyệt', async () => {
@@ -74,13 +77,14 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
     assert.equal((await db().from('nhiem_vu').select('san_pham_mo_ta').eq('id', nv1).single()).data.san_pham_mo_ta, 'Báo cáo tổng hợp');
   });
 
-  test('6. cấu hình 2: giao mới → Owner và người theo dõi tự động "đã nhận", viec_moi của Owner = 0, tin tới Owner dù Trưởng phòng giao độ khẩn Thường; giao lại → chủ trì mới tự nhận; từ chối bị chặn; cấu hình 1 → việc cũ vẫn chờ nhận', async () => {
+  test('6. cấu hình 2: giao mới → Owner (= người theo dõi nội bộ, v3.31) tự động "đã nhận", viec_moi của Owner = 0, tin tới Owner dù Trưởng phòng giao độ khẩn Thường; giao lại → chủ trì mới tự nhận; từ chối bị chặn; cấu hình 1 → việc cũ vẫn chờ nhận', async () => {
     assertOk(await datCauHinh('2'), 'đặt cấu hình 2');
     const cv1 = await userClient('demo_cv1');
     const viecMoiTruoc = Number((await cv1.rpc('kl_so_chua_xu_ly')).data?.viec_moi);
     const r = await giao('demo_truongphong', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
     assertOk(r, 'Trưởng phòng giao cv1');
-    assert.deepEqual(await daNhan(r.data.id), [IDS.cv1, IDS.truongphong].sort(), 'Owner + theo dõi (= Trưởng phòng) tự nhận');
+    // v3.31 (0128): người theo dõi = chủ trì cv1 — Trưởng phòng (người giao) không còn là người theo dõi nên không tự "đã nhận"
+    assert.deepEqual(await daNhan(r.data.id), [IDS.cv1], 'chỉ Owner (= theo dõi nội bộ) tự nhận');
     const v = (await db().from('v_nhiem_vu').select('da_xac_nhan_nhan, nguoi_da_nhan').eq('id', r.data.id).single()).data;
     assert.ok(v.da_xac_nhan_nhan && v.nguoi_da_nhan.includes(IDS.cv1), 'v_nhiem_vu đọc được trạng thái đã nhận');
     assert.ok((await nguoiNhanTin(r.data.id)).includes(IDS.cv1), 'cấu hình 2: Owner luôn có tin giao');
@@ -93,12 +97,13 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
     assertOk(await datCauHinh('1'), 'về cấu hình 1');
     const r2 = await giao('demo_truongphong', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
     assertOk(r2, 'giao dưới cấu hình 1');
-    assert.deepEqual(await daNhan(r2.data.id), [IDS.truongphong], 'cấu hình 1: chỉ lãnh đạo (người theo dõi) đã nhận tự động (0090); chuyên viên chờ xác nhận');
+    // v3.31 (0128): Trưởng phòng giao không còn là người theo dõi (= chủ trì cv1) ⇒ không ai "đã nhận" tự động (trước: Trưởng phòng theo dõi, 0090)
+    assert.deepEqual(await daNhan(r2.data.id), [], 'cấu hình 1: chuyên viên chủ trì chờ xác nhận, không ai tự nhận');
     const v2 = (await db().from('v_nhiem_vu').select('da_xac_nhan_nhan, khau').eq('id', r2.data.id).single()).data;
-    assert.equal(v2.da_xac_nhan_nhan, false, '0094: "đã nhận" tự động của lãnh đạo chỉ theo dõi không thay chủ trì nhận việc');
+    assert.equal(v2.da_xac_nhan_nhan, false, 'chủ trì chưa xác nhận → việc chưa nhận');
   });
 
-  test('7. quản trị KL (cv2 cấp tạm) không chọn thay mặt → giao thẳng (phòng bị chặn); có thay mặt → như trước; giao_viec_nhieu của chuyên viên: hai dòng cùng theo dõi = người giao', async () => {
+  test('7. quản trị KL (cv2 cấp tạm) không chọn thay mặt → giao thẳng (phòng bị chặn); có thay mặt → như trước; giao_viec_nhieu của chuyên viên: theo dõi (nội bộ) = chủ trì từng dòng (v3.31)', async () => {
     assertOk(await db().from('accounts').update({ quan_tri_kl: true }).eq('id', IDS.cv2), 'cấp quan_tri_kl tạm');
     ma(await giao('demo_cv2', { owner_don_vi_ma: 'TONG_HOP' }), '42501', 'quản trị KL không thay mặt giao phòng');
     assertOk(await giao('demo_cv2', { owner_don_vi_ma: 'TONG_HOP', thay_mat_cho: IDS.cvp, nguoi_theo_doi: IDS.truongphong }), 'quản trị KL thay mặt Chánh VP giao phòng');
@@ -107,6 +112,8 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
       p_dong: [{ noi_dung: `${KHOA} nhiều 1`, owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, san_pham_loai: 'BAO_CAO', han_xu_ly: '2026-12-31' },
         { noi_dung: `${KHOA} nhiều 2`, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, san_pham_loai: 'TO_TRINH', han_xu_ly: '2026-12-31' }] });
     assertOk(nhieu, 'chuyên viên giao 2 việc một lượt'); assert.equal(nhieu.data.so, 2);
-    for (const v of nhieu.data.viec) assert.equal((await doc(v.id)).nguoi_theo_doi, IDS.cv1, `dòng ${v.dong} theo dõi = người giao`);
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì từng dòng (dòng 1: cv2, dòng 2: cv1) — không còn = người giao cv1
+    const ds = await Promise.all(nhieu.data.viec.map((v) => doc(v.id)));
+    assert.deepEqual(ds.map((d) => [d.owner_tai_khoan, d.nguoi_theo_doi]), [[IDS.cv2, IDS.cv2], [IDS.cv1, IDS.cv1]], 'theo dõi = chủ trì từng dòng');
   });
 });

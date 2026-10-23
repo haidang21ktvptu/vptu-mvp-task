@@ -65,6 +65,17 @@ export function parseOwner(value, dm, accounts) {
   return { owner_don_vi_ma: ma, owner_tai_khoan: null, capMacDinh: dv?.phong ? 'PHO_CHANH_VAN_PHONG' : 'THUONG_TRUC' };
 }
 
+// v3.31 (0128): người theo dõi nội bộ gửi kèm (không hiện) khi giao cho phòng / Văn phòng — giao_viec gửi tin "Giao việc" và tin theo độ khẩn tới
+// người theo dõi được truyền vào (không đọc lại dòng đã ghi), nên truyền đúng người đại diện như CSDL sẽ ghi (kl_dai_dien_chu_tri: phòng → Trưởng
+// phòng, Văn phòng → Chánh VP; không khoá, theo tên đăng nhập). Giao cho cán bộ: không gửi (CSDL ghi theo chủ trì). Unit: giao-thang.test.mjs.
+export function theoDoiTheoChuTri(value, dm, accounts) {
+  const [kieu, ma] = (value || '').split(':');
+  const dv = kieu === 'dv' ? dm.donVi.find((d) => d.ma === ma) : null;
+  if (!dv?.trong_van_phong) return null;
+  const hop = (a) => !a.is_system && !a.bi_khoa && (dv.phong ? a.role_group === 'A2' && a.department === dv.phong : a.role_group === 'A1' && a.is_chief);
+  return accounts.filter(hop).sort((a, b) => ((a.username || '') < (b.username || '') ? -1 : 1))[0]?.id || null;
+}
+
 export const LOAI_VAN_BAN = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'],
   ['KL_BCH', 'Kết luận Ban Chấp hành Đảng bộ tỉnh'], ['NQ_BCH', 'Nghị quyết Ban Chấp hành Đảng bộ tỉnh'],   // 0087 (Đợt C2)
   ['NQ_TW', 'Nghị quyết Trung ương'], ['CONG_VAN', 'Công văn'], ['KHAC', 'Văn bản khác']];

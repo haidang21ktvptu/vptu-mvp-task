@@ -29,7 +29,7 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     fx = await setupKlFixtures();
     await don();
     await Promise.all([   // bốn việc độc lập (mã cố định) — một lượt (D3)
-      them({ ma: 'NV-T80', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 }),     // Owner = cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
+      them({ ma: 'NV-T80', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 }),     // Owner = cv2 (QUAN_TRI); 0128: theo dõi = cv2 (cv1 bị ghi đè)
       them({ ma: 'NV-T81', owner_don_vi_ma: 'QUAN_TRI' }),                              // Owner = phòng Quản trị, không tài khoản
       them({ ma: 'NV-T82', owner_don_vi_ma: 'DANG_UY_UBND' }),                          // Owner đơn vị ngoài
       them({ ma: 'NV-T83', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-01', minh_chung: 'CV 9' })]);
@@ -40,7 +40,9 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     assert.equal(await thay('demo_cv2', 'NV-T80'), true, 'cv2 là Owner');
     assert.equal(await thay('demo_cv2', 'NV-T81'), false, 'cv2 không phải Owner tài khoản của việc Owner = phòng');
     assert.equal(await thay('demo_cv2', 'NV-T82'), false, 'cv2 không liên quan việc đơn vị ngoài');
-    assert.equal(await thay('demo_truongphong', 'NV-T80'), true, 'A2 Tổng hợp thấy vì người theo dõi thuộc phòng');
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì cv2 (Quản trị) — A2 Tổng hợp không còn thấy NV-T80; nhánh "người theo dõi thuộc phòng" kiểm trên NV-T82
+    assert.equal(await thay('demo_truongphong', 'NV-T80'), false, 'A2 Tổng hợp không thấy việc chủ trì cv2 (Quản trị)');
+    assert.equal(await thay('demo_truongphong', 'NV-T82'), true, 'A2 Tổng hợp thấy việc đơn vị ngoài vì người theo dõi thuộc phòng');
     assert.equal(await thay('demo_pcvp2', 'NV-T80'), true, 'PCVP phụ trách Quản trị thấy vì Owner thuộc Quản trị');
     assert.equal(await thay('demo_pcvp2', 'NV-T81'), true, 'PCVP phụ trách Quản trị thấy việc Owner = phòng Quản trị');
     assert.equal(await thay('demo_pcvp2', 'NV-T82'), false, 'PCVP Quản trị không thấy việc đơn vị ngoài do Tổng hợp theo dõi');
@@ -51,7 +53,8 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     const cv2 = await userClient('demo_cv2');
     const r = await cv2.from('nhiem_vu').update({ san_pham_loai: 'BAO_CAO', san_pham_mo_ta: 'Báo cáo thử', cap_quyet_dinh: 'CHANH_VAN_PHONG', ngay_nhan_van_ban: '2026-08-10' }).eq('ma', 'NV-T80').select('san_pham_loai, ngay_nhan_uoc_tinh');
     assertOk(r, 'Owner sửa cột mới'); assert.equal(r.data[0].san_pham_loai, 'BAO_CAO'); assert.equal(r.data[0].ngay_nhan_uoc_tinh, false);
-    assertDenied(await cv2.from('nhiem_vu').update({ nguoi_theo_doi: IDS.cv2 }).eq('ma', 'NV-T80').select('id'), 'Owner đổi người theo dõi');
+    // v3.31 (0128): người theo dõi đã = chủ trì cv2 — ghi giá trị khác (cv1) để vẫn là một thay đổi bị guard chặn
+    assertDenied(await cv2.from('nhiem_vu').update({ nguoi_theo_doi: IDS.cv1 }).eq('ma', 'NV-T80').select('id'), 'Owner đổi người theo dõi');
     assertDenied(await cv2.from('nhiem_vu').update({ owner_tai_khoan: IDS.cv1 }).eq('ma', 'NV-T80').select('id'), 'Owner đổi Owner');
     const cv1 = await userClient('demo_cv1');
     assertOk(await cv1.from('nhiem_vu').update({ ghi_chu: 'việc cũ không cần sản phẩm' }).eq('id', fx.n1).select('id'), 'người theo dõi cập nhật việc cũ không sản phẩm');
@@ -66,7 +69,8 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     const ok = await giao('demo_truongphong', { ma: 'A2', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });
     assertOk(ok, 'A2 giao cho cv1');
     const nv = (await db().from('nhiem_vu').select('theo_1400, cap_nhan_san_pham, ngay_nhan_van_ban, ngay_nhan_uoc_tinh, nguoi_theo_doi, tao_boi, han_xu_ly').eq('id', ok.data.id).single()).data;
-    assert.deepEqual(nv, { theo_1400: true, cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: IDS.truongphong, tao_boi: IDS.truongphong, han_xu_ly: '2026-12-31' });
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì cv1, không còn mặc định là người giao
+    assert.deepEqual(nv, { theo_1400: true, cap_nhan_san_pham: 'TRUONG_PHONG', ngay_nhan_van_ban: homNayVN(), ngay_nhan_uoc_tinh: false, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.truongphong, han_xu_ly: '2026-12-31' });
     assert.equal((await db().rpc('tinh_trang_thai', { p_id: ok.data.id, p_ngay: homNayVN() })).data.muc_canh_bao, 'XANH');
     assert.match(loi(await giao('demo_truongphong', { owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 })), /chuyên viên phòng mình/);
     assert.match(loi(await giao('demo_truongphong', { owner_don_vi_ma: 'TONG_HOP' })), /chuyên viên phòng mình/);
@@ -105,7 +109,8 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     const r = await giao('demo_cv2', { ma: 'QTKL', owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp }); // GĐ22: quan_tri_kl giao thay mặt lãnh đạo
     assertOk(r, 'quan_tri_kl giao việc Văn phòng thay mặt Chánh VP');
     const nv = (await db().from('nhiem_vu').select('owner_tai_khoan, nguoi_theo_doi, cap_nhan_san_pham').eq('id', r.data.id).single()).data;
-    assert.deepEqual(nv, { owner_tai_khoan: null, nguoi_theo_doi: IDS.cv1, cap_nhan_san_pham: 'THUONG_TRUC' });
+    // v3.31 (0128): chủ trì là "Văn phòng Tỉnh ủy" → người theo dõi (nội bộ) = Chánh Văn phòng (tham số cv1 bị ghi đè)
+    assert.deepEqual(nv, { owner_tai_khoan: null, nguoi_theo_doi: IDS.cvp, cap_nhan_san_pham: 'THUONG_TRUC' });
     assert.match(loi(await giao('demo_cv2', { owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv1, thay_mat_cho: IDS.cvp })), /phòng hoặc cán bộ Văn phòng/);   // 0079: đơn vị ngoài không còn giao được
     assert.match(loi(await giao('demo_cv2', { owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: '00000000-0000-4000-8000-000000000007', thay_mat_cho: IDS.cvp })), /cán bộ Văn phòng/);
     await db().from('accounts').update({ quan_tri_kl: false }).eq('id', IDS.cv2);
@@ -123,7 +128,9 @@ describe('0025 — phạm vi Owner, giao_viec, xac_nhan_nhan_viec', { skip: SKIP
     const sau = (await db().from('nhiem_vu').select('han_xu_ly, tien_do_ma, cap_nhat_luc').eq('ma', 'NV-T80').single()).data;
     assert.deepEqual(sau, truoc, 'không dừng đồng hồ, không đổi gì trên nhiệm vụ');
     const cv1 = await userClient('demo_cv1');
-    assertOk(await cv1.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T80'] }), 'người theo dõi cũng xác nhận được (dòng riêng)');
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì cv2 — cv1 không còn là bên trong NV-T80; người theo dõi việc đơn vị ngoài (NV-T82) vẫn xác nhận được
+    assertDenied(await cv1.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T80'] }), 'cv1 không còn là người theo dõi NV-T80');
+    assertOk(await cv1.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T82'] }), 'người theo dõi việc đơn vị ngoài xác nhận được');
     assertDenied(await (await userClient('demo_truongphong')).rpc('xac_nhan_nhan_viec', { p_id: id['NV-T80'] }), 'A2 không phải bên trong');
     assert.match(loi(await cv2.rpc('xac_nhan_nhan_viec', { p_id: id['NV-T83'] })), /đã đóng/);
   });

@@ -41,8 +41,8 @@ describe('Q7 — Owner / người theo dõi không tự đổi han_xu_ly (chỉ 
     await assertChan(await doiHan('demo_cv1', 'Q7A', '2027-06-30'), 'Q7A', HAN, 'Owner cv1 đổi hạn');
   });
 
-  test('2. Người theo dõi (truongphong) đổi han_xu_ly của việc đang có hạn phải bị chặn', async () => {
-    await assertChan(await doiHan('demo_truongphong', 'Q7B', '2027-03-31'), 'Q7B', HAN, 'Người theo dõi đổi hạn');
+  test('2. Trưởng phòng (lãnh đạo trong phạm vi; trước v3.31 là người theo dõi) đổi han_xu_ly của việc đang có hạn phải bị chặn', async () => {
+    await assertChan(await doiHan('demo_truongphong', 'Q7B', '2027-03-31'), 'Q7B', HAN, 'Trưởng phòng đổi hạn');
   });
 
   test('3. Owner điền han_xu_ly khi đang NULL (việc "Cần điền hạn") vẫn được', async () => {

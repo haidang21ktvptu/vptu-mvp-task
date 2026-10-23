@@ -38,9 +38,10 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
     fx = await setupKlFixtures();
     await don();
     await db().from('dm_don_vi').update({ lanh_dao_phu_trach: IDS.pcvp2 }).eq('ma', 'DANG_UY_UBND');   // CH-4b: lãnh đạo VP phụ trách đơn vị ngoài
-    await them({ ma: 'NV-T100', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, han_xu_ly: '2026-08-22' });   // VÀNG: còn 2 ngày, chưa minh chứng
-    await them({ ma: 'NV-T101', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, han_xu_ly: '2026-08-19' });   // ĐỎ: trễ 1 ngày
-    await them({ ma: 'NV-T102', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, han_xu_ly: '2026-08-15' });   // ĐỎ ĐẶC BIỆT: trễ 5 ≥ 3
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì — ba việc leo thang nay chủ trì cv1 (Tổng hợp, có A2) thay cho Owner cv2 + theo dõi cv1 (hai phòng)
+    await them({ ma: 'NV-T100', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, han_xu_ly: '2026-08-22' });   // VÀNG: còn 2 ngày, chưa minh chứng
+    await them({ ma: 'NV-T101', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, han_xu_ly: '2026-08-19' });   // ĐỎ: trễ 1 ngày
+    await them({ ma: 'NV-T102', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, han_xu_ly: '2026-08-15' });   // ĐỎ ĐẶC BIỆT: trễ 5 ≥ 3
     await them({ ma: 'NV-T103', owner_don_vi_ma: 'DANG_UY_UBND', han_xu_ly: '2026-08-18' });                        // ĐỎ, Owner đơn vị ngoài
     await them({ ma: 'NV-T104', owner_don_vi_ma: 'TONG_HOP', loai_thoi_han_ma: 'THUONG_XUYEN', han_xu_ly: null });  // KHONG_AP_DUNG
     await them({ ma: 'NV-T105', owner_don_vi_ma: 'TONG_HOP', han_xu_ly: '2026-09-30' });                            // XANH
@@ -70,27 +71,29 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
   });
 
   test('3. người nhận leo thang: Vàng = Owner + theo dõi; Đỏ + A2 hai phòng (+ lãnh đạo VP phụ trách đơn vị ngoài); Đỏ đặc biệt + PCVP hai phòng + Chánh VP', { skip: CHI_CUC_BO }, async () => {
-    assert.deepEqual(await nguoiNhan('NV-T100'), [IDS.cv1, IDS.cv2].sort(), 'Vàng');
-    assert.deepEqual(await nguoiNhan('NV-T101'), [IDS.cv1, IDS.cv2, IDS.truongphong].sort(), 'Đỏ: + trưởng phòng TH (QUAN_TRI không có A2)');
-    assert.deepEqual(await nguoiNhan('NV-T102'), [IDS.cv1, IDS.cv2, IDS.truongphong, IDS.pcvp, IDS.pcvp2, IDS.cvp].sort(), 'Đỏ đặc biệt: + PCVP TH, PCVP QT, Chánh VP');
+    // v3.31 (0128): chủ trì cv1 = người theo dõi — một phòng (Tổng hợp)
+    assert.deepEqual(await nguoiNhan('NV-T100'), [IDS.cv1], 'Vàng: chủ trì (= người theo dõi)');
+    assert.deepEqual(await nguoiNhan('NV-T101'), [IDS.cv1, IDS.truongphong].sort(), 'Đỏ: + trưởng phòng TH');
+    assert.deepEqual(await nguoiNhan('NV-T102'), [IDS.cv1, IDS.truongphong, IDS.pcvp, IDS.cvp].sort(), 'Đỏ đặc biệt: + PCVP TH, Chánh VP');
     assert.deepEqual(await nguoiNhan('NV-T103'), [IDS.cv1, IDS.truongphong, IDS.pcvp2].sort(), 'Đỏ đơn vị ngoài: + lãnh đạo VP phụ trách');
   });
 
   test('4. mỗi người nhận một tin he_thong, sender_id NULL; người nhận đọc được qua RLS; ghi lich_su không người sửa', { skip: CHI_CUC_BO }, async () => {
     const tin = await tinCua('NV-T102');
-    assert.equal(tin.length, 6);
+    assert.equal(tin.length, 4);   // v3.31 (0128): 4 người nhận Đỏ đặc biệt (trước 6)
     assert.ok(tin.every((t) => t.sender_id === null && /^Quá hạn từ \d+ ngày trở lên · NV-T102: quá hạn 5 ngày/.test(t.content)), 'nội dung tin (tiêu đề theo cách ghi mới — 0127)');
     const cv1 = await (await userClient('demo_cv1')).from('direct_messages').select('content, sender_id').eq('nhiem_vu_id', id['NV-T102']).eq('loai', 'he_thong');
     assertOk(cv1, 'cv1 đọc tin'); assert.equal(cv1.data.length, 1); assert.equal(cv1.data[0].sender_id, null);
-    const cv2 = await (await userClient('demo_cv2')).from('direct_messages').select('content').eq('nhiem_vu_id', id['NV-T101']).eq('loai', 'he_thong');
-    assertOk(cv2, 'cv2 đọc tin'); assert.equal(cv2.data.length, 1);
+    // v3.31 (0128): cv2 không còn trong việc — người nhận Đỏ thứ hai là Trưởng phòng
+    const tp = await (await userClient('demo_truongphong')).from('direct_messages').select('content').eq('nhiem_vu_id', id['NV-T101']).eq('loai', 'he_thong');
+    assertOk(tp, 'Trưởng phòng đọc tin'); assert.equal(tp.data.length, 1);
     const ls = (await db().from('lich_su').select('nguoi_sua, nguoi_sua_ghi_chu, gia_tri_moi').eq('nhiem_vu_id', id['NV-T100']).eq('cot', 'canh_bao')).data;
     assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, null); assert.match(ls[0].nguoi_sua_ghi_chu, /Hệ thống/); assert.match(ls[0].gia_tri_moi, /còn 2 ngày tới hạn 22\/08\/2026/);
   });
 
   test('5. chạy lại cùng ngày và ngày +1: không gửi trùng; ngày +N (3): nhắc lại cùng mức', { skip: CHI_CUC_BO }, async () => {
     const kq2 = await quet(NGAY);
-    assert.equal((await tinCua('NV-T102')).length, 6, 'chạy lần 2 không thêm tin');
+    assert.equal((await tinCua('NV-T102')).length, 4, 'chạy lần 2 không thêm tin');   // v3.31 (0128): 4 người nhận
     assert.equal((await soCanhBao('NV-T102')).length, 1);
     assert.ok(kq2.bo_qua >= 4, `bỏ qua ≥ 4: ${JSON.stringify(kq2)}`);
     await quet('2026-08-21');
@@ -98,7 +101,7 @@ describe('0029 — cảnh báo tự động: quyền gọi, người nhận theo
     await quet('2026-08-23');
     const cb = await soCanhBao('NV-T102');
     assert.deepEqual(cb.map((c) => c.muc), ['DO_DAC_BIET', 'DO_DAC_BIET'], 'ngày +3 nhắc lại');
-    assert.equal((await tinCua('NV-T102')).length, 12);
+    assert.equal((await tinCua('NV-T102')).length, 8);   // v3.31 (0128): 2 lần × 4 người nhận
     // NV-T101 lên mức: 23/8 trễ 4 ngày ≥ 3 → ĐỎ ĐẶC BIỆT gửi ngay dù ĐỎ mới gửi 20/8.
     assert.deepEqual((await soCanhBao('NV-T101')).map((c) => c.muc), ['DO', 'DO_DAC_BIET']);
   });

@@ -32,10 +32,11 @@ describe('0079 — thay mặt theo nhóm, Owner luôn là phòng / cán bộ Vă
   after(don);
   let nvLdvp;
 
-  test('1. quản trị KL giao thay mặt "Lãnh đạo Văn phòng": đại diện = Chánh VP, cột nhóm, không ưu tiên Thường trực; tin tới Chánh VP + PCVP phụ trách Tổng hợp (0083: không PCVP2 khối Quản trị) + người theo dõi', async () => {
-    const r = await giao('demo_cv2', { owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.cv1, thay_mat_nhom: 'LANH_DAO_VP' });
+  test('1. quản trị KL giao thay mặt "Lãnh đạo Văn phòng": đại diện = Chánh VP, cột nhóm, không ưu tiên Thường trực; tin tới Chánh VP + PCVP phụ trách Tổng hợp (0083: không PCVP2 khối Quản trị) + chủ trì', async () => {
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì — giao cho phòng thì theo dõi thành Trưởng phòng; cv1 (người đề nghị từ chối ở bài 2) làm chủ trì
+    const r = await giao('demo_cv2', { owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, thay_mat_nhom: 'LANH_DAO_VP' });
     assertOk(r, 'giao thay mặt nhóm'); nvLdvp = r.data.id;
-    assert.deepEqual(await doc(nvLdvp), { giao_thay_mat_cho: IDS.cvp, giao_thay_mat_nhom: 'LANH_DAO_VP', uu_tien: null, nguoi_theo_doi: IDS.cv1, owner_tai_khoan: null, do_khan: 'THUONG' });
+    assert.deepEqual(await doc(nvLdvp), { giao_thay_mat_cho: IDS.cvp, giao_thay_mat_nhom: 'LANH_DAO_VP', uu_tien: null, nguoi_theo_doi: IDS.cv1, owner_tai_khoan: IDS.cv1, do_khan: 'THUONG' });
     const nhan = await nguoiNhanTin(nvLdvp, 'Giao việc · NV-');
     for (const u of [IDS.cvp, IDS.pcvp, IDS.cv1]) assert.ok(nhan.includes(u), `tin giao tới ${u}`);   // staging có thể thêm lãnh đạo khác
     assert.ok(!nhan.includes(IDS.pcvp2), 'PCVP2 (Quản trị) ngoài phạm vi việc Tổng hợp: không được báo');
