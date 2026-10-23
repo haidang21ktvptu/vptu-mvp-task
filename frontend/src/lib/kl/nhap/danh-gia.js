@@ -7,6 +7,7 @@
 // Thuần (không DOM, không mạng): dữ liệu vào là dòng đã chuẩn hoá { k: {ma, hien, gan} | {loi} | null } (chuan-hoa.js).
 import { nhanTruong } from './truong.js';
 import { tachThayMat } from '../thay-mat.js';
+import { daiDienDonVi } from '../chu-tri.js';
 import { KHONG_THUOC, HIEN_MUC_TIEU } from '../muc-tieu.js';
 import { sanPhamMacDinh, linhVucMacDinh, hanMacDinh } from './mac-dinh.js';   // v3.27: ô bảng Phụ lục không có — quy tắc cố định
 
@@ -35,16 +36,15 @@ function lanhDaoMacDinh(dv, accounts) {
   return (tp || ds.find((a) => a.role_group === 'A1' && a.is_chief))?.id || null;
 }
 // Người theo dõi gửi DB (v3.31 — 0128: trường nội bộ, không hiện, không đọc từ tệp; trigger ghi lại theo chủ trì theo dõi — vẫn gửi vì hàm nhập kiểm
-// phạm vi / bắt buộc như trước): cán bộ chủ trì → Trưởng phòng của phòng chủ trì → Chánh VP (việc của Văn phòng) → lãnh đạo giao → người nhập.
+// phạm vi / bắt buộc như trước): cán bộ chủ trì → Trưởng phòng của phòng chủ trì → Chánh VP (việc của Văn phòng — chỉ khi người nhập hoặc lãnh đạo
+// giao là Chánh VP / nhóm Lãnh đạo Văn phòng: hàm nhập không nhận Chánh VP ngoài phạm vi của Phó Chánh VP, rà soát 23/10) → lãnh đạo giao → người nhập.
 function theoDoiMacDinh(g, dv, accounts, me) {
   if (me?.role_group === 'A3' && !g.lanh_dao_giao) return me.id;   // Đợt F: chuyên viên giao thẳng — người theo dõi = người nhập (giao_viec ép)
   if (g.can_bo) return g.can_bo;
-  const ds = accounts.filter((a) => !a.is_system && !a.bi_khoa);
-  if (dv?.trong_van_phong) {
-    const a = dv.phong ? ds.find((x) => x.role_group === 'A2' && x.department === dv.phong) : ds.find((x) => x.role_group === 'A1' && x.is_chief);
-    if (a) return a.id;
-  }
-  return tachThayMat(g.lanh_dao_giao).thay_mat_cho || me?.id || null;   // nhóm lãnh đạo không phải người theo dõi
+  const tm = tachThayMat(g.lanh_dao_giao);
+  const a3 = me?.role_group === 'A3';   // thay mặt chỉ tính khi người nhập là chuyên viên (như du_lieu)
+  const cvp = me?.is_chief || (a3 && (tm.thay_mat_nhom === 'LANH_DAO_VP' || Boolean(accounts.find((a) => a.id === tm.thay_mat_cho)?.is_chief)));
+  return (dv?.phong || cvp ? daiDienDonVi(dv, accounts) : null) || tm.thay_mat_cho || me?.id || null;   // nhóm lãnh đạo không phải người theo dõi
 }
 
 // dong: { soDong, o: {k: {ma,hien,gan}|{loi}|null}, goc: {tiêu đề: giá trị} }; ctx: { me, dm, accounts, cheDoXong, hangLoat: {k: ma; linh_vuc: [ma]}, maDaCo: Set<MÃ HOA> }

@@ -56,7 +56,7 @@ export function docForm(cha) {
     van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThLvct').value.trim() || null,   // v3.27: ô của thẻ 1
     ...docThongTinNguon(),   // Đợt C2: phần chung của lượt (tachDong để ở chung)
   });
-  const td = theoDoiTheoChuTri($('klThOwner').value, danhMucKl(), state.accounts);   // v3.31: giao cho phòng / Văn phòng — người nhận tin giao (không hiện)
+  const td = theoDoiTheoChuTri($('klThOwner').value, danhMucKl(), state.accounts, state.user);   // v3.31: giao cho phòng / Văn phòng — người nhận tin giao (không hiện)
   if (td) p.nguoi_theo_doi = td;
   if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;
   return themHoanThien(p);

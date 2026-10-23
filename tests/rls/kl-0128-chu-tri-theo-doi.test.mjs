@@ -6,13 +6,15 @@
 // tin người nhận, nhật ký; người không phải quản trị bị chặn. Khoá "KL-0128"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, IDS, homNayVN } from './lib.mjs';
+import { randomUUID } from 'node:crypto';
+import { adminClient, userClient, assertOk, IDS, EMAIL_DOMAIN, homNayVN } from './lib.mjs';
 import { klSchemaReady } from './fixtures-kl.mjs';
 
 const db = () => adminClient();
 const KHOA = 'KL-0128';
 const KL = '00000000-0000-4000-8000-000000000010';   // demo_e2e_kl (A3, Tổng hợp)
-const MC = '00000000-0000-4000-8000-000000000011';   // demo_e2e_mc (A3, Tổng hợp) — người cũ của hộp chuyển việc (không spec RLS nào khác giao việc)
+const MC = '00000000-0000-4000-8000-000000000011';   // demo_e2e_mc (A3, Tổng hợp) — chỉ để dò đã có 0128 (xem trước của người không có quyền)
+const CT = 'kl0128_ct'; let ctId = null;   // tài khoản tạm: người cũ của hộp chuyển việc (staging có thể còn việc thử của tài khoản e2e — rà soát 23/10)
 const coMig = async () => {   // 0128: hàm chuyển việc báo lỗi bằng câu mới "… chuyển việc chủ trì theo dõi"
   const r = await (await userClient('demo_cv1')).rpc('admin_chuyen_theo_doi', { p_tu: MC, p_den: IDS.cv1, p_ly_do: null, p_thuc_hien: false });
   return /chủ trì theo dõi/.test(r.error?.message || '');
@@ -34,6 +36,8 @@ const don = async () => {
   await db().from('nhat_ky_he_thong').delete().eq('hanh_dong', 'chuyen_theo_doi').like('chi_tiet->>ly_do', `${KHOA}%`);
   await db().from('nhiem_vu').delete().like('noi_dung', `${KHOA}%`);
   await db().from('van_ban_giao_viec').delete().like('so_ket_luan', `${KHOA}%`);
+  const cu = (await db().from('accounts').select('id').eq('username', CT)).data || [];
+  for (const a of cu) { await db().from('accounts').delete().eq('id', a.id); await db().auth.admin.deleteUser(a.id); }
 };
 
 describe('0128 — chỉ còn chủ trì theo dõi: người theo dõi nội bộ theo chủ trì', { skip: SKIP }, () => {
@@ -89,9 +93,13 @@ describe('0128 — chỉ còn chủ trì theo dõi: người theo dõi nội b�
   });
 
   test('4. Quản trị › Chuyển việc đang chủ trì theo dõi: chặn người không phải quản trị; xem trước; chuyển chủ trì việc đang mở, giữ việc đã hoàn thành; lịch sử, tin, nhật ký', async () => {
-    await viec('CK1', { owner_tai_khoan: MC });
-    await viec('CK2', { owner_tai_khoan: MC, tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-1), nguon: 'excel' });
-    const goi = async (u, p) => (await userClient(u)).rpc('admin_chuyen_theo_doi', { p_tu: MC, p_den: IDS.cv1, ...p });
+    const u = await db().auth.admin.createUser({ email: `${CT}@${EMAIL_DOMAIN}`, password: `T${randomUUID()}`, email_confirm: true, user_metadata: { username: CT, full_name: 'KL-0128 Chủ trì tạm' } });
+    assert.equal(u.error, null, `tạo tài khoản tạm: ${u.error?.message}`); ctId = u.data.user.id;
+    assertOk(await db().from('accounts').upsert({ id: ctId, username: CT, full_name: 'KL-0128 Chủ trì tạm', role_group: 'A3', position_title: 'Chuyên viên (test)',
+      department: 'TONG_HOP', is_chief: false, must_change_password: false, is_system: false, quan_tri_he_thong: false }, { onConflict: 'id' }), 'hồ sơ tạm');
+    await viec('CK1', { owner_tai_khoan: ctId });
+    await viec('CK2', { owner_tai_khoan: ctId, tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-1), nguon: 'excel' });
+    const goi = async (us, p) => (await userClient(us)).rpc('admin_chuyen_theo_doi', { p_tu: ctId, p_den: IDS.cv1, ...p });
     const chan = await goi('demo_truongphong', { p_ly_do: null, p_thuc_hien: false });
     assert.match(chan.error?.message || '', /Chỉ quản trị hệ thống hoặc Chánh Văn phòng mới chuyển việc chủ trì theo dõi/);
     const xem = await goi('demo_qtht', { p_ly_do: null, p_thuc_hien: false }); assertOk(xem, 'xem trước');
@@ -100,7 +108,7 @@ describe('0128 — chỉ còn chủ trì theo dõi: người theo dõi nội b�
     assert.equal(lam.data.so_viec, 1); assert.deepEqual(lam.data.bo_qua, []);
     const ck1 = (await db().from('nhiem_vu').select('owner_tai_khoan, owner_don_vi_ma, nguoi_theo_doi, cap_nhan_san_pham').eq('id', v.CK1.id).single()).data;
     assert.deepEqual(ck1, { owner_tai_khoan: IDS.cv1, owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: IDS.cv1, cap_nhan_san_pham: 'TRUONG_PHONG' });
-    assert.equal((await db().from('nhiem_vu').select('owner_tai_khoan').eq('id', v.CK2.id).single()).data.owner_tai_khoan, MC, 'việc đã hoàn thành giữ nguyên');
+    assert.equal((await db().from('nhiem_vu').select('owner_tai_khoan').eq('id', v.CK2.id).single()).data.owner_tai_khoan, ctId, 'việc đã hoàn thành giữ nguyên');
     const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', v.CK1.id).eq('cot', 'chuyen_theo_doi')).data;
     assert.ok(ls.some((l) => /^Chuyển chủ trì theo dõi từ .+ sang .+ — lý do: KL-0128 chuyển công tác$/.test(l.gia_tri_moi)), JSON.stringify(ls));
     const tin = (await db().from('direct_messages').select('content').eq('receiver_id', IDS.cv1).like('content', `%${KHOA}%`)).data;

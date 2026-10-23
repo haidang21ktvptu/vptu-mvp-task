@@ -45,13 +45,18 @@ test('lãnh đạo không đổi: Trưởng phòng = chuyên viên phòng mình 
   assert.deepEqual(ids(canBoOwner(DS, CVP)), ['cv', 'cv2', 'cvp', 'tp']);
 });
 
-test('v3.31 (0128): người đại diện gửi kèm khi giao cho phòng / Văn phòng — Trưởng phòng không khoá (theo tên đăng nhập), Chánh VP; cán bộ / đơn vị ngoài: không gửi', () => {
+test('v3.31 (0128): người đại diện gửi kèm khi giao cho phòng — Trưởng phòng không khoá; "Văn phòng Tỉnh ủy" → Chánh VP chỉ khi người giao là Chánh VP / toàn quyền; cán bộ / đơn vị ngoài: không gửi', () => {
   const tpKhoa = { id: 'tp0', username: 'a_tp_cu', role_group: 'A2', department: 'TONG_HOP', bi_khoa: true };
   const ds = [{ ...CVP, username: 'cvp' }, { ...TP, username: 'tp' }, tpKhoa, CV, CV2, TT, HT];
   const dm = { donVi: [...DM.donVi, { ma: 'QUAN_TRI', trong_van_phong: true, phong: 'QUAN_TRI' }, { ma: 'SO_TAI_CHINH', trong_van_phong: false, phong: null }] };
-  assert.equal(theoDoiTheoChuTri('dv:TONG_HOP', dm, ds), 'tp', 'bỏ tài khoản khoá dù tên đăng nhập xếp trước');
-  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds), 'cvp');
-  assert.equal(theoDoiTheoChuTri('dv:QUAN_TRI', dm, ds), null, 'phòng chưa có Trưởng phòng: không gửi (người giao)');
-  assert.equal(theoDoiTheoChuTri('dv:SO_TAI_CHINH', dm, ds), null);
-  assert.equal(theoDoiTheoChuTri('tk:cv', dm, ds), null); assert.equal(theoDoiTheoChuTri('', dm, ds), null); assert.equal(theoDoiTheoChuTri(null, dm, ds), null);
+  const PCVP = { id: 'pcvp', role_group: 'A1', is_chief: false };
+  assert.equal(theoDoiTheoChuTri('dv:TONG_HOP', dm, ds, PCVP), 'tp', 'bỏ tài khoản khoá dù tên đăng nhập xếp trước');
+  assert.equal(theoDoiTheoChuTri('dv:TONG_HOP', dm, ds, CV), 'tp', 'chuyên viên thay mặt giao cho phòng: Trưởng phòng');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, CVP), 'cvp');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, { id: 'qt', role_group: 'A1', is_chief: true, toan_quyen: true }), 'cvp', 'toàn quyền (hồ sơ hiệu dụng)');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, PCVP), null, 'Phó Chánh VP: không gửi Chánh VP (giao_viec chặn ngoài phạm vi)');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, CV), null, 'chuyên viên thay mặt: không gửi (Chánh VP nhận tin qua thay mặt)');
+  assert.equal(theoDoiTheoChuTri('dv:QUAN_TRI', dm, ds, CVP), null, 'phòng chưa có Trưởng phòng: không gửi (người giao)');
+  assert.equal(theoDoiTheoChuTri('dv:SO_TAI_CHINH', dm, ds, CVP), null);
+  assert.equal(theoDoiTheoChuTri('tk:cv', dm, ds, CVP), null); assert.equal(theoDoiTheoChuTri('', dm, ds, CVP), null); assert.equal(theoDoiTheoChuTri(null, dm, ds), null);
 });

@@ -18,7 +18,7 @@ function theTTHtml(c) {
       <form class="o" id="oTTph-${c.id}" data-submit="phanHoiThe" data-chi-dao="${c.id}"><input name="noi_dung" required placeholder="Nội dung phản hồi" aria-label="Nội dung phản hồi">
         <button type="submit" class="nut chinh">Gửi</button><button type="button" class="nut" data-action="dongO" data-o="oTTph-${c.id}">Huỷ</button></form>
       <form class="o" id="oTTdd-${c.id}" data-submit="guiDonDocThe" data-id="${c.nhiem_vu_id}" data-ma="${escapeHtml(c.ma)}" data-tra-loi-cho="${c.id}">
-        <small>Đôn đốc gửi Trưởng phòng và chuyên viên theo dõi; Thường trực được báo là chỉ đạo đã được chuyển xuống.</small>
+        <small>Đôn đốc gửi chủ trì theo dõi và Trưởng phòng; Thường trực được báo là chỉ đạo đã được chuyển xuống.</small>
         <input name="noi_dung" required placeholder="Nội dung đôn đốc" aria-label="Nội dung đôn đốc">
         <button type="submit" class="nut lam">Gửi đôn đốc</button><button type="button" class="nut" data-action="dongO" data-o="oTTdd-${c.id}">Huỷ</button></form>
     </article>`;

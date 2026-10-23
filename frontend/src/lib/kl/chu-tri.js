@@ -11,6 +11,14 @@ export function chuTriText(r, trong = 'chưa xác định') {
   return dv || trong;
 }
 
+// Người đại diện của chủ trì là phòng / Văn phòng — cùng quy tắc với kl_dai_dien_chu_tri (0128): phòng → Trưởng phòng đang hoạt động (không khoá,
+// không phải tài khoản hệ thống; 0076: mỗi phòng một người); "Văn phòng Tỉnh ủy" → Chánh Văn phòng. dv: dòng dm_don_vi; đơn vị ngoài / chưa có → null.
+export function daiDienDonVi(dv, accounts = []) {
+  if (!dv?.trong_van_phong) return null;
+  const hop = (a) => !a.is_system && !a.bi_khoa && (dv.phong ? a.role_group === 'A2' && a.department === dv.phong : a.role_group === 'A1' && a.is_chief);
+  return accounts.filter(hop).sort((a, b) => ((a.username || '') < (b.username || '') ? -1 : 1))[0]?.id || null;
+}
+
 // Dòng Diễn biến không hiện: đổi người theo dõi (máy tự ghi theo chủ trì; căn dữ liệu 0128); "Đổi chủ trì theo dõi" trước v3.31 chỉ đổi người
 // theo dõi (câu bắt đầu "người theo dõi:").
 export const anDongDienBien = (d) => d?.nguon === 'lich_su'

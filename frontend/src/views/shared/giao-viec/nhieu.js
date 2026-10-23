@@ -97,7 +97,7 @@ export function docDong() {
   const a0 = laA0(); const cn = canNganhHienTai();
   return dongs().map((the) => {
     const v = (c) => o(the, c).value; const ow = parseOwner(v('owner'), danhMucKl(), state.accounts);
-    const td = a0 ? null : theoDoiTheoChuTri(v('owner'), danhMucKl(), state.accounts);
+    const td = a0 ? null : theoDoiTheoChuTri(v('owner'), danhMucKl(), state.accounts, state.user);
     const d = { noi_dung: v('noi_dung').trim(), owner_don_vi_ma: ow.owner_don_vi_ma, owner_tai_khoan: ow.owner_tai_khoan, do_khan: v('do_khan'),
       san_pham_loai: v('san_pham') || null, san_pham_mo_ta: v('san_pham_mo_ta').trim() || null, cap_nhan_san_pham: v('cap_nhan') || null,
       loai_thoi_han_ma: v('loai'), han_xu_ly: v('loai') === 'KY_BAN_HANH' ? null : v('han') || null, don_vi_phoi_hop: v('phoi_hop').trim() || null,

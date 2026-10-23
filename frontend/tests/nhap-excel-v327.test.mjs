@@ -9,7 +9,7 @@ import { danhGia } from '../src/lib/kl/nhap/danh-gia.js';
 import { chuanDong } from '../src/lib/kl/nhap/bang.js';
 import { sanPhamMacDinh, linhVucMacDinh, congThang, hanMacDinh, dienSanCho, chuDienSan } from '../src/lib/kl/nhap/mac-dinh.js';
 import { chuKetQua } from '../src/lib/kl/nhap/mau.js';
-import { CTX, DG, DM } from './fixtures-nhap.mjs';
+import { ACC, CTX, DG, DM } from './fixtures-nhap.mjs';
 
 const dong = (raw, soDong = 7) => chuanDong({ soDong, raw, goc: {} }, CTX);
 // Một dòng bảng Phụ lục đủ B–M (A STT, N, O để trống) — việc đang làm của Kết luận BTV.
@@ -45,6 +45,14 @@ test('"VPTU" ở cột chủ trì: đơn vị Văn phòng Tỉnh ủy, người 
   assert.equal(kq.ket_qua, 'GIAO', kq.thieu.join(', '));
   assert.deepEqual([kq.du_lieu.owner_don_vi_ma, kq.du_lieu.owner_tai_khoan, kq.du_lieu.nguoi_theo_doi], ['VAN_PHONG_TINH_UY', null, 'cvp']);
   assert.equal(kq.du_lieu.han_xu_ly, '2026-11-02'); assert.ok(kq.macDinh.has('han_xu_ly'));
+});
+
+test('v3.31 (0128): chủ trì "VPTU", chuyên viên nhập thay mặt — Chánh VP / nhóm Lãnh đạo VP: người theo dõi gửi kèm = Chánh VP; Phó Chánh VP: chính Phó Chánh VP (hàm nhập không nhận Chánh VP ngoài phạm vi)', () => {
+  const acc = [...ACC, { id: 'pcvp', full_name: 'Bế Thị Hoa', role_group: 'A1', is_chief: false, department: 'LANH_DAO_VAN_PHONG', username: 'hoa.pcvp' }];
+  const dg = (ld) => danhGia(chuanDong({ soDong: 7, raw: { ...PL, chu_tri: 'VPTU', lanh_dao_giao: ld }, goc: {} }, { ...CTX, accounts: acc }), { ...DG, accounts: acc }).du_lieu;
+  assert.deepEqual([dg('Bế Thị Hoa').thay_mat_cho, dg('Bế Thị Hoa').nguoi_theo_doi], ['pcvp', 'pcvp']);
+  assert.equal(dg('Hoàng Văn Bình').nguoi_theo_doi, 'cvp');
+  assert.equal(dg('Lãnh đạo Văn phòng').nguoi_theo_doi, 'cvp');
 });
 
 test('Hoàn thành + "Đã xong ngoài hệ thống": nhập DA_XONG, giữ cơ quan trình và kết quả (cột M); việc đang làm có kết quả → ghi chú tiến độ', () => {

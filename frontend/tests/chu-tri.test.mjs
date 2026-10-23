@@ -2,7 +2,7 @@
 // người theo dõi (trường nội bộ) và làm gọn câu lịch sử cũ còn nhắc người theo dõi (lib/kl/chu-tri.js). Dữ liệu hư cấu. Chạy `npm test` trong frontend/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chuTriText, anDongDienBien, lamGonCauCu } from '../src/lib/kl/chu-tri.js';
+import { chuTriText, anDongDienBien, lamGonCauCu, daiDienDonVi } from '../src/lib/kl/chu-tri.js';
 
 test('Chủ trì theo dõi một kiểu: cán bộ "Họ tên (Phòng …)", lãnh đạo "(Văn phòng Tỉnh ủy)", phòng / Văn phòng: tên đơn vị bỏ số thứ tự', () => {
   assert.equal(chuTriText({ owner_tai_khoan_ten: 'Nông Văn A', owner_don_vi_ten: '1. Phòng Tổng hợp' }), 'Nông Văn A (Phòng Tổng hợp)');
@@ -30,4 +30,15 @@ test('Câu lịch sử cũ: bỏ phần người theo dõi (giao thẳng, giao l
   assert.equal(lamGonCauCu('Chuyển người theo dõi từ A sang B — lý do: nghỉ hưu'), 'Chuyển theo dõi từ A sang B — lý do: nghỉ hưu');
   assert.equal(lamGonCauCu('Chuyển chủ trì theo dõi từ A sang B — lý do: nghỉ hưu'), 'Chuyển chủ trì theo dõi từ A sang B — lý do: nghỉ hưu', 'câu mới giữ nguyên');
   assert.equal(lamGonCauCu('Hạn xử lý: 01/11/2026'), 'Hạn xử lý: 01/11/2026'); assert.equal(lamGonCauCu(null), null); assert.equal(lamGonCauCu(5), 5);
+});
+
+test('Người đại diện của đơn vị chủ trì (như kl_dai_dien_chu_tri): phòng → Trưởng phòng đang hoạt động; Văn phòng → Chánh VP; đơn vị ngoài / chưa có → null', () => {
+  const ds = [{ id: 'tp-khoa', username: 'a', role_group: 'A2', department: 'TONG_HOP', bi_khoa: true }, { id: 'tp', username: 'b', role_group: 'A2', department: 'TONG_HOP' },
+    { id: 'ht', username: 'c', role_group: 'A2', department: 'QUAN_TRI', is_system: true }, { id: 'cvp', username: 'd', role_group: 'A1', is_chief: true },
+    { id: 'pcvp', username: 'e', role_group: 'A1', is_chief: false }, { id: 'cv', username: 'f', role_group: 'A3', department: 'TONG_HOP' }];
+  assert.equal(daiDienDonVi({ ma: 'TONG_HOP', trong_van_phong: true, phong: 'TONG_HOP' }, ds), 'tp');
+  assert.equal(daiDienDonVi({ ma: 'VAN_PHONG_TINH_UY', trong_van_phong: true, phong: null }, ds), 'cvp');
+  assert.equal(daiDienDonVi({ ma: 'QUAN_TRI', trong_van_phong: true, phong: 'QUAN_TRI' }, ds), null, 'chỉ tài khoản hệ thống: không có');
+  assert.equal(daiDienDonVi({ ma: 'DANG_UY_UBND', trong_van_phong: false, phong: null }, ds), null);
+  assert.equal(daiDienDonVi(null, ds), null); assert.equal(daiDienDonVi({ ma: 'TONG_HOP', trong_van_phong: true, phong: 'TONG_HOP' }), null);
 });

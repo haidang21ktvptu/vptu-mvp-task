@@ -15,7 +15,7 @@ export const vctTemplate = (ngay, giao) => `
       <button type="button" class="nut nho" data-action="openKl" title="Danh sách đầy đủ ở màn Nhiệm vụ: thêm bộ lọc, in / lưu PDF">Lọc chi tiết, in</button>
       ${giao ? '<button type="button" class="nut nho chinh" data-action="openGiaoViec">Giao việc</button>' : ''}
       <button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
-  <p class="bnv-mo-ta">Việc đồng chí chủ trì hoặc theo dõi. Bấm nội dung việc để xem chi tiết; nút ở cột Việc cần làm mở thao tác ngay dưới dòng.
+  <p class="bnv-mo-ta">Việc đồng chí chủ trì theo dõi. Bấm nội dung việc để xem chi tiết; nút ở cột Việc cần làm mở thao tác ngay dưới dòng.
     <span id="vctTom"></span></p>
   <div id="dhCanXuLy"></div>
   <section class="tam vct-khoi hidden" id="vctKhoi" aria-label="Đề nghị từ chối và việc bị từ chối"></section>

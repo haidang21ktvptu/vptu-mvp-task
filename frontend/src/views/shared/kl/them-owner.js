@@ -6,6 +6,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { NHOM_THAY_MAT, giaTriNhom } from '../../../lib/kl/thay-mat.js';
+import { daiDienDonVi } from '../../../lib/kl/chu-tri.js';
 
 const opt = (v, t, chon = false) => `<option value="${escapeHtml(v)}"${chon ? ' selected' : ''}>${escapeHtml(t)}</option>`;
 const nhomOpt = (nhan, ds) => (ds.length ? `<optgroup label="${escapeHtml(nhan)}">${ds.join('')}</optgroup>` : '');
@@ -66,14 +67,14 @@ export function parseOwner(value, dm, accounts) {
 }
 
 // v3.31 (0128): người theo dõi nội bộ gửi kèm (không hiện) khi giao cho phòng / Văn phòng — giao_viec gửi tin "Giao việc" và tin theo độ khẩn tới
-// người theo dõi được truyền vào (không đọc lại dòng đã ghi), nên truyền đúng người đại diện như CSDL sẽ ghi (kl_dai_dien_chu_tri: phòng → Trưởng
-// phòng, Văn phòng → Chánh VP; không khoá, theo tên đăng nhập). Giao cho cán bộ: không gửi (CSDL ghi theo chủ trì). Unit: giao-thang.test.mjs.
-export function theoDoiTheoChuTri(value, dm, accounts) {
+// người theo dõi được truyền vào (không đọc lại dòng đã ghi), nên truyền đúng người đại diện như CSDL sẽ ghi (daiDienDonVi = kl_dai_dien_chu_tri).
+// "Văn phòng Tỉnh ủy" → Chánh VP chỉ khi người giao là Chánh VP (hoặc toàn quyền — hồ sơ hiệu dụng is_chief): giao_viec không nhận Chánh VP làm
+// người theo dõi ngoài phạm vi của Phó Chánh VP / lãnh đạo được thay mặt (rà soát 23/10); khi thay mặt, Chánh VP đã nhận tin qua thay mặt.
+// Giao cho cán bộ: không gửi (CSDL ghi theo chủ trì). me: state.user. Unit: giao-thang.test.mjs.
+export function theoDoiTheoChuTri(value, dm, accounts, me) {
   const [kieu, ma] = (value || '').split(':');
   const dv = kieu === 'dv' ? dm.donVi.find((d) => d.ma === ma) : null;
-  if (!dv?.trong_van_phong) return null;
-  const hop = (a) => !a.is_system && !a.bi_khoa && (dv.phong ? a.role_group === 'A2' && a.department === dv.phong : a.role_group === 'A1' && a.is_chief);
-  return accounts.filter(hop).sort((a, b) => ((a.username || '') < (b.username || '') ? -1 : 1))[0]?.id || null;
+  return dv && (dv.phong || me?.is_chief) ? daiDienDonVi(dv, accounts) : null;
 }
 
 export const LOAI_VAN_BAN = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'],
