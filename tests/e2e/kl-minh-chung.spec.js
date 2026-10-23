@@ -83,6 +83,9 @@ test.describe.serial('Nhiệm vụ — minh chứng có cấu trúc và đóng n
     const r = await clientCuaVai('A2').rpc('xac_nhan_minh_chung', { p_id: mc, p_hop_le: true, p_chat_luong: 'DAT' });   // demo_truongphong — A2 phòng của người theo dõi
     expect(r.error, r.error?.message).toBeNull();
     await page.reload(); await expect(page.locator('#mainHeader')).toBeVisible(NAP);   // nạp lại app rồi mới mở menu (A3 đi qua Điều hành → Nhiệm vụ)
+    // v3.29: đường dẫn còn "…/NV-…" của bài trước → app mở lại việc ở ngăn dùng chung SAU khi màn nạp xong (thanh địa chỉ tạm bỏ mã trong lúc đó) —
+    // chờ ngăn mở rồi nav() mới đóng, không thì ngăn mở ra giữa chừng che nút "Lọc chi tiết, in" (CI PR #176).
+    await expect(page.locator('#nganCT')).toBeVisible(NAP);
     await nav(page, 'navKl');
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
     const row = page.locator(`#klRow-${nvId}`);
