@@ -4,8 +4,8 @@
 // có kết quả hoặc có việc gắn chỉ tiêu; nhóm khác (đột phá, chương trình trọng tâm…): thẻ), khối 3 "Thực hiện theo lĩnh vực trọng tâm" (5 khối mở ra các ngành, thanh cơ cấu trạng thái). Chỉ dựng HTML từ số đã tính
 // (lib/kl/tong-quan-lanh-dao.js); mọi số / thẻ / dòng mở danh sách việc trong ngăn chi tiết dùng chung (tqMo).
 import { escapeHtml } from '../../../lib/dom.js';
-import { DEPT_NAMES } from '../../../lib/constants.js';
 import { boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
+import { chuTriText } from '../../../lib/kl/chu-tri.js';
 import { NHOM_MUC_TIEU } from '../../../lib/kl/muc-tieu.js';
 import { DOAN, tenKy, chuThieuNganh } from '../../../lib/kl/tong-quan-lanh-dao.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
@@ -20,12 +20,12 @@ function sanPhamThieu(r) {
   if (r.khau === 'BI_TU_CHOI') return 'Bị từ chối — chờ giao lại';
   return [r.san_pham_ten, r.san_pham_mo_ta].filter(Boolean).join(': ') || 'Chưa định nghĩa sản phẩm';
 }
-// Cơ quan trình (đơn vị ngoài Văn phòng) nếu có, không thì đơn vị chủ trì; dòng phụ: người theo dõi (khi việc của cơ quan ngoài / chưa giao cán bộ)
-// hoặc cán bộ chủ trì.
+// Cơ quan trình (đơn vị ngoài Văn phòng) nếu có, không thì đơn vị chủ trì; dòng phụ: chủ trì theo dõi, ghi một kiểu (v3.31 — 0128: bỏ "Người theo
+// dõi"): cán bộ "Đ/c Họ tên (Phòng …)", phòng / Văn phòng chủ trì: tên đơn vị (bỏ khi trùng dòng trên).
 function coQuanCanBo(r) {
   const dv = boSoThuTu(r.co_quan_trinh_ten) || boSoThuTu(r.owner_don_vi_ten) || 'Chưa xác định';
-  const phong = DEPT_NAMES[r.nguoi_theo_doi_phong];
-  const phu = r.co_quan_trinh || !r.owner_tai_khoan ? `Người theo dõi: Đ/c ${r.nguoi_theo_doi_ten || '—'}${phong ? `, ${phong}` : ''}` : `Chủ trì theo dõi: Đ/c ${r.owner_tai_khoan_ten}`;
+  const ct = chuTriText(r, '');
+  const phu = !ct || (!r.owner_tai_khoan_ten && ct === dv) ? '' : `Chủ trì theo dõi: ${r.owner_tai_khoan_ten ? 'Đ/c ' : ''}${ct}`;
   return [dv, phu];
 }
 

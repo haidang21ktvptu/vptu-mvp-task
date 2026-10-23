@@ -35,6 +35,10 @@ Cách dùng: mỗi câu có bối cảnh, các phương án kèm hệ quả kỹ
 
 **Quyết định (16/9):** ☑ **A** — giữ cột, đổi tên "Người theo dõi"; số liệu đánh giá tính theo Owner.
 
+**Thay thế (23/10/2026, `v3.31` — nhóm Q, Q-1):** bỏ vai "Người theo dõi" trên giao diện — chỉ còn **"Chủ trì theo dõi"**; cột `nguoi_theo_doi` thành
+trường nội bộ luôn bằng người đại diện của chủ trì (cán bộ chủ trì; phòng → Trưởng phòng; Văn phòng Tỉnh ủy → Chánh Văn phòng). Các bổ sung dưới đây
+về "người theo dõi" chỉ còn giá trị lịch sử.
+
 **Bổ sung (22/10/2026, `v3.28.1` — nhóm N):** trên giao diện, ô người / phòng chịu trách nhiệm (Owner) ghi **"Chủ trì theo dõi"** đúng cột E bảng Phụ lục (nhập Excel từ v3.27 ghi cột E vào cả chủ trì và người theo dõi); vai theo dõi riêng giữ tên **"Người theo dõi"**.
 
 **Bổ sung (17/9/2026, `v3.6.1`):** chủ trì (Owner tài khoản) và người theo dõi **mỗi người tự xác nhận nhận việc**, người này nhận không thay cho người kia (dải "Cần xử lý ngay", thẻ "Việc mới giao", nút ở ngăn chi tiết và `kl_so_chua_xu_ly.viec_moi` đều tính theo chính người xem); khâu nghẽn "Chưa nhận việc" và cảnh báo tự động (`da_nhan_viec`, `v_ngoai_le`) tính khi **chưa ai** nhận.
@@ -328,6 +332,7 @@ ngành/lĩnh vực, Cơ quan/đơn vị trình,... Phải giống như các cộ
 | N-2 | Ô không có trong bảng Phụ lục? | Theo tên ở màn Giao việc: Người theo dõi (thay "Theo dõi"), Sản phẩm đầu ra, Nguồn nhiệm vụ, Đơn vị phối hợp, Cấp nhận sản phẩm (cả trong hộp nộp minh chứng). | unit `ten-o-phu-luc` |
 | N-3 | Chỗ nào giữ nguyên? | Nghĩa khác cột Excel: "Trạng thái" (tính theo hạn), "Số hiệu" văn bản ở Giao việc (mọi loại văn bản), cột "Nhiệm vụ" của bảng, các ô riêng của minh chứng (số hiệu, ngày, trích yếu, mô tả kết quả), màn và tệp rà soát phân loại (tệp đọc lại theo tiêu đề cũ), chữ "Theo dõi" ở nhóm menu và hộp "Theo dõi giải ngân". Nhập Excel vẫn nhận tiêu đề cũ (mẫu 29 cột). Thông báo lỗi do cơ sở dữ liệu trả về còn chữ "Owner" — cần migration, để sau. | unit `ten-o-phu-luc` (mẫu cũ) |
 
+**Thay thế một phần (23/10/2026, nhóm Q — Q-1):** ô "Người theo dõi" nêu ở N-2 đã bỏ khỏi giao diện; chỉ còn "Chủ trì theo dõi".
 
 ## Nhóm O — Quyết định 22/10/2026: bỏ ô Lĩnh vực, ghi rõ mức cảnh báo, Báo cáo theo phòng / chuyên viên, đường dẫn riêng, quyền điều chỉnh hạn và sửa (v3.29)
 
@@ -361,3 +366,21 @@ cho đỡ rối mắt." Trả lời hai câu hỏi và duyệt kế hoạch cùn
 | P-1 | Báo cáo theo kỳ tính số thế nào? | **Như Tổng quan**: hoàn thành = hoàn thành trong khoảng ngày (chưa ghi ngày hoàn thành thì tính theo ngày giao); quá hạn, sắp đến hạn, đang thực hiện = việc chưa hoàn thành, tính tới hôm nay — cùng kỳ, cùng phạm vi thì số Báo cáo khớp Tổng quan (Báo cáo luôn theo phạm vi phụ trách của người xem; khi cấu hình xem toàn bộ bật, Tổng quan của Phó Chánh VP mặc định "Toàn Văn phòng" — chọn "Phạm vi của tôi" để so). Áp cho dải số, bốn bảng, danh sách khi bấm, bản in, tệp Excel (thêm sheet "Kỳ báo cáo"; tên tệp `vptu-bao-cao-<ngày xuất>_<từ>-<đến>.xlsx` thay tên ở I-8); "Việc cần lãnh đạo quyết định" giữ việc đang mở (SPEC DB-12). | unit `bao-cao`; e2e `bao-cao-phong` |
 | P-2 | Kỳ mặc định khi mở Báo cáo? | **Năm hiện tại** (như Tổng quan); nút nhanh Tháng · Quý · Năm · Nhiệm kỳ 2025–2030; hai ô Từ ngày – Đến ngày (trống một đầu: từ đầu dữ liệu / đến hôm nay; ngược thì đổi chỗ); kỳ giữ trong phiên. | e2e `bao-cao-phong` |
 | P-3 | Bỏ những dòng nào? | Ba dòng "Cách tính" trên màn hình: dưới dải đầu Tổng quan, trong khối Giải ngân vốn, dưới dải số Báo cáo. Cách tính ghi ở Hướng dẫn sử dụng (mục 5.1, 5.7). Giữ các dòng gợi ý ngắn khác (ví dụ "Bấm tên loại để lọc…"). | e2e `cv-xem-phong`, `bao-cao-phong` |
+
+## Nhóm Q — Quyết định 23/10/2026: chỉ còn "Chủ trì theo dõi" — bỏ vai "Người theo dõi" (v3.31, migration 0128)
+
+Chủ dự án (23/10/2026, 14:25, kèm hình ngăn chi tiết ghi lặp "Chủ trì theo dõi: Trần Thị Hiền (Phòng Tổng hợp)" và "Người theo dõi: Trần Thị
+Hiền"): "Tại sao vẫn còn chủ trì theo dõi và người theo dõi → Hiển thị thống nhất 1 kiểu thôi không để như hiện tại." Trả lời câu hỏi: "Bỏ đi → Chỉ
+còn chủ trì theo dõi"; duyệt kế hoạch cùng ngày. Thay CH-2 (phương án A) và N-2 (tên ô "Người theo dõi").
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| Q-1 | Giữ hai vai "Chủ trì theo dõi" và "Người theo dõi"? | **Bỏ "Người theo dõi"** khỏi mọi màn hình, ô nhập, bộ lọc, cột Excel. Cột `nguoi_theo_doi` giữ làm trường nội bộ = người đại diện của chủ trì: cán bộ chủ trì; chủ trì là phòng → Trưởng phòng; "Văn phòng Tỉnh ủy" → Chánh Văn phòng; đơn vị ngoài Văn phòng / phòng chưa có Trưởng phòng → giữ giá trị đang ghi. Trigger ghi trên mọi đường (giao việc, giao lại, đổi chủ trì, nhập Excel, bổ sung dữ liệu). | RLS `kl-0128`; unit `chu-tri` |
+| Q-2 | Việc có người theo dõi khác chủ trì (production 23/10: 7 việc, 5 đang mở)? | Căn một lần theo quy tắc Q-1 (lịch sử tự ghi, Diễn biến ẩn dòng này); chủ trì giữ nguyên. Trước khi phát hành, Claude gửi chủ dự án mã 2 việc đang mở do chuyên viên theo dõi — nếu chuyên viên đó mới là người làm thì "Đổi chủ trì theo dõi" sang chuyên viên. | Migration 0128 (khối căn dữ liệu) |
+| Q-3 | Người giao việc (lãnh đạo, Trưởng phòng, chuyên viên giao thẳng) còn làm gì với việc giao cho người khác? | Không còn là "người theo dõi": không phải xác nhận nhận việc, không nhận cảnh báo mức "sắp đến hạn" của việc đó (cảnh báo quá hạn theo quy tắc hiện nay). Vẫn xem (người nhập), đôn đốc, giao lại, trả lại / đánh giá minh chứng. Chuyên viên giao thẳng cho chuyên viên khác không còn nhận tin hoạt động của việc, trừ khi đã chỉ đạo trên việc đó. | e2e `cv-giao-viec`, `nhiem-vu` |
+| Q-4 | Ai trả lại / đánh giá minh chứng? | Bỏ nhánh "người theo dõi" (`kl_duoc_nghiem_thu`) — chủ trì không tự xem lại việc của mình; vẫn được: người giao việc, lãnh đạo trong phạm vi (gồm Trưởng phòng), quản trị nhiệm vụ. | RLS `kl-0128` |
+| Q-5 | Hộp Quản trị "Chuyển việc đang theo dõi"? | Thành **"Chuyển việc đang chủ trì theo dõi"**: chuyển chủ trì các việc đang mở từ cán bộ cũ sang cán bộ mới (đơn vị, cấp nhận theo người mới); việc giao cho phòng / Văn phòng chỉ chuyển khi người nhận đang giữ chức Trưởng phòng / Chánh VP (đổi chức danh ở Tài khoản trước), không thì giữ nguyên và báo mã. | RLS `kl-0128` |
+| Q-6 | "Việc tôi theo dõi" của chuyên viên? | Thành **"Việc tôi đã giao"** — việc mình giao hoặc nhập mà người khác chủ trì theo dõi; đường dẫn `/Viec-toi-da-giao` (đường dẫn cũ vẫn mở); bỏ nút quan hệ. "Việc của tôi" bỏ lọc "Mọi vai trò / Chủ trì / Người theo dõi". | Unit `tuyen`, `tong-hop`; e2e `duong-dan`, `cv-giao-viec` |
+| Q-7 | Ghi chủ trì thế nào? | **Một kiểu ở mọi nơi**: cán bộ "Họ tên (Phòng …)" (lãnh đạo: "(Văn phòng Tỉnh ủy)"); phòng / Văn phòng: tên đơn vị. Bảng danh sách giữ tên ở dòng trên, phòng ở dòng dưới; Xuất Excel giữ cột "Chủ trì theo dõi" và cột "Phòng" riêng. | Unit `chu-tri` |
+
+**Chưa sửa (đề xuất để sau):** vài câu báo lỗi do cơ sở dữ liệu trả về còn chữ "người theo dõi" (ít gặp — ví dụ khi giao việc thay mặt với dữ liệu sai).

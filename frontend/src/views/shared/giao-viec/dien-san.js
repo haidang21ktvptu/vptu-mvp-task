@@ -1,6 +1,6 @@
 // Hoàn thiện một dòng "Chờ hoàn thiện" của lô nhập Excel (v9 đợt 2): biểu mẫu Giao việc điền sẵn từ dữ liệu đã chuẩn hoá của dòng (dong_nhap.du_lieu),
 // dải nhắc phía trên ghi lô / dòng / ô còn thiếu / lý do DB trả. Điền theo thứ tự các ô phụ thuộc nhau (văn bản → thay mặt [chờ đọc phạm vi] → Owner
-// → ngành → lĩnh vực → người theo dõi) bằng chính sự kiện change của ô, nên mọi kiểm tra / gợi ý của biểu mẫu chạy như người dùng chọn. Gửi Giao
+// → ngành → lĩnh vực; v3.31: không còn ô người theo dõi — DB đặt theo chủ trì) bằng chính sự kiện change của ô, nên mọi kiểm tra / gợi ý của biểu mẫu chạy như người dùng chọn. Gửi Giao
 // việc kèm dong_nhap_id (+ vướng mắc của dòng) → giao_viec (0073) gắn việc vào dòng (DA_HOAN_THIEN). Quyền thật ở DB.
 import { $, show, escapeHtml } from '../../../lib/dom.js';
 import { vanBanTheoKhoa, danhMucKl } from '../../../lib/kl/du-lieu.js';
@@ -45,9 +45,9 @@ export async function apDienSan(dong, { nhanMoi }) {
   }
   // 2. Thay mặt (chuyên viên giao): đổi lãnh đạo → biểu mẫu khoá trong lúc đọc phạm vi → chờ mở lại rồi mới chọn Owner / ngành.
   if (!$('klThThayMatWrap').classList.contains('hidden') && chon('klThThayMat', d.thay_mat_nhom ? giaTriNhom(d.thay_mat_nhom) : d.thay_mat_cho)) { await cho(() => $('gvKhoa').disabled); await cho(() => !$('gvKhoa').disabled); }
-  // 3. Owner (cán bộ, không thì đơn vị) → ngành → lĩnh vực → người theo dõi.
+  // 3. Owner (cán bộ, không thì đơn vị) → ngành → lĩnh vực.
   if (!(d.owner_tai_khoan && chon('klThOwner', `tk:${d.owner_tai_khoan}`))) chon('klThOwner', d.owner_don_vi_ma ? `dv:${d.owner_don_vi_ma}` : '');
-  chon('klThNganh', d.nganh_ma); goiYLinhVuc($('klThLinhVuc'), d.linh_vuc_ma); chon('klThNguoiTheoDoi', d.nguoi_theo_doi);   // v3.29: lĩnh vực của dòng = gợi ý
+  chon('klThNganh', d.nganh_ma); goiYLinhVuc($('klThLinhVuc'), d.linh_vuc_ma);   // v3.29: lĩnh vực của dòng = gợi ý
   // 4. Các ô còn lại.
   go('klThNoiDung', d.noi_dung); chon('klThSanPham', d.san_pham_loai); chon('klThCapNhan', d.cap_nhan_san_pham);
   chon('klThLoai', d.loai_thoi_han_ma); go('klThHan', d.han_xu_ly);

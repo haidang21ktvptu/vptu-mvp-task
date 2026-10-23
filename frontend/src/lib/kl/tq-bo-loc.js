@@ -84,7 +84,7 @@ export function tuyChonLocMoi(rows, { mucTieuDm = [], nhomDm = null, khoiDm = []
 }
 
 // Chip "Đang áp dụng": { k, v?, ten } — bấm ✕ bỏ đúng điều kiện đó. tc: tuyChonLoc (cũ + mới), dm: { mucTieuDm }, nhan: { phamVi, loai(ma) }.
-export function chipLoc(loc, tc, { mucTieuDm = [], nhomDm = null, phamViNhan = 'Việc tôi theo dõi hoặc giao', tenLoai = (m) => m, tenDoKhan = (m) => m } = {}) {
+export function chipLoc(loc, tc, { mucTieuDm = [], nhomDm = null, phamViNhan = 'Việc tôi chủ trì hoặc giao', tenLoai = (m) => m, tenDoKhan = (m) => m } = {}) {
   const ten = (ds, ma) => (ds || []).flatMap((x) => x.ds || [x]).find((o) => o.ma === ma)?.ten || ma;
   const nguoi = () => { const [p, ...v] = loc.nguoi.split(':'); const ma = v.join(':'); return p === 'LD' ? (ma === 'CHUA' ? 'Chưa có lãnh đạo phụ trách' : ten(tc.ldvp, ma)) : p === 'P' ? ten(tc.phong, ma) : ten(tc.canBo, ma); };
   const c = [];

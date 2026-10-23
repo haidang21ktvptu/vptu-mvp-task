@@ -117,7 +117,7 @@ export const TEN_COT = {
   sua_thong_tin_giao: 'Sửa thông tin giao', de_nghi_sua: 'Đề nghị sửa', nhap_excel: 'Nhập Excel',
   don_vi_phoi_hop: 'Đơn vị phối hợp', van_ban_ra_soat: 'Rà soát văn bản (số nhiệm vụ dự kiến)',
   muc_quan_trong: 'Mức quan trọng', co_quan_trinh: 'Cơ quan/đơn vị trình', thuong_truc_chi_dao: 'Thường trực chỉ đạo', stt_van_ban: 'Số thứ tự trong văn bản',   // 0087
-  tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển người theo dõi',   // 0090, 0092
+  tep_minh_chung: 'Gắn tệp minh chứng', chuyen_theo_doi: 'Chuyển chủ trì theo dõi',   // 0090, 0092 (v3.31 — 0128: chuyển chủ trì theo dõi)
   gan_muc_tieu: 'Mục tiêu then chốt',   // 0105
   ra_soat_phan_loai: 'Rà soát phân loại (ngành/lĩnh vực, mục tiêu then chốt)',   // 0116
   giai_ngan: 'Giải ngân vốn',   // 0119: nhập / xoá kỳ số liệu, gắn / đổi / bỏ theo dõi

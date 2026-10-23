@@ -1,6 +1,6 @@
-// Tổng quan — Đợt C1 v3.19: thanh lọc (phạm vi tôi theo dõi / giao, loại văn bản, phòng, cán bộ chủ trì, độ khẩn, lãnh đạo VP phụ trách),
+// Tổng quan — Đợt C1 v3.19: thanh lọc (phạm vi tôi chủ trì / giao, loại văn bản, phòng, cán bộ chủ trì, độ khẩn, lãnh đạo VP phụ trách),
 // khối "Theo loại văn bản", khối "Theo lãnh đạo VP phụ trách" (phân công phu_trach_phong hiệu lực — cùng quy tắc pcvp_phu_trach: kiêm nhiệm
-// đúng phòng + ngành + lĩnh vực thắng "cả phòng"; phòng của việc = phòng người theo dõi và phòng chủ trì trong Văn phòng, như kl_pham_vi) và
+// đúng phòng + ngành + lĩnh vực thắng "cả phòng"; phòng của việc = phòng người đại diện chủ trì (nguoi_theo_doi nội bộ, 0128) và phòng chủ trì trong Văn phòng, như kl_pham_vi) và
 // thanh tải chồng của bảng KPI. Thuần tổng hợp trên dòng v_nhiem_vu RLS đã trả về — không DOM, không Supabase; unit test tong-quan-them.test.mjs.
 import { soLieuChinh, laXong, laMo, mucMo, laViecGoc } from './tong-quan.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from './do-khan.js';

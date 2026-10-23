@@ -71,7 +71,7 @@ test.describe.serial('Luồng giao việc → xác nhận nhận việc trên d�
     await page.locator('#klThLuu').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao việc NV-');
     const { data } = await db.from('nhiem_vu').select('id, ma, theo_1400, owner_tai_khoan, nguoi_theo_doi').eq('noi_dung', title).single();
-    expect(data).toMatchObject({ theo_1400: true, owner_tai_khoan: CV1_ID, nguoi_theo_doi: '00000000-0000-4000-8000-000000000003' });
+    expect(data).toMatchObject({ theo_1400: true, owner_tai_khoan: CV1_ID, nguoi_theo_doi: CV1_ID });   // v3.31 (0128): người theo dõi theo chủ trì, không còn là người giao
     moiId = data.id; moiMa = data.ma;
     await expect(page.locator(`#nganCT #klChiTiet-${moiId}`)).toBeVisible(NAP);   // v9 đợt 2: ở lại Giao việc, việc vừa giao mở trong ngăn chi tiết
     await expect(page.locator('#viewGiaoViec')).toBeVisible();

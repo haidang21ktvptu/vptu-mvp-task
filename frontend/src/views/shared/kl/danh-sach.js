@@ -3,7 +3,7 @@
 // điều hành truyền sang) áp cho cả dải số lẫn danh sách; bộ lọc "nhóm" chỉ áp cho danh sách. Ngăn chi tiết đang mở giữ nguyên qua vẽ lại.
 // v3.24: bộ lọc chi tiết (thời gian nhập, người nhập, cấp giao, hạn xử lý, độ khẩn — loc-them.js) và ba cách sắp xếp (kl.sx; mặc định mới nhập trước).
 // v3.25 (bảng theo cột, mẫu NhiemVu 16/10/2026): 50 dòng mỗi trang (kl.trang; đổi lọc / tìm / sắp xếp / ô số → trang 1; nạp lại, realtime giữ
-// trang; In / Xuất Excel lấy đủ danh sách), hàng tiêu đề theo bộ cột; chế độ "Việc tôi theo dõi" (theo-doi.js) khi có khoá theoDoiCuaToi.
+// trang; In / Xuất Excel lấy đủ danh sách), hàng tiêu đề theo bộ cột; chế độ "Việc tôi đã giao" (theo-doi.js; v3.31) khi có khoá daGiaoCuaToi.
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
@@ -36,10 +36,9 @@ const coSo = () => (kl.loc.toanBo ? kl.rows : trongPhamVi(kl.rows));
 
 // Khoá lọc do màn hình điều hành đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm (đơn vị, kết luận, hội nghị, ngành, lĩnh vực) không hiện chip.
 const NHAN_CHIP = {
-  nguoiTheoDoi: (v) => `Người theo dõi: ${kl.rows.find((r) => r.nguoi_theo_doi === v)?.nguoi_theo_doi_ten || v}`,
   canBo: (v) => `Cán bộ: ${state.accounts.find((a) => a.id === v)?.full_name || v}`,
-  cuaToi: () => 'Việc của tôi (chủ trì theo dõi hoặc người theo dõi)',
-  theoDoiCuaToi: () => 'Việc tôi là người theo dõi (không phải chủ trì theo dõi)',
+  cuaToi: () => 'Việc tôi chủ trì theo dõi',
+  daGiaoCuaToi: () => 'Việc tôi đã giao (người khác chủ trì theo dõi)',
   chiMo: () => 'Chỉ việc đang mở',
   thieuMinhChung: () => 'Hoàn thành chưa có minh chứng',
   khongNgayHoanThanh: () => 'Hoàn thành không có ngày hoàn thành gốc',
@@ -50,7 +49,7 @@ const NHAN_CHIP = {
   nhomTrong: (v) => `Nhóm: ${v.map(tenNhom).join(', ')}`,
 };
 const MAP_O = { klLocDonVi: 'donVi', klLocKetLuan: 'ketLuan', klLocHoiNghi: 'hoiNghi', klLocNganh: 'nganh', klLocNguon: 'nguon', klTimKiem: 'tuKhoa',
-  klLocChuTri: 'chuTri', klLocTheoDoi: 'theoDoi', klLocLdvp: 'ldvp',   // v3.23: lọc theo cán bộ chủ trì, người theo dõi, lãnh đạo VP phụ trách
+  klLocChuTri: 'chuTri', klLocLdvp: 'ldvp',   // v3.23: lọc theo cán bộ chủ trì, lãnh đạo VP phụ trách (v3.31: bỏ ô người theo dõi)
   klLocNhap: 'nhapKy', klLocNhapTu: 'nhapTuNgay', klLocNhapDen: 'nhapDenNgay', klLocNguoiNhap: 'nguoiNhap', klLocCapGiao: 'capGiao',   // v3.24
   klLocHan: 'hanKy', klLocHanTu: 'hanTuNgay', klLocHanDen: 'hanDenNgay', klLocDoKhan: 'doKhan', klLocMucTieu: 'mucTieu' };   // ô ngày: khoá *Ngay, locRows nhận khoá đã giải
 // PR-3: danh sách ĐANG HIỆN (lọc ngữ cảnh + nhóm, đã sắp xếp) — nút Xuất Excel xuất đúng các dòng này.
@@ -114,10 +113,10 @@ function dienBoLoc() {
   const ds = [...dv].sort((a, b) => b[1].n - a[1].n || a[1].ten.localeCompare(b[1].ten, 'vi'));
   $('klLocDonVi').innerHTML = opt('', `Đơn vị chủ trì theo dõi (${dv.size})`) + ds.map(([ma, c]) => opt(ma, `${c.ten} (${c.n})`, kl.loc.donVi === ma)).join('');
   show('klLocDonVi', dv.size > 1 || Boolean(kl.loc.donVi));
-  // v3.23: ba ô lọc theo cán bộ (có đếm, trên dòng của phạm vi đang xem); ô chỉ một lựa chọn và chưa chọn thì ẩn.
+  // v3.23: các ô lọc theo cán bộ (có đếm, trên dòng của phạm vi đang xem); ô chỉ một lựa chọn và chưa chọn thì ẩn.
   const tc = tuyChonCanBo(rows, { ten: (id) => state.accounts.find((a) => a.id === id)?.full_name, phanCong: kl.phanCong,
     lanhDaoVP: state.accounts.filter((a) => a.role_group === 'A1' && !a.is_chief && !a.is_system) });
-  [['klLocChuTri', 'chuTri', 'Chủ trì theo dõi'], ['klLocTheoDoi', 'theoDoi', 'Người theo dõi'], ['klLocLdvp', 'ldvp', 'Lãnh đạo VP phụ trách']].forEach(([id, k, nhan]) => {
+  [['klLocChuTri', 'chuTri', 'Chủ trì theo dõi'], ['klLocLdvp', 'ldvp', 'Lãnh đạo VP phụ trách']].forEach(([id, k, nhan]) => {
     $(id).innerHTML = opt('', `${nhan} (${tc[k].length})`) + tc[k].map((o) => opt(o.ma, `${o.ten} (${o.n})`, kl.loc[k] === o.ma)).join('');
     show(id, tc[k].length > 1 || Boolean(kl.loc[k]));
   });
@@ -149,7 +148,7 @@ export function render(veLaiNgan = false) {
   setText('klSo-TONG', t.tong);
   THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
   document.querySelectorAll('#klStats .o-so').forEach((el) => el.setAttribute('aria-pressed', String((el.dataset.nhom || '') === (nhom || ''))));
-  // Việc tôi theo dõi (theo-doi.js): ô số riêng + quan hệ thay dải trạng thái; sắp xếp "Mức cảnh báo" không dùng ở chế độ này.
+  // Việc tôi đã giao (theo-doi.js): ô số riêng thay dải trạng thái; sắp xếp "Mức cảnh báo" không dùng ở chế độ này.
   const theoDoi = laTheoDoi(kl.loc); const tdLoc = theoDoi ? locTheoDoi(trongNguCanh) : null;
   veTheoDoi(theoDoi, tdLoc?.so);
   if (theoDoi && kl.sx === 'canh-bao') kl.sx = 'moi';
@@ -167,8 +166,8 @@ export function render(veLaiNgan = false) {
   if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
   setText('klSoDong', `${chuHienThi(p, list.length, goc.length)}${nhom && !theoDoi ? ` · ${tenNhom(nhom)}` : ''}`);
   $('klTrang').innerHTML = kl.inDayDu ? '' : nutTrangHtml(p, 'klTrang');
-  const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi theo dõi' : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
-  setText('klPhuDe', theoDoi ? 'việc đồng chí theo dõi hoặc đã giao, do cán bộ, cơ quan khác chủ trì — cột Tình hình cho biết việc cần đôn đốc'
+  const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi đã giao' : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
+  setText('klPhuDe', theoDoi ? 'việc đồng chí đã giao hoặc nhập, do cán bộ, phòng khác chủ trì theo dõi — cột Tình hình cho biết việc cần đôn đốc'
     : kl.loc.toanBo ? (laThuKyTT(state.user) ? 'toàn Văn phòng — thư ký Thường trực xử lý được mọi việc chưa hoàn thành; việc đã hoàn thành ngoài phạm vi ghi "Chỉ xem"'
       : 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết')
       : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
@@ -216,7 +215,7 @@ export function ganBoLoc() {
 }
 export const locKlNhom = ({ nhom }) => { kl.loc.nhom = nhom || ''; kl.trang = 1; render(); };
 // v3.23: đổi phạm vi danh sách (Phạm vi của tôi / Toàn Văn phòng) — bỏ khoá "việc của tôi"; ô chọn vẽ lại theo dòng của phạm vi mới.
-export const doiKlToanBo = (toanBo) => { kl.loc = { ...kl.loc, toanBo, ...(toanBo ? { cuaToi: null, theoDoiCuaToi: null } : {}) }; kl.trang = 1; dienBoLoc(); render(); };
+export const doiKlToanBo = (toanBo) => { kl.loc = { ...kl.loc, toanBo, ...(toanBo ? { cuaToi: null, daGiaoCuaToi: null } : {}) }; kl.trang = 1; dienBoLoc(); render(); };
 export const boKlLoc = ({ khoa }) => { delete kl.loc[khoa]; kl.trang = 1; render(); };
 // v3.24: cách sắp xếp (giữ trong phiên làm việc, không đổi khi màn khác truyền bộ lọc sang); Xoá bộ lọc = bỏ mọi ô lọc + ô số đang chọn,
 // giữ khoá ngữ cảnh (việc của tôi, phạm vi, chip từ màn điều hành — bỏ bằng nút ✕ của chip).
@@ -226,8 +225,7 @@ export function xoaKlLoc() {
   delete kl.loc.nhom;
   kl.trang = 1; render();
 }
-// v3.25: trang (‹ / ›, cuộn về đầu bảng); ô số và quan hệ của "Việc tôi theo dõi"; In / lưu PDF vẽ tạm mọi dòng đang lọc (beforeprint / afterprint).
+// v3.25: trang (‹ / ›, cuộn về đầu bảng); ô số của "Việc tôi đã giao"; In / lưu PDF vẽ tạm mọi dòng đang lọc (beforeprint / afterprint).
 export function doiKlTrang({ trang }) { kl.trang = Number(trang) || 1; render(); $('klBang')?.scrollIntoView({ block: 'start' }); }
 export const locKlTd = ({ loc }) => { td.loc = loc || 'tat'; kl.trang = 1; render(); };
-export const doiKlQh = ({ qh }) => { td.qh = qh || ''; kl.trang = 1; render(); };
 export function inKlDayDu(bat) { if (kl.inDayDu === bat) return; kl.inDayDu = bat; render(); }

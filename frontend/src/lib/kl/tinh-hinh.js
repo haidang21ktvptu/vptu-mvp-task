@@ -1,6 +1,6 @@
-// "Việc tôi theo dõi" dạng bảng (v3.25, mẫu ViecTheoDoi 16/10/2026) — phần THUẦN (unit test frontend/tests/tinh-hinh.test.mjs): cột "Tình
-// hình" (việc cần đôn đốc gì), tám ô số, quan hệ của tôi với việc (tôi đã giao / tôi theo dõi). Dòng là việc tôi theo dõi hoặc đã giao mà người
-// khác chủ trì (locRows theoDoiCuaToi, tong-hop.js). Lớp th-* viết nguyên văn (Tailwind giữ lớp).
+// "Việc tôi đã giao" dạng bảng (v3.25 "Việc tôi theo dõi", mẫu ViecTheoDoi 16/10/2026; v3.31 — 0128: chỉ còn chủ trì theo dõi) — phần THUẦN (unit
+// test frontend/tests/tinh-hinh.test.mjs): cột "Tình hình" (việc cần đôn đốc gì), tám ô số. Dòng là việc tôi giao hoặc nhập mà người khác chủ trì
+// theo dõi (locRows daGiaoCuaToi, tong-hop.js). Lớp th-* viết nguyên văn (Tailwind giữ lớp).
 import { ngayNgan, gioVN } from './bang-o.js';
 import { mo, GAP, choNghiemThu } from './viec-toi.js';   // một định nghĩa dùng chung với "Việc của tôi"
 import { nhanTheoNguong, tenMucHoa } from './nhan.js';
@@ -26,11 +26,6 @@ export function tinhHinh(r) {
   const phu = [r.da_xac_nhan_nhan ? 'đã nhận việc' : '', r.cap_nhat_luc ? `cập nhật ${ngayNgan(gioVN(r.cap_nhat_luc).ymd)}` : ''].filter(Boolean).join(', ');
   return { lop: 'th-thuong', tieu: 'Bình thường', chu: phu };
 }
-
-// Quan hệ của tôi với việc: 'giao' (tôi đã giao / nhập) | 'theo' (tôi theo dõi); việc vừa do tôi giao vừa do tôi theo dõi tính cả hai khi lọc.
-export const quanHe = (r, me) => (r.tao_boi === me ? 'giao' : 'theo');
-export const QUAN_HE = [['', 'Mọi việc'], ['giao', 'Tôi đã giao'], ['theo', 'Tôi theo dõi']];
-export const khopQuanHe = (r, me, qh) => !qh || (qh === 'giao' ? r.tao_boi === me : r.nguoi_theo_doi === me);
 
 // Tám ô số (mặc định "Cần đôn đốc": việc đang mở chưa nhận, có vướng mắc, chỉ đạo chờ trả lời, đề nghị từ chối, hoặc đã Vàng / Đỏ).
 export const O_SO_TD = nhanTheoNguong([

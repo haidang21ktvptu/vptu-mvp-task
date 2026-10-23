@@ -1,4 +1,4 @@
-// Màn hình "Nhiệm vụ" (mockup: tổng quan → danh sách → chi tiết): mục dùng chung mọi vai — A3 việc mình là Owner hoặc người theo dõi,
+// Màn hình "Nhiệm vụ" (mockup: tổng quan → danh sách → chi tiết): mục dùng chung mọi vai — A3 việc mình chủ trì theo dõi (v3.31),
 // A2 phòng mình, A1 theo phụ trách/kiêm nhiệm, A0 và quan_tri_kl tất cả — phạm vi do RLS (kl_pham_vi) quyết định, frontend chỉ vẽ.
 // Nút "Giao việc" cho A1/A2/quan_tri_kl (quyền thật trong hàm giao_viec). moNhiemVu(id, ma, cheDo): các màn hình khác mở đúng việc.
 // Đợt C1 v3.19 (0086): cấu hình pham_vi_chuyen_vien = 2 → chuyên viên vào "Nhiệm vụ của phòng" (openKlPhong, nút Việc của tôi / Cả phòng; chỉ xem).
@@ -13,7 +13,7 @@ import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { klTemplate } from './template.js';
 import { loadKl, ganBoLoc, locKlNhom, boKlLoc, setKlLoc, timKlRow, datKlChuaNap, render, dsDangHien, doiKlToanBo, doiKlSapXep, xoaKlLoc,
-  doiKlTrang, locKlTd, doiKlQh, inKlDayDu } from './danh-sach.js';
+  doiKlTrang, locKlTd, inKlDayDu } from './danh-sach.js';
 import { datLaiTheoDoi } from './theo-doi.js';
 import { mountXuatKy } from './xuat-ky.js';
 import { mountKlCapNhatModal } from './cap-nhat-modal.js';
@@ -34,7 +34,7 @@ import { boViec } from '../../shell/duong-dan.js';
 import { moViecTheoMa } from './mo-theo-ma.js';   // v3.29: "…/<chức năng>/NV-…" (chủ dự án 22/10/2026 17:02)
 
 export const duocGiaoViec = () => ['A1', 'A2', 'A3'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl);   // 0085: cả chuyên viên (giao thẳng)
-// Chuyên viên thường: màn này là "Việc của tôi" (mặc định lọc việc mình chủ trì / theo dõi). Chuyên viên giữ quyền quản trị nhiệm vụ vào
+// Chuyên viên thường: màn này là "Việc của tôi" (mặc định lọc việc mình chủ trì theo dõi). Chuyên viên giữ quyền quản trị nhiệm vụ vào
 // từ mục "Toàn bộ nhiệm vụ" (menu.js) nên không lọc — việc của riêng họ đã có màn hình điều hành; tìm nhanh (tim-nhanh.js) cùng quy tắc.
 export const chiViecCuaToi = () => state.user?.role_group === 'A3' && !state.user?.quan_tri_kl;
 const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng', A3: 'Việc của tôi' };
@@ -48,9 +48,9 @@ export function openKl(loc, phong = false) {
   show('klNutThem', duocGiaoViec()); show('klXuatMau', laNguoiNhap(state.user));   // v9 đợt 2: xuất theo mẫu nhập (người nhập Excel)
   const thuong = loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
     : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
-  $('klTieuDe').dataset.thuong = thuong;   // render() đổi về tên này khi rời chế độ "Việc tôi theo dõi" (bỏ chip, Toàn Văn phòng)
-  $('klTieuDe').textContent = loc?.theoDoiCuaToi ? 'Việc tôi theo dõi' : thuong;
-  if (loc?.theoDoiCuaToi) datLaiTheoDoi();   // v3.25: mở "Việc tôi theo dõi" từ menu → ô Cần đôn đốc, Mọi việc
+  $('klTieuDe').dataset.thuong = thuong;   // render() đổi về tên này khi rời chế độ "Việc tôi đã giao" (bỏ chip, Toàn Văn phòng)
+  $('klTieuDe').textContent = loc?.daGiaoCuaToi ? 'Việc tôi đã giao' : thuong;
+  if (loc?.daGiaoCuaToi) datLaiTheoDoi();   // v3.25: mở "Việc tôi đã giao" (v3.31) từ menu → ô Cần đôn đốc
   show('klPhamVi', phong);
   const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : {});
   setKlLoc(bo, true);
@@ -151,7 +151,7 @@ export function registerKlView() {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
   registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
-    klTrang: doiKlTrang, klTdLoc: locKlTd, klTdQh: doiKlQh,
+    klTrang: doiKlTrang, klTdLoc: locKlTd,
     dongKlChiTiet: () => { dongKlChiTiet(); boViec({ nguoiDung: true }); },   // nút "Đóng ngăn" của màn Nhiệm vụ: bỏ mã việc khỏi đường dẫn
     moViecTheoMa });
   // v3.25: In / lưu PDF (nút hoặc Ctrl+P) in đủ danh sách đang lọc, không chỉ trang 50 dòng đang xem.

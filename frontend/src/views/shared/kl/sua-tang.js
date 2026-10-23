@@ -27,9 +27,9 @@ const kieuCua = (cot) => O_GIAO.find(([c]) => c === cot)?.[2] || 'chu';
 const nguoiGiao = (r) => tenCapDuyet(r, r.giao_thay_mat_cho || r.tao_boi) || 'cấp giao việc';   // nhóm được thay mặt → tên nhóm (v3.18)
 const dongViec = (id) => timKlRow(id) || dh.rows.find((x) => x.id === id);   // ngăn chi tiết (kl.rows) hoặc thẻ "Việc của tôi" (dh.rows)
 // v3.29: thư ký Thường trực (0124), tài khoản quản trị sửa ngay — người giao việc cũng được báo (sua_thong_tin_giao).
-const moTaSua = (r) => (laToanQuyen(state.user) ? 'Tài khoản quản trị: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì, người theo dõi và người giao việc được báo.'
-  : !laTangGiao(r) && laThuKyTT(state.user) ? 'Đồng chí là thư ký Thường trực: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì, người theo dõi và người giao việc được báo.'
-    : 'Đồng chí là cấp giao việc: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì và người theo dõi được báo.');
+const moTaSua = (r) => (laToanQuyen(state.user) ? 'Tài khoản quản trị: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi và người giao việc được báo.'
+  : !laTangGiao(r) && laThuKyTT(state.user) ? 'Đồng chí là thư ký Thường trực: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi và người giao việc được báo.'
+    : 'Đồng chí là cấp giao việc: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi được báo.');
 
 // Giá trị hiển thị của một ô (mã danh mục → tên).
 export function giaTriO(cot, v) {
@@ -174,7 +174,7 @@ async function luuSuaTang() {
   try {
     if ($('stCheDo').value === 'sua') {
       await suaThongTinGiao(id, thay, lyDo);
-      notifySuccess(`Đã sửa ${tenOGiao(cot).toLowerCase()}. Chủ trì theo dõi và người theo dõi được báo.`);
+      notifySuccess(`Đã sửa ${tenOGiao(cot).toLowerCase()}. Chủ trì theo dõi được báo.`);
     } else {
       await guiDeNghiSua(id, thay, lyDo);
       notifySuccess('Đã gửi đề nghị sửa. Người duyệt nhận thông báo; việc vẫn chạy trong lúc chờ.');

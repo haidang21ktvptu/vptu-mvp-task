@@ -1,6 +1,7 @@
 // v3.17 (Đợt A, yêu cầu 7/10/2026 mục 1, 5, 9; v3.18 gộp bố cục 8/10): Trưởng phòng (demo_truongphong, TONG_HOP) giao NHIỀU nhiệm vụ từ một văn
 // bản mới bằng các thẻ nhiệm vụ — thẻ 1 là bộ ô chính (id klTh*), "+ Thêm nhiệm vụ" dựng thẻ 2, 3 (bỏ một thẻ rồi thêm lại; thẻ 2 giao cho chính
-// mình) — mỗi thẻ đủ ô của một việc (người theo dõi, phối hợp, độ khẩn, mô tả, cấp nhận, loại hạn riêng), một giao dịch → 3 việc cùng văn bản;
+// mình) — mỗi thẻ đủ ô của một việc (phối hợp, độ khẩn, mô tả, cấp nhận, loại hạn riêng; v3.31 — 0128: không còn ô người theo dõi, CSDL ghi theo
+// chủ trì theo dõi), một giao dịch → 3 việc cùng văn bản;
 // tìm nhanh ở ô Chịu trách nhiệm (gõ "chính tôi" / tên chuyên viên, bỏ dấu) mở danh sách người khớp + dòng kết quả, tự chọn; nút chọn nhanh
 // "Chính tôi"; PCVP giao hai thẻ khác phòng, khác lĩnh vực trong một lượt từ Kết luận BTV mới. v3.29: không còn ô Lĩnh vực — lĩnh vực tự xác định
 // (ô ẩn) theo ngành và ô Lĩnh vực chi tiết. Dữ liệu theo khoá; tự dọn.
@@ -20,7 +21,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
   test.beforeAll(async () => { db = dbAdmin(); khoa = khoaRieng('GN', test.info()); await don(); });   // dọn cả lượt chạy dở
   test.afterAll(async () => { if (db) await don(); });
 
-  test('1. Thẻ 1 = ô chính; thêm / bỏ → 3 thẻ; thẻ đủ ô; thẻ 2 giao cho chính mình, Khẩn, phối hợp; "Giao 3 việc" → ba việc cùng văn bản, theo dõi / cấp nhận / độ khẩn từng thẻ', async ({ browser }, testInfo) => {
+  test('1. Thẻ 1 = ô chính; thêm / bỏ → 3 thẻ; thẻ đủ ô (không ô người theo dõi); thẻ 2 giao cho chính mình, Khẩn, phối hợp; "Giao 3 việc" → ba việc cùng văn bản, chủ trì / cấp nhận / độ khẩn từng thẻ', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'A2', testInfo, async (p) => {
       await moGiaoViec(p);
       await expect(p.locator('#viewGiaoViec .gv-phan')).toHaveCount(2);   // v3.18: hai khối — văn bản & mốc giao, nhiệm vụ
@@ -31,10 +32,11 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await expect(p.locator('#klThLuuTiep')).toBeVisible(); await expect(p.locator('#klThLuu')).toHaveText('Giao việc');
       await p.locator('#gvThemDong').click();
       await expect(p.locator('#klThLuuTiep')).toBeHidden(); await expect(p.locator('#gvLuoiDem')).toHaveText('2 / 20 nhiệm vụ');
-      for (const cot of ['noi_dung', 'owner', 'owner_tim', 'theo_doi', 'theo_doi_tim', 'phoi_hop', 'do_khan', 'san_pham', 'san_pham_mo_ta', 'cap_nhan', 'loai', 'han', 'nganh', 'lvct', 'linh_vuc']) await expect(o(p, 2, cot)).toHaveCount(1);
+      for (const cot of ['noi_dung', 'owner', 'owner_tim', 'phoi_hop', 'do_khan', 'san_pham', 'san_pham_mo_ta', 'cap_nhan', 'loai', 'han', 'nganh', 'lvct', 'linh_vuc']) await expect(o(p, 2, cot)).toHaveCount(1);
+      for (const cot of ['theo_doi', 'theo_doi_tim']) await expect(o(p, 2, cot)).toHaveCount(0);   // v3.31: chỉ còn Chủ trì theo dõi
+      await expect(p.locator('#klThNguoiTheoDoi')).toHaveCount(0);
       await expect(o(p, 2, 'linh_vuc')).toHaveAttribute('type', 'hidden');   // v3.29: lĩnh vực tự xác định, không phải ô chọn
       await expect(the(p, 2).locator('label', { hasText: /^Lĩnh vực$/ })).toHaveCount(0);
-      await expect(o(p, 2, 'theo_doi')).toHaveValue(ID.tp);   // mặc định người giao
       await p.locator('#gvThemDong').click(); await p.locator('#gvThemDong').click();
       await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(3);
       await the(p, 3).locator('.gvl-xoa').click();
@@ -54,9 +56,9 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       }
       await expect(o(p, 2, 'cap_nhan')).toHaveValue('PHO_CHANH_VAN_PHONG');   // cấp nhận = cấp trên của Owner
       await the(p, 2).locator('.dk-chon button[data-gia-tri="KHAN"]').click();
-      await moThem(p, 2); await moThem(p, 3);   // v3.27: phối hợp, mô tả, người theo dõi, cấp nhận ở mục gập "Thêm" của thẻ
+      await moThem(p, 2); await moThem(p, 3);   // v3.27: phối hợp, mô tả, cấp nhận ở mục gập "Thêm" của thẻ
       await o(p, 2, 'phoi_hop').fill('Sở Tài chính'); await o(p, 2, 'san_pham_mo_ta').fill('Báo cáo quý');
-      await o(p, 3, 'theo_doi').selectOption(ID.cv1); await o(p, 3, 'cap_nhan').selectOption('THUONG_TRUC');
+      await o(p, 3, 'cap_nhan').selectOption('THUONG_TRUC');
       for (const i of [1, 2, 3]) await chonPhanLoai(p, { the: i });   // v3.26: phân loại bắt buộc mọi thẻ ("Không thuộc")
       await expect(p.locator('#gvConThieu')).toHaveText('', NAP);
       await expect(p.locator('#gvTomTatChu')).toContainText('Sẵn sàng giao 3 nhiệm vụ — nhiệm vụ 1: Chủ trì theo dõi:');   // v3.27: không trích nội dung
@@ -71,7 +73,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
     expect(data.length).toBe(3);
     expect(new Set(data.map((x) => x.van_ban_id)).size).toBe(1);
     expect(data.map((x) => [x.owner_tai_khoan, x.cap_nhan_san_pham, x.han_xu_ly, x.san_pham_loai, x.nguoi_theo_doi, x.do_khan, x.don_vi_phoi_hop, x.san_pham_mo_ta])).toEqual([
-      [ID.cv1, 'TRUONG_PHONG', cong(H, 1), 'BAO_CAO', ID.tp, 'THUONG', null, null],
+      [ID.cv1, 'TRUONG_PHONG', cong(H, 1), 'BAO_CAO', ID.cv1, 'THUONG', null, null],   // v3.31 (0128): người theo dõi (nội bộ) = chủ trì, không còn là người giao
       [ID.tp, 'PHO_CHANH_VAN_PHONG', cong(H, 2), 'BAO_CAO', ID.tp, 'KHAN', 'Sở Tài chính', 'Báo cáo quý'],
       [ID.cv1, 'THUONG_TRUC', cong(H, 3), 'BAO_CAO', ID.cv1, 'THUONG', null, null]]);
   });
@@ -122,7 +124,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
     expect(v).toEqual({ owner_tai_khoan: ID.pcvp, owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: ID.pcvp, cap_nhan_san_pham: 'THUONG_TRUC', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH' });
   });
 
-  test('4. Phó Chánh VP giao hai thẻ khác lĩnh vực trong MỘT lượt từ Kết luận BTV vừa tạo: ngành / lĩnh vực, người theo dõi riêng từng thẻ; DB đúng từng việc', async ({ browser }, testInfo) => {
+  test('4. Phó Chánh VP giao hai thẻ khác lĩnh vực trong MỘT lượt từ Kết luận BTV vừa tạo: ngành / lĩnh vực, chủ trì riêng từng thẻ; DB đúng từng việc (người theo dõi nội bộ theo chủ trì)', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'PCVP', testInfo, async (p) => {
       await moGiaoViec(p);
       await p.locator('#klThVanBanTim').fill(`${khoa}-KL`);
@@ -130,7 +132,6 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
       await p.locator('#gvThemDong').click();
       await expect(p.locator('#gvLuoiThan .gv-nv')).toHaveCount(1);
       await p.locator('#klThNoiDung').fill(`${khoa} PCVP thẻ 1`); await p.locator('#klThOwner').selectOption('dv:TONG_HOP');
-      await moThem(p); await p.locator('#klThNguoiTheoDoi').selectOption(ID.tp);   // người theo dõi riêng của thẻ 1 (trưởng phòng Tổng hợp) — mục "Thêm" (v3.27)
       await p.locator('#klThNganh').selectOption('KINH_TE_TONG_HOP'); await p.locator('#klThLvct').fill('Ngân sách');   // không dùng LV08_TAI_CHINH: fixture kiêm nhiệm của spec khác
       await p.locator('#klThSanPham').selectOption('TO_TRINH'); await p.locator('#klThHan').fill(cong(H, 4));
       await o(p, 2, 'noi_dung').fill(`${khoa} PCVP thẻ 2`); await o(p, 2, 'owner').selectOption(`tk:${ID.pcvp}`);
@@ -143,7 +144,7 @@ test.describe.serial('Giao việc — nhiều nhiệm vụ từ một văn bản
     });
     const { data } = await db.from('nhiem_vu').select('noi_dung, owner_don_vi_ma, owner_tai_khoan, nguoi_theo_doi, nganh_ma, linh_vuc_ma, cap_nhan_san_pham').like('noi_dung', `${khoa} PCVP thẻ%`).order('noi_dung');
     expect(data.map((x) => [x.owner_don_vi_ma, x.owner_tai_khoan, x.nguoi_theo_doi, x.nganh_ma, x.linh_vuc_ma, x.cap_nhan_san_pham])).toEqual([
-      ['TONG_HOP', null, ID.tp, 'KINH_TE_TONG_HOP', 'LV08_NGAN_SACH', 'PHO_CHANH_VAN_PHONG'],
+      ['TONG_HOP', null, ID.tp, 'KINH_TE_TONG_HOP', 'LV08_NGAN_SACH', 'PHO_CHANH_VAN_PHONG'],   // giao cho phòng → người theo dõi (nội bộ) = Trưởng phòng
       ['VAN_PHONG_TINH_UY', ID.pcvp, ID.pcvp, 'THAM_MUU_TONG_HOP', 'LV01_THAM_MUU_TONG_HOP', 'THUONG_TRUC']]);
   });
 });

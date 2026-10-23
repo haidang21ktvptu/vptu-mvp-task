@@ -32,7 +32,7 @@ const boSungHtml = () => `<details class="tam nx-phan nx-bo-sung hidden" id="nxB
 
 const tenLoai = (m) => LOAI_VB.find(([x]) => x === m)?.[1] || m || '';
 const tenGt = (k, v) => (['co_quan_trinh', 'owner_don_vi_ma'].includes(k) ? (danhMucKl().donVi || []).find((d) => d.ma === v)?.ten || v
-  : ['owner_tai_khoan', 'nguoi_theo_doi'].includes(k) ? findAccount(v)?.full_name || v : k === 'han_xu_ly' ? formatNgay(v) : v);
+  : k === 'owner_tai_khoan' ? findAccount(v)?.full_name || v : k === 'han_xu_ly' ? formatNgay(v) : v);
 function ketQuaHtml(kq) {
   const doi = kq.viec.filter((x) => x.ket_qua === 'DOI'); const loi = kq.viec.filter((x) => x.ket_qua === 'LOI');
   const vb = kq.van_ban.map((v) => `<li>Văn bản ${esc(v.so_ket_luan || '')} ngày ${esc(formatNgay(v.ngay_ban_hanh) || '')}: ${v.ket_qua === 'LOI' ? `<b>lỗi</b> — ${esc(v.loi || '')}`

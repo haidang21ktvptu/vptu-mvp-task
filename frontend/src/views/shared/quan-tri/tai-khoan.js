@@ -24,7 +24,7 @@ function taiKhoanRowHtml(a) {
   const btnTk = a.role_group === 'A0' ? '' : nut(a.thu_ky_thuong_truc ? 'Thu thư ký TT' : 'Cấp thư ký TT', 'toggleThuKyTT', a, `data-bat="${a.thu_ky_thuong_truc ? '0' : '1'}"`);
   const btnKhoa = me || a.quan_tri_he_thong ? '' : nut(a.bi_khoa ? 'Mở khoá' : 'Khoá', 'khoaTaiKhoan', a, `data-bat="${a.bi_khoa ? '0' : '1'}"`);
   const btnSua = state.user.quan_tri_he_thong && !a.is_system ? nut('Sửa', 'moSuaTaiKhoan', a, `aria-label="Sửa vai trò, phòng, chức danh của ${escapeHtml(a.full_name)}"`) : ''; // PR-4, 0068
-  const btnCtd = duocChuyenTheoDoi() && !a.is_system && a.role_group !== 'A0' ? nut('Chuyển việc theo dõi', 'moChuyenTheoDoi', a, `aria-label="Chuyển việc đang theo dõi của ${escapeHtml(a.full_name)}"`) : '';   // J-6, 0092
+  const btnCtd = duocChuyenTheoDoi() && !a.is_system && a.role_group !== 'A0' ? nut('Chuyển việc chủ trì', 'moChuyenTheoDoi', a, `aria-label="Chuyển việc đang chủ trì theo dõi của ${escapeHtml(a.full_name)}"`) : '';   // J-6, 0092, 0128
   return `
     <tr data-search="${escapeHtml(search)}">
       <td class="tieude">${escapeHtml(a.full_name)}${me ? ' (tôi)' : ''}<small>${escapeHtml(a.username)}${a.position_title ? ` · ${escapeHtml(a.position_title)}` : ''}${a.dien_thoai ? ` · ${escapeHtml(a.dien_thoai)}` : ''}</small></td>

@@ -1,7 +1,7 @@
 // KPI theo nhóm cán bộ từ dòng v_nhiem_vu (GĐ14, CH-2): số ĐÁNH GIÁ tính theo Owner — owner_tai_khoan thuộc nhóm, hoặc
 // (khi nhóm là một phòng, phongMa) Owner là chính phòng đó (owner_tai_khoan NULL, owner_don_vi_ma = phongMa) — gồm
-// đang mở / quá hạn / đỏ đặc biệt / hoàn thành; việc chỉ THEO DÕI (nguoi_theo_doi thuộc nhóm, Owner không thuộc nhóm) đếm
-// riêng, không cộng vào. Màu/mức từ hàm trang_thai (muc_canh_bao) — frontend không tự tính hạn.
+// đang mở / quá hạn / đỏ đặc biệt / hoàn thành; việc có nguoi_theo_doi thuộc nhóm mà Owner không thuộc nhóm (v3.31 — 0128: trường nội bộ = người
+// đại diện của chủ trì, không hiện) đếm riêng (theoDoi), không cộng vào. Màu/mức từ hàm trang_thai (muc_canh_bao) — frontend không tự tính hạn.
 // PR-2b (Mới 2): "Đỏ" (quá hạn, đỏ đặc biệt) tính cho người / phòng CHỊU CHẬM do DB tính (nguoi_chiu_cham, phong_chiu_cham): việc quá hạn ở bước
 // nghiệm thu thuộc lãnh đạo nghiệm thu, không thuộc chủ trì hay phòng chủ trì.
 import { state } from '../../lib/state.js';

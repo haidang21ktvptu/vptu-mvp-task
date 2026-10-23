@@ -1,7 +1,7 @@
 // Phần thuần (không DOM) của form giao việc GĐ14: ô "Chịu trách nhiệm" (Owner, NT-1) gộp hai kiểu trong MỘT ô chọn — Văn phòng/phòng
 // (A1, quan_tri_kl), cán bộ (A2 chỉ chuyên viên phòng mình) — giá trị "dv:<mã>" hoặc "tk:<id>"; v3.18 (0079): Owner luôn là phòng / cán bộ
 // Văn phòng, đơn vị ngoài không còn trong ô chọn (việc giao cho sở, ngành ghi tên đơn vị trong nội dung). Cấp nhận sản phẩm mặc định = cấp
-// ngay trên Owner (CH-7); người theo dõi trong phạm vi người giao (mặc định = người nhập). Ô Thay mặt (mọi chuyên viên, 0095): nhóm "Lãnh đạo Văn
+// ngay trên Owner (CH-7); v3.31 (0128): không còn ô người theo dõi — CSDL ghi theo chủ trì. Ô Thay mặt (mọi chuyên viên, 0095): nhóm "Lãnh đạo Văn
 // phòng" / "Thường trực Tỉnh ủy" (lib/kl/thay-mat.js) rồi từng lãnh đạo. Quyền thật kiểm trong hàm giao_viec (0025); đây chỉ là gợi ý đúng.
 import { escapeHtml } from '../../../lib/dom.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -50,17 +50,6 @@ export function thayMatOptionsHtml(accounts) {
     .map((a) => opt(a.id, `${a.full_name} — ${a.position_title || ''}${a.department ? ` · ${tenPhong(a.department)}` : ''}`));
   return nhomOpt('Nhóm lãnh đạo', nhom) + nhomOpt('Từng lãnh đạo', nguoi);
 }
-// Người theo dõi gợi ý theo Owner (GĐ22): phòng → Trưởng phòng; Văn phòng → Chánh VP; lãnh đạo A1/A2 → chính họ; chuyên viên → giữ mặc định (người giao).
-export function goiYTheoDoi(value, dm, accounts) {
-  if (!value) return null;
-  const [kieu, ma] = value.split(':');
-  if (kieu === 'tk') { const a = accounts.find((x) => x.id === ma); return a && ['A1', 'A2'].includes(a.role_group) ? a.id : null; }
-  const dv = dm.donVi.find((d) => d.ma === ma);
-  if (!dv?.trong_van_phong) return null;
-  const a = dv.phong ? accounts.find((x) => x.role_group === 'A2' && x.department === dv.phong && !x.is_system) : accounts.find((x) => x.role_group === 'A1' && x.is_chief && !x.is_system);
-  return a?.id || null;
-}
-
 // "tk:<id>" → { owner_tai_khoan, owner_don_vi_ma (phòng của cán bộ, hoặc Văn phòng với lãnh đạo), capMacDinh };
 // "dv:<mã>" → { owner_don_vi_ma, owner_tai_khoan: null, capMacDinh }.
 export function parseOwner(value, dm, accounts) {
@@ -74,13 +63,6 @@ export function parseOwner(value, dm, accounts) {
   }
   const dv = dm.donVi.find((d) => d.ma === ma);
   return { owner_don_vi_ma: ma, owner_tai_khoan: null, capMacDinh: dv?.phong ? 'PHO_CHANH_VAN_PHONG' : 'THUONG_TRUC' };
-}
-
-// Người theo dõi (CH-2): cán bộ Văn phòng trong phạm vi người giao; A2 chỉ phòng mình (+ chính mình).
-export function nguoiTheoDoiOptionsHtml(accounts, me) {
-  let ds = accounts.filter((a) => !a.is_system);
-  if (me?.role_group === 'A2' && !laQtkl(me)) ds = ds.filter((a) => a.department === me.department || a.id === me.id);
-  return ds.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '', 'vi')).map((a) => opt(a.id, `${a.full_name} — ${tenPhong(a.department)}`, a.id === me?.id)).join('');
 }
 
 export const LOAI_VAN_BAN = [['KL_BTV', 'Kết luận Hội nghị Ban Thường vụ'], ['TB_THUONG_TRUC', 'Thông báo của Thường trực Tỉnh ủy'],

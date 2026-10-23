@@ -2,7 +2,8 @@
 // trong frontend/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { O_SO, locO, demO, viecCanLam, sapXepViec, sapXepMuc, nhomGiuThuTu, vaiCua, chuaNhan } from '../src/lib/kl/viec-toi.js';
+import { O_SO, locO, demO, viecCanLam, sapXepViec, sapXepMuc, nhomGiuThuTu, chuaNhan } from '../src/lib/kl/viec-toi.js';
+import * as viecToiMod from '../src/lib/kl/viec-toi.js';
 
 const ME = 'me';
 const v = (id, o = {}) => ({ id, ma: `NV-${id}`, owner_tai_khoan: ME, nguoi_theo_doi: 'tp', theo_1400: true, toi_da_xac_nhan: true, tien_do_ma: 'DANG_THUC_HIEN',
@@ -17,7 +18,7 @@ const DS = [
   v('5'),                                                                      // trong hạn, không việc gấp
   v('6', { tien_do_ma: 'HOAN_THANH', nhom_dem: 'HOAN_THANH', so_minh_chung_hop_le: 1 }),
   v('7', { bi_tu_choi: true }),                                                // bị từ chối, chờ giao lại
-  v('8', { owner_tai_khoan: 'cv2', nguoi_theo_doi: ME, toi_da_xac_nhan: false }),   // tôi theo dõi, chưa nhận
+  v('8', { owner_tai_khoan: null, nguoi_theo_doi: ME, toi_da_xac_nhan: false }),   // việc giao cho phòng, tôi là người đại diện chủ trì (0128), chưa nhận
   v('9', { owner_tai_khoan: 'cv2', nguoi_theo_doi: 'tp', muc_canh_bao: 'DO' }),    // không phải việc của tôi (Toàn Văn phòng)
   v('10', { theo_1400: false, toi_da_xac_nhan: false }),                      // việc cũ (không theo 1400): không phải nhận
 ];
@@ -52,8 +53,8 @@ test('việc cần làm: thứ tự xác nhận → trả lời chỉ đạo →
   assert.equal(viecCanLam(v('x', { minh_chung_buoc: 'BI_TRA_LAI' }), C).chinh, true, 'minh chứng bị trả lại → nút chính');
 });
 
-test('vai, sắp xếp mới giao / hạn / mức cảnh báo, nhóm theo văn bản giữ thứ tự', () => {
-  assert.equal(vaiCua(DS[0], ME), 'Chủ trì theo dõi'); assert.equal(vaiCua(DS[7], ME), 'Người theo dõi'); assert.equal(vaiCua(DS[8], ME), '');
+test('v3.31: không còn nhãn vai (chỉ còn chủ trì theo dõi); sắp xếp mới giao / hạn / mức cảnh báo, nhóm theo văn bản giữ thứ tự', () => {
+  assert.ok(!('vaiCua' in viecToiMod), 'bỏ nhãn vai Chủ trì / Người theo dõi');
   const a = v('a', { created_at: '2026-10-02T01:00:00Z', van_ban_id: 'vb2', han_xu_ly: '2026-12-01' });
   const b = v('b', { created_at: '2026-10-03T01:00:00Z', van_ban_id: 'vb1', han_xu_ly: '2026-10-20', muc_canh_bao: 'VANG' });
   const c = v('c', { created_at: '2026-10-01T01:00:00Z', van_ban_id: 'vb2', han_xu_ly: '2026-10-10', muc_canh_bao: 'DO_DAC_BIET' });

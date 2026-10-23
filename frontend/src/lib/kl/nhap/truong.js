@@ -1,8 +1,9 @@
 // Chuẩn nhập của hệ thống (v9 đợt 2 — nhập Excel toàn trình), 3 mức: mức 1 = đủ để GIAO việc; mức 2 = tiến độ (tuỳ chọn); mức 3 = đủ để
 // ĐÓNG việc (minh chứng 4 yếu tố + chất lượng). Mã trường khớp kl_truong_nhap() (migration 0072). ten: tiêu đề hay gặp (đã chuẩn hoá — chuanTieuDe)
 // để tự ghép cột. v3.27 (chủ dự án 20/10/2026 — "chuẩn hoá theo tệp TUCB …, điền đủ cột B tới M thì import được ngay"): MẪU NHẬP CHUẨN = đúng các cột
-// của bảng Phụ lục (COT_MAU, A–O); mẫu 29 cột cũ (cu: true) vẫn nhận ra (HO_SO_MAU_CU). Cột "Chủ trì theo dõi" (chu_tri) = cán bộ chủ trì + người theo
-// dõi, hoặc một đơn vị Văn phòng ("VPTU"); "Cơ quan/đơn vị trình" là cơ quan trình (trước v3.27 bị ghép nhầm vào đơn vị chủ trì).
+// của bảng Phụ lục (COT_MAU, A–O); mẫu 29 cột cũ (cu: true) vẫn nhận ra (HO_SO_MAU_CU). Cột "Chủ trì theo dõi" (chu_tri) = cán bộ chủ trì, hoặc một đơn
+// vị Văn phòng ("VPTU"); "Cơ quan/đơn vị trình" là cơ quan trình (trước v3.27 bị ghép nhầm vào đơn vị chủ trì). v3.31 (0128): cột "Người theo dõi" của
+// mẫu cũ vẫn nhận ra nhưng bỏ qua (an: không có trong ô chọn ghép cột; chuanDong không đọc) — hệ thống ghi theo chủ trì theo dõi.
 
 export const TRUONG = [
   { k: 'ma', nhan: 'Mã nhiệm vụ', muc: 0, cu: true, ten: ['ma nhiem vu', 'ma nv', 'ma'], goiY: 'Để trống khi nhập việc mới; có mã → cập nhật việc đó' },
@@ -14,7 +15,7 @@ export const TRUONG = [
   { k: 'don_vi', nhan: 'Đơn vị chủ trì theo dõi', nhanCu: 'Đơn vị chủ trì', muc: 1, cu: true, kieu: 'donVi', ten: ['don vi chu tri', 'co quan chu tri', 'don vi thuc hien', 'don vi'] },
   { k: 'chu_tri', nhan: 'Chủ trì theo dõi', muc: 1, kieu: 'chuTri', ten: ['chu tri theo doi', 'chu tri', 'nguoi chu tri theo doi'], goiY: 'Họ tên cán bộ, hoặc "VPTU" (Văn phòng Tỉnh ủy)' },
   { k: 'can_bo', nhan: 'Cán bộ chủ trì', muc: 1, cu: true, kieu: 'canBo', ten: ['can bo chu tri', 'chuyen vien chu tri', 'nguoi chu tri', 'nguoi thuc hien'] },
-  { k: 'theo_doi', nhan: 'Người theo dõi', muc: 1, cu: true, kieu: 'canBo', ten: ['nguoi theo doi', 'can bo theo doi', 'theo doi'] },
+  { k: 'theo_doi', nhan: 'Người theo dõi', muc: 1, cu: true, an: true, kieu: 'canBo', ten: ['nguoi theo doi', 'can bo theo doi', 'theo doi'] },   // v3.31: bỏ qua
   { k: 'lanh_dao_giao', nhan: 'Lãnh đạo giao', muc: 1, cu: true, kieu: 'lanhDao', ten: ['lanh dao giao', 'nguoi giao', 'lanh dao chi dao'], goiY: 'Họ tên lãnh đạo, hoặc "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" (cả nhóm — v3.18)' },
   { k: 'loai_thoi_han', nhan: 'Loại thời hạn', muc: 1, cu: true, kieu: 'loaiThoiHan', ten: ['loai thoi han', 'loai han'] },
   { k: 'han_xu_ly', nhan: 'Hạn xử lý', nhanCu: 'Hạn hoàn thành', muc: 1, cu: true, kieu: 'ngay', ten: ['han hoan thanh', 'han xu ly', 'thoi han hoan thanh', 'thoi han', 'han'] },

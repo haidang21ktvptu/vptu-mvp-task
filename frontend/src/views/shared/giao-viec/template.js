@@ -1,8 +1,8 @@
 // Giao việc v8 (đợt 3, mockup 07; v9: dải 1-1-1-1-3, chọn nhanh, kế thừa khi giao tiếp xuống, văn bản đang nhập — v9.js). v3.18 (quyết định 8/10/2026,
 // gộp bố cục): biểu mẫu HAI khối trong một tấm — (1) Văn bản và mốc giao: văn bản (chọn có sẵn / tạo mới), nguồn nhiệm vụ, ngày giao nhiệm vụ, Thay
 // mặt (khi người giao không phải lãnh đạo); (2) Nhiệm vụ: luôn là các THẺ — thẻ "Nhiệm vụ 1" là bộ ô chính (id klTh*: nội dung, chịu trách nhiệm,
-// người theo dõi, đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành/lĩnh vực — kèm chọn nhanh; v3.29: lĩnh vực là ô ẩn
-// tự xác định, phan-loai.js), thẻ 2…20 dựng bằng
+// đơn vị phối hợp, độ khẩn, sản phẩm, mô tả, cấp nhận, loại thời hạn, hạn, ngành/lĩnh vực — kèm chọn nhanh; v3.29: lĩnh vực là ô ẩn tự xác
+// định, phan-loai.js; v3.31: bỏ ô người theo dõi — CSDL tự ghi theo chủ trì, 0128), thẻ 2…20 dựng bằng
 // nhieu-the.js (+ Thêm nhiệm vụ); cuối tấm "Thông tin thêm (không bắt buộc)" thu gọn: cấp cần quyết định, văn bản triển khai, ghi chú — dùng chung
 // cả lượt (Đợt C2: + mức quan trọng, cơ quan trình, Thường trực chỉ đạo — thong-tin-nguon.js). Không còn công tắc "Một việc / Nhiều nhiệm vụ": một thẻ → giao_viec (kể cả hoàn thiện dòng Excel, giao tiếp xuống), nhiều thẻ → giao_viec_nhieu.
 // Chấm 1-2 sáng khi khối điền đủ; chân tấm: "Còn thiếu: …" cạnh nút Giao việc / Giao N việc + Huỷ + Giao, nhập tiếp (chỉ khi một thẻ). Cột phụ 340px:
@@ -96,11 +96,10 @@ export const giaoViecTemplate = `
           <p class="chu-phu goi-y-han" id="gvGoiYHan">Nhiệm vụ không xác định được thời hạn (thường xuyên, chờ điều kiện): chọn mốc rà soát gần nhất làm hạn (ví dụ cuối quý hoặc 31/12) và ghi rõ "thực hiện thường xuyên" trong nội dung; đến mốc, người chủ trì báo cáo kết quả hoặc đề nghị gia hạn.</p>
           <div class="gv-truong gv-dk" id="klThDoKhanWrap"><span class="nhan">Độ khẩn</span>${nutDoKhanHtml('do_khan', 'THUONG', 'klThDoKhan')}</div>
           <p class="gv-nhac-pl" id="gvNhacPhanLoai" role="note">${NHAC}</p>
-          <details class="gv-nv-them" id="gvThe1Them"><summary>Thêm: người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận</summary>
+          <details class="gv-nv-them" id="gvThe1Them"><summary>Thêm: đơn vị phối hợp, mô tả sản phẩm, cấp nhận</summary>
             <div class="cot-3">
-              ${truong('klThNguoiTheoDoi', `Người theo dõi${BB}`, selTim('klThNguoiTheoDoi'), '', 'tự gợi ý theo người chủ trì')}
               ${truong('klThPhoiHop', 'Đơn vị phối hợp', inp('klThPhoiHop', 'text', ' maxlength="300" placeholder="Sở Tài chính; Sở Nội vụ" autocomplete="off"'), '', 'không bắt buộc, nhiều đơn vị cách nhau bằng dấu ;')}
-              <div></div>
+              <div></div><div></div>
             </div>
             <div class="cot-3">
               ${truong('klThSanPhamMoTa', 'Mô tả sản phẩm', inp('klThSanPhamMoTa', 'text', ' placeholder="Ví dụ: Tờ trình đề án X"'))}
@@ -145,7 +144,7 @@ export const giaoViecTemplate = `
         <b id="gvXtNoiDung">Nội dung kết luận / Văn bản trình (chưa nhập)</b><span id="gvXtPhu">Chủ trì theo dõi: chưa chọn · Hạn xử lý: chưa chọn · Sản phẩm đầu ra: chưa chọn</span></div></section>
     <section class="tam"><div class="tam-dau"><h2>Ba bước sau khi giao</h2></div>
       <ol class="gv-buoc-sau">
-        <li><i>1</i><span id="gvBuoc1">Chủ trì theo dõi và người theo dõi mỗi người tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
+        <li><i>1</i><span id="gvBuoc1">Chủ trì theo dõi tự xác nhận đã nhận việc trong 1 ngày làm việc; từ chối cần lý do, cấp trên duyệt.</span></li>
         <li><i>2</i><span>Hệ thống đếm hạn từ ngày giao nhiệm vụ; sắp đến hạn, quá hạn thì tự cảnh báo và nhắc người liên quan.</span></li>
         <li><i>3</i><span>Người thực hiện nộp minh chứng (số hiệu, ngày văn bản; có thể kèm tệp) trước hạn xử lý — nộp là việc hoàn thành; người giao việc, lãnh đạo xem kết quả và trả lại nếu chưa đạt.</span></li>
       </ol></section>

@@ -2,7 +2,7 @@
 // setActiveNav và khi đổi thẻ Quản trị / Giao việc); Quay lại / Tiến tới → mở đúng chức năng (popstate); vào app (đăng nhập xong, tải lại, mở đường dẫn
 // được gửi) → moManDau mở chức năng theo đường dẫn nếu thuộc menu / quyền của người dùng, không thì trang đầu của vai kèm thông báo. Bảng đường dẫn và
 // quy tắc chọn ở lib/tuyen.js (thuần). Đây chỉ chọn màn để vẽ — quyền thật vẫn ở RLS / hàm DB.
-// Một lượt bấm có thể sáng nhiều mục liên tiếp (chuyên viên: "Việc tôi theo dõi" mở danh sách rồi đổi mục) → các lần ghi trong cùng lượt gộp làm một
+// Một lượt bấm có thể sáng nhiều mục liên tiếp (chuyên viên: "Việc tôi đã giao" mở danh sách rồi đổi mục) → các lần ghi trong cùng lượt gộp làm một
 // (mục cuối, ghi ở microtask). Mở theo đường dẫn / Quay lại (đồng bộ, trước await đầu tiên của màn) → sửa bước lịch sử hiện tại, không thêm bước.
 // Chưa có phiên (mở đường dẫn, hết phiên, đăng xuất): thanh địa chỉ ghi "/Dang-nhap" (chủ dự án 22/10/2026); chức năng đang mở giữ trong
 // history.state.tiep — không ghi lên đường dẫn — để đăng nhập xong mở đúng chức năng, bước "/Dang-nhap" được thay bằng đường dẫn chức năng.

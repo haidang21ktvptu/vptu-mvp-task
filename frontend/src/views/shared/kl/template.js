@@ -5,7 +5,7 @@
 // nút Xoá bộ lọc; thanh Sắp xếp đầu danh sách (#klSapXep): Mới nhập trước (mặc định, như V-Office) · Hạn gần trước · Mức cảnh báo (thứ tự cũ).
 // v3.25 (bảng theo cột, mẫu NhiemVu / ViecTheoDoi 16/10/2026): danh sách là bảng (#klBang — bộ cột cot-nv / cot-td, hàng tiêu đề #klDauBang,
 // chân #klSoDong + nút trang #klTrang), chú giải màu mức; ngăn chi tiết chỉ chiếm chỗ khi đang mở một việc (.md.co-ct — chi-tiet.js). Chế độ
-// "Việc tôi theo dõi": ô số #klTdSo và nút quan hệ #klTdQh (theo-doi.js).
+// "Việc tôi đã giao": ô số #klTdSo (theo-doi.js). v3.31 (0128): bỏ ô lọc Người theo dõi và nút quan hệ — chỉ còn chủ trì theo dõi.
 import { THU_TU_NHOM, NHOM } from '../../../lib/kl/nhan.js';
 import { KY_NHAP, KY_HAN, CAP_GIAO, SAP_XEP } from '../../../lib/kl/loc-them.js';
 import { CHU_GIAI_MUC } from '../bang/khung.js';
@@ -25,9 +25,8 @@ export const klTemplate = `
       <button type="button" id="klRaSoatMt" class="nut nho hidden" data-action="moRaSoatMucTieu" title="Ngành, lĩnh vực và mục tiêu then chốt của các việc đã giao (số liệu các khối mục tiêu then chốt, lĩnh vực trọng tâm của Tổng quan) — hệ thống tự nhận diện, đồng chí kiểm tra rồi chấp nhận; sửa hàng loạt bằng tệp Excel">Rà soát phân loại</button>
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 
-  <div id="klTdSo" class="bnv-so so-8 hidden" role="group" aria-label="Lọc việc theo dõi theo tình hình"></div>
+  <div id="klTdSo" class="bnv-so so-8 hidden" role="group" aria-label="Lọc việc đã giao theo tình hình"></div>
   <div class="kl-loc">
-    <div id="klTdQh" class="pham-vi hidden" role="group" aria-label="Quan hệ của đồng chí với việc"></div>
     <div id="klPhamVi" class="pham-vi hidden" role="group" aria-label="Phạm vi xem" title="Cấu hình của Văn phòng cho phép chuyên viên xem mọi việc của phòng mình (chỉ xem)">
       <button type="button" data-action="klPhamVi" data-pv="toi" aria-pressed="false">Việc của tôi</button>
       <button type="button" data-action="klPhamVi" data-pv="phong" aria-pressed="true">Cả phòng</button></div>
@@ -43,7 +42,6 @@ export const klTemplate = `
     <select id="klLocDonVi" aria-label="Lọc theo đơn vị chủ trì theo dõi"><option value="">Đơn vị chủ trì theo dõi</option></select>
     <select id="klLocKetLuan" aria-label="Lọc theo số TB/KL"><option value="">Mọi số TB/KL</option></select>
     <select id="klLocChuTri" aria-label="Lọc theo chủ trì theo dõi"><option value="">Chủ trì theo dõi</option></select>
-    <select id="klLocTheoDoi" aria-label="Lọc theo người theo dõi"><option value="">Người theo dõi</option></select>
     <select id="klLocLdvp" aria-label="Lọc theo lãnh đạo Văn phòng phụ trách"><option value="">Lãnh đạo VP phụ trách</option></select>
     <button type="button" id="klXoaLoc" class="nut nho hidden" data-action="klXoaLoc" title="Bỏ mọi bộ lọc đã chọn ở hàng này (giữ phạm vi xem)">Xoá bộ lọc</button>
     <details class="kl-them"><summary>Thêm bộ lọc<span id="klSoLocThem" class="so-loc"></span></summary><div class="them-loc">

@@ -22,7 +22,7 @@ const THEO_VAI = {
   A3: `<h3>Chuyên viên</h3>
     <ul><li><b>Việc của tôi</b>: việc mới cần bấm "Đã nhận", việc sắp đến hạn / quá hạn, chỉ đạo cần phản hồi.</li>
     <li>Mở một việc → cập nhật tiến độ, nộp minh chứng (số hiệu văn bản hoặc tệp), phản hồi chỉ đạo; đề nghị từ chối khi không đúng phạm vi (Trưởng phòng duyệt).</li>
-    <li><b>Việc tôi theo dõi</b>: việc mình là người theo dõi nhưng chủ trì theo dõi là đơn vị khác.</li></ul>`,
+    <li><b>Việc tôi đã giao</b>: việc mình giao hoặc nhập lên hệ thống, do cán bộ, phòng khác chủ trì theo dõi — xem tình hình để đôn đốc.</li></ul>`,
 };
 
 export const troGiupHtml = (roleGroup) => (THEO_VAI[roleGroup] || '') + CHUNG;

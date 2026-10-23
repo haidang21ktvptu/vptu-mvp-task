@@ -27,7 +27,7 @@ const pv = (k, ds, chon, id, nhan) => `<div class="pham-vi" role="group" aria-la
 
 // loc: tq.loc; tc: tuyChonLoc + tuyChonLocMoi; hien: { phong, ldvp, phamViNhan, toanBo (null = không hiện) }; chip: chipLoc (+ kỳ tuỳ chọn); mo: hàng 2 mở.
 export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo: moLuoi = false, coLoc = false }) {
-  const { phong = false, ldvp = false, phamViNhan = 'Việc tôi theo dõi hoặc giao' } = hien;
+  const { phong = false, ldvp = false, phamViNhan = 'Việc tôi chủ trì hoặc giao' } = hien;
   const tb = hien.toanBo === null || hien.toanBo === undefined ? ''
     : pv('toanBo', [['1', 'Toàn Văn phòng', 'tqToanBo'], ['0', 'Phạm vi của tôi', 'tqToanBo']], hien.toanBo ? '1' : '0', 'tqToanBo', 'Phạm vi số liệu');
   const nhanh = NHANH.filter(([k]) => k !== 'dp' || coMucTieu()).map(([k, ten]) =>   // v3.27: "Nhiệm vụ đột phá" là nhóm mục tiêu — tạm ẩn

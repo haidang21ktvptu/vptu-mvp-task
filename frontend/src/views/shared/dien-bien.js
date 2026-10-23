@@ -6,18 +6,21 @@ import { loadDienBien, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../li
 import { tenCot } from '../../lib/kl/nhan.js';
 import { moNhiemVu } from './kl/index.js';
 import { hienGiaTri } from '../../lib/kl/gia-tri.js';
+import { anDongDienBien, lamGonCauCu } from '../../lib/kl/chu-tri.js';   // v3.31: chỉ còn chủ trì theo dõi
 
 const NHAN_NGUON = { lich_su: '', canh_bao: 'Cảnh báo', tu_choi: 'Từ chối', tu_choi_ly_do: 'Lý do từ chối', chi_dao: 'Chỉ đạo', phan_hoi: 'Phản hồi', minh_chung: 'Minh chứng' };
 const LOP_NGUON = { lich_su: 'db-lich-su', canh_bao: 'db-canh-bao', tu_choi: 'db-tu-choi', tu_choi_ly_do: 'db-tu-choi', chi_dao: 'db-chi-dao', phan_hoi: 'db-phan-hoi', minh_chung: 'db-minh-chung' };
 const TT_MC = { CHO_XAC_NHAN: 'chờ xác nhận', HOP_LE: 'hợp lệ', KHONG_HOP_LE: 'không hợp lệ' };
 
 // Giá trị trong lịch sử hiện bằng tên, ngày dd/mm/yyyy (như bảng căn cứ của ngăn chi tiết — hienGiaTri): mã danh mục (ngành, lĩnh vực, nguồn, chất
-// lượng, mức quan trọng, cơ quan trình, tiến độ, loại thời hạn, cấp, đơn vị), tài khoản (chủ trì, người theo dõi, Thường trực chỉ đạo), ngày.
-const gt = (cot, v) => (v == null || v === '' ? v : hienGiaTri(cot, v));
+// lượng, mức quan trọng, cơ quan trình, tiến độ, loại thời hạn, cấp, đơn vị), tài khoản (chủ trì, Thường trực chỉ đạo), ngày. v3.31: câu ghi trước
+// bản này còn nhắc người theo dõi được làm gọn (lamGonCauCu); dòng đổi người theo dõi không hiện (anDongDienBien).
+const gt = (cot, v) => (v == null || v === '' ? v : lamGonCauCu(hienGiaTri(cot, v)));
 function noiDung(d) {
   if (d.nguon === 'lich_su') {
     if (d.loai === '*') return `Tạo dòng ${escapeHtml(d.noi_dung || '')}`;
-    if (d.loai === 'han_nop_minh_chung_ly_do') return escapeHtml(d.noi_dung || '');   // PR-2b: tin đã đủ "Đổi hạn nộp minh chứng · mã: cũ → mới — lý do"
+    // PR-2b: tin đã đủ "Đổi hạn nộp minh chứng · mã: cũ → mới — lý do"; chuyển việc (0092, 0128): "Chuyển … từ X sang Y — lý do: …"
+    if (d.loai === 'han_nop_minh_chung_ly_do' || d.loai === 'chuyen_theo_doi') return escapeHtml(lamGonCauCu(d.noi_dung || ''));
     if (d.gia_tri_cu === null || d.gia_tri_cu === undefined) return `<b>${escapeHtml(tenCot(d.loai))}</b>: ${escapeHtml(gt(d.loai, d.noi_dung) || '')}`;
     return `<b>${escapeHtml(tenCot(d.loai))}</b>: <s class="cu">${escapeHtml(gt(d.loai, d.gia_tri_cu) || '(trống)')}</s> → <span class="moi">${escapeHtml(gt(d.loai, d.noi_dung) || '(trống)')}</span>`;   // Đợt C1: cũ gạch ngang
   }
@@ -31,14 +34,14 @@ function noiDung(d) {
 }
 
 // v3.29: dòng của các ô đã được một dòng khác ghi CÙNG LẦN (cùng lúc) nói đủ thì ẩn — lĩnh vực tự đổi theo ngành (không còn ô Lĩnh vực; lĩnh vực
-// đổi riêng — rà soát bằng tệp, sửa lĩnh vực chi tiết — vẫn hiện); hạn, số lần gia hạn khi "Điều chỉnh hạn"; chủ trì, phòng, người theo dõi khi
-// "Đổi chủ trì theo dõi"; tiến độ, ngày hoàn thành khi "Mở lại nhiệm vụ" (dòng tóm tắt có cũ → mới và lý do).
-const AN_CUNG_LAN = { nganh_ma: ['linh_vuc_ma'], dieu_chinh_han: ['han_xu_ly', 'so_lan_gia_han'], doi_chu_tri: ['owner_tai_khoan', 'owner_don_vi_ma', 'nguoi_theo_doi'],
+// đổi riêng — rà soát bằng tệp, sửa lĩnh vực chi tiết — vẫn hiện); hạn, số lần gia hạn khi "Điều chỉnh hạn"; chủ trì, phòng khi "Đổi chủ trì
+// theo dõi"; tiến độ, ngày hoàn thành khi "Mở lại nhiệm vụ" (dòng tóm tắt có cũ → mới và lý do).
+const AN_CUNG_LAN = { nganh_ma: ['linh_vuc_ma'], dieu_chinh_han: ['han_xu_ly', 'so_lan_gia_han'], doi_chu_tri: ['owner_tai_khoan', 'owner_don_vi_ma'],
   mo_lai: ['tien_do_ma', 'ngay_hoan_thanh'] };
 export function dienBienHtml(tatCa) {
   const ls = tatCa.filter((d) => d.nguon === 'lich_su');
   const an = new Set(ls.flatMap((d) => (AN_CUNG_LAN[d.loai] || []).map((c) => `${c}|${d.luc}`)));
-  const rows = tatCa.filter((d) => !(d.nguon === 'lich_su' && an.has(`${d.loai}|${d.luc}`)));
+  const rows = tatCa.filter((d) => !(d.nguon === 'lich_su' && an.has(`${d.loai}|${d.luc}`)) && !anDongDienBien(d));
   if (!rows.length) return '<p class="chu-phu">Chưa có diễn biến nào.</p>';
   return `<ul class="dien-bien">${rows.map((d) => `<li class="${LOP_NGUON[d.nguon] || ''}" data-nguon="${escapeHtml(d.nguon)}">
       <span class="db-luc">${formatDateTime(d.luc)}</span><span class="db-nguoi">${escapeHtml(d.nguoi_ten || 'Hệ thống')}</span>

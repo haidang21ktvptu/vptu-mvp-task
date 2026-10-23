@@ -15,7 +15,8 @@ import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
 import { sapXep } from '../../lib/kl/tong-hop.js';
 import { homNayVN } from '../../lib/kl/ngay.js';
-import { lopMep, boSoThuTu } from '../../lib/kl/nhan.js';
+import { lopMep } from '../../lib/kl/nhan.js';
+import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
 import { datNghePhu } from '../../features/kl-realtime.js';
 import { sectionDangHien } from '../shell/index.js';
@@ -31,7 +32,7 @@ const nguon = new Set();   // hàm (id) → dòng của các màn hình tự đ�
 const laMo = () => !$('nganCT')?.classList.contains('hidden');
 export const nganDangMoViec = () => laMo() && Boolean($('klChiTiet')?.closest('#nganCT'));
 export const datNguonDong = (fn) => { nguon.add(fn); };
-const ownerText = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || 'chưa xác định chủ trì';
+const ownerText = (r) => chuTriText(r, 'chưa xác định chủ trì');   // v3.31: ghi một kiểu ở mọi nơi
 const phuViec = (r) => `${ownerText(r)} · ${hanNgan(r, homNayVN())}`;
 const dongCua = (id) => ngan.rows.get(id) || dh.rows.find((r) => r.id === id) || [...nguon].map((f) => f(id)).find(Boolean) || null;
 

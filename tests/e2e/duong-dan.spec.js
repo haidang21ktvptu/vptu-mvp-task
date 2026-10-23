@@ -1,6 +1,6 @@
 // v3.29 (chủ dự án 22/10/2026 — CAU-HOI O-7): mỗi chức năng một đường dẫn. Chánh VP: vào app → "/Tong-quan"; bấm menu đổi đường dẫn; Quay lại /
 // Tiến tới mở đúng chức năng; tải lại giữ chức năng; gõ chữ thường → tự sửa đúng chữ hoa; thẻ Quản trị, thẻ "Nhập từ Excel" có đường dẫn riêng.
-// Chuyên viên: "/Viec-cua-toi"; một lần bấm "Việc tôi theo dõi" chỉ thêm một bước lịch sử; gõ đường dẫn không thuộc vai (Báo cáo) → về trang đầu kèm
+// Chuyên viên: "/Viec-cua-toi"; một lần bấm "Việc tôi đã giao" (v3.31) chỉ thêm một bước lịch sử, đường dẫn cũ "/Viec-toi-theo-doi" vẫn mở được; gõ đường dẫn không thuộc vai (Báo cáo) → về trang đầu kèm
 // thông báo. Bản build có chính sách nội dung (CSP) — không bị chặn nhầm (không thông báo vi phạm CSP, không lỗi chưa bắt). Chưa đăng nhập: thanh địa
 // chỉ "/Dang-nhap" (gốc, chữ thường, đường dẫn chức năng), có phiên thì vào đúng chức năng đã mở (phiên đặt sẵn rồi tải lại — không tốn lượt đăng nhập,
 // không đăng xuất: đăng xuất huỷ phiên dùng chung của vai). Đường dẫn tới một nhiệm vụ "…/<chức năng>/NV-…" (chủ dự án 22/10/2026 17:02): mở thẳng,
@@ -164,10 +164,13 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     await expect.poll(() => duong(page)).toBe('/Viec-cua-toi');
     await nav(page, 'navGiaoViec');
     await expect.poll(() => duong(page)).toBe('/Giao-viec');
-    await nav(page, 'navTheoDoi');   // mở danh sách Nhiệm vụ (sáng "Việc của tôi") rồi đổi sang "Việc tôi theo dõi" — chỉ một bước
-    await expect.poll(() => duong(page)).toBe('/Viec-toi-theo-doi');
+    await nav(page, 'navDaGiao');   // mở danh sách Nhiệm vụ (sáng "Việc của tôi") rồi đổi sang "Việc tôi đã giao" — chỉ một bước
+    await expect.poll(() => duong(page)).toBe('/Viec-toi-da-giao');
     await page.goBack();
     await expect(page.locator('#viewGiaoViec')).toBeVisible(NAP); expect(duong(page)).toBe('/Giao-viec');
+    await page.goto('./Viec-toi-theo-doi');   // v3.31: đường dẫn cũ — mở đúng "Việc tôi đã giao", thanh địa chỉ ghi đường dẫn mới
+    await expect(page.locator('#klTieuDe')).toHaveText('Việc tôi đã giao', NAP);
+    await expect.poll(() => duong(page)).toBe('/Viec-toi-da-giao');
     await page.goto('./Bao-cao');
     await expect(page.locator('#viewDieuHanh')).toBeVisible(NAP);
     await expect(page.locator('#viewBaoCao')).toBeHidden();

@@ -1,7 +1,7 @@
 // Đợt E v3.18 (0085): chuyên viên chủ trì văn bản gốc X nhập từng nhiệm vụ trên văn bản và giao thẳng cho chuyên viên khác / chính mình — ô
-// Thay mặt để trống (Đợt F v3.21: mọi chuyên viên có ô, tuỳ chọn), không ô Người theo dõi (theo dõi = người giao); cấu hình xac_nhan_nhan_viec = 2 (đặt tạm bằng service_role, khôi phục) → việc coi như đã
+// Thay mặt để trống (Đợt F v3.21: mọi chuyên viên có ô, tuỳ chọn), không ô Người theo dõi (v3.31 — 0128: người theo dõi nội bộ = chủ trì); cấu hình xac_nhan_nhan_viec = 2 (đặt tạm bằng service_role, khôi phục) → việc coi như đã
 // nhận ngay khi giao. demo_e2e_cv (A3, phòng E2E_RT) giao 2 việc một lượt (thẻ 1 cho demo_e2e_nv phòng Tổng hợp — khác phòng; thẻ 2 cho chính mình)
-// → việc 1 ở "Việc tôi theo dõi", việc 2 ở "Việc của tôi"; demo_e2e_nv (không bị spec nào đăng xuất — bo-cuc đăng xuất demo_e2e_kl) thấy việc 1 ở "Việc của tôi" nhóm đang làm (không chờ xác nhận, không nút
+// → việc 1 ở "Việc tôi đã giao" (v3.31), việc 2 ở "Việc của tôi"; demo_e2e_nv (không bị spec nào đăng xuất — bo-cuc đăng xuất demo_e2e_kl) thấy việc 1 ở "Việc của tôi" nhóm đang làm (không chờ xác nhận, không nút
 // Xác nhận), có tin giao, menu có Giao việc (Đợt D: không còn Cần nghiệm thu). v3.25 (bảng): việc đã nhận, còn hạn không ở ô mặc định (Cần xử lý /
 // Cần đôn đốc) — chọn ô Tất cả. Một phiên mỗi lúc; dữ liệu theo khoá; tự dọn.
 import { test, expect } from '@playwright/test';
@@ -28,12 +28,12 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
   });
   test.afterAll(async () => { if (!db) return; await don(); await datCauHinh(cauHinhCu); });
 
-  test('1. demo_e2e_cv: menu có Giao việc; ô Thay mặt tuỳ chọn để trống, không ô Người theo dõi, Owner chỉ chuyên viên; giao 2 việc một lượt từ văn bản X → DB: theo dõi = người giao, đã nhận tự động, tin tới Owner', async ({ browser }, testInfo) => {
+  test('1. demo_e2e_cv: menu có Giao việc; ô Thay mặt tuỳ chọn để trống, không ô Người theo dõi, Owner chỉ chuyên viên; giao 2 việc một lượt từ văn bản X → DB: người theo dõi (nội bộ) = chủ trì, đã nhận tự động, tin tới Owner', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await expect(p.locator('#navGiaoViec')).toHaveCount(1); await expect(p.locator('#navNghiemThu')).toHaveCount(0);   // Đợt D: bỏ mục Cần nghiệm thu
       await moGiaoViec(p);
       await expect(p.locator('#klThThayMatWrap')).toBeVisible(); await expect(p.locator('#klThThayMat')).toHaveValue('');   // Đợt F: quyền chung, để trống = giao thẳng
-      await expect(p.locator('#klThNguoiTheoDoiWrap')).toHaveClass(/\bhidden\b/);   // v3.27: ô trong mục gập "Thêm" — kiểm lớp ẩn
+      await expect(p.locator('#klThNguoiTheoDoiWrap')).toHaveCount(0);   // v3.31 (0128): không còn ô người theo dõi
       expect(await p.locator('#klThOwner optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual(['Chuyên viên']);
       const owner = await p.locator('#klThOwner option').evaluateAll((os) => os.map((x) => x.value).filter(Boolean));
       expect(owner[0]).toBe(`tk:${ID.e2eCv}`);   // chính tôi đứng đầu
@@ -45,7 +45,7 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
       await p.locator('#klThSanPham').selectOption('BAO_CAO'); await p.locator('#klThHan').fill(cong(H, 1));
       await expect(p.locator('#klThCapNhan')).toHaveValue('TRUONG_PHONG');
       await p.locator('#gvThemDong').click();
-      await expect(the(p, 2).locator('[data-wrap="theo_doi"]')).toHaveClass(/\bhidden\b/);
+      await expect(the(p, 2).locator('[data-wrap="theo_doi"]')).toHaveCount(0);
       await o(p, 2, 'noi_dung').fill(`${khoa} việc 2 tự làm`); await o(p, 2, 'owner').selectOption(`tk:${ID.e2eCv}`);
       await o(p, 2, 'san_pham').selectOption('TO_TRINH'); await o(p, 2, 'han').fill(cong(H, 2));
       await chonPhanLoai(p); await chonPhanLoai(p, { the: 2 });   // v3.26: phân loại bắt buộc mọi thẻ
@@ -56,31 +56,32 @@ test.describe.serial('Chuyên viên nhập nhiệm vụ từ văn bản gốc v�
     });
     const { data } = await db.from('nhiem_vu').select('id, noi_dung, owner_tai_khoan, nguoi_theo_doi, tao_boi, giao_thay_mat_cho, van_ban_id').like('noi_dung', `${khoa} việc%`).order('noi_dung');
     viec = data; expect(data.length).toBe(2);
-    expect(data.map((x) => [x.owner_tai_khoan, x.nguoi_theo_doi, x.tao_boi, x.giao_thay_mat_cho])).toEqual([[ID.e2eNv, ID.e2eCv, ID.e2eCv, null], [ID.e2eCv, ID.e2eCv, ID.e2eCv, null]]);
+    expect(data.map((x) => [x.owner_tai_khoan, x.nguoi_theo_doi, x.tao_boi, x.giao_thay_mat_cho])).toEqual([[ID.e2eNv, ID.e2eNv, ID.e2eCv, null], [ID.e2eCv, ID.e2eCv, ID.e2eCv, null]]);
     expect(new Set(data.map((x) => x.van_ban_id)).size).toBe(1);
     const { data: ls } = await db.from('lich_su').select('nhiem_vu_id, nguoi_sua').eq('cot', 'xac_nhan_nhan_viec').in('nhiem_vu_id', data.map((x) => x.id));
-    expect(ls.filter((l) => l.nhiem_vu_id === data[0].id).map((l) => l.nguoi_sua).sort()).toEqual([ID.e2eCv, ID.e2eNv].sort());   // Owner + theo dõi tự nhận
+    expect(ls.filter((l) => l.nhiem_vu_id === data[0].id).map((l) => l.nguoi_sua)).toEqual([ID.e2eNv]);   // chủ trì tự nhận (cấu hình 2); người giao không còn là người theo dõi
     expect(ls.filter((l) => l.nhiem_vu_id === data[1].id).map((l) => l.nguoi_sua)).toEqual([ID.e2eCv]);
     const { data: tin } = await db.from('direct_messages').select('receiver_id').eq('nhiem_vu_id', data[0].id).eq('loai', 'he_thong');
     expect(tin.map((t) => t.receiver_id)).toContain(ID.e2eNv);
   });
 
-  test('2. demo_e2e_cv: việc 1 ở "Việc tôi theo dõi" (có Giao tiếp xuống), việc 2 ở "Việc của tôi" — không chờ xác nhận', async ({ browser }, testInfo) => {
+  test('2. demo_e2e_cv: việc 1 ở "Việc tôi đã giao" (không Giao tiếp xuống — người khác chủ trì), việc 2 ở "Việc của tôi" — không chờ xác nhận', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_CV', testInfo, async (p) => {
       await expect(p.locator('#vctBang')).toHaveAttribute('data-nap', /./, NAP);
       await p.locator('#vctSo [data-loc="tat"]').click();   // v3.25: việc đang làm, đã nhận, còn hạn — ở ô Tất cả của bảng
       const dong = p.locator(`#vct-${viec[1].id}`); await expect(dong).toBeVisible(NAP);
       await expect(dong).toHaveAttribute('data-kieu', 'dang-lam');
       await expect(dong.locator('[data-action="xacNhanNhanThe"]')).toHaveCount(0);   // không chờ xác nhận
-      await nav(p, 'navTheoDoi');
+      await nav(p, 'navDaGiao');
+      await expect(p.locator('#klTieuDe')).toHaveText('Việc tôi đã giao');
       await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
       await p.locator('#klTdSo [data-loc="tat"]').click();   // v3.25: ô mặc định "Cần đôn đốc" — việc đã nhận, còn hạn ở ô Tất cả
       await expect(p.locator('#klTdSo [data-loc="tat"]')).toHaveAttribute('aria-pressed', 'true');
       const row = p.locator(`#klRow-${viec[0].id}`); await expect(row).toBeVisible(NAP); await row.click();
       await expect(p.locator(`#klChiTiet-${viec[0].id}`)).toBeVisible(NAP);
       await expect(p.locator(`#klChiTiet-${viec[0].id}`)).toContainText('đã nhận việc');
-      await expect(p.locator(`#klGiaoTiep-${viec[0].id}`)).toBeVisible();
-      await expect(p.locator(`#klRow-${viec[1].id}`)).toHaveCount(0);   // việc tự làm không ở "theo dõi (không phải Owner)"
+      await expect(p.locator(`#klGiaoTiep-${viec[0].id}`)).toHaveCount(0);   // v3.31: người giao không phải chủ trì theo dõi — không tách việc người khác chủ trì
+      await expect(p.locator(`#klRow-${viec[1].id}`)).toHaveCount(0);   // việc tự làm (tôi chủ trì) không ở "Việc tôi đã giao"
     });
   });
 

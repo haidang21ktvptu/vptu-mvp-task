@@ -32,7 +32,7 @@ const tt = (chu) => { setText('gvDocTt', chu); show('gvDocTt', Boolean(chu)); };
 const chuanSo = (s) => String(s || '').replace(/\s+/g, '').toUpperCase();
 const ID1 = { noi_dung: 'klThNoiDung', owner: 'klThOwner', san_pham: 'klThSanPham', san_pham_mo_ta: 'klThSanPhamMoTa', han: 'klThHan', loai: 'klThLoai', nganh: 'klThNganh',
   linh_vuc: 'klThLinhVuc', phoi_hop: 'klThPhoiHop', co_quan_trinh: 'klThCoQuanTrinh' };
-// Thứ tự điền: chịu trách nhiệm trước (đổi danh sách ngành, lĩnh vực theo phạm vi phòng, gợi ý người theo dõi), loại thời hạn trước hạn.
+// Thứ tự điền: chịu trách nhiệm trước (đổi danh sách ngành, lĩnh vực theo phạm vi phòng, gợi ý cấp nhận), loại thời hạn trước hạn.
 const THU_TU = ['owner', 'nganh', 'linh_vuc', 'san_pham', 'loai', 'han', 'co_quan_trinh', 'noi_dung', 'san_pham_mo_ta', 'phoi_hop'];
 const oCua = (the, cot) => (the?.id === 'gvThe1' ? $(ID1[cot]) : oThe(the, cot));
 const cacThe = () => [$('gvThe1'), ...document.querySelectorAll('#gvLuoiThan .gv-nv')].filter(Boolean);

@@ -26,7 +26,8 @@ export const tyLe = (da, kh) => (coSo(da) && Number(kh) > 0 ? tron1((Number(da) 
 
 // Người được ghi (như kl_nguoi_nhap: không Thường trực, không tài khoản khoá / hệ thống) — chỉ để ẩn / hiện nút; hàm DB là chốt.
 export const nguoiNhap = (u) => Boolean(u) && u.role_group !== 'A0' && !u.bi_khoa && !u.is_system;
-// Nhập / xoá kỳ số liệu (gn_duoc_nhap_ky): lãnh đạo Văn phòng (cả toàn quyền), hoặc chủ trì / người theo dõi việc "Số liệu toàn tỉnh" của năm.
+// Nhập / xoá kỳ số liệu (gn_duoc_nhap_ky): lãnh đạo Văn phòng (cả toàn quyền), hoặc chủ trì theo dõi việc "Số liệu toàn tỉnh" của năm (cán bộ chủ
+// trì, hoặc người đại diện của phòng / Văn phòng chủ trì — nguoi_theo_doi nội bộ, 0128).
 export const duocNhapKy = (u, rowTt) => nguoiNhap(u) && (u.role_group === 'A1' || (Boolean(rowTt) && [rowTt.owner_tai_khoan, rowTt.nguoi_theo_doi].includes(u.id)));
 
 // Năm kế hoạch vốn hiển thị: tháng 1 vẫn là năm trước (kế hoạch vốn năm được giải ngân tới 31/1 năm sau).

@@ -1,8 +1,8 @@
 // View A3 — Chuyên viên. v3.25 (bảng theo cột, mẫu Main 16/10/2026; chủ dự án duyệt 18/10): "Việc của tôi" là MỘT bảng (bang-viec.js) — ô số,
-// tìm, vai trò, sắp xếp, nhóm theo văn bản giao; mỗi dòng một "Việc cần làm" (xác nhận nhận việc / trả lời chỉ đạo / nộp minh chứng có đính kèm
+// tìm, sắp xếp, nhóm theo văn bản giao; mỗi dòng một "Việc cần làm" (xác nhận nhận việc / trả lời chỉ đạo / nộp minh chứng có đính kèm
 // tệp / cập nhật tiến độ), biểu mẫu mở ngay dưới dòng (khoi-viec.js); bấm nội dung việc mở ngăn chi tiết dùng chung (vướng mắc, đề nghị sửa,
-// diễn biến). Đầu trang giữ dải Cần xử lý ngay và các khối đề nghị từ chối. "Việc tôi theo dõi" = màn hình Nhiệm vụ chế độ theo dõi
-// (shared/kl/theo-doi.js). Quyền thật ở DB.
+// diễn biến). Đầu trang giữ dải Cần xử lý ngay và các khối đề nghị từ chối. "Việc tôi đã giao" (v3.31, trước là "Việc tôi theo dõi") = màn hình
+// Nhiệm vụ chế độ đã giao (shared/kl/theo-doi.js). Quyền thật ở DB.
 import { $, setText, show, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
@@ -72,7 +72,7 @@ function openDieuHanh() {
   loadViecCuaToi();
   batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadViecCuaToi, ve); }, (m) => hienKetNoi('dhKetNoi', m));
 }
-const openTheoDoi = () => { const p = openKl({ theoDoiCuaToi: state.user.id }); setActiveNav('navTheoDoi'); return p; };   // v3.29: trả lời hứa — mở việc theo đường dẫn chờ danh sách nạp xong
+const openDaGiao = () => { const p = openKl({ daGiaoCuaToi: state.user.id }); setActiveNav('navDaGiao'); return p; };   // v3.29: trả lời hứa — mở việc theo đường dẫn chờ danh sách nạp xong
 
 // Xác nhận đã nhận việc (GV-5): chỉ ghi lịch sử, hạn/trạng thái không đổi (CN-2.2).
 async function xacNhanNhanThe({ id }) {
@@ -118,7 +118,7 @@ async function vctXuatExcel() {
 }
 
 export function registerA3View() {
-  registerActions({ openTheoDoi, xacNhanNhanThe, nopMinhChungThe, capNhatThe, vctXuatExcel, ...hanhDongBangViec });
+  registerActions({ openDaGiao, xacNhanNhanThe, nopMinhChungThe, capNhatThe, vctXuatExcel, ...hanhDongBangViec });
   registerView('A3', {
     init() {
       registerActions({ openDieuHanh, loadDieuHanh: loadViecCuaToi }); // đăng ký lúc vào vai, không đè vai khác

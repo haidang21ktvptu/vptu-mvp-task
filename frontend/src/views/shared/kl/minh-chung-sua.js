@@ -76,7 +76,7 @@ async function luuSuaMinhChung() {
   $('smcLuu').disabled = true;
   try {
     await suaMinhChung(cu.id, thay, lyDo);
-    notifySuccess('Đã sửa minh chứng. Bản cũ được lưu lại; chủ trì, người theo dõi được báo.');
+    notifySuccess('Đã sửa minh chứng. Bản cũ được lưu lại; chủ trì theo dõi được báo.');
     dongSuaMinhChung();
     await sauHanhDong(cu.nhiem_vu_id);
   } catch (e) { notifyError(loiDeHieu(e)); $('smcLuu').disabled = false; }

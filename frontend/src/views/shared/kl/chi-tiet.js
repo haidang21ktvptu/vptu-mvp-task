@@ -11,7 +11,8 @@ import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, lopQuaH
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { napDienBien } from '../dien-bien.js';
 import { timKlRow } from './danh-sach.js';
-import { sanPhamText, laBenTrong, duocCapNhat, duocDong, ownerText } from './dong.js';
+import { sanPhamText, laBenTrong, duocCapNhat, duocDong } from './dong.js';
+import { chuTriText } from '../../../lib/kl/chu-tri.js';   // v3.31: chỉ còn chủ trì theo dõi (0128)
 import { napChiDao, focusChiDao, duocChiDao } from './chi-dao.js';
 import { napMinhChung } from './minh-chung.js';
 import { oLuoiPr3Html, khoiPr3Html } from './thong-tin-giao.js';
@@ -60,8 +61,9 @@ function hanhDongHtml(r, nhanViec = []) {
   // Đợt D (0090–0091): lãnh đạo được ghi "đã nhận" tự động nhưng vẫn đề nghị từ chối được (de_nghi_tu_choi bỏ qua dòng nhận tự động; tự bấm nhận rồi thì thôi).
   const nhanTay = nhanViec.some((l) => l.nguoi_sua === state.user?.id && !/^tự động/.test(l.gia_tri_moi || ''));
   const tuChoi = laBenTrong(r) && mo && !r.bi_tu_choi && !r.tu_choi_cho && (!r.toi_da_xac_nhan || (['A1', 'A2'].includes(state.user?.role_group) && !nhanTay));
-  // Giao tiếp xuống (v8 đợt 4): chủ trì hoặc người theo dõi của việc chưa hoàn thành, và vai được giao việc (A1/A2/quan_tri_kl; 0085: cả chuyên viên —
-  // chuyên viên chủ trì tách việc được giao thành việc con cho chuyên viên khác; giao_viec là chốt).
+  // Giao tiếp xuống (v8 đợt 4): chủ trì theo dõi của việc chưa hoàn thành (cán bộ chủ trì; việc giao cho phòng / Văn phòng: Trưởng phòng / Chánh VP —
+  // nguoi_theo_doi nội bộ, 0128), và vai được giao việc (A1/A2/quan_tri_kl; 0085: cả chuyên viên — chuyên viên chủ trì tách việc được giao thành việc
+  // con cho chuyên viên khác; giao_viec là chốt).
   const giaoTiep = mo && (r.owner_tai_khoan === state.user?.id || r.nguoi_theo_doi === state.user?.id) && (['A1', 'A2', 'A3'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl));
   return `<div class="hanh-dong">
     ${laBenTrong(r) && mo && !r.toi_da_xac_nhan ? nut('xacNhanNhanViec', 'Xác nhận đã nhận việc', 'lam') : ''}
@@ -95,8 +97,7 @@ export function chiTietHtml(r, ls, dc) {
       <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanTT}</div>
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
         <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}${nguoiNhap ? ` bởi ${escapeHtml(nguoiNhap)}` : ''}</p></div>
-      <dl class="ct-luoi">${o('Chủ trì theo dõi', `${escapeHtml(ownerText(r))}${r.owner_tai_khoan_ten ? ` (${escapeHtml(boSoThuTu(r.owner_don_vi_ten))})` : ''}`)}
-        ${o('Người theo dõi', `${escapeHtml(r.nguoi_theo_doi_ten || '(trống)')}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
+      <dl class="ct-luoi">${o('Chủ trì theo dõi', `${escapeHtml(chuTriText(r))}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
         ${o('Sản phẩm đầu ra', escapeHtml(sanPhamText(r) || 'chưa định nghĩa'), 'san_pham_loai')}
         ${o('Hạn xử lý', `<span${hanLop}>${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}${r.nhom_dem === 'QUA_HAN' ? `, trễ ${r.so_ngay_qua} ngày` : ''}</span>${r.so_lan_gia_han ? ` <span class="chu-phu" data-truong="so-lan-gia-han">· đã gia hạn ${r.so_lan_gia_han} lần</span>` : ''}${r.ly_do_chua_co_han ? ` — ${escapeHtml(r.ly_do_chua_co_han)}` : ''}`)}
         ${o('Cấp quyết', capQuyetHtml(r))}
@@ -113,7 +114,7 @@ export function chiTietHtml(r, ls, dc) {
       ${coNhapExcel(ls) ? khoiDuLieuGocHtml(r) : ''}
       <details class="chi-tiet-them"><summary>Xem chi tiết <span class="chu-phu">căn cứ từng trường</span></summary>
       <table class="can-cu"><thead><tr><th>Trường</th><th>Giá trị</th><th>Căn cứ</th></tr></thead><tbody>
-          ${hang('Chủ trì theo dõi', ownerText(r), canCu(r.owner_tai_khoan ? 'owner_tai_khoan' : 'owner_don_vi_ma', ls))}
+          ${hang('Chủ trì theo dõi', chuTriText(r), canCu(r.owner_tai_khoan ? 'owner_tai_khoan' : 'owner_don_vi_ma', ls))}
           ${hang('Sản phẩm đầu ra', sanPhamText(r) || '(chưa định nghĩa sản phẩm — dữ liệu chuyển đổi)', canCu('san_pham_loai', ls))}
           ${hang('Ngày giao nhiệm vụ', `${hienGiaTri('ngay_nhan_van_ban', r.ngay_nhan_van_ban)}${r.ngay_nhan_uoc_tinh ? ' (ước tính = ngày ban hành)' : ''}`, canCu('ngay_nhan_van_ban', ls))}
           ${hang('Hạn xử lý', hienGiaTri('han_xu_ly', r.han_xu_ly), r.loai_thoi_han_ma === 'KY_BAN_HANH' ? '<span class="chu-phu">tự tính = ngày ban hành + 10</span>' : canCu('han_xu_ly', ls))}

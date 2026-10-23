@@ -44,7 +44,7 @@ export function registerViews() {
   registerA0View();      // Trung tâm điều hành Thường trực, Chỉ đạo đã gửi
   registerA1View();      // Điều hành hôm nay, Cán bộ thuộc quyền, Báo cáo
   registerA2View();      // Phòng tôi hôm nay, Cán bộ trong phòng
-  registerA3View();      // Việc của tôi, Việc tôi theo dõi
+  registerA3View();      // Việc của tôi, Việc tôi đã giao
   registerQuanTriView(); // khu theo quyền: cờ quan_tri_*, Chánh VP (phân công, ngưỡng), Trưởng phòng (ủy quyền)
   registerCaNhanView();  // Hồ sơ cá nhân, Thông báo, Trợ giúp, Bản gọn (bánh răng)
   mountBanhRang();       // menu bánh răng trên dải (Đăng xuất ở cuối)

@@ -24,7 +24,6 @@ export const vctTemplate = (ngay, giao) => `
     <div class="kl-loc bnv-loc">
       <div id="vctPhamVi" class="pham-vi hidden" role="group" aria-label="Phạm vi"></div>
       <label class="kl-tim">${TIM}<input type="search" id="vctTim" placeholder="Tìm mã, nội dung, số văn bản, người" aria-label="Tìm trong việc của tôi" autocomplete="off"></label>
-      <div id="vctVai" class="pham-vi" role="group" aria-label="Vai trò của tôi"></div>
       <span id="vctCanBo" class="bnv-chon hidden"></span>
       <select id="vctSapXep" aria-label="Sắp xếp">${SAP_XEP_VIEC.map(([k, t]) => `<option value="${k}">Sắp xếp: ${t}</option>`).join('')}</select>
       <label class="bnv-gat"><input type="checkbox" id="vctNhomVb"> Nhóm theo văn bản giao</label></div>

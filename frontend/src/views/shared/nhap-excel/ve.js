@@ -33,7 +33,7 @@ export const khungNhapHtml = () => `
 
 // Ô chọn trường cho một cột: nhóm theo mức; trường đang dùng ở cột khác vẫn chọn được (chọn lại thì cột cũ bỏ ghép). v3.27: không có mục tiêu khi tạm ẩn.
 const chonTruong = (i, k) => `<select class="o-nhap" data-nx-cot="${i}" aria-label="Ghép cột ${i + 1} vào trường">${opt('', '— Không ghép (giữ ở dữ liệu gốc) —', !k)}${
-  [0, 1, 2, 3].map((m) => `<optgroup label="${escapeHtml(TEN_MUC[m])}">${TRUONG.filter((t) => t.muc === m && (HIEN_MUC_TIEU || t.k !== 'muc_tieu')).map((t) => opt(t.k, `${t.nhan}${t.mau ? '' : ' (trường phụ)'}`, t.k === k)).join('')}</optgroup>`).join('')}</select>`;
+  [0, 1, 2, 3].map((m) => `<optgroup label="${escapeHtml(TEN_MUC[m])}">${TRUONG.filter((t) => t.muc === m && !t.an && (HIEN_MUC_TIEU || t.k !== 'muc_tieu')).map((t) => opt(t.k, `${t.nhan}${t.mau ? '' : ' (trường phụ)'}`, t.k === k)).join('')}</optgroup>`).join('')}</select>`;
 
 export function ghepHtml(s) {
   const viDu = (i) => s.dongDuLieu.slice(0, 3).map((d) => d.goc[s.tieuDe[i]]).filter((v) => v !== undefined).map((v) => escapeHtml(hienGoc(v).slice(0, 40))).join(' · ');
@@ -142,8 +142,7 @@ const QUY_TAC = { loai_van_ban: 'có số hội nghị → Kết luận Hội ng
   loai_thoi_han: 'Có hạn cụ thể (việc mới ghi "thường xuyên" / "chờ quyết định" cũng chuyển thành Có hạn cụ thể — loại gốc ghi ở ghi chú)',
   han_xu_ly: 'việc đang làm còn trống hạn: 1 tháng kể từ hôm nay', san_pham: 'theo nội dung ("ban hành Kế hoạch…" → Kế hoạch; "Ký ban hành" → Dự thảo văn bản), còn lại Báo cáo',
   co_quan_trinh: 'đơn vị ngoài Văn phòng ghi ở cột đơn vị chủ trì', nganh: 'ngành của lĩnh vực',
-  lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)',
-  theo_doi: 'cán bộ chủ trì; không có → Trưởng phòng chủ trì (việc của Văn phòng) hoặc lãnh đạo giao' };
+  lanh_dao_giao: 'Trưởng phòng của phòng chủ trì; việc ngoài các phòng → Chánh Văn phòng (ghi thay mặt; ghi "Lãnh đạo Văn phòng" / "Thường trực Tỉnh ủy" để thay mặt cả nhóm)' };
 function macDinhHtml(s) {
   const dem = {}; s.dg.forEach((x) => x.macDinh.forEach((k) => { dem[k] = (dem[k] || 0) + 1; }));
   const ks = Object.keys(dem).filter((k) => k !== 'linh_vuc'); if (!ks.length) return '';   // v3.29: lĩnh vực tự xác định — không liệt kê

@@ -6,6 +6,7 @@ import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
+import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { laNguoiGiao, tenCapDuyet } from '../../lib/kl/thay-mat.js';
 import { soChuaXuLy, onSoChuaXuLy, lamMoiHuyHieu } from '../../features/huy-hieu.js';
 import { registerActions } from '../../lib/actions.js';
@@ -72,7 +73,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
     <div id="cxChiTiet" class="cx-chi-tiet ${mucDangMo ? '' : 'hidden'}" role="region" aria-label="Danh sách cần xử lý">${mucDangMo ? chiTietHtml(mucDangMo, so) : ''}</div>`;
 }
 
-// Việc Thường trực giao cho tôi, chưa xác nhận nhận (A1: Owner tài khoản; A2: người theo dõi khi giao cho phòng).
+// Việc Thường trực giao cho tôi, chưa xác nhận nhận (A1: cán bộ chủ trì; A2: Trưởng phòng khi giao cho phòng — nguoi_theo_doi nội bộ, 0128).
 export function khoiThuongTrucHtml() {
   const ds = dh.rows.filter((r) => r.uu_tien === 'THUONG_TRUC' && mo(r) && !r.bi_tu_choi && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
   if (ds.length === 0) return '';
@@ -97,7 +98,7 @@ export function khoiBiTuChoiHtml() {
     ${ds.map((r) => {
     const dn = r.tu_choi_cho; const nd = dn ? findAccount(dn.nguoi_de_nghi) : null;
     const tt = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : `<span class="nhan-xam">${escapeHtml(nd?.full_name || 'Cán bộ')} đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, dn.cap_duyet) || 'cấp duyệt')} duyệt</span>`;
-    return `<div class="the-con" id="btc-${r.id}" data-tu-choi="${r.bi_tu_choi ? 'da' : 'cho'}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} · ${escapeHtml(r.owner_tai_khoan_ten || r.nguoi_theo_doi_ten || '')} ${tt}</p>
+    return `<div class="the-con" id="btc-${r.id}" data-tu-choi="${r.bi_tu_choi ? 'da' : 'cho'}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} · ${escapeHtml(chuTriText(r, ''))} ${tt}</p>
       <div class="hanh-dong">${giaoLai && r.bi_tu_choi ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : ''}${xem(r)}</div>
       ${giaoLai && r.bi_tu_choi ? oGiaoLaiHtml(r) : ''}</div>`;
   }).join('')}</div>`;

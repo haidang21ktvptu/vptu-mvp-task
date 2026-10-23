@@ -9,7 +9,6 @@ import { xacNhanMinhChung } from '../../../lib/kl/minh-chung.js';
 import { xacNhanNhanViec } from '../../../lib/kl/du-lieu.js';
 import { findAccount } from '../../../lib/state.js';
 import { dh } from './du-lieu.js';
-import { goiYTheoDoiCuaChuTri } from './the-viec.js';
 import { veDieuHanh } from './man-hinh.js';
 import { napLaiViec } from '../kl/nap-lai-viec.js';
 import { chonDoKhan } from '../../../lib/kl/do-khan.js';
@@ -81,22 +80,15 @@ async function mcKhongHopLeThe(ds, form) {
   if (!lyDo) { notifyError('Trả lại minh chứng phải ghi lý do.'); return; }
   try { await xacNhanMinhChung(ds.id, false, lyDo); await thanhCong(form, 'Đã trả lại minh chứng. Người nộp nhận thông báo (không còn minh chứng hợp lệ thì nhiệm vụ mở lại).', nvCua(form, ds)); } catch (e) { notifyError(e.message); }
 }
-// Giao lại tại chỗ (GIAO_LAI, 0045): đổi CHỦ TRÌ + người theo dõi (tuỳ chọn, gợi ý theo chủ trì mới) + một dòng lý do; cờ bị từ chối tự xoá (0034).
+// Giao lại tại chỗ (GIAO_LAI, 0045): đổi CHỦ TRÌ theo dõi + một dòng lý do; cờ bị từ chối tự xoá (0034). v3.31 (0128): không còn ô người theo dõi.
 async function giaoLaiThe(ds, form) {
-  const f = new FormData(form); const moi = f.get('chu_tri_moi'); const theoDoi = f.get('nguoi_theo_doi_moi') || ''; const nd = noiDung(form);
+  const f = new FormData(form); const moi = f.get('chu_tri_moi'); const nd = noiDung(form);
   if (!moi) { notifyError('Chọn chủ trì theo dõi mới.'); return; }
   if (!nd) { notifyError('Cần một dòng lý do giao lại.'); return; }
   try {
-    await chiDaoGui({ nhiem_vu_id: ds.id, loai: 'GIAO_LAI', noi_dung: nd, chu_tri_moi: moi, nguoi_theo_doi_moi: theoDoi });
+    await chiDaoGui({ nhiem_vu_id: ds.id, loai: 'GIAO_LAI', noi_dung: nd, chu_tri_moi: moi });
     await thanhCong(form, `Đã giao lại ${ds.ma}: chủ trì theo dõi mới là ${findAccount(moi)?.full_name || 'cán bộ được chọn'}. Người cũ và người mới nhận thông báo; chủ trì theo dõi mới xác nhận nhận việc lại.`, ds.id);
   } catch (e) { notifyError(e.message); }
-}
-// Chọn chủ trì mới trong ô Giao lại (mọi màn hình) → ô người theo dõi gợi ý theo cấp quản lý của chủ trì mới; người dùng sửa được.
-function onDoiChuTri(e) {
-  const sel = e.target;
-  if (!(sel instanceof HTMLSelectElement) || sel.name !== 'chu_tri_moi') return;
-  const theoDoi = sel.form?.querySelector('select[name=nguoi_theo_doi_moi]'); const goiY = sel.value ? goiYTheoDoiCuaChuTri(sel.value) : null;
-  if (theoDoi && goiY && theoDoi.querySelector(`option[value="${goiY}"]`)) theoDoi.value = goiY;
 }
 // Từ chối nhận việc (0034): đề nghị (lý do bắt buộc, chỉ cấp duyệt và cấp trên đọc) / duyệt (nút bấm quyết định đồng ý hay không).
 async function deNghiTuChoiThe(ds, form) {
@@ -132,7 +124,6 @@ async function xacNhanNhanTT({ id, ma }) {
 const cuonToi = ({ toi }) => { const el = $(toi); if (el && !el.classList.contains('hidden')) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
 export function mountHanhDongDieuHanh() {
-  document.addEventListener('change', onDoiChuTri);
   registerActions({ moO, dongO, dienGoiY, guiChiDaoTTThe, guiDonDocThe, phanHoiThe, mcHopLeThe, mcDanhGiaThe, mcKhongHopLeThe, xemDienBien, moChiDaoViec,
     giaoLaiThe, deNghiTuChoiThe, duyetTuChoiThe, xacNhanNhanTT, chonDoKhan, cuonToi });
 }

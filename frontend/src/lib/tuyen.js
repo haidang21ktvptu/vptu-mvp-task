@@ -11,7 +11,8 @@ export const TUYEN = [
   { duong: 'Nhap-Excel', nav: 'navGiaoViec', theGv: 'nhap' },   // thẻ của Giao việc (người nhập liệu); mục menu riêng "Nhập từ Excel" cũng về đây
   { duong: 'Cho-hoan-thien', nav: 'navGiaoViec', theGv: 'cho' },
   { duong: 'Nhiem-vu', nav: 'navKl' },
-  { duong: 'Viec-toi-theo-doi', nav: 'navTheoDoi' },
+  { duong: 'Viec-toi-da-giao', nav: 'navDaGiao' },   // v3.31 (0128): "Việc tôi theo dõi" → "Việc tôi đã giao"
+  { duong: 'Viec-toi-theo-doi', nav: 'navDaGiao' },   // đường dẫn cũ (trước v3.31) vẫn mở được; thanh địa chỉ ghi đường dẫn mới
   { duong: 'Theo-van-ban', nav: 'navTheoVanBan' },
   { duong: 'Can-bo', nav: 'navCanBo' },
   { duong: 'Bao-cao', nav: 'navBaoCao' },

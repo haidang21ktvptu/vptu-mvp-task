@@ -1,6 +1,6 @@
 // Bổ sung dữ liệu chuyển đổi (v3.27 — hàm DB bo_sung_chuyen_doi của 0118, CHỈ tài khoản toàn quyền; chủ dự án 20/10/2026: chỉ cho hai tệp chủ dự án gửi,
 // giai đoạn chuyển đổi). Tệp JSON { viec: [{ ma, co_quan_trinh?, linh_vuc_chi_tiet?, han_xu_ly?, van_ban_trien_khai?, ghi_chu?, ket_qua?, owner_tai_khoan?,
-// nguoi_theo_doi?, ghi_de? }], van_ban: [{ so_ket_luan, ngay_ban_hanh, so_hoi_nghi?, loai }] } do Claude dựng từ tệp đã được chủ dự án duyệt bản xem trước.
+// ghi_de? }], van_ban: [{ so_ket_luan, ngay_ban_hanh, so_hoi_nghi?, loai }] } do Claude dựng từ tệp đã được chủ dự án duyệt bản xem trước.
 // Kiểm dạng tệp, chia lượt (mỗi lượt một giao dịch ngắn — như nhập Excel gửi từng phần), gộp kết quả, chữ "ô: cũ → mới". Thuần (không DOM, không mạng).
 import { chuanGiaTri } from './chuan-hoa.js';
 export const LUOT = 50;   // việc mỗi lần gọi (DB nhận tối đa 300) — tránh quá giờ chạy câu lệnh; chạy lại an toàn (ô đã điền → giữ nguyên)
@@ -27,8 +27,8 @@ export const gopKetQua = (ds) => ({ so_viec: ds.reduce((s, x) => s + (x.so_viec 
 export const soGiu = (kq) => (kq.viec || []).filter((x) => x.ket_qua === 'GIU').length;
 
 // Cột "chu_tri" của tệp (họ tên cán bộ, hoặc "VPTU" / tên phòng — như cột "Chủ trì theo dõi" của bảng Phụ lục, cùng cách khớp của nhập Excel) → ghi đè
-// chủ trì: cán bộ → owner_tai_khoan + người theo dõi là chính cán bộ đó; đơn vị → owner_tai_khoan trống + owner_don_vi_ma, người theo dõi mặc định (Chánh
-// Văn phòng / Trưởng phòng — như nhập Excel). ctx: { dm, accounts, tenPhong }. → { du, loi: [chữ] } — có lỗi thì không gửi tệp.
+// chủ trì: cán bộ → owner_tai_khoan; đơn vị → owner_tai_khoan trống + owner_don_vi_ma (v3.31 — 0128: không gửi người theo dõi, trigger ghi theo chủ trì).
+// ctx: { dm, accounts, tenPhong }. → { du, loi: [chữ] } — có lỗi thì không gửi tệp.
 export function chuanHoaChuTri(d, ctx) {
   const loi = [];
   const viec = d.viec.map((x, i) => {
@@ -37,20 +37,19 @@ export function chuanHoaChuTri(d, ctx) {
     const k = chuanGiaTri('chuTri', ten, { ...ctx, tuDien: new Map() });
     if (!k?.ma) { loi.push(`Dòng việc thứ ${i + 1} (${x.ma}): chưa xác định được chủ trì "${ten}"${k?.loi ? ` — ${k.loi}` : ''}.`); return con; }
     const [loai, ma] = String(k.ma).split(':');
-    if (loai === 'tk') return { ...con, owner_tai_khoan: ma, nguoi_theo_doi: ma, ghi_de: ['owner_tai_khoan', 'nguoi_theo_doi'] };
-    const dv = (ctx.dm?.donVi || []).find((v) => v.ma === ma);
-    const td = (ctx.accounts || []).find((a) => !a.is_system && !a.bi_khoa && (dv?.phong ? a.role_group === 'A2' && a.department === dv.phong : a.role_group === 'A1' && a.is_chief));
-    return { ...con, owner_tai_khoan: '', owner_don_vi_ma: ma, ...(td ? { nguoi_theo_doi: td.id } : {}), ghi_de: ['owner_tai_khoan', ...(td ? ['nguoi_theo_doi'] : [])] };
+    if (loai === 'tk') return { ...con, owner_tai_khoan: ma, ghi_de: ['owner_tai_khoan'] };
+    return { ...con, owner_tai_khoan: '', owner_don_vi_ma: ma, ghi_de: ['owner_tai_khoan'] };
   });
   return { du: { ...d, viec }, loi };
 }
 
 export const TEN_O = { co_quan_trinh: 'Cơ quan/đơn vị trình', linh_vuc_chi_tiet: 'Lĩnh vực chi tiết', han_xu_ly: 'Hạn xử lý', van_ban_trien_khai: 'Văn bản triển khai',
-  ghi_chu: 'Ghi chú', ket_qua: 'Kết quả thực hiện / Minh chứng', owner_tai_khoan: 'Chủ trì theo dõi', owner_don_vi_ma: 'Đơn vị chủ trì theo dõi', nguoi_theo_doi: 'Người theo dõi' };
+  ghi_chu: 'Ghi chú', ket_qua: 'Kết quả thực hiện / Minh chứng', owner_tai_khoan: 'Chủ trì theo dõi', owner_don_vi_ma: 'Đơn vị chủ trì theo dõi' };
 const rut = (t, n = 140) => (String(t).length > n ? `${String(t).slice(0, n - 1)}…` : String(t));
-// x: một việc trong kết quả; ten(k, v): tên hiển thị của giá trị (đơn vị, cán bộ, ngày). → ['Cơ quan trình: (trống) → 6. Đảng ủy …', …]
+// x: một việc trong kết quả; ten(k, v): tên hiển thị của giá trị (đơn vị, cán bộ, ngày). → ['Cơ quan trình: (trống) → 6. Đảng ủy …', …]. v3.31 (0128):
+// nguoi_theo_doi là trường nội bộ — không hiện.
 export function chuDoi(x, ten = (k, v) => v) {
   const cu = x.cu || {}; const moi = x.moi || {};
   const hien = (k, v) => (v === null || v === undefined || v === '' ? '(trống)' : rut(ten(k, v)));
-  return Object.keys(moi).map((k) => `${TEN_O[k] || k}: ${k === 'ket_qua' ? '' : `${hien(k, cu[k])} → `}${hien(k, moi[k])}`);
+  return Object.keys(moi).filter((k) => k !== 'nguoi_theo_doi').map((k) => `${TEN_O[k] || k}: ${k === 'ket_qua' ? '' : `${hien(k, cu[k])} → `}${hien(k, moi[k])}`);
 }

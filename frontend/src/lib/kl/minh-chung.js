@@ -1,7 +1,8 @@
 // Minh chứng có cấu trúc (GĐ16, migration 0028): đọc bảng minh_chung (RLS theo phạm vi nhiệm vụ); MỌI thao tác ghi đi qua
 // hàm SECURITY DEFINER nop_minh_chung / xac_nhan_minh_chung / gan_tep_minh_chung / dong_nhiem_vu — frontend không ghi thẳng bảng, quyền thật trong hàm.
 // Đợt D v3.20 (0090, định hướng 8/10/2026: lãnh đạo theo dõi, chuyên viên nhập liệu): nộp minh chứng hợp lệ = TỰ HOÀN THÀNH nhiệm vụ (ngày hoàn
-// thành = ngày văn bản minh chứng); người giao việc / người theo dõi / lãnh đạo trong phạm vi được (không bắt buộc) trả lại hoặc đánh giá chất lượng.
+// thành = ngày văn bản minh chứng); người giao việc / lãnh đạo trong phạm vi được (không bắt buộc) trả lại hoặc đánh giá chất lượng (v3.31 — 0128: chủ
+// trì theo dõi không tự xem lại việc của mình).
 import { supabase } from '../supabase.js';
 import { COT_MINH_CHUNG, taiTheoTrang } from './cot.js';
 import { state, findAccount } from '../state.js';
@@ -25,7 +26,8 @@ export function nghiemThuViecTt(r, nopBoi, me = state.user) {
 
 const laLanhDao = () => ['A0', 'A1', 'A2'].includes(state.user?.role_group);
 const qtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.user.quan_tri_kl_het_han || state.user.quan_tri_kl_het_han >= homNayVN());
-// Ai nộp được minh chứng (kl_duoc_nop_minh_chung, 0089): Owner, người theo dõi, người tạo việc (chuyên viên nộp thay khi Owner là lãnh đạo),
+// Ai nộp được minh chứng (kl_duoc_nop_minh_chung, 0089): chủ trì theo dõi (cán bộ, hoặc người đại diện phòng — nguoi_theo_doi nội bộ, 0128), người tạo
+// việc (chuyên viên nộp thay khi Owner là lãnh đạo),
 // lãnh đạo / quản trị nhiệm vụ thấy việc (dòng hiện ra = trong phạm vi). Chuyên viên chỉ xem cả phòng (0086) không nộp việc người khác.
 // v3.29 (0124): thư ký Thường trực nộp được cho mọi việc chưa hoàn thành, kể cả ngoài phạm vi cũ.
 export function duocNopMinhChung(r) {
@@ -34,14 +36,14 @@ export function duocNopMinhChung(r) {
     && ([r.owner_tai_khoan, r.nguoi_theo_doi, r.tao_boi].includes(me) || laLanhDao() || qtklConHan() || thuKyGhi(r, state.user));
 }
 // Ai trả lại / đánh giá được (kl_duoc_xem_lai_minh_chung, 0090): tầng giao (người giao kể cả Thường trực, người tạo việc, quản trị — 0091), như
-// nghiệm thu cũ (người theo dõi, lãnh đạo Văn phòng / phòng trong phạm vi; việc Thường trực giao Chánh VP: thư ký Thường trực); không phải minh
-// chứng do chính mình nộp; Chánh VP không tự xem lại việc Thường trực giao cho mình (0061).
+// nghiệm thu (lãnh đạo Văn phòng / phòng trong phạm vi, quản trị nhiệm vụ — 0128 bỏ nhánh người theo dõi; việc Thường trực giao Chánh VP: thư ký
+// Thường trực); không phải minh chứng do chính mình nộp; Chánh VP không tự xem lại việc Thường trực giao cho mình (0061).
 export function duocXemLaiMinhChung(r, m) {
   const me = state.user?.id;
   if (!me || !r || !m || chiXem(r) || m.nop_boi === me || (laViecTtGiaoCvp(r) && r.owner_tai_khoan === me)) return false;
   if (laTangGiao(r)) return true;
   if (laViecTtGiaoCvp(r)) return nghiemThuViecTt(r, m.nop_boi);
-  return r.nguoi_theo_doi === me || ['A1', 'A2'].includes(state.user?.role_group) || qtklConHan();
+  return ['A1', 'A2'].includes(state.user?.role_group) || qtklConHan();
 }
 
 // Mọi minh chứng của một nhiệm vụ, mới nhất trước.

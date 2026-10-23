@@ -62,7 +62,7 @@ function tieuDe() {
   if (toanVP()) return ['Tổng quan thực hiện nhiệm vụ', 'Toàn Văn phòng Tỉnh ủy — việc ngoài phạm vi xử lý của đồng chí chỉ xem'];
   if (u.role_group === 'A0') return ['Tổng quan thực hiện nhiệm vụ', 'Toàn bộ nhiệm vụ Thường trực theo dõi trên hệ thống'];
   if (u.role_group === 'A2') return [`Tổng quan ${DEPT_NAMES[u.department] || 'phòng'}`, 'Nhiệm vụ của phòng'];
-  if (u.role_group === 'A3' && !chuyenVienXemPhong()) return ['Tổng quan việc của tôi', 'Việc đồng chí chủ trì, theo dõi hoặc đã giao'];   // 0103: Phạm vi của tôi
+  if (u.role_group === 'A3' && !chuyenVienXemPhong()) return ['Tổng quan việc của tôi', 'Việc đồng chí chủ trì theo dõi hoặc đã giao'];   // 0103: Phạm vi của tôi
   if (u.role_group === 'A3') return [`Tổng quan ${DEPT_NAMES[u.department] || 'phòng'}`, 'Nhiệm vụ của phòng — chỉ xem'];
   return ['Tổng quan thực hiện nhiệm vụ', u.is_chief ? 'Văn phòng Tỉnh ủy' : 'Các phòng, lĩnh vực đồng chí phụ trách'];
 }
@@ -96,7 +96,7 @@ function ve() {
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
   const tc = { ...tuyChonLoc(coSo(), { tenPhong: DEPT_NAMES, tenCanBo: (id) => state.accounts.find((a) => a.id === id)?.full_name, lanhDaoVP: lanhDaoVP(), tenLoai }),
     ...tuyChonLocMoi(coSo(), { mucTieuDm: coMucTieu() ? dm.mucTieu : [], nhomDm: coMucTieu() ? dm.nhomMucTieu : [], khoiDm: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganhDm: dm.nganh, linhVucDm: dm.linhVuc, nguonDm: dm.nguonNhiemVu }) };
-  const hienLoc = { phong: v === 'A0' || v === 'A1' || toanVP(), ldvp: laCapVanPhong(), phamViNhan: v === 'A3' ? 'Việc của tôi (chủ trì, theo dõi, đã giao)' : 'Việc tôi theo dõi hoặc giao',
+  const hienLoc = { phong: v === 'A0' || v === 'A1' || toanVP(), ldvp: laCapVanPhong(), phamViNhan: v === 'A3' ? 'Việc của tôi (chủ trì theo dõi, đã giao)' : 'Việc tôi chủ trì hoặc giao',   // v3.31 (0128)
     toanBo: coNutToanBo() ? toanVP() : null };
   const chip = [...chipLoc(tq.loc, tc, { mucTieuDm: dm.mucTieu, nhomDm: dm.nhomMucTieu, phamViNhan: hienLoc.phamViNhan, tenLoai, tenDoKhan }), ...(kyTuy ? [{ k: 'ky', ten: `Kỳ: ${k.ten}` }] : [])];
   const nghen = diemNghen(rows); const cl = chatLuongKy(rows, k); const coCl = Boolean(cl.coDanhGia || cl.traLai);

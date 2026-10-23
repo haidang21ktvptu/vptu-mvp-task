@@ -89,7 +89,7 @@ export async function expectLoggedIn(page, role) {
 }
 
 // Bấm một mục menu theo id (navKl, navDieuHanh, dmBubbleLauncher, navQuanTri…): pill trên máy tính, nút thanh dưới hoặc "Khác" trên điện thoại.
-// Chuyên viên (A3) không có mục Nhiệm vụ trên menu (mockup: Việc của tôi · Việc tôi theo dõi · Nhắn tin) — mở toàn bộ việc bằng nút
+// Chuyên viên (A3) không có mục Nhiệm vụ trên menu (Việc của tôi · Giao việc · Việc tôi đã giao · Theo văn bản) — mở toàn bộ việc bằng nút
 // [data-action=openKl] trên màn hình Việc của tôi (v3.25: "Lọc chi tiết, in").
 // Mở biểu mẫu Giao việc rồi CHỜ khởi tạo xong ([data-san-sang="1"]) trước thao tác đầu tiên — quy tắc 17/9: "phần tử đã hiện" không phải
 // tín hiệu nạp xong (lỗi đua CI #96: chọn "Văn bản mới" trong lúc biểu mẫu còn nạp rồi bị bước khởi tạo ghi đè). mo: cách mở (mặc định menu).
@@ -120,7 +120,8 @@ export async function chonPhanLoai(page, { the = 1, nganh = 'KHONG_THUOC', mucTi
   await expect(o.locator('[data-mtg-phan="chon"] .mtg-chip')).not.toHaveCount(0);
 }
 
-// v3.27: người theo dõi, đơn vị phối hợp, mô tả sản phẩm, cấp nhận ở mục gập "Thêm" của thẻ nhiệm vụ — mở trước khi điền. the: số thẻ (1 = thẻ chính).
+// v3.27: đơn vị phối hợp, mô tả sản phẩm, cấp nhận ở mục gập "Thêm" của thẻ nhiệm vụ (v3.31: không còn ô người theo dõi) — mở trước khi điền. the: số
+// thẻ (1 = thẻ chính).
 export async function moThem(page, the = 1) {
   const d = the === 1 ? page.locator('#gvThe1Them') : page.locator(`#gvLuoiThan .gv-nv[data-dong="${the}"] .gv-nv-them`);
   if ((await d.getAttribute('open')) === null) await d.locator('summary').click();

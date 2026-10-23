@@ -40,7 +40,7 @@ test.describe.serial('Thường trực giao việc → Chánh Văn phòng xác n
     await expect(page.locator('#klThVanBanWrap')).toBeVisible();         // v8 đợt 4: A0 nhập được văn bản; để trống số hiệu + ngày → DB ghi mốc "Thường trực giao …"
     await expect(page.locator('#klThVanBan')).toHaveValue('__moi__');
     await expect(page.locator('#gvVbA0')).toBeVisible();
-    await expect(page.locator('#klThNguoiTheoDoiWrap')).toHaveClass(/\bhidden\b/);    // người theo dõi tự suy (v3.27: ô nằm trong mục gập "Thêm" — kiểm lớp ẩn)
+    await expect(page.locator('#klThNguoiTheoDoiWrap')).toHaveCount(0);    // v3.31 (0128): không còn ô người theo dõi (CSDL ghi theo chủ trì)
     await expect(page.locator('#klThThayMatWrap')).toBeHidden();
     await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');
     await expect(page.locator('#klThDoKhanWrap .dk-chon button[aria-pressed="true"]')).toHaveText(/Khẩn/);   // độ khẩn của biểu mẫu chính (thẻ nhiệm vụ cũng có .dk-chon)
