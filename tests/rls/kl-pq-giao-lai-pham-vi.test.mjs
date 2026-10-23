@@ -54,8 +54,9 @@ describe('0056 — GIAO_LAI theo phạm vi giao (chỉ PCVP đổi hành vi)', {
     await don();
     assertOk(await db().from('phu_trach_phong').insert({ lanh_dao_id: IDS.pcvp2, phong: 'TONG_HOP', nganh_ma: 'KINH_TE_TONG_HOP', linh_vuc_ma: 'LV08_TAI_CHINH',
       tu_ngay: '2026-01-01', den_ngay: null, ly_do: `${KHOA} kiêm nhiệm`, phan_cong_boi: IDS.qtht }), 'kiêm nhiệm pcvp2');
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì — PCVP thấy TC2 vì là người giao việc (tao_boi), không còn ghi làm người theo dõi được
     await Promise.all([them('DT', { linh_vuc_ma: 'LV08_DAU_TU' }), them('TC', { linh_vuc_ma: 'LV08_TAI_CHINH' }),
-      them('TC2', { linh_vuc_ma: 'LV08_TAI_CHINH', nguoi_theo_doi: IDS.pcvp })]);
+      them('TC2', { linh_vuc_ma: 'LV08_TAI_CHINH', tao_boi: IDS.pcvp })]);
   });
   after(don);
 
@@ -71,7 +72,8 @@ describe('0056 — GIAO_LAI theo phạm vi giao (chỉ PCVP đổi hành vi)', {
 
   test('2. PCVP đổi: kiêm nhiệm được giao lại trong lĩnh vực kiêm nhiệm; cả phòng mất quyền với lĩnh vực người khác kiêm nhiệm; theo dõi mới ngoài phạm vi bị chặn', async () => {
     duoc(await giaoLai('demo_pcvp2', 'TC', OWNER_E2E), 'PCVP2 kiêm nhiệm Tài chính');
-    chan(await giaoLai('demo_pcvp', 'TC2', OWNER_E2E), 'PCVP cả phòng, lĩnh vực đã có người kiêm nhiệm (thấy việc vì là người theo dõi)');
+    const tc2 = await giaoLai('demo_pcvp', 'TC2', OWNER_E2E);   // 0128: chặn ở bước phạm vi giao, không phải vì không thấy việc
+    chan(tc2, 'PCVP cả phòng, lĩnh vực đã có người kiêm nhiệm (thấy việc vì là người giao việc)'); assert.match(tc2.error.message, /Chủ trì mới phải thuộc phòng/);
     const r = await giaoLai('demo_pcvp2', 'TC', OWNER_E2E, IDS.qtht);   // theo dõi mới phòng CDS_CY — ngoài phạm vi PCVP2
     chan(r, 'PCVP2 chọn người theo dõi ngoài phạm vi'); assert.match(r.error.message, /Người theo dõi phải thuộc phòng/);
   });

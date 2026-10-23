@@ -7,9 +7,9 @@ import { $, show } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { parseOwner } from '../kl/them-owner.js';
-import { thongBaoPhamVi, theoDoiHopLe } from './pham-vi.js';
-import { phongCuaGiaTri, ngayBH, laA0, nhuA0, anTheoDoi, laA3GiaoThang, canNganhHienTai } from './trang-thai.js';
+import { parseOwner, theoDoiTheoChuTri } from '../kl/them-owner.js';
+import { thongBaoPhamVi } from './pham-vi.js';
+import { phongCuaGiaTri, ngayBH, laA0, canNganhHienTai } from './trang-thai.js';
 import { o, taoThe, lamMoiThe, anHienThe, suKienThe } from './nhieu-the.js';
 import { boTheMucTieu, khoaThe } from './muc-tieu.js';
 import { canNganhBatBuoc, thieuMucTieu, mucThieuNganh, MUC_THIEU_MT } from './phan-loai.js';   // v3.26
@@ -71,15 +71,15 @@ export function anHienNhieu() {
 
 // Thiếu gì ở từng thẻ thêm (theo thứ tự) — dòng "Còn thiếu"; hợp lệ khi không thiếu gì. Cùng quy tắc với conThieu() của thẻ 1 (index.js).
 export function thieuNhieu() {
-  const bh = ngayBH(); const dm = danhMucKl(); const a0 = anTheoDoi(); const cn = canNganhBatBuoc(); const tm = $('klThThayMat').value;   // a0: không ô người theo dõi (Thường trực giao / chuyên viên giao thẳng)
+  const bh = ngayBH(); const dm = danhMucKl(); const cn = canNganhBatBuoc();
   return dongs().flatMap((the) => {
     const i = the.dataset.dong; const v = (c) => o(the, c).value;
     const owner = v('owner'); const han = v('han'); const kyBH = v('loai') === 'KY_BAN_HANH'; const nganh = v('nganh'); const lv = v('linh_vuc');
     const pv = owner ? thongBaoPhamVi(phongCuaGiaTri(owner), nganh, lv, dm.linhVuc) : { thieu: null };
-    return [[!v('noi_dung').trim(), 'nội dung'], [!owner, 'chủ trì theo dõi'], [!a0 && !v('theo_doi'), 'người theo dõi'], [!v('san_pham'), 'sản phẩm đầu ra'],
+    return [[!v('noi_dung').trim(), 'nội dung'], [!owner, 'chủ trì theo dõi'], [!v('san_pham'), 'sản phẩm đầu ra'],
       [!kyBH && !han, 'hạn xử lý'], [Boolean(han && bh) && han < bh, 'hạn sau ngày ban hành'], [cn && !nganh, mucThieuNganh()], [cn && Boolean(nganh) && !lv, 'ngành/lĩnh vực trong phạm vi giao'],
       [thieuMucTieu(khoaThe(the)), MUC_THIEU_MT],
-      [Boolean(pv.thieu), pv.thieu], [!a0 && !theoDoiHopLe(v('theo_doi'), tm, nganh, lv), 'người theo dõi thuộc phòng, lĩnh vực đồng chí phụ trách']]
+      [Boolean(pv.thieu), pv.thieu]]
       .filter(([t]) => t).map(([, n]) => `nhiệm vụ ${i}: ${n}`);
   });
 }
@@ -90,18 +90,20 @@ export function loiNhieu() {
   const [d, nd] = t[0].split(': ');
   return nd === 'hạn sau ngày ban hành' ? `${d}: hạn không được trước ngày ban hành (${formatNgay(ngayBH())}).` : `Còn thiếu ở ${d}: ${nd}.`;
 }
-// Tham số các thẻ thêm cho giao_viec_nhieu (mỗi thẻ ghi đè phần chung — cùng khoá với dòng 1 tách từ docForm, doc-form.js tachDong). A0 / thay mặt
-// Thường trực: DB tự suy người theo dõi; ngành / lĩnh vực của A0 chỉ gửi khi loại văn bản đòi (như docForm).
+// Tham số các thẻ thêm cho giao_viec_nhieu (mỗi thẻ ghi đè phần chung — cùng khoá với dòng 1 tách từ docForm, doc-form.js tachDong). v3.31: không có
+// ô người theo dõi — DB ghi theo chủ trì (trigger 0128); thẻ giao cho phòng / Văn phòng gửi kèm người đại diện để tin giao tới đúng người (như docForm);
+// ngành / lĩnh vực của A0 chỉ gửi khi loại văn bản đòi (như docForm).
 export function docDong() {
   const a0 = laA0(); const cn = canNganhHienTai();
   return dongs().map((the) => {
     const v = (c) => o(the, c).value; const ow = parseOwner(v('owner'), danhMucKl(), state.accounts);
+    const td = a0 ? null : theoDoiTheoChuTri(v('owner'), danhMucKl(), state.accounts, state.user);
     const d = { noi_dung: v('noi_dung').trim(), owner_don_vi_ma: ow.owner_don_vi_ma, owner_tai_khoan: ow.owner_tai_khoan, do_khan: v('do_khan'),
       san_pham_loai: v('san_pham') || null, san_pham_mo_ta: v('san_pham_mo_ta').trim() || null, cap_nhan_san_pham: v('cap_nhan') || null,
       loai_thoi_han_ma: v('loai'), han_xu_ly: v('loai') === 'KY_BAN_HANH' ? null : v('han') || null, don_vi_phoi_hop: v('phoi_hop').trim() || null,
       co_quan_trinh: v('co_quan_trinh') || null, linh_vuc_chi_tiet: v('lvct').trim() || null };   // v3.27: cột G, H của bảng Phụ lục theo từng thẻ
     if (!a0 || cn) Object.assign(d, { nganh_ma: v('nganh') || null, linh_vuc_ma: v('linh_vuc') || null });
-    if (!nhuA0()) d.nguoi_theo_doi = laA3GiaoThang() ? state.user?.id || null : v('theo_doi') || null;   // 0085: chuyên viên giao thẳng — theo dõi = người giao
+    if (td) d.nguoi_theo_doi = td;
     return d;
   });
 }

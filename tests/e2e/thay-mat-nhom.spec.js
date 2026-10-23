@@ -51,12 +51,12 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       const tm = await giaTri(page.locator('#klThThayMat option'));
       expect(tm.slice(0, 2)).toEqual(['nhom:LANH_DAO_VP', 'nhom:THUONG_TRUC']);
       expect(await page.locator('#klThThayMat optgroup').evaluateAll((gs) => gs.map((g) => g.label))).toEqual(['Nhóm lãnh đạo', 'Từng lãnh đạo']);
-      // (1) Lãnh đạo Văn phòng → phạm vi Chánh VP: chuyên viên Tổng hợp chọn được; vẫn có người theo dõi; không có đơn vị ngoài
+      // (1) Lãnh đạo Văn phòng → phạm vi Chánh VP: chuyên viên Tổng hợp chọn được; không có đơn vị ngoài (v3.31: không còn ô người theo dõi)
       await page.locator('#klThThayMat').selectOption('nhom:LANH_DAO_VP'); await expect(page.locator('#gvKhoa')).toBeEnabled(NAP);
       const nhomOwner = await page.locator('#klThOwner optgroup').evaluateAll((gs) => gs.map((g) => g.label));
       expect(nhomOwner).not.toContain('Đơn vị ngoài Văn phòng');
       expect(await giaTri(page.locator('#klThOwner option'))).not.toContain('dv:DANG_UY_UBND');
-      await expect(page.locator('#klThNguoiTheoDoiWrap')).not.toHaveClass(/\bhidden\b/);   // v3.27: ô trong mục gập "Thêm" — kiểm lớp ẩn
+      await expect(page.locator('#klThNguoiTheoDoiWrap')).toHaveCount(0);   // v3.31 (0128): chỉ còn Chủ trì theo dõi
       await vanBanMoi(page, `${khoa}-LDVP`);
       await page.locator('#klThNoiDung').fill(`${khoa} LDVP`); await page.locator('#klThOwner').selectOption(`tk:${ID.cv1}`);
       await page.locator('#klThSanPham').selectOption('BAO_CAO'); await page.locator('#klThHan').fill(H);
@@ -69,7 +69,6 @@ test.describe.serial('Thay mặt theo nhóm — Lãnh đạo Văn phòng / Thư�
       await moGiaoViec(page);
       // (2) Thường trực Tỉnh ủy → như Thường trực giao
       await page.locator('#klThThayMat').selectOption('nhom:THUONG_TRUC'); await expect(page.locator('#gvKhoa')).toBeEnabled(NAP);
-      await expect(page.locator('#klThNguoiTheoDoiWrap')).toHaveClass(/\bhidden\b/);
       await expect(page.locator('#klThDoKhan')).toHaveValue('KHAN');
       const owner = await giaTri(page.locator('#klThOwner option'));
       expect(owner).toContain('dv:TONG_HOP'); expect(owner).toContain(`tk:${ID.cvp}`); expect(owner).not.toContain(`tk:${ID.cv1}`); expect(owner).not.toContain('dv:VAN_PHONG_TINH_UY');

@@ -16,13 +16,13 @@ export const datHomNay = (v) => { homNay = v || homNayVN(); };
 export const laA0 = () => state.user?.role_group === 'A0';
 // Ô Thay mặt: mọi chuyên viên (Đợt F v3.21, 0095 — quyền chung, lưu vết người nhập), TUỲ CHỌN — để trống = giao thẳng cho chuyên viên (0085).
 export const canThayMat = () => state.user?.role_group === 'A3';
-// Đợt E (0085): chuyên viên giao thẳng (không thay mặt) — Owner là một chuyên viên (phòng bất kỳ) hoặc chính mình; người theo dõi = người giao (ô ẩn).
+// Đợt E (0085): chuyên viên giao thẳng (không thay mặt) — Owner là một chuyên viên (phòng bất kỳ) hoặc chính mình.
 export const laA3GiaoThang = () => state.user?.role_group === 'A3' && !$('klThThayMat')?.value;
 // v3.18: thay mặt "Thường trực Tỉnh ủy" (nhóm) → quy tắc như Thường trực giao (giao_viec v_nhu_a0): Owner là lãnh đạo Văn phòng / phòng, không ô người
 // theo dõi (DB tự suy), Khẩn mặc định; văn bản, ngày giao, ngành / lĩnh vực vẫn theo vai A3.
 export const laThayMatTT = () => canThayMat() && laThayMatThuongTruc($('klThThayMat').value);
 export const nhuA0 = () => laA0() || laThayMatTT();
-export const anTheoDoi = () => nhuA0() || laA3GiaoThang();   // ô người theo dõi ẩn: DB tự suy (Thường trực giao) hoặc = người giao (chuyên viên)
+export const anGoiYCanBo = () => nhuA0() || laA3GiaoThang();   // dòng gợi ý "Cân tải" ẩn khi Thường trực giao / chuyên viên giao thẳng (v3.31: bỏ ô người theo dõi)
 export const vanBanChon = () => timTrongDs($('klThVanBan').value);
 export const nhanMoi = () => (laA0() ? 'Văn bản mới hoặc giao trực tiếp…' : 'Văn bản giao việc mới…');
 // Phòng của một giá trị Owner ("tk:<id>" / "dv:<mã>") như giao_viec tính; phongOwner() = ô Chịu trách nhiệm đang chọn. Lãnh đạo (A1/A2) giao cho chính

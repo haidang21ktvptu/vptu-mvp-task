@@ -25,7 +25,8 @@ let rowsHienTai = []; let nguoiDangMo = null;
 // quá hạn ở bước nghiệm thu tính "đang làm" (trung tính). tatCa: mọi dòng trong phạm vi (không chỉ của phòng) để thấy việc chờ nghiệm thu.
 function nguoiHtml(a, rows, tatCa = rows) {
   const owner = rows.filter((r) => r.owner_tai_khoan === a.id && mo(r));
-  const theoDoi = rows.filter((r) => r.nguoi_theo_doi === a.id && r.owner_tai_khoan !== a.id && mo(r)).length;
+  // v3.31 (0128): việc giao cho phòng / Văn phòng mà người này là người đại diện chủ trì (Trưởng phòng / Chánh VP — nguoi_theo_doi nội bộ).
+  const theoDoi = rows.filter((r) => r.nguoi_theo_doi === a.id && !r.owner_tai_khoan && mo(r)).length; const donVi = a.role_group === 'A1' ? 'Văn phòng' : 'phòng';
   const doRows = tatCa.filter((r) => r.nguoi_chiu_cham === a.id && DO(r) && mo(r));
   const dem = { do: doRows.length, vang: owner.filter((r) => VANG(r) && !doRows.includes(r)).length };
   const lam = owner.filter((r) => !doRows.includes(r) && !VANG(r)).length;
@@ -33,10 +34,10 @@ function nguoiHtml(a, rows, tatCa = rows) {
   const pct = (n) => (tong ? (n / tong) * 100 : 0);
   const xong = rows.filter((r) => r.owner_tai_khoan === a.id && !mo(r));   // PR-3: việc đã hoàn thành theo chất lượng nghiệm thu
   const clChu = CHAT_LUONG.map(([m, ten]) => [xong.filter((r) => r.chat_luong === m).length, ten]).filter(([n]) => n).map(([n, ten]) => `${n} ${ten}`).join(', ');
-  const soChu = tong === 0 ? (theoDoi ? `${theoDoi} đang theo dõi` : 'rảnh, có thể nhận thêm')
+  const soChu = tong === 0 ? (theoDoi ? `${theoDoi} việc giao cho ${donVi}` : 'rảnh, có thể nhận thêm')
     : [dem.do ? `<b>${dem.do}</b> quá hạn` : '', dem.vang ? `${dem.vang} ${tenMuc('vang')}` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
   return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}">
-      <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc theo dõi` : ''}${clChu ? ` · <span data-truong="kpi-chat-luong">hoàn thành: ${clChu}</span>` : ''}</small></div>
+      <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc giao cho ${donVi}` : ''}${clChu ? ` · <span data-truong="kpi-chat-luong">hoàn thành: ${clChu}</span>` : ''}</small></div>
       <div class="tai"><span class="t-do" style="width:${pct(dem.do)}%"></span><span class="t-vang" style="width:${pct(dem.vang)}%"></span><span class="t-lam" style="width:${pct(lam)}%"></span></div>
       <span class="tai-so">${soChu}</span></button>`;
 }

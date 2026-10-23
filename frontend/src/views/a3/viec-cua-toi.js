@@ -10,7 +10,7 @@ import { mo, GAP, choNghiemThu, chuaNhan, laCuaToi as laCuaToiCua } from '../../
 
 const me = () => state.user?.id;
 const laCuaToi = (r) => laCuaToiCua(r, me());
-const canNhan = (r) => chuaNhan(r, me());   // chính tôi chưa nhận (owner / người theo dõi mỗi người tự nhận)
+const canNhan = (r) => chuaNhan(r, me());   // chính tôi chưa nhận (chủ trì theo dõi tự nhận)
 // Chỉ đạo (không phải Thường trực) đang chờ TÔI trả lời trên một việc.
 export const chiDaoCua = (id) => dh.chiDaoCho.filter((c) => c.nhiem_vu_id === id && c.nguoi_gui !== me() && c.loai !== 'CHI_DAO_TT');
 
@@ -29,7 +29,7 @@ export function thanhTuChoiHtml() {
     `<p data-nhiem-vu="${r.id}" data-ket-qua="${t.trang_thai}"><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} — <b>${escapeHtml(chu)}</b> (${escapeHtml(findAccount(t.cap_duyet)?.full_name || 'cấp duyệt')} duyệt ${t.duyet_luc ? formatDateTime(t.duyet_luc) : ''})</p>`).join('')}</div>`;
 }
 
-// rows: việc của tôi (chủ trì hoặc theo dõi). Trả các nhóm ưu tiên + theo dõi (đang mở, không chủ trì) + đã hoàn thành + tất cả.
+// rows: việc tôi chủ trì theo dõi. Trả các nhóm ưu tiên + đang thực hiện + đã hoàn thành + tất cả (v3.31: bỏ nhóm "theo dõi" — không còn vai riêng).
 export function nhomViecCuaToi(rows = dh.rows.filter(laCuaToi)) {
   const daXep = new Set();
   const lay = (ds) => { const kq = ds.filter((r) => !daXep.has(r.id)); kq.forEach((r) => daXep.add(r.id)); return kq; };
@@ -37,10 +37,9 @@ export function nhomViecCuaToi(rows = dh.rows.filter(laCuaToi)) {
   const moi = lay(rows.filter(canNhan));
   const chiDao = lay(rows.filter((r) => mo(r) && chiDaoCua(r.id).length));
   const canMinhChung = lay(rows.filter((r) => mo(r) && GAP.includes(r.muc_canh_bao) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r)));
-  const dangLam = lay(rows.filter((r) => mo(r) && r.owner_tai_khoan === me()));
-  const theoDoi = rows.filter((r) => mo(r) && !daXep.has(r.id));   // tôi theo dõi (không chủ trì), không cần làm gì ngay
+  const dangLam = lay(rows.filter(mo));
   const xong = rows.filter((r) => !mo(r));
-  return { tuChoi, moi, chiDao, canMinhChung, dangLam, theoDoi, xong, tatCa: rows };
+  return { tuChoi, moi, chiDao, canMinhChung, dangLam, xong, tatCa: rows };
 }
 // Đề nghị sửa của tôi đang chờ duyệt (0071): thẻ ghi "chờ … duyệt" + nút Rút thay nút Đề nghị sửa. Đọc khi nạp trang và mỗi lần số chưa xử lý
 // làm mới (a3/index.js — sau ghi, theo hai kênh realtime); trả true khi danh sách đổi (để vẽ lại).

@@ -40,6 +40,6 @@ export function layDong(sheet, dongTieuDe, anhXa) {
 export function chuanDong(dong, ctx) {
   const o = {};
   const thuTu = Object.keys(dong.raw).sort((a, b) => (a === 'linh_vuc') - (b === 'linh_vuc'));   // ngành trước lĩnh vực
-  thuTu.forEach((k) => { if (k !== 'muc_tieu' || HIEN_MUC_TIEU) o[k] = chuanGiaTri(truong(k)?.kieu, dong.raw[k], ctx, { nganh: o.nganh?.ma }); });   // v3.27: mục tiêu tạm ẩn
+  thuTu.forEach((k) => { if ((k !== 'muc_tieu' || HIEN_MUC_TIEU) && !truong(k)?.an) o[k] = chuanGiaTri(truong(k)?.kieu, dong.raw[k], ctx, { nganh: o.nganh?.ma }); });   // v3.27: mục tiêu tạm ẩn; v3.31: cột ẩn (Người theo dõi) bỏ qua
   return { soDong: dong.soDong, goc: dong.goc, raw: dong.raw, o };
 }

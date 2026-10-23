@@ -9,11 +9,10 @@ export const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 export const GAP = ['VANG', 'DO', 'DO_DAC_BIET'];   // Vàng / Đỏ / Đỏ đặc biệt
 export const laCuaToi = (r, me) => Boolean(me) && (r.owner_tai_khoan === me || r.nguoi_theo_doi === me);
 export const choNghiemThu = (r) => ['CHO_NGHIEM_THU', 'QUA_HAN_NGHIEM_THU'].includes(r.nhom_dem);
-// Chính tôi chưa xác nhận nhận việc (chủ trì và người theo dõi mỗi người tự nhận; chỉ việc theo Công văn 1400).
+// Chính tôi chưa xác nhận nhận việc (chủ trì theo dõi tự nhận — v3.31; chỉ việc theo Công văn 1400).
 export const chuaNhan = (r, me) => Boolean(r.theo_1400) && mo(r) && !r.toi_da_xac_nhan && laCuaToi(r, me) && !r.bi_tu_choi;
 // Còn phải nộp minh chứng: việc theo 1400 đang mở, chưa có minh chứng hợp lệ, không chờ xác nhận minh chứng nộp trước v3.20.
 export const canMinhChung = (r) => mo(r) && Boolean(r.theo_1400) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r);
-export const vaiCua = (r, me) => (r.owner_tai_khoan === me ? 'Chủ trì theo dõi' : r.nguoi_theo_doi === me ? 'Người theo dõi' : '');
 const coChiDao = (r, c) => mo(r) && (c.chiDao?.(r.id) || []).length > 0;
 const can = (r, c) => laCuaToi(r, c.me) && mo(r) && (Boolean(r.bi_tu_choi) || chuaNhan(r, c.me) || coChiDao(r, c)
   || r.minh_chung_buoc === 'BI_TRA_LAI' || (GAP.includes(r.muc_canh_bao) && !choNghiemThu(r)));

@@ -11,7 +11,7 @@ import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
 import { loadChiDao, chiDaoGui, chiDaoPhanHoi, chiDaoDong, chiDaoDanhDauDoc, xacNhanDaNhanChiDao, TEN_LOAI_CHI_DAO, TEN_TRANG_THAI_CHI_DAO } from '../../../lib/kl/dieu-hanh.js';
 import { nutDoKhanHtml, nhanDoKhanHtml } from '../../../lib/kl/do-khan.js';
-import { chuTriMoiOptions, nguoiTheoDoiOptions } from '../dieu-hanh/the-viec.js';
+import { chuTriMoiOptions } from '../dieu-hanh/the-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 
@@ -39,7 +39,8 @@ function phanHoiHtml(p, daDoc) {
     <p>${escapeHtml(p.noi_dung)}</p></div>`;
 }
 
-// Ai được phản hồi luồng g (ẩn/hiện): luồng TT chỉ người nhận; luồng thường: Owner, người theo dõi, người đã tham gia.
+// Ai được phản hồi luồng g (ẩn/hiện): luồng TT chỉ người nhận; luồng thường: chủ trì theo dõi (cán bộ hoặc người đại diện phòng — nguoi_theo_doi nội
+// bộ, 0128), người đã tham gia.
 const trongLuong = (g, phanHoi, r) => {
   const me = state.user?.id;
   if (g.loai === 'CHI_DAO_TT') return laNguoiNhan(g);
@@ -66,7 +67,7 @@ function gocHtml(g, phanHoi, daDoc, r, gocDau) {
   const dongDuoc = mo && g.nguoi_gui === me && (g.loai === 'CHI_DAO_TT' ? laA0() : !laA0());
   // Thư ký Thường trực (0047): đóng thay mặt luồng CHI_DAO_TT (hàm chi_dao_dong là chốt; không đóng loại khác).
   const thayMat = mo && g.loai === 'CHI_DAO_TT' && Boolean(state.user?.thu_ky_thuong_truc) && g.nguoi_gui !== me;
-  // Hỏa tốc (GĐ22): người nhận (luồng TT: nguoi_nhan; luồng thường: Owner/người theo dõi) phải bấm "Đã nhận" — hàm 0036 là chốt.
+  // Hỏa tốc (GĐ22): người nhận (luồng TT: nguoi_nhan; luồng thường: chủ trì theo dõi) phải bấm "Đã nhận" — hàm 0036 là chốt.
   const laNhan = g.loai === 'CHI_DAO_TT' ? laNguoiNhan(g) : me === r.nguoi_theo_doi || me === r.owner_tai_khoan;
   const daNhan = (g.da_nhan || []).includes(me);
   const nutNhan = mo && g.do_khan === 'HOA_TOC' && laNhan && !daNhan && !laA0() ? `<button type="button" class="nut nho do" data-action="daNhanChiDao" data-id="${g.id}" data-nv="${r.id}">Đã nhận</button>` : '';
@@ -107,7 +108,6 @@ function formGuiHtml(r, loai = LOAI_GUI, traLoiCho = '') {
         <input type="date" name="han_moi" class="o-nhap nho hidden" aria-label="Hạn mới" min="${r.han_xu_ly || ''}">
         <input type="date" name="han_phan_hoi" class="o-nhap nho hidden" aria-label="Hạn phản hồi (mặc định 2 ngày làm việc)" title="Hạn phản hồi — để trống = 2 ngày làm việc">
         <select name="chu_tri_moi" class="o-nhap nho hidden" aria-label="Chủ trì theo dõi mới"><option value="">— Chọn chủ trì theo dõi mới —</option>${chuTriMoiOptions(r)}</select>
-        <select name="nguoi_theo_doi_moi" class="o-nhap nho hidden" aria-label="Người theo dõi (gợi ý theo chủ trì theo dõi mới, sửa được)"><option value="">— Người theo dõi: giữ như hiện tại —</option>${nguoiTheoDoiOptions(r)}</select>
       </div>
       <div class="cd-form-hang">
         <input type="text" name="noi_dung" required class="o-nhap nho" placeholder="${traLoiCho ? 'Nội dung chỉ đạo điều hành theo chỉ đạo Thường trực' : a0 ? 'Nội dung ý kiến / chỉ đạo Thường trực' : 'Nội dung chỉ đạo (lý do nếu gia hạn/giao lại)'}" aria-label="Nội dung chỉ đạo">
@@ -162,7 +162,7 @@ async function guiChiDao(ds, form) {
   const f = new FormData(form);
   const p = { nhiem_vu_id: ds.nv, loai: f.get('loai'), noi_dung: (f.get('noi_dung') || '').trim(), do_khan: f.get('do_khan') || 'THUONG' };
   if (p.loai === 'GIA_HAN') p.han_moi = f.get('han_moi') || '';
-  if (p.loai === 'GIAO_LAI') { p.chu_tri_moi = f.get('chu_tri_moi') || ''; p.nguoi_theo_doi_moi = f.get('nguoi_theo_doi_moi') || ''; }
+  if (p.loai === 'GIAO_LAI') p.chu_tri_moi = f.get('chu_tri_moi') || '';   // v3.31 (0128): người theo dõi theo chủ trì mới — không còn ô riêng
   if (p.loai === 'CHI_DAO_TT') p.han_phan_hoi = f.get('han_phan_hoi') || '';
   if (ds.traLoiCho) p.tra_loi_cho = ds.traLoiCho;
   try {
@@ -205,7 +205,7 @@ async function daNhanChiDao(ds) {
     notifyError(e.message);
   }
 }
-// Chọn loại → hiện ô hạn mới (GIA_HAN) / chủ trì mới + người theo dõi (GIAO_LAI) / hạn phản hồi (CHI_DAO_TT). Uỷ quyền một lần cho cả trang.
+// Chọn loại → hiện ô hạn mới (GIA_HAN) / chủ trì theo dõi mới (GIAO_LAI) / hạn phản hồi (CHI_DAO_TT). Uỷ quyền một lần cho cả trang.
 function onDoiLoai(e) {
   const sel = e.target;
   if (!(sel instanceof HTMLSelectElement) || sel.name !== 'loai' || !sel.closest('.cd-form')) return;
@@ -214,7 +214,6 @@ function onDoiLoai(e) {
 function hienOTheoLoai(form, loai) {
   form.querySelector('[name=han_moi]').classList.toggle('hidden', loai !== 'GIA_HAN');
   form.querySelector('[name=chu_tri_moi]').classList.toggle('hidden', loai !== 'GIAO_LAI');
-  form.querySelector('[name=nguoi_theo_doi_moi]').classList.toggle('hidden', loai !== 'GIAO_LAI');
   form.querySelector('[name=han_phan_hoi]').classList.toggle('hidden', loai !== 'CHI_DAO_TT');
 }
 // Bản nháp ô gửi chỉ đạo theo form (việc + luồng TT trả lời): ghi ở mọi input/change, khôi phục sau mỗi lần vẽ lại khối (không mất "Chỉ đạo"

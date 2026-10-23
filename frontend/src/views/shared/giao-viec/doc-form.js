@@ -5,10 +5,10 @@ import { $ } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { parseOwner } from '../kl/them-owner.js';
+import { parseOwner, theoDoiTheoChuTri } from '../kl/them-owner.js';
 import { loiNguon, docNguon, docVanBanThem } from './nguon.js';
 import { themHoanThien } from './dien-san.js';
-import { getHomNay, laA0, anTheoDoi, laA3GiaoThang, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
+import { getHomNay, laA0, canThayMat, canNgayNhan, canNganhHienTai, laMoi, vbTrong, ngayBH } from './trang-thai.js';
 import { tachThayMat } from '../../../lib/kl/thay-mat.js';
 import { docThongTinNguon } from './thong-tin-nguon.js';
 
@@ -28,7 +28,6 @@ export function kiemTra(p) {
   if (p.han_xu_ly && ngayBH() && p.han_xu_ly < ngayBH()) return `Hạn không được trước ngày ban hành (${formatNgay(ngayBH())}). Chọn lại ngày.`;
   if (canNganhHienTai() && !p.nganh_ma) return 'Chọn ngành/lĩnh vực (bắt buộc với việc từ kết luận / thông báo).';
   if (canNganhHienTai() && !p.linh_vuc_ma) return 'Ngành/lĩnh vực đã chọn không thuộc phạm vi đồng chí được giao ở phòng chủ trì — chọn ngành khác hoặc báo lãnh đạo phụ trách.';   // v3.29: lĩnh vực tự xác định
-  if (!anTheoDoi() && !p.nguoi_theo_doi) return 'Chọn người theo dõi (cán bộ Văn phòng).';
   return loiNguon();
 }
 
@@ -46,7 +45,7 @@ export function docForm(cha) {
   };
   if (canThayMat()) Object.assign(p, tachThayMat($('klThThayMat').value));   // thay_mat_cho (một lãnh đạo) hoặc thay_mat_nhom (v3.18); trống = giao thẳng (0085)
   if (cha) p.nhiem_vu_cha = cha.id;
-  if (laA0()) {   // A0: DB tự suy người theo dõi, đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
+  if (laA0()) {   // A0: DB đặt uu_tien Thường trực; văn bản: đã điền → như vai khác, để trống → DB ghi mốc giao
     if (laMoi() && !vbTrong()) p.van_ban = vanBanMoi(); else if (!laMoi()) p.van_ban_id = $('klThVanBan').value;
     if (canNganhHienTai()) Object.assign(p, { nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null, ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value });
     return { ...p, ...docThongTinNguon(), linh_vuc_chi_tiet: $('klThLvct').value.trim() || null };   // Đợt D: Thường trực điền mức quan trọng / cơ quan trình ngay khi giao (Thường trực chỉ đạo trống = chính mình)
@@ -54,10 +53,11 @@ export function docForm(cha) {
   Object.assign(p, {
     ngay_nhan_van_ban: $('klThNgayNhan').value || null, loai_thoi_han_ma: $('klThLoai').value, cap_quyet_dinh: $('klThCapQD').value || null,
     nganh_ma: $('klThNganh').value || null, linh_vuc_ma: $('klThLinhVuc').value || null,
-    nguoi_theo_doi: laA3GiaoThang() ? state.user?.id || null : $('klThNguoiTheoDoi').value || null,   // 0085: chuyên viên giao thẳng — theo dõi = người giao
     van_ban_trien_khai: $('klThVanBanTK').value.trim() || null, linh_vuc_chi_tiet: $('klThLvct').value.trim() || null,   // v3.27: ô của thẻ 1
     ...docThongTinNguon(),   // Đợt C2: phần chung của lượt (tachDong để ở chung)
   });
+  const td = theoDoiTheoChuTri($('klThOwner').value, danhMucKl(), state.accounts, state.user);   // v3.31: giao cho phòng / Văn phòng — người nhận tin giao (không hiện)
+  if (td) p.nguoi_theo_doi = td;
   if (laMoi()) p.van_ban = vanBanMoi(); else p.van_ban_id = $('klThVanBan').value;
   return themHoanThien(p);
 }

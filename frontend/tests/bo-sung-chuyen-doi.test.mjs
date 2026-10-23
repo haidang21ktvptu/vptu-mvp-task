@@ -33,13 +33,14 @@ test('gộp kết quả các lượt; số giữ nguyên; chữ ô cũ → mới
     ['Cơ quan/đơn vị trình: (trống) → 6. Đảng ủy Ủy ban nhân dân tỉnh', 'Hạn xử lý: (trống) → 2026-11-20', 'Kết quả thực hiện / Minh chứng: [Tự điền] Đã ban hành kế hoạch']);
 });
 
-test('cột chu_tri: cán bộ → chủ trì + người theo dõi là cán bộ đó; "VPTU" → Văn phòng Tỉnh ủy, theo dõi Chánh Văn phòng; tên phòng → Trưởng phòng; không rõ / trùng tên → lỗi', () => {
+test('cột chu_tri: cán bộ → chủ trì; "VPTU" → Văn phòng Tỉnh ủy; tên phòng → phòng (v3.31 — 0128: không gửi người theo dõi, trigger ghi); không rõ / trùng tên → lỗi', () => {
   const ctx = { dm: DM, accounts: ACC, tenPhong: (m) => TEN_PHONG[m] || m };
   const r = chuanHoaChuTri({ viec: [{ ma: 'NV-1', chu_tri: 'Đàm Văn Sơn', ket_qua: 'x' }, { ma: 'NV-2', chu_tri: 'VPTU' }, { ma: 'NV-3', chu_tri: 'Phòng Tổng hợp' }, { ma: 'NV-4' }], van_ban: [] }, ctx);
   assert.deepEqual(r.loi, []);
-  assert.deepEqual(r.du.viec, [{ ma: 'NV-1', ket_qua: 'x', owner_tai_khoan: 'tpqt', nguoi_theo_doi: 'tpqt', ghi_de: ['owner_tai_khoan', 'nguoi_theo_doi'] },
-    { ma: 'NV-2', owner_tai_khoan: '', owner_don_vi_ma: 'VAN_PHONG_TINH_UY', nguoi_theo_doi: 'cvp', ghi_de: ['owner_tai_khoan', 'nguoi_theo_doi'] },
-    { ma: 'NV-3', owner_tai_khoan: '', owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: 'tp', ghi_de: ['owner_tai_khoan', 'nguoi_theo_doi'] }, { ma: 'NV-4' }]);
+  assert.deepEqual(r.du.viec, [{ ma: 'NV-1', ket_qua: 'x', owner_tai_khoan: 'tpqt', ghi_de: ['owner_tai_khoan'] },
+    { ma: 'NV-2', owner_tai_khoan: '', owner_don_vi_ma: 'VAN_PHONG_TINH_UY', ghi_de: ['owner_tai_khoan'] },
+    { ma: 'NV-3', owner_tai_khoan: '', owner_don_vi_ma: 'TONG_HOP', ghi_de: ['owner_tai_khoan'] }, { ma: 'NV-4' }]);
+  assert.deepEqual(chuDoi({ cu: { nguoi_theo_doi: 'a' }, moi: { nguoi_theo_doi: 'b' } }), [], 'trường nội bộ người theo dõi không hiện');
   const loi = chuanHoaChuTri({ viec: [{ ma: 'NV-5', chu_tri: 'Người Không Có' }, { ma: 'NV-6', chu_tri: 'Lý Văn Phúc' }], van_ban: [] }, ctx).loi;
   assert.equal(loi.length, 2); assert.match(loi[0], /NV-5.*không khớp/); assert.match(loi[1], /NV-6.*trùng tên/);
 });

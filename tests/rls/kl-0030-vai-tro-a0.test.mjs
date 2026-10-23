@@ -35,7 +35,7 @@ describe('0030 — vai trò A0: đọc toàn bộ, chỉ đạo chỉ Y_KIEN, nh
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    await them({ ma: 'NV-T88', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 });          // Owner cv2 (QUAN_TRI), theo dõi cv1 (TONG_HOP)
+    await them({ ma: 'NV-T88', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2 });          // Owner cv2 (QUAN_TRI); v3.31 (0128): theo dõi (nội bộ) = cv2
     await them({ ma: 'NV-T89', owner_don_vi_ma: 'DANG_UY_UBND', nguoi_theo_doi: IDS.cv2 });      // đơn vị ngoài, theo dõi cv2
     await them({ ma: 'NV-T87', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1 });          // việc A0 nhập liệu thay (Đợt D)
     const mc = await db().from('minh_chung').insert({ nhiem_vu_id: id['NV-T88'], loai: 'so_hieu', so_hieu: '12/CV-VPTU', ngay_van_ban: '2026-08-10', cap_nhan: 'CHANH_VAN_PHONG', nop_boi: IDS.cv1 }).select('id').single();

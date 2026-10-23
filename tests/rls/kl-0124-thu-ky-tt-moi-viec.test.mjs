@@ -89,17 +89,18 @@ describe('0124 — thư ký Thường trực trên mọi nhiệm vụ; đổi ch
     assert.ok((await tin('Y', 'Nộp minh chứng%')).includes(IDS.cv2), 'chủ trì được báo');
   });
 
-  test('5. Đổi chủ trì: đơn vị, cấp nhận theo chủ trì mới, nhật ký, tin chủ trì cũ / mới / người giao; đổi người theo dõi riêng; các trường hợp bị chặn', async () => {
+  test('5. Đổi chủ trì: đơn vị, cấp nhận theo chủ trì mới, nhật ký, tin chủ trì cũ / mới / người giao; đổi riêng người theo dõi không đổi được (0128); các trường hợp bị chặn', async () => {
     const r = await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.X.id, p: { chu_tri: IDS.cv1 }, p_ly_do: 'Thường trực giao lại cho Tổng hợp' });
     assertOk(r, 'đổi chủ trì');
-    assert.deepEqual(await doc('X', 'owner_tai_khoan, owner_don_vi_ma, cap_nhan_san_pham, nguoi_theo_doi'),
-      { owner_tai_khoan: IDS.cv1, owner_don_vi_ma: 'TONG_HOP', cap_nhan_san_pham: 'TRUONG_PHONG', nguoi_theo_doi: IDS.cv2 });
+    assert.deepEqual(await doc('X', 'owner_tai_khoan, owner_don_vi_ma, cap_nhan_san_pham, nguoi_theo_doi'),   // v3.31 (0128): người theo dõi (nội bộ) theo chủ trì mới
+      { owner_tai_khoan: IDS.cv1, owner_don_vi_ma: 'TONG_HOP', cap_nhan_san_pham: 'TRUONG_PHONG', nguoi_theo_doi: IDS.cv1 });
     const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', v.X.id).eq('cot', 'doi_chu_tri')).data;
     assert.deepEqual(ls.map((l) => l.gia_tri_moi), ['chủ trì: Demo Chuyên viên Hai → Demo Chuyên viên Một — lý do: Thường trực giao lại cho Tổng hợp']);
     const nhan = await tin('X', 'Đổi chủ trì theo dõi%');
     for (const id of [IDS.cv1, IDS.cv2, IDS.pcvp2]) assert.ok(nhan.includes(id), `tin tới ${id}`);
-    assertOk(await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.X.id, p: { nguoi_theo_doi: IDS.truongphong }, p_ly_do: 'Trưởng phòng theo dõi' }), 'đổi người theo dõi');
-    assert.equal((await doc('X', 'nguoi_theo_doi')).nguoi_theo_doi, IDS.truongphong);
+    // v3.31 (0128): bỏ vai người theo dõi riêng — đổi riêng người theo dõi không còn tác dụng: cột nội bộ vẫn = chủ trì (trigger ghi đè)
+    assertOk(await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.X.id, p: { nguoi_theo_doi: IDS.truongphong }, p_ly_do: 'Trưởng phòng theo dõi' }), 'đổi riêng người theo dõi');
+    assert.equal((await doc('X', 'nguoi_theo_doi')).nguoi_theo_doi, IDS.cv1, 'người theo dõi vẫn = chủ trì cv1');
     const r22 = [await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.X.id, p: { chu_tri: IDS.cv1 }, p_ly_do: 'x' }),
       await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.XONG.id, p: { chu_tri: IDS.cv1 }, p_ly_do: 'x' }),
       await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.X.id, p: { chu_tri: IDS.a0 }, p_ly_do: 'x' })];

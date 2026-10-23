@@ -8,8 +8,6 @@ import { DEPT_NAMES } from '../../../lib/constants.js';
 import { formatNgay, homNayVN } from '../../../lib/kl/ngay.js';
 import { tenKhau, boSoThuTu } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
-import { danhMucKl } from '../../../lib/kl/du-lieu.js';
-import { goiYTheoDoi } from '../kl/them-owner.js';
 import { canToiQuyet, ttCuaViec } from './du-lieu.js';
 
 export const GOI_Y_A0 = ['Báo cáo Thường trực lý do chậm', 'Hoàn thành trước ngày …', 'Chánh Văn phòng trực tiếp xử lý', 'Trình Ban Thường vụ kỳ họp tới'];
@@ -44,7 +42,7 @@ function oHtml(r) {
   const a0 = laA0();
   const goiY = (a0 ? GOI_Y_A0 : GOI_Y_VP).map((g) => `<button type="button" data-action="dienGoiY" data-goi-y="${escapeHtml(g)}">${escapeHtml(g)}</button>`).join('');
   return `<form class="o" id="oThe-${r.id}" data-submit="${a0 ? 'guiChiDaoTTThe' : 'guiDonDocThe'}" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
-      <small>${a0 ? 'Gửi tới Chánh Văn phòng và PCVP phụ trách; hạn phản hồi 2 ngày làm việc, tự điền.' : 'Đôn đốc gửi chủ trì theo dõi, người theo dõi và Trưởng phòng; hạn phản hồi tự điền.'}</small>
+      <small>${a0 ? 'Gửi tới Chánh Văn phòng và PCVP phụ trách; hạn phản hồi 2 ngày làm việc, tự điền.' : 'Đôn đốc gửi chủ trì theo dõi và Trưởng phòng; hạn phản hồi tự điền.'}</small>
       <div class="goi-y">${goiY}</div>
       <input name="noi_dung" required placeholder="Một dòng ${a0 ? 'chỉ đạo' : 'đôn đốc'}, hoặc chọn gợi ý ở trên" aria-label="Nội dung ${a0 ? 'chỉ đạo' : 'đôn đốc'}">
       <button type="submit" class="nut chinh">Gửi</button><button type="button" class="nut" data-action="dongO" data-o="oThe-${r.id}">Huỷ</button>
@@ -60,27 +58,18 @@ function canBoOptions(loai, chon) {
     .map((a) => `<option value="${a.id}"${a.id === chon ? ' selected' : ''}>${escapeHtml(a.full_name)} · ${escapeHtml(DEPT_NAMES[a.department] || a.department || '')}</option>`).join('');
 }
 export const chuTriMoiOptions = (r) => canBoOptions(r.owner_tai_khoan, null);
-export const nguoiTheoDoiOptions = (r, chon = r.nguoi_theo_doi) => canBoOptions(null, chon);
-// Người theo dõi gợi ý theo cấp quản lý của chủ trì mới — cùng quy tắc goiYTheoDoi của biểu mẫu giao việc: lãnh đạo A1/A2 → chính họ;
-// chuyên viên → Trưởng phòng của phòng mình (nhánh "dv:" theo đơn vị của phòng); không suy được → null (giữ người theo dõi hiện tại).
-export function goiYTheoDoiCuaChuTri(chuTriId) {
-  const dm = danhMucKl(); const a = state.accounts.find((x) => x.id === chuTriId);
-  const dv = dm.donVi.find((d) => d.phong && d.phong === a?.department);
-  return goiYTheoDoi(`tk:${chuTriId}`, dm, state.accounts) || (dv ? goiYTheoDoi(`dv:${dv.ma}`, dm, state.accounts) : null);
-}
-// Ô giao lại (A1/A2) dưới thẻ việc bị từ chối / trong ngăn: CHỦ TRÌ mới (đổi người chịu trách nhiệm) + người theo dõi (gợi ý theo chủ trì mới,
-// sửa được) + lý do một dòng. Sau khi giao lại: cờ "bị từ chối" tự xoá, chủ trì mới phải xác nhận nhận việc lại (0045).
+// Ô giao lại (A1/A2) dưới thẻ việc bị từ chối / trong ngăn: CHỦ TRÌ theo dõi mới (đổi người chịu trách nhiệm) + lý do một dòng (v3.31 — 0128: bỏ
+// ô người theo dõi). Sau khi giao lại: cờ "bị từ chối" tự xoá, chủ trì mới phải xác nhận nhận việc lại (0045).
 export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
   return `<form class="o" id="${tienTo}-${r.id}" data-submit="giaoLaiThe" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
       <small>Giao lại = đổi chủ trì theo dõi; người cũ và người mới nhận thông báo; cờ "bị từ chối" tự xoá; chủ trì theo dõi mới xác nhận nhận việc lại.</small>
       <select name="chu_tri_moi" required aria-label="Chủ trì theo dõi mới"><option value="">Chọn chủ trì theo dõi mới</option>${chuTriMoiOptions(r)}</select>
-      <select name="nguoi_theo_doi_moi" aria-label="Người theo dõi (gợi ý theo chủ trì theo dõi mới, sửa được)"><option value="">Người theo dõi: giữ như hiện tại</option>${nguoiTheoDoiOptions(r)}</select>
       <input name="noi_dung" required placeholder="Lý do giao lại" aria-label="Lý do giao lại">
       <button type="submit" class="nut chinh">Giao lại</button><button type="button" class="nut" data-action="dongO" data-o="${tienTo}-${r.id}">Huỷ</button>
     </form>`;
 }
 
-// Hàng việc (v8 đợt 2): chấm trạng thái · mã · nội dung (+ cần X quyết, nhãn) với dòng phụ xám (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết · theo dõi)
+// Hàng việc (v8 đợt 2): chấm trạng thái · mã · nội dung (+ cần X quyết, nhãn) với dòng phụ xám (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết)
 // · số ngày trễ · nút; vòng khép kín và các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau, .vong, .dk, #the-<id>, data-*).
 export function theHtml(r) {
   const quyet = canToiQuyet(r);
@@ -91,14 +80,13 @@ export function theHtml(r) {
   const nutGiaoLai = r.bi_tu_choi && !laA0() ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : '';
   // PR-2b: quá hạn ở bước nghiệm thu — "cá nhân đang chậm" là lãnh đạo nghiệm thu (nguoi_chiu_cham_ten, DB tính), không phải chủ trì.
   const owner = r.nhom === 'NGHIEM_THU' ? `chờ nghiệm thu: ${escapeHtml(r.nguoi_chiu_cham_ten || 'lãnh đạo')} · chủ trì theo dõi ${escapeHtml(r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '')}` : r.owner_tai_khoan_ten ? `${escapeHtml(r.owner_tai_khoan_ten)} · ${escapeHtml(boSoThuTu(r.owner_don_vi_ten))}`
-    : `${escapeHtml(boSoThuTu(r.owner_don_vi_ten) || '(chưa xác định)')} · ${r.owner_trong_van_phong ? 'người theo dõi: ' + escapeHtml(r.nguoi_theo_doi_ten || '—') : 'đơn vị ngoài Văn phòng'}`;
-  const theoDoi = r.nguoi_theo_doi_ten && r.owner_tai_khoan_ten ? ` · người theo dõi: ${escapeHtml(r.nguoi_theo_doi_ten)} (${escapeHtml(DEPT_NAMES[r.nguoi_theo_doi_phong] || '')})` : '';
+    : `${escapeHtml(boSoThuTu(r.owner_don_vi_ten) || '(chưa xác định)')}${r.owner_trong_van_phong ? '' : ' · đơn vị ngoài Văn phòng'}`;   // v3.31: bỏ "người theo dõi: …"
   const daCo = ttCuaViec(r.id).length > 0;
   const nutChinh = laA0() ? (daCo ? 'Chỉ đạo thêm' : 'Chỉ đạo') : 'Đôn đốc';
   return `<article class="the hang ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
       <div class="the-dau"><span class="stt ${cham}"></span><span class="ma">${escapeHtml(r.ma)}</span>
         <div class="ten"><b><span class="nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}</span> <span class="nhan-cum">${nhanTC}${vongHtml(r)}</span></b>
-          <span title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}${theoDoi}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
+          <span title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
         ${tre}
         <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
           <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div></div>

@@ -7,6 +7,7 @@ import { state, findAccount } from '../../lib/state.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
+import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { laNguoiGiao, tenCapDuyet } from '../../lib/kl/thay-mat.js';
 import { dh, canToiQuyet, tuChoiChoToiDuyet } from './dieu-hanh/du-lieu.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
@@ -16,9 +17,8 @@ const me = () => state.user?.id;
 const vai = () => state.user?.role_group;
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const trich = (s, n = 110) => { const t = (s || '').trim(); return t.length > n ? `${t.slice(0, n)}…` : t; };
-// Ai liên quan (đã escape — chu của dong() là HTML).
-const lienQuan = (r) => escapeHtml([r.owner_tai_khoan_ten || r.owner_don_vi_ten, r.nguoi_theo_doi_ten && r.nguoi_theo_doi_ten !== r.owner_tai_khoan_ten ? `người theo dõi: ${r.nguoi_theo_doi_ten}` : '']
-  .filter(Boolean).join(' · '));
+// Ai liên quan (đã escape — chu của dong() là HTML): chủ trì theo dõi, ghi một kiểu (v3.31 — 0128: bỏ "người theo dõi: …").
+const lienQuan = (r) => escapeHtml(chuTriText(r, ''));
 const maNut = (r) => `<button type="button" class="cx-ma" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}" aria-expanded="false" title="Mở diễn biến của việc"><b>${escapeHtml(r.ma)}</b></button>`;
 const dong = (muc, r, chu, hanhDong = '', them = '') => `<div class="cx-dong the-con" id="cx-${muc}-${r.id}" data-nhiem-vu="${r.id}">
     <p>${maNut(r)} ${escapeHtml(trich(r.noi_dung))}${r.han_xu_ly ? `, hạn ${formatNgay(r.han_xu_ly)}` : ''} ${nhanPhuHtml(r)}<span class="chu-phu"> · ${chu}</span></p>
@@ -26,7 +26,8 @@ const dong = (muc, r, chu, hanhDong = '', them = '') => `<div class="cx-dong the
 const nut = (nhan, action, data, lop = '') => `<button type="button" class="nut nho ${lop}" data-action="${action}" ${Object.entries(data).map(([k, v]) => `data-${k}="${escapeHtml(String(v))}"`).join(' ')}>${nhan}</button>`;
 
 // ---- Các tập việc theo mục (cùng quy tắc đếm với kl_so_chua_xu_ly ở DB)
-// Việc mới chờ CHÍNH TÔI xác nhận (cùng quy tắc kl_so_chua_xu_ly.viec_moi: owner và người theo dõi mỗi người tự nhận, không nhận thay nhau).
+// Việc mới chờ CHÍNH TÔI xác nhận (cùng quy tắc kl_so_chua_xu_ly.viec_moi: chủ trì theo dõi tự nhận — cán bộ chủ trì, hoặc người đại diện của
+// phòng / Văn phòng chủ trì, nguoi_theo_doi nội bộ 0128).
 export const cuaToiChoNhan = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && r.theo_1400 && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
 const canQuyet = () => dh.rows.filter((r) => mo(r) && !r.bi_tu_choi && canToiQuyet(r) && ['DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) && !r.dang_dinh_chinh);
 const biTuChoi = () => dh.rows.filter((r) => mo(r) && r.bi_tu_choi && (['A0', 'A1', 'A2'].includes(vai()) || laNguoiGiao(r)));

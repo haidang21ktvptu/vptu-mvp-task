@@ -27,7 +27,7 @@ test.describe.serial('Tài khoản toàn quyền (v3.22, 0100)', () => {
       for (const id of ['navTongQuan', 'navDieuHanh', 'navGiaoViec', 'navKl', 'navTheoVanBan', 'navCanBo', 'navBaoCao', 'navQuanTri']) {
         await expect(p.locator(`#${id}`), id).toHaveCount(1);
       }
-      await expect(p.locator('#navTheoDoi'), 'không còn menu chuyên viên').toHaveCount(0);
+      await expect(p.locator('#navDaGiao'), 'không còn menu chuyên viên').toHaveCount(0);
       await expect(p.locator('#viewTongQuan')).toBeVisible(NAP);
       await expect(p.locator('#viewTongQuan')).toContainText('Văn phòng Tỉnh ủy', NAP);
     });

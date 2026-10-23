@@ -2,11 +2,12 @@
 // hoàn thiện; cấp dưới tự bổ sung phần thực hiện khi nhận việc (nhập theo tầng, 0070). Ngành ↔ lĩnh vực suy ra nhau khi xác định được (lĩnh vực
 // thuộc đúng một ngành; ngành chỉ có một lĩnh vực). Kết quả dự kiến của dòng (DB là chốt khi nhập):
 //   CAP_NHAT  — có mã việc đã có trên hệ thống (chỉ ô có giá trị trong tệp; KHÔNG mặc định, không điền hàng loạt — tránh ghi đè dữ liệu đang có);
-//   DA_XONG   — tiến độ Hoàn thành + lô chọn "Đã xong ngoài hệ thống" (cần văn bản, nội dung, người theo dõi);
+//   DA_XONG   — tiến độ Hoàn thành + lô chọn "Đã xong ngoài hệ thống" (cần văn bản, nội dung);
 //   CHO_NGHIEM_THU — Hoàn thành + "Ghi minh chứng" + đủ 4 yếu tố minh chứng (0093: hoàn thành theo minh chứng ngay); GIAO — còn lại, đủ mức 1; CHO_HOAN_THIEN — thiếu mức 1.
 // Thuần (không DOM, không mạng): dữ liệu vào là dòng đã chuẩn hoá { k: {ma, hien, gan} | {loi} | null } (chuan-hoa.js).
 import { nhanTruong } from './truong.js';
 import { tachThayMat } from '../thay-mat.js';
+import { daiDienDonVi } from '../chu-tri.js';
 import { KHONG_THUOC, HIEN_MUC_TIEU } from '../muc-tieu.js';
 import { sanPhamMacDinh, linhVucMacDinh, hanMacDinh } from './mac-dinh.js';   // v3.27: ô bảng Phụ lục không có — quy tắc cố định
 
@@ -34,16 +35,16 @@ function lanhDaoMacDinh(dv, accounts) {
   const tp = dv?.phong ? ds.find((a) => a.role_group === 'A2' && a.department === dv.phong) : null;
   return (tp || ds.find((a) => a.role_group === 'A1' && a.is_chief))?.id || null;
 }
-// Người theo dõi mặc định: cán bộ chủ trì → Trưởng phòng của phòng chủ trì → Chánh VP (việc của Văn phòng) → lãnh đạo giao → người nhập.
+// Người theo dõi gửi DB (v3.31 — 0128: trường nội bộ, không hiện, không đọc từ tệp; trigger ghi lại theo chủ trì theo dõi — vẫn gửi vì hàm nhập kiểm
+// phạm vi / bắt buộc như trước): cán bộ chủ trì → Trưởng phòng của phòng chủ trì → Chánh VP (việc của Văn phòng — chỉ khi người nhập hoặc lãnh đạo
+// giao là Chánh VP / nhóm Lãnh đạo Văn phòng: hàm nhập không nhận Chánh VP ngoài phạm vi của Phó Chánh VP, rà soát 23/10) → lãnh đạo giao → người nhập.
 function theoDoiMacDinh(g, dv, accounts, me) {
   if (me?.role_group === 'A3' && !g.lanh_dao_giao) return me.id;   // Đợt F: chuyên viên giao thẳng — người theo dõi = người nhập (giao_viec ép)
   if (g.can_bo) return g.can_bo;
-  const ds = accounts.filter((a) => !a.is_system && !a.bi_khoa);
-  if (dv?.trong_van_phong) {
-    const a = dv.phong ? ds.find((x) => x.role_group === 'A2' && x.department === dv.phong) : ds.find((x) => x.role_group === 'A1' && x.is_chief);
-    if (a) return a.id;
-  }
-  return tachThayMat(g.lanh_dao_giao).thay_mat_cho || me?.id || null;   // nhóm lãnh đạo không phải người theo dõi
+  const tm = tachThayMat(g.lanh_dao_giao);
+  const a3 = me?.role_group === 'A3';   // thay mặt chỉ tính khi người nhập là chuyên viên (như du_lieu)
+  const cvp = me?.is_chief || (a3 && (tm.thay_mat_nhom === 'LANH_DAO_VP' || Boolean(accounts.find((a) => a.id === tm.thay_mat_cho)?.is_chief)));
+  return (dv?.phong || cvp ? daiDienDonVi(dv, accounts) : null) || tm.thay_mat_cho || me?.id || null;   // nhóm lãnh đạo không phải người theo dõi
 }
 
 // dong: { soDong, o: {k: {ma,hien,gan}|{loi}|null}, goc: {tiêu đề: giá trị} }; ctx: { me, dm, accounts, cheDoXong, hangLoat: {k: ma; linh_vuc: [ma]}, maDaCo: Set<MÃ HOA> }
@@ -56,8 +57,8 @@ export function danhGia(dong, ctx) {
   const ma = gt.ma ? String(gt.ma).trim().toUpperCase() : '';
   const capNhat = Boolean(ma && ctx.maDaCo?.has(ma));
   if (!HIEN_MUC_TIEU) { delete gt.muc_tieu; if (loi.includes('muc_tieu')) loi.splice(loi.indexOf('muc_tieu'), 1); }   // v3.27: mục tiêu tạm ẩn — bỏ cột
-  // v3.27: "Chủ trì theo dõi" (bảng Phụ lục) = cán bộ chủ trì + người theo dõi ("tk:<id>"), hoặc một đơn vị Văn phòng ("dv:<mã>", VPTU). Cập nhật theo
-  // mã: chỉ cán bộ chủ trì (DB chỉ báo khác chủ trì — tệp "Xuất theo mẫu" nhập lại không báo nhầm người theo dõi).
+  // v3.27: "Chủ trì theo dõi" (bảng Phụ lục) = cán bộ chủ trì ("tk:<id>"), hoặc một đơn vị Văn phòng ("dv:<mã>", VPTU). Cập nhật theo mã: chỉ cán bộ
+  // chủ trì (không gửi người theo dõi — DB không báo nhầm).
   const [loaiCt, maCt] = String(gt.chu_tri || '').split(':');
   if (loaiCt === 'tk') (capNhat ? ['can_bo'] : ['can_bo', 'theo_doi']).forEach((k) => { if (!gt[k] && !loi.includes(k)) gt[k] = maCt; });
   else if (loaiCt === 'dv' && !gt.don_vi && !loi.includes('don_vi')) gt.don_vi = maCt;
@@ -90,7 +91,7 @@ export function danhGia(dong, ctx) {
     const dv = dm.donVi.find((d) => d.ma === gt.don_vi);
     if (!xongNgoai) macDinhGiao(gt, { dm, ctx, macDinh, canhBao, loi });   // v3.27: dòng đi qua giao_viec — loại hạn, hạn, sản phẩm, ghi chú tiến độ
     if (me?.role_group === 'A3') md('lanh_dao_giao', lanhDaoMacDinh(dv, accounts));
-    md('theo_doi', theoDoiMacDinh(gt, dv, accounts, me));
+    if (!gt.theo_doi) gt.theo_doi = theoDoiMacDinh(gt, dv, accounts, me);   // v3.31: không ghi vào "tự điền theo quy tắc" (trường nội bộ)
     const cb = accounts.find((a) => a.id === gt.can_bo);
     if (cb && dv && (dv.phong ? cb.department !== dv.phong : !(dv.ma === 'VAN_PHONG_TINH_UY' && cb.role_group === 'A1'))) {
       delete gt.can_bo; loi.push('can_bo'); canhBao.push('cán bộ chủ trì không thuộc đơn vị chủ trì theo dõi');
@@ -109,9 +110,9 @@ export function danhGia(dong, ctx) {
   const thieu = [];
   const can = (k, dk = true) => { if (dk && !gt[k] && !thieu.includes(k)) thieu.push(k); };
   if (!capNhat) {
-    can('so_ket_luan'); can('ngay_ban_hanh'); can('so_hoi_nghi', gt.loai_van_ban === 'KL_BTV'); can('noi_dung'); can('theo_doi');
+    can('so_ket_luan'); can('ngay_ban_hanh'); can('so_hoi_nghi', gt.loai_van_ban === 'KL_BTV'); can('noi_dung');
     if (!daXong) {
-      // Đợt F (0095): chuyên viên không ghi Lãnh đạo giao (không suy được mặc định) mà chủ trì là chuyên viên → giao thẳng (người theo dõi = người nhập).
+      // Đợt F (0095): chuyên viên không ghi Lãnh đạo giao (không suy được mặc định) mà chủ trì là chuyên viên → giao thẳng.
       can('don_vi'); can('lanh_dao_giao', me?.role_group === 'A3' && accounts.find((a) => a.id === gt.can_bo)?.role_group !== 'A3'); can('san_pham'); can('nguon');
       can('han_xu_ly', gt.loai_thoi_han === 'CO_HAN_CU_THE');
       can('nganh', CAN_NGANH.has(gt.loai_van_ban)); can('linh_vuc', CAN_NGANH.has(gt.loai_van_ban) && Boolean(gt.nganh));   // v3.29: chưa có ngành → chỉ báo thiếu ngành

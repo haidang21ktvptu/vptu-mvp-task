@@ -9,7 +9,7 @@ const TEN_HANH_DONG = { tao_tai_khoan: 'Tạo tài khoản', reset_mat_khau: 'Đ
   sua_tai_khoan: 'Sửa vai trò / phòng / chức danh', cap_co: 'Cấp hoặc thu quyền', thu_co: 'Thu quyền', cau_hinh: 'Đổi ngưỡng cảnh báo', ngay_nghi: 'Sửa lịch ngày nghỉ',
   don_du_lieu: 'Dọn dữ liệu', backup: 'Sao lưu production', nhap_excel_mo_lo: 'Nhập Excel — mở lô', nhap_excel_chot_lo: 'Nhập Excel — chốt lô',
   hoan_tac_lo: 'Nhập Excel — hoàn tác lô', ho_so_nhap_luu: 'Lưu hồ sơ ghép cột Excel', ho_so_nhap_xoa: 'Xoá hồ sơ ghép cột Excel', tu_dien_nhap_luu: 'Thêm từ điển chuẩn hoá Excel',
-  reset_hang_loat: 'Bàn giao tài khoản — đặt lại mật khẩu hàng loạt', chuyen_theo_doi: 'Chuyển việc đang theo dõi', cau_hinh_ai: 'Đổi cấu hình trợ lý AI' };   // v3.25 (0112)
+  reset_hang_loat: 'Bàn giao tài khoản — đặt lại mật khẩu hàng loạt', chuyen_theo_doi: 'Chuyển việc đang chủ trì theo dõi', cau_hinh_ai: 'Đổi cấu hình trợ lý AI' };   // v3.25 (0112)
 // Khoá trong cột chi tiết → tiếng Việt (giá trị giữ nguyên: mã cờ, số dòng…).
 const TEN_KHOA = { co: 'quyền', bat: 'bật', ly_do: 'lý do', ghi_chu: 'ghi chú', cu: 'cũ', moi: 'mới', full_name: 'họ tên', role_group: 'vai trò', department: 'phòng',
   so_dong: 'số dòng', tep: 'tệp', ma: 'mã', mau: 'mẫu', che_do_xong: 'việc đã xong', so_cot: 'số cột', so_muc: 'số mục', hoan_tac: 'hoàn tác', giu_lai: 'giữ lại',

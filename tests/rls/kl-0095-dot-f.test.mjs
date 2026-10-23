@@ -53,7 +53,8 @@ describe('0095–0096 — mọi chuyên viên nhập thay mặt, lưu vết ngư
     ma(cc, '22023', 'lãnh đạo ghi thay mặt'); assert.match(cc.error.message, /Lãnh đạo giao việc trực tiếp/);
     ma(cd, '22023', 'thay mặt một chuyên viên'); assert.match(cd.error.message, /lãnh đạo Văn phòng hoặc Trưởng phòng/);
     const n = (await db().from('nhiem_vu').select('tao_boi, giao_thay_mat_cho, nguoi_theo_doi').eq('id', nvTp).single()).data;
-    assert.deepEqual(n, { tao_boi: IDS.cv1, giao_thay_mat_cho: IDS.truongphong, nguoi_theo_doi: IDS.truongphong });
+    // v3.31 (0128): người theo dõi (nội bộ) = chủ trì cv1 — tham số theo dõi (Trưởng phòng) vẫn được kiểm phạm vi rồi bị ghi đè
+    assert.deepEqual(n, { tao_boi: IDS.cv1, giao_thay_mat_cho: IDS.truongphong, nguoi_theo_doi: IDS.cv1 });
   });
 
   test('2. Lưu vết: lich_su "Nhập bởi <người nhập>" (không cột giao_thay_mat); diễn biến không ghi "thay mặt"; vết cũ giao_thay_mat hiện như "Nhập bởi"', async () => {
@@ -94,7 +95,7 @@ describe('0095–0096 — mọi chuyên viên nhập thay mặt, lưu vết ngư
     } finally { await db().from('dm_linh_vuc').delete().eq('ma', r.data); }
   });
 
-  test('5. (0097) Excel "đã xong ngoài hệ thống": lãnh đạo theo phạm vi mình (thay mặt bị bỏ), chuyên viên không ghi lãnh đạo = giao thẳng (chủ trì chuyên viên, theo dõi = người nhập), ghi lãnh đạo thì theo phạm vi lãnh đạo đó', async () => {
+  test('5. (0097) Excel "đã xong ngoài hệ thống": lãnh đạo theo phạm vi mình (thay mặt bị bỏ), chuyên viên không ghi lãnh đạo = giao thẳng (chủ trì chuyên viên; v3.31: theo dõi nội bộ = chủ trì), ghi lãnh đạo thì theo phạm vi lãnh đạo đó', async () => {
     const tp = await nhap('demo_truongphong', [{ noi_dung: `${KHOA} TP phòng khác`, owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2, thay_mat_cho: IDS.truongphong }]);
     assert.deepEqual([tp[0].ket_qua, tp[0].ghi_chu], ['CHO_HOAN_THIEN', 'Chủ trì ngoài phạm vi giao của đồng chí.']);
     const cv = await nhap('demo_cv1', [
@@ -107,7 +108,8 @@ describe('0095–0096 — mọi chuyên viên nhập thay mặt, lưu vết ngư
     assert.match(cv[0].ghi_chu, /chủ trì phải là một chuyên viên/); assert.match(cv[2].ghi_chu, /Chủ trì ngoài phạm vi giao của lãnh đạo giao/);
     assert.match(cv[3].ghi_chu, /Người theo dõi ngoài phạm vi giao của lãnh đạo giao/);
     const v = (await db().from('nhiem_vu').select('nguoi_theo_doi, giao_thay_mat_cho, tao_boi, nguon').in('id', [cv[1].nhiem_vu_id, cv[4].nhiem_vu_id]).order('noi_dung')).data;
-    assert.deepEqual(v, [{ nguoi_theo_doi: IDS.cv1, giao_thay_mat_cho: null, tao_boi: IDS.cv1, nguon: 'excel' }, { nguoi_theo_doi: IDS.cv1, giao_thay_mat_cho: IDS.cvp, tao_boi: IDS.cv1, nguon: 'excel' }]);
+    // v3.31 (0128): giao thẳng → theo dõi = chủ trì cv2 (không còn = người nhập); đơn vị ngoài Văn phòng (DANG_UY_UBND) giữ người theo dõi ghi trong tệp
+    assert.deepEqual(v, [{ nguoi_theo_doi: IDS.cv2, giao_thay_mat_cho: null, tao_boi: IDS.cv1, nguon: 'excel' }, { nguoi_theo_doi: IDS.cv1, giao_thay_mat_cho: IDS.cvp, tao_boi: IDS.cv1, nguon: 'excel' }]);
   });
 
   test('6. Cập nhật theo mã của việc ngoài phạm vi: bỏ qua, không so từng ô; thay mặt có người theo dõi ngoài phạm vi lãnh đạo bị chặn; văn bản trùng khoá (người nhập không thấy) được dùng lại', async () => {

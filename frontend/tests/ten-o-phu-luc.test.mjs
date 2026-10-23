@@ -26,11 +26,11 @@ test('Tệp mẫu 29 cột cũ (tiêu đề trước v3.28.1) vẫn ghép đúng
   });
 });
 
-test('Xuất Excel: cột ứng với ô bảng Phụ lục mang đúng tên cột, không còn tên cũ', () => {
+test('Xuất Excel: cột ứng với ô bảng Phụ lục mang đúng tên cột, không còn tên cũ; v3.31 (0128): không còn cột Người theo dõi', () => {
   const ten = COT_NHIEM_VU.map((c) => c.nhan);
-  [PL.ma, PL.noi_dung, PL.so_ket_luan, PL.chu_tri, PL.han_xu_ly, PL.co_quan_trinh, 'Người theo dõi', 'Sản phẩm đầu ra', 'Cấp nhận sản phẩm']
+  [PL.ma, PL.noi_dung, PL.so_ket_luan, PL.chu_tri, PL.han_xu_ly, PL.co_quan_trinh, 'Sản phẩm đầu ra', 'Cấp nhận sản phẩm']
     .forEach((t) => assert.ok(ten.includes(t), t));
-  ['Mã', 'Nội dung', 'Văn bản', 'Chủ trì', 'Hạn hoàn thành', 'Sản phẩm', 'Cấp nhận', 'Cơ quan trình'].forEach((t) => assert.ok(!ten.includes(t), `còn tên cũ: ${t}`));
+  ['Mã', 'Nội dung', 'Văn bản', 'Chủ trì', 'Hạn hoàn thành', 'Sản phẩm', 'Cấp nhận', 'Cơ quan trình', 'Người theo dõi'].forEach((t) => assert.ok(!ten.includes(t), `còn tên cũ: ${t}`));
 });
 
 test('Diễn biến: tên ô theo bảng Phụ lục; chủ trì theo dõi tách cán bộ / phòng, đơn vị', () => {

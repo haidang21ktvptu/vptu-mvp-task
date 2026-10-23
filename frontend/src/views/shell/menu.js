@@ -40,7 +40,7 @@ export const MENU = {
   A3: [
     { id: 'navDieuHanh', label: 'Việc của tôi', ngan: 'Việc của tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
-    { id: 'navTheoDoi', label: 'Việc tôi theo dõi', ngan: 'Theo dõi', action: 'openTheoDoi', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
+    { id: 'navDaGiao', label: 'Việc tôi đã giao', ngan: 'Đã giao', action: 'openDaGiao', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },   // v3.31 (0128)
     { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },   // v3.22.1
   ],
 };

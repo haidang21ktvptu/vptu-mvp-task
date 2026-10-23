@@ -1,7 +1,7 @@
 // Hộp "Đổi chủ trì theo dõi" (v3.29, 0124 — chủ dự án quyết 22/10/2026, CAU-HOI O-5/O-6): thư ký Thường trực (việc chưa hoàn thành), tài khoản quản
-// trị (mọi việc). Chọn cán bộ chủ trì mới và / hoặc người theo dõi mới (cán bộ Văn phòng đang hoạt động; gõ tên để tìm), lý do bắt buộc. Phòng chủ trì
-// theo phòng của cán bộ mới (lãnh đạo Văn phòng → Văn phòng Tỉnh ủy), cấp nhận sản phẩm đặt lại theo chủ trì mới. Hàm doi_chu_tri là chốt; nhật ký +
-// tin báo chủ trì, người theo dõi cũ và mới, người giao việc. Lãnh đạo Văn phòng vẫn "Giao lại" ở mục Chỉ đạo như trước.
+// trị (mọi việc). Chọn cán bộ chủ trì mới (cán bộ Văn phòng đang hoạt động; gõ tên để tìm), lý do bắt buộc — v3.31 (0128): bỏ ô người theo dõi
+// (CSDL ghi theo chủ trì). Phòng chủ trì theo phòng của cán bộ mới (lãnh đạo Văn phòng → Văn phòng Tỉnh ủy), cấp nhận sản phẩm đặt lại theo chủ trì
+// mới. Hàm doi_chu_tri là chốt; nhật ký + tin báo chủ trì cũ và mới, người giao việc. Lãnh đạo Văn phòng vẫn "Giao lại" ở mục Chỉ đạo như trước.
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -11,7 +11,7 @@ import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { boSoThuTu } from '../../../lib/kl/nhan.js';
 import { ganTimChon } from '../../../lib/tim-chon.js';
 import { doiChuTri } from '../../../lib/kl/quyen-them-db.js';
-import { ownerText } from './dong.js';
+import { chuTriText } from '../../../lib/kl/chu-tri.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
 
@@ -46,14 +46,11 @@ const template = `
     <p id="dctMoTa" class="chu-phu mt-1 mb-4"></p>
     <input type="hidden" id="dctId">
     <p class="nhan">Đang ghi</p><p id="dctCu" class="st-cu"></p>
-    <div class="cot-2 mt-3">
-      <div><label for="dctChuTri" class="nhan">Chủ trì theo dõi mới</label><div class="gv-tim-chon"><input type="search" id="dctChuTriTim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="dctChuTri" aria-label="Tìm nhanh chủ trì theo dõi mới (gõ tên, không cần dấu)"><select id="dctChuTri" class="o-nhap"></select></div></div>
-      <div><label for="dctTheoDoi" class="nhan">Người theo dõi mới</label><div class="gv-tim-chon"><input type="search" id="dctTheoDoiTim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="dctTheoDoi" aria-label="Tìm nhanh người theo dõi mới (gõ tên, không cần dấu)"><select id="dctTheoDoi" class="o-nhap"></select></div></div>
-    </div>
+    <div class="mt-3"><label for="dctChuTri" class="nhan">Chủ trì theo dõi mới</label><div class="gv-tim-chon"><input type="search" id="dctChuTriTim" class="o-nhap" placeholder="Gõ tên để tìm…" autocomplete="off" aria-controls="dctChuTri" aria-label="Tìm nhanh chủ trì theo dõi mới (gõ tên, không cần dấu)"><select id="dctChuTri" class="o-nhap"></select></div></div>
     <p id="dctGhiChu" class="chu-phu mt-2" aria-live="polite"></p>
     <div class="mt-3"><label for="dctLyDo" class="nhan">Lý do <span class="chu-phu">bắt buộc, tối đa 500 ký tự</span></label>
       <input type="text" id="dctLyDo" class="o-nhap" maxlength="500" placeholder="Ví dụ: cán bộ chủ trì cũ chuyển công tác"></div>
-    <p class="chu-phu mt-3">Phòng chủ trì lấy theo phòng của cán bộ mới; cấp nhận sản phẩm đặt lại theo chủ trì mới. Lịch sử ghi người cũ → người mới và lý do; chủ trì, người theo dõi cũ và mới, người giao việc được báo.</p>
+    <p class="chu-phu mt-3">Phòng chủ trì lấy theo phòng của cán bộ mới; cấp nhận sản phẩm đặt lại theo chủ trì mới. Lịch sử ghi người cũ → người mới và lý do; chủ trì theo dõi cũ và mới, người giao việc được báo.</p>
     <div class="modal-chan"><button type="button" class="nut" data-action="dongDoiChuTri">Huỷ</button><button type="submit" id="dctLuu" class="nut chinh">Lưu thay đổi</button></div>
   </form>
 </div>`;
@@ -63,7 +60,7 @@ function capNhatGhiChu() {
   const a = findAccount($('dctChuTri').value); const r = dongViec($('dctId').value);
   const dv = a && a.id !== r?.owner_tai_khoan ? donViMoi(a) : '';
   const ngoai = dv && r?.owner_trong_van_phong === false ? ` Lưu ý: việc đang do ${boSoThuTu(r.owner_don_vi_ten) || 'cơ quan, đơn vị ngoài Văn phòng'} chủ trì — `
-    + 'đổi chủ trì là chuyển việc về Văn phòng (số liệu tính theo đơn vị mới); chỉ đổi cán bộ theo dõi thì để "Giữ nguyên chủ trì".' : '';
+    + 'đổi chủ trì là chuyển việc về Văn phòng (số liệu tính theo đơn vị mới).' : '';
   setText('dctGhiChu', dv ? `Phòng, đơn vị chủ trì sau khi đổi: ${dv}.${ngoai}` : '');
 }
 
@@ -73,10 +70,9 @@ function moDoiChuTri({ id }) {
   $('dctId').value = id;
   setText('dctTieuDe', `Đổi chủ trì theo dõi · ${r.ma}`);
   setText('dctMoTa', r.noi_dung || '');
-  setText('dctCu', `Chủ trì theo dõi: ${ownerText(r)}${r.owner_tai_khoan_ten ? ` (${boSoThuTu(r.owner_don_vi_ten)})` : ''} · Người theo dõi: ${r.nguoi_theo_doi_ten || '(chưa có)'}`);
-  $('dctChuTri').innerHTML = canBoOptionsHtml(state.accounts, '— Giữ nguyên chủ trì —');
-  $('dctTheoDoi').innerHTML = canBoOptionsHtml(state.accounts, '— Giữ nguyên người theo dõi —');
-  ['dctChuTriTim', 'dctTheoDoiTim'].forEach((x) => { $(x).value = ''; });
+  setText('dctCu', `Chủ trì theo dõi: ${chuTriText(r)}`);
+  $('dctChuTri').innerHTML = canBoOptionsHtml(state.accounts, '— Chọn chủ trì theo dõi mới —');
+  $('dctChuTriTim').value = '';
   tim.forEach((t) => t.apLai());
   $('dctLyDo').value = ''; $('dctLuu').disabled = false;
   capNhatGhiChu();
@@ -87,16 +83,13 @@ const dongDoiChuTri = () => show('dctModal', false);
 
 async function luuDoiChuTri() {
   const id = $('dctId').value; const r = dongViec(id); const lyDo = $('dctLyDo').value.trim();
-  const p = {}; const ct = $('dctChuTri').value; const td = $('dctTheoDoi').value;
-  if (ct && ct !== r?.owner_tai_khoan) p.chu_tri = ct;
-  if (td && td !== r?.nguoi_theo_doi) p.nguoi_theo_doi = td;
-  if (!Object.keys(p).length) { notifyError('Chọn chủ trì hoặc người theo dõi mới (khác người đang ghi).'); return; }
+  const ct = $('dctChuTri').value;
+  if (!ct || ct === r?.owner_tai_khoan) { notifyError('Chọn chủ trì theo dõi mới (khác người đang ghi).'); return; }
   if (!lyDo) { notifyError('Ghi lý do (bắt buộc).'); $('dctLyDo').focus(); return; }
   $('dctLuu').disabled = true;
   try {
-    await doiChuTri(id, p, lyDo);
-    const ten = [p.chu_tri ? `chủ trì: ${findAccount(p.chu_tri)?.full_name || ''}` : '', p.nguoi_theo_doi ? `người theo dõi: ${findAccount(p.nguoi_theo_doi)?.full_name || ''}` : ''].filter(Boolean).join(', ');
-    notifySuccess(`Đã đổi ${ten} cho ${r?.ma || 'nhiệm vụ'}. Người cũ, người mới và người giao việc được báo.`);
+    await doiChuTri(id, { chu_tri: ct }, lyDo);
+    notifySuccess(`Đã đổi chủ trì theo dõi ${r?.ma || 'nhiệm vụ'} sang ${findAccount(ct)?.full_name || 'cán bộ được chọn'}. Người cũ, người mới và người giao việc được báo.`);
     dongDoiChuTri();
     await sauHanhDong(id);
   } catch (e) { notifyError(loiDeHieu(e)); $('dctLuu').disabled = false; }
@@ -105,7 +98,7 @@ async function luuDoiChuTri() {
 export function mountDoiChuTri(registerActions, napLai) {
   sauHanhDong = napLai;
   $('modalRoot').insertAdjacentHTML('beforeend', template);
-  tim = [ganTimChon($('dctChuTriTim'), $('dctChuTri')), ganTimChon($('dctTheoDoiTim'), $('dctTheoDoi'))];
+  tim = [ganTimChon($('dctChuTriTim'), $('dctChuTri'))];
   $('dctChuTri').addEventListener('change', capNhatGhiChu);
   registerActions({ moDoiChuTri, dongDoiChuTri, luuDoiChuTri });
 }

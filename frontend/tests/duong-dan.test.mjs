@@ -29,12 +29,12 @@ const { menuCuaVai } = await import('../src/views/shell/menu.js');
 const xongLuot = () => new Promise((r) => setTimeout(r, 0));   // chờ microtask ghi đường dẫn
 const datLai = (pathname, trangThai = null) => { buoc.length = 0; viTri.pathname = pathname; globalThis.history.state = trangThai; };
 
-test('Một lượt bấm sáng hai mục (chuyên viên: "Việc tôi theo dõi" mở danh sách rồi đổi mục) → một bước lịch sử, đường dẫn của mục cuối', async () => {
+test('Một lượt bấm sáng hai mục (chuyên viên: "Việc tôi đã giao" mở danh sách rồi đổi mục) → một bước lịch sử, đường dẫn của mục cuối (v3.31: đường dẫn mới)', async () => {
   state.user = { id: 'cv', role_group: 'A3' };
   datLai('/Giao-viec');
-  ghiDuongDan('navDieuHanh'); ghiDuongDan('navTheoDoi');
+  ghiDuongDan('navDieuHanh'); ghiDuongDan('navDaGiao');
   await xongLuot();
-  assert.deepEqual(buoc, [['push', '/Viec-toi-theo-doi']]);
+  assert.deepEqual(buoc, [['push', '/Viec-toi-da-giao']]);
 });
 
 test('Mở theo đường dẫn: chữ thường → sửa tại chỗ; màn còn đang nạp thì lần bấm sau vẫn thêm bước (không ghi đè)', async () => {

@@ -7,7 +7,7 @@ import { findAccount } from '../../lib/state.js';
 import { lopMep } from '../../lib/kl/nhan.js';
 import { nhanDoKhanHtml } from '../../lib/kl/do-khan.js';
 import { hanO, trangThaiO, gioVN, vanBanNgan } from '../../lib/kl/bang-o.js';
-import { viecCanLam, vaiCua, chuaNhan } from '../../lib/kl/viec-toi.js';
+import { viecCanLam, chuaNhan } from '../../lib/kl/viec-toi.js';
 import { laViecMoi } from '../../lib/kl/loc-them.js';
 import { chiXem } from '../../lib/kl/pham-vi.js';
 import { NHAN_CHI_XEM } from '../shared/kl/dong.js';
@@ -33,8 +33,8 @@ export function dongViecHtml(r, o) {
   const v = ro ? { ma: '', chinh: false } : viecCanLam(r, o.ctx);
   const kieuKhoi = KIEU_KHOI[v.ma]; const mo = Boolean(kieuKhoi) && o.khoi?.id === r.id && o.khoi?.kieu === kieuKhoi;
   const lop = lopMep(r, me); const tt = trangThaiO(r, me); const han = hanO(r, o.homNay); const g = gioVN(r.created_at); const vb = vanBanNgan(r);
-  const vai = vaiCua(r, me); const nguoiGiao = findAccount(r.tao_boi)?.full_name;
-  const dau = [`<span class="ma">${escapeHtml(r.ma)}</span>`, vai ? `<span class="bnv-nhan ${vai === 'Chủ trì theo dõi' ? 'vai' : 'xam'}">${vai}</span>` : '',
+  const nguoiGiao = findAccount(r.tao_boi)?.full_name;   // v3.31: bỏ nhãn vai "Chủ trì theo dõi / Người theo dõi" — chỉ còn chủ trì theo dõi
+  const dau = [`<span class="ma">${escapeHtml(r.ma)}</span>`,
     nhanDoKhanHtml(r.do_khan), r.uu_tien === 'THUONG_TRUC' ? '<span class="nhan-tt">Thường trực giao</span>' : '',
     laViecMoi(r, o.now) ? '<span class="bnv-nhan moi" title="Giao trong 24 giờ qua">Mới</span>' : '', ro ? NHAN_CHI_XEM : ''].join('');
   const trangThai = r.bi_tu_choi && r.tien_do_ma !== 'HOAN_THANH'

@@ -8,7 +8,7 @@ import { dauBangHtml, CHU_GIAI_VB } from '../bang/khung.js';
 export function nhanPhamViTvb(user, xemPhong = false) {
   if (user?.role_group === 'A2') return 'việc của phòng đồng chí';
   if (user?.role_group !== 'A3') return '';
-  const pv = xemPhong ? 'việc của phòng đồng chí (việc người khác chỉ xem)' : 'việc đồng chí chủ trì, theo dõi hoặc đã giao';
+  const pv = xemPhong ? 'việc của phòng đồng chí (việc người khác chỉ xem)' : 'việc đồng chí chủ trì theo dõi hoặc đã giao';   // v3.31 (0128): chỉ còn chủ trì theo dõi
   return user.thu_ky_thuong_truc ? `${pv}; việc có chỉ đạo Thường trực` : pv;   // thư ký Thường trực (0047) thấy thêm
 }
 

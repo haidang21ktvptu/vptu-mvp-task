@@ -23,7 +23,7 @@ let sauHanhDong = async () => {};
 const me = () => state.user;
 const vai = () => state.user?.role_group;
 const LIEN_QUAN = /giải\s*ngân|đầu\s*tư\s*công|vốn\s*đầu\s*tư|kế\s*hoạch\s*vốn|chủ\s*đầu\s*tư|nguồn\s*vốn/i;
-// Gắn mới (như ghi vướng mắc 0103): chủ trì, người theo dõi, lãnh đạo trong phạm vi. Việc đã gắn nguồn vốn / chủ đầu tư (0120–0122): đổi, bỏ — lãnh đạo
+// Gắn mới (như ghi vướng mắc 0103): chủ trì theo dõi, lãnh đạo trong phạm vi. Việc đã gắn nguồn vốn / chủ đầu tư (0120–0122): đổi, bỏ — lãnh đạo
 // trong phạm vi hoặc người giao, không phải người chủ trì (tài khoản chủ trì — kể cả tự giao cho mình —, Trưởng phòng của việc giao cho phòng), trừ Chánh
 // Văn phòng / toàn quyền; hoặc chính người đã gắn khi mục tiêu còn mặc định (100% trước 31/12). Mục tiêu riêng: như trên, không có ngoại lệ người tự gắn.
 // Việc "Số liệu toàn tỉnh": chỉ lãnh đạo Văn phòng. Hàm DB là chốt; ở đây chỉ để ẩn nút.

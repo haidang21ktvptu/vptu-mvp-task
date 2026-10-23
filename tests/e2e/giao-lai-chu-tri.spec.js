@@ -1,5 +1,5 @@
 // Sau kiểm tra v3.6.2 (0045): (1) duyệt "Đồng ý từ chối" xong, số trên dải "Cần xử lý ngay" giảm ngay không cần tải lại; (2) "Giao lại" việc bị
-// từ chối đổi CHỦ TRÌ sang người được chọn (người theo dõi gợi ý theo cấp quản lý của chủ trì mới), chủ trì cũ không còn là chủ trì và không
+// từ chối đổi CHỦ TRÌ sang người được chọn (v3.31 — 0128: không còn ô người theo dõi; CSDL ghi theo chủ trì mới), chủ trì cũ không còn là chủ trì và không
 // còn thấy việc, cờ bị từ chối tự xoá, lịch sử ghi chuyển chủ trì (không ghi lý do từ chối), chủ trì mới phải xác nhận nhận lại.
 // Tài khoản riêng phòng E2E_RT: demo_e2e_tp (A2, người giao + cấp duyệt), demo_e2e_cv (chủ trì cũ), demo_e2e_cv2 (chủ trì mới, seed-demo.mjs).
 // Đơn vị dm_don_vi E2E_RT do seed-demo tạo. Dữ liệu tự tạo, tự dọn theo khoá riêng. Số trên dải so tương đối (spec khác có thể dùng chung TP).
@@ -60,7 +60,7 @@ test.describe.serial('Giao lại đổi chủ trì; số đếm dải Cần xử
     await expect(page.locator('#canXuLy [data-muc="tuchoi"]')).toBeVisible(NAP); // việc chuyển sang mục "bị từ chối"
   });
 
-  test('Lỗi 1: Giao lại đổi chủ trì; người theo dõi gợi ý = Trưởng phòng; cờ xoá; lịch sử; chủ trì cũ không còn thấy việc; chủ trì mới phải nhận lại', async () => {
+  test('Lỗi 1: Giao lại đổi chủ trì (không ô người theo dõi); cờ xoá; lịch sử; chủ trì cũ không còn thấy việc; chủ trì mới phải nhận lại', async () => {
     await page.locator('#canXuLy [data-muc="tuchoi"]').click();
     const dong = page.locator(`#cx-tuchoi-${id}`);
     await expect(dong).toBeVisible(NAP);
@@ -69,14 +69,14 @@ test.describe.serial('Giao lại đổi chủ trì; số đếm dải Cần xử
     await expect(o).toHaveClass(/\bmo\b/);
     await expect(o.locator('select[name=chu_tri_moi] option[value="' + CV_ID + '"]')).toHaveCount(0); // không cho chọn lại chủ trì hiện tại
     await o.locator('select[name=chu_tri_moi]').selectOption(CV2_ID);
-    await expect(o.locator('select[name=nguoi_theo_doi_moi]')).toHaveValue(TP_ID);                      // gợi ý theo cấp quản lý của chủ trì mới
+    await expect(o.locator('select[name=nguoi_theo_doi_moi]')).toHaveCount(0);                          // v3.31: chỉ còn chủ trì theo dõi
     await o.locator('input[name=noi_dung]').fill('Chuyển đồng chí Hai chủ trì (e2e)');
     await o.locator('button[type=submit]').click();
     await expect(page.locator('#toastContainer')).toContainText('Đã giao lại');
     await expect(page.locator('#toastContainer')).toContainText('Demo E2E Chuyên viên GL');
     await expect(dong).toHaveCount(0, NAP);
     const { data: nv } = await db.from('nhiem_vu').select('owner_tai_khoan, owner_don_vi_ma, nguoi_theo_doi, bi_tu_choi, cap_nhan_san_pham').eq('id', id).single();
-    expect(nv).toEqual({ owner_tai_khoan: CV2_ID, owner_don_vi_ma: 'E2E_RT', nguoi_theo_doi: TP_ID, bi_tu_choi: false, cap_nhan_san_pham: 'TRUONG_PHONG' });
+    expect(nv).toEqual({ owner_tai_khoan: CV2_ID, owner_don_vi_ma: 'E2E_RT', nguoi_theo_doi: CV2_ID, bi_tu_choi: false, cap_nhan_san_pham: 'TRUONG_PHONG' });   // người theo dõi (nội bộ) = chủ trì mới
     const { data: ls } = await db.from('lich_su').select('cot, gia_tri_moi').eq('nhiem_vu_id', id);
     expect(ls.some((l) => l.cot === 'giao_lai' && /Chuyển chủ trì từ Demo E2E Chuyên viên RT sang Demo E2E Chuyên viên GL/.test(l.gia_tri_moi))).toBe(true);
     expect(ls.some((l) => (l.gia_tri_moi || '').includes(LY_DO_TU_CHOI))).toBe(false);                 // lý do từ chối không vào lịch sử việc

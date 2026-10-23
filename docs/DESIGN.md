@@ -218,10 +218,10 @@ Màu mức cảnh báo (Vàng, Đỏ, Đỏ đặc biệt) và trạng thái gi�
 
 ## 11. Bảng nhiệm vụ theo cột (v3.25.0 — mẫu 16/10/2026, chủ dự án duyệt 18/10/2026)
 
-Mọi danh sách nhiệm vụ (Nhiệm vụ, Việc tôi theo dõi, Việc của tôi, Theo văn bản) là **bảng có cột** kiểu V-Office; thay "dòng cao 44px" của mục 4 cho các bảng này. CSS `styles/bang-nhiem-vu.css` (khung, cột) + `styles/bang-man-hinh.css` (màn hẹp, in); lớp tiền tố `bnv-` (tên trong mẫu như `.bang .han .stt` đã là lớp chung), viết nguyên văn trong JS.
+Mọi danh sách nhiệm vụ (Nhiệm vụ, Việc tôi đã giao — trước v3.31 là "Việc tôi theo dõi", Việc của tôi, Theo văn bản) là **bảng có cột** kiểu V-Office; thay "dòng cao 44px" của mục 4 cho các bảng này. CSS `styles/bang-nhiem-vu.css` (khung, cột) + `styles/bang-man-hinh.css` (màn hẹp, in); lớp tiền tố `bnv-` (tên trong mẫu như `.bang .han .stt` đã là lớp chung), viết nguyên văn trong JS.
 - **Ô số** trên bảng: một khối, các ô cách nhau 1px, chia đều một hàng; ô đang chọn nền `--navy-dac`, chữ trắng, số `--vang-tren-dac`; chọn một ô một lúc; số của ô = số dòng khi chọn ô đó (cùng một mảng). Bộ 8 ô: 4 + 4 ở 861–1199px; ≤ 860px hai ô một hàng.
 - **Dòng**: cao ≥ 58px, kẻ ngang mảnh, không kẻ dọc, không sọc; **mép trái 4px theo mức** (lam trong hạn, vàng, đỏ, tím Đỏ đặc biệt — nền tím nhạt cả dòng, lục hoàn thành); hàng tiêu đề chữ 13px đậm vừa màu `--chu-phu` trên nền `--nen-mo`; giờ và con số bằng Lexend; mã việc đậm màu navy; ô Hạn: ngày đậm theo màu mức + dòng phụ "còn 3 ngày / trễ 4 ngày / xong 29/9 · trước hạn 1 ngày"; Trạng thái là nhãn màu. Chú giải màu ngay trên bảng.
-- **Cột**: Nhiệm vụ — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì theo dõi | Hạn xử lý | Trạng thái; Việc tôi theo dõi — STT | Nhiệm vụ | Chủ trì theo dõi | Văn bản giao | Hạn xử lý | Trạng thái | Tình hình (xám bình thường, vàng cần đôn đốc, đỏ vướng mắc / chỉ đạo chờ, lục đã nộp minh chứng); Việc của tôi — STT | Nhiệm vụ | Văn bản giao | Thời gian giao | Hạn xử lý | Trạng thái | Việc cần làm; Theo văn bản — STT | Văn bản | Ngày nhận | Người giao | Nhiệm vụ (đã nhập / dự kiến) | Tiến độ (thanh lục / đỏ / vàng + "x/n hoàn thành") | Cảnh báo, bấm tên văn bản mở bảng con (Nhiệm vụ của văn bản | Chủ trì theo dõi | Hạn xử lý | Trạng thái; việc giao tiếp xuống thụt "↳").
+- **Cột**: Nhiệm vụ — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì theo dõi | Hạn xử lý | Trạng thái; Việc tôi đã giao — STT | Nhiệm vụ | Chủ trì theo dõi | Văn bản giao | Hạn xử lý | Trạng thái | Tình hình (xám bình thường, vàng cần đôn đốc, đỏ vướng mắc / chỉ đạo chờ, lục đã nộp minh chứng); Việc của tôi — STT | Nhiệm vụ | Văn bản giao | Thời gian giao | Hạn xử lý | Trạng thái | Việc cần làm; Theo văn bản — STT | Văn bản | Ngày nhận | Người giao | Nhiệm vụ (đã nhập / dự kiến) | Tiến độ (thanh lục / đỏ / vàng + "x/n hoàn thành") | Cảnh báo, bấm tên văn bản mở bảng con (Nhiệm vụ của văn bản | Chủ trì theo dõi | Hạn xử lý | Trạng thái; việc giao tiếp xuống thụt "↳").
 - **Việc cần làm** (Việc của tôi): một nút cho việc đầu tiên áp dụng — Xác nhận đã nhận việc (nút lam, kèm nút viền "Từ chối") → Trả lời chỉ đạo → Nộp minh chứng (nút lam khi việc gấp) → Cập nhật tiến độ; không có việc chờ thì chữ xám. Biểu mẫu mở **ngay dưới dòng** (khối viền trái theo mức), mỗi lúc một khối, Huỷ đưa con trỏ về nút đã mở.
 - **Trang**: 50 dòng mỗi trang; chân bảng "Hiển thị 1–50 trong 230 nhiệm vụ (lọc từ 812)" + "‹ Trang trước · Trang 1/5 · Trang sau ›"; đổi ô số / tìm / lọc / sắp xếp về trang 1. In và Xuất Excel lấy đủ danh sách.
 - **Ngăn chi tiết** (màn Nhiệm vụ) hiện **cạnh** bảng (520px; 420px khi ≤ 1180px), không phủ lên bảng; khi ngăn mở, dưới 1600px dòng thành thẻ gọn.
@@ -246,9 +246,10 @@ Việc của tôi, Cần xử lý, Báo cáo, Nhập / Xuất Excel, Diễn bi�
 | số văn bản | **Số TB/KL** (cột C) |
 | Lĩnh vực chi tiết, Loại thời hạn, Tiến độ, Văn bản triển khai, Số hội nghị, Ngày ban hành | như tên cột (H, J, L, N, B, D) |
 | kết quả (Nhập Excel, Bổ sung dữ liệu) | **Kết quả thực hiện / Minh chứng** (cột M) |
-| người theo dõi · sản phẩm · nguồn · phối hợp · cấp nhận | **Người theo dõi** · **Sản phẩm đầu ra** · **Nguồn nhiệm vụ** · **Đơn vị phối hợp** · **Cấp nhận sản phẩm** (tên ở Giao việc) |
+| sản phẩm · nguồn · phối hợp · cấp nhận | **Sản phẩm đầu ra** · **Nguồn nhiệm vụ** · **Đơn vị phối hợp** · **Cấp nhận sản phẩm** (tên ở Giao việc) |
+| người theo dõi | **không có ô** (v3.31 — CAU-HOI nhóm Q): chỉ còn **Chủ trì theo dõi**, ghi một kiểu — cán bộ "Họ tên (Phòng …)" (lãnh đạo: "(Văn phòng Tỉnh ủy)"), phòng / Văn phòng: tên đơn vị (`lib/kl/chu-tri.js` `chuTriText`); bảng danh sách: tên dòng trên, phòng dòng dưới. Mục chuyên viên "Việc tôi đã giao" (thay "Việc tôi theo dõi") |
 
-Không dùng "Chủ trì", "Theo dõi", "Chịu trách nhiệm", "Hạn hoàn thành", "Cơ quan trình" hay chữ "Owner" làm tên ô (thông báo lỗi do cơ sở dữ liệu
+Không dùng "Chủ trì", "Theo dõi", "Người theo dõi" (v3.31), "Chịu trách nhiệm", "Hạn hoàn thành", "Cơ quan trình" hay chữ "Owner" làm tên ô (thông báo lỗi do cơ sở dữ liệu
 trả về còn chữ "Owner" — sửa bằng migration ở đợt sau). Giữ nguyên vì nghĩa khác cột Excel: "Trạng thái" (tính theo hạn — khác cột "Tiến độ");
 "Số hiệu" của văn bản ở Giao việc (mọi loại văn bản); cột "Nhiệm vụ" của bảng (mã + nội dung); các ô riêng của minh chứng (số hiệu, ngày, trích yếu,
 mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại theo tiêu đề cũ — v3.29: cột ngành ghi "Ngành/lĩnh vực", bỏ cột "Lĩnh vực", tệp cũ có cột
@@ -288,7 +289,7 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 | Tổng quan | `/Tong-quan` |
 | Cần xử lý / Việc của tôi (chuyên viên) | `/Can-xu-ly`, `/Viec-cua-toi` |
 | Giao việc và hai thẻ nhập liệu: Nhập từ Excel, Chờ hoàn thiện | `/Giao-viec`, `/Nhap-Excel`, `/Cho-hoan-thien` |
-| Nhiệm vụ (mọi tên theo vai) / Việc tôi theo dõi | `/Nhiem-vu`, `/Viec-toi-theo-doi` |
+| Nhiệm vụ (mọi tên theo vai) / Việc tôi đã giao | `/Nhiem-vu`, `/Viec-toi-da-giao` (v3.31; đường dẫn cũ `/Viec-toi-theo-doi` vẫn mở) |
 | Theo văn bản / Cán bộ / Báo cáo | `/Theo-van-ban`, `/Can-bo`, `/Bao-cao` |
 | Chỉ đạo đã gửi / Chỉ đạo Thường trực | `/Chi-dao-da-gui`, `/Chi-dao-Thuong-truc` |
 | Rà soát phân loại | `/Ra-soat-phan-loai` |

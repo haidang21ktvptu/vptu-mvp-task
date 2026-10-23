@@ -62,6 +62,15 @@ test('Chỉ mở chức năng có trong menu của vai; đường dẫn lạ / k
   assert.deepEqual(chonMo({ duong: 'Nhap-Excel', the: '' }, { vai: 'A0', menu: [], quyen: { nhapExcel: true } }), { tuChoi: true }, 'menu không có Giao việc / Nhập từ Excel');
 });
 
+test('v3.31 (0128): "Việc tôi đã giao" — đường dẫn mới, đường dẫn cũ "Viec-toi-theo-doi" vẫn mở được (cùng mục), thanh địa chỉ ghi đường dẫn mới', () => {
+  const a3 = { role_group: 'A3' };
+  assert.deepEqual(chonMo({ duong: 'Viec-toi-da-giao', the: '' }, { vai: 'A3', menu: menuCuaVai(a3) }), { action: 'openDaGiao', ds: {} });
+  assert.deepEqual(chonMo({ duong: 'viec-toi-theo-doi', the: '' }, { vai: 'A3', menu: menuCuaVai(a3) }), { action: 'openDaGiao', ds: {} });
+  assert.equal(duongCua({ nav: 'navDaGiao', vai: 'A3' }), 'Viec-toi-da-giao');
+  assert.ok(DS_TEP.includes('Viec-toi-da-giao') && DS_TEP.includes('Viec-toi-theo-doi'), 'tệp dựng sẵn cho cả hai đường dẫn');
+  assert.equal(menuCuaVai(a3).find((m) => m.id === 'navDaGiao')?.label, 'Việc tôi đã giao');
+});
+
 test('Chính sách nội dung: chỉ mã của hệ thống, chỉ máy chủ dữ liệu của bản đó (https + wss), không nhúng đối tượng ngoài', () => {
   const c = chinhSachNoiDung('https://abcxyz.supabase.co');
   assert.match(c, /(^|; )script-src 'self'(;|$)/);

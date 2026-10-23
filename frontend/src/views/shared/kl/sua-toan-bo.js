@@ -20,7 +20,7 @@ const template = `
   <form class="modal modal-rong" data-submit="luuSuaToanBo" novalidate>
     <h2 id="stbTieuDe" class="modal-tieu-de">Sửa toàn bộ thông tin</h2>
     <p class="chu-phu mt-1">Tài khoản quản trị sửa được mọi ô, kể cả việc đã hoàn thành. Chỉ ô có thay đổi được ghi; lịch sử lưu cũ → mới, người sửa, lúc
-      sửa và lý do; chủ trì, người theo dõi, người giao việc được báo. Chủ trì, người theo dõi: "Đổi chủ trì theo dõi"; văn bản: "Sửa văn bản giao".</p>
+      sửa và lý do; chủ trì theo dõi, người giao việc được báo. Chủ trì theo dõi: "Đổi chủ trì theo dõi"; văn bản: "Sửa văn bản giao".</p>
     <input type="hidden" id="stbId">
     <div id="stbO"></div>
     <p id="stbLv" class="chu-phu mt-2" aria-live="polite"></p>
@@ -73,7 +73,7 @@ async function luuSuaToanBo() {
   $('stbLuu').disabled = true;
   try {
     await suaToanBo(id, thay, lyDo);
-    notifySuccess(`Đã sửa ${r.ma}: ${ten.join(', ')}. Chủ trì, người theo dõi, người giao việc được báo.`);
+    notifySuccess(`Đã sửa ${r.ma}: ${ten.join(', ')}. Chủ trì theo dõi, người giao việc được báo.`);
     dongSuaToanBo();
     await sauHanhDong(id);
   } catch (e) { notifyError(loiDeHieu(e)); $('stbLuu').disabled = false; }

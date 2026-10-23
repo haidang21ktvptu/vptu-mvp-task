@@ -54,7 +54,7 @@ function moSuaTaiKhoan({ username }) {
   const me = acc.id === state.user.id;
   const khoaVai = me ? 'Không tự đổi vai trò của chính mình.' : acc.is_chief ? 'Tài khoản Chánh Văn phòng: chỉ sửa chức danh.' : '';
   $('qtSuaTkMoTa').innerText = `${acc.full_name} (${acc.username}). Đổi vai trò hoặc phòng có hiệu lực ngay với phạm vi xem và giao việc; `
-    + 'việc đang theo dõi không tự chuyển sang người khác.';
+    + 'việc đang chủ trì theo dõi không tự chuyển sang người khác (dùng "Chuyển việc đang chủ trì theo dõi").';
   $('qtSuaTkVai').value = acc.role_group;
   $('qtSuaTkVai').disabled = Boolean(khoaVai);
   $('qtSuaTkVaiGhiChu').innerText = khoaVai;

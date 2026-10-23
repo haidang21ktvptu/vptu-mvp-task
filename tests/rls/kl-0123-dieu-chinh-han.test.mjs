@@ -64,14 +64,17 @@ describe('0123 — điều chỉnh hạn: chủ trì theo dõi (chưa quá hạn
     assert.equal(dbien.data.length, 1, 'Diễn biến có dòng điều chỉnh hạn');
   });
 
-  test('2. Rút ngắn hạn: không cộng lần gia hạn; việc giao cho phòng: người theo dõi điều chỉnh; Kết luận BTV: chủ trì điều chỉnh được', async () => {
+  test('2. Rút ngắn hạn: không cộng lần gia hạn; việc giao cho phòng: Trưởng phòng (người đại diện, 0128) điều chỉnh; Kết luận BTV: chủ trì điều chỉnh được', async () => {
     const r = await dc('demo_cv1', 'A', cong(70)); assertOk(r, 'rút ngắn');
     assert.deepEqual([r.data.gia_han, (await doc('A')).so_lan_gia_han], [false, 1]);
-    assertOk(await dc('demo_cv1', 'PHONG', cong(65)), 'việc giao cho phòng — người theo dõi');
+    // v3.31 (0128): người theo dõi (nội bộ) = người đại diện của chủ trì — việc giao cho phòng Tổng hợp: Trưởng phòng; cv1 ghi lúc tạo bị trigger thay
+    assertOk(await dc('demo_truongphong', 'PHONG', cong(65)), 'việc giao cho phòng — Trưởng phòng (người đại diện chủ trì)');
+    assertDenied(await dc('demo_cv1', 'PHONG', cong(66)), 'chuyên viên ghi làm người theo dõi lúc tạo — không còn quyền');
     assertOk(await dc('demo_cv1', 'KL', cong(65)), 'việc từ Kết luận BTV');
   });
 
-  test('3. Chặn (42501): người theo dõi khi đã có chủ trì, chuyên viên khác, Thường trực, Phó / Chánh VP (gia hạn ở Chỉ đạo), chưa có cờ thư ký; chủ trì khi việc quá hạn', async () => {
+  test('3. Chặn (42501): Trưởng phòng (không phải chủ trì), chuyên viên khác, Thường trực, Phó / Chánh VP (gia hạn ở Chỉ đạo), chưa có cờ thư ký; chủ trì khi việc quá hạn', async () => {
+    // v3.31 (0128): người theo dõi (nội bộ) của A = chủ trì cv1 — Trưởng phòng ở đây là lãnh đạo phòng, không phải chủ trì ⇒ vẫn bị chặn
     for (const u of ['demo_truongphong', 'demo_cv2', 'demo_a0', 'demo_pcvp', 'demo_cvp', 'demo_e2e_tk']) assertDenied(await dc(u, 'A', cong(80)), `${u} điều chỉnh`);
     const qh = await dc('demo_cv1', 'QH', cong(20));
     assertDenied(qh, 'chủ trì điều chỉnh việc đã quá hạn'); assert.match(qh.error.message, /quá hạn/);

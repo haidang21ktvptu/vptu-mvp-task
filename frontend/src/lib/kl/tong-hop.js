@@ -56,8 +56,9 @@ export function sapXep(rows) {
   }).map(([, r]) => r);
 }
 
-// Bộ lọc danh sách: mọi khoá đều tuỳ chọn; '' hoặc null = không lọc. linhVuc nhận mã hoặc CHUA_PHAN_LOAI; theoDoiCuaToi = việc tôi theo dõi
-// mà không phải Owner; canBo = việc một cán bộ là Owner hoặc theo dõi; ketLuan = số hiệu văn bản giao việc; capGiao = GOC | TIEP_XUONG.
+// Bộ lọc danh sách: mọi khoá đều tuỳ chọn; '' hoặc null = không lọc. linhVuc nhận mã hoặc CHUA_PHAN_LOAI; cuaToi = việc tôi chủ trì theo dõi
+// (cán bộ chủ trì, hoặc người đại diện của phòng / Văn phòng chủ trì — nguoi_theo_doi nội bộ, 0128); daGiaoCuaToi (v3.31, "Việc tôi đã giao") = việc
+// tôi giao hoặc nhập mà người khác chủ trì theo dõi; ketLuan = số hiệu văn bản giao việc; capGiao = GOC | TIEP_XUONG.
 export function locRows(rows, f = {}) {
   const kw = (f.tuKhoa || '').trim().toLowerCase();
   return rows.filter((r) =>
@@ -67,11 +68,10 @@ export function locRows(rows, f = {}) {
     && (!f.linhVuc || (f.linhVuc === CHUA_PHAN_LOAI ? !r.linh_vuc_ma : r.linh_vuc_ma === f.linhVuc))
     && (!f.nguon || (f.nguon === CHUA_CO_NGUON ? !r.nguon_nhiem_vu_ma : r.nguon_nhiem_vu_ma === f.nguon))
     && (!f.chatLuong || r.chat_luong === f.chatLuong) && (!f.tienDoHT || r.tien_do_hoan_thanh === f.tienDoHT)
-    && (!f.nguoiTheoDoi || r.nguoi_theo_doi === f.nguoiTheoDoi)
     && (!f.donVi || r.owner_don_vi_ma === f.donVi)
     && (!f.ketLuan || (r.so_ket_luan || '(không có số hiệu)') === f.ketLuan)   // v9: trước đây ô "Mọi kết luận" đặt khoá nhưng không lọc
     && (!f.cuaToi || r.nguoi_theo_doi === f.cuaToi || r.owner_tai_khoan === f.cuaToi)
-    && (!f.theoDoiCuaToi || ((r.nguoi_theo_doi === f.theoDoiCuaToi || r.tao_boi === f.theoDoiCuaToi) && r.owner_tai_khoan !== f.theoDoiCuaToi))   // v3.14.2; Đợt F: + việc tôi đã nhập
+    && (!f.daGiaoCuaToi || (r.tao_boi === f.daGiaoCuaToi && r.owner_tai_khoan !== f.daGiaoCuaToi && r.nguoi_theo_doi !== f.daGiaoCuaToi))   // v3.31
     && (!f.chiMo || laMo(r))
     && (!f.thieuMinhChung || (r.nhom_dem === 'HOAN_THANH' && r.thieu_minh_chung))
     && (!f.khongNgayHoanThanh || (r.nhom_dem === 'HOAN_THANH' && !r.ngay_hoan_thanh))
@@ -88,7 +88,7 @@ export function locRows(rows, f = {}) {
     && (!f.hanTu || (Boolean(r.han_xu_ly) && r.han_xu_ly >= f.hanTu)) && (!f.hanDen || (Boolean(r.han_xu_ly) && r.han_xu_ly <= f.hanDen))
     && (!f.hanMo || laMo(r)) && (!f.chuaCoHan || !r.han_xu_ly)
     && (!f.mucTieu || khopMucTieu(r, f.mucTieu, f.mucTieuDm))   // v3.24 (0105): mã | 'NHOM:<nhóm>' | 'CHUA'
-    && (!kw || `${r.ma} ${maTheoNguon(r)} ${r.so_ket_luan || ''} ${r.noi_dung} ${r.nguoi_theo_doi_ten || ''} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''} ${r.co_quan_trinh_ten || ''} ${r.thuong_truc_chi_dao_ten || ''}`.toLowerCase().includes(kw)));   // C2: + mã theo nguồn, số hiệu, cơ quan trình
+    && (!kw || `${r.ma} ${maTheoNguon(r)} ${r.so_ket_luan || ''} ${r.noi_dung} ${r.owner_don_vi_ten || ''} ${r.owner_tai_khoan_ten || ''} ${r.san_pham_mo_ta || ''} ${r.co_quan_trinh_ten || ''} ${r.thuong_truc_chi_dao_ten || ''}`.toLowerCase().includes(kw)));   // C2: + mã theo nguồn, số hiệu, cơ quan trình
 }
 
 // Hàng 4 dashboard: ngành → lĩnh vực, có nhóm "Chưa phân loại" (lĩnh vực NULL) trong mỗi ngành và "Chưa có ngành".
@@ -110,7 +110,8 @@ export function theoNganhLinhVuc(rows) {
     .sort((a, b) => (a.ma === CHUA_CO_NGANH) - (b.ma === CHUA_CO_NGANH) || a.ten.localeCompare(b.ten, 'vi', { numeric: true }));
 }
 
-// Hàng 3a: theo người theo dõi, CHỈ việc đang mở, phân theo nhóm (quá hạn / sắp hạn / cần điền hạn / đang làm / chờ điều kiện).
+// Hàng 3a: theo chủ trì theo dõi (người đại diện — nguoi_theo_doi nội bộ, 0128), CHỈ việc đang mở, phân theo nhóm (quá hạn / sắp hạn / cần điền
+// hạn / đang làm / chờ điều kiện).
 export function theoChuTriMo(rows) {
   const m = new Map();
   rows.filter(laMo).forEach((r) => {

@@ -1,7 +1,8 @@
 // Kịch bản 12 (GĐ15; giao diện v7 GĐ20): điều hành ngoại lệ — A1 mở "Điều hành hôm nay" → thẻ việc Đỏ (4 điều: ai chậm, trễ bao nhiêu, thiếu
-// sản phẩm gì, cấp cần quyết; khâu "Chưa nhận việc") → Đôn đốc ngay tại thẻ → A3 (người theo dõi) nhận chuông + toast realtime → mở nhiệm
+// sản phẩm gì, cấp cần quyết; khâu "Chưa nhận việc") → Đôn đốc ngay tại thẻ → A3 (chủ trì theo dõi) nhận chuông + toast realtime → mở nhiệm
 // vụ từ toast, phản hồi → A1 thấy phản hồi realtime trong ngăn chi tiết, đóng chỉ đạo → chọn cấp cần quyết định tại ngăn → lịch sử ghi.
-// Kiểm màu/lớp trên bản build (Tailwind giữ lớp trong @layer components). Nhiệm vụ mẫu ở hội nghị 993 (E2E), Owner = phòng Tổng hợp, tự dọn.
+// Kiểm màu/lớp trên bản build (Tailwind giữ lớp trong @layer components). Nhiệm vụ mẫu ở hội nghị 993 (E2E), chủ trì = demo_e2e_dh (phòng Tổng hợp;
+// v3.31 — 0128: người theo dõi luôn theo chủ trì, nên A3 phải là cán bộ chủ trì để nhận tin), tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs, nav, moViec, mauToken, NAP } from './lib/app.js';
@@ -26,7 +27,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     hnKhoa = khoaRieng('DH', testInfo); // khoá riêng theo project: chạy lại / chạy dở / 2 worker không đụng nhau
     const hn = { id: await taoVanBanRieng(db, hnKhoa, { so_hoi_nghi: SO_HOI_NGHI }) };
     const { data: nv, error: e2 } = await db.from('nhiem_vu').insert({
-      van_ban_id: hn.id, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} ngoại lệ ${testInfo.project.name} ${Date.now()}`,
+      van_ban_id: hn.id, owner_tai_khoan: CV1_ID, nguoi_theo_doi: CV1_ID, noi_dung: `${E2E_TAG} ngoại lệ ${testInfo.project.name} ${Date.now()}`,
       loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-08-15', nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP',
       theo_1400: true, ngay_nhan_van_ban: '2026-08-05', ngay_nhan_uoc_tinh: false, // 0033: khâu "Chưa nhận việc" chỉ với việc theo quy tắc 1400
       do_khan: 'KHAN', // nhãn độ khẩn trên thẻ nghẽn (kiểm nhãn gọn, không giãn ngang — sau kiểm tra v3.6.0)
@@ -84,7 +85,7 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(a1.locator('#toastContainer')).toContainText('Đã gửi đôn đốc');
     await expect(a1.locator(`#the-${nvId} .vong`)).toContainText('1 chỉ đạo điều hành chờ phản hồi', RT);
 
-    // A3: toast + huy hiệu chuông (tin hệ thống cho người theo dõi), chuông gom theo việc.
+    // A3: toast + huy hiệu chuông (tin hệ thống cho chủ trì theo dõi), chuông gom theo việc.
     await expect(a3.locator('#realtimeToast')).toBeVisible(RT);
     await expect(a3.locator('#toastSender')).toHaveText('Thông báo trên nhiệm vụ');
     await expect(a3.locator('#toastContent')).toContainText('Đôn đốc · NV-');

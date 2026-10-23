@@ -2,7 +2,7 @@
 // Dữ liệu hư cấu. Chạy `npm test` trong frontend/ (node:test).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canBoOwner, ownerOptionsHtml, laGiaoThang } from '../src/views/shared/kl/them-owner.js';
+import { canBoOwner, ownerOptionsHtml, laGiaoThang, theoDoiTheoChuTri } from '../src/views/shared/kl/them-owner.js';
 
 const CVP = { id: 'cvp', full_name: 'Hoàng Văn Bình', role_group: 'A1', is_chief: true, department: 'LANH_DAO_VAN_PHONG' };
 const TP = { id: 'tp', full_name: 'Đàm Văn Khánh', role_group: 'A2', department: 'TONG_HOP' };
@@ -43,4 +43,20 @@ test('v3.21.1: chuyên viên KHÔNG có cờ quản trị KL (mọi tài khoản
 test('lãnh đạo không đổi: Trưởng phòng = chuyên viên phòng mình + chính mình; Chánh VP = mọi cán bộ', () => {
   assert.deepEqual(ids(canBoOwner(DS, TP)), ['cv', 'tp']);
   assert.deepEqual(ids(canBoOwner(DS, CVP)), ['cv', 'cv2', 'cvp', 'tp']);
+});
+
+test('v3.31 (0128): người đại diện gửi kèm khi giao cho phòng — Trưởng phòng không khoá; "Văn phòng Tỉnh ủy" → Chánh VP chỉ khi người giao là Chánh VP / toàn quyền; cán bộ / đơn vị ngoài: không gửi', () => {
+  const tpKhoa = { id: 'tp0', username: 'a_tp_cu', role_group: 'A2', department: 'TONG_HOP', bi_khoa: true };
+  const ds = [{ ...CVP, username: 'cvp' }, { ...TP, username: 'tp' }, tpKhoa, CV, CV2, TT, HT];
+  const dm = { donVi: [...DM.donVi, { ma: 'QUAN_TRI', trong_van_phong: true, phong: 'QUAN_TRI' }, { ma: 'SO_TAI_CHINH', trong_van_phong: false, phong: null }] };
+  const PCVP = { id: 'pcvp', role_group: 'A1', is_chief: false };
+  assert.equal(theoDoiTheoChuTri('dv:TONG_HOP', dm, ds, PCVP), 'tp', 'bỏ tài khoản khoá dù tên đăng nhập xếp trước');
+  assert.equal(theoDoiTheoChuTri('dv:TONG_HOP', dm, ds, CV), 'tp', 'chuyên viên thay mặt giao cho phòng: Trưởng phòng');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, CVP), 'cvp');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, { id: 'qt', role_group: 'A1', is_chief: true, toan_quyen: true }), 'cvp', 'toàn quyền (hồ sơ hiệu dụng)');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, PCVP), null, 'Phó Chánh VP: không gửi Chánh VP (giao_viec chặn ngoài phạm vi)');
+  assert.equal(theoDoiTheoChuTri('dv:VAN_PHONG_TINH_UY', dm, ds, CV), null, 'chuyên viên thay mặt: không gửi (Chánh VP nhận tin qua thay mặt)');
+  assert.equal(theoDoiTheoChuTri('dv:QUAN_TRI', dm, ds, CVP), null, 'phòng chưa có Trưởng phòng: không gửi (người giao)');
+  assert.equal(theoDoiTheoChuTri('dv:SO_TAI_CHINH', dm, ds, CVP), null);
+  assert.equal(theoDoiTheoChuTri('tk:cv', dm, ds, CVP), null); assert.equal(theoDoiTheoChuTri('', dm, ds, CVP), null); assert.equal(theoDoiTheoChuTri(null, dm, ds), null);
 });

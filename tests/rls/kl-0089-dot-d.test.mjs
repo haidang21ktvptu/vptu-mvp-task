@@ -137,24 +137,29 @@ describe('Đợt D (0089–0093) — tệp minh chứng, chuyên viên người 
     assert.equal((await viec(nv.D)).owner_tai_khoan, E2E_KL);
   });
 
-  test('6. (J-6) Chuyển việc đang theo dõi: chỉ QTHT / Chánh VP; xem trước không ghi; lý do bắt buộc; chỉ việc đang mở; lịch sử từng việc + một tin', async () => {
+  test('6. (J-6) Chuyển việc đang chủ trì theo dõi (v3.31): chỉ QTHT / Chánh VP; xem trước không ghi; lý do bắt buộc; chỉ việc đang mở; lịch sử từng việc + một tin', async () => {
     const u = await db().auth.admin.createUser({ email: `${TD}@${EMAIL_DOMAIN}`, password: `T${randomUUID()}`, email_confirm: true, user_metadata: { username: TD, full_name: 'KL-0089 Theo dõi tạm' } });
     assert.equal(u.error, null, `tạo tài khoản tạm: ${u.error?.message}`); tdId = u.data.user.id;
     assertOk(await db().from('accounts').upsert({ id: tdId, username: TD, full_name: 'KL-0089 Theo dõi tạm', role_group: 'A3', position_title: 'Chuyên viên (test)',
       department: 'TONG_HOP', is_chief: false, must_change_password: false, is_system: false, quan_tri_he_thong: false }, { onConflict: 'id' }), 'hồ sơ tạm');
+    // v3.31 (0128): tài khoản tạm là CHỦ TRÌ (người theo dõi nội bộ = chủ trì) — việc giao cho phòng không chủ trì thì trigger đặt theo dõi = Trưởng phòng
     const chen = (ma, row) => db().from('nhiem_vu').insert({ van_ban_id: vb, noi_dung: `${KHOA} ${ma}`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: '2026-12-31',
-      nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP', nguoi_theo_doi: tdId, theo_1400: false, ...row }).select('id').single();
+      nganh_ma: 'KINH_TE_TONG_HOP', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: tdId, nguoi_theo_doi: tdId, theo_1400: false, ...row }).select('id').single();
     const [mo, xong] = await Promise.all([chen('E mở', {}), chen('E xong', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-09-10', minh_chung: `${KHOA}/MC` })]);
     assertOk(mo, 'việc mở'); assertOk(xong, 'việc đã hoàn thành'); nv.E = mo.data.id; nv.F = xong.data.id;
     const goiCtd = (user, lyDo, thucHien) => goi(user, 'admin_chuyen_theo_doi', { p_tu: tdId, p_den: IDS.cv2, p_ly_do: lyDo, p_thuc_hien: thucHien });
     assertDenied(await goiCtd('demo_cv1', 'x', true), 'chuyên viên');
     assertDenied(await goiCtd('demo_truongphong', 'x', true), 'Trưởng phòng');
     const xem = await goiCtd('demo_cvp', null, false); assertOk(xem, 'Chánh VP xem trước');
-    assert.equal(xem.data.so_viec, 1); assert.equal((await viec(nv.E)).nguoi_theo_doi, tdId, 'xem trước không ghi');
+    const e0 = await viec(nv.E);
+    assert.equal(xem.data.so_viec, 1); assert.deepEqual([e0.owner_tai_khoan, e0.nguoi_theo_doi], [tdId, tdId], 'xem trước không ghi');
     loi(await goiCtd('demo_qtht', '  ', true), /Lý do bắt buộc/, 'thiếu lý do');
     const lam = await goiCtd('demo_qtht', `${KHOA} điều động cán bộ`, true); assertOk(lam, 'QTHT chuyển');
     assert.equal(lam.data.so_viec, 1);
-    assert.deepEqual([(await viec(nv.E)).nguoi_theo_doi, (await viec(nv.F)).nguoi_theo_doi], [IDS.cv2, tdId], 'việc mở chuyển, việc đã hoàn thành giữ nguyên');
+    // v3.31 (0128): chuyển CHỦ TRÌ (đơn vị theo phòng người nhận, Quản trị); người theo dõi theo chủ trì; việc đã hoàn thành giữ nguyên
+    const [e, f] = [await viec(nv.E), await viec(nv.F)];
+    assert.deepEqual([e.owner_tai_khoan, e.owner_don_vi_ma, e.nguoi_theo_doi], [IDS.cv2, 'QUAN_TRI', IDS.cv2], 'việc mở chuyển chủ trì');
+    assert.deepEqual([f.owner_tai_khoan, f.nguoi_theo_doi], [tdId, tdId], 'việc đã hoàn thành giữ nguyên');
     const ls = (await db().from('lich_su').select('nguoi_sua, gia_tri_moi').eq('nhiem_vu_id', nv.E).eq('cot', 'chuyen_theo_doi')).data;
     assert.equal(ls.length, 1); assert.equal(ls[0].nguoi_sua, IDS.qtht); assert.match(ls[0].gia_tri_moi, /lý do: KL-0089 điều động cán bộ$/);
     const tin = (await db().from('direct_messages').select('content').eq('receiver_id', IDS.cv2).like('content', `%${KHOA} điều động cán bộ`)).data;

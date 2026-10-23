@@ -1,21 +1,23 @@
 // HTML một dòng của bảng "Nhiệm vụ" (v3.25 — bảng theo cột kiểu V-Office, mẫu NhiemVu / ViecTheoDoi 16/10/2026): cả dòng là MỘT nút
 // (button.hang-nv#klRow-<id>, data-action=chonKlRow — bấm mở ngăn chi tiết; giữ data-nhom / muc / do-khan / tao / han cho e2e và sắp xếp), ô là
 // span có data-nhan (nhãn ô khi bảng thành thẻ). Hai bộ cột: 'nv' — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì | Hạn xử lý | Trạng
-// thái; 'td' (Việc tôi theo dõi) — STT | Nhiệm vụ | Chủ trì | Văn bản giao | Hạn | Trạng thái | Tình hình. .stt là mép màu 4px theo mức. Các vị
+// thái; 'td' (Việc tôi đã giao — v3.31) — STT | Nhiệm vụ | Chủ trì | Văn bản giao | Hạn | Trạng thái | Tình hình. .stt là mép màu 4px theo mức. Các vị
 // từ "ai được làm gì" chỉ để ẩn/hiện nút trong ngăn (policy + hàm DB là chốt).
 import { escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { lopMep, boSoThuTu, nhanChatLuongHtml } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { hanO, trangThaiO, gioVN, vanBanNgan, cachNhap } from '../../../lib/kl/bang-o.js';
-import { tinhHinh, quanHe } from '../../../lib/kl/tinh-hinh.js';
+import { tinhHinh } from '../../../lib/kl/tinh-hinh.js';
+import { chuTriText } from '../../../lib/kl/chu-tri.js';
 import { duocChiDao } from './chi-dao.js';
 import { maNguonHtml, nhanMucHtml } from './thong-tin-nguon.js';   // Đợt C2 (0087)
 import { chiXem } from '../../../lib/kl/pham-vi.js';
 import { chiXemVoi, thuKyGhi } from '../../../lib/kl/quyen-them.js';
 import { laViecMoi, nhanNhap } from '../../../lib/kl/loc-them.js';
 
-// Ai là "bên trong" của việc: người theo dõi hoặc Owner tài khoản.
+// Ai là "bên trong" của việc: chủ trì theo dõi — cán bộ chủ trì, hoặc người đại diện của phòng / Văn phòng chủ trì (Trưởng phòng / Chánh VP:
+// nguoi_theo_doi nội bộ, trigger 0128).
 export const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
 // 0091 (policy nhiem_vu_update): + người tạo việc và lãnh đạo A0/A1/A2 thấy việc — lãnh đạo làm được việc của chuyên viên, không bắt buộc.
 // v3.29 (0124): + thư ký Thường trực với mọi việc chưa hoàn thành (kể cả ngoài phạm vi cũ).
@@ -24,7 +26,7 @@ export const duocCapNhat = (r) => !chiXemVoi(r, state.user) && (laBenTrong(r) ||
 // v3.29 (0124): người chỉ cập nhật được nhờ cờ thư ký Thường trực không tự chuyển việc sang Hoàn thành (policy chặn — hoàn thành qua nộp minh chứng).
 export const capNhatChiNhoThuKy = (r) => thuKyGhi(r, state.user) && !(laBenTrong(r) || r.tao_boi === state.user?.id
   || (!chiXem(r) && (['A0', 'A1', 'A2'].includes(state.user?.role_group) || Boolean(state.user?.quan_tri_kl))));
-// GĐ16 (MC-4): ai được đóng nhiệm vụ — Owner/người theo dõi, lãnh đạo trong phạm vi (A1/A2), quan_tri_kl; hàm dong_nhiem_vu là chốt.
+// GĐ16 (MC-4): ai được đóng nhiệm vụ — chủ trì theo dõi, lãnh đạo trong phạm vi (A1/A2), quan_tri_kl; hàm dong_nhiem_vu là chốt.
 export const duocDong = (r) => !chiXem(r) && (laBenTrong(r) || duocChiDao() || Boolean(state.user?.quan_tri_kl));
 // 0103: việc ngoài phạm vi xử lý của người xem (cấu hình xem toàn bộ) — nhãn trung tính, chỉ xem. v3.29: thư ký Thường trực không có nhãn này ở
 // việc chưa hoàn thành (ghi được — 0124).
@@ -53,11 +55,10 @@ export function dongHtml(r, homNay, dangChon, { now = Date.now(), stt = '', cot 
   const nguoiNhap = r.tao_boi ? state.accounts.find((a) => a.id === r.tao_boi)?.full_name || '' : '';
   const g = gioVN(r.created_at); const vb = vanBanNgan(r); const han = hanO(r, homNay); const tt = trangThaiO(r, me); const cach = cachNhap(r);
   const nhap = nhanNhap(r.created_at, homNay);
-  const qh = cot === 'td' ? (quanHe(r, me) === 'giao' ? '<span class="bnv-nhan vai">Tôi đã giao</span>' : '<span class="bnv-nhan xam">Tôi theo dõi</span>') : '';
-  const cy = cot === 'td' ? '' : chuY(r);   // Việc tôi theo dõi: cột Tình hình đã nói điều cần để ý
-  const goi = `${nhap ? `${nhap.replace(/^n/, 'N')}${nguoiNhap ? ` bởi ${nguoiNhap}` : ''} — ` : ''}${ownerText(r)}${cy ? `, ${cy}` : ''}`;
+  const cy = cot === 'td' ? '' : chuY(r);   // Việc tôi đã giao: cột Tình hình đã nói điều cần để ý
+  const goi = `${nhap ? `${nhap.replace(/^n/, 'N')}${nguoiNhap ? ` bởi ${nguoiNhap}` : ''} — ` : ''}${chuTriText(r)}${cy ? `, ${cy}` : ''}`;
   const gon = cot === 'nv' && nhap ? `<span class="nhap-luc">${escapeHtml(nhap)}${nguoiNhap ? ` · ${escapeHtml(nguoiNhap)}` : ''}</span>` : '';   // dòng phụ khi gộp cột thời gian
-  const oNv = `<span class="bnv-c bnv-c-nv" title="${escapeHtml(goi)}"><span class="bnv-dong1"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${qh}${laViecMoi(r, now) ? NHAN_MOI : ''}${nhanMucHtml(r)}${nhanPhuHtml(r)}${chiXemVoi(r, state.user) ? NHAN_CHI_XEM : ''}</span>
+  const oNv = `<span class="bnv-c bnv-c-nv" title="${escapeHtml(goi)}"><span class="bnv-dong1"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${laViecMoi(r, now) ? NHAN_MOI : ''}${nhanMucHtml(r)}${nhanPhuHtml(r)}${chiXemVoi(r, state.user) ? NHAN_CHI_XEM : ''}</span>
       <span class="bnv-nd">${escapeHtml(r.noi_dung)}</span>${gon ? `<span class="bnv-phu bnv-chi-gon">${gon}</span>` : ''}${cy ? `<span class="bnv-phu bnv-chu-y">${escapeHtml(cy)}</span>` : ''}</span>`;
   const oVb = o('Văn bản giao', `<span class="bnv-vb">${escapeHtml(vb.ten)}</span>${phu(vb.phu)}`);
   const oChuTri = o('Chủ trì theo dõi', `<span>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`);

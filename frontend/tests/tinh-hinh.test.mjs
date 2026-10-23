@@ -1,8 +1,9 @@
-// v3.25 — "Việc tôi theo dõi" (mẫu ViecTheoDoi) và "Theo văn bản" (mẫu TheoVanBan) dạng bảng: cột Tình hình, ô số, quan hệ; tổng hợp văn bản,
+// v3.25 — "Việc tôi theo dõi" (v3.31: "Việc tôi đã giao"; mẫu ViecTheoDoi) và "Theo văn bản" (mẫu TheoVanBan) dạng bảng: cột Tình hình, ô số; tổng hợp văn bản,
 // rà soát, ô số văn bản, sắp xếp (lib/kl/tinh-hinh.js, lib/kl/van-ban-bang.js). Chạy `npm test` trong frontend/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tinhHinh, O_SO_TD, locOTd, demOTd, khopQuanHe, quanHe } from '../src/lib/kl/tinh-hinh.js';
+import { tinhHinh, O_SO_TD, locOTd, demOTd } from '../src/lib/kl/tinh-hinh.js';
+import * as tinhHinhMod from '../src/lib/kl/tinh-hinh.js';
 import { tongHopVanBan, lopVanBan, raSoatVanBan, O_SO_VB, locOVb, demOVb, sapXepVanBan } from '../src/lib/kl/van-ban-bang.js';
 
 const v = (id, o = {}) => ({ id, tien_do_ma: 'DANG_THUC_HIEN', nhom_dem: 'DANG_THUC_HIEN', muc_canh_bao: 'XANH', theo_1400: true, da_xac_nhan_nhan: true,
@@ -24,16 +25,13 @@ test('tình hình: thứ tự ưu tiên đỏ → vàng → lục → xám, kèm
   assert.equal(tinhHinh(v('12', { theo_1400: false, da_xac_nhan_nhan: false })).tieu, 'Bình thường', 'việc cũ không theo 1400: không đôn đốc nhận việc');
 });
 
-test('ô số theo dõi (mỗi ô = số dòng lọc) và quan hệ tôi đã giao / tôi theo dõi', () => {
+test('ô số "Việc tôi đã giao" (mỗi ô = số dòng lọc); v3.31: không còn lọc quan hệ tôi đã giao / tôi theo dõi', () => {
   const ds = [v('a', { da_xac_nhan_nhan: false }), v('b', { vuong_mac: 'x' }), v('c', { muc_canh_bao: 'VANG' }), v('d'), v('e', { tien_do_ma: 'HOAN_THANH', nhom_dem: 'HOAN_THANH' }),
     v('f', { muc_canh_bao: 'DO_DAC_BIET', tao_boi: 'me', nguoi_theo_doi: 'tp' })];
   assert.deepEqual(locOTd(ds, 'don').map((r) => r.id), ['a', 'b', 'c', 'f']);
   const so = demOTd(ds); for (const [k] of O_SO_TD) assert.equal(so[k], locOTd(ds, k).length, `ô ${k}`);
   assert.deepEqual([so.nhan, so.vm, so.sap, so.qua, so.mo, so.xong, so.tat], [1, 1, 1, 1, 5, 1, 6]);
-  assert.equal(quanHe(ds[5], 'me'), 'giao'); assert.equal(quanHe(ds[0], 'me'), 'theo');
-  assert.deepEqual(ds.filter((r) => khopQuanHe(r, 'me', 'giao')).map((r) => r.id), ['f']);
-  assert.deepEqual(ds.filter((r) => khopQuanHe(r, 'me', 'theo')).map((r) => r.id), ['a', 'b', 'c', 'd', 'e']);
-  assert.equal(ds.filter((r) => khopQuanHe(r, 'me', '')).length, 6);
+  assert.ok(!('khopQuanHe' in tinhHinhMod) && !('QUAN_HE' in tinhHinhMod), 'bỏ nút quan hệ (chỉ còn chủ trì theo dõi)');
 });
 
 test('văn bản: tổng hợp, lớp mức, rà soát, ô số đếm văn bản, sắp xếp mới nhập / ngày nhận', () => {

@@ -1,5 +1,5 @@
-// v3.23 (0103, chủ dự án duyệt 13/10/2026): mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem ngoài phạm vi), lọc theo cán bộ chủ trì / người theo dõi /
-// lãnh đạo VP phụ trách, người giao của văn bản, menu theo cấu hình, bỏ Nhắn tin. Chạy `npm test` trong frontend/.
+// v3.23 (0103, chủ dự án duyệt 13/10/2026): mọi cán bộ xem toàn bộ nhiệm vụ (chỉ xem ngoài phạm vi), lọc theo cán bộ chủ trì / lãnh đạo VP phụ
+// trách (v3.31 — 0128: bỏ ô người theo dõi), người giao của văn bản, menu theo cấu hình, bỏ Nhắn tin. Chạy `npm test` trong frontend/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chiXem, trongPhamVi, locTheoViec, locCanBo, tuyChonCanBo, ghiNgoaiPhamVi, laNgoaiPhamVi, datNgoaiPhamVi, coLocCanBo } from '../src/lib/kl/pham-vi.js';
@@ -27,10 +27,10 @@ test('Việc đã biết ngoài phạm vi (realtime bỏ qua tín hiệu phụ):
   ghiNgoaiPhamVi([]); assert.ok(!laNgoaiPhamVi('a'));
 });
 
-test('Lọc theo cán bộ chủ trì, người theo dõi, lãnh đạo VP phụ trách (phân công phòng) — kết hợp được; không lọc = nguyên mảng', () => {
+test('Lọc theo cán bộ chủ trì, lãnh đạo VP phụ trách (phân công phòng) — kết hợp được; không lọc = nguyên mảng; v3.31: khoá người theo dõi không còn tác dụng', () => {
   assert.equal(locCanBo(ROWS, {}, PC), ROWS); assert.equal(coLocCanBo({ chuTri: '' }), false);
   assert.deepEqual(locCanBo(ROWS, { chuTri: 'cv1' }, PC).map((x) => x.id), ['a', 'c']);
-  assert.deepEqual(locCanBo(ROWS, { theoDoi: 'tp2' }, PC).map((x) => x.id), ['b']);
+  assert.equal(locCanBo(ROWS, { theoDoi: 'tp2' }, PC), ROWS, 'không còn lọc theo người theo dõi');
   assert.deepEqual(locCanBo(ROWS, { ldvp: 'pc1' }, PC).map((x) => x.id), ['a', 'd']);
   assert.deepEqual(locCanBo(ROWS, { ldvp: CHUA_LDVP }, PC).map((x) => x.id), ['c']);
   assert.deepEqual(locCanBo(ROWS, { chuTri: 'cv1', ldvp: 'pc1' }, PC).map((x) => x.id), ['a']);
@@ -39,7 +39,7 @@ test('Lọc theo cán bộ chủ trì, người theo dõi, lãnh đạo VP phụ
 test('Lựa chọn ô lọc có đếm; tên theo danh bạ, thiếu thì theo dòng; lãnh đạo không có việc thì bỏ, có "Chưa có lãnh đạo phụ trách"', () => {
   const tc = tuyChonCanBo(ROWS, { ten: (id) => ({ tp1: 'Trưởng phòng Một' })[id], phanCong: PC, lanhDaoVP: [{ id: 'pc1', full_name: 'Phó Một' }, { id: 'pc3', full_name: 'Phó Ba' }] });
   assert.deepEqual(tc.chuTri.map((o) => [o.ma, o.ten, o.n]), [['cv2', 'Cán bộ Hai', 1], ['cv1', 'Cán bộ Một', 2]]);   // theo tên (tiếng Việt)
-  assert.deepEqual(tc.theoDoi.map((o) => [o.ma, o.ten, o.n]), [['tp2', 'Cán bộ', 1], ['tp1', 'Trưởng phòng Một', 3]]);
+  assert.deepEqual(Object.keys(tc).sort(), ['chuTri', 'ldvp'], 'v3.31: không còn ô người theo dõi');
   assert.deepEqual(tc.ldvp.map((o) => [o.ma, o.n]), [['pc1', 2], [CHUA_LDVP, 1]]);   // pc3 không có việc: bỏ
 });
 
@@ -55,7 +55,7 @@ test('Menu: không còn Nhắn tin ở mọi vai; cấu hình xem toàn bộ →
   const kl = a3.filter((m) => m.id === 'navKl'); assert.equal(kl.length, 1); assert.equal(kl[0].action, 'openKlToanBo'); assert.equal(kl[0].label, 'Toàn bộ nhiệm vụ');
   const ca = menuCuaVai(tk('A3'), { xemToanBo: true, xemPhong: true });   // bật cả xem cả phòng (0086): một Tổng quan, một mục Nhiệm vụ (của phòng — có nút Toàn Văn phòng)
   assert.equal(ca.filter((m) => m.id === 'navTongQuan').length, 1); assert.deepEqual(ca.filter((m) => m.id === 'navKl').map((m) => m.action), ['openKlPhong']);
-  assert.deepEqual(a3.filter((m) => m.duoi).map((m) => m.id), ['navDieuHanh', 'navGiaoViec', 'navTheoDoi']);
+  assert.deepEqual(a3.filter((m) => m.duoi).map((m) => m.id), ['navDieuHanh', 'navGiaoViec', 'navDaGiao']);
   assert.equal(menuCuaVai(tk('A2'), { xemToanBo: true }).find((m) => m.id === 'navTongQuan').label, 'Tổng quan');
   assert.equal(menuCuaVai(tk('A2')).find((m) => m.id === 'navTongQuan').label, 'Tổng quan phòng');
 });

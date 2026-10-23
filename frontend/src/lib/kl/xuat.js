@@ -10,19 +10,18 @@ import { phanLoaiTheoKy, tongHopTheoKy } from './ky.js';
 import { maTheoNguon } from './ma-nguon.js';
 
 const ngayTep = () => homNayVN().replace(/-/g, '');
-const chuTri = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '';
+const chuTri = (r) => r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || '';   // phòng ở cột "Phòng" bên cạnh
 const phong = (r) => DEPT_NAMES[r.owner_phong] || r.owner_phong || (r.owner_trong_van_phong === false ? 'Đơn vị ngoài Văn phòng' : '');
 const sanPham = (r) => (r.san_pham_ten ? `${r.san_pham_ten}${r.san_pham_mo_ta ? `: ${r.san_pham_mo_ta}` : ''}` : '');
 const trangThai = (r) => `${tenNhom(r.nhom_dem)}${r.so_ngay_qua ? ` (trễ ${r.so_ngay_qua} ngày)` : ''}`;
 
-// Cột màn Nhiệm vụ (thứ tự theo prompt PR-3; C2 thêm 4 cột nguồn ở cuối).
+// Cột màn Nhiệm vụ (thứ tự theo prompt PR-3; C2 thêm 4 cột nguồn ở cuối; v3.31 — 0128: bỏ cột "Người theo dõi", chỉ còn "Chủ trì theo dõi").
 export const COT_NHIEM_VU = [
   { nhan: 'Mã nhiệm vụ', rong: 12, gt: (r) => r.ma },
   { nhan: 'Nội dung kết luận / Văn bản trình', rong: 60, gt: (r) => r.noi_dung },
   { nhan: 'Số TB/KL', rong: 22, gt: (r) => r.so_ket_luan || '' },
   { nhan: 'Nguồn nhiệm vụ', rong: 24, gt: (r) => r.nguon_nhiem_vu_ten || '' },
   { nhan: 'Chủ trì theo dõi', rong: 26, gt: chuTri },
-  { nhan: 'Người theo dõi', rong: 22, gt: (r) => r.nguoi_theo_doi_ten || '' },
   { nhan: 'Phòng', rong: 22, gt: phong },
   { nhan: 'Hạn xử lý', rong: 13, kieu: 'ngay', gt: (r) => r.han_xu_ly },
   { nhan: 'Trạng thái', rong: 24, gt: trangThai },

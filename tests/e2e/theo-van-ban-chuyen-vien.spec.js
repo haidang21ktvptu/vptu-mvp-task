@@ -35,7 +35,7 @@ test.describe.serial('Theo văn bản cho Trưởng phòng, chuyên viên (v3.22
       await expect(p.locator(`#tvbNv-${p3.id}`)).toHaveCount(0);
       await expect(goc).toHaveAttribute('data-so', '1');   // tiến độ theo việc người xem thấy
       await expect(goc.locator('.tvb-ra-soat')).toContainText('đã nhập 3');   // tổng thật của văn bản — chỉ con số
-      await expect(p.locator('#tvbTomTat')).toContainText('việc đồng chí chủ trì, theo dõi hoặc đã giao');
+      await expect(p.locator('#tvbTomTat')).toContainText('việc đồng chí chủ trì theo dõi hoặc đã giao');   // v3.31 (0128): chỉ còn chủ trì theo dõi
       await p.locator(`#tvbNv-${p1.id} > .tvb-hang .tvb-nut`).click();
       await expect(p.locator(`#nganCT #klChiTiet-${p1.id}`)).toBeVisible(NAP);
     });
