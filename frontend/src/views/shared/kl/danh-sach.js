@@ -37,7 +37,7 @@ const coSo = () => (kl.loc.toanBo ? kl.rows : trongPhamVi(kl.rows));
 // Khoá lọc do màn hình điều hành đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm (đơn vị, kết luận, hội nghị, ngành, lĩnh vực) không hiện chip.
 const NHAN_CHIP = {
   canBo: (v) => `Cán bộ: ${state.accounts.find((a) => a.id === v)?.full_name || v}`,
-  cuaToi: () => 'Việc tôi chủ trì theo dõi',
+  cuaToi: () => 'Việc của tôi (chủ trì theo dõi)',   // v3.31 (0128): trước "(chủ trì theo dõi hoặc người theo dõi)"
   daGiaoCuaToi: () => 'Việc tôi đã giao (người khác chủ trì theo dõi)',
   chiMo: () => 'Chỉ việc đang mở',
   thieuMinhChung: () => 'Hoàn thành chưa có minh chứng',
