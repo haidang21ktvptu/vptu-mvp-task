@@ -3,7 +3,7 @@
 // chú dưới ô hạn mới. Chỉ là ẩn / hiện — hàm DB là chốt (test RLS kl-0123…kl-0126). Dữ liệu hư cấu. Chạy `npm test` trong frontend/.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { laThuKyTT, thuKyGhi, chiXemVoi, chuTriTheoDoi, cheDoDieuChinhHan, duocDoiChuTri, duocSuaToanBo, duocMoLai, duocSuaVanBan, duocSuaMinhChung,
+import { laThuKyTT, thuKyGhi, chiXemVoi, chuTriTheoDoi, cheDoDieuChinhHan, duocDoiChuTri, duocSuaToanBo, duocMoLai, duocSuaVanBan, duocSuaMinhChung, duocGoMinhChung,
   ghiChuHanMoi } from '../src/lib/kl/quyen-them.js';
 import { hoSoHieuDung } from '../src/lib/toan-quyen.js';
 
@@ -55,7 +55,6 @@ test('Đổi chủ trì: thư ký (việc chưa hoàn thành), quản trị (m�
   assert.equal(duocSuaToanBo(xong, QT), true); assert.equal(duocSuaToanBo(viec(), TK), false);
   assert.equal(duocMoLai(xong, QT), true); assert.equal(duocMoLai(viec(), QT), false); assert.equal(duocMoLai(xong, TK), false);
   assert.equal(duocSuaVanBan(viec(), QT), true); assert.equal(duocSuaVanBan(viec({ van_ban_id: null }), QT), false); assert.equal(duocSuaVanBan(viec(), TK), false);
-  assert.equal(duocSuaMinhChung(QT), true); assert.equal(duocSuaMinhChung(TK), false);
   const a0 = { id: 'a0', role_group: 'A0', toan_quyen: true };
   assert.equal(duocSuaToanBo(viec(), a0), false, 'Thường trực không bao giờ là toàn quyền');
 });
@@ -73,4 +72,17 @@ test('Ghi chú hạn mới: lùi = gia hạn lần n + 1, rút ngắn không tí
   assert.equal(ghiChuHanMoi(r, '2026-10-20', { homNay: HOM_NAY, choQuaKhu: true }), 'Rút ngắn hạn: không tính lần gia hạn.', 'quản trị: đính chính hạn đã qua');
   assert.equal(ghiChuHanMoi(r, '2026-08-01', { homNay: HOM_NAY, choQuaKhu: true }), 'Hạn mới không được trước ngày ban hành văn bản.');
   assert.equal(ghiChuHanMoi({ ...r, han_xu_ly: null }, '2026-11-15', { homNay: HOM_NAY }), '', 'việc chưa có hạn: không ghi chú gia hạn');
+});
+
+test('v3.32 (0130): sửa minh chứng — chủ trì theo dõi (cả việc đã hoàn thành), trừ minh chứng bị trả lại; tài khoản quản trị mọi minh chứng; gỡ chỉ quản trị', () => {
+  const xong = viec({ tien_do_ma: 'HOAN_THANH' }); const ct = { id: chuTriTheoDoi(xong), role_group: 'A3' };
+  const mc = { id: 'm', hop_le: true }; const traLai = { id: 'm2', hop_le: false };
+  assert.equal(duocSuaMinhChung(ct, xong, mc), true, 'chủ trì, việc đã hoàn thành');
+  assert.equal(duocSuaMinhChung(ct, xong, { id: 'm3', hop_le: null }), true, 'minh chứng cũ chưa xét');
+  assert.equal(duocSuaMinhChung(ct, xong, traLai), false, 'minh chứng bị trả lại');
+  assert.equal(duocSuaMinhChung(QT, xong, traLai), true); assert.equal(duocSuaMinhChung(TK, xong, mc), false); assert.equal(duocSuaMinhChung(KHAC, xong, mc), false); assert.equal(duocSuaMinhChung(TD, xong, mc), false, 'người theo dõi cũ không phải chủ trì');
+  const phong = viec({ owner_tai_khoan: null, nguoi_theo_doi: 'tp' });
+  assert.equal(duocSuaMinhChung({ id: 'tp', role_group: 'A2' }, phong, mc), true, 'việc của phòng: Trưởng phòng (người đại diện)');
+  assert.equal(duocSuaMinhChung(null, xong, mc), false); assert.equal(duocSuaMinhChung(ct, null, mc), false);
+  assert.equal(duocGoMinhChung(QT), true); assert.equal(duocGoMinhChung(ct), false);
 });

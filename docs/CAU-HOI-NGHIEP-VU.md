@@ -384,3 +384,15 @@ còn chủ trì theo dõi"; duyệt kế hoạch cùng ngày. Thay CH-2 (phươn
 | Q-7 | Ghi chủ trì thế nào? | **Một kiểu ở mọi nơi**: cán bộ "Họ tên (Phòng …)" (lãnh đạo: "(Văn phòng Tỉnh ủy)"); phòng / Văn phòng: tên đơn vị. Bảng danh sách giữ tên ở dòng trên, phòng ở dòng dưới; Xuất Excel giữ cột "Chủ trì theo dõi" và cột "Phòng" riêng. | Unit `chu-tri` |
 
 **Chưa sửa (đề xuất để sau):** vài câu báo lỗi do cơ sở dữ liệu trả về còn chữ "người theo dõi" (ít gặp — ví dụ khi giao việc thay mặt với dữ liệu sai).
+
+## Nhóm R — Quyết định 26/10/2026: chủ trì theo dõi sửa minh chứng đã nộp (v3.32, migration 0130)
+
+Chủ dự án (26/10/2026, 11:13, kèm hình ngăn chi tiết của một việc đã hoàn thành — minh chứng có số hiệu và tệp kèm): "Hiện tôi muốn thay đổi minh
+chứng hoàn thành nhiệm vụ mà tôi chủ trì không thực hiện được → Bổ sung chức năng này. Cho phép chủ trì thực hiện theo dõi nhiệm vụ chỉnh sửa được
+minh chứng." Trả lời ba câu hỏi và duyệt kế hoạch cùng ngày. Bổ sung O-6 / QT-13 (d) — trước đây chỉ tài khoản quản trị sửa, gỡ minh chứng.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| R-1 | Chủ trì được sửa những gì? | **Mọi thông tin và thay tệp**: số hiệu, ngày văn bản, cấp nhận, trích yếu, mô tả kết quả (minh chứng chữ cũ: nội dung); thay hoặc thêm tệp với minh chứng có số hiệu (không bỏ tệp; tệp cũ giữ trong kho). Đổi ngày văn bản của minh chứng đã làm việc hoàn thành → ngày hoàn thành đổi theo. Chủ trì = cán bộ chủ trì theo dõi; việc giao cho phòng / Văn phòng → Trưởng phòng / Chánh Văn phòng (người đại diện, Q-1). Mỗi lần sửa: lý do bắt buộc, lưu bản cũ, ghi Diễn biến, báo người giao việc và lãnh đạo liên quan. | RLS `kl-0130`; e2e `quyen-v329` |
+| R-2 | Sửa đến khi nào? | **Bất cứ lúc nào** — kể cả việc đã hoàn thành, đã được lãnh đạo đánh giá chất lượng (đánh giá giữ nguyên; lãnh đạo nhận tin, cần thì đánh giá lại). Riêng minh chứng **đã bị trả lại** không sửa (giữ làm vết của lần trả lại) — chủ trì nộp minh chứng mới. | RLS `kl-0130` |
+| R-3 | Chủ trì có gỡ (xoá) minh chứng? | **Không, chỉ sửa.** Gỡ minh chứng vẫn chỉ tài khoản quản trị (QT-13 d). | RLS `kl-0130`, `kl-0126` |

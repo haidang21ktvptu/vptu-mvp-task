@@ -5,6 +5,7 @@
 // 2. Thư ký Thường trực (demo_e2e_tk, cờ tạm): việc ngoài phạm vi cũ không còn "Chỉ xem"; nộp minh chứng → hoàn thành; đổi chủ trì theo dõi.
 // 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa văn bản giao" (trích yếu), "Sửa toàn bộ thông tin" (ghi chú),
 //    "Sửa" minh chứng (trích yếu), "Mở lại nhiệm vụ" (minh chứng chuyển "Bị trả lại").
+// 4. v3.32 (0130): chủ trì theo dõi (demo_e2e_nv) sửa minh chứng việc đã hoàn thành, đã đánh giá — đổi số hiệu, thay tệp; không có nút "Gỡ".
 // Dữ liệu riêng theo khoá E2E-TEST-Q329-<project>; cờ thu lại ở afterAll. Chạy MỘT MÌNH (project v329-quyen, nối cuối chuỗi): đổi cờ tài khoản dùng chung.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
@@ -37,10 +38,16 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
     await viec(vbId, 'DOI_CT', { owner_tai_khoan: ID.e2eKl, nguoi_theo_doi: ID.e2eKl });
     await viec(vbId, 'XONG', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(homNay(), -5), nguon: 'excel', chat_luong: 'DAT' });
     v.mcXong = await taoMinhChung(db, v.XONG.id, ID.e2eNv, `${khoa}/MC`);
+    await viec(vbId, 'MC_CT', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: homNay(), nguon: 'excel', chat_luong: 'DAT' });
+    v.mcCt = await taoMinhChung(db, v.MC_CT.id, ID.e2eNv, `${khoa}/MC-CT`);
   });
   test.afterAll(async () => {
     if (!db) return;
     await datCo(db, ID.e2eTk, { thu_ky_thuong_truc: false }); await datCo(db, TQ_ID, { toan_quyen: false });
+    if (v.MC_CT) {   // tệp thay ở kịch bản 4
+      const kho = db.storage.from('minh-chung'); const { data } = await kho.list(v.MC_CT.id);
+      if (data?.length) await kho.remove(data.map((f) => `${v.MC_CT.id}/${f.name}`));
+    }
     if (khoa) await donVanBan(db, khoa);
   });
 
@@ -148,5 +155,26 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
       expect((await db.from('minh_chung').select('hop_le').eq('id', v.mcXong).single()).data.hop_le).toBe(false);
     });
     await datCo(db, TQ_ID, { toan_quyen: false });
+  });
+
+  test('4. (v3.32 — 0130) Chủ trì sửa minh chứng việc đã hoàn thành, đã đánh giá: đổi số hiệu, thay tệp; không có nút Gỡ; đánh giá giữ nguyên', async ({ browser }, testInfo) => {
+    await voiPhien(browser, 'E2E_NV', testInfo, async (p) => {
+      await p.goto(`./Viec-cua-toi/${v.MC_CT.ma}`);
+      const ngan = p.locator(`#nganCT #klChiTiet-${v.MC_CT.id}`);
+      await expect(ngan).toBeVisible(NAP);
+      await expect(ngan.locator(`[data-action="moSuaMinhChung"][data-id="${v.mcCt}"]`)).toBeVisible(NAP);
+      await expect(ngan.locator(`[data-o="mcGo-${v.mcCt}"]`)).toHaveCount(0);   // gỡ vẫn chỉ tài khoản quản trị
+      await ngan.locator(`[data-action="moSuaMinhChung"][data-id="${v.mcCt}"]`).click();
+      await expect(p.locator('#smcModal')).toBeVisible();
+      await p.locator('#smcSoHieu').fill(`${khoa}/MC-CT (sửa)`);
+      await p.locator('#smcTep').setInputFiles({ name: 'Bao cao ban ky.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') });
+      await expect(p.locator('#smcDoi')).toHaveText('Sẽ sửa: số hiệu, tệp.');
+      await p.locator('#smcLyDo').fill('Thay bản có chữ ký');
+      await p.locator('#smcLuu').click(); await expect(p.locator('#smcModal')).toBeHidden(NAP);
+      await expect.poll(async () => (await db.from('minh_chung').select('so_hieu, tep_ten').eq('id', v.mcCt).single()).data, NAP)
+        .toEqual({ so_hieu: `${khoa}/MC-CT (sửa)`, tep_ten: 'Bao cao ban ky.pdf' });
+      expect((await doc('MC_CT', 'chat_luong, tien_do_ma'))).toEqual({ chat_luong: 'DAT', tien_do_ma: 'HOAN_THANH' });
+      await expect(p.locator(`#klDienBien-${v.MC_CT.id}`)).toContainText('Sửa minh chứng', NAP);
+    });
   });
 });
