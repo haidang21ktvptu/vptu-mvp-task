@@ -3,6 +3,7 @@
 // - Thư ký Thường trực: mọi việc chưa hoàn thành, kể cả ngoài phạm vi cũ (v_nhiem_vu.trong_pham_vi = false) — cập nhật, nộp minh chứng, ghi
 //   vướng mắc, sửa thông tin giao, điều chỉnh hạn, đổi chủ trì. Không: chỉ đạo, trả lại / đánh giá minh chứng, đóng nhiệm vụ.
 // - Tài khoản toàn quyền (0100): sửa toàn bộ thông tin, mở lại việc đã hoàn thành, sửa văn bản giao, sửa / gỡ minh chứng, đổi chủ trì, điều chỉnh hạn.
+// - v3.32 (0130): chủ trì theo dõi sửa minh chứng đã nộp của việc mình (chưa bị trả lại), kể cả thay tệp; không gỡ.
 // Thuần: không DOM, không Supabase (unit test frontend/tests/quyen-them.test.mjs).
 import { laToanQuyen } from '../toan-quyen.js';
 import { chiXem } from './pham-vi.js';
@@ -27,7 +28,10 @@ export const duocDoiChuTri = (r, u) => Boolean(r) && (laToanQuyen(u) || thuKyGhi
 export const duocSuaToanBo = (r, u) => Boolean(r) && laToanQuyen(u);
 export const duocMoLai = (r, u) => laToanQuyen(u) && daXong(r);
 export const duocSuaVanBan = (r, u) => Boolean(r?.van_ban_id) && laToanQuyen(u);
-export const duocSuaMinhChung = (u) => laToanQuyen(u);
+// Minh chứng đã nộp (v3.32 — 0130, CAU-HOI R-1…R-3): sửa (mọi ô, thay tệp) — tài khoản quản trị, hoặc chủ trì theo dõi khi minh chứng chưa bị trả
+// lại (mọi lúc, kể cả việc đã hoàn thành / đã đánh giá); gỡ — chỉ tài khoản quản trị. m: dòng minh chứng (hop_le false = bị trả lại).
+export const duocSuaMinhChung = (u, r, m) => Boolean(u) && (laToanQuyen(u) || (Boolean(r) && chuTriTheoDoi(r) === u.id && m?.hop_le !== false));
+export const duocGoMinhChung = (u) => laToanQuyen(u);
 // Lần gia hạn tiếp theo nếu lùi hạn (đúng như hàm DB: lùi = so_lan_gia_han + 1, rút ngắn không cộng). → chữ ghi chú dưới ô hạn mới. homNay: hạn mới
 // không trước hôm nay (trừ tài khoản toàn quyền — choQuaKhu, đính chính).
 export function ghiChuHanMoi(r, hanMoi, { homNay = '', choQuaKhu = false } = {}) {

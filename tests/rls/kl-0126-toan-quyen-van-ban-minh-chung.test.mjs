@@ -2,7 +2,7 @@
 // ngày nhận chép từ văn bản đổi theo — không sau ngày hoàn thành của việc, xoá thì về ước tính; nhật ký mỗi việc + nhật ký hệ thống; chặn: ngày ban
 // hành sau hạn của việc, Kết luận BTV thiếu số hội nghị, đổi sang Thông báo khi còn việc "Không thuộc", trùng văn bản) và sửa / gỡ minh chứng đã nộp
 // (bản chụp minh_chung_lich_su; sửa ngày văn bản của minh chứng hợp lệ → ngày hoàn thành theo; gỡ minh chứng hợp lệ cuối cùng → việc mở lại, không
-// phải cuối cùng → ngày hoàn thành theo minh chứng còn lại; tệp của minh chứng đã gỡ người tải lên không xoá được). Chánh VP thật, chủ trì bị chặn;
+// phải cuối cùng → ngày hoàn thành theo minh chứng còn lại; tệp của minh chứng đã gỡ người tải lên không xoá được). Chánh VP thật bị chặn, chủ trì bị chặn gỡ (0130: chủ trì theo dõi sửa được — kl-0130);
 // bản chụp đọc theo phạm vi, không ghi thẳng. demo_e2e_tq bật cờ tạm. Khoá "KL-0126"; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';

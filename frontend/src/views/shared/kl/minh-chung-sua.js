@@ -1,7 +1,9 @@
-// Sửa / gỡ minh chứng đã nộp (v3.29, 0126 — chủ dự án quyết 22/10/2026, CAU-HOI O-6): chỉ tài khoản quản trị (toàn quyền). Nút "Sửa" / "Gỡ" cạnh
-// từng minh chứng trong ngăn chi tiết. Sửa: số hiệu, ngày văn bản, cấp nhận, trích yếu, mô tả kết quả (minh chứng chữ cũ: nội dung); sửa ngày văn
-// bản của minh chứng đã làm việc hoàn thành → ngày hoàn thành theo. Gỡ: lý do bắt buộc; tệp đính kèm giữ trong kho; gỡ minh chứng hợp lệ cuối cùng
-// thì việc mở lại (như "Trả lại"). Hàm sua_minh_chung / go_minh_chung là chốt; bản cũ chụp vào minh_chung_lich_su; Diễn biến + tin báo chủ trì.
+// Sửa / gỡ minh chứng đã nộp (v3.29, 0126 — CAU-HOI O-6: tài khoản quản trị; v3.32, 0130 — CAU-HOI R-1…R-3: thêm chủ trì theo dõi sửa minh chứng
+// chưa bị trả lại của việc mình, mọi lúc, kể cả thay tệp; gỡ vẫn chỉ tài khoản quản trị). Nút "Sửa" / "Gỡ" cạnh từng minh chứng trong ngăn chi tiết.
+// Sửa: số hiệu, ngày văn bản, cấp nhận, trích yếu, mô tả kết quả (minh chứng chữ cũ: nội dung), tệp (tải lên trước, lưu lỗi thì xoá tệp vừa tải);
+// sửa ngày văn bản của minh chứng đã làm việc hoàn thành → ngày hoàn thành theo. Gỡ: lý do bắt buộc; tệp đính kèm giữ trong kho; gỡ minh chứng hợp
+// lệ cuối cùng thì việc mở lại (như "Trả lại"). Hàm sua_minh_chung / go_minh_chung là chốt; bản cũ chụp vào minh_chung_lich_su; Diễn biến + tin báo
+// người liên quan, người giao việc, người nộp.
 import { $, show, setText, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
@@ -9,7 +11,9 @@ import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { danhMucKl } from '../../../lib/kl/du-lieu.js';
 import { loadMinhChung } from '../../../lib/kl/minh-chung.js';
 import { suaMinhChung, goMinhChung } from '../../../lib/kl/quyen-them-db.js';
-import { duocSuaMinhChung } from '../../../lib/kl/quyen-them.js';
+import { duocSuaMinhChung, duocGoMinhChung } from '../../../lib/kl/quyen-them.js';
+import { NHAN_TEP, loiTep } from '../../../lib/kl/tep-ten.js';
+import { taiLenTep, xoaTepChuaGan } from '../../../lib/kl/tep-minh-chung.js';
 
 let sauHanhDong = async () => {};
 let cu = null;   // minh chứng đang sửa (đọc lại lúc mở hộp)
@@ -17,9 +21,10 @@ const O_MC = [['so_hieu', 'smcSoHieu', 'số hiệu'], ['ngay_van_ban', 'smcNgay
   ['mo_ta_ket_qua', 'smcMoTa', 'mô tả kết quả'], ['noi_dung_chu', 'smcNoiDung', 'nội dung']];
 
 // Nút cạnh minh chứng (trong .mc-nut) và ô lý do gỡ (dưới minh chứng).
-export const nutSuaMcHtml = (r, m) => (duocSuaMinhChung(state.user)
-  ? `<button type="button" class="nut nho" data-action="moSuaMinhChung" data-id="${m.id}" data-nv="${r.id}">Sửa</button><button type="button" class="nut nho" data-action="moO" data-o="mcGo-${m.id}">Gỡ</button>` : '');
-export const oGoMcHtml = (r, m) => (duocSuaMinhChung(state.user) ? `<form class="o" id="mcGo-${m.id}" data-submit="goMinhChung" data-id="${m.id}" data-nv="${r.id}">
+export const nutSuaMcHtml = (r, m) => (duocSuaMinhChung(state.user, r, m)
+  ? `<button type="button" class="nut nho" data-action="moSuaMinhChung" data-id="${m.id}" data-nv="${r.id}">Sửa</button>` : '')
+  + (duocGoMinhChung(state.user) ? `<button type="button" class="nut nho" data-action="moO" data-o="mcGo-${m.id}">Gỡ</button>` : '');
+export const oGoMcHtml = (r, m) => (duocGoMinhChung(state.user) ? `<form class="o" id="mcGo-${m.id}" data-submit="goMinhChung" data-id="${m.id}" data-nv="${r.id}">
     <small>Gỡ minh chứng ${escapeHtml(m.so_hieu || '')}: bản cũ được lưu lại, tệp đính kèm giữ trong kho; gỡ minh chứng hợp lệ cuối cùng thì nhiệm vụ mở lại.</small>
     <input name="ly_do" required maxlength="500" placeholder="Lý do gỡ (bắt buộc)" aria-label="Lý do gỡ minh chứng">
     <button type="submit" class="nut lam">Gỡ minh chứng</button><button type="button" class="nut" data-action="dongO" data-o="mcGo-${m.id}">Huỷ</button></form>` : '');
@@ -28,7 +33,7 @@ const template = `
 <div id="smcModal" class="modal-nen hidden" role="dialog" aria-modal="true" aria-labelledby="smcTieuDe">
   <form class="modal" data-submit="luuSuaMinhChung" novalidate>
     <h2 id="smcTieuDe" class="modal-tieu-de">Sửa minh chứng</h2>
-    <p class="chu-phu mt-1 mb-4">Bản trước khi sửa được lưu lại. Sửa ngày văn bản của minh chứng đã làm nhiệm vụ hoàn thành thì ngày hoàn thành đổi theo.</p>
+    <p class="chu-phu mt-1 mb-4">Bản trước khi sửa được lưu lại; người giao việc và lãnh đạo liên quan được báo. Sửa ngày văn bản của minh chứng đã làm nhiệm vụ hoàn thành thì ngày hoàn thành đổi theo.</p>
     <div id="smcSoWrap">
       <label for="smcSoHieu" class="nhan">Số hiệu văn bản</label><input type="text" id="smcSoHieu" class="o-nhap" autocomplete="off">
       <div class="cot-2 mt-3">
@@ -37,6 +42,9 @@ const template = `
       </div>
       <div class="mt-3"><label for="smcTrichYeu" class="nhan">Trích yếu văn bản</label><input type="text" id="smcTrichYeu" class="o-nhap" maxlength="300"></div>
       <div class="mt-3"><label for="smcMoTa" class="nhan">Mô tả kết quả <span class="chu-phu">tối đa 600 ký tự</span></label><textarea id="smcMoTa" class="o-nhap" rows="3" maxlength="600"></textarea></div>
+      <div class="mt-3 o-tep" id="smcTepWrap"><span class="nhan" id="smcTepNhan">Tệp văn bản kết quả <span class="chu-phu">thay tệp: PDF, Word, Excel, ảnh; tối đa 10 MB</span></span>
+        <div class="o-tep-hang"><input type="file" id="smcTep" class="an-tep" accept="${NHAN_TEP}" aria-labelledby="smcTepNhan">
+          <label class="nut nho" for="smcTep">Chọn tệp mới…</label><span class="ten-tep" id="smcTepTen"></span></div></div>
     </div>
     <div id="smcChuWrap" class="mt-3"><label for="smcNoiDung" class="nhan">Nội dung (minh chứng dạng chữ)</label><textarea id="smcNoiDung" class="o-nhap" rows="3"></textarea></div>
     <p id="smcDoi" class="chu-phu mt-2" aria-live="polite"></p>
@@ -46,13 +54,23 @@ const template = `
   </form>
 </div>`;
 
+const tepMoi = () => (cu?.loai === 'so_hieu' ? $('smcTep').files?.[0] || null : null);
+const tenTepCu = () => (cu?.tep_path ? `Đang có: ${cu.tep_ten || cu.tep_path.split('/').pop()}` : 'Chưa có tệp');
 function thayDoi() {
   const thay = {};
   O_MC.forEach(([cot, id]) => { const moi = $(id).value.trim(); if (moi !== String(cu?.[cot] ?? '')) thay[cot] = moi || null; });
   if (cu?.loai !== 'chu_cu') delete thay.noi_dung_chu;
   return thay;
 }
-const capNhat = () => { const ten = Object.keys(thayDoi()).map((c) => O_MC.find(([k]) => k === c)[2]); setText('smcDoi', ten.length ? `Sẽ sửa: ${ten.join(', ')}.` : 'Chưa đổi ô nào.'); };
+const capNhat = () => {
+  const ten = Object.keys(thayDoi()).map((c) => O_MC.find(([k]) => k === c)[2]).concat(tepMoi() ? ['tệp'] : []);
+  setText('smcDoi', ten.length ? `Sẽ sửa: ${ten.join(', ')}.` : 'Chưa đổi ô nào.');
+  if (cu?.loai === 'so_hieu') setText('smcTepTen', tepMoi() ? `Tệp mới: ${tepMoi().name}` : tenTepCu());
+};
+function chonTep() {
+  const f = $('smcTep').files?.[0]; const loi = f ? loiTep(f) : null;
+  if (loi) { notifyError(loi); $('smcTep').value = ''; }
+}
 
 async function moSuaMinhChung({ id, nv }) {
   try { cu = (await loadMinhChung(nv)).find((m) => m.id === id) || null; } catch (e) { notifyError(loiDeHieu(e)); return; }
@@ -60,7 +78,8 @@ async function moSuaMinhChung({ id, nv }) {
   setText('smcTieuDe', `Sửa minh chứng ${cu.so_hieu || ''}`.trim());
   $('smcCap').innerHTML = '<option value="">— Chọn cấp nhận —</option>' + (danhMucKl().cap || []).map((c) => `<option value="${escapeHtml(c.ma)}">${escapeHtml(c.ten)}</option>`).join('');
   O_MC.forEach(([cot, oid]) => { $(oid).value = cu[cot] ?? ''; });
-  show('smcChuWrap', cu.loai === 'chu_cu');
+  $('smcTep').value = '';
+  show('smcChuWrap', cu.loai === 'chu_cu'); show('smcTepWrap', cu.loai === 'so_hieu');
   $('smcLyDo').value = ''; $('smcLuu').disabled = false;
   capNhat();
   show('smcModal', true);
@@ -68,18 +87,29 @@ async function moSuaMinhChung({ id, nv }) {
 }
 const dongSuaMinhChung = () => show('smcModal', false);
 
+// Thiếu ô bắt buộc sau khi sửa (cùng quy tắc sua_minh_chung — DB là chốt): báo trước khi tải tệp (tới 10 MB) lên rồi mới bị từ chối.
+const thieuBatBuoc = (mc, thay) => mc.loai === 'so_hieu' && ['so_hieu', 'ngay_van_ban', 'cap_nhan'].some((k) => !(k in thay ? thay[k] : mc[k]));
+
 async function luuSuaMinhChung() {
-  const thay = thayDoi(); const lyDo = $('smcLyDo').value.trim();
-  if (!cu) return;
-  if (!Object.keys(thay).length) { notifyError('Chưa đổi ô nào.'); return; }
+  const mc = cu;   // giữ minh chứng của lượt lưu này: trong lúc tải tệp, người dùng có thể Huỷ và mở hộp sửa minh chứng khác (cu đổi)
+  const thay = thayDoi(); const lyDo = $('smcLyDo').value.trim(); const f = tepMoi();
+  if (!mc) return;
+  if (!Object.keys(thay).length && !f) { notifyError('Chưa đổi ô nào.'); return; }
+  if (thieuBatBuoc(mc, thay)) { notifyError('Minh chứng phải có số hiệu, ngày văn bản và cấp nhận.'); return; }
   if (!lyDo) { notifyError('Ghi lý do sửa (bắt buộc).'); $('smcLyDo').focus(); return; }
   $('smcLuu').disabled = true;
+  let path = null;
   try {
-    await suaMinhChung(cu.id, thay, lyDo);
-    notifySuccess('Đã sửa minh chứng. Bản cũ được lưu lại; chủ trì theo dõi được báo.');
-    dongSuaMinhChung();
-    await sauHanhDong(cu.nhiem_vu_id);
-  } catch (e) { notifyError(loiDeHieu(e)); $('smcLuu').disabled = false; }
+    if (f) { path = await taiLenTep(mc.nhiem_vu_id, f); Object.assign(thay, { tep_path: path, tep_ten: f.name }); }   // tải lên trước, DB kiểm tệp có thật
+    await suaMinhChung(mc.id, thay, lyDo);
+  } catch (e) {
+    if (path) await xoaTepChuaGan(path);
+    notifyError(loiDeHieu(e)); if (cu === mc) $('smcLuu').disabled = false;
+    return;
+  }
+  notifySuccess('Đã sửa minh chứng. Bản cũ được lưu lại; người giao việc và lãnh đạo liên quan được báo.');
+  if (cu === mc) dongSuaMinhChung();
+  try { await sauHanhDong(mc.nhiem_vu_id); } catch (e) { notifyError(loiDeHieu(e)); }   // đã lưu: lỗi nạp lại không xoá tệp vừa gắn
 }
 
 async function goMinhChungAction({ id, nv }, form) {
@@ -97,6 +127,7 @@ async function goMinhChungAction({ id, nv }, form) {
 export function mountMinhChungSua(registerActions, napLai) {
   sauHanhDong = napLai;
   $('modalRoot').insertAdjacentHTML('beforeend', template);
+  $('smcTep').addEventListener('change', chonTep);   // gắn trước: tệp sai loại / quá cỡ bị bỏ trước khi capNhat đọc
   ['input', 'change'].forEach((ev) => $('smcModal').addEventListener(ev, capNhat));
   registerActions({ moSuaMinhChung, dongSuaMinhChung, luuSuaMinhChung, goMinhChung: goMinhChungAction });
 }
