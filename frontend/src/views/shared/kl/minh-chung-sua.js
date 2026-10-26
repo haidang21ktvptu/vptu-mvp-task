@@ -87,20 +87,29 @@ async function moSuaMinhChung({ id, nv }) {
 }
 const dongSuaMinhChung = () => show('smcModal', false);
 
+// Thiếu ô bắt buộc sau khi sửa (cùng quy tắc sua_minh_chung — DB là chốt): báo trước khi tải tệp (tới 10 MB) lên rồi mới bị từ chối.
+const thieuBatBuoc = (mc, thay) => mc.loai === 'so_hieu' && ['so_hieu', 'ngay_van_ban', 'cap_nhan'].some((k) => !(k in thay ? thay[k] : mc[k]));
+
 async function luuSuaMinhChung() {
+  const mc = cu;   // giữ minh chứng của lượt lưu này: trong lúc tải tệp, người dùng có thể Huỷ và mở hộp sửa minh chứng khác (cu đổi)
   const thay = thayDoi(); const lyDo = $('smcLyDo').value.trim(); const f = tepMoi();
-  if (!cu) return;
+  if (!mc) return;
   if (!Object.keys(thay).length && !f) { notifyError('Chưa đổi ô nào.'); return; }
+  if (thieuBatBuoc(mc, thay)) { notifyError('Minh chứng phải có số hiệu, ngày văn bản và cấp nhận.'); return; }
   if (!lyDo) { notifyError('Ghi lý do sửa (bắt buộc).'); $('smcLyDo').focus(); return; }
   $('smcLuu').disabled = true;
   let path = null;
   try {
-    if (f) { path = await taiLenTep(cu.nhiem_vu_id, f); Object.assign(thay, { tep_path: path, tep_ten: f.name }); }   // tải lên trước, DB kiểm tệp có thật
-    await suaMinhChung(cu.id, thay, lyDo);
-    notifySuccess('Đã sửa minh chứng. Bản cũ được lưu lại; người giao việc và lãnh đạo liên quan được báo.');
-    dongSuaMinhChung();
-    await sauHanhDong(cu.nhiem_vu_id);
-  } catch (e) { if (path) await xoaTepChuaGan(path); notifyError(loiDeHieu(e)); $('smcLuu').disabled = false; }
+    if (f) { path = await taiLenTep(mc.nhiem_vu_id, f); Object.assign(thay, { tep_path: path, tep_ten: f.name }); }   // tải lên trước, DB kiểm tệp có thật
+    await suaMinhChung(mc.id, thay, lyDo);
+  } catch (e) {
+    if (path) await xoaTepChuaGan(path);
+    notifyError(loiDeHieu(e)); if (cu === mc) $('smcLuu').disabled = false;
+    return;
+  }
+  notifySuccess('Đã sửa minh chứng. Bản cũ được lưu lại; người giao việc và lãnh đạo liên quan được báo.');
+  if (cu === mc) dongSuaMinhChung();
+  try { await sauHanhDong(mc.nhiem_vu_id); } catch (e) { notifyError(loiDeHieu(e)); }   // đã lưu: lỗi nạp lại không xoá tệp vừa gắn
 }
 
 async function goMinhChungAction({ id, nv }, form) {

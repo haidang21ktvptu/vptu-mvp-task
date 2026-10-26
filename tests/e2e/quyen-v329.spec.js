@@ -5,7 +5,8 @@
 // 2. Thư ký Thường trực (demo_e2e_tk, cờ tạm): việc ngoài phạm vi cũ không còn "Chỉ xem"; nộp minh chứng → hoàn thành; đổi chủ trì theo dõi.
 // 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa văn bản giao" (trích yếu), "Sửa toàn bộ thông tin" (ghi chú),
 //    "Sửa" minh chứng (trích yếu), "Mở lại nhiệm vụ" (minh chứng chuyển "Bị trả lại").
-// 4. v3.32 (0130): chủ trì theo dõi (demo_e2e_nv) sửa minh chứng việc đã hoàn thành, đã đánh giá — đổi số hiệu, thay tệp; không có nút "Gỡ".
+// 4. v3.32 (0130): chủ trì theo dõi (demo_e2e_nv) sửa minh chứng việc đã hoàn thành, đã có chất lượng — đổi số hiệu, gắn tệp qua ô "Chọn tệp mới…"
+//    (đường thay tệp đã có, tệp cũ giữ: RLS kl-0130); không có nút "Gỡ".
 // Dữ liệu riêng theo khoá E2E-TEST-Q329-<project>; cờ thu lại ở afterAll. Chạy MỘT MÌNH (project v329-quyen, nối cuối chuỗi): đổi cờ tài khoản dùng chung.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
@@ -157,7 +158,7 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
     await datCo(db, TQ_ID, { toan_quyen: false });
   });
 
-  test('4. (v3.32 — 0130) Chủ trì sửa minh chứng việc đã hoàn thành, đã đánh giá: đổi số hiệu, thay tệp; không có nút Gỡ; đánh giá giữ nguyên', async ({ browser }, testInfo) => {
+  test('4. (v3.32 — 0130) Chủ trì sửa minh chứng việc đã hoàn thành, đã có chất lượng: đổi số hiệu, gắn tệp mới; không có nút Gỡ; chất lượng giữ nguyên', async ({ browser }, testInfo) => {
     await voiPhien(browser, 'E2E_NV', testInfo, async (p) => {
       await p.goto(`./Viec-cua-toi/${v.MC_CT.ma}`);
       const ngan = p.locator(`#nganCT #klChiTiet-${v.MC_CT.id}`);
