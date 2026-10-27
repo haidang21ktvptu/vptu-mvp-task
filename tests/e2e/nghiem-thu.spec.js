@@ -88,6 +88,11 @@ test.describe.serial('Đợt D — nộp minh chứng là hoàn thành; trả l�
     expect(v).toEqual({ trang_thai: 'QUA_HAN_NGHIEM_THU', nguoi_chiu_cham: ID.e2eTp, phong_chiu_cham: 'E2E_RT' });
     await tp.locator('#navCanBo').click();
     await expect(tp.locator(`#viewCanBo [data-action="moNganNguoi"][data-id="${ID.e2eTp}"]`)).toContainText('quá hạn', NAP);   // v3.29: ghi theo nghĩa (mức Đỏ)
+    // v3.33 (CAU-HOI S-4): Trưởng phòng có Báo cáo — cấu hình mặc định: phạm vi phòng, không nút Toàn Văn phòng (staging bật xem toàn bộ: Toàn VP)
+    const tb = Number((await db.from('kl_cau_hinh').select('gia_tri').eq('khoa', 'xem_toan_bo').maybeSingle()).data?.gia_tri) === 2;
+    await tp.locator('#navBaoCao').click();
+    await expect(tp.locator('#viewBaoCao')).toHaveAttribute('data-pham-vi', tb ? 'toan' : 'toi', NAP);
+    await expect(tp.locator('#bcTheoPhong')).toBeVisible(); if (!tb) await expect(tp.locator('#bcToanBo')).toBeHidden();
   });
 
   test('5. Việc Thường trực giao cho Chánh VP: thư ký xác nhận minh chứng cũ thay mặt Thường trực → hoàn thành', async ({ browser }, testInfo) => {

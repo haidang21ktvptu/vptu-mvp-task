@@ -396,3 +396,17 @@ minh chứng." Trả lời ba câu hỏi và duyệt kế hoạch cùng ngày. B
 | R-1 | Chủ trì được sửa những gì? | **Mọi thông tin và thay tệp**: số hiệu, ngày văn bản, cấp nhận, trích yếu, mô tả kết quả (minh chứng chữ cũ: nội dung); thay hoặc thêm tệp với minh chứng có số hiệu (không bỏ tệp; tệp cũ giữ trong kho). Đổi ngày văn bản của minh chứng đã làm việc hoàn thành → ngày hoàn thành đổi theo. Chủ trì = cán bộ chủ trì theo dõi; việc giao cho phòng / Văn phòng → Trưởng phòng / Chánh Văn phòng (người đại diện, Q-1). Mỗi lần sửa: lý do bắt buộc, lưu bản cũ, ghi Diễn biến, báo người giao việc và lãnh đạo liên quan. | RLS `kl-0130`; e2e `quyen-v329` |
 | R-2 | Sửa đến khi nào? | **Bất cứ lúc nào** — kể cả việc đã hoàn thành, đã được lãnh đạo đánh giá chất lượng (đánh giá giữ nguyên; lãnh đạo nhận tin, cần thì đánh giá lại). Riêng minh chứng **đã bị trả lại** không sửa (giữ làm vết của lần trả lại) — chủ trì nộp minh chứng mới. | RLS `kl-0130` |
 | R-3 | Chủ trì có gỡ (xoá) minh chứng? | **Không, chỉ sửa.** Gỡ minh chứng vẫn chỉ tài khoản quản trị (QT-13 d). | RLS `kl-0130`, `kl-0126` |
+
+## Nhóm S — Quyết định 27/10/2026: mọi tài khoản theo dõi toàn Văn phòng, chỉ thao tác việc được phân công (v3.33, chỉ giao diện)
+
+Chủ dự án (27/10/2026, 10:53, kèm hình Tổng quan của một Phó Chánh Văn phòng ở "Toàn Văn phòng" và bảng Báo cáo "Theo phòng chuyên môn" chỉ có hai
+phòng phụ trách): "Tôi cần mọi tài khoản đều theo dõi được các nhiệm vụ của cả văn phòng → Chỉ có thể thao tác được với các nhiệm vụ được phân công
+phụ trách … ở tổng quan nhìn được số liệu nhưng ở báo cáo lại chỉ nhìn được lĩnh vực phụ trách → Chỉnh sửa ngay." Trả lời hai câu hỏi và duyệt kế
+hoạch cùng ngày. Áp dụng khi cấu hình `xem_toan_bo = 2` (GV-21, đang bật trên production); quyền ghi không đổi.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| S-1 | Báo cáo hiển thị theo phạm vi nào? | **Mặc định Toàn Văn phòng** (như Tổng quan), nút **Phạm vi của tôi**; dải số, bảng, danh sách khi bấm, "Việc cần lãnh đạo quyết định", In, Xuất Excel theo phạm vi đang xem (dòng đầu trang, sheet "Kỳ báo cáo" ghi phạm vi). Thay ghi chú "Báo cáo luôn theo phạm vi phụ trách" ở P-1. | e2e `xem-toan-bo` test 5 |
+| S-2 | Danh sách Nhiệm vụ? | Mở từ menu là **Toàn Văn phòng** (trước mặc định "Phạm vi của tôi"); "Việc của tôi" của chuyên viên giữ như cũ; lối vào từ màn khác (Cần xử lý, chip lọc, tìm nhanh) giữ bộ lọc truyền sang. | e2e `xem-toan-bo` test 5 |
+| S-3 | Màn Cán bộ? | **Toàn Văn phòng** mặc định (Lãnh đạo Văn phòng rồi mọi phòng, mọi cán bộ), nút Phạm vi của tôi; Giao lại / Nhắc chỉ ở việc trong phạm vi phụ trách. | e2e `xem-toan-bo` test 5 |
+| S-4 | Báo cáo cho Trưởng phòng, chuyên viên? | **Có**: Trưởng phòng luôn có mục Báo cáo; chuyên viên có khi đã có Tổng quan (bật xem toàn bộ hoặc xem cả phòng). Khi xem toàn bộ, tên mục bỏ "của phòng" / "thuộc quyền": "Nhiệm vụ", "Cán bộ" (chuyên viên: "Toàn bộ nhiệm vụ"). | unit `xem-toan-bo` |

@@ -102,7 +102,7 @@ export function registerA2View() {
           <div class="cot-chinh">
             <section class="tam hidden" id="ptChiDao"></section>
             <section class="tam"><div class="tam-dau"><h2>Việc quá hạn và sắp đến hạn trong phòng</h2><span id="ptTom"></span></div><div id="ptDo"></div><div id="ptVang"></div>
-              <div class="them"><button type="button" class="nut nho" data-action="openKl">Xem đủ nhiệm vụ của phòng</button></div></section>
+              <div class="them"><button type="button" class="nut nho" data-action="openKl" data-pham-vi="toi">Xem đủ nhiệm vụ của phòng</button></div></section>
             <section class="tam hidden" id="ptMc"></section>
           </div>
           <aside class="cot-phu">

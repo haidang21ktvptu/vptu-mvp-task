@@ -7,7 +7,7 @@ import { state } from '../../../lib/state.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../../components/toast.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { xacNhanNhanViec, chuyenVienXemPhong } from '../../../lib/kl/du-lieu.js';
+import { xacNhanNhanViec, chuyenVienXemPhong, xemToanBo } from '../../../lib/kl/du-lieu.js';
 import { datCapQuyetDinh, deNghiTuChoi } from '../../../lib/kl/dieu-hanh.js';
 import { napLaiViec } from './nap-lai-viec.js';
 import { lamMoiHuyHieu } from '../../../features/huy-hieu.js';
@@ -37,10 +37,13 @@ export const duocGiaoViec = () => ['A1', 'A2', 'A3'].includes(state.user?.role_g
 // Chuyên viên thường: màn này là "Việc của tôi" (mặc định lọc việc mình chủ trì theo dõi). Chuyên viên giữ quyền quản trị nhiệm vụ vào
 // từ mục "Toàn bộ nhiệm vụ" (menu.js) nên không lọc — việc của riêng họ đã có màn hình điều hành; tìm nhanh (tim-nhanh.js) cùng quy tắc.
 export const chiViecCuaToi = () => state.user?.role_group === 'A3' && !state.user?.quan_tri_kl;
+let toanBoDaChon = true;   // v3.33: Toàn Văn phòng / Phạm vi của tôi người dùng chọn lần cuối (giữ trong phiên, như Tổng quan, Báo cáo)
 const TIEU_DE = { A0: 'Toàn bộ nhiệm vụ', A2: 'Nhiệm vụ của phòng', A3: 'Việc của tôi' };
 
 // Mở màn hình; loc (tuỳ chọn) = bộ lọc do màn hình khác truyền sang (thay thế toàn bộ bộ lọc hiện có). A3 thường mặc định = việc của tôi.
 // phong = true (0086, chuyên viên xem cả phòng): tiêu đề "Nhiệm vụ của phòng", không lọc (RLS đã giới hạn trong phòng), hiện nút phạm vi.
+// v3.33 (chủ dự án 27/10/2026 — CAU-HOI S-2): cấu hình xem toàn bộ bật, mở không kèm bộ lọc (menu) → mặc định Toàn Văn phòng (trừ "Việc của tôi"
+// của chuyên viên); lối vào từ màn khác giữ bộ lọc được truyền. Đang Toàn Văn phòng: tiêu đề "Nhiệm vụ" / "Toàn bộ nhiệm vụ" (danh-sach.js).
 export function openKl(loc, phong = false) {
   showSection('viewKl');
   setActiveNav(chiViecCuaToi() && !phong ? 'navDieuHanh' : 'navKl');   // chuyên viên xem "việc của tôi" (0086: navKl là Nhiệm vụ của phòng)
@@ -49,10 +52,11 @@ export function openKl(loc, phong = false) {
   const thuong = loc?.toanBo && state.user?.role_group === 'A3' ? 'Toàn bộ nhiệm vụ' : phong ? 'Nhiệm vụ của phòng'
     : (state.user?.role_group === 'A3' && state.user?.quan_tri_kl ? 'Toàn bộ nhiệm vụ' : TIEU_DE[state.user?.role_group]) || 'Nhiệm vụ';
   $('klTieuDe').dataset.thuong = thuong;   // render() đổi về tên này khi rời chế độ "Việc tôi đã giao" (bỏ chip, Toàn Văn phòng)
+  $('klTieuDe').dataset.toanVp = ['A0', 'A3'].includes(state.user?.role_group) ? 'Toàn bộ nhiệm vụ' : 'Nhiệm vụ';   // v3.33: tên khi đang Toàn Văn phòng
   $('klTieuDe').textContent = loc?.daGiaoCuaToi ? 'Việc tôi đã giao' : thuong;
   if (loc?.daGiaoCuaToi) datLaiTheoDoi();   // v3.25: mở "Việc tôi đã giao" (v3.31) từ menu → ô Cần đôn đốc
   show('klPhamVi', phong);
-  const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : {});
+  const bo = loc || (chiViecCuaToi() && !phong ? { cuaToi: state.user.id } : xemToanBo() ? { toanBo: toanBoDaChon } : {});
   setKlLoc(bo, true);
   const nap = loadKl();
   batKlRealtime(klTheoSuKien, (m) => hienKetNoi('klKetNoi', m));
@@ -60,10 +64,10 @@ export function openKl(loc, phong = false) {
 }
 // Chuyên viên (cấu hình 2) mở "Nhiệm vụ của phòng"; nút phạm vi: Việc của tôi = lọc cuaToi, Cả phòng = bỏ lọc. Không có cấu hình → như Việc của tôi.
 const openKlPhong = () => openKl(null, chiViecCuaToi() && chuyenVienXemPhong());
-const klPhamVi = ({ pv }) => setKlLoc({ cuaToi: pv === 'toi' ? state.user.id : null });
+const klPhamVi = ({ pv }) => setKlLoc({ cuaToi: pv === 'toi' ? state.user.id : null, toanBo: false });   // v3.33: Việc của tôi / Cả phòng = trong phạm vi phòng
 // v3.23 (0103): chuyên viên mở "Toàn bộ nhiệm vụ" (menu khi cấu hình xem toàn bộ) — danh sách Toàn Văn phòng, chỉ xem việc ngoài phạm vi.
 const openKlToanBo = () => { const p = openKl({ toanBo: true }); setActiveNav('navKl'); return p; };
-const klToanBo = ({ tb }) => doiKlToanBo(tb === '1');
+const klToanBo = ({ tb }) => { toanBoDaChon = tb === '1'; doiKlToanBo(toanBoDaChon); };
 
 // Realtime (B6): sự kiện của việc đã có trong danh sách → nạp lại riêng việc đó (dòng + ngăn chi tiết đang mở); còn lại nạp cả danh sách.
 async function klTheoSuKien(su) {
@@ -150,7 +154,7 @@ export function registerKlView() {
   const klXuatExcel = async () => {
     try { const { xuatNhiemVu } = await import('../../../lib/kl/xuat.js'); notifySuccess(`Đã xuất ${dsDangHien().length} nhiệm vụ ra tệp ${xuatNhiemVu(dsDangHien())}.`); } catch (e) { notifyError('Không xuất được Excel: ' + e.message); }
   };
-  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: () => openKl(), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
+  registerActions({ klXuatExcel, klIn: () => window.print(), openKl: (d) => openKl(d?.phamVi === 'toi' ? { toanBo: false } : undefined), openKlPhong, klPhamVi, openKlToanBo, klToanBo, loadKl, locKlNhom, boKlLoc, klSapXep: doiKlSapXep, klXoaLoc: xoaKlLoc, toggleKlChiTiet, chonKlRow, xacNhanNhanViec: xacNhanNhanViecAction, tuChoiNhanViec,
     klTrang: doiKlTrang, klTdLoc: locKlTd,
     dongKlChiTiet: () => { dongKlChiTiet(); boViec({ nguoiDung: true }); },   // nút "Đóng ngăn" của màn Nhiệm vụ: bỏ mã việc khỏi đường dẫn
     moViecTheoMa });

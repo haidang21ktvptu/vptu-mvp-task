@@ -10,6 +10,8 @@ import { lopMep, MOC_RA_SOAT, tenMuc } from '../../lib/kl/nhan.js';
 import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
+import { chiXem } from '../../lib/kl/pham-vi.js';
+import { NHAN_CHI_XEM } from './kl/dong.js';
 
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const duocChiDao = () => ['A1', 'A2'].includes(state.user?.role_group);
@@ -25,9 +27,9 @@ export function hanNgan(r, homNay = homNayVN()) {
 // Nhãn phụ: độ khẩn / Thường trực giao / thay mặt / từ chối (GĐ22) rồi số chỉ đạo chờ phản hồi.
 const nhanPhu = (r) => `${nhanGd22(r)} ${!r.bi_tu_choi && !r.tu_choi_cho && r.so_chi_dao_cho_phan_hoi > 0 ? `<span class="nhan-xam">${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi</span>` : ''}`;
 
-// Hai ô hành động một dòng dưới một việc (A1/A2): Giao lại, Nhắc.
+// Hai ô hành động một dòng dưới một việc (A1/A2): Giao lại, Nhắc. v3.33: việc ngoài phạm vi xử lý (Cán bộ — Toàn Văn phòng) chỉ xem.
 function hanhDongViecHtml(r, tienTo) {
-  if (!duocChiDao() || !mo(r)) return '';
+  if (!duocChiDao() || !mo(r) || chiXem(r)) return '';
   const ma = escapeHtml(r.ma);
   return `<div class="hanh-dong"><button type="button" class="nut lam" data-action="moO" data-o="${tienTo}GL-${r.id}">Giao lại</button>
       <button type="button" class="nut" data-action="moO" data-o="${tienTo}Nhac-${r.id}">Nhắc</button></div>
@@ -39,7 +41,7 @@ function hanhDongViecHtml(r, tienTo) {
 
 // Một dòng việc trong ngăn của người / trong hàng mở rộng của Báo cáo (nút Xem chi tiết mở ngăn chi tiết dùng chung).
 export function dongViecHtml(r, homNay, nutXem = true) {
-  return `<div class="nv-dong ${lopMep(r, state.user?.id)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<small>${escapeHtml(chuTriText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
+  return `<div class="nv-dong ${lopMep(r, state.user?.id)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b>${chiXem(r) ? NHAN_CHI_XEM : ''} ${escapeHtml(r.noi_dung)}<small>${escapeHtml(chuTriText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
       ${nutXem ? `<button type="button" class="nut nho" data-action="nganMoViec" data-id="${r.id}">Xem chi tiết</button>` : ''}</div>`;
 }
 

@@ -3,7 +3,9 @@
 // chuyên viên lẫn Trưởng phòng E2E_RT). Kiểm: menu không còn Nhắn tin, chuyên viên có Tổng quan (Toàn Văn phòng mặc định) + Toàn bộ nhiệm vụ; P3
 // ghi "Chỉ xem", ngăn chi tiết không nút ghi (cả với Trưởng phòng — không ô gửi chỉ đạo); bảng Việc của tôi (v3.25: người giao trên dòng, ngăn chi
 // tiết, Toàn VP — P3 chỉ xem);
-// vướng mắc gửi tới người được chọn (một tin cho đúng người); hộp Cập nhật có ô gửi tới; Giao việc có hướng dẫn hạn. Project riêng nối sau
+// vướng mắc gửi tới người được chọn (một tin cho đúng người); hộp Cập nhật có ô gửi tới; Giao việc có hướng dẫn hạn. v3.33 (CAU-HOI S-1…S-4):
+// Trưởng phòng có Báo cáo — mặc định Toàn Văn phòng (nhiều việc hơn "Phạm vi của tôi"); Nhiệm vụ mở ra đã Toàn Văn phòng; Cán bộ Toàn Văn phòng có
+// phòng Tổng hợp, ngăn người: việc chỉ xem không có Giao lại / Nhắc, việc trong phạm vi vẫn có. Project riêng nối sau
 // v3221-tvb (cấu hình chung — chạy một mình). Dữ liệu theo khoá riêng, tự dọn.
 import { test, expect } from '@playwright/test';
 import { NAP, nav, moGiaoViec } from './lib/app.js';
@@ -39,6 +41,8 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
       await expect(p.locator('#viewTongQuan')).toContainText('Toàn Văn phòng Tỉnh ủy');
       await p.locator('#tqToanBo [data-tb="0"]').click();
       await expect(p.locator('#tqToanBo [data-tb="0"]')).toHaveAttribute('aria-pressed', 'true');
+      await nav(p, 'navBaoCao');   // v3.33: chuyên viên có Tổng quan thì có Báo cáo — mặc định Toàn Văn phòng
+      await expect(p.locator('#viewBaoCao')).toHaveAttribute('data-pham-vi', 'toan', NAP);
       await expect(p.locator('#navKl')).toHaveText(/Toàn bộ nhiệm vụ/);
       await nav(p, 'navKl');
       await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
@@ -130,6 +134,47 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
       await p.locator('#klCapNhatModal [data-action="closeKlCapNhat"]').click();
       await moGiaoViec(p);
       await expect(p.locator('#gvGoiYHan')).toContainText('không xác định được thời hạn');
+    });
+  });
+
+  test('5. (v3.33) Trưởng phòng: Báo cáo Toàn Văn phòng mặc định; Nhiệm vụ mở ra Toàn Văn phòng; Cán bộ Toàn Văn phòng, việc chỉ xem không có Giao lại', async ({ browser }, testInfo) => {
+    await voiPhien(browser, 'E2E_TP', testInfo, async (p) => {
+      const tong = async () => Number(await p.locator('#bcThan .tq .o-so b').first().textContent());
+      await expect(p.locator('#navBaoCao')).toHaveText(/Báo cáo/);
+      await nav(p, 'navBaoCao');
+      await expect(p.locator('#viewBaoCao')).toHaveAttribute('data-pham-vi', 'toan', NAP);
+      await expect(p.locator('#bcToanBo [data-tb="1"]')).toHaveAttribute('aria-pressed', 'true');
+      await expect(p.locator('#bcKyMoTa')).toContainText('toàn Văn phòng Tỉnh ủy');
+      await expect(p.locator('#bcTheoPhong')).toContainText('Phòng Tổng hợp');   // P3 (phòng Tổng hợp) ngoài phạm vi Trưởng phòng E2E_RT
+      await p.locator('#bcTheoPhong tr.bc-hang', { hasText: 'Phòng Tổng hợp' }).first().locator('td.tieude').click();   // mở danh sách của dòng
+      const dongP3 = p.locator(`#bcMoRong #ngv-${p3.id}`); await expect(dongP3.locator('.nhan-chi-xem')).toBeVisible(NAP);
+      await dongP3.locator('[data-action="nganMoViec"]').click();
+      await expect(p.locator(`#nganCT #klChiTiet-${p3.id} [data-chi-xem]`)).toBeVisible(NAP);   // ngăn chi tiết chỉ xem
+      await p.locator('#nganCTDong').click(); await expect(p.locator('#nganCT')).toBeHidden();
+      const toan = await tong();
+      await p.locator('#bcToanBo [data-tb="0"]').click();
+      await expect(p.locator('#viewBaoCao')).toHaveAttribute('data-pham-vi', 'toi');
+      expect(await tong()).toBeLessThan(toan);
+      await expect(p.locator('#bcKyMoTa')).toContainText('phạm vi phụ trách của đồng chí');
+      await expect(p.locator('#navKl')).toHaveText(/^Nhiệm vụ$/);
+      await nav(p, 'navKl');
+      await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+      await expect(p.locator('#klToanBo [data-tb="1"]')).toHaveAttribute('aria-pressed', 'true');   // mở từ menu: Toàn Văn phòng
+      await expect(p.locator('#klTieuDe')).toHaveText('Nhiệm vụ');
+      await p.locator('#klTimKiem').fill(khoa);
+      await expect(p.locator(`#klRow-${p3.id} .nhan-chi-xem`)).toBeVisible(NAP);
+      await expect(p.locator('#navCanBo')).toHaveText(/^Cán bộ$/);
+      await nav(p, 'navCanBo');
+      await expect(p.locator('#viewCanBo')).toHaveAttribute('data-pham-vi', 'toan', NAP);
+      await expect(p.locator('#cb-TONG_HOP')).toBeVisible(NAP);
+      await p.locator(`#viewCanBo [data-action="moNganNguoi"][data-id="${ID.e2eOwner}"]`).click();   // chủ trì P3
+      await expect(p.locator(`#cbNgan #ngv-${p3.id}`)).toBeVisible(NAP);
+      await expect(p.locator(`#cbNgan [data-o="oNgGL-${p3.id}"]`)).toHaveCount(0);   // chỉ xem: không Giao lại / Nhắc
+      await p.locator(`#viewCanBo [data-action="moNganNguoi"][data-id="${ID.e2eCv}"]`).click();   // chủ trì P1 (trong phòng)
+      await expect(p.locator(`#cbNgan [data-o="oNgGL-${p1.id}"]`).first()).toBeVisible(NAP);
+      await p.locator('#cbToanBo [data-tb="0"]').click();
+      await expect(p.locator('#viewCanBo')).toHaveAttribute('data-pham-vi', 'toi');
+      await expect(p.locator('#cb-TONG_HOP')).toHaveCount(0);
     });
   });
 });

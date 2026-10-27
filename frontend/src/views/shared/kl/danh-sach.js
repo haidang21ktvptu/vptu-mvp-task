@@ -33,6 +33,7 @@ export const setKlSauKhiNap = (fn) => { sauKhiNap = fn; };
 export const getKlRows = () => kl.rows;
 export const timKlRow = (id) => kl.rows.find((r) => r.id === id);
 const coSo = () => (kl.loc.toanBo ? kl.rows : trongPhamVi(kl.rows));
+const coNutToanBo = () => xemToanBo() && kl.rows.some(chiXem);
 
 // Khoá lọc do màn hình điều hành đặt — hiện thành chip có nút bỏ; khoá ở ô chọn/ô tìm (đơn vị, kết luận, hội nghị, ngành, lĩnh vực) không hiện chip.
 const NHAN_CHIP = {
@@ -166,9 +167,10 @@ export function render(veLaiNgan = false) {
   if (veLaiNgan && dangMo && timKlRow(dangMo)) veLaiChiTiet(dangMo);
   setText('klSoDong', `${chuHienThi(p, list.length, goc.length)}${nhom && !theoDoi ? ` · ${tenNhom(nhom)}` : ''}`);
   $('klTrang').innerHTML = kl.inDayDu ? '' : nutTrangHtml(p, 'klTrang');
-  const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi đã giao' : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
+  const toanVP = kl.loc.toanBo && coNutToanBo();   // v3.33: đang Toàn Văn phòng (người xem có việc ngoài phạm vi)
+  const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi đã giao' : toanVP && td.dataset.toanVp ? td.dataset.toanVp : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
   setText('klPhuDe', theoDoi ? 'việc đồng chí đã giao hoặc nhập, do cán bộ, phòng khác chủ trì theo dõi — cột Tình hình cho biết việc cần đôn đốc'
-    : kl.loc.toanBo ? (laThuKyTT(state.user) ? 'toàn Văn phòng — thư ký Thường trực xử lý được mọi việc chưa hoàn thành; việc đã hoàn thành ngoài phạm vi ghi "Chỉ xem"'
+    : toanVP ? (laThuKyTT(state.user) ? 'toàn Văn phòng — thư ký Thường trực xử lý được mọi việc chưa hoàn thành; việc đã hoàn thành ngoài phạm vi ghi "Chỉ xem"'
       : 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết')
       : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
   dongBoNgan();
@@ -197,8 +199,9 @@ function veChip() {
   $('klChipLoc').innerHTML = chips.join('');
   $('klChipLoc').classList.toggle('hidden', chips.length === 0);
   // 0086: nút phạm vi của chuyên viên xem cả phòng (Việc của tôi / Cả phòng) luôn khớp khoá cuaToi — kể cả khi bỏ chip.
-  document.querySelectorAll('#klPhamVi button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.pv === 'toi') === Boolean(kl.loc.cuaToi))));
-  show('klToanBo', xemToanBo() && kl.rows.some(chiXem));   // v3.23 (0103): chỉ khi có việc ngoài phạm vi (Thường trực, Chánh VP vốn thấy hết)
+  const toanVP = kl.loc.toanBo && coNutToanBo();   // v3.33: đang Toàn Văn phòng thì "Cả phòng" không sáng
+  document.querySelectorAll('#klPhamVi button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pv === 'toi' ? Boolean(kl.loc.cuaToi) : !kl.loc.cuaToi && !toanVP)));
+  show('klToanBo', coNutToanBo());   // v3.23 (0103): chỉ khi có việc ngoài phạm vi (Thường trực, Chánh VP vốn thấy hết)
   document.querySelectorAll('#klToanBo button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.tb === '1') === Boolean(kl.loc.toanBo))));
 }
 
