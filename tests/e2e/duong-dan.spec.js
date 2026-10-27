@@ -171,9 +171,9 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
     await page.goto('./Viec-toi-theo-doi');   // v3.31: đường dẫn cũ — mở đúng "Việc tôi đã giao", thanh địa chỉ ghi đường dẫn mới
     await expect(page.locator('#klTieuDe')).toHaveText('Việc tôi đã giao', NAP);
     await expect.poll(() => duong(page)).toBe('/Viec-toi-da-giao');
-    await page.goto('./Bao-cao');
+    await page.goto('./Can-bo');   // v3.33: chuyên viên có Báo cáo khi Văn phòng bật xem toàn bộ / cả phòng — Cán bộ thì không bao giờ
     await expect(page.locator('#viewDieuHanh')).toBeVisible(NAP);
-    await expect(page.locator('#viewBaoCao')).toBeHidden();
+    await expect(page.locator('#viewCanBo')).toBeHidden();
     await expect(page.locator('#toastContainer')).toContainText('không thuộc chức năng của tài khoản đồng chí');
     await expect.poll(() => duong(page)).toBe('/Viec-cua-toi');
     await page.goto('./khong-co-trang-nay');

@@ -60,6 +60,22 @@ test('Menu: không còn Nhắn tin ở mọi vai; cấu hình xem toàn bộ →
   assert.equal(menuCuaVai(tk('A2')).find((m) => m.id === 'navTongQuan').label, 'Tổng quan phòng');
 });
 
+test('v3.33 (CAU-HOI S-2…S-4): Báo cáo cho Trưởng phòng (luôn), chuyên viên (khi có Tổng quan); xem toàn bộ → "Nhiệm vụ", "Cán bộ", chuyên viên "Toàn bộ nhiệm vụ"', () => {
+  const tk = (role_group, o = {}) => ({ id: 'x', role_group, department: 'TONG_HOP', ...o });
+  const nhan = (u, o, id) => menuCuaVai(u, o).find((m) => m.id === id)?.label;
+  const coBc = (u, o) => menuCuaVai(u, o).filter((m) => m.id === 'navBaoCao').length;
+  assert.equal(coBc(tk('A2')), 1); assert.equal(coBc(tk('A2'), { xemToanBo: true }), 1); assert.equal(coBc(tk('A1')), 1);
+  assert.equal(coBc(tk('A3')), 0, 'chuyên viên không có Tổng quan → không có Báo cáo');
+  assert.equal(coBc(tk('A3'), { xemToanBo: true }), 1); assert.equal(coBc(tk('A3'), { xemPhong: true }), 1); assert.equal(coBc(tk('A3'), { xemToanBo: true, xemPhong: true }), 1);
+  assert.equal(coBc(tk('A0'), { xemToanBo: true }), 0);
+  assert.ok(!menuCuaVai(tk('A3'), { xemToanBo: true }).find((m) => m.id === 'navBaoCao').duoi, 'Báo cáo không lên thanh dưới điện thoại');
+  assert.equal(nhan(tk('A2'), {}, 'navKl'), 'Nhiệm vụ của phòng'); assert.equal(nhan(tk('A2'), { xemToanBo: true }, 'navKl'), 'Nhiệm vụ');
+  assert.equal(nhan(tk('A2'), {}, 'navCanBo'), 'Cán bộ trong phòng'); assert.equal(nhan(tk('A2'), { xemToanBo: true }, 'navCanBo'), 'Cán bộ');
+  assert.equal(nhan(tk('A1'), {}, 'navCanBo'), 'Cán bộ thuộc quyền'); assert.equal(nhan(tk('A1'), { xemToanBo: true }, 'navCanBo'), 'Cán bộ');
+  assert.equal(nhan(tk('A0'), { xemToanBo: true }, 'navKl'), 'Toàn bộ nhiệm vụ');
+  assert.equal(nhan(tk('A3'), { xemPhong: true }, 'navKl'), 'Nhiệm vụ của phòng'); assert.equal(nhan(tk('A3'), { xemToanBo: true, xemPhong: true }, 'navKl'), 'Toàn bộ nhiệm vụ');
+});
+
 test('v3.23.1: người giao của văn bản = tài khoản tao_boi của việc giao thẳng (không tính việc giao tiếp xuống), nhiều việc trước', async () => {
   const { nguoiGiaoVanBan, nguoiGiaoText } = await import('../src/lib/kl/pham-vi.js');
   const ds = [{ tao_boi: 'u1' }, { tao_boi: 'u2' }, { tao_boi: 'u2' }, { tao_boi: 'u3', nhiem_vu_cha: 'x' }, { tao_boi: null }];

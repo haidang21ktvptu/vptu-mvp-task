@@ -2,12 +2,14 @@
 // mockup: bức tranh tải việc theo phòng rồi theo người, mỗi người một thanh Đỏ/Vàng/Đang làm (việc đang mở người đó là Owner tài khoản;
 // việc theo dõi ghi riêng, CH-2). Bấm một người → ngăn bên phải ngay trong trang (tải việc, việc mở, Giao lại / Nhắc), không rời mục; "Xem chi
 // tiết" một việc → ngăn chi tiết dùng chung (v9 đợt 2) mở chồng lên trang; ghi xong trong ngăn → trang tự nạp lại, giữ người đang mở.
+// v3.33 (chủ dự án 27/10/2026 — CAU-HOI S-3): cấu hình xem toàn bộ (0103) bật, người xem có việc ngoài phạm vi → mặc định TOÀN VĂN PHÒNG (Lãnh đạo
+// Văn phòng rồi mọi phòng, như màn của Thường trực; tải việc trên tatCa), nút "Phạm vi của tôi"; Giao lại / Nhắc chỉ ở việc trong phạm vi (ngan-viec.js).
 import { $, escapeHtml } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
-import { loadDanhMucKl, loadCauHinhKl, loadKlRows } from '../../lib/kl/du-lieu.js';
+import { loadDanhMucKl, loadCauHinhKl, loadKlRows, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { calculateGroupKPI, laOwnerPhong } from './kpi.js';
 import { CHAT_LUONG, tenMuc } from '../../lib/kl/nhan.js';
 import { setActiveNav, showSection } from '../shell/index.js';
@@ -20,6 +22,9 @@ const VANG = (r) => r.muc_canh_bao === 'VANG';
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const TIEU_DE = { A0: 'Cán bộ', A2: 'Cán bộ trong phòng' };
 let rowsHienTai = []; let nguoiDangMo = null;
+let trong = []; let tatCa = []; let cbToanBo = true;   // v3.33: việc trong phạm vi / mọi việc đọc được; đang chọn Toàn Văn phòng (giữ trong phiên)
+const coNutToanBo = () => xemToanBo() && tatCa.length > trong.length;
+const toanVP = () => coNutToanBo() && cbToanBo;
 
 // PR-2b (Mới 2): Đỏ = việc người này CHỊU CHẬM (nguoi_chiu_cham, DB tính — kể cả việc của phòng khác chờ họ nghiệm thu); việc họ chủ trì đã nộp,
 // quá hạn ở bước nghiệm thu tính "đang làm" (trung tính). tatCa: mọi dòng trong phạm vi (không chỉ của phòng) để thấy việc chờ nghiệm thu.
@@ -52,26 +57,30 @@ function phongHtml(ma, rows) {
     ${canBo.map((a) => nguoiHtml(a, cuaPhong, rows)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
 }
 
-// Phòng hiện: A2 phòng mình; A0 toàn Văn phòng (Lãnh đạo Văn phòng đứng đầu); A1 phòng có việc trong phạm vi hoặc có cán bộ dưới quyền.
-function danhSachPhong(me, rows) {
-  if (me.role_group === 'A2') return [me.department];
-  const cuaTaiKhoan = state.accounts.filter((a) => !a.is_system && a.department && (me.role_group === 'A0' || a.manager_id === me.id || me.is_chief)).map((a) => a.department);
+// Phòng hiện: A2 phòng mình; A0 / Toàn Văn phòng (v3.33) mọi phòng (Lãnh đạo Văn phòng đứng đầu); A1 phòng có việc trong phạm vi hoặc có cán bộ dưới quyền.
+function danhSachPhong(me, rows, toan = false) {
+  const tatCaPhong = me.role_group === 'A0' || toan;
+  if (me.role_group === 'A2' && !toan) return [me.department];
+  const cuaTaiKhoan = state.accounts.filter((a) => !a.is_system && a.department && (tatCaPhong || a.manager_id === me.id || me.is_chief)).map((a) => a.department);
   const ds = [...new Set([...rows.map((r) => r.owner_phong).filter(Boolean), ...cuaTaiKhoan])].filter((p) => p !== 'LANH_DAO_VAN_PHONG');
-  return me.role_group === 'A0' ? ['LANH_DAO_VAN_PHONG', ...ds] : ds;
+  return tatCaPhong ? ['LANH_DAO_VAN_PHONG', ...ds] : ds;
 }
+const nutPhamVi = () => (coNutToanBo() ? `<div class="pham-vi" id="cbToanBo" role="group" aria-label="Phạm vi số liệu">${[['1', 'Toàn Văn phòng'], ['0', 'Phạm vi của tôi']]
+  .map(([tb, ten]) => `<button type="button" data-action="cbToanBo" data-tb="${tb}" aria-pressed="${String((tb === '1') === toanVP())}">${ten}</button>`).join('')}</div>` : '');
 
 function ve() {
-  const me = state.user; const phong = danhSachPhong(me, rowsHienTai);
+  const me = state.user; const toan = toanVP(); rowsHienTai = toan ? tatCa : trong; const phong = danhSachPhong(me, rowsHienTai, toan);
+  $('viewCanBo').dataset.phamVi = toan ? 'toan' : 'toi';   // e2e: phạm vi đang vẽ
   $('viewCanBo').innerHTML = `
-    <div class="dau"><h1>${TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>tải việc theo người: quá hạn / sắp đến hạn / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
-      <div class="phai-dau"><button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
+    <div class="dau"><h1>${toan ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy — việc ngoài phạm vi xử lý của đồng chí chỉ xem; ' : ''}tải việc theo người: quá hạn / sắp đến hạn / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
+      <div class="phai-dau">${nutPhamVi()}<button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
     <div class="hai-ngan${nguoiDangMo ? ' mo' : ''}"><div class="cb">${phong.length ? phong.map((p) => phongHtml(p, rowsHienTai)).join('') : '<p class="trong">Không có phòng nào trong phạm vi của đồng chí.</p>'}</div>
       <aside class="ngan-ben${nguoiDangMo ? '' : ' hidden'}" id="cbNgan" aria-label="Chi tiết cán bộ đang chọn"></aside></div>`;
   if (nguoiDangMo) moNganNguoi({ id: nguoiDangMo });
 }
 
 async function napCanBo() {
-  try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); rowsHienTai = (await loadKlRows()).rows; } catch (e) { notifyError('Không đọc được nhiệm vụ: ' + e.message); return; }
+  try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); ({ rows: trong, tatCa } = await loadKlRows()); } catch (e) { notifyError('Không đọc được nhiệm vụ: ' + e.message); return; }
   ve();
 }
 async function openCanBo() {
@@ -94,7 +103,7 @@ function dongNganCanBo() {
 }
 
 export function registerCanBo() {
-  registerActions({ openCanBo, moNganNguoi, dongNganCanBo });
-  datNguonDong((id) => rowsHienTai.find((r) => r.id === id));
+  registerActions({ openCanBo, moNganNguoi, dongNganCanBo, cbToanBo: ({ tb }) => { cbToanBo = tb === '1'; nguoiDangMo = null; ve(); } });
+  datNguonDong((id) => tatCa.find((r) => r.id === id));   // mọi việc đọc được — việc ngoài phạm vi mở ngăn chỉ xem
   khiGhiTrongNgan('viewCanBo', napCanBo);
 }

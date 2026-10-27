@@ -167,6 +167,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     P2('3.12 Tổng quan phòng và Nhiệm vụ của phòng (khi Văn phòng bật cấu hình xem cả phòng)'),
     p('**Nhiệm vụ của phòng** mở danh sách mọi việc của phòng (việc phòng theo dõi hoặc phòng chủ trì) với nút **Việc của tôi / Cả phòng** ở đầu dải số; bấm một dòng để xem chi tiết, chỉ đạo, minh chứng và lịch sử — với việc của người khác, ngăn chi tiết không có nút Cập nhật / Nộp minh chứng. **Tổng quan phòng** giống Tổng quan của Trưởng phòng (mục 4.1): dải số theo tháng / quý / năm, dải cảnh báo Đỏ, bảng Theo cán bộ, Theo loại văn bản, Tiến độ theo văn bản; **thanh lọc** dưới dải số (Phạm vi: toàn bộ / việc của tôi; loại văn bản; cán bộ chủ trì; độ khẩn) lọc mọi khối bên dưới. Ô tìm nhanh trên đầu trang cũng tìm trong cả phòng.'),
     ...hinh('a3-12-nhiem-vu-phong.jpg', 'Nhiệm vụ của phòng (chuyên viên, cấu hình xem cả phòng): nút Việc của tôi / Cả phòng, ngăn chi tiết chỉ xem'),
+    luuY('Khi Văn phòng bật cấu hình **"mọi cán bộ xem toàn bộ nhiệm vụ"** (mục 8.4), menu chuyên viên có **Tổng quan**, **Toàn bộ nhiệm vụ** và (từ v3.33) **Báo cáo** (mục 5.7) — mở ra là số liệu, danh sách **toàn Văn phòng**; bấm **Phạm vi của tôi** để chỉ xem việc của mình. Việc ngoài phạm vi ghi "Chỉ xem": xem được chi tiết, chỉ đạo, minh chứng, diễn biến nhưng không có nút cập nhật, nộp minh chứng.'),
     // ───────────────────────── PHẦN 4
     P1('Phần 4. Dành cho Trưởng phòng'),
     p('Trưởng phòng nhìn thấy **mọi việc của phòng mình**, dùng hệ thống chủ yếu để **theo dõi và chỉ đạo**; việc nhập liệu do chuyên viên làm. Menu: **Tổng quan phòng**, **Cần xử lý**, **Giao việc trong phòng**, **Nhiệm vụ của phòng**, **Cán bộ trong phòng**, Nhắn tin.'),
@@ -226,6 +227,8 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     ...hinh('a2-05-nhiem-vu-phong-cat.jpg', 'Nhiệm vụ của phòng với bộ lọc và ngăn chi tiết'),
     p('**Cán bộ trong phòng**: mỗi cán bộ một dòng với thanh tải việc (quá hạn / sắp đến hạn / đang làm) và ghi chú "rảnh, có thể nhận thêm" — dùng để cân đối việc trước khi giao. Bấm tên để xem việc đang mở của người đó ngay bên phải, kèm nút **Giao lại** / **Nhắc** / **Xem chi tiết**.'),
     ...hinh('a2-06-can-bo-cat.jpg', 'Cán bộ trong phòng — tải việc từng người'),
+    p('**Báo cáo** (từ v3.33): như của Lãnh đạo Văn phòng (mục 5.7) — số liệu theo kỳ, theo phòng, theo chuyên viên, theo nguồn, theo văn bản; In / PDF và Xuất Excel.'),
+    luuY('Khi Văn phòng bật cấu hình **"mọi cán bộ xem toàn bộ nhiệm vụ"** (mục 8.4), các mục này mang tên **Nhiệm vụ**, **Cán bộ**, **Báo cáo** và mở ra ở **Toàn Văn phòng** (mọi phòng, mọi cán bộ); bấm **Phạm vi của tôi** để chỉ xem phòng mình. Việc của phòng khác ghi "Chỉ xem" — không có Giao lại, Nhắc, chỉ đạo; đồng chí chỉ thao tác với việc của phòng mình.'),
 
   ];
 }

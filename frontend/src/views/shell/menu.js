@@ -10,6 +10,8 @@
 // không lên thanh dưới điện thoại (vào "Khác").
 // v3.23 (chủ dự án 13/10/2026): bỏ mục Nhắn tin ở mọi vai (thông báo hệ thống vẫn ở chuông); cấu hình xem toàn bộ (0103) → chuyên viên có
 // "Tổng quan" (chung toàn Văn phòng) và "Toàn bộ nhiệm vụ" (danh sách Toàn Văn phòng, chỉ xem việc ngoài phạm vi); Trưởng phòng: "Tổng quan".
+// v3.33 (chủ dự án 27/10/2026 — CAU-HOI S-4): Trưởng phòng có "Báo cáo" (phòng mình; xem toàn bộ → toàn Văn phòng); chuyên viên có "Báo cáo" khi đã có
+// Tổng quan (xem toàn bộ / xem cả phòng). Xem toàn bộ: Trưởng phòng "Nhiệm vụ" (thay "Nhiệm vụ của phòng"), lãnh đạo / Trưởng phòng "Cán bộ".
 export const MENU = {
   A0: [
     { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
@@ -36,6 +38,7 @@ export const MENU = {
     { id: 'navKl', label: 'Nhiệm vụ của phòng', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
     { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },   // v3.22.1
     { id: 'navCanBo', label: 'Cán bộ trong phòng', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
+    { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao', nhom: 'Theo dõi' },   // v3.33
   ],
   A3: [
     { id: 'navDieuHanh', label: 'Việc của tôi', ngan: 'Việc của tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
@@ -59,13 +62,18 @@ const QTKL_A3 = [{ ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
 const PHONG_A3 = { tongQuan: { ...MENU.A2[0], label: 'Tổng quan phòng', duoi: false }, nhiemVu: { ...MENU.A2[3], label: 'Nhiệm vụ của phòng', duoi: false, action: 'openKlPhong' } };
 // 0103: cấu hình xem toàn bộ — Tổng quan chung, Toàn bộ nhiệm vụ (chuyên viên chưa có mục Nhiệm vụ nào khác).
 const TOAN_BO_A3 = { tongQuan: { ...MENU.A1[0], duoi: false }, nhiemVu: { ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ', duoi: false, action: 'openKlToanBo' } };
+const BAO_CAO = MENU.A1.find((m) => m.id === 'navBaoCao');   // v3.33: chuyên viên có Tổng quan thì có Báo cáo (cuối nhóm Theo dõi)
+// v3.33: xem toàn bộ → tên mục không còn giới hạn "của phòng" / "thuộc quyền" (màn mở mặc định Toàn Văn phòng).
+const TEN_TOAN_BO = { navTongQuan: 'Tổng quan', navCanBo: 'Cán bộ', navKl: 'Nhiệm vụ' };
 
 export function menuCuaVai(user, { xemPhong = false, xemToanBo = false } = {}) {
   const a3 = user?.role_group === 'A3';
-  const vai = (MENU[user?.role_group] || []).map((it) => (xemToanBo && it.id === 'navTongQuan' ? { ...it, label: 'Tổng quan' } : it));
+  const doiTen = (it) => (xemToanBo && TEN_TOAN_BO[it.id] && !(user?.role_group === 'A0' && it.id === 'navKl') ? { ...it, label: TEN_TOAN_BO[it.id] } : it);
+  const vai = (MENU[user?.role_group] || []).map(doiTen);
   const tongQuanA3 = a3 && xemToanBo ? [TOAN_BO_A3.tongQuan] : a3 && xemPhong ? [PHONG_A3.tongQuan] : [];
-  const nhiemVuA3 = !a3 ? [] : user?.quan_tri_kl ? QTKL_A3 : xemPhong ? [PHONG_A3.nhiemVu] : xemToanBo ? [TOAN_BO_A3.nhiemVu] : [];
-  const goc = [...tongQuanA3, ...vai, ...nhiemVuA3];   // 0096: không còn ngoại lệ quản trị KL
+  const phongA3 = xemToanBo ? { ...PHONG_A3.nhiemVu, label: 'Toàn bộ nhiệm vụ' } : PHONG_A3.nhiemVu;   // v3.33: cả hai cấu hình → mở Toàn Văn phòng, giữ nút Việc của tôi / Cả phòng
+  const nhiemVuA3 = !a3 ? [] : user?.quan_tri_kl ? QTKL_A3 : xemPhong ? [phongA3] : xemToanBo ? [TOAN_BO_A3.nhiemVu] : [];
+  const goc = [...tongQuanA3, ...vai, ...nhiemVuA3, ...(tongQuanA3.length ? [BAO_CAO] : [])];   // 0096: không còn ngoại lệ quản trị KL
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
   if (user?.quan_tri_he_thong && user.role_group !== 'A0' && !goc.some((it) => it.id === 'navGiaoViec')) goc.push(NHAP_EXCEL_NAV);
