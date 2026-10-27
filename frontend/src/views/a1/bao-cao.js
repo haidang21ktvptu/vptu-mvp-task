@@ -88,7 +88,8 @@ function kyHtml() {
   const oNgay = (k, nhan) => `<label>${nhan} <input type="date" id="bc${k === 'tu' ? 'Tu' : 'Den'}" class="o-nhap nho" data-bc-ngay="${k}" min="2000-01-01" max="2100-12-31" value="${escapeHtml(kyBc[k])}"></label>`;
   const phamVi = '<div class="pham-vi hidden" id="bcToanBo" role="group" aria-label="Phạm vi số liệu"><button type="button" data-action="bcToanBo" data-tb="1">Toàn Văn phòng</button>'
     + '<button type="button" data-action="bcToanBo" data-tb="0">Phạm vi của tôi</button></div>';   // v3.33: ẩn khi không có việc ngoài phạm vi
-  return `<div class="bc-ky" id="bcKy">${phamVi}<div class="pham-vi" role="group" aria-label="Kỳ báo cáo">${nutKy}</div>${oNgay('tu', 'Từ ngày')}${oNgay('den', 'Đến ngày')}</div>`;
+  // Nhóm phạm vi đứng ngoài #bcKy (khối kỳ — nút kỳ, ô ngày) nhưng cùng một hàng: #bcKy display: contents (man-hinh.css).
+  return `<div class="bc-ky">${phamVi}<div class="bc-ky-trong" id="bcKy"><div class="pham-vi" role="group" aria-label="Kỳ báo cáo">${nutKy}</div>${oNgay('tu', 'Từ ngày')}${oNgay('den', 'Đến ngày')}</div></div>`;
 }
 
 // Khung (tiêu đề, nút, thanh kỳ) dựng một lần, không bao giờ dựng lại; đổi kỳ, nạp lại (Tải lại, mở lại màn, ghi trong ngăn, realtime) chỉ thay dòng
