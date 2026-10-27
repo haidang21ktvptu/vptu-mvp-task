@@ -41,6 +41,8 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
       await expect(p.locator('#viewTongQuan')).toContainText('Toàn Văn phòng Tỉnh ủy');
       await p.locator('#tqToanBo [data-tb="0"]').click();
       await expect(p.locator('#tqToanBo [data-tb="0"]')).toHaveAttribute('aria-pressed', 'true');
+      await nav(p, 'navBaoCao');   // v3.33: chuyên viên có Tổng quan thì có Báo cáo — mặc định Toàn Văn phòng
+      await expect(p.locator('#viewBaoCao')).toHaveAttribute('data-pham-vi', 'toan', NAP);
       await expect(p.locator('#navKl')).toHaveText(/Toàn bộ nhiệm vụ/);
       await nav(p, 'navKl');
       await expect(p.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
@@ -144,6 +146,11 @@ test.describe.serial('Mọi cán bộ xem toàn bộ nhiệm vụ, Việc của 
       await expect(p.locator('#bcToanBo [data-tb="1"]')).toHaveAttribute('aria-pressed', 'true');
       await expect(p.locator('#bcKyMoTa')).toContainText('toàn Văn phòng Tỉnh ủy');
       await expect(p.locator('#bcTheoPhong')).toContainText('Phòng Tổng hợp');   // P3 (phòng Tổng hợp) ngoài phạm vi Trưởng phòng E2E_RT
+      await p.locator('#bcTheoPhong tr.bc-hang', { hasText: 'Phòng Tổng hợp' }).first().locator('td.tieude').click();   // mở danh sách của dòng
+      const dongP3 = p.locator(`#bcMoRong #ngv-${p3.id}`); await expect(dongP3.locator('.nhan-chi-xem')).toBeVisible(NAP);
+      await dongP3.locator('[data-action="nganMoViec"]').click();
+      await expect(p.locator(`#nganCT #klChiTiet-${p3.id} [data-chi-xem]`)).toBeVisible(NAP);   // ngăn chi tiết chỉ xem
+      await p.locator('#nganCTDong').click(); await expect(p.locator('#nganCT')).toBeHidden();
       const toan = await tong();
       await p.locator('#bcToanBo [data-tb="0"]').click();
       await expect(p.locator('#viewBaoCao')).toHaveAttribute('data-pham-vi', 'toi');

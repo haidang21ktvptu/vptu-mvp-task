@@ -1,4 +1,4 @@
-// Báo cáo (A1): dải số đầu trang; "Việc cần lãnh đạo quyết định"; theo phòng chuyên môn; theo chuyên viên thực hiện của mỗi phòng (v3.29); theo nguồn
+// Báo cáo (A1; v3.33 thêm Trưởng phòng, chuyên viên — menu.js): dải số đầu trang; "Việc cần lãnh đạo quyết định"; theo phòng chuyên môn; theo chuyên viên thực hiện của mỗi phòng (v3.29); theo nguồn
 // nhiệm vụ; theo kết luận, văn bản giao việc; nút In/PDF (window.print — in.css giữ dải và bảng, bỏ nút) và Xuất Excel (nạp động lib/kl/xuat.js). Số
 // liệu đếm client trên dòng RLS trả về (DB-5). v3.29 (chủ dự án 22/10/2026): mọi bảng cùng sáu cột (lib/kl/bao-cao.js) — Tổng số nhiệm vụ, Quá hạn,
 // Sắp đến hạn (còn ≤ 3 ngày), Đang thực hiện, Hoàn thành, Trước hạn; cách xếp mức như Tổng quan; bỏ 4 cột chất lượng. Bấm một số / một dòng → danh

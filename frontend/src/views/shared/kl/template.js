@@ -31,8 +31,8 @@ export const klTemplate = `
       <button type="button" data-action="klPhamVi" data-pv="toi" aria-pressed="false">Việc của tôi</button>
       <button type="button" data-action="klPhamVi" data-pv="phong" aria-pressed="true">Cả phòng</button></div>
     <div id="klToanBo" class="pham-vi hidden" role="group" aria-label="Phạm vi danh sách" title="Cấu hình của Văn phòng: mọi cán bộ xem toàn bộ nhiệm vụ — việc ngoài phạm vi xử lý chỉ xem">
-      <button type="button" data-action="klToanBo" data-tb="0" aria-pressed="true">Phạm vi của tôi</button>
-      <button type="button" data-action="klToanBo" data-tb="1" aria-pressed="false">Toàn Văn phòng</button></div>
+      <button type="button" data-action="klToanBo" data-tb="1" aria-pressed="false">Toàn Văn phòng</button>
+      <button type="button" data-action="klToanBo" data-tb="0" aria-pressed="true">Phạm vi của tôi</button></div>
     <div id="klStats" class="tq" role="group" aria-label="Tổng quan, bấm để lọc">
       <button type="button" class="o-so" data-action="locKlNhom" data-nhom="" aria-pressed="true"><b id="klSo-TONG">0</b> tổng</button>
       ${THU_TU_NHOM.map(oSo).join('')}

@@ -199,7 +199,8 @@ function veChip() {
   $('klChipLoc').innerHTML = chips.join('');
   $('klChipLoc').classList.toggle('hidden', chips.length === 0);
   // 0086: nút phạm vi của chuyên viên xem cả phòng (Việc của tôi / Cả phòng) luôn khớp khoá cuaToi — kể cả khi bỏ chip.
-  document.querySelectorAll('#klPhamVi button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.pv === 'toi') === Boolean(kl.loc.cuaToi))));
+  const toanVP = kl.loc.toanBo && coNutToanBo();   // v3.33: đang Toàn Văn phòng thì "Cả phòng" không sáng
+  document.querySelectorAll('#klPhamVi button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pv === 'toi' ? Boolean(kl.loc.cuaToi) : !kl.loc.cuaToi && !toanVP)));
   show('klToanBo', coNutToanBo());   // v3.23 (0103): chỉ khi có việc ngoài phạm vi (Thường trực, Chánh VP vốn thấy hết)
   document.querySelectorAll('#klToanBo button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.tb === '1') === Boolean(kl.loc.toanBo))));
 }

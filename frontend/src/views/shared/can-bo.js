@@ -27,12 +27,12 @@ const coNutToanBo = () => xemToanBo() && tatCa.length > trong.length;
 const toanVP = () => coNutToanBo() && cbToanBo;
 
 // PR-2b (Mới 2): Đỏ = việc người này CHỊU CHẬM (nguoi_chiu_cham, DB tính — kể cả việc của phòng khác chờ họ nghiệm thu); việc họ chủ trì đã nộp,
-// quá hạn ở bước nghiệm thu tính "đang làm" (trung tính). tatCa: mọi dòng trong phạm vi (không chỉ của phòng) để thấy việc chờ nghiệm thu.
-function nguoiHtml(a, rows, tatCa = rows) {
+// quá hạn ở bước nghiệm thu tính "đang làm" (trung tính). moiDong: mọi dòng đang xem (không chỉ của phòng) để thấy việc chờ nghiệm thu.
+function nguoiHtml(a, rows, moiDong = rows) {
   const owner = rows.filter((r) => r.owner_tai_khoan === a.id && mo(r));
   // v3.31 (0128): việc giao cho phòng / Văn phòng mà người này là người đại diện chủ trì (Trưởng phòng / Chánh VP — nguoi_theo_doi nội bộ).
   const theoDoi = rows.filter((r) => r.nguoi_theo_doi === a.id && !r.owner_tai_khoan && mo(r)).length; const donVi = a.role_group === 'A1' ? 'Văn phòng' : 'phòng';
-  const doRows = tatCa.filter((r) => r.nguoi_chiu_cham === a.id && DO(r) && mo(r));
+  const doRows = moiDong.filter((r) => r.nguoi_chiu_cham === a.id && DO(r) && mo(r));
   const dem = { do: doRows.length, vang: owner.filter((r) => VANG(r) && !doRows.includes(r)).length };
   const lam = owner.filter((r) => !doRows.includes(r) && !VANG(r)).length;
   const tong = dem.do + dem.vang + lam;
@@ -69,10 +69,12 @@ const nutPhamVi = () => (coNutToanBo() ? `<div class="pham-vi" id="cbToanBo" rol
   .map(([tb, ten]) => `<button type="button" data-action="cbToanBo" data-tb="${tb}" aria-pressed="${String((tb === '1') === toanVP())}">${ten}</button>`).join('')}</div>` : '');
 
 function ve() {
-  const me = state.user; const toan = toanVP(); rowsHienTai = toan ? tatCa : trong; const phong = danhSachPhong(me, rowsHienTai, toan);
+  const me = state.user; const toan = toanVP(); rowsHienTai = toan ? tatCa : trong;
+  const ca = toan || (xemToanBo() && !coNutToanBo());   // xem toàn bộ, không có việc ngoài phạm vi (Chánh VP): vẫn mọi phòng, tên "Cán bộ" như menu
+  const phong = danhSachPhong(me, rowsHienTai, ca);
   $('viewCanBo').dataset.phamVi = toan ? 'toan' : 'toi';   // e2e: phạm vi đang vẽ
   $('viewCanBo').innerHTML = `
-    <div class="dau"><h1>${toan ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy — việc ngoài phạm vi xử lý của đồng chí chỉ xem; ' : ''}tải việc theo người: quá hạn / sắp đến hạn / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
+    <div class="dau"><h1>${ca ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy — việc ngoài phạm vi xử lý của đồng chí chỉ xem; ' : ''}tải việc theo người: quá hạn / sắp đến hạn / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
       <div class="phai-dau">${nutPhamVi()}<button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
     <div class="hai-ngan${nguoiDangMo ? ' mo' : ''}"><div class="cb">${phong.length ? phong.map((p) => phongHtml(p, rowsHienTai)).join('') : '<p class="trong">Không có phòng nào trong phạm vi của đồng chí.</p>'}</div>
       <aside class="ngan-ben${nguoiDangMo ? '' : ' hidden'}" id="cbNgan" aria-label="Chi tiết cán bộ đang chọn"></aside></div>`;

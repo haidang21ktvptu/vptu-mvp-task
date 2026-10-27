@@ -11,6 +11,7 @@ import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
 import { chiXem } from '../../lib/kl/pham-vi.js';
+import { NHAN_CHI_XEM } from './kl/dong.js';
 
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const duocChiDao = () => ['A1', 'A2'].includes(state.user?.role_group);
@@ -40,7 +41,7 @@ function hanhDongViecHtml(r, tienTo) {
 
 // Một dòng việc trong ngăn của người / trong hàng mở rộng của Báo cáo (nút Xem chi tiết mở ngăn chi tiết dùng chung).
 export function dongViecHtml(r, homNay, nutXem = true) {
-  return `<div class="nv-dong ${lopMep(r, state.user?.id)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<small>${escapeHtml(chuTriText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
+  return `<div class="nv-dong ${lopMep(r, state.user?.id)}" id="ngv-${r.id}"><p><b>${escapeHtml(r.ma)}</b>${chiXem(r) ? NHAN_CHI_XEM : ''} ${escapeHtml(r.noi_dung)}<small>${escapeHtml(chuTriText(r))} · ${hanNgan(r, homNay)} ${nhanPhu(r)}</small></p>
       ${nutXem ? `<button type="button" class="nut nho" data-action="nganMoViec" data-id="${r.id}">Xem chi tiết</button>` : ''}</div>`;
 }
 
