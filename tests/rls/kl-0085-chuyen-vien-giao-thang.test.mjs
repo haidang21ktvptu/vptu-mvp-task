@@ -65,9 +65,9 @@ describe('0085 — chuyên viên giao thẳng; cấu hình coi như đã nhận 
     for (const [u, mong] of [['demo_cv1', true], ['demo_cv2', true], ['demo_truongphong', false], ['demo_pcvp2', true], ['demo_pcvp', false]]) assert.equal(await thay(u, nv1), mong, `${u} thấy việc`);
   });
 
-  test('5. tầng giao: cv1 sửa thông tin giao được; cv2 (Owner) không; đề nghị sửa của cv2 → cấp duyệt = cv1, cv1 được đếm và duyệt', async () => {
+  test('5. tầng giao: cv1 sửa thông tin giao được; chuyên viên ngoài cuộc không (0131: cv2 — chủ trì — được, kiểm ở kl-0131); đề nghị sửa của cv2 → cấp duyệt = cv1, cv1 được đếm và duyệt', async () => {
     assertOk(await (await userClient('demo_cv1')).rpc('sua_thong_tin_giao', { p_id: nv1, p_thay_doi: { noi_dung: `${KHOA} demo_cv1 1 (đã sửa)` }, p_ly_do: 'bổ sung yêu cầu' }), 'cv1 sửa thông tin giao');
-    ma(await (await userClient('demo_cv2')).rpc('sua_thong_tin_giao', { p_id: nv1, p_thay_doi: { noi_dung: 'x' }, p_ly_do: 'x' }), '42501', 'cv2 không phải tầng giao');
+    ma(await (await userClient('demo_e2e_nv')).rpc('sua_thong_tin_giao', { p_id: nv1, p_thay_doi: { noi_dung: 'x' }, p_ly_do: 'x' }), '42501', 'không phải tầng giao, không phải chủ trì');
     const dn = await (await userClient('demo_cv2')).rpc('de_nghi_sua_gui', { p_nhiem_vu: nv1, p_thay_doi: { san_pham_mo_ta: 'Báo cáo tổng hợp' }, p_ly_do: 'nêu rõ sản phẩm' });
     assertOk(dn, 'cv2 đề nghị sửa');
     assert.equal((await db().from('de_nghi_sua').select('cap_duyet').eq('id', dn.data).single()).data.cap_duyet, IDS.cv1, 'cấp duyệt = chuyên viên giao');

@@ -2,7 +2,8 @@
 // người nhận chủ trì (không phải người nhập việc) không sửa được thông tin giao, không tự điều chỉnh hạn việc quá hạn. Kịch bản: Trưởng phòng giao cho
 // cv1 một việc đã quá hạn; thư ký Thường trực (demo_e2e_tk, cờ tạm) đổi chủ trì sang cv2. cv2: sửa thông tin giao (nội dung, mô tả sản phẩm), nguồn /
 // đơn vị phối hợp, điều chỉnh hạn việc quá hạn — lịch sử ghi đủ, người giao được báo. Bị chặn: cv1 (chủ trì cũ, không phải người nhập), chuyên viên
-// khác, việc đã hoàn thành; hạn mới trước hôm nay. Khoá "KL-0131"; cờ khôi phục; tự dọn.
+// khác, việc đã hoàn thành; hạn mới trước hôm nay. Thêm: việc giao cho phòng (Trưởng phòng — người đại diện chủ trì) do Phó Chánh VP giao, việc từ Kết
+// luận Ban Thường vụ (ngành bắt buộc) — chủ trì sửa được, bỏ ngành vẫn lỗi. Khoá "KL-0131"; cờ khôi phục; tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { adminClient, userClient, assertOk, assertDenied, IDS, homNayVN } from './lib.mjs';
@@ -19,7 +20,7 @@ const coMig = async () => {   // 0131: câu báo quyền mới có "chủ trì t
 const SKIP = !(await klSchemaReady()) ? 'Chưa có migration KL trên project này.' : !(await coMig()) ? 'Chưa có migration 0131.' : false;
 const cong = (n) => { const d = new Date(`${homNayVN()}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const vn = (iso) => iso.split('-').reverse().join('/');
-let vb = null; const v = {};
+let vb = null; let vbKl = null; const v = {};
 const viec = async (k, them = {}) => {
   const r = await db().from('nhiem_vu').insert({ van_ban_id: vb, noi_dung: `${KHOA} ${k}`, loai_thoi_han_ma: 'CO_HAN_CU_THE', han_xu_ly: cong(-3), nganh_ma: 'KINH_TE_TONG_HOP',
     linh_vuc_ma: 'LV08_TAI_CHINH', theo_1400: true, owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, nguoi_theo_doi: IDS.cv1, tao_boi: IDS.truongphong,
@@ -42,6 +43,10 @@ describe('0131 — chủ trì theo dõi (kể cả người được chuyển sa
     assertOk(r, 'văn bản'); vb = r.data.id;
     await viec('T');
     await viec('XONG', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-5), nguon: 'excel' });
+    await viec('PHONG', { owner_tai_khoan: null, nguoi_theo_doi: IDS.truongphong, tao_boi: IDS.pcvp, han_xu_ly: cong(30), cap_nhan_san_pham: 'PHO_CHANH_VAN_PHONG' });
+    const k = await db().from('van_ban_giao_viec').insert({ loai: 'KL_BTV', so_hoi_nghi: 131, so_ket_luan: `${KHOA} KL`, ngay_ban_hanh: cong(-40), ngay_nhan: cong(-39) }).select('id').single();
+    assertOk(k, 'kết luận BTV'); vbKl = k.data.id;
+    await viec('KL', { van_ban_id: vbKl, han_xu_ly: cong(30), tao_boi: IDS.pcvp });
     assertOk(await co(true), 'cấp cờ thư ký');
     assertOk(await goi('demo_e2e_tk', 'doi_chu_tri', { p_id: v.T.id, p: { chu_tri: IDS.cv2 }, p_ly_do: `${KHOA} chủ trì cũ đi công tác` }), 'đổi chủ trì cv1 → cv2');
     assertOk(await co(false), 'thu cờ thư ký');
@@ -81,5 +86,13 @@ describe('0131 — chủ trì theo dõi (kể cả người được chuyển sa
     }
     assertDenied(await sua('demo_cv1', 'XONG', { san_pham_mo_ta: 'x' }), 'chủ trì sửa việc đã hoàn thành');
     assertDenied(await goi('demo_cv1', 'dat_thong_tin_giao', { p_id: v.XONG.id, p_nguon_nhiem_vu_ma: null, p_don_vi_phoi_hop: 'x' }), 'chủ trì sửa phối hợp việc đã hoàn thành');
+  });
+
+  test('5. Việc giao cho phòng (Phó Chánh VP giao): Trưởng phòng — người đại diện chủ trì — sửa ngay; việc từ Kết luận BTV: chủ trì sửa được, bỏ ngành vẫn lỗi', async () => {
+    assertOk(await sua('demo_truongphong', 'PHONG', { san_pham_mo_ta: 'Báo cáo của phòng' }), 'Trưởng phòng (chủ trì việc của phòng) sửa');
+    assertOk(await sua('demo_cv1', 'KL', { noi_dung: `${KHOA} KL (chủ trì sửa)` }), 'chủ trì sửa việc từ Kết luận BTV');
+    const r = await sua('demo_cv1', 'KL', { nganh_ma: '' });
+    assert.equal(r.error?.code, '22023', r.error?.message); assert.match(r.error.message, /ngành và lĩnh vực/);
+    assertDenied(await sua('demo_cv2', 'KL', { san_pham_mo_ta: 'x' }), 'chuyên viên khác sửa việc Kết luận BTV');
   });
 });

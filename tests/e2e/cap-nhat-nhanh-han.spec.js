@@ -1,5 +1,5 @@
 // PR-2a Q7 (0052): Cập nhật nhanh của Owner / người theo dõi — việc ĐÃ có hạn không còn ô hạn (chỉ dòng "đã chốt…"; v3.29 (0123): chủ trì theo dõi
-// đổi hạn bằng nút "Điều chỉnh hạn" ở ngăn chi tiết — câu trong hộp trỏ tới nút đó khi việc chưa quá hạn); việc
+// đổi hạn bằng nút "Điều chỉnh hạn" ở ngăn chi tiết — câu trong hộp trỏ tới nút đó; v3.34 (0131): cả khi việc đã quá hạn); việc
 // "Cần điền hạn" (Có hạn cụ thể, chưa có hạn) vẫn điền được hạn và lưu. Người quản trị KL không bị khoá (test RLS kl-pq-q7 phủ phía DB).
 // Dữ liệu riêng: 2 việc của demo_e2e_nv theo khoá E2E-TEST-CNH-<project>; tự dọn trước và sau.
 import { test, expect } from '@playwright/test';
@@ -9,7 +9,7 @@ import { pageAs, moViec, NAP } from './lib/app.js';
 import { khoaRieng, taoVanBanRieng, donVanBan, kiemThayViec } from './lib/du-lieu.mjs';
 import { homNay, cong, dd } from './lib/pr2b.mjs';
 
-const HAN = cong(homNay(), 60);   // hạn còn xa: chủ trì thấy câu trỏ tới "Điều chỉnh hạn" (việc quá hạn thì câu khác)
+const HAN = cong(homNay(), 60);   // chủ trì thấy câu trỏ tới "Điều chỉnh hạn" (v3.34: cả việc quá hạn)
 const HAN_DIEN = cong(homNay(), 45);
 
 test.describe.serial('Cập nhật nhanh: khoá hạn khi việc đã có hạn (Q7)', () => {

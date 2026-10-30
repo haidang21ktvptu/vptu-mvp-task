@@ -39,7 +39,7 @@ const don = async () => {
   await db().from('van_ban_giao_viec').delete().like('so_ket_luan', `${KHOA}%`);
 };
 
-describe('0123 — điều chỉnh hạn: chủ trì theo dõi (chưa quá hạn), thư ký Thường trực, toàn quyền', { skip: SKIP }, () => {
+describe('0123 — điều chỉnh hạn: chủ trì theo dõi (v3.34: kể cả quá hạn), thư ký Thường trực, toàn quyền', { skip: SKIP }, () => {
   before(async () => {
     await don();
     await vanBan('cv'); await vanBan('kl', { loai: 'KL_BTV', so_hoi_nghi: 123 }); await vanBan('ky', { ngay_ban_hanh: cong(-3), ngay_nhan: cong(-2) });

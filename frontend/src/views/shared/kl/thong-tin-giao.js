@@ -2,7 +2,7 @@
 // "Vướng mắc / đề nghị lãnh đạo quyết định" sửa tại chỗ. Ai sửa (chỉ ẩn/hiện — hàm DB là chốt):
 //   - vướng mắc (dat_vuong_mac): Owner / người theo dõi, lãnh đạo A1/A2 thấy việc, quan_tri_kl, thư ký Thường trực (0124, việc chưa hoàn thành);
 //     không A0. Để trống rồi Lưu = đã giải quyết.
-//   - nguồn + đơn vị phối hợp: tầng giao (0091 — người giao / người tạo việc, lãnh đạo trong phạm vi, quan_tri_kl) — hộp Cập nhật nhanh và "Sửa thông tin giao".
+//   - nguồn + đơn vị phối hợp: tầng giao (0091 — người giao / người tạo việc, lãnh đạo trong phạm vi, quan_tri_kl; v3.34 — 0131: + chủ trì theo dõi, việc chưa hoàn thành) — hộp Cập nhật nhanh và "Sửa thông tin giao".
 import { escapeHtml } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';

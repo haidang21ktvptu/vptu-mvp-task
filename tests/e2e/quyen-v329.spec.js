@@ -93,7 +93,7 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
       await expect(ctQh.locator('[data-action="moDeNghiSua"]')).toHaveCount(0);
       await ctQh.locator('.hanh-dong [data-action="moSuaTang"]').first().click();
       await expect(p.locator('#stModal')).toBeVisible();
-      await expect(p.locator('#stMoTa')).toContainText('chủ trì theo dõi');
+      await expect(p.locator('#stMoTa')).toContainText('Đồng chí là chủ trì theo dõi');
       await p.locator('#stCot').selectOption('san_pham_mo_ta'); await p.locator('#stMoi').fill(`${khoa} báo cáo kèm phụ lục`);
       await p.locator('#stLyDo').fill('Bổ sung theo yêu cầu của lãnh đạo phòng'); await p.locator('#stLuu').click();
       await expect(p.locator('#stModal')).toBeHidden(NAP);

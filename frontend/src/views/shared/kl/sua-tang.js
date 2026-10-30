@@ -1,5 +1,6 @@
-// Ngăn chi tiết — nhập theo tầng (giao diện v9 đợt 2, 0070–0071): ô do cấp giao điền có biểu tượng BÚT (đồng chí là cấp giao: sửa ngay, lý do bắt
-// buộc, lịch sử + tin cho người nhận) hoặc KHOÁ (đồng chí là Owner / người theo dõi: bấm để "Đề nghị sửa", người giao duyệt một bấm). Một hộp thoại
+// Ngăn chi tiết — nhập theo tầng (giao diện v9 đợt 2, 0070–0071): ô do cấp giao điền có biểu tượng BÚT (đồng chí là cấp giao — v3.34 (0131): hoặc chủ
+// trì theo dõi —: sửa ngay, lý do bắt buộc, lịch sử + tin) hoặc KHOÁ ("Đề nghị sửa", người giao duyệt một bấm — từ v3.34 chủ trì sửa ngay nên đường này
+// chỉ còn cho dữ liệu cũ: đề nghị đang chờ vẫn duyệt / rút ở khối dưới). Một hộp thoại
 // cho cả hai (chọn ô, giá trị mới, lý do). Khối "Đề nghị sửa đang chờ" trong ngăn: người duyệt Chấp nhận / Giữ nguyên (ý kiến bắt buộc), người gửi
 // Rút đề nghị. Hàm DB là chốt (cheDoTang chỉ ẩn / hiện).
 import { $, escapeHtml, show, formatDateTime } from '../../../lib/dom.js';
@@ -46,7 +47,7 @@ export function giaTriO(cot, v) {
 // Nút bút / khoá cạnh một ô của ngăn chi tiết ('' khi chỉ xem).
 export function nutTangHtml(r, cot) {
   const che = cheDoTang(r); const ten = tenOGiao(cot);
-  if (che === 'sua') return `<button type="button" class="nut-tang" data-action="moSuaTang" data-id="${r.id}" data-cot="${cot}" aria-label="Sửa ${escapeHtml(ten.toLowerCase())}" title="Sửa tại chỗ — lịch sử được ghi lại, người nhận việc được báo">${BUT}</button>`;
+  if (che === 'sua') return `<button type="button" class="nut-tang" data-action="moSuaTang" data-id="${r.id}" data-cot="${cot}" aria-label="Sửa ${escapeHtml(ten.toLowerCase())}" title="Sửa tại chỗ — lịch sử được ghi lại, người liên quan được báo">${BUT}</button>`;
   if (che === 'de-nghi') {
     const ai = escapeHtml(nguoiGiao(r));
     return `<button type="button" class="nut-tang khoa" data-action="moDeNghiSua" data-id="${r.id}" data-cot="${cot}" aria-label="${escapeHtml(ten)} do ${ai} điền. Bấm để đề nghị sửa" title="Do ${ai} điền. Bấm để đề nghị sửa">${KHOA}</button>`;
@@ -175,7 +176,7 @@ async function luuSuaTang() {
   try {
     if ($('stCheDo').value === 'sua') {
       await suaThongTinGiao(id, thay, lyDo);
-      notifySuccess(`Đã sửa ${tenOGiao(cot).toLowerCase()}. Chủ trì theo dõi được báo.`);
+      notifySuccess(`Đã sửa ${tenOGiao(cot).toLowerCase()}. ${laChuTriSua(dongViec(id)) && !laTangGiao(dongViec(id)) ? 'Người giao việc' : 'Chủ trì theo dõi'} được báo.`);   // v3.34: chủ trì sửa → báo người giao
     } else {
       await guiDeNghiSua(id, thay, lyDo);
       notifySuccess('Đã gửi đề nghị sửa. Người duyệt nhận thông báo; việc vẫn chạy trong lúc chờ.');

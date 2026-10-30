@@ -421,5 +421,5 @@ thay đổi là được." Duyệt kế hoạch cùng ngày.
 
 | # | Câu hỏi | Quyết định | Kiểm bằng |
 |---|---|---|---|
-| T-1 | Chủ trì theo dõi sửa thông tin giao thế nào? | **Sửa ngay mọi ô** (13 ô thông tin giao, nguồn / đơn vị phối hợp) khi việc chưa hoàn thành — mọi chủ trì theo dõi, kể cả người được chuyển sang; lý do bắt buộc, lưu lịch sử, báo người giao việc. Không cần "Đề nghị sửa" nữa. Việc đã hoàn thành: như cũ (tài khoản quản trị). | RLS `kl-0131`; e2e `quyen-v329` test 1 |
+| T-1 | Chủ trì theo dõi sửa thông tin giao thế nào? | **Sửa ngay mọi ô** (13 ô thông tin giao; nguồn / đơn vị phối hợp cả ở hộp Cập nhật) khi việc chưa hoàn thành — mọi chủ trì theo dõi (cả Trưởng phòng / Chánh VP chủ trì việc của phòng / Văn phòng, Phó Chánh VP chủ trì), kể cả người được chuyển sang; lý do bắt buộc, lưu lịch sử, báo người giao việc. Không cần "Đề nghị sửa" nữa. Việc đã hoàn thành: như cũ (tài khoản quản trị). | RLS `kl-0131`; e2e `quyen-v329` test 1 |
 | T-2 | Chủ trì điều chỉnh hạn khi việc đã quá hạn? | **Được** — chỉ cần lưu lịch sử thay đổi (thay O-4 phần "chỉ khi chưa quá hạn"); hạn mới không trước hôm nay, lý do bắt buộc, lùi hạn tính lần gia hạn, Diễn biến và tin báo như cũ. | RLS `kl-0131`, `kl-0123`; e2e `quyen-v329` test 1 |
