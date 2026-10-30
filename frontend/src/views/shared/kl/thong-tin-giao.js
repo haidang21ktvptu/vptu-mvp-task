@@ -2,7 +2,7 @@
 // "Vướng mắc / đề nghị lãnh đạo quyết định" sửa tại chỗ. Ai sửa (chỉ ẩn/hiện — hàm DB là chốt):
 //   - vướng mắc (dat_vuong_mac): Owner / người theo dõi, lãnh đạo A1/A2 thấy việc, quan_tri_kl, thư ký Thường trực (0124, việc chưa hoàn thành);
 //     không A0. Để trống rồi Lưu = đã giải quyết.
-//   - nguồn + đơn vị phối hợp: tầng giao (0091 — người giao / người tạo việc, lãnh đạo trong phạm vi, quan_tri_kl) — hộp Cập nhật nhanh và "Sửa thông tin giao".
+//   - nguồn + đơn vị phối hợp: tầng giao (0091 — người giao / người tạo việc, lãnh đạo trong phạm vi, quan_tri_kl; v3.34 — 0131: + chủ trì theo dõi, việc chưa hoàn thành) — hộp Cập nhật nhanh và "Sửa thông tin giao".
 import { escapeHtml } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -11,7 +11,7 @@ import { danhMucKl, datVuongMac } from '../../../lib/kl/du-lieu.js';
 import { nhanChatLuongHtml, tenTienDoHoanThanh, nhomCua } from '../../../lib/kl/nhan.js';
 import { loiDeHieu } from '../../../lib/kl/loi.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
-import { laTangGiao } from '../../../lib/kl/sua-tang.js';
+import { laTangGiao, laChuTriSua } from '../../../lib/kl/sua-tang.js';
 import { laBenTrong } from './dong.js';
 import { duocChiDao } from './chi-dao.js';
 import { chiXemVoi, thuKyGhi } from '../../../lib/kl/quyen-them.js';
@@ -23,8 +23,9 @@ export const laQtklConHan = () => Boolean(state.user?.quan_tri_kl) && (!state.us
 const qtkl = laQtklConHan;
 // 0103: việc chỉ xem → không; v3.29 (0124): + thư ký Thường trực với mọi việc chưa hoàn thành.
 export const duocSuaVuongMac = (r) => !laA0() && !chiXemVoi(r, state.user) && (laBenTrong(r) || duocChiDao() || qtkl() || thuKyGhi(r, state.user));
-// 0091: cùng tầng giao với "Sửa thông tin giao" (dat_thong_tin_giao gọi kl_la_tang_giao) — người giao / người tạo việc, lãnh đạo trong phạm vi, quản trị.
-export const duocSuaThongTinGiao = (r) => laTangGiao(r);
+// 0091: cùng tầng giao với "Sửa thông tin giao" (dat_thong_tin_giao gọi kl_la_tang_giao) — người giao / người tạo việc, lãnh đạo trong phạm vi, quản trị;
+// v3.34 (0131): + chủ trì theo dõi khi việc chưa hoàn thành.
+export const duocSuaThongTinGiao = (r) => laTangGiao(r) || laChuTriSua(r);
 
 // v3.23 (0103): "Đề nghị xử lý gửi tới" — người giao việc, lãnh đạo Văn phòng, Trưởng phòng (đang hoạt động, khác người ghi); trống = báo tự động
 // như cũ (người giao, Phó Chánh VP phụ trách). dat_vuong_mac kiểm người nhận và gửi một tin hệ thống cho đúng người đó.

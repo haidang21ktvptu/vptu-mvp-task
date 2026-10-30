@@ -1,4 +1,4 @@
-// Hộp "Điều chỉnh hạn" (v3.29, 0123 — chủ dự án quyết 22/10/2026, CAU-HOI O-4): chủ trì theo dõi (việc chưa quá hạn), thư ký Thường trực, tài
+// Hộp "Điều chỉnh hạn" (v3.29, 0123 — chủ dự án quyết 22/10/2026, CAU-HOI O-4; v3.34 — 0131, T-2): chủ trì theo dõi (kể cả việc đã quá hạn), thư ký Thường trực, tài
 // khoản quản trị. Hạn hiện tại + số lần đã gia hạn, hạn mới (không trước ngày ban hành), lý do bắt buộc; lùi hạn = gia hạn lần n, rút ngắn không
 // tính. Hàm dieu_chinh_han là chốt (quyền, quá hạn, ngày, việc cha – con); người giao việc, Trưởng phòng, lãnh đạo Văn phòng phụ trách được báo.
 import { $, show, setText } from '../../../lib/dom.js';

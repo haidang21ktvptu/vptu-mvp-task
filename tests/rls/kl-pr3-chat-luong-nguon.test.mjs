@@ -55,13 +55,13 @@ describe('PR-3 A/B/E — chất lượng, nguồn nhiệm vụ, đơn vị phố
     assert.deepEqual(vbRow, { so_nhiem_vu_du_kien: null, da_ra_soat_toan_van: false, ra_soat_boi: null });
   });
 
-  test('B2. Ai đổi nguồn / đơn vị phối hợp: người giao (A2), lãnh đạo cấp trên trong phạm vi (0091), quan_tri_kl được; Owner, PCVP ngoài phạm vi bị chặn; không bỏ nguồn', async () => {
+  test('B2. Ai đổi nguồn / đơn vị phối hợp: người giao (A2), lãnh đạo cấp trên trong phạm vi (0091), quan_tri_kl được (0131: + chủ trì — kl-0131); chuyên viên ngoài cuộc, PCVP ngoài phạm vi bị chặn; không bỏ nguồn', async () => {
     const cv1 = await userClient('demo_cv1');
     assertDenied(await cv1.from('nhiem_vu').update({ nguon_nhiem_vu_ma: 'NHIEM_VU_DINH_KY' }).eq('id', nv).select('id'), 'Owner UPDATE nguồn (guard a3)');
     assertDenied(await cv1.from('nhiem_vu').update({ don_vi_phoi_hop: 'X' }).eq('id', nv).select('id'), 'Owner UPDATE đơn vị phối hợp (guard a3)');
     const goi = (u, ma, ph) => rpc(u, 'dat_thong_tin_giao', { p_id: nv, p_nguon_nhiem_vu_ma: ma, p_don_vi_phoi_hop: ph });
-    const [ow, pc2] = await Promise.all([goi('demo_cv1', 'NHIEM_VU_DINH_KY', null), goi('demo_pcvp2', 'NHIEM_VU_DINH_KY', null)]);
-    assertDenied(ow, 'Owner'); assertDenied(pc2, 'PCVP ngoài phạm vi');
+    const [ow, pc2] = await Promise.all([goi('demo_e2e_nv', 'NHIEM_VU_DINH_KY', null), goi('demo_pcvp2', 'NHIEM_VU_DINH_KY', null)]);
+    assertDenied(ow, 'chuyên viên không phải chủ trì'); assertDenied(pc2, 'PCVP ngoài phạm vi');
     assertOk(await goi('demo_pcvp', 'NHIEM_VU_DINH_KY', 'Sở Nội vụ'), 'PCVP phụ trách (cấp trên người giao) đổi');
     assertOk(await goi('demo_a0', 'NHIEM_VU_DINH_KY', 'Sở Nội vụ'), 'Thường trực đổi được — cùng giá trị ⇒ không ghi gì');
     assertOk(await goi('demo_truongphong', 'LINH_VUC_TRONG_TAM', 'Sở Nội vụ'), 'người giao đổi');

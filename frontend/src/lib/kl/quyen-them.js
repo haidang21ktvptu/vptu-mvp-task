@@ -1,5 +1,6 @@
 // v3.29 (0123–0126, chủ dự án quyết 22/10/2026 — CAU-HOI O-4…O-6): quyền mới trên nhiệm vụ — chỉ để ẩn / hiện nút cho đúng; hàm DB là chốt.
-// - Chủ trì theo dõi (tài khoản chủ trì; việc giao cho phòng / đơn vị: người theo dõi) điều chỉnh hạn khi việc chưa quá hạn (dieu_chinh_han).
+// - Chủ trì theo dõi (tài khoản chủ trì; việc giao cho phòng / đơn vị: người theo dõi) điều chỉnh hạn (dieu_chinh_han) — v3.34 (0131): kể cả khi
+//   việc đã quá hạn (lịch sử, Diễn biến, tin báo ghi như cũ).
 // - Thư ký Thường trực: mọi việc chưa hoàn thành, kể cả ngoài phạm vi cũ (v_nhiem_vu.trong_pham_vi = false) — cập nhật, nộp minh chứng, ghi
 //   vướng mắc, sửa thông tin giao, điều chỉnh hạn, đổi chủ trì. Không: chỉ đạo, trả lại / đánh giá minh chứng, đóng nhiệm vụ.
 // - Tài khoản toàn quyền (0100): sửa toàn bộ thông tin, mở lại việc đã hoàn thành, sửa văn bản giao, sửa / gỡ minh chứng, đổi chủ trì, điều chỉnh hạn.
@@ -15,14 +16,13 @@ export const thuKyGhi = (r, u) => Boolean(r) && laThuKyTT(u) && !daXong(r);
 // Việc "chỉ xem" với người này (thay chiXem ở các vị từ ẩn / hiện nút ghi): ngoài phạm vi xử lý (0103) mà không phải thư ký ghi được (0124).
 export const chiXemVoi = (r, u) => chiXem(r) && !thuKyGhi(r, u);
 
-// Điều chỉnh hạn → 'duoc' | 'qua-han' (chủ trì, việc đã quá hạn: đề nghị lãnh đạo giao việc gia hạn) | '' (không có). homNay: 'YYYY-MM-DD'.
-export function cheDoDieuChinhHan(r, u, homNay) {
+// Điều chỉnh hạn → 'duoc' | '' (không có). v3.34 (0131 — CAU-HOI T-2): chủ trì điều chỉnh cả khi việc đã quá hạn (bỏ 'qua-han' và tham số hôm nay).
+export function cheDoDieuChinhHan(r, u) {
   if (!r?.han_xu_ly || !u) return '';
   if (laToanQuyen(u)) return 'duoc';
   if (daXong(r)) return '';
   if (laThuKyTT(u)) return 'duoc';
-  if (chuTriTheoDoi(r) !== u.id) return '';
-  return r.han_xu_ly < homNay ? 'qua-han' : 'duoc';
+  return chuTriTheoDoi(r) === u.id ? 'duoc' : '';
 }
 export const duocDoiChuTri = (r, u) => Boolean(r) && (laToanQuyen(u) || thuKyGhi(r, u));
 export const duocSuaToanBo = (r, u) => Boolean(r) && laToanQuyen(u);

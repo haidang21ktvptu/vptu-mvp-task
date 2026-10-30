@@ -69,9 +69,10 @@ describe('0100–0102 — tài khoản toàn quyền (như Chánh Văn phòng, v
     assert.equal(rtm.error?.code, '22023', 'thay mặt'); assert.match(rtm.error.message, /Lãnh đạo giao việc trực tiếp/);
     const n = (await db().from('nhiem_vu').select('tao_boi, giao_thay_mat_cho, nguoi_theo_doi').eq('id', rp.data.id).single()).data;
     assert.deepEqual(n, { tao_boi: IDS.qtht, giao_thay_mat_cho: null, nguoi_theo_doi: IDS.truongphong });
-    // kl_cap_bac(toàn quyền) = 2: Chánh VP thật sửa được thông tin giao của việc tài khoản này giao; Phó Chánh VP chủ trì thì không.
+    // kl_cap_bac(toàn quyền) = 2: Chánh VP thật sửa được thông tin giao của việc tài khoản này giao. v3.34 (0131 — CAU-HOI T-1): Phó Chánh VP chủ trì cũng sửa được
+    // (mọi chủ trì theo dõi, việc chưa hoàn thành) — trước đây bị chặn.
     const sua = (u) => goi(u, 'dat_thong_tin_giao', { p_id: rl.data.id, p_nguon_nhiem_vu_ma: 'NHIEM_VU_PHAT_SINH', p_don_vi_phoi_hop: KHOA });
-    assertDenied(await sua('demo_pcvp'), 'Phó Chánh VP (chủ trì) sửa thông tin giao'); assertOk(await sua('demo_cvp'), 'Chánh VP thật sửa thông tin giao');
+    assertOk(await sua('demo_pcvp'), 'Phó Chánh VP (chủ trì) sửa thông tin giao — 0131'); assertOk(await sua('demo_cvp'), 'Chánh VP thật sửa thông tin giao');
   });
 
   test('3. Có cờ: gia hạn việc chuyên viên tự giao, sửa nguồn việc Chánh VP giao (tầng giao), xem lịch sử việc người khác', async () => {

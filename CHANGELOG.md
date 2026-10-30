@@ -944,3 +944,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Danh sách Nhiệm vụ mở từ menu đã ở Toàn Văn phòng (trừ "Việc của tôi" của chuyên viên; nút "Xem đủ nhiệm vụ của phòng" của Trưởng phòng giữ phạm vi phòng); Cán bộ mở Toàn Văn phòng (Lãnh đạo Văn phòng rồi mọi phòng), Giao lại / Nhắc chỉ ở việc trong phạm vi.
 - Menu: Trưởng phòng có **Báo cáo**; chuyên viên có Báo cáo khi đã có Tổng quan; khi xem toàn bộ, tên mục bỏ "của phòng" / "thuộc quyền" ("Nhiệm vụ", "Cán bộ"; chuyên viên "Toàn bộ nhiệm vụ"). Quyền ghi không đổi (cơ sở dữ liệu là chốt).
 - Unit `xem-toan-bo` (menu), e2e `xem-toan-bo` test 1, 5 (chuyên viên, Trưởng phòng: Báo cáo, ngăn chỉ xem, Nhiệm vụ, Cán bộ), `nghiem-thu` (Báo cáo Trưởng phòng, cấu hình mặc định), `duong-dan`; SPEC GV-21 · DB-12, HDSD 3.12, 4.7, 5.4, 5.6, 5.7, 8.4.
+
+## 89. v3.34.0 — Chủ trì theo dõi tự sửa thông tin giao và điều chỉnh hạn cả khi quá hạn (30/10/2026, chủ dự án quyết — CAU-HOI T-1, T-2; migration **0131**)
+- Lỗi báo: sau "Đổi chủ trì theo dõi", người nhận chủ trì không sửa được nội dung, các ô thông tin giao (chủ trì ban đầu sửa được vì là người nhập việc).
+- CSDL: `sua_thong_tin_giao`, `dat_thong_tin_giao` cho thêm **chủ trì theo dõi** (`kl_la_chu_tri_theo_doi`) khi việc chưa hoàn thành; `dieu_chinh_han` bỏ chặn chủ trì khi việc đã quá hạn (lý do, lịch sử, Diễn biến, tin báo như cũ). `kl_la_tang_giao` không đổi.
+- Giao diện: chủ trì có nút bút "Sửa thông tin giao" (thay khoá "Đề nghị sửa"), ô nguồn / đơn vị phối hợp ở hộp Cập nhật; nút "Điều chỉnh hạn" cả với việc quá hạn, bỏ câu nhắc đề nghị gia hạn.
+- Test RLS `kl-0131` (mới), sửa `kl-0123`; unit `quyen-them`; e2e `quyen-v329` test 1; SPEC GV-29 · DL-7, HDSD 3.4 · 3.7 · Hỏi đáp.
