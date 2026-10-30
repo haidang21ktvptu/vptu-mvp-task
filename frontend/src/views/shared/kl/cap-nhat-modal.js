@@ -29,12 +29,11 @@ let homNay = homNayVN();
 const laHT = () => $('klCnTienDo').value === 'HOAN_THANH';
 const coMcNhanh = () => Boolean(row?.theo_1400) && row.tien_do_ma !== 'HOAN_THANH' && duocNopMinhChung(row);
 const khoaHan = () => Boolean(row?.han_xu_ly) && !state.user?.quan_tri_kl;
-// v3.29 (0123): đổi hạn đã có = nút "Điều chỉnh hạn" ở ngăn chi tiết (chủ trì theo dõi khi việc chưa quá hạn, thư ký Thường trực, tài khoản quản trị).
+// v3.29 (0123): đổi hạn đã có = nút "Điều chỉnh hạn" ở ngăn chi tiết (chủ trì theo dõi — v3.34: kể cả việc đã quá hạn, thư ký Thường trực, tài khoản quản trị).
 function chuKhoaHan(r) {
   const dau = `Hạn xử lý: ${formatNgay(r.han_xu_ly)} — đã chốt khi giao.`;
-  const che = cheDoDieuChinhHan(r, state.user, homNay);
+  const che = cheDoDieuChinhHan(r, state.user);
   if (che === 'duoc') return `${dau} Đổi hạn: bấm "Điều chỉnh hạn" ở ngăn chi tiết (ghi lý do; người giao việc, lãnh đạo phụ trách được báo).`;
-  if (che === 'qua-han') return `${dau} Việc đã quá hạn — đồng chí đề nghị lãnh đạo giao việc gia hạn hoặc báo thư ký Thường trực.`;
   return `${dau} Muốn đổi hạn, đồng chí đề nghị gia hạn với lãnh đạo giao việc.`;
 }
 const trong = (s) => !s || !s.trim();

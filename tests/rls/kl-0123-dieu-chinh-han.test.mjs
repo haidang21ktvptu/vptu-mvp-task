@@ -1,7 +1,7 @@
 // 0123 (v3.29, chủ dự án quyết 22/10/2026 — CAU-HOI O-4): điều chỉnh hạn ngay trên nhiệm vụ — chủ trì theo dõi (việc giao cho phòng: người
 // theo dõi) khi việc CHƯA quá hạn, mọi loại văn bản kể cả Kết luận BTV; thư ký Thường trực mọi việc chưa hoàn thành, kể cả quá hạn; tài khoản toàn
 // quyền mọi việc. Lùi hạn = gia hạn lần n, rút ngắn không cộng; "theo ngày ký" thành "có hạn cụ thể"; nhật ký (hạn cũ → mới + dòng có lý do), tin
-// báo người liên quan (không người làm, không Thường trực). Chặn: người khác, chủ trì khi đã quá hạn, việc đã hoàn thành, lỗi dữ liệu (hạn mới
+// báo người liên quan (không người làm, không Thường trực). v3.34 (0131 — CAU-HOI T-2): chủ trì điều chỉnh cả việc đã quá hạn. Chặn: người khác, việc đã hoàn thành, lỗi dữ liệu (hạn mới
 // trước hôm nay — trừ toàn quyền đính chính, nhưng vẫn không trước ngày ban hành); sửa thẳng hạn vẫn bị chặn (Q7). Ngày tính theo hôm nay (giờ
 // Việt Nam). Khoá "KL-0123"; cờ tạm của demo_e2e_tk / demo_e2e_tq khôi phục ở before / after; tự dọn.
 import { test, describe, before, after } from 'node:test';
@@ -43,7 +43,7 @@ describe('0123 — điều chỉnh hạn: chủ trì theo dõi (chưa quá hạn
   before(async () => {
     await don();
     await vanBan('cv'); await vanBan('kl', { loai: 'KL_BTV', so_hoi_nghi: 123 }); await vanBan('ky', { ngay_ban_hanh: cong(-3), ngay_nhan: cong(-2) });
-    await viec('A'); await viec('PHONG', { owner_tai_khoan: null, nguoi_theo_doi: IDS.cv1 }); await viec('QH', { han_xu_ly: cong(-5) });
+    await viec('A'); await viec('PHONG', { owner_tai_khoan: null, nguoi_theo_doi: IDS.cv1 }); await viec('QH', { han_xu_ly: cong(-5) }); await viec('QH2', { han_xu_ly: cong(-4) });
     await viec('KL', { van_ban_id: vb.kl }); await viec('KY', { van_ban_id: vb.ky, loai_thoi_han_ma: 'KY_BAN_HANH', han_xu_ly: null });
     await viec('XONG', { tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: cong(-10), nguon: 'excel' });
     await viec('CHA', { han_xu_ly: cong(40) }); await viec('CON', { han_xu_ly: cong(30), nhiem_vu_cha: v.CHA.id });
@@ -73,11 +73,14 @@ describe('0123 — điều chỉnh hạn: chủ trì theo dõi (chưa quá hạn
     assertOk(await dc('demo_cv1', 'KL', cong(65)), 'việc từ Kết luận BTV');
   });
 
-  test('3. Chặn (42501): Trưởng phòng (không phải chủ trì), chuyên viên khác, Thường trực, Phó / Chánh VP (gia hạn ở Chỉ đạo), chưa có cờ thư ký; chủ trì khi việc quá hạn', async () => {
+  test('3. Chặn (42501): Trưởng phòng (không phải chủ trì), chuyên viên khác, Thường trực, Phó / Chánh VP (gia hạn ở Chỉ đạo), chưa có cờ thư ký; v3.34: chủ trì điều chỉnh việc đã quá hạn', async () => {
     // v3.31 (0128): người theo dõi (nội bộ) của A = chủ trì cv1 — Trưởng phòng ở đây là lãnh đạo phòng, không phải chủ trì ⇒ vẫn bị chặn
     for (const u of ['demo_truongphong', 'demo_cv2', 'demo_a0', 'demo_pcvp', 'demo_cvp', 'demo_e2e_tk']) assertDenied(await dc(u, 'A', cong(80)), `${u} điều chỉnh`);
-    const qh = await dc('demo_cv1', 'QH', cong(20));
-    assertDenied(qh, 'chủ trì điều chỉnh việc đã quá hạn'); assert.match(qh.error.message, /quá hạn/);
+    for (const u of ['demo_cv2', 'demo_truongphong']) assertDenied(await dc(u, 'QH2', cong(20)), `${u} điều chỉnh việc quá hạn của người khác`);
+    const qh = await dc('demo_cv1', 'QH2', cong(20), 'Chờ ý kiến Thường trực'); assertOk(qh, 'v3.34: chủ trì điều chỉnh việc đã quá hạn');
+    assert.deepEqual([qh.data.gia_han, (await doc('QH2')).han_xu_ly], [true, cong(20)]);
+    const ls = (await db().from('lich_su').select('gia_tri_moi').eq('nhiem_vu_id', v.QH2.id).eq('cot', 'dieu_chinh_han')).data;
+    assert.deepEqual(ls.map((l) => l.gia_tri_moi), [`${vn(cong(-4))} → ${vn(cong(20))} (gia hạn lần 1) — lý do: Chờ ý kiến Thường trực`], 'lưu lịch sử thay đổi');
   });
 
   test('4. Thư ký Thường trực (cờ): điều chỉnh việc quá hạn ngoài phạm vi theo dõi cũ; tin tới chủ trì. Thu cờ → hết quyền', async () => {

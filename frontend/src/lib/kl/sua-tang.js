@@ -7,7 +7,7 @@ import { homNayVN } from './ngay.js';
 import { toiTrongNhom, duyetThayNhom } from './thay-mat.js';
 import { laToanQuyen } from '../toan-quyen.js';
 import { chiXem } from './pham-vi.js';
-import { thuKyGhi } from './quyen-them.js';
+import { thuKyGhi, chuTriTheoDoi } from './quyen-them.js';
 
 // [cột, nhãn, kiểu ô]: vb = đoạn chữ, chu = một dòng, còn lại = khoá danh mục (danhMucKl) hoặc doKhan.
 export const O_GIAO = [['noi_dung', 'Nội dung kết luận / Văn bản trình', 'vb'], ['san_pham_loai', 'Sản phẩm đầu ra', 'sanPham'], ['san_pham_mo_ta', 'Mô tả sản phẩm', 'chu'],
@@ -37,10 +37,13 @@ export function laTangGiao(r) {
 }
 const mo = (r) => r.tien_do_ma !== 'HOAN_THANH';
 const laBenTrong = (r) => r.nguoi_theo_doi === state.user?.id || (r.owner_tai_khoan && r.owner_tai_khoan === state.user?.id);
+// v3.34 (0131 — CAU-HOI T-1): chủ trì theo dõi (cán bộ chủ trì; việc của phòng / Văn phòng: người đại diện) sửa ngay thông tin giao của việc chưa hoàn
+// thành — kể cả người được chuyển sang làm chủ trì (không phải người nhập). Không đổi laTangGiao (duyệt đề nghị, mục tiêu… vẫn theo tầng giao).
+export const laChuTriSua = (r) => Boolean(r && state.user?.id) && mo(r) && !chiXem(r) && chuTriTheoDoi(r) === state.user.id && state.user?.role_group !== 'A0';
 // 'sua' = bút (sửa ngay), 'de-nghi' = khoá (đề nghị sửa), '' = chỉ xem. v3.29 (0124): thư ký Thường trực sửa ngay mọi việc chưa hoàn thành (không
-// duyệt đề nghị sửa — laTangGiao không đổi); việc đã hoàn thành: tài khoản toàn quyền sửa được (sua_thong_tin_giao).
+// duyệt đề nghị sửa — laTangGiao không đổi); việc đã hoàn thành: tài khoản toàn quyền sửa được (sua_thong_tin_giao). v3.34: + chủ trì theo dõi.
 export function cheDoTang(r) {
-  if (thuKyGhi(r, state.user)) return 'sua';
+  if (thuKyGhi(r, state.user) || laChuTriSua(r)) return 'sua';
   if (laTangGiao(r) && (mo(r) || qtklConHan() || laToanQuyen(state.user))) return 'sua';
   if (mo(r) && laBenTrong(r) && state.user?.role_group !== 'A0') return 'de-nghi';
   return '';

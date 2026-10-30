@@ -15,7 +15,7 @@ import { dsCoQuanTrinh } from '../../../lib/kl/nhap/chuan-hoa.js';   // v3.27 (0
 import { napPhamViSua, lvSauSua, ghiChuLv } from './sua-tang-lv.js';   // v3.29: lĩnh vực tự xác định trong phạm vi người sửa
 import { laToanQuyen } from '../../../lib/toan-quyen.js';
 import { laThuKyTT } from '../../../lib/kl/quyen-them.js';
-import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
+import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, laChuTriSua, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
 
@@ -29,7 +29,8 @@ const dongViec = (id) => timKlRow(id) || dh.rows.find((x) => x.id === id);   // 
 // v3.29: thư ký Thường trực (0124), tài khoản quản trị sửa ngay — người giao việc cũng được báo (sua_thong_tin_giao).
 const moTaSua = (r) => (laToanQuyen(state.user) ? 'Tài khoản quản trị: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi và người giao việc được báo.'
   : !laTangGiao(r) && laThuKyTT(state.user) ? 'Đồng chí là thư ký Thường trực: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi và người giao việc được báo.'
-    : 'Đồng chí là cấp giao việc: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi được báo.');
+    : !laTangGiao(r) && laChuTriSua(r) ? 'Đồng chí là chủ trì theo dõi: thay đổi áp ngay, ghi lịch sử kèm lý do; người giao việc được báo.'   // v3.34 (0131)
+      : 'Đồng chí là cấp giao việc: thay đổi áp ngay, ghi lịch sử kèm lý do; chủ trì theo dõi được báo.');
 
 // Giá trị hiển thị của một ô (mã danh mục → tên).
 export function giaTriO(cot, v) {

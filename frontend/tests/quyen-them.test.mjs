@@ -32,12 +32,12 @@ test('Chỉ xem: việc ngoài phạm vi — thư ký ghi được nếu chưa h
   assert.equal(chiXemVoi(viec(), KHAC), false, 'việc trong phạm vi: không phải chỉ xem');
 });
 
-test('Điều chỉnh hạn: chủ trì (việc giao cho phòng → người theo dõi) khi chưa quá hạn; quá hạn → câu nhắc; thư ký, quản trị', () => {
+test('Điều chỉnh hạn: chủ trì (việc giao cho phòng → người theo dõi), v3.34 (0131) kể cả khi đã quá hạn; thư ký, quản trị', () => {
   assert.equal(chuTriTheoDoi(viec()), 'cv');
   assert.equal(chuTriTheoDoi(viec({ owner_tai_khoan: null })), 'td');
   assert.equal(cheDoDieuChinhHan(viec(), CV, HOM_NAY), 'duoc');
   assert.equal(cheDoDieuChinhHan(viec({ han_xu_ly: HOM_NAY }), CV, HOM_NAY), 'duoc', 'hạn đúng hôm nay: chưa quá hạn');
-  assert.equal(cheDoDieuChinhHan(viec({ han_xu_ly: '2026-10-21' }), CV, HOM_NAY), 'qua-han');
+  assert.equal(cheDoDieuChinhHan(viec({ han_xu_ly: '2026-10-21' }), CV, HOM_NAY), 'duoc', 'v3.34: việc đã quá hạn — chủ trì vẫn tự điều chỉnh');
   assert.equal(cheDoDieuChinhHan(viec(), TD, HOM_NAY), '', 'người theo dõi khi đã có cán bộ chủ trì');
   assert.equal(cheDoDieuChinhHan(viec({ owner_tai_khoan: null }), TD, HOM_NAY), 'duoc');
   assert.equal(cheDoDieuChinhHan(viec(), KHAC, HOM_NAY), '');

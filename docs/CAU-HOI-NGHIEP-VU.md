@@ -410,3 +410,16 @@ hoạch cùng ngày. Áp dụng khi cấu hình `xem_toan_bo = 2` (GV-21, đang 
 | S-2 | Danh sách Nhiệm vụ? | Mở từ menu là **Toàn Văn phòng** (trước mặc định "Phạm vi của tôi"); "Việc của tôi" của chuyên viên giữ như cũ; lối vào từ màn khác (Cần xử lý, chip lọc, tìm nhanh) giữ bộ lọc truyền sang. | e2e `xem-toan-bo` test 5 |
 | S-3 | Màn Cán bộ? | **Toàn Văn phòng** mặc định (Lãnh đạo Văn phòng rồi mọi phòng, mọi cán bộ), nút Phạm vi của tôi; Giao lại / Nhắc chỉ ở việc trong phạm vi phụ trách. | e2e `xem-toan-bo` test 5 |
 | S-4 | Báo cáo cho Trưởng phòng, chuyên viên? | **Có**: Trưởng phòng luôn có mục Báo cáo; chuyên viên có khi đã có Tổng quan (bật xem toàn bộ hoặc xem cả phòng). Khi xem toàn bộ, tên mục bỏ "của phòng" / "thuộc quyền": "Nhiệm vụ", "Cán bộ" (chuyên viên: "Toàn bộ nhiệm vụ"). | unit `xem-toan-bo` |
+
+## Nhóm T — Quyết định 30/10/2026: chủ trì theo dõi tự sửa nhiệm vụ mình chủ trì (v3.34, migration 0131)
+
+Chủ dự án (30/10/2026, 15:14): "Chủ trì theo dõi ban đầu sẽ tự thay đổi hạn và chỉnh sửa được hết mọi nội dung nhiệm vụ → Sau khi đổi chủ trì theo
+dõi thì cán bộ được chuyển sang làm chủ trì theo dõi lại không chỉnh sửa được các nội dung và trường thông tin trong nhiệm vụ đang chủ trì → Chỉnh sửa
+lại ngay." Nguyên nhân: chủ trì ban đầu là người nhập việc (tầng giao) nên sửa ngay được; người nhận chủ trì chỉ "Đề nghị sửa", và chủ trì không tự điều
+chỉnh hạn việc đã quá hạn (O-4). Trả lời hai câu hỏi; 15:25 bổ sung: "Việc quá hạn thì chủ trì theo dõi có thể thay đổi được chỉ cần lưu lại lịch sử
+thay đổi là được." Duyệt kế hoạch cùng ngày.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| T-1 | Chủ trì theo dõi sửa thông tin giao thế nào? | **Sửa ngay mọi ô** (13 ô thông tin giao, nguồn / đơn vị phối hợp) khi việc chưa hoàn thành — mọi chủ trì theo dõi, kể cả người được chuyển sang; lý do bắt buộc, lưu lịch sử, báo người giao việc. Không cần "Đề nghị sửa" nữa. Việc đã hoàn thành: như cũ (tài khoản quản trị). | RLS `kl-0131`; e2e `quyen-v329` test 1 |
+| T-2 | Chủ trì điều chỉnh hạn khi việc đã quá hạn? | **Được** — chỉ cần lưu lịch sử thay đổi (thay O-4 phần "chỉ khi chưa quá hạn"); hạn mới không trước hôm nay, lý do bắt buộc, lùi hạn tính lần gia hạn, Diễn biến và tin báo như cũ. | RLS `kl-0131`, `kl-0123`; e2e `quyen-v329` test 1 |

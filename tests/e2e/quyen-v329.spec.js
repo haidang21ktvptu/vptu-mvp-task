@@ -1,7 +1,8 @@
 // v3.29 (0123–0126, chủ dự án quyết 22/10/2026 — CAU-HOI O-4…O-6): mỗi vai một luồng trên giao diện thật.
 // 1. Chủ trì theo dõi (demo_e2e_nv): "Điều chỉnh hạn" việc còn hạn (mở bằng đường dẫn, ngăn dùng chung) — lùi hạn = gia hạn lần 1, lý do bắt buộc,
-//    Diễn biến, tiêu đề ngăn theo hạn mới, chuông của chủ trì không có tin mình gửi; việc đã quá hạn: không có nút,
-//    có câu nhắc đề nghị lãnh đạo gia hạn.
+//    Diễn biến, tiêu đề ngăn theo hạn mới, chuông của chủ trì không có tin mình gửi; v3.34 (0131 — CAU-HOI T-1, T-2): việc do Trưởng phòng nhập
+//    (chủ trì không phải người nhập — như người được chuyển sang làm chủ trì): nút "Sửa thông tin giao" (không còn "Đề nghị sửa"), sửa mô tả sản
+//    phẩm ngay; việc đã quá hạn: chủ trì vẫn tự điều chỉnh hạn, lịch sử ghi lại.
 // 2. Thư ký Thường trực (demo_e2e_tk, cờ tạm): việc ngoài phạm vi cũ không còn "Chỉ xem"; nộp minh chứng → hoàn thành; đổi chủ trì theo dõi.
 // 3. Tài khoản quản trị (demo_e2e_tq, cờ toàn quyền tạm): việc đã hoàn thành — "Sửa văn bản giao" (trích yếu), "Sửa toàn bộ thông tin" (ghi chú),
 //    "Sửa" minh chứng (trích yếu), "Mở lại nhiệm vụ" (minh chứng chuyển "Bị trả lại").
@@ -52,7 +53,7 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
     if (khoa) await donVanBan(db, khoa);
   });
 
-  test('1. Chủ trì: điều chỉnh hạn việc còn hạn (gia hạn lần 1, lý do, Diễn biến); việc quá hạn chỉ có câu nhắc', async ({ browser }, testInfo) => {
+  test('1. Chủ trì: điều chỉnh hạn việc còn hạn (gia hạn lần 1, lý do, Diễn biến); v3.34: sửa thông tin giao, điều chỉnh hạn việc quá hạn', async ({ browser }, testInfo) => {
     const moi = cong(homNay(), 35);
     await voiPhien(browser, 'E2E_NV', testInfo, async (p) => {
       await p.goto(`./Viec-cua-toi/${v.CON_HAN.ma}`);   // mở bằng đường dẫn → ngăn chi tiết dùng chung (dòng tiêu đề phụ phải theo hạn mới sau khi lưu)
@@ -87,8 +88,27 @@ test.describe.serial('Quyền sửa v3.29 — điều chỉnh hạn, thư ký Th
       await expect(nhomTin).not.toContainText('diễn biến');
       await p.locator('#chuongBtn').click();
       await moViec(p, v.QUA_HAN.id, v.QUA_HAN.ma);
-      await expect(p.locator(`#klChiTiet-${v.QUA_HAN.id} [data-truong="nhac-gia-han"]`)).toBeVisible(NAP);
-      await expect(p.locator(`#klChiTiet-${v.QUA_HAN.id} [data-action="moDieuChinhHan"]`)).toHaveCount(0);
+      const ctQh = p.locator(`#klChiTiet-${v.QUA_HAN.id}`);
+      // v3.34: chủ trì (Trưởng phòng nhập việc) sửa ngay thông tin giao — không còn nút khoá "Đề nghị sửa"
+      await expect(ctQh.locator('[data-action="moDeNghiSua"]')).toHaveCount(0);
+      await ctQh.locator('.hanh-dong [data-action="moSuaTang"]').first().click();
+      await expect(p.locator('#stModal')).toBeVisible();
+      await expect(p.locator('#stMoTa')).toContainText('chủ trì theo dõi');
+      await p.locator('#stCot').selectOption('san_pham_mo_ta'); await p.locator('#stMoi').fill(`${khoa} báo cáo kèm phụ lục`);
+      await p.locator('#stLyDo').fill('Bổ sung theo yêu cầu của lãnh đạo phòng'); await p.locator('#stLuu').click();
+      await expect(p.locator('#stModal')).toBeHidden(NAP);
+      await expect.poll(async () => (await doc('QUA_HAN', 'san_pham_mo_ta')).san_pham_mo_ta, NAP).toBe(`${khoa} báo cáo kèm phụ lục`);
+      // v3.34: việc đã quá hạn — chủ trì vẫn tự điều chỉnh hạn (không còn câu nhắc đề nghị gia hạn), lịch sử ghi lại
+      await expect(ctQh.locator('[data-truong="nhac-gia-han"]')).toHaveCount(0);
+      await ctQh.locator('[data-action="moDieuChinhHan"]').click();
+      await expect(p.locator('#dchModal')).toBeVisible();
+      const moiQh = cong(homNay(), 12);
+      await p.locator('#dchHan').fill(moiQh); await p.locator('#dchLyDo').fill(`${khoa} chờ ý kiến Thường trực`);
+      await p.locator('#dchLuu').click(); await expect(p.locator('#dchModal')).toBeHidden(NAP);
+      await expect.poll(async () => (await doc('QUA_HAN', 'han_xu_ly')).han_xu_ly, NAP).toBe(moiQh);
+      await expect(p.locator(`#klDienBien-${v.QUA_HAN.id}`)).toContainText('Điều chỉnh hạn', NAP);
+      const lsQh = await db.from('lich_su').select('cot').eq('nhiem_vu_id', v.QUA_HAN.id).in('cot', ['sua_thong_tin_giao', 'dieu_chinh_han']);
+      expect(lsQh.data.map((l) => l.cot).sort()).toEqual(['dieu_chinh_han', 'sua_thong_tin_giao']);
     });
   });
 

@@ -111,7 +111,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
       'Bấm **Lưu cập nhật**. Lần đầu ghi vướng mắc, hệ thống báo ngay cho người giao và Phó Chánh Văn phòng phụ trách; việc hiện ở mục "Việc cần lãnh đạo quyết định" của lãnh đạo. Khi vướng mắc đã được giải quyết, xoá trống ô này. Có ghi kết quả thì việc chuyển ngay sang **Hoàn thành** (như mục 3.5).',
     ]),
     ...hinh('a3-04-cap-nhat-tien-do-cat.jpg', 'Hộp Cập nhật: đánh dấu "Việc đã hoàn thành — ghi kết quả" mở các ô minh chứng và ô chọn tệp'),
-    luuY('Từ v3.29, **chủ trì theo dõi tự điều chỉnh hạn** khi việc **chưa quá hạn**: mở ngăn chi tiết → **Điều chỉnh hạn** → chọn hạn mới (không trước hôm nay), ghi **lý do** (bắt buộc) → **Lưu hạn mới**. Lùi hạn tính là một lần gia hạn; hạn cũ, hạn mới và lý do lưu ở Diễn biến; người giao việc, Trưởng phòng, lãnh đạo phụ trách nhận thông báo. Việc **đã quá hạn** thì đề nghị lãnh đạo giao việc **gia hạn** (hoặc báo thư ký Thường trực) — lãnh đạo gia hạn có lý do, hạn cũ vẫn lưu trong lịch sử.'),
+    luuY('**Chủ trì theo dõi tự điều chỉnh hạn** (từ v3.34 cả khi việc **đã quá hạn**): mở ngăn chi tiết → **Điều chỉnh hạn** → chọn hạn mới (không trước hôm nay), ghi **lý do** (bắt buộc) → **Lưu hạn mới**. Lùi hạn tính là một lần gia hạn; hạn cũ, hạn mới và lý do lưu ở Diễn biến; người giao việc, Trưởng phòng, lãnh đạo phụ trách nhận thông báo. Lãnh đạo giao việc vẫn có thể **gia hạn** ở ô Chỉ đạo — mọi lần đổi hạn đều lưu lịch sử.'),
     P2('3.5 Nộp minh chứng — nộp xong là hoàn thành'),
     p('Minh chứng là **văn bản đã phát hành hoặc đã trình** ghi nhận kết quả (tra cứu được trên V-Office). Từ v3.20, **nộp minh chứng hợp lệ là việc hoàn thành ngay** — ngày hoàn thành = ngày văn bản minh chứng; không còn bước chờ lãnh đạo nghiệm thu. Kèm **tệp văn bản kết quả** (PDF, Word, Excel hoặc ảnh, tối đa 10 MB) để người giao việc, lãnh đạo mở xem ngay trên hệ thống — tệp không bắt buộc, trừ khi Văn phòng bật cấu hình "bắt buộc kèm tệp" (mục 8.4).'),
     ...steps([
@@ -127,8 +127,9 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     luuY('**Việc lãnh đạo chủ trì theo dõi** (ví dụ việc Thường trực giao Chánh Văn phòng, việc giao cho phòng — Trưởng phòng thay mặt phòng chủ trì theo dõi): người đã nhập việc (chuyên viên giao, chuyên viên nhập thay mặt lãnh đạo) **cập nhật và nộp minh chứng thay** được; lãnh đạo không phải tự nhập. Mỗi việc chỉ có **một hạn — hạn hoàn thành**: nộp minh chứng trước hạn là đúng hạn.'),
     P2('3.6 Trả lời chỉ đạo'),
     p('Khi lãnh đạo đôn đốc hoặc Thường trực có ý kiến chỉ đạo, nội dung chỉ đạo hiện **ngay trên thẻ việc** kèm ô trả lời một dòng. Gõ nội dung trả lời và bấm **Gửi**; người chỉ đạo nhận được ngay và thẻ rời khỏi nhóm "có chỉ đạo chờ trả lời". Hạn trả lời chỉ đạo của Thường trực là 2 ngày làm việc.'),
-    P2('3.7 Đề nghị sửa thông tin giao'),
-    p('Những ô do cấp giao điền (sản phẩm, cấp nhận, độ khẩn, ngành/lĩnh vực, nguồn, đơn vị phối hợp…) có **biểu tượng ổ khoá** trong ngăn chi tiết: chuyên viên không tự sửa nhưng có thể **Đề nghị sửa**.'),
+    P2('3.7 Sửa thông tin giao — chủ trì sửa ngay; người khác đề nghị sửa'),
+    p('Từ v3.34, **chủ trì theo dõi sửa ngay** mọi ô do cấp giao điền (nội dung, sản phẩm, cấp nhận, độ khẩn, ngành/lĩnh vực, nguồn, đơn vị phối hợp…) của việc chưa hoàn thành — kể cả khi đồng chí mới được **chuyển sang làm chủ trì**: bấm biểu tượng **bút** cạnh ô hoặc nút **Sửa thông tin giao** ở ngăn chi tiết, chọn ô, nhập giá trị mới và **lý do** (bắt buộc), bấm **Lưu thay đổi**. Thay đổi áp ngay, lưu lịch sử; người giao việc nhận thông báo.'),
+    p('Những ô có **biểu tượng ổ khoá** (khi đồng chí không phải chủ trì, không phải người giao) thì không tự sửa được nhưng có thể **Đề nghị sửa**:'),
     ...steps([
       'Trên thẻ việc (hoặc trong ngăn chi tiết), bấm **Đề nghị sửa**.',
       'Chọn **Ô cần sửa**, xem giá trị **Đang ghi**, nhập **Giá trị mới** và **Lý do** (bắt buộc), bấm **Gửi đề nghị**.',
