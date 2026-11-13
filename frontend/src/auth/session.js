@@ -5,6 +5,7 @@ import { show, showInlineError } from '../lib/dom.js';
 import { state } from '../lib/state.js';
 import { initUserInterface } from '../views/shell/index.js';
 import { loadCauHinhKl } from '../lib/kl/du-lieu.js';
+import { napDanhMuc as napDanhMucNvq, nq } from '../lib/nvq/du-lieu.js';
 import { batDemPhien, tatDemPhien, phienDaQuaHan, soPhut } from './het-phien.js';
 import { CAU_HET_PHIEN } from '../lib/het-phien.js';
 import { ghiDangNhap, boMaTruocKhiThoat } from '../views/shell/duong-dan.js';
@@ -24,7 +25,11 @@ export async function loadAccountsCache() {
 
 export async function enterApp() {
   show('changePasswordModal', false);
-  try { await loadCauHinhKl(); } catch { /* không đọc được cấu hình: menu theo mặc định (0086: chuyên viên chưa có mục phòng) */ }
+  nq.quyen = {}; nq.daNap = false; nq.kyChon = '';   // v3.35: tài khoản khác đăng nhập trên cùng máy — quyền phân hệ Nhiệm vụ quý đọc lại
+  await Promise.all([
+    loadCauHinhKl().catch(() => null),   // không đọc được cấu hình: menu theo mặc định (0086: chuyên viên chưa có mục phòng)
+    napDanhMucNvq().catch(() => null),   // v3.35: quyền quản lý danh mục quý → mục "Quản lý danh mục quý" trên menu
+  ]);
   initUserInterface();
   hooks.onEnter.forEach((fn) => fn());
   batDemPhien(() => hooks.onLeave.forEach((fn) => fn()));   // v3.15.1: tự đăng xuất khi không thao tác (lib/het-phien.js)

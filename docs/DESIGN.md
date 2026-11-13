@@ -321,3 +321,13 @@ chữ phụ nói hệ quả ngay khi nhập ("Lùi hạn: tính là gia hạn l�
 bắt buộc ngay trên chân hộp, nút chính "Lưu …" bên phải. Thao tác một bước trên một việc (Mở lại nhiệm vụ, Gỡ minh chứng) dùng ô lý do mở tại chỗ
 dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với người có quyền; việc đã quá hạn thì chủ trì thấy một dòng chữ phụ thay cho nút Điều chỉnh hạn.
 
+## 16. Phân hệ Nhiệm vụ quý BTV (v3.35 — chủ dự án 13/11/2026, CAU-HOI U-5)
+
+- **Lãnh đạo nắm ngay, chủ trì theo dõi cập nhật**: Tổng quan quý đọc từ trên xuống — một câu tóm tắt (con số kèm danh từ, số ngày còn lại của quý) → ô số
+  bấm được → 05 chỉ tiêu cơ bản (mục tiêu / thực hiện / thanh % / Đạt – Chưa đạt, ngày và nguồn số liệu) → 6 trục (thanh xếp chồng hoàn thành / đang /
+  chậm / chưa) → **Cần lãnh đạo quan tâm** (đơn vị, số ngày chậm so với mốc, kết quả còn thiếu, lãnh đạo phụ trách, vướng mắc / đề xuất) → kết quả mới trong
+  tuần, đến mốc trong tháng → bảng theo lãnh đạo phụ trách, đơn vị, chủ trì theo dõi → diễn biến các tuần đã chốt. Mọi số, tên bấm được → Danh mục đã lọc.
+- **Danh mục** đúng cột bảng Phụ lục (nhóm theo trục → nhóm), thêm Kết quả thực hiện mới nhất (kèm ngày), Trạng thái, Chủ trì theo dõi; mép trái theo mức
+  (Đỏ đặc biệt tím, Đỏ, Vàng, xanh, lục); kết quả / sản phẩm thu gọn một chấm màu một dòng; màn hẹp: mỗi dòng thành thẻ có nhãn ô.
+- **Cập nhật tuần** (nơi làm việc của chủ trì theo dõi): thẻ "Chưa báo cáo tuần này" trước, biểu mẫu mở ngay trên thẻ, ô theo loại kết quả.
+- Ngăn chi tiết `#nqNgan` như ngăn dùng chung (mục 10): khối **Kết quả thực hiện** nền lam nhạt ngay dưới nội dung; hộp lý do như mục 15. Chỉ token sẵn có.

@@ -26,6 +26,7 @@ import { napLaiViec } from './kl/nap-lai-viec.js';
 import { dh } from './dieu-hanh/du-lieu.js';
 import { hanNgan } from './ngan-viec.js';
 import { boViec, quenViec } from '../shell/duong-dan.js';
+import { dangMo as nvqDangMo, dongNgan as dongNganNvq } from '../nvq/chi-tiet.js';
 
 const ngan = { ds: null, rows: new Map(), daMo: new Set(), tuDs: false, onDong: null, cha: null, sau: null, truoc: null, cuon: 0, viecVua: null };
 const nguon = new Set();   // hàm (id) → dòng của các màn hình tự đọc v_nhiem_vu (Báo cáo, Cán bộ): mở việc ngay, không chờ đọc
@@ -136,7 +137,8 @@ function nganLui({ url = true } = {}) {
 
 // Quay lại / Tiến tới của trình duyệt bỏ mã việc (cùng màn): đóng việc như "Quay lại" của ngăn / "Đóng ngăn" của màn Nhiệm vụ, không ghi lịch sử.
 export function dongViecTheoDuong() {
-  if (nganDangMoViec()) nganLui({ url: false });
+  if (nvqDangMo()) dongNganNvq({ doiMan: true });   // v3.35: ngăn nhiệm vụ quý (mã NQ-…) — không ghi lịch sử
+  else if (nganDangMoViec()) nganLui({ url: false });
   else if (idDangMo()) dongKlChiTiet();
 }
 

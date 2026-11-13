@@ -5,9 +5,10 @@ import { $, show, setText, escapeHtml } from '../../lib/dom.js';
 import { menuCuaVai } from './menu.js';
 import { chuyenVienXemPhong, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { ghiDuongDan, datMenuDuongDan } from './duong-dan.js';   // v3.29: đường dẫn riêng từng chức năng
+import { nq } from '../../lib/nvq/du-lieu.js';   // v3.35: quyền phân hệ Nhiệm vụ quý BTV
 
 let items = [];
-const NHOM = ['Điều hành', 'Theo dõi', 'Hệ thống'];   // v3.23: bỏ nhóm Trao đổi (Nhắn tin)
+const NHOM = ['Điều hành', 'Theo dõi', 'Nhiệm vụ quý BTV', 'Hệ thống'];   // v3.23: bỏ nhóm Trao đổi (Nhắn tin); v3.35: nhóm Nhiệm vụ quý BTV
 
 // Biểu tượng nét đơn (viewBox 24, stroke = màu chữ) theo id mục; mục lạ dùng dấu chấm tròn.
 const ICON = {
@@ -22,6 +23,11 @@ const ICON = {
   navNhapExcel: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
   navCanBo: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5a5 5 0 0 1 6 5"/>',
   navBaoCao: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  navNqTongQuan: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/><path d="M8 15l2.5 2.5L16 12"/>',
+  navNqDanhMuc: '<path d="M9 6h12M9 12h12M9 18h12"/><path d="M3 6l1.5 1.5L7 5M3 12l1.5 1.5L7 11"/><circle cx="5" cy="18" r="1.3"/>',
+  navNqCapNhat: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  navNqBaoCao: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 17v-3M12 17v-5M15 17v-2"/>',
+  navNqQuanLy: '<path d="M4 6h10M4 12h6M4 18h10"/><circle cx="17" cy="6" r="2"/><circle cx="13" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   navQuanTri: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
 };
 const icon = (it) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[it.id] || '<circle cx="12" cy="12" r="4"/>'}</svg>`;
@@ -37,7 +43,8 @@ function duoiHtml(it) {
 
 export function renderNav(user) {
   // 0086: Tổng quan phòng, Nhiệm vụ của phòng cho chuyên viên; 0103: Tổng quan chung, Toàn bộ nhiệm vụ (cấu hình xem toàn bộ)
-  items = menuCuaVai(user, { xemPhong: user?.role_group === 'A3' && chuyenVienXemPhong(), xemToanBo: xemToanBo() });
+  items = menuCuaVai(user, { xemPhong: user?.role_group === 'A3' && chuyenVienXemPhong(), xemToanBo: xemToanBo(),
+    nvq: { quanLy: Boolean(nq.quyen.quan_ly), phanQuyen: Boolean(nq.quyen.phan_quyen) } });   // v3.35: quyền nạp lúc vào app (auth/session.js)
   datMenuDuongDan(items);
   $('mainNav').innerHTML = NHOM.map((n) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? `<div class="menu-nhom">${n}</div>${ds.map(pillHtml).join('')}` : ''; }).join('')
     + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>';

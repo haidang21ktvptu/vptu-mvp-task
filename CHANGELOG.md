@@ -950,3 +950,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - CSDL: `sua_thong_tin_giao`, `dat_thong_tin_giao` cho thêm **chủ trì theo dõi** (`kl_la_chu_tri_theo_doi`) khi việc chưa hoàn thành; `dieu_chinh_han` bỏ chặn chủ trì khi việc đã quá hạn (lý do, lịch sử, Diễn biến, tin báo như cũ). `kl_la_tang_giao` không đổi.
 - Giao diện: chủ trì có nút bút "Sửa thông tin giao" (thay khoá "Đề nghị sửa"), ô nguồn / đơn vị phối hợp ở hộp Cập nhật; nút "Điều chỉnh hạn" cả với việc quá hạn, bỏ câu nhắc đề nghị gia hạn.
 - Test RLS `kl-0131` (mới), sửa `kl-0123`; unit `quyen-them`; e2e `quyen-v329` test 1; SPEC GV-29 · DL-7, HDSD 3.4 · 3.7 · Hỏi đáp.
+
+## 90. v3.35.0 — Phân hệ Nhiệm vụ quý của Ban Thường vụ (13/11/2026, chủ dự án duyệt kế hoạch — CAU-HOI U-1…U-6; migration **0132–0139**)
+- Phân hệ tách riêng (bảng `nvq_*`, menu "Nhiệm vụ quý BTV", mã `NQ-<số>`): quý và tuần báo cáo (hạn 11h00 thứ Năm), danh mục theo trục / nhóm, kết quả / sản phẩm theo loại (văn bản, chỉ tiêu, hoạt động, định kỳ), trạng thái và mức do CSDL tính.
+- Năm màn: Tổng quan quý cho lãnh đạo (05 chỉ tiêu cơ bản, 6 trục, cần quan tâm), Danh mục, Cập nhật tuần cho chủ trì theo dõi, Báo cáo (Word theo thể thức Văn phòng, Excel, chốt tuần), Quản lý danh mục (nhập Word / Excel có xem trước, phân công, đầu mối, đánh giá, chốt quý, chuyển quý sau).
+- Ngăn chi tiết: kết quả thực hiện mới nhất, ý kiến chỉ đạo / trao đổi (chuông dùng chung), tệp (kho `nvq-tep`), lịch sử; thời gian thực; nhắc tự động 7h30 (`canh-bao.yml` → `nvq_nhac_quet`).
+- Test RLS `nvq-0132` (mới), unit `nvq-tach`, `nvq-tinh`, e2e `nhiem-vu-quy`; SPEC mục 10, DESIGN mục 16, HDSD Phần 9.

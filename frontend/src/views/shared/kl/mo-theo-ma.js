@@ -6,7 +6,8 @@
 import { $ } from '../../../lib/dom.js';
 import { supabase } from '../../../lib/supabase.js';
 import { notify } from '../../../components/toast.js';
-import { laMaViec } from '../../../lib/tuyen.js';
+import { laMaViec, laMaNvq } from '../../../lib/tuyen.js';
+import { moTheoMaNvq } from '../../nvq/chi-tiet.js';
 import { boMaTrenDuong, ghiViec, conLuot } from '../../shell/duong-dan.js';
 import { sectionDangHien } from '../../shell/index.js';
 import { getKlRows, timKlRow } from './danh-sach.js';
@@ -20,6 +21,7 @@ export async function moViecTheoMa({ ma, luot }) {
   const m = String(ma || '').toUpperCase();
   const l = Number(luot);
   if (!laMaViec(m)) { boMaTrenDuong(); return; }
+  if (laMaNvq(m)) { await moTheoMaNvq(m); return; }   // v3.35: nhiệm vụ quý của Ban Thường vụ — ngăn riêng của phân hệ
   let r = getKlRows().find((x) => x.ma === m) || dh.rows.find((x) => x.ma === m);
   if (!r) {
     const { data, error } = await supabase.from('v_nhiem_vu').select('id, ma').eq('ma', m).maybeSingle();
