@@ -956,3 +956,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Năm màn: Tổng quan quý cho lãnh đạo (05 chỉ tiêu cơ bản, 6 trục, cần quan tâm), Danh mục, Cập nhật tuần cho chủ trì theo dõi, Báo cáo (Word theo thể thức Văn phòng, Excel, chốt tuần), Quản lý danh mục (nhập Word / Excel có xem trước, phân công, đầu mối, đánh giá, chốt quý, chuyển quý sau).
 - Ngăn chi tiết: kết quả thực hiện mới nhất, ý kiến chỉ đạo / trao đổi (chuông dùng chung), tệp (kho `nvq-tep`), lịch sử; thời gian thực; nhắc tự động 7h30 (`canh-bao.yml` → `nvq_nhac_quet`).
 - Test RLS `nvq-0132` (mới), unit `nvq-tach`, `nvq-tinh`, e2e `nhiem-vu-quy`; SPEC mục 10, DESIGN mục 16, HDSD Phần 9.
+
+## 91. v3.35.1 — Nhiệm vụ quý: sửa giao diện sau kiểm tra staging (13/11/2026; chỉ giao diện, không migration)
+- Nút gửi trong biểu mẫu (Tạo quý, Lưu, Thêm văn bản, Chốt báo cáo tuần, Chỉ định) không kéo hết bề ngang; nút lam giữ chữ khi rê chuột; "Tạo quý mới" mặc định quý hiện tại khi chưa có quý.
+- Không còn dải "Có cập nhật mới" ngay sau thao tác của chính mình; Cập nhật tuần mở sẵn "Cả phòng" / "Tất cả nhiệm vụ" cho người không trực tiếp theo dõi việc nào.
+- Câu số liệu báo cáo tuần ghi đúng "x/y nhiệm vụ chưa hoàn thành"; mở lại tuần thì ô Nhận xét điền sẵn nhận xét cũ; thẻ Phân công: nút "Bỏ chọn", ô "Chọn tất cả" theo đúng số việc đã chọn.

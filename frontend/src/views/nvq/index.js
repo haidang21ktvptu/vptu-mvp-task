@@ -46,8 +46,10 @@ async function mo(ten, ds = {}) {
   batNvqRealtime(khiCoMoi);
 }
 // Sau mỗi lần ghi: nạp lại quý (và danh mục khi đổi đầu mối / danh mục), vẽ lại màn đang xem (ngăn chi tiết tự nạp lại — chi-tiet-hanh-dong.js).
+let tuGhiLuc = 0;   // lúc vừa nạp lại sau thao tác ghi của chính mình — sự kiện thời gian thực ngay sau đó là của mình, không báo "Có cập nhật mới"
 async function napLaiSauGhi(op = {}) {
   await napTatCa(op);
+  tuGhiLuc = Date.now();
   if (sectionDangHien('viewNvq')) await veLai();
 }
 // Sự kiện thời gian thực: màn chỉ xem (Tổng quan, Danh mục) không đang gõ → nạp lại ngay; màn có biểu mẫu → dải "Có cập nhật mới"; ngăn chi tiết đang
@@ -58,6 +60,7 @@ function khiCoMoi(ids) {
   henRt = setTimeout(async () => {
     if (dangMo() && (!ids.length || ids.includes(ct.id)) && !$('nqNganThan')?.querySelector('form')) napLaiNgan();
     if (!sectionDangHien('viewNvq')) return;   // mở lại màn nào của phân hệ cũng nạp lại quý
+    if (ids.length && Date.now() - tuGhiLuc < 8000) return;   // tín hiệu từ chính thao tác vừa ghi (đã nạp lại rồi)
     const dangGo = el().contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (MAN[man].chiXem && !dangGo) { try { await napTatCa(); await veLai(); } catch { show('nqCoMoi', true); } }
     else show('nqCoMoi', true);
