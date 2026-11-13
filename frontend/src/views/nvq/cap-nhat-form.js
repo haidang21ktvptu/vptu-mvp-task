@@ -15,7 +15,7 @@ function spForm(s) {
   const hom = homNayVN();
   const chon = `<select class="o-nhap nho" name="tt_${s.id}" data-nq-tt-sp>${luaChonTrangThaiSp(s.loai, { quanLy: nq.quyen.quan_ly })
     .map((t) => `<option value="${t}"${t === s.trang_thai ? ' selected' : ''}>${e(tenTrangThaiSp(s.loai, t))}</option>`).join('')}</select>`;
-  let rieng = '';
+  let rieng;
   if (s.loai === 'VAN_BAN') {
     rieng = `<div class="nq-luoi-form">${vb(s, 'kq_so_ky_hieu', 'Số, ký hiệu văn bản', 'text', 'maxlength="100" placeholder="Ví dụ: 199-KH/TU"')}${vb(s, 'kq_ngay', 'Ngày văn bản', 'date', `max="${hom}"`)}`
       + `${vb(s, 'kq_co_quan', 'Cơ quan ban hành', 'text', 'maxlength="200"')}${vb(s, 'kq_trich_yeu', 'Trích yếu', 'text', 'maxlength="1000"')}</div>`;

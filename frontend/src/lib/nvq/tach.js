@@ -3,7 +3,7 @@
 // (văn bản, chỉ tiêu có số mục tiêu, hoạt động, định kỳ hằng tháng), tính chất tiến độ, số / ngày văn bản kết quả trong phần đã cập nhật, khớp tên chủ trì
 // theo dõi với tài khoản. Thuần — unit test frontend/tests/nvq-tach.test.mjs. Kết quả là GỢI Ý: màn Nhập cho xem trước, sau nhập vẫn sửa được từng nhiệm vụ.
 
-export const chuan = (s) => String(s ?? '').normalize('NFC').replace(/uỷ/g, 'ủy').replace(/Uỷ/g, 'Ủy').replace(/UỶ/g, 'ỦY').replace(/[ \t ]+/g, ' ').trim();
+export const chuan = (s) => String(s ?? '').normalize('NFC').replace(/uỷ/g, 'ủy').replace(/Uỷ/g, 'Ủy').replace(/UỶ/g, 'ỦY').replace(/[ \t\u00a0]+/g, ' ').trim();
 export const thuong = (s) => chuan(s).toLowerCase();
 export const boDau = (s) => chuan(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
 const doan = (s) => chuan(s).split(/[;\n]+/).map((x) => x.trim()).filter(Boolean);

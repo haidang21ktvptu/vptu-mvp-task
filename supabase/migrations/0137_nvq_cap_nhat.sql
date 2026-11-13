@@ -15,7 +15,7 @@ DECLARE n "public"."nvq_nhiem_vu"; k "public"."nvq_ky"; w "public"."nvq_tuan"; s
         v_hom date := "public"."kl_hom_nay"(); v_ngay date := coalesce(nullif("p" ->> 'ngay_bao_cao', '')::date, "public"."kl_hom_nay"());
         v_nd text := nullif(btrim(coalesce("p" ->> 'noi_dung', '')), ''); v_kq text := nullif(btrim(coalesce("p" ->> 'ket_qua_thuc_hien', '')), '');
         v_vm text := nullif(btrim(coalesce("p" ->> 'vuong_mac', '')), ''); v_dx text := nullif(btrim(coalesce("p" ->> 'de_xuat', '')), '');
-        v_ktd boolean := coalesce(("p" ->> 'khong_thay_doi')::boolean, false); v_doi jsonb := '[]'; v_tt text; v_ngay_xong date; v_gt numeric; v_ns date;
+        v_ktd boolean := coalesce(("p" ->> 'khong_thay_doi')::boolean, false); v_doi jsonb := '[]'::jsonb; v_tt text; v_ngay_xong date; v_gt numeric; v_ns date;
         v_vm_moi boolean := false; v_tin text;
 BEGIN
   SELECT * INTO n FROM "public"."nvq_nhiem_vu" WHERE "id" = nullif("p" ->> 'nhiem_vu_id', '')::uuid FOR UPDATE;

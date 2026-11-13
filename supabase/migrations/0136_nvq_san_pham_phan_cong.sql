@@ -5,7 +5,7 @@
 
 -- ---- 1. Kết quả / sản phẩm ----
 CREATE FUNCTION "public"."nvq_kiem_san_pham"("p" jsonb, "k" "public"."nvq_ky") RETURNS void
-LANGUAGE plpgsql IMMUTABLE AS $$
+LANGUAGE plpgsql STABLE AS $$
 BEGIN
   IF "p" ? 'mo_ta' AND char_length(btrim(coalesce("p" ->> 'mo_ta', ''))) NOT BETWEEN 1 AND 2000 THEN
     RAISE EXCEPTION 'Ghi kết quả, sản phẩm cần đạt (tối đa 2.000 ký tự).' USING ERRCODE = '22023';

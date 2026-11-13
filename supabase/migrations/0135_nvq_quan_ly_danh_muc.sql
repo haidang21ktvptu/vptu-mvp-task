@@ -64,7 +64,7 @@ END $$;
 CREATE FUNCTION "public"."nvq_ky_luu"("p" jsonb) RETURNS uuid
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_id uuid := nullif("p" ->> 'id', '')::uuid; v_nam integer := nullif("p" ->> 'nam', '')::integer; v_quy integer := nullif("p" ->> 'quy', '')::integer;
-        v_tu date; k "public"."nvq_ky";
+        v_tu date;
 BEGIN
   PERFORM "public"."nvq_can_quan_ly"();
   IF v_id IS NULL THEN
@@ -82,7 +82,7 @@ BEGIN
     PERFORM "public"."nvq_tao_tuan"(v_id);
     PERFORM "public"."nvq_ghi_lich_su"(NULL, v_id, 'tao_ky', format('Tạo Quý %s năm %s', "public"."nvq_la_ma"(v_quy), v_nam));
   ELSE
-    k := "public"."nvq_ky_mo"(v_id);
+    PERFORM "public"."nvq_ky_mo"(v_id);
     UPDATE "public"."nvq_ky" SET
       "han_bao_cao_ket_qua" = CASE WHEN "p" ? 'han_bao_cao_ket_qua' THEN nullif("p" ->> 'han_bao_cao_ket_qua', '')::date ELSE "han_bao_cao_ket_qua" END,
       "ghi_chu" = CASE WHEN "p" ? 'ghi_chu' THEN nullif(btrim(coalesce("p" ->> 'ghi_chu', '')), '') ELSE "ghi_chu" END
