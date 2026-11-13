@@ -65,6 +65,15 @@ jobs:
             --max-time 60 -X POST "$URL/rest/v1/rpc/tin_tom_tat_sang" \
             -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
           if [ "$HTTP" != 200 ]; then echo "::warning::tin_tom_tat_sang trả HTTP $HTTP (hàm chưa có trước 0041?)."; else echo "Bản tin 7h30 đã gửi cho $(cat tomtat.json) tài khoản." >> "$GITHUB_STEP_SUMMARY"; fi
+      # v3.35 (0139): phân hệ Nhiệm vụ quý BTV — thứ Tư, thứ Năm nhắc chủ trì theo dõi chưa cập nhật tuần (hạn 11h00 thứ Năm); hằng ngày nhắc việc sắp
+      # đến mốc / chậm tiến độ (khoá chống nhắc trùng trong hàm). Lỗi ở bước này không chặn cảnh báo của nhiệm vụ theo kết luận.
+      - name: Gọi RPC nvq_nhac_quet (Nhiệm vụ quý BTV)
+        run: |
+          HTTP=$(curl --silent --show-error --retry 3 --retry-delay 10 --retry-all-errors --output nvq.json --write-out '%{http_code}' \
+            --max-time 60 -X POST "$URL/rest/v1/rpc/nvq_nhac_quet" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
+          if [ "$HTTP" != 200 ]; then echo "::warning::nvq_nhac_quet trả HTTP $HTTP (hàm chưa có trước 0139?)."
+          else jq -r '"Nhiệm vụ quý BTV: \(.tin_tuan) tin nhắc cập nhật tuần, \(.tin_muc) tin nhắc mốc / chậm tiến độ."' nvq.json >> "$GITHUB_STEP_SUMMARY"; fi
       - name: Ghi thống kê tổng hợp vào Summary (không tên tài khoản)
         run: |
           {

@@ -423,3 +423,20 @@ thay đổi là được." Duyệt kế hoạch cùng ngày.
 |---|---|---|---|
 | T-1 | Chủ trì theo dõi sửa thông tin giao thế nào? | **Sửa ngay mọi ô** (13 ô thông tin giao; nguồn / đơn vị phối hợp cả ở hộp Cập nhật) khi việc chưa hoàn thành — mọi chủ trì theo dõi (cả Trưởng phòng / Chánh VP chủ trì việc của phòng / Văn phòng, Phó Chánh VP chủ trì), kể cả người được chuyển sang; lý do bắt buộc, lưu lịch sử, báo người giao việc. Không cần "Đề nghị sửa" nữa. Việc đã hoàn thành: như cũ (tài khoản quản trị). | RLS `kl-0131`; e2e `quyen-v329` test 1 |
 | T-2 | Chủ trì điều chỉnh hạn khi việc đã quá hạn? | **Được** — chỉ cần lưu lịch sử thay đổi (thay O-4 phần "chỉ khi chưa quá hạn"); hạn mới không trước hôm nay, lý do bắt buộc, lùi hạn tính lần gia hạn, Diễn biến và tin báo như cũ. | RLS `kl-0131`, `kl-0123`; e2e `quyen-v329` test 1 |
+
+## Nhóm U — Quyết định 13/11/2026: phân hệ Nhiệm vụ quý của Ban Thường vụ (v3.35, migration 0132–0139)
+
+Chủ dự án (13/11/2026, 15:51), kèm Phụ lục 2 (Công văn 888-CV/TU ngày 30/10/2026) và Kế hoạch 193-KH/TU ngày 08/10/2026: "Bổ sung phân hệ mới để theo
+dõi việc thực hiện các nhiệm vụ của Ban Thường vụ … tách riêng hoàn toàn … theo từng quý, giai đoạn này làm cho quý 4 trước … đầy đủ các chức năng như
+phân hệ cũ nhưng tùy biến … trong tệp docx đã có phân công chủ trì theo dõi (cột Stt, họ tên chữ màu đỏ) → tổng hợp luôn dữ liệu … nhiệm vụ ở rất nhiều
+lĩnh vực … cách cập nhật tiến độ không giống nhau." 16:13 bổ sung: "cán bộ chủ trì theo dõi là người cập nhật chính, lãnh đạo chỉ nhìn các chỉ tiêu và
+nắm thông tin mà cán bộ chủ trì theo dõi đã cập nhật … khi lãnh đạo nhìn vào nắm được ngay tình hình." Trả lời bốn câu hỏi, duyệt kế hoạch cùng ngày.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| U-1 | Tách riêng hay dùng chung bảng nhiệm vụ cũ? | **Tách riêng hoàn toàn**: bảng `nvq_*`, menu nhóm "Nhiệm vụ quý BTV", mã `NQ-<số>`, ngăn chi tiết riêng; chỉ dùng chung tài khoản, chuông thông báo, ngưỡng cảnh báo (`kl_cau_hinh`). | RLS `nvq-0132`; e2e `nhiem-vu-quy` |
+| U-2 | Làm một đợt hay chia đợt? | **Một đợt đủ cả**: danh mục theo quý (Quý IV/2026 trước), nhập từ Word / Excel, cập nhật tuần (hạn 11h00 thứ Năm), Tổng quan quý, báo cáo Word / Excel, chốt tuần, đánh giá, chốt quý, chuyển quý sau, nhắc tự động. | RLS `nvq-0132` |
+| U-3 | Ô chủ trì theo dõi ghi hai người? | **Người đầu chủ trì, người sau phối hợp** (phối hợp cũng cập nhật được); "PHÒNG …" = phòng theo dõi (cán bộ của phòng cùng cập nhật). Tên viết nhầm trong tệp: chọn đúng tài khoản ở bước xem trước khi nhập (chủ dự án xác nhận tên đúng). | unit `nvq-tach` |
+| U-4 | Ai xem? | **Mọi cán bộ xem toàn bộ** danh mục quý; cập nhật: chủ trì / phối hợp theo dõi, cán bộ phòng được giao, Trưởng phòng của các đồng chí đó, lãnh đạo Văn phòng, đầu mối tổng hợp (Chánh Văn phòng chỉ định; quản trị hệ thống chỉ định được người khác, không tự chỉ định mình); Thường trực xem, chỉ đạo, không cập nhật. | RLS `nvq-0132`; unit `nvq-tinh` |
+| U-5 | Trình bày cho lãnh đạo? | Tổng quan quý: một câu tóm tắt → ô số → **05 chỉ tiêu cơ bản** → tiến độ 6 trục → việc cần lãnh đạo quan tâm (đơn vị, số ngày chậm, sản phẩm còn thiếu, lãnh đạo phụ trách) → kết quả mới trong tuần, đến mốc trong tháng → theo lãnh đạo / đơn vị / chủ trì theo dõi → diễn biến các tuần. Mọi nhiệm vụ hiện **kết quả thực hiện mới nhất** do chủ trì theo dõi ghi, kèm ngày. | e2e `nhiem-vu-quy` |
+| U-6 | Cập nhật tiến độ theo loại kết quả? | Mỗi kết quả / sản phẩm một loại, một mốc: **văn bản** (đã ban hành phải có số, ký hiệu hoặc mô tả), **chỉ tiêu** (số thực hiện lũy kế, ngày, nguồn, ước tính), **hoạt động** (ngày tổ chức, kết quả), **định kỳ** (mỗi tháng một mốc), **khác**; "Không có thay đổi trong tuần" một bấm. | RLS `nvq-0132`; e2e `nhiem-vu-quy` |

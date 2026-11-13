@@ -56,7 +56,7 @@ export const datCapQuyetDinh = (id, cap) => rpc('dat_cap_quyet_dinh', { p_id: id
 // RLS cho đọc tin mình gửi lẫn tin mình nhận. nguoiNhan (chuông): chỉ tin gửi TỚI người đó — tin hệ thống mỗi người nhận một dòng, người thao tác
 // (người gửi) không thấy các dòng báo người khác trong chuông của mình (v3.29, kiểm tay staging 22/10/2026). Hội thoại của việc đọc cả hai chiều.
 export async function loadTinHeThong(gioiHan = 60, { nguoiNhan = null } = {}) {
-  let q = supabase.from('direct_messages').select('id, sender_id, receiver_id, content, is_read, created_at, nhiem_vu_id').eq('loai', 'he_thong');
+  let q = supabase.from('direct_messages').select('id, sender_id, receiver_id, content, is_read, created_at, nhiem_vu_id, nvq_nhiem_vu_id').eq('loai', 'he_thong');   // v3.35: tin nhiệm vụ quý (0133)
   if (nguoiNhan) q = q.eq('receiver_id', nguoiNhan);
   return loi(await q.order('created_at', { ascending: false }).limit(gioiHan), 'đọc thông báo') || [];
 }

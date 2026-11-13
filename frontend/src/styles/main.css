@@ -36,6 +36,7 @@
 @import './theo-van-ban.css';
 @import './v327.css';
 @import './v328.css';
+@import './nvq.css';   /* v3.35: phân hệ Nhiệm vụ quý BTV */
 @import './in.css';
 
 @tailwind base;

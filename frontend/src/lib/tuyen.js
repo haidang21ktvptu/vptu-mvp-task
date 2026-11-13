@@ -19,6 +19,12 @@ export const TUYEN = [
   { duong: 'Chi-dao-da-gui', nav: 'navChiDaoDaGui' },
   { duong: 'Chi-dao-Thuong-truc', nav: 'navChiDaoTTThuKy' },
   { duong: 'Quan-tri', nav: 'navQuanTri' },
+  // v3.35: phân hệ Nhiệm vụ quý của Ban Thường vụ (tách riêng — menu nhóm "Nhiệm vụ quý BTV")
+  { duong: 'Tong-quan-quy', nav: 'navNqTongQuan' },
+  { duong: 'Danh-muc-quy', nav: 'navNqDanhMuc' },
+  { duong: 'Cap-nhat-tuan', nav: 'navNqCapNhat' },
+  { duong: 'Bao-cao-quy', nav: 'navNqBaoCao' },
+  { duong: 'Quan-ly-danh-muc-quy', nav: 'navNqQuanLy' },
   { duong: 'Ra-soat-phan-loai', man: 'viewRaSoatMucTieu', action: 'moRaSoatMucTieu' },
   { duong: 'Ca-nhan', man: 'viewCaNhan', action: 'openCaNhan' },
   { duong: 'Tro-giup', man: 'viewTroGiup', action: 'openTroGiup' },
@@ -37,8 +43,10 @@ export const DS_TEP = [DUONG_DANG_NHAP, ...new Set(TUYEN.map((t) => t.duong)), .
 const thuong = (s) => String(s || '').toLowerCase();
 export const laDangNhap = (duong) => thuong(duong) === thuong(DUONG_DANG_NHAP);
 // Mã nhiệm vụ trên đường dẫn (chủ dự án 22/10/2026 17:02): "…/<Chức năng>/NV-9601" — chỉ nhận đúng dạng NV-<số> (mã do CSDL sinh); chuỗi khác không
-// phải mã. Không có tệp dựng sẵn cho từng việc (không đưa mã / dữ liệu lên trang công khai): Pages trả 404.html → app (?p=).
-const MA_VIEC = /^NV-\d{1,9}$/i;
+// phải mã. Không có tệp dựng sẵn cho từng việc (không đưa mã / dữ liệu lên trang công khai): Pages trả 404.html → app (?p=). v3.35: nhiệm vụ quý của
+// Ban Thường vụ có mã NQ-<số> (nvq_nhiem_vu.ma) — cùng cơ chế.
+const MA_VIEC = /^N[VQ]-\d{1,9}$/i;
+export const laMaNvq = (s) => /^NQ-\d{1,9}$/i.test(String(s || ''));
 export const laMaViec = (s) => MA_VIEC.test(String(s || ''));
 // { duong, the } (tachDuong) → thêm ma: đoạn cuối là mã việc thì tách ra (chữ hoa), phần còn lại là chức năng; "/NV-9601" → trang đầu + việc.
 export function tachViec(t) {

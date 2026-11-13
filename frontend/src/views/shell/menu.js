@@ -66,7 +66,21 @@ const BAO_CAO = MENU.A1.find((m) => m.id === 'navBaoCao');   // v3.33: chuyên v
 // v3.33: xem toàn bộ → tên mục không còn giới hạn "của phòng" / "thuộc quyền" (màn mở mặc định Toàn Văn phòng).
 const TEN_TOAN_BO = { navTongQuan: 'Tổng quan', navCanBo: 'Cán bộ', navKl: 'Nhiệm vụ' };
 
-export function menuCuaVai(user, { xemPhong = false, xemToanBo = false } = {}) {
+// v3.35 (chủ dự án 13/11/2026): phân hệ Nhiệm vụ quý của Ban Thường vụ — nhóm riêng, tách hẳn khỏi nhiệm vụ theo kết luận / văn bản giao việc. Mọi cán bộ
+// xem toàn bộ (Tổng quan quý, Danh mục, Báo cáo); "Cập nhật tuần" cho cán bộ Văn phòng (Thường trực không cập nhật); "Quản lý danh mục quý" cho đầu mối
+// tổng hợp / Chánh Văn phòng / người chỉ định đầu mối (nvq_quyen_cua_toi). Không lên thanh dưới điện thoại (vào "Khác"). nvq không truyền → không có nhóm.
+export const NVQ_NAV = [
+  { id: 'navNqTongQuan', label: 'Tổng quan quý', ngan: 'Tổng quan quý', action: 'openNqTongQuan', section: 'viewNvq', nhom: 'Nhiệm vụ quý BTV' },
+  { id: 'navNqDanhMuc', label: 'Danh mục nhiệm vụ quý', ngan: 'Danh mục quý', action: 'openNqDanhMuc', section: 'viewNvq', nhom: 'Nhiệm vụ quý BTV' },
+  { id: 'navNqCapNhat', label: 'Cập nhật tuần', ngan: 'Cập nhật tuần', action: 'openNqCapNhat', section: 'viewNvq', nhom: 'Nhiệm vụ quý BTV' },
+  { id: 'navNqBaoCao', label: 'Báo cáo quý', ngan: 'Báo cáo quý', action: 'openNqBaoCao', section: 'viewNvq', nhom: 'Nhiệm vụ quý BTV' },
+  { id: 'navNqQuanLy', label: 'Quản lý danh mục quý', ngan: 'Quản lý quý', action: 'openNqQuanLy', section: 'viewNvq', nhom: 'Nhiệm vụ quý BTV' },
+];
+export function menuNvq(user, { quanLy = false, phanQuyen = false } = {}) {
+  return NVQ_NAV.filter((it) => (it.id === 'navNqCapNhat' ? user?.role_group !== 'A0' : it.id === 'navNqQuanLy' ? quanLy || phanQuyen : true));
+}
+
+export function menuCuaVai(user, { xemPhong = false, xemToanBo = false, nvq = null } = {}) {
   const a3 = user?.role_group === 'A3';
   const doiTen = (it) => (xemToanBo && TEN_TOAN_BO[it.id] && !(user?.role_group === 'A0' && it.id === 'navKl') ? { ...it, label: TEN_TOAN_BO[it.id] } : it);
   const vai = (MENU[user?.role_group] || []).map(doiTen);
@@ -77,5 +91,5 @@ export function menuCuaVai(user, { xemPhong = false, xemToanBo = false } = {}) {
   const thuKy = user?.thu_ky_thuong_truc && user?.role_group !== 'A0' ? [THU_KY_TT_NAV] : [];
   const quanTri = user?.quan_tri_he_thong || user?.quan_tri_kl ? [QUAN_TRI_NAV] : [];
   if (user?.quan_tri_he_thong && user.role_group !== 'A0' && !goc.some((it) => it.id === 'navGiaoViec')) goc.push(NHAP_EXCEL_NAV);
-  return [...goc, ...thuKy, ...quanTri];
+  return [...goc, ...thuKy, ...(nvq ? menuNvq(user, nvq) : []), ...quanTri];
 }

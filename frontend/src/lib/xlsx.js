@@ -16,7 +16,7 @@ function crc32(b) {
 }
 
 // ZIP STORE: [đầu tệp cục bộ + dữ liệu]… + thư mục trung tâm + bản ghi kết thúc. Thời gian tệp cố định (1/1/2026) — không ảnh hưởng nội dung.
-function zip(tep) {
+export function zip(tep) {
   const phan = []; const tt = []; let viTri = 0;
   for (const { ten, du } of tep) {
     const tenB = enc.encode(ten); const crc = crc32(du);
@@ -113,8 +113,8 @@ export function taoXlsx(sheets) {
 }
 
 // Tải tệp về máy (Blob + thẻ a[download]); thu hồi URL sau khi bấm.
-export function taiXuong(tenTep, bytes) {
-  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+export function taiXuong(tenTep, bytes, kieu = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {   // v3.35: tệp Word dùng chung (kieu)
+  const url = URL.createObjectURL(new Blob([bytes], { type: kieu }));
   const a = document.createElement('a'); a.href = url; a.download = tenTep; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

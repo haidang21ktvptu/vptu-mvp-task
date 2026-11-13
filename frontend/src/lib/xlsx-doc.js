@@ -10,7 +10,7 @@ export const TOI_DA_BYTE = 15 * 1024 * 1024;
 const LOI_CHUNG = 'Không đọc được tệp .xlsx này — mở bằng Excel rồi "Lưu thành" Excel Workbook (.xlsx) và chọn lại.';
 const loi = (m) => Object.assign(new Error(m), { cuaTa: true });
 
-function docZip(buf) {
+export function docZip(buf) {
   const b = new Uint8Array(buf); const dv = new DataView(buf);
   let e = -1;
   for (let i = b.length - 22; i >= Math.max(0, b.length - 22 - 65535); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
@@ -26,7 +26,7 @@ function docZip(buf) {
   return { b, dv, tep };
 }
 const boTienTo = (xml) => xml.replace(/<(\/?)[A-Za-z_][\w.-]*:(?=[A-Za-z_])/g, '<$1');   // <x:row> → <row>; thuộc tính (r:id) giữ nguyên
-async function layTep(z, ten) {
+export async function layTep(z, ten) {
   const t = z.tep.get(ten.replace(/^\//, ''));
   if (!t) return null;
   const dau = t.viTri + 30 + z.dv.getUint16(t.viTri + 26, true) + z.dv.getUint16(t.viTri + 28, true);

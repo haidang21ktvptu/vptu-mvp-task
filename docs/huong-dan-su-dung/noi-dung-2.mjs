@@ -1,4 +1,4 @@
-// Nội dung Hướng dẫn sử dụng — phần 5–9 (Lãnh đạo Văn phòng, Thường trực, Nhập Excel, Quản trị, Hỏi đáp). Mỗi hàm nhận bộ công cụ (ctx) và trả mảng phần tử docx.
+// Nội dung Hướng dẫn sử dụng — phần 5–10 (Lãnh đạo Văn phòng, Thường trực, Nhập Excel, Quản trị, Nhiệm vụ quý BTV, Hỏi đáp). Mỗi hàm nhận bộ công cụ (ctx) và trả mảng phần tử docx.
 export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangTrong }) {
   return [
     // ───────────────────────── PHẦN 5
@@ -167,8 +167,30 @@ export function phan5den9({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
     p('**Nhật ký hệ thống** ghi 100 thao tác gần nhất (tài khoản, cấp quyền, cấu hình, nhập Excel, hoàn tác lô, sao lưu); thẻ **Nhật ký** ghi riêng từng lần cấp/thu cờ, sửa tài khoản (Quản trị hệ thống) và từng lần sửa danh mục lĩnh vực (mọi cán bộ xem được). **Dọn dữ liệu** chỉ dùng để xoá dữ liệu thử nghiệm theo hai bước (xem trước số dòng → gõ XOÁ) và đòi hỏi đã sao lưu trong 24 giờ — không dùng cho dữ liệu thật.'),
     ...hinh('qt-06-nhat-ky.jpg', 'Thẻ Nhật ký hệ thống'),
 
-    // ───────────────────────── PHẦN 9
-    P1('Phần 9. Hỏi đáp nhanh'),
+    // ───────────────────────── PHẦN 9 (v3.35)
+    P1('Phần 9. Nhiệm vụ quý của Ban Thường vụ'),
+    p('Phân hệ **riêng** theo dõi Danh mục các chỉ tiêu, nhiệm vụ chính trị trong quý của Ban Thường vụ Tỉnh ủy (nhóm **Nhiệm vụ quý BTV** trên menu trái). Không lẫn với nhiệm vụ theo kết luận, văn bản giao việc. **Mọi cán bộ xem toàn bộ**; **chủ trì theo dõi** là người cập nhật chính; lãnh đạo xem Tổng quan quý để nắm ngay tình hình.'),
+    P2('9.1 Tổng quan quý (dành cho lãnh đạo)'),
+    p('Đọc từ trên xuống: câu tóm tắt (bao nhiêu nhiệm vụ hoàn thành, đang thực hiện, chậm tiến độ, còn bao nhiêu ngày đến hết quý) → ô số → **05 chỉ tiêu cơ bản** (mục tiêu, số thực hiện, Đạt / Chưa đạt) → tiến độ **6 trục** → **Cần lãnh đạo quan tâm** (đơn vị đang chậm, chậm bao nhiêu ngày, kết quả còn thiếu, lãnh đạo phụ trách, vướng mắc) → kết quả mới trong tuần, đến mốc trong tháng → theo lãnh đạo phụ trách, đơn vị, chủ trì theo dõi. Bấm số / tên bất kỳ → Danh mục đã lọc; bấm một nhiệm vụ → ngăn chi tiết bên phải.'),
+    P2('9.2 Danh mục nhiệm vụ quý'),
+    p('Đúng các cột của bảng Phụ lục, nhóm theo trục rồi theo "theo / ngoài chương trình, kế hoạch", thêm **Kết quả thực hiện** mới nhất, **Trạng thái**, **Chủ trì theo dõi**. Lọc theo chữ, trạng thái, trục, nhóm, lãnh đạo, đơn vị, chủ trì theo dõi, tháng có mốc, việc tôi theo dõi, chưa báo cáo tuần này, cần quan tâm; **Xuất Excel**, **In**. Chọn quý khác ở ô chọn quý góc trên.'),
+    P2('9.3 Cập nhật tuần (dành cho chủ trì theo dõi)'),
+    steps(['Mở **Cập nhật tuần**: việc "Chưa báo cáo tuần này" ở trên (hạn **11h00 thứ Năm**; 7h30 thứ Tư, thứ Năm hệ thống nhắc ở chuông).',
+      'Bấm **Cập nhật** trên thẻ: ghi **Kết quả trong tuần**, sửa **Kết quả thực hiện** (lũy kế — lãnh đạo đọc ô này).',
+      'Từng kết quả / sản phẩm theo loại: văn bản chọn "Đã ban hành" và ghi **số, ký hiệu**, ngày; chỉ tiêu ghi **số thực hiện lũy kế**, ngày số liệu, nguồn (ước tính thì đánh dấu); hoạt động ghi ngày tổ chức, kết quả.',
+      'Ghi vướng mắc, đề xuất (nếu có) → **Lưu cập nhật**. Tuần không có gì mới: bấm **Không có thay đổi trong tuần**.']),
+    luuY('Cập nhật sau khi đầu mối đã chốt báo cáo tuần được tính vào tuần kế tiếp. Ý kiến chỉ đạo của lãnh đạo hiện ở ngăn chi tiết và chuông; trả lời ngay trong ngăn.'),
+    P2('9.4 Báo cáo, chốt tuần'),
+    p('Chọn tuần → **Xuất dự thảo báo cáo tuần (Word)** đúng thể thức báo cáo của Văn phòng (phụ lục khổ ngang), hoặc **Xuất dự thảo báo cáo kết quả quý (Word)**, **Xuất Excel**. Đầu mối tổng hợp **Chốt báo cáo tuần** (lưu ảnh chụp số liệu); mở lại phải ghi lý do. Người ký, nơi nhận lưu trên máy.'),
+    P2('9.5 Quản lý danh mục quý (đầu mối tổng hợp, Chánh Văn phòng)'),
+    bullets(['**Quý, văn bản căn cứ**: tạo quý (tự tạo các tuần báo cáo), hạn báo cáo kết quả, kế hoạch và văn bản điều chỉnh danh mục.',
+      '**Nhập danh mục**: chọn tệp Word bảng Phụ lục (họ tên chữ đỏ cột Stt = chủ trì theo dõi: người đầu chủ trì, người sau phối hợp; "PHÒNG …" = phòng) hoặc Excel theo mẫu → xem trước, sửa chủ trì, chọn tài khoản cho tên chưa khớp → **Nhập**. Nhập lại cùng vị trí = sửa thông tin; sai thì **Hoàn tác lô** trong 24 giờ.',
+      '**Phân công**: chọn nhiều nhiệm vụ → chủ trì, phối hợp, phòng theo dõi (đổi người đang chủ trì phải ghi lý do).',
+      '**Đánh giá, chốt quý**: chốt mức từng nhiệm vụ (lý do khi chưa hoàn thành / chậm), **Chốt quý**, chuyển nhiệm vụ chưa hoàn thành sang quý sau.',
+      '**Đầu mối, danh mục**: Chánh Văn phòng chỉ định đầu mối tổng hợp; danh mục lãnh đạo phụ trách, đơn vị tham mưu.']),
+
+    // ───────────────────────── PHẦN 10
+    P1('Phần 10. Hỏi đáp nhanh'),
     bang(['Tình huống', 'Cách xử lý'], [
       ['Tôi không thấy một việc mà tôi biết là có.', 'Hệ thống chỉ hiện việc trong phạm vi của mình: chuyên viên thấy việc mình chủ trì theo dõi hoặc đã giao; Trưởng phòng thấy việc của phòng. Nhờ người giao kiểm tra lại chủ trì theo dõi của việc, hoặc dùng Đề nghị sửa.'],
       ['Việc giao nhầm người / nhầm hạn.', 'Chủ trì theo dõi (kể cả người mới được chuyển sang): tự *Sửa thông tin giao* (ô có bút) và tự *Điều chỉnh hạn*, kể cả việc đã quá hạn — đều ghi lý do, lưu lịch sử (v3.34). Người nhận việc không đồng ý việc giao: *Từ chối* có lý do. Người giao: *Giao lại* hoặc *Gia hạn* trong ô Chỉ đạo. Thư ký Thường trực: *Đổi chủ trì theo dõi*, *Điều chỉnh hạn* — không xoá việc.'],

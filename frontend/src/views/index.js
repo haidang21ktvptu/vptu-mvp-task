@@ -19,6 +19,7 @@ import { registerRaSoatMucTieu } from './shared/ra-soat-muc-tieu/index.js';
 import { registerChiDaoTTThuKy } from './shared/chi-dao-tt-thu-ky/index.js';
 import { mountDieuHanh } from './shared/dieu-hanh/man-hinh.js';
 import { registerTongQuan } from './shared/tong-quan/index.js';
+import { registerNvq } from './nvq/index.js';
 import { mountNganChiTiet } from './shared/ngan-chi-tiet.js';
 import { mountMessages, loadDMUnreadMap } from '../features/messages/index.js';
 import { mountThongBao, loadThongBao } from '../features/thong-bao/index.js';
@@ -40,6 +41,7 @@ export function registerViews() {
   registerChiDaoTTThuKy(); // "Chỉ đạo Thường trực" của thư ký Thường trực (0047)
   mountDieuHanh();       // hành động dùng chung của các màn hình điều hành (A0/A1)
   registerTongQuan();    // v9: Tổng quan — trang mở đầu của A0/A1/A2
+  registerNvq();         // v3.35: phân hệ Nhiệm vụ quý của Ban Thường vụ (tách riêng; nhóm menu "Nhiệm vụ quý BTV")
   mountNganChiTiet();    // v9 đợt 2: ngăn chi tiết dùng chung — mọi "bấm để xem" mở tại chỗ, không đổi mục
   registerA0View();      // Trung tâm điều hành Thường trực, Chỉ đạo đã gửi
   registerA1View();      // Điều hành hôm nay, Cán bộ thuộc quyền, Báo cáo
