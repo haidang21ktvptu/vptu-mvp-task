@@ -44,8 +44,9 @@ export async function veCapNhatTuan(el, ds = {}) {
   const w = tuanNay();
   const u = state.user;
   const chip = [['toi', 'Việc tôi theo dõi'], ...(u?.role_group === 'A2' ? [['phong', 'Cả phòng']] : []), ...(nq.quyen.quan_ly || u?.role_group === 'A1' ? [['tat-ca', 'Tất cả nhiệm vụ']] : [])];
-  // Lãnh đạo / đầu mối / Trưởng phòng không trực tiếp theo dõi việc nào: mở sẵn phạm vi rộng hơn kế tiếp (cả phòng hoặc tất cả)
-  if (!tt.daChon && tt.phamVi === 'toi' && chip.length > 1 && !dongCuaPhamVi().length) tt.phamVi = chip[1][0];
+  // Chưa tự chọn phạm vi: có việc mình theo dõi → "Việc tôi theo dõi"; lãnh đạo / đầu mối / Trưởng phòng không trực tiếp theo dõi việc nào → mở sẵn
+  // phạm vi rộng hơn kế tiếp (cả phòng hoặc tất cả). Tính lại mỗi lần vẽ (đổi quý, vừa được phân công).
+  if (!tt.daChon) tt.phamVi = chip.length > 1 && !nq.rows.some((r) => r.trang_thai !== 'RUT' && laNguoiTheoDoi(r, u)) ? chip[1][0] : 'toi';
   const rows = sapXepViTri(dongCuaPhamVi());
   const mo = rows.filter(laMo); const da = mo.filter((r) => r.cap_nhat_tuan_nay);
   const spMap = spTheoNv(nq.sp);
