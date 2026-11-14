@@ -12,7 +12,7 @@ import { e, vn, vnNgan, dauTrang, chuaCoKy, nhanTrangThai, ghiMocHtml, tuanNay, 
 import { spMiniHtml } from './dong.js';
 import { formCapNhatHtml, guiForm } from './cap-nhat-form.js';
 
-const tt = { phamVi: 'toi', mo: null };
+const tt = { phamVi: 'toi', mo: null, daChon: false };   // daChon: người dùng đã tự chọn phạm vi (không tự đổi nữa)
 const timPhong = (id) => findAccount(id)?.department || null;
 const coCapNhat = (r) => duocCapNhat(r, state.user, nq.quyen, timPhong, nq.ky);
 
@@ -39,19 +39,22 @@ function theHtml(r, spMap) {
 }
 
 export async function veCapNhatTuan(el, ds = {}) {
-  if (ds.phamVi) tt.phamVi = ds.phamVi;
+  if (ds.phamVi) { tt.phamVi = ds.phamVi; tt.daChon = true; }
   if (!nq.ky) { el.innerHTML = dauTrang('Cập nhật tuần') + chuaCoKy(nq.quyen.quan_ly); return; }
   const w = tuanNay();
+  const u = state.user;
+  const chip = [['toi', 'Việc tôi theo dõi'], ...(u?.role_group === 'A2' ? [['phong', 'Cả phòng']] : []), ...(nq.quyen.quan_ly || u?.role_group === 'A1' ? [['tat-ca', 'Tất cả nhiệm vụ']] : [])];
+  // Chưa tự chọn phạm vi: có việc mình theo dõi → "Việc tôi theo dõi"; lãnh đạo / đầu mối / Trưởng phòng không trực tiếp theo dõi việc nào → mở sẵn
+  // phạm vi rộng hơn kế tiếp (cả phòng hoặc tất cả). Tính lại mỗi lần vẽ (đổi quý, vừa được phân công).
+  if (!tt.daChon) tt.phamVi = chip.length > 1 && !nq.rows.some((r) => r.trang_thai !== 'RUT' && laNguoiTheoDoi(r, u)) ? chip[1][0] : 'toi';
   const rows = sapXepViTri(dongCuaPhamVi());
   const mo = rows.filter(laMo); const da = mo.filter((r) => r.cap_nhat_tuan_nay);
   const spMap = spTheoNv(nq.sp);
   const nhomChua = mo.filter((r) => !r.cap_nhat_tuan_nay); const nhomDa = da; const nhomXong = rows.filter((r) => !laMo(r));
-  const u = state.user;
-  const chip = [['toi', 'Việc tôi theo dõi'], ...(u?.role_group === 'A2' ? [['phong', 'Cả phòng']] : []), ...(nq.quyen.quan_ly || u?.role_group === 'A1' ? [['tat-ca', 'Tất cả nhiệm vụ']] : [])];
   const nhom = (tieuDe, ds2) => (ds2.length ? `<h2 class="nq-nhom-tieu-de">${e(tieuDe)} (${ds2.length})</h2>${ds2.map((r) => theHtml(r, spMap)).join('')}` : '');
   el.innerHTML = dauTrang('Cập nhật tuần')
     + `<section class="nq-tom-tat"><p class="nq-cau">${w ? `Tuần ${w.so} (${vnNgan(w.tu_ngay)} – ${vn(w.den_ngay)}), hạn báo cáo 11h00 thứ Năm ${vnNgan(w.den_ngay)}${w.trang_thai === 'DA_CHOT' ? ' — tuần đã chốt, cập nhật mới tính vào tuần sau' : ''}.` : ''}`
-    + ` ${mo.length ? `Đã báo cáo ${da.length}/${mo.length} nhiệm vụ đang thực hiện.` : 'Không có nhiệm vụ đang thực hiện.'}</p>`
+    + ` ${mo.length ? `Đã báo cáo ${da.length}/${mo.length} nhiệm vụ chưa hoàn thành.` : 'Không có nhiệm vụ chưa hoàn thành cần báo cáo.'}</p>`
     + (chip.length > 1 ? `<div class="nq-chip" role="group" aria-label="Phạm vi">${chip.map(([k, t]) => `<button type="button" class="nut nho${tt.phamVi === k ? ' lam' : ''}" aria-pressed="${tt.phamVi === k}" data-action="nqPhamViTuan" data-pham-vi="${k}">${e(t)}</button>`).join('')}</div>` : '')
     + '</section>'
     + (rows.length ? nhom('Chưa báo cáo tuần này', nhomChua) + nhom('Đã báo cáo tuần này', nhomDa) + nhom('Đã hoàn thành', nhomXong)
@@ -61,7 +64,7 @@ export async function veCapNhatTuan(el, ds = {}) {
 
 export function hanhDongTuan(veLai, napLaiSauGhi) {
   return {
-    nqPhamViTuan: ({ phamVi }) => { tt.phamVi = phamVi; tt.mo = null; return veLai(); },
+    nqPhamViTuan: ({ phamVi }) => { tt.phamVi = phamVi; tt.daChon = true; tt.mo = null; return veLai(); },
     nqMoFormDong: ({ id }) => { tt.mo = id; return veLai(); },
     nqHuyDong: () => { tt.mo = null; return veLai(); },
     nqGuiCapNhatDong: (ds, form) => {

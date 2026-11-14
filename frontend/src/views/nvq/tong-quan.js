@@ -72,7 +72,7 @@ export async function veTongQuan(el) {
   const hom = homNayVN();
   const d = demTheoTrangThai(nq.rows);
   const theoId = dongTheoId(); const spMap = spTheoNv(nq.sp);
-  const tuanCap = d.mo ? `Báo cáo tuần này: ${d.daCapNhatTuan}/${d.mo} nhiệm vụ đang thực hiện đã được chủ trì theo dõi cập nhật.` : '';
+  const tuanCap = d.mo ? `Báo cáo tuần này: ${d.daCapNhatTuan}/${d.mo} nhiệm vụ chưa hoàn thành đã được chủ trì theo dõi cập nhật.` : '';
   el.innerHTML = dauTrang('Tổng quan nhiệm vụ quý')
     + `<section class="nq-tom-tat"><p class="nq-cau">${e(cauTomTat(d, nq.ky, hom))}</p>${tuanCap ? `<p class="chu-phu">${e(tuanCap)}</p>` : ''}${oSoTongQuan(d)}</section>`
     + `<div class="nq-luoi">${khoiChiTieu(nq.sp, theoId)}${khoiTruc(nq.rows)}${khoiNghen(nq.rows, spMap)}${khoiTuanThang(nq.sp, theoId, hom)}`

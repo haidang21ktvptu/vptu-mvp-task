@@ -46,8 +46,10 @@ async function mo(ten, ds = {}) {
   batNvqRealtime(khiCoMoi);
 }
 // Sau mỗi lần ghi: nạp lại quý (và danh mục khi đổi đầu mối / danh mục), vẽ lại màn đang xem (ngăn chi tiết tự nạp lại — chi-tiet-hanh-dong.js).
+let tuGhiLuc = 0;   // lúc vừa nạp lại sau thao tác ghi của chính mình — tín hiệu thời gian thực ngay sau đó chủ yếu là của mình: không hiện "Có cập nhật mới"
 async function napLaiSauGhi(op = {}) {
   await napTatCa(op);
+  if (!op.khongGhi) tuGhiLuc = Date.now();
   if (sectionDangHien('viewNvq')) await veLai();
 }
 // Sự kiện thời gian thực: màn chỉ xem (Tổng quan, Danh mục) không đang gõ → nạp lại ngay; màn có biểu mẫu → dải "Có cập nhật mới"; ngăn chi tiết đang
@@ -60,7 +62,7 @@ function khiCoMoi(ids) {
     if (!sectionDangHien('viewNvq')) return;   // mở lại màn nào của phân hệ cũng nạp lại quý
     const dangGo = el().contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
     if (MAN[man].chiXem && !dangGo) { try { await napTatCa(); await veLai(); } catch { show('nqCoMoi', true); } }
-    else show('nqCoMoi', true);
+    else if (!ids.length || Date.now() - tuGhiLuc > 4000) show('nqCoMoi', true);   // trong 4 giây sau khi mình ghi: tín hiệu của chính mình
   }, 300);
 }
 
@@ -79,7 +81,7 @@ function veLaiGiuO(chon) {
 function khiDoi(ev) {
   const t = ev.target; const d = t.dataset || {};
   if (ev.type === 'input' && !(t.type === 'search' || t.type === 'text')) return;
-  if (d.nqChonKy !== undefined && ev.type === 'change') { nq.kyChon = t.value; napLaiSauGhi(); return; }
+  if (d.nqChonKy !== undefined && ev.type === 'change') { nq.kyChon = t.value; napLaiSauGhi({ khongGhi: true }); return; }
   if (d.nqLoc) { if (ev.type === 'change' && d.nqLoc === 'q') return; doiLoc(d.nqLoc, t.type === 'checkbox' ? t.checked : t.value, veLai); return; }
   if (d.nqPcLoc) { if (ev.type === 'change' && d.nqPcLoc === 'q') return; if (khiDoiPhanCong(t)) veLaiGiuO(d.nqPcLoc === 'q' ? '[data-nq-pc-loc="q"]' : ''); return; }
   if (ev.type !== 'change') return;
@@ -103,7 +105,7 @@ export function registerNvq() {
     openNqQuanLy: (ds) => mo('quan-ly', ds?.the ? { the: ds.the } : {}),
     nqMo: ({ id }) => moNhiemVuQuy(id),
     nqDong: () => dongNgan({ nguoiDung: true }),
-    nqNapLai: () => { show('nqCoMoi', false); return napLaiSauGhi(); },
+    nqNapLai: () => { show('nqCoMoi', false); return napLaiSauGhi({ khongGhi: true }); },
     nqLocDanhMuc: ({ loc }) => mo('danh-muc', { loc }),
     nqLocTrangThai: ({ loc }) => doiLoc('trangThai', loc || '', veLai),
     nqBoLoc: () => { dm.loc = {}; return veLai(); },

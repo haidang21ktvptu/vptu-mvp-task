@@ -135,6 +135,9 @@ button.nq-ct:hover { border-color: var(--vien-o); background: var(--the); }
 
 /* ---- Biểu mẫu ---- */
 .nq-form { display: grid; gap: 12px; }
+.nq-form > .nut { justify-self: start; }   /* nút gửi của biểu mẫu không kéo hết bề ngang lưới */
+/* .nut:hover (components.css) đổi nền sang --nen-phu mà giữ chữ trắng của nút lam → chữ mất khi rê chuột; giữ nền lam, chỉ tối đi */
+.nq-man .nut.lam:hover:not(:disabled) { background: var(--lam); }
 .nq-form > h3 { font-size: 16px; color: var(--chu); }
 .nq-luoi-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px 14px; }
 .nq-o-form { display: grid; gap: 5px; align-content: start; font-size: 13.5px; color: var(--chu-phu); }

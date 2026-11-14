@@ -45,6 +45,9 @@ export function vePhanCong() {
 function capNhatNut() {
   const n = $('nqPcNut'); if (!n) return;
   n.textContent = `Phân công ${pc.chon.size} nhiệm vụ`; n.disabled = !pc.chon.size;
+  const bo = n.parentElement?.querySelector('[data-action="nqPcBoChon"]'); if (bo) bo.disabled = !pc.chon.size;
+  const het = n.parentElement?.querySelector('[data-nq-chon-het]'); const ds = dangHien();
+  if (het) het.checked = ds.length > 0 && ds.every((r) => pc.chon.has(r.id));
 }
 // Ô chọn / ô lọc trong thẻ Phân công. Trả true khi cần vẽ lại.
 export function khiDoiPhanCong(el) {

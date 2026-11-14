@@ -15,9 +15,10 @@ const THE = [['ky', 'Quý, văn bản căn cứ'], ['nhap', 'Nhập danh mục']
 
 function theKy() {
   const k = nq.ky; const nam = new Date().getFullYear();
+  const quyMoi = k ? (k.quy % 4) + 1 : Math.floor(new Date().getMonth() / 3) + 1;   // chưa có quý nào → mặc định quý hiện tại
   const tao = `<form class="nq-form" data-submit="nqTaoKy"><h3>Tạo quý mới</h3><div class="nq-luoi-form">`
     + `<label class="nq-o-form"><span>Năm</span><input type="number" class="o-nhap nho" name="nam" min="2025" max="2100" value="${k ? (k.quy === 4 ? k.nam + 1 : k.nam) : nam}" required></label>`
-    + `<label class="nq-o-form"><span>Quý</span><select class="o-nhap nho" name="quy">${[1, 2, 3, 4].map((q) => `<option value="${q}"${k && q === (k.quy % 4) + 1 ? ' selected' : ''}>Quý ${laMa(q)}</option>`).join('')}</select></label>`
+    + `<label class="nq-o-form"><span>Quý</span><select class="o-nhap nho" name="quy">${[1, 2, 3, 4].map((q) => `<option value="${q}"${q === quyMoi ? ' selected' : ''}>Quý ${laMa(q)}</option>`).join('')}</select></label>`
     + '<label class="nq-o-form"><span>Hạn báo cáo kết quả</span><input type="date" class="o-nhap nho" name="han_bao_cao_ket_qua"></label></div>'
     + '<p class="chu-phu">Hệ thống tự tạo các tuần báo cáo của quý (kết thúc thứ Năm, hạn 11h00).</p><button type="submit" class="nut chinh">Tạo quý</button></form>';
   if (!k) return tao;
