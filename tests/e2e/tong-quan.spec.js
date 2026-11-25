@@ -104,7 +104,7 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
   test('cỡ chữ: lãnh đạo mặc định cỡ lớn, chuyên viên cỡ vừa; đổi ở menu bánh răng, nhớ sau khi tải lại', async ({ browser }, testInfo) => {
     const a1 = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
     const html = a1.locator('html');
-    const goc = () => a1.evaluate(() => globalThis.getComputedStyle(document.documentElement).fontSize);
+    const goc = () => a1.evaluate(() => globalThis.getComputedStyle(globalThis.document.documentElement).fontSize);
     await expect(html).toHaveAttribute('data-co-chu', 'lon');
     expect(await goc()).toBe('18px');
     await a1.locator('#banhRangBtn').click();
