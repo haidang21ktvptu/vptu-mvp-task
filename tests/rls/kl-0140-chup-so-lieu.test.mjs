@@ -33,7 +33,7 @@ describe('0140 — bảng chụp số liệu hằng ngày: quyền gọi, nội 
     await them({ ma: 'NV-T141', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, han_xu_ly: '2026-08-10', cap_quyet_dinh: 'THUONG_TRUC' });          // ĐỎ ĐẶC BIỆT, ghi cấp quyết
     await them({ ma: 'NV-T142', owner_don_vi_ma: 'QUAN_TRI', owner_tai_khoan: IDS.cv2, nguoi_theo_doi: IDS.cv2, han_xu_ly: '2026-09-30' });                // XANH, phòng khác
     await them({ ma: 'NV-T143', owner_don_vi_ma: 'TONG_HOP', owner_tai_khoan: IDS.cv1, han_xu_ly: '2026-08-15', tien_do_ma: 'HOAN_THANH',
-      ngay_hoan_thanh: '2026-08-14' });                                                                                                                      // đã hoàn thành
+      ngay_hoan_thanh: '2026-08-14', minh_chung: 'Báo cáo số 12-BC/VPTU' });   // việc không theo Công văn 1400: minh chứng chữ là đủ                                                                                                                      // đã hoàn thành
   });
   after(don);
 
@@ -77,7 +77,8 @@ describe('0140 — bảng chụp số liệu hằng ngày: quyền gọi, nội 
   });
 
   test('5. chạy lại trong ngày thay bản chụp; xoá nhiệm vụ xoá bản chụp của việc đó', async () => {
-    assertOk(await db().from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-20' }).eq('id', id['NV-T142']), 'hoàn thành NV-T142');
+    assertOk(await db().from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: '2026-08-20', minh_chung: 'Báo cáo số 13-BC/VPTU' }).eq('id', id['NV-T142']),
+      'hoàn thành NV-T142');
     await chup();
     assert.deepEqual((await banChup()).map((s) => s.nhiem_vu_id).sort(), [id['NV-T140'], id['NV-T141']].sort());
     assertOk(await db().from('nhiem_vu').delete().eq('id', id['NV-T140']), 'xoá NV-T140');
