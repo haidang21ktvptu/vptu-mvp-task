@@ -6,19 +6,19 @@
   /* ---- Hàng lọc ---- */
   .kl-loc { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
   .tq { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; background: none; border: 0; border-radius: 0; overflow: visible; }
-  .tq .o-so { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--vien); border-left: 1px solid var(--vien); border-radius: 16px; background: var(--the); font-size: 13px; font-weight: 600; color: var(--chu); white-space: nowrap; }
-  .tq .o-so b { font-size: 13px; font-weight: 800; color: var(--do); }
+  .tq .o-so { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--vien); border-left: 1px solid var(--vien); border-radius: 16px; background: var(--the); font-size: var(--chu-nho); font-weight: 600; color: var(--chu); white-space: nowrap; }
+  .tq .o-so b { font-size: var(--chu-nho); font-weight: 800; color: var(--do); }
   .tq .o-so[aria-pressed="true"] { background: var(--navy-dac); border-color: var(--navy-dac); color: #fff; }
   .tq .o-so[aria-pressed="true"] b { color: var(--vang-tren-dac); }
   .tq .s-vang b { color: var(--vang-chu); } .tq .s-lam b { color: var(--navy); } .tq .s-luc b { color: var(--luc); }
   .kl-tim { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: var(--the); border: 1px solid var(--vien); border-radius: 8px; width: 300px; max-width: 100%; margin-left: auto; color: var(--chu-phu); }
   .kl-tim svg { width: 16px; height: 16px; flex: none; }
-  .kl-tim input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 13px; color: var(--chu); outline: 0; padding: 0; }
-  .kl-loc > select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px; max-width: 220px; }
-  .kl-them { flex-basis: 100%; font-size: 13px; }
+  .kl-tim input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: var(--chu-nho); color: var(--chu); outline: 0; padding: 0; }
+  .kl-loc > select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho); max-width: 220px; }
+  .kl-them { flex-basis: 100%; font-size: var(--chu-nho); }
   .kl-them summary { cursor: pointer; color: var(--do); }
   .kl-them .them-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .kl-them .them-loc select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px;
+  .kl-them .them-loc select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho);
     max-width: 100%; min-width: 0; text-overflow: ellipsis; }   /* kiểm tay 18/10: tên ngành / mục tiêu dài làm ô tràn mép phải trên điện thoại 390px */
 
   /* ---- Danh sách + ngăn — v3.25: bảng theo cột (bang-nhiem-vu.css); ngăn chỉ chiếm chỗ khi đang mở một việc (.md.co-ct, chi-tiet.js) ---- */
@@ -26,7 +26,7 @@
   .md.co-ct { grid-template-columns: minmax(0, 1fr) 520px; }
   .md:not(.co-ct) > .chi-tiet { display: none; }
   .md .list { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; }
-  .ds-chan { padding: 10px 16px; font-size: 12px; color: var(--chu-phu); border-top: 1px solid var(--vien-nhat); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .ds-chan { padding: 10px 16px; font-size: var(--chu-nho); color: var(--chu-phu); border-top: 1px solid var(--vien-nhat); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
   .md .chi-tiet { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 0; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
   .chi-tiet .trong-nho, .chi-tiet > .loi-inline { margin: 16px; }
@@ -34,13 +34,13 @@
   /* .ct-nhan là block (không flex) để .dk/.tag/.trang-thai giữ display inline-flex ở mọi ngữ cảnh */
   .ct-nhan { display: block; line-height: 26px; }
   .ct-nhan > * { vertical-align: middle; margin-right: 8px; }
-  .ct-nhan .ma { display: inline-block; font-size: 16px; min-width: 0; }
-  .ct-nhan .trang-thai { float: right; margin-right: 0; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11px; display: inline-flex; align-items: center; }
-  .ct-dau h3 { font-size: 15px; line-height: 1.4; }
-  .ct-dau .ma { font-size: 12px; color: var(--chu-phu); font-weight: 400; }
-  .chi-tiet .ct-luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--vien-nhat); font-size: 13px; }
+  .ct-nhan .ma { display: inline-block; font-size: var(--chu-o); min-width: 0; }
+  .ct-nhan .trang-thai { float: right; margin-right: 0; height: 22px; padding: 0 8px; border-radius: 6px; font-size: var(--chu-nho); display: inline-flex; align-items: center; }
+  .ct-dau h3 { font-size: var(--chu-than); line-height: 1.4; }
+  .ct-dau .ma { font-size: var(--chu-nho); color: var(--chu-phu); font-weight: 400; }
+  .chi-tiet .ct-luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--vien-nhat); font-size: var(--chu-nho); }
   .ct-luoi > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .ct-luoi dt { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--chu-phu); }
+  .ct-luoi dt { font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }   /* v3.36: nhãn chữ thường (DESIGN mục 3) */
   .ct-luoi dd { margin: 0; font-weight: 600; } .ct-luoi dd .nl-cap { font-weight: 400; }
   .chi-tiet > .chi-tiet-noi > .hanh-dong { margin: 0; padding: 12px 18px; border-bottom: 1px solid var(--vien-nhat); gap: 8px; }
   .chi-tiet .chi-tiet-noi > .o { margin: 0 18px 12px; }
@@ -56,9 +56,9 @@
 
   /* v3.24: thanh sắp xếp đầu danh sách, ô ngày của "khoảng ngày…", số bộ lọc đang áp dụng, nhãn Mới, thời điểm nhập trên dòng */
   .kl-sap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--vien-nhat); }
-  .kl-them .them-loc input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: 13px; color: var(--chu); }
+  .kl-them .them-loc input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho); color: var(--chu); }
   .kl-them summary .so-loc { color: var(--chu-phu); font-weight: 600; }
-  .nhan-moi { margin-left: 4px; font-size: 11px; vertical-align: 1px; background: var(--lam-nhat); color: var(--lam); }
+  .nhan-moi { margin-left: 4px; font-size: var(--chu-nho); vertical-align: 1px; background: var(--lam-nhat); color: var(--lam); }
 
   @media (max-width: 1180px) { .md.co-ct { grid-template-columns: minmax(0, 1fr) 420px; } }
   @media (max-width: 860px) {

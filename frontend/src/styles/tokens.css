@@ -35,6 +35,16 @@
   --font-sans: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-tieu-de: "Lexend", "Source Sans 3", system-ui, sans-serif;
   --font-van-ban: "Noto Serif", Georgia, "Times New Roman", serif;
+  /* v3.36 (DESIGN mục 3, CAU-HOI V-1): thang chữ tám bậc, đơn vị rem theo gốc 16px (base.css); mọi font-size của CSS dùng các biến này.
+     Không còn chữ dưới 13px. "Cỡ chữ lớn" đặt gốc 18px nên cả thang lớn theo (13 → 14,6; 15 → 16,9). */
+  --chu-nho: .8125rem;   /* 13: nhãn phụ, chú thích, chip */
+  --chu-bang: .875rem;   /* 14: bảng, nút gọn, ô lọc */
+  --chu-than: .9375rem;  /* 15: thân chữ */
+  --chu-o: 1rem;         /* 16: ô nhập, nút chính (điện thoại không tự phóng to khi gõ) */
+  --chu-muc: 1.0625rem;  /* 17: tiêu đề mục, khối */
+  --chu-khoi: 1.25rem;   /* 20: tên cơ quan, tiêu đề hộp, số trung bình */
+  --chu-trang: 1.5rem;   /* 24: tiêu đề trang, số trong thẻ */
+  --chu-so: 2rem;        /* 32: con số lớn ở dải đầu, thẻ tổng quan */
   --max-w: 1040px;
   --cao-dau-trang: 72px; --rong-menu: 236px;
   --bo-the: 16px; --bo-nut: 8px; --bo-o: 8px;
@@ -87,5 +97,7 @@
     --hero-1: #5F1219; --hero-2: #7E1820; --hero-3: #982129;
   }
 }
+/* Cỡ chữ lớn (menu bánh răng; lãnh đạo mặc định — shell/kieu-giao-dien.js): gốc 18px trên màn hình; bản in giữ 16px. */
+@media screen { html[data-co-chu="lon"] { font-size: 18px; } }
 /* Điện thoại (≤ 600px): thanh đầu trang 56px — dau-trang.css, menu-doc.css (ngăn kéo mở dưới thanh) đều đọc biến này. */
 @media (max-width: 600px) { :root { --cao-dau-trang: 56px; } }

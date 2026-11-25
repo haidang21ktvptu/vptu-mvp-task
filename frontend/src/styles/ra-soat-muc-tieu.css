@@ -3,10 +3,10 @@
 @layer components {
   .rs-loc .pham-vi button b { margin-left: 4px; font-weight: 700; }
   .rs-thanh { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 14px 0 10px; }
-  .rs-thanh .chu-phu { font-size: 13px; }
+  .rs-thanh .chu-phu { font-size: var(--chu-nho); }
   .rs-xac-nhan { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; margin: 0 0 12px; padding: 12px 14px;
     border: 1px solid var(--vien-vang); border-radius: 12px; background: var(--nen-vang-mo); color: var(--chu); }
-  .rs-xac-nhan p { flex: 1 1 360px; margin: 0; font-size: 13.5px; line-height: 1.5; }
+  .rs-xac-nhan p { flex: 1 1 360px; margin: 0; font-size: var(--chu-bang); line-height: 1.5; }
   .rs-xac-nhan > div { display: flex; gap: 8px; }
   .rs-ds { display: flex; flex-direction: column; gap: 12px; }
   .rs-dong { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "viec chan" "mt mt"; gap: 4px 16px; padding: 14px 16px;
@@ -16,19 +16,19 @@
   .rs-viec .ten-bam { display: block; padding: 0; background: none; border: 0; cursor: pointer; }
   .rs-viec .ten-bam b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; line-height: 1.4; color: var(--chu); }
   .rs-viec .ten-bam:hover b, .rs-viec .ten-bam:focus-visible b { color: var(--lam); text-decoration: underline; text-underline-offset: 3px; }
-  .rs-viec small { font-size: 12.5px; line-height: 1.45; }
+  .rs-viec small { font-size: var(--chu-nho); line-height: 1.45; }
   .rs-hien { color: var(--navy); font-weight: 600; }
   .rs-chan { grid-area: chan; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; text-align: right; }
-  .rs-chan .chu-phu { font-size: 12.5px; max-width: 220px; }
+  .rs-chan .chu-phu { font-size: var(--chu-nho); max-width: 220px; }
   .rs-mt { grid-area: mt; min-width: 0; }
   .rs-mt .mtg { margin-top: 8px; padding-top: 10px; }
   .rs-trang { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 16px 0 4px; }
 
   /* Nhập Excel: ô tự gắn mục tiêu + dòng "mục tiêu tự gắn (dự kiến)" ở cột ghi chú */
   .nx-tu-gan { display: flex; flex-direction: column; gap: 4px; margin: 12px 0; padding: 10px 12px; border: 1px solid var(--vien-nhat); border-radius: 12px; background: var(--nen-mo); }
-  .nx-tu-gan label { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--chu); cursor: pointer; }
+  .nx-tu-gan label { display: flex; align-items: center; gap: 8px; font-size: var(--chu-bang); font-weight: 600; color: var(--chu); cursor: pointer; }
   .nx-tu-gan input { width: 16px; height: 16px; accent-color: var(--lam); }
-  .nx-tu-gan small { font-size: 12.5px; line-height: 1.45; }
+  .nx-tu-gan small { font-size: var(--chu-nho); line-height: 1.45; }
   .nx-dk { display: block; margin-top: 2px; color: var(--lam); }
   .nx-dk:empty { display: none; }
 

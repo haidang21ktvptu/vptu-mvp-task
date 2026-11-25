@@ -11,11 +11,11 @@
   .logo { flex: none; width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 12px; padding: 5px; display: block; }
   .dai .ten { display: flex; flex-direction: column; align-items: center; min-width: 0; width: calc(var(--rong-menu) - 18px - 44px - 16px - 12px); color: #fff;
     font-family: var(--font-van-ban); text-align: center; line-height: 1.2; }
-  .dai .ten span { font-size: 11.5px; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
-  .dai .ten b { font-weight: 700; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
-  .dai .ten i { font-style: normal; font-size: 11px; line-height: 1; margin-top: 2px; color: var(--ben-chon-icon); }
-  .ngay-vb { margin-left: 12px; font-family: var(--font-van-ban); font-style: italic; font-size: 15px; color: var(--chu-phu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-  .dai .phai { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .dai .ten span { font-size: var(--chu-nho); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
+  .dai .ten b { font-weight: 700; font-size: var(--chu-bang); letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+  .dai .ten i { font-style: normal; font-size: var(--chu-nho); line-height: 1; margin-top: 2px; color: var(--ben-chon-icon); }
+  .ngay-vb { margin-left: 12px; font-family: var(--font-van-ban); font-style: italic; font-size: var(--chu-than); color: var(--chu-phu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .dai .phai { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: var(--chu-nho); }
   /* Nút trên thanh: ô vuông 40px bo 10px, nền mặt thẻ, viền nhạt */
   .nut-dai { position: relative; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--chu-phu); background: var(--the); border: 1px solid var(--vien); flex: none; }
   .nut-dai:hover, .nut-dai[aria-expanded="true"] { color: var(--chu); border-color: var(--vien-o); }
@@ -25,25 +25,25 @@
   .tim-nhanh { display: flex; align-items: center; height: 40px; border-radius: 10px; background: var(--the); border: 1px solid var(--vien); }
   .tim-nhanh:focus-within { border-color: var(--vien-focus); }
   .tim-nhanh .nut-dai { background: transparent; border: 0; }
-  .tim-nhanh-o input { width: 236px; max-width: 34vw; height: 38px; padding: 0 12px 0 0; border: 0; background: transparent; color: var(--chu); font: inherit; font-size: 14px; outline: 0; }
+  .tim-nhanh-o input { width: 236px; max-width: 34vw; height: 38px; padding: 0 12px 0 0; border: 0; background: transparent; color: var(--chu); font: inherit; font-size: var(--chu-bang); outline: 0; }
   .tim-nhanh-o input::placeholder { color: var(--chu-mo); }
   .chuong { position: relative; }
   .chuong-nut i { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; display: grid; place-items: center; background: var(--vang); color: #14243B;
-    font-style: normal; font-size: 11px; font-weight: 800; line-height: 1; border-radius: 9px; }
+    font-style: normal; font-size: var(--chu-nho); font-weight: 800; line-height: 1; border-radius: 9px; }
   .chuong-nut i.hidden { display: none; }
   .dai .nguoi { display: flex; align-items: center; gap: 10px; padding-left: 10px; border-left: 1px solid var(--vien); text-align: left; line-height: 1.2; }
-  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--navy-dac); color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center; flex: none; overflow: hidden; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--navy-dac); color: #fff; font-weight: 700; font-size: var(--chu-nho); display: grid; place-items: center; flex: none; overflow: hidden; }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .dai .nguoi b { display: block; font-weight: 600; font-size: 14px; white-space: nowrap; }
-  .dai .nguoi span { font-size: 12.5px; color: var(--chu-phu); white-space: nowrap; }
-  .dai .nguoi .avatar { font-size: 13px; color: #fff; } /* avatar là span: không ăn cỡ chữ / màu dòng 2 */
+  .dai .nguoi b { display: block; font-weight: 600; font-size: var(--chu-bang); white-space: nowrap; }
+  .dai .nguoi span { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }
+  .dai .nguoi .avatar { font-size: var(--chu-nho); color: #fff; } /* avatar là span: không ăn cỡ chữ / màu dòng 2 */
   .banh-rang { position: relative; }
   .br-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 260px; background: var(--the); color: var(--chu); border: 1px solid var(--vien); border-radius: 12px;
-    box-shadow: var(--bong-noi); padding: 6px; font-size: 14px; }
+    box-shadow: var(--bong-noi); padding: 6px; font-size: var(--chu-bang); }
   .br-menu button, .br-menu a { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; color: var(--chu); text-decoration: none; }
   .br-menu button:hover, .br-menu a:hover { background: var(--nen-phu); }
   .br-menu hr { border: 0; border-top: 1px solid var(--vien); margin: 6px 4px; }
-  .br-menu .br-nhom { display: block; padding: 6px 12px 2px; font-size: 12px; font-weight: 600; color: var(--chu-phu); }
+  .br-menu .br-nhom { display: block; padding: 6px 12px 2px; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
   .br-menu .br-thoat { color: var(--do); font-weight: 600; }
   .br-menu [aria-checked="true"]::after { content: "✓"; margin-left: auto; color: var(--luc); font-weight: 700; }
 
@@ -67,7 +67,7 @@
     .dai .ten { display: none; }
     .dai .phai { gap: 6px; }
     .dai .nguoi { padding-left: 2px; border-left: 0; }
-    .avatar { width: 32px; height: 32px; font-size: 12px; background: rgba(255, 255, 255, .18); }
+    .avatar { width: 32px; height: 32px; font-size: var(--chu-nho); background: rgba(255, 255, 255, .18); }
     .nut-dai { width: 36px; height: 36px; color: #fff; background: rgba(255, 255, 255, .12); border: 0; }
     .nut-dai:hover, .nut-dai[aria-expanded="true"] { color: #fff; background: rgba(255, 255, 255, .24); }
     .tim-nhanh { background: transparent; border: 0; }

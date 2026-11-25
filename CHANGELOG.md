@@ -967,3 +967,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - `kiem-thu-dem.yml`: từ mỗi đêm sang 03:00 thứ Hai hằng tuần; nạp lại tài khoản và dữ liệu mẫu e2e (`seed-demo`) trước khi chạy; e2e chỉ kích thước desktop; RLS token thật được 25 phút.
 - `backup-dinh-ky.yml`: sao lưu production mỗi ngày (trước 3 ngày/lần), artifact giữ 30 ngày; hằng tuần tải một bản về thiết bị lưu trữ của Văn phòng (`docs/sao-luu-khoi-phuc.md`).
 - Tài liệu: `kien-truc.md`, `KIEM-THU.md`, `sao-luu-khoi-phuc.md`.
+
+## 93. v3.36.0 (Đợt 1, phần 1) — Nền giao diện theo DESIGN.md: thang chữ, cỡ chữ lớn, bỏ ảnh nền sau số liệu (25/11/2026, chủ dự án duyệt — CAU-HOI V-1, V-4; chỉ giao diện, không migration)
+- Thang chữ tám bậc bằng biến rem (`tokens.css` `--chu-nho` 13 … `--chu-so` 32); 608 khai báo `font-size` ở 36 tệp CSS chuyển sang biến (trước: 27 cỡ, nhỏ nhất 11px); không còn chữ dưới 13px; bản in giữ cỡ riêng.
+- Menu bánh răng thêm **Cỡ chữ lớn** (gốc 18px, cả thang lớn theo); máy chưa chọn thì lãnh đạo (A0, A1) mặc định cỡ lớn; nhớ theo máy (`vptu.co-chu`).
+- Tổng quan: bỏ ảnh chụp mờ sau dải số liệu (DESIGN mục 1); nhãn ở ngăn chi tiết bỏ viết hoa toàn bộ (giữ thể thức tên cơ quan ở đầu trang, đăng nhập).
+- `tailwind.config.js` đọc cùng biến màu, chữ, cỡ chữ của token (bỏ bảng màu v7 và Be Vietnam Pro); DESIGN mục 3 viết lại thành bản hiện hành; e2e `tong-quan` thêm bài cỡ chữ.
