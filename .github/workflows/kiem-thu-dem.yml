@@ -1,12 +1,14 @@
-name: Kiểm thử đêm trên staging
+name: Kiểm thử hằng tuần trên staging
 
-# v3.18 (docs/KIEM-THU.md): bộ e2e ĐỦ và RLS token thật chạy trên staging MỖI ĐÊM (03:00 giờ Việt Nam) và khi bấm tay — thay cho việc chạy
-# cả bộ trên staging ở từng PR / từng lần merge (staging gói nhỏ, dùng chung với kiểm tay → chập chờn). PR: e2e + RLS trên Supabase cục bộ
-# của runner (ci.yml); sau merge: deploy + smoke (deploy-staging.yml). Lịch đêm bắt khác biệt môi trường hosted (Auth, Edge Function,
-# realtime, dữ liệu staging tích luỹ). Đỏ → xem annotation / artifact; chạy lại bằng workflow_dispatch khi staging rảnh.
+# v3.18 (docs/KIEM-THU.md): e2e và RLS token thật chạy trên staging theo lịch và khi bấm tay — thay cho việc chạy cả bộ trên staging ở từng
+# PR / từng lần merge (staging gói nhỏ, dùng chung với kiểm tay → chập chờn). PR: e2e + RLS trên Supabase cục bộ của runner (ci.yml); sau
+# merge: deploy + smoke (deploy-staging.yml). Lịch này bắt khác biệt môi trường hosted (Auth, Edge Function, realtime, dữ liệu tích luỹ).
+# 25/11/2026 (chủ dự án duyệt): từ mỗi đêm chuyển sang MỖI TUẦN (03:00 thứ Hai giờ Việt Nam); chỉ kích thước desktop (PR đã chạy hai kích
+# thước); nạp lại tài khoản và dữ liệu mẫu e2e (seed-demo, idempotent) trước khi chạy; RLS token thật được 25 phút (staging chậm).
+# Đỏ → xem annotation / artifact; chạy lại bằng workflow_dispatch khi staging rảnh.
 on:
   schedule:
-    - cron: '0 20 * * *'   # 20:00 UTC = 03:00 Asia/Ho_Chi_Minh
+    - cron: '0 20 * * 0'   # Chủ nhật 20:00 UTC = 03:00 thứ Hai Asia/Ho_Chi_Minh
   workflow_dispatch:
 
 concurrency:
@@ -22,7 +24,7 @@ env:
 
 jobs:
   e2e-staging:
-    name: e2e đủ bộ trên staging (retries 1)
+    name: e2e trên staging (desktop, retries 1)
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -36,19 +38,30 @@ jobs:
           if [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
             echo "::error::Thiếu secret STAGING_SUPABASE_ANON_KEY / STAGING_SUPABASE_SERVICE_ROLE_KEY (docs/kien-truc.md)."; exit 1
           fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: scripts/package-lock.json
+      # Như PR (ci.yml): tài khoản demo + dữ liệu mẫu E2E-SEED, chỉ tạo phần còn thiếu, không sửa dòng đã có (scripts/seed-demo.mjs).
+      - name: Nạp tài khoản và dữ liệu mẫu e2e lên staging (idempotent)
+        run: |
+          npm ci --prefix scripts
+          node scripts/seed-demo.mjs 2>&1 | tail -n 15
       - uses: ./.github/actions/e2e-playwright
         with:
           dich: staging
           workers: '2'
           retries: '1'
-          ten-bao-cao: playwright-report-staging-dem
+          tham-so: --project=desktop
+          ten-bao-cao: playwright-report-staging-tuan
 
   rls-staging:
     name: Test RLS trên staging (token thật)
     needs: e2e-staging
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
-    timeout-minutes: 14
+    timeout-minutes: 28
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,7 +70,7 @@ jobs:
           cache: npm
           cache-dependency-path: tests/rls/package-lock.json
       - name: Test RLS (token thật, 7 tài khoản seed)
-        timeout-minutes: 12
+        timeout-minutes: 25
         working-directory: tests/rls
         env:
           RLS_STAGING: '1'

@@ -208,8 +208,8 @@ Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAU
 | Viết migration | tạo tay `supabase/migrations/NNNN_*.sql`; xem trước `supabase db push --dry-run` | `supabase db diff` (shadow DB) |
 | Áp migration | `supabase db push` (staging); production qua `deploy-prod.yml` | `supabase db reset` (cục bộ) |
 | Kiểm tra schema / hàm | `supabase db lint --linked`; `supabase db query --linked "select …"` (chỉ SELECT) | `supabase db lint --local` |
-| Test RLS | để CI chạy: mọi PR trên runner (`RLS_LOCAL=1`); token thật trên staging mỗi đêm (`kiem-thu-dem.yml`) hoặc bấm tay | `RLS_LOCAL=1 npm test` sau `supabase start` |
-| Test e2e | để CI chạy: mọi PR trên runner (`E2E_LOCAL=1`, v3.18); đủ bộ trên staging mỗi đêm; tay: `E2E_STAGING=1 npx playwright test <spec>` (một spec) | `E2E_LOCAL=1` (+ `E2E_TRE_MS`) |
+| Test RLS | để CI chạy: mọi PR trên runner (`RLS_LOCAL=1`); token thật trên staging mỗi tuần (`kiem-thu-dem.yml`) hoặc bấm tay | `RLS_LOCAL=1 npm test` sau `supabase start` |
+| Test e2e | để CI chạy: mọi PR trên runner (`E2E_LOCAL=1`, v3.18); kích thước desktop trên staging mỗi tuần; tay: `E2E_STAGING=1 npx playwright test <spec>` (một spec) | `E2E_LOCAL=1` (+ `E2E_TRE_MS`) |
 | Chạy frontend | `cd frontend && npm run dev` với `.env` trỏ **staging** (anon key) | `.env` trỏ Supabase cục bộ |
 | Backup | tải artifact của `deploy-prod` / `backup-dinh-ky` (GitHub Actions) | `scripts/backup-db.sh` (`db dump` chạy pg_dump trong Docker) |
 | Edge Function | `supabase functions deploy quan-tri-tai-khoan --use-api --project-ref <staging>` | `supabase functions serve` |

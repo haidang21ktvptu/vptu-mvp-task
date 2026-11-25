@@ -7,7 +7,8 @@ name: CI
 # `kiem-thu-staging` thay bằng job rỗng CÙNG TÊN hiển thị (ruleset `main` bắt 4 check theo tên; deploy-prod `kiem-tra` cũng đọc theo tên nên PR
 # release chỉ tài liệu vẫn tag được). `gitleaks` luôn chạy. Không chắc (PR rỗng, API lỗi, lấy không đủ danh sách, push đầu tiên) hoặc đổi chính
 # script / ci.yml / deploy-*.yml → chạy đủ. Trong PR, RLS và e2e đều chạy trên Supabase cục bộ của runner (v3.18); staging: smoke sau merge
-# (deploy-staging.yml), bộ đủ + RLS token thật mỗi đêm (kiem-thu-dem.yml).
+# (deploy-staging.yml), e2e (desktop) + RLS token thật mỗi tuần (kiem-thu-dem.yml). Từ 25/11/2026: PR không đổi supabase/, tests/rls/,
+# scripts/, .github/ (output can_rls=false) bỏ job `supabase-db`, thay bằng job rỗng cùng tên; `frontend` và e2e vẫn chạy.
 on:
   pull_request:
   push:
@@ -57,6 +58,7 @@ jobs:
       khong_anh_huong_app: ${{ steps.xet.outputs.khong_anh_huong_app }}
       cham_function: ${{ steps.xet.outputs.cham_function }}
       cham_migration: ${{ steps.xet.outputs.cham_migration }}
+      can_rls: ${{ steps.xet.outputs.can_rls }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -72,10 +74,11 @@ jobs:
           SHA: ${{ github.sha }}
         run: bash .github/scripts/phan-loai.sh
 
+  # Chỉ khi đổi CSDL / test RLS / script / CI (can_rls); thiếu output (job phân loại không chạy) → vẫn chạy (khác 'false').
   supabase-db:
     name: Áp migration + lint schema
     needs: phan-loai
-    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app != 'true' }}
+    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app != 'true' && needs.phan-loai.outputs.can_rls != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -110,14 +113,14 @@ jobs:
       - name: Chú thích test RLS đỏ (đọc được qua API check-runs)
         if: failure()
         run: bash scripts/rls-chu-thich.sh "$RUNNER_TEMP/rls.log"
-  # Job rỗng cùng tên hiển thị với `supabase-db`, chỉ khi thay đổi không ảnh hưởng app / PR docs-only (ruleset bắt check theo tên).
+  # Job rỗng cùng tên hiển thị với `supabase-db` (ruleset bắt check theo tên): PR docs-only, hoặc PR không đổi CSDL / test RLS / script / CI.
   supabase-db-tai-lieu:
     name: Áp migration + lint schema
     needs: phan-loai
-    if: ${{ !cancelled() && needs.phan-loai.outputs.khong_anh_huong_app == 'true' }}
+    if: ${{ !cancelled() && (needs.phan-loai.outputs.khong_anh_huong_app == 'true' || needs.phan-loai.outputs.can_rls == 'false') }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Thay đổi không ảnh hưởng app — bỏ qua áp migration, lint schema và test RLS cục bộ."
+      - run: echo "Không đổi CSDL, test RLS, script hay CI — bỏ qua áp migration, lint schema và test RLS cục bộ (e2e vẫn chạy trên Supabase cục bộ)."
 
   # Job rỗng cùng tên hiển thị với `frontend`, chỉ khi thay đổi không ảnh hưởng app.
   frontend-tai-lieu:

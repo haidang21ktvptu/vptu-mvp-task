@@ -16,7 +16,10 @@ KHONG_ANH_HUONG='^docs/|\.md$|^\.github/workflows/(backup-dinh-ky|canh-bao|hoc-q
 CHAM_RLS='^supabase/|^tests/rls/'
 CHAM_FUNCTION='^supabase/functions/'
 CHAM_MIGRATION='^supabase/migrations/'
-KQ=false; LY_DO=''; FILES=''; RLS=true; HAM=true; MIG=true
+# can_rls (25/11/2026, chủ dự án duyệt): job "Áp migration + lint schema" (test RLS cục bộ) chỉ cần khi đổi CSDL, test RLS, script nạp
+# dữ liệu hoặc chính CI. PR chỉ sửa giao diện bỏ job đó; e2e vẫn chạy trên Supabase cục bộ. Không đọc được danh sách → true (chạy đủ).
+CAN_RLS_MAU='^supabase/|^tests/rls/|^scripts/|^\.github/'
+KQ=false; LY_DO=''; FILES=''; RLS=true; HAM=true; MIG=true; CAN_RLS=true
 
 lay_files_pr() {
   local mong_doi
@@ -44,13 +47,15 @@ if [ -z "$LY_DO" ]; then
 ' "$FILES" | grep -q -E "$CHAM_FUNCTION"; then HAM=true; else HAM=false; fi
   if printf '%s
 ' "$FILES" | grep -q -E "$CHAM_MIGRATION"; then MIG=true; else MIG=false; fi
+  if printf '%s\n' "$FILES" | grep -q -E "$CAN_RLS_MAU"; then CAN_RLS=true; else CAN_RLS=false; fi
 fi
 echo "khong_anh_huong_app=$KQ" >> "${GITHUB_OUTPUT:-/dev/null}"
+echo "can_rls=$CAN_RLS" >> "${GITHUB_OUTPUT:-/dev/null}"
 echo "cham_rls=$RLS" >> "${GITHUB_OUTPUT:-/dev/null}"
 echo "cham_function=$HAM" >> "${GITHUB_OUTPUT:-/dev/null}"
 echo "cham_migration=$MIG" >> "${GITHUB_OUTPUT:-/dev/null}"
 {
-  echo "### Phân loại thay đổi: khong_anh_huong_app=**$KQ** — $LY_DO · cham_rls=**$RLS** · cham_function=**$HAM** · cham_migration=**$MIG**"
+  echo "### Phân loại thay đổi: khong_anh_huong_app=**$KQ** — $LY_DO · cham_rls=**$RLS** · cham_function=**$HAM** · cham_migration=**$MIG** · can_rls=**$CAN_RLS**"
   echo '```'; printf '%s\n' "${FILES:-(không đọc được danh sách file)}"; echo '```'
   [ -n "${NGOAI:-}" ] && { echo 'File ảnh hưởng app:'; echo '```'; printf '%s\n' "$NGOAI"; echo '```'; }
 } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
