@@ -440,3 +440,18 @@ nắm thông tin mà cán bộ chủ trì theo dõi đã cập nhật … khi l�
 | U-4 | Ai xem? | **Mọi cán bộ xem toàn bộ** danh mục quý; cập nhật: chủ trì / phối hợp theo dõi, cán bộ phòng được giao, Trưởng phòng của các đồng chí đó, lãnh đạo Văn phòng, đầu mối tổng hợp (Chánh Văn phòng chỉ định; quản trị hệ thống chỉ định được người khác, không tự chỉ định mình); Thường trực xem, chỉ đạo, không cập nhật. | RLS `nvq-0132`; unit `nvq-tinh` |
 | U-5 | Trình bày cho lãnh đạo? | Tổng quan quý: một câu tóm tắt → ô số → **05 chỉ tiêu cơ bản** → tiến độ 6 trục → việc cần lãnh đạo quan tâm (đơn vị, số ngày chậm, sản phẩm còn thiếu, lãnh đạo phụ trách) → kết quả mới trong tuần, đến mốc trong tháng → theo lãnh đạo / đơn vị / chủ trì theo dõi → diễn biến các tuần. Mọi nhiệm vụ hiện **kết quả thực hiện mới nhất** do chủ trì theo dõi ghi, kèm ngày. | e2e `nhiem-vu-quy` |
 | U-6 | Cập nhật tiến độ theo loại kết quả? | Mỗi kết quả / sản phẩm một loại, một mốc: **văn bản** (đã ban hành phải có số, ký hiệu hoặc mô tả), **chỉ tiêu** (số thực hiện lũy kế, ngày, nguồn, ước tính), **hoạt động** (ngày tổ chức, kết quả), **định kỳ** (mỗi tháng một mốc), **khác**; "Không có thay đổi trong tuần" một bấm. | RLS `nvq-0132`; e2e `nhiem-vu-quy` |
+
+## Nhóm V — Quyết định 25/11/2026: rà soát toàn diện, kế hoạch Đợt 1–3, kinh phí
+Chủ dự án yêu cầu rà soát toàn bộ web app (11:01), vào vai lãnh đạo trên production, đối chiếu dashboard của các hệ thống lớn; 14:41 yêu cầu dự toán kinh phí
+và tóm tắt chỉnh sửa; 14:58 duyệt; 15:07 yêu cầu dự toán một phương án tốt nhất, dùng tối thiểu 5 năm, tính cả Claude và dữ liệu tăng hằng năm.
+
+| # | Câu hỏi | Quyết định | Kiểm bằng |
+|---|---|---|---|
+| V-1 | Đợt 1 giao diện, UI/UX? | **Duyệt**, kèm viết lại DESIGN.md thành một bản hiện hành; làm ngay, ưu tiên UI/UX | Kiểm staging các vai, chủ dự án duyệt trước phát hành |
+| V-2 | 275/337 việc hoàn thành chưa có ngày hoàn thành? | **"Tự thêm 30 ngày những việc chưa có ngày hoàn thành."** Cách hiểu: lấy ngày thật từ lịch sử chuyển trạng thái nếu có; còn lại ngày giao + 30 ngày, không quá ngày bổ sung; đánh dấu là ngày bổ sung | Báo số việc, chủ dự án xác nhận trước khi chạy production |
+| V-3 | Xác thực hai lớp? | **Bỏ** | |
+| V-4 | Tailwind? | Theo đề xuất: **đồng bộ cấu hình với token DESIGN.md**, không đổi stack | |
+| V-5 | Kiểm tra kiểu TypeScript? | Theo đề xuất: **để sau Đợt 2** | |
+| V-6 | Sao lưu mức 1 (không tốn kinh phí)? | **Làm**: hằng ngày, giữ 30 ngày trên GitHub, hằng tuần tải một bản về thiết bị lưu trữ của Văn phòng | PR #194 |
+| V-7 | Kinh phí? | **Một phương án tốt nhất, dùng tối thiểu 5 năm**: tên miền .vn mua riêng (không dùng chung tên miền đang thuê), repo riêng tư (GitHub Pro), Supabase Pro máy Medium + PITR 7 ngày, Claude gói Ultra (tối thiểu Max); có dự báo dữ liệu tăng hằng năm, hạn mức dung lượng, I/O. Chờ kinh phí | Bảng Excel 25/11 (ngoài repo) |
+| V-8 | Repo phụ thuộc một tài khoản cá nhân? | **Bỏ qua**: chủ dự án là chủ quản sản phẩm | |
