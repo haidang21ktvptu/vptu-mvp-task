@@ -99,4 +99,27 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
     await expect(html).not.toHaveAttribute('data-theme', /./);
     await page.context().close();
   });
+
+  // v3.36 (CAU-HOI V-1, DESIGN mục 3): máy chưa chọn thì lãnh đạo cỡ lớn (gốc 18px), chuyên viên cỡ vừa; chọn ở menu thì nhớ theo máy.
+  test('cỡ chữ: lãnh đạo mặc định cỡ lớn, chuyên viên cỡ vừa; đổi ở menu bánh răng, nhớ sau khi tải lại', async ({ browser }, testInfo) => {
+    const a1 = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
+    const html = a1.locator('html');
+    const goc = () => a1.evaluate(() => globalThis.getComputedStyle(globalThis.document.documentElement).fontSize);
+    await expect(html).toHaveAttribute('data-co-chu', 'lon');
+    expect(await goc()).toBe('18px');
+    await a1.locator('#banhRangBtn').click();
+    const muc = a1.locator('#banhRangMenu [data-action="doiCoChu"]');
+    await expect(muc).toHaveAttribute('aria-checked', 'true');
+    await muc.click();
+    await expect(html).not.toHaveAttribute('data-co-chu', /./);
+    expect(await goc()).toBe('16px');
+    await a1.reload();
+    await expect(a1.locator('#mainHeader')).toBeVisible(NAP);
+    await expect(html).not.toHaveAttribute('data-co-chu', /./);
+    await a1.context().close();
+    const a3 = await pageAs(browser, 'A3', testInfo);
+    await expect(a3.locator('#mainHeader')).toBeVisible(NAP);
+    await expect(a3.locator('html')).not.toHaveAttribute('data-co-chu', /./);
+    await a3.context().close();
+  });
 });

@@ -5,10 +5,10 @@
   .mc-inline .mc-tep-the { margin-top: 0; }
 
   /* Việc ngoài phạm vi xử lý (cấu hình xem toàn bộ): nhãn trung tính, lời nhắc trong ngăn chi tiết. */
-  .nhan-chi-xem { margin-left: 4px; font-size: 11px; vertical-align: 1px; }
+  .nhan-chi-xem { margin-left: 4px; font-size: var(--chu-nho); vertical-align: 1px; }
   .ct-chi-xem { flex-basis: 100%; margin: 0 0 6px; }
 
   /* Vướng mắc: chọn người được đề nghị xử lý; hướng dẫn hạn của việc không xác định thời hạn. */
-  .vm-gui-toi { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
-  .goi-y-han { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; }
+  .vm-gui-toi { display: flex; flex-direction: column; gap: 4px; font-size: var(--chu-nho); }
+  .goi-y-han { margin: 6px 0 0; font-size: var(--chu-nho); line-height: 1.5; }
 }

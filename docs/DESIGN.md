@@ -56,22 +56,30 @@ Quy tắc: **màu là thông tin, không phải trang trí.** Mỗi màu xuất 
 
 ## 3. Chữ
 
-Hai họ chữ, vai trò rõ ràng, đều có bộ dấu tiếng Việt đầy đủ; **tự host** tại `frontend/public/fonts/` (woff2, subset Vietnamese + Latin, khai báo ở `src/styles/fonts.css`) vì mạng cơ quan có thể chặn Google Fonts:
+**Bản hiện hành từ v3.36 (25/11/2026, CAU-HOI V-1), thay cả phần chữ của mục 10.** Ba họ chữ, đều có bộ dấu tiếng Việt đầy đủ, **tự host** tại `frontend/public/fonts/` (woff2 biến thiên 400–700, subset Vietnamese + Latin, khai báo ở `src/styles/fonts.css`) vì mạng cơ quan có thể chặn Google Fonts:
 
-| Họ chữ | Vai trò | Lý do |
+| Họ chữ | Vai trò |
+|---|---|
+| **Lexend** (`--font-tieu-de`) | Tiêu đề trang, tiêu đề khối, con số lớn |
+| **Source Sans 3** (`--font-sans`) | Thân chữ, bảng, nút, ô nhập |
+| **Noto Serif** (`--font-van-ban`) | Tên cơ quan ở đầu trang, dòng ngày theo thể thức (in nghiêng), nội dung ý kiến chỉ đạo |
+
+**Thang cỡ: tám bậc, đơn vị rem** (biến ở `tokens.css`; **mọi** `font-size` trong CSS dùng biến, không viết số px; bản in `in.css` giữ cỡ riêng):
+
+| Biến | Cỡ | Dùng cho |
 |---|---|---|
-| **Noto Serif** | Tên cơ quan ở đầu trang, tiêu đề trang đăng nhập, tiêu đề văn bản trong modal | Gợi sự trang trọng của văn bản hành chính, gần chữ Times quen thuộc mà rõ trên màn hình |
-| **Be Vietnam Pro** | Toàn bộ giao diện còn lại | Thiết kế riêng cho tiếng Việt, dấu không bị lệch, đọc tốt cỡ nhỏ trong bảng |
+| `--chu-nho` | 13 | Nhãn phụ, chú thích, chip — **nhỏ nhất, không có chữ dưới 13px** |
+| `--chu-bang` | 14 | Bảng, nút gọn, ô lọc |
+| `--chu-than` | 15 | Thân chữ |
+| `--chu-o` | 16 | Ô nhập, nút chính (điện thoại không tự phóng to khi gõ) |
+| `--chu-muc` | 17 | Tiêu đề mục, khối |
+| `--chu-khoi` | 20 | Tên cơ quan, tiêu đề hộp, số trung bình |
+| `--chu-trang` | 24 | Tiêu đề trang, số trong thẻ |
+| `--chu-so` | 32 | Con số lớn ở dải đầu, thẻ tổng quan |
 
-Thang cỡ (px / độ đậm / giãn dòng):
-- Tên cơ quan: 20 / Serif 600 / 1.3, chữ hoa có dấu, giãn chữ 0.02em
-- Tiêu đề trang: 24 / 600 / 1.3
-- Tiêu đề mục: 17 / 600 / 1.4
-- Thân: 15 / 400 / 1.6
-- Bảng: 14 / 400 / 1.5
-- Nhãn phụ: 13 / 500 / 1.4, màu mực nhạt, **viết hoa chữ đầu, không viết hoa toàn bộ**
+**Cỡ chữ lớn:** mục "Cỡ chữ lớn" ở menu bánh răng đặt `<html data-co-chu="lon">`, gốc 18px, cả thang lớn theo (13 thành 14,6; 15 thành 16,9). Máy chưa chọn thì lãnh đạo (Thường trực, lãnh đạo Văn phòng) mặc định cỡ lớn, người khác cỡ vừa; chọn rồi thì nhớ theo máy (`shell/kieu-giao-dien.js`). Bản in luôn cỡ vừa.
 
-Không dùng chữ hoa toàn bộ cho nhãn cột. Không in nghiêng để nhấn một từ. Không dùng chữ đơn cách (monospace) cho số liệu.
+Nhãn viết hoa chữ đầu, **không viết hoa toàn bộ** (trừ tên cơ quan theo thể thức văn bản của Đảng ở đầu trang và trang đăng nhập). Không in nghiêng để nhấn một từ. Không dùng chữ đơn cách (monospace) cho số liệu; số dùng `tabular-nums`. Tailwind (`tailwind.config.js`) đọc cùng biến màu, chữ, cỡ chữ; `text-xs` là 13px.
 
 ---
 
@@ -195,7 +203,7 @@ Dải cao 6px lặp ngang, hình thoi lồng nhau, màu vàng sao 60% trên nề
 
 Màu mức cảnh báo (Vàng, Đỏ, Đỏ đặc biệt) và trạng thái giữ **cùng nghĩa ở mọi kiểu**; biểu đồ dùng bộ `--f-*` (đúng hạn, trễ, nghiệm thu, vàng, đỏ, đỏ đặc biệt). Không thêm màu ngoài token. Nền tối chỉ áp trên màn hình — bản in / PDF luôn dùng token sáng. **Tương thích:** không dùng `color-mix()` hay tính năng CSS cần trình duyệt mới hơn Chrome 109 (máy Windows 7/8.1 của cơ quan); chữ / nền phải đạt 4.5:1 ở cả bốn chế độ (viền tiêu điểm trên nền đặc của thanh bên màu trắng).
 
-**Chữ** (thay mục 3; tự host woff2 biến thiên 400–700, subset Vietnamese + Latin, `src/styles/fonts.css`; bỏ Be Vietnam Pro và Lora): **Lexend** cho tiêu đề trang, tiêu đề khối, con số lớn; **Source Sans 3** cho thân chữ, bảng, nút, ô nhập; **Noto Serif** cho tên cơ quan ở đầu trang, dòng ngày theo thể thức ("Cao Bằng, ngày 02 tháng 10 năm 2026", in nghiêng) và nội dung ý kiến chỉ đạo.
+**Chữ:** xem mục 3 (bản hiện hành từ v3.36: họ chữ Lexend, Source Sans 3, Noto Serif; thang tám bậc bằng biến rem; cỡ chữ lớn). Dòng ngày theo thể thức viết "Cao Bằng, ngày 02 tháng 10 năm 2026", in nghiêng.
 
 **Khung.** Đầu trang: khối trái cùng màu thanh bên mang biểu trưng và tên cơ quan theo thể thức văn bản của Đảng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG / dấu sao vàng), cạnh đó dòng ngày; bỏ ảnh Bản Giốc ở đầu trang. 601–900px: khối trái thu còn 56px, tên cơ quan nằm cạnh. Điện thoại (≤600px): cả dải đầu màu thanh bên, thanh dưới 4 mục, mục đang chọn có gạch son phía trên.
 

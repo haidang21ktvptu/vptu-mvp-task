@@ -19,9 +19,9 @@
     .bnv .bnv-dau { display: none; }
     .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
     .bnv .bnv-c-stt, .bnv .bnv-c-tg { display: none; }
-    .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 13.5px; }
+    .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: var(--chu-bang); }
     .bnv .bnv-c-nv { flex-direction: column; align-items: flex-start; gap: 3px; }
-    .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: 12.5px; font-weight: 600; color: var(--chu-phu); }
+    .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
     .bnv .bnv-c.han, .bnv .bnv-c-tt { flex: 0 1 auto; }
     .bnv .bnv-c-tt::before, .bnv .bnv-c-viec::before { display: none; }
     .bnv .bnv-c-viec { gap: 8px; } .bnv .bnv-c-viec .nut { flex: 1 1 auto; min-height: 44px; }
@@ -33,9 +33,9 @@
     .md.co-ct .bnv .bnv-dau { display: none; }
     .md.co-ct .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
     .md.co-ct .bnv .bnv-c-stt, .md.co-ct .bnv .bnv-c-tg { display: none; }
-    .md.co-ct .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 13.5px; }
+    .md.co-ct .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: var(--chu-bang); }
     .md.co-ct .bnv .bnv-c-nv { flex-direction: column; align-items: flex-start; gap: 3px; }
-    .md.co-ct .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: 12.5px; font-weight: 600; color: var(--chu-phu); }
+    .md.co-ct .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
     .md.co-ct .bnv .bnv-c.han, .md.co-ct .bnv .bnv-c-tt { flex: 0 1 auto; }
     .md.co-ct .bnv .bnv-c-tt::before { display: none; }
     .md.co-ct .bnv .bnv-chi-gon { display: block; }
@@ -46,13 +46,13 @@
   }
   @media (max-width: 860px) {
     .bnv-so .o-so { flex: 1 1 40%; padding: 10px 12px; }
-    .bnv-so .o-so b { font-size: 21px; }
+    .bnv-so .o-so b { font-size: var(--chu-khoi); }
     .bnv-loc .kl-tim, .bnv-loc > select { width: 100%; max-width: 100%; flex: 1 1 100%; }
     .bnv-chu-giai { gap: 4px 12px; }
   }
   @media (max-width: 600px) {
     .bnv { border-radius: 12px; }
-    .bnv .bnv-nd { font-size: 15px; -webkit-line-clamp: 3; }
+    .bnv .bnv-nd { font-size: var(--chu-than); -webkit-line-clamp: 3; }
     .bnv .bnv-c-viec .nut { flex: 1 1 100%; }
     .bnv-khoi { margin: 0 10px 12px 14px; }
     .bnv-khoi .mc-inline { grid-template-columns: minmax(0, 1fr); }

@@ -7,16 +7,16 @@
   .than { display: flex; align-items: flex-start; min-height: calc(100vh - var(--cao-dau-trang)); background: linear-gradient(90deg, var(--ben-cuoi) 0 var(--rong-menu), transparent var(--rong-menu)); }
   .menu { flex: none; width: var(--rong-menu); position: sticky; top: 0; min-height: calc(100vh - var(--cao-dau-trang)); max-height: 100vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 3px;
     padding: 18px 14px; background: var(--ben-nen); color: var(--ben-chu); scrollbar-color: rgba(255, 255, 255, .25) transparent; }
-  .menu-nhom { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--ben-chu-3); padding: 16px 12px 6px; }
+  .menu-nhom { font-size: var(--chu-nho); font-weight: 600; letter-spacing: .02em; color: var(--ben-chu-3); padding: 16px 12px 6px; }
   .menu-nhom:first-child { padding-top: 0; }
-  .menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 10px; color: var(--ben-chu-2); font-size: 15px; font-weight: 500; text-align: left; transition: background-color .12s; }
+  .menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 10px; color: var(--ben-chu-2); font-size: var(--chu-than); font-weight: 500; text-align: left; transition: background-color .12s; }
   .menu button:hover { background: var(--ben-hover); color: var(--ben-chu); }
   .menu button .ico { width: 19px; height: 19px; flex: none; color: var(--ben-chu-3); }
   .menu button .nhan-menu { flex: 1; min-width: 0; line-height: 1.25; overflow-wrap: anywhere; } /* nhãn hiện đủ, xuống dòng khi dài; số đếm không đè chữ */
   .menu button[aria-selected="true"] { background: var(--ben-chon); color: var(--ben-chu); font-weight: 600; }
   .menu button[aria-selected="true"] .ico { color: var(--ben-chon-icon); }
-  .menu button .huy-hieu { flex: none; min-width: 22px; height: 22px; border-radius: 11px; font-size: 12px; padding: 0 7px; background: var(--ben-dem); color: var(--ben-dem-chu); }
-  .menu-chan { margin-top: auto; padding: 14px 12px 4px; font-size: 12px; color: var(--ben-chu-3); line-height: 1.5; overflow-wrap: anywhere; border-top: 1px solid rgba(255, 255, 255, .12); }
+  .menu button .huy-hieu { flex: none; min-width: 22px; height: 22px; border-radius: 11px; font-size: var(--chu-nho); padding: 0 7px; background: var(--ben-dem); color: var(--ben-dem-chu); }
+  .menu-chan { margin-top: auto; padding: 14px 12px 4px; font-size: var(--chu-nho); color: var(--ben-chu-3); line-height: 1.5; overflow-wrap: anywhere; border-top: 1px solid rgba(255, 255, 255, .12); }
   .menu-nen { display: none; }
   .trang { flex: 1; min-width: 0; padding: 26px 32px 64px; }
 
@@ -26,7 +26,7 @@
     .menu-nhom, .menu-chan, .menu button .nhan-menu { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .menu button { position: relative; width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 12px; }
     .menu button .ico { width: 22px; height: 22px; }
-    .menu button .huy-hieu { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; font-size: 11px; padding: 0 5px; }
+    .menu button .huy-hieu { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; font-size: var(--chu-nho); padding: 0 5px; }
     .trang { padding: 20px 16px 60px; }
   }
   @media (max-width: 600px) {
