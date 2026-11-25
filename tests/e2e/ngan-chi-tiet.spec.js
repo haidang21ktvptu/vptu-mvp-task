@@ -1,5 +1,5 @@
-// Giao diện v9 đợt 2 — ngăn chi tiết dùng chung: mọi chỗ "bấm để xem" mở NGAY TẠI CHỖ, không đổi mục. Tổng quan: 4 số dải đầu, một dòng bảng
-// theo phòng / cán bộ, một tháng của biểu đồ → danh sách đúng bằng con số đã bấm; danh sách → chi tiết → Quay lại (tiêu điểm về việc vừa xem) →
+// Giao diện v9 đợt 2 — ngăn chi tiết dùng chung: mọi chỗ "bấm để xem" mở NGAY TẠI CHỖ, không đổi mục. Tổng quan (v3.36 ba tầng): năm thẻ tầng 1,
+// tên và một ô của ma trận đơn vị, một tháng của biểu đồ → danh sách đúng bằng con số đã bấm; danh sách → chi tiết → Quay lại (tiêu điểm về việc vừa xem) →
 // Esc đóng; khi đang mở chi tiết không có id trùng (#klChiTiet chuyển vào ngăn, không dựng bản thứ hai); chọn mục khác ở menu → ngăn tự đóng,
 // #klChiTiet về màn Nhiệm vụ. Cần xử lý: ô toàn cảnh mở danh sách trong ngăn. Tìm nhanh ngoài màn Nhiệm vụ: gõ đúng một mã → mở thẳng việc đó.
 // Vai A1 (toàn Văn phòng) và A2 (phòng mình). Chỉ đọc — không tạo dữ liệu. Chỉ máy tính (ngăn che phải 560px; điện thoại là toàn màn hình).
@@ -25,7 +25,7 @@ for (const vai of ['A1', 'A2']) {
     await expect(tq).toHaveAttribute('data-nap', /./, NAP);
     const ngan = page.locator('#nganCT'); const viec = ngan.locator('.nct-viec');
     const dong = async () => { await page.keyboard.press('Escape'); await expect(ngan).toBeHidden(); };   // ngăn che phải: đóng trước khi bấm ô khác
-    for (const khoa of ['giao', 'xong', 'mo', 'canh']) {
+    for (const khoa of ['qh', 'quyet', 'cdCho', 'th', 'xong']) {   // v3.36: năm thẻ tầng 1
       const so = await docVaBam(page, `#tqSo [data-so="${khoa}"]`);
       await expect(ngan).toBeVisible();
       await expect(viec, `danh sách "${khoa}" trong ngăn = con số đã bấm`).toHaveCount(so);
@@ -33,20 +33,20 @@ for (const vai of ['A1', 'A2']) {
       await expect(page.locator('#navTongQuan')).toHaveAttribute('aria-selected', 'true');
       await dong();
     }
-    // v3.24: bảng theo phòng / cán bộ nằm trong khối 9 "Quản lý nội bộ" — gập sẵn với lãnh đạo Văn phòng, mở sẵn với Trưởng phòng.
-    const noiBo = page.locator('#tqNoiBoNut');
-    if ((await noiBo.getAttribute('aria-expanded')) === 'false') await noiBo.click();
-    await expect(page.locator('#tqNoiBoThan')).toBeVisible();
-    if (await page.locator('#tqTheoNhom .ten-bam').count()) {   // một phòng (A1) / một cán bộ (A2): đang làm + hoàn thành trong kỳ
-      await page.locator('#tqTheoNhom .ten-bam').first().click();
+    // v3.36: ma trận đơn vị (tầng 2) — tên một phòng (A1) / một cán bộ (A2): đang làm + hoàn thành trong kỳ; một ô có việc: đúng số trong ô.
+    if (await page.locator('#tqMaTran tbody .ten-bam').count()) {
+      await page.locator('#tqMaTran tbody .ten-bam').first().click();
       await expect(ngan.locator('.nct-nhom').first()).toBeVisible();
+      await dong();
+      const soO = await page.evaluate(() => { const o = globalThis.document.querySelector('#tqMaTran tbody .o-mt'); const n = Number(o.textContent.trim()); o.click(); return n; });
+      await expect(viec, 'ô ma trận: danh sách = số trong ô').toHaveCount(soO);
       await dong();
     }
     await page.locator('#viewTongQuan .nhom-cot').first().click();   // tháng 1: giao mới / hoàn thành
     await expect(page.locator('#nganCTTieuDe')).toContainText('Tháng 1/');
     await dong();
 
-    await page.locator('#tqSo [data-so="giao"]').click();
+    await page.locator('#tqSo [data-so="th"]').click();
     if (await viec.count()) {
       await viec.first().click();
       await expect(ngan.locator('#nganCTViec .chi-tiet-noi')).toBeVisible(NAP);
@@ -59,7 +59,7 @@ for (const vai of ['A1', 'A2']) {
     await dong();
     await expect(page.locator('#viewKl #klChiTiet')).toHaveCount(1);
 
-    await page.locator('#tqSo [data-so="giao"]').click();   // đang mở ngăn mà chọn mục khác ở menu → ngăn tự đóng
+    await page.locator('#tqSo [data-so="th"]').click();   // đang mở ngăn mà chọn mục khác ở menu → ngăn tự đóng
     await expect(ngan).toBeVisible();
     await nav(page, 'navDieuHanh');
     await expect(ngan).toBeHidden();

@@ -973,3 +973,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Menu bánh răng thêm **Cỡ chữ lớn** (gốc 18px, cả thang lớn theo); máy chưa chọn thì lãnh đạo (A0, A1) mặc định cỡ lớn; nhớ theo máy (`vptu.co-chu`).
 - Tổng quan: bỏ ảnh chụp mờ sau dải số liệu (DESIGN mục 1); nhãn ở ngăn chi tiết bỏ viết hoa toàn bộ (giữ thể thức tên cơ quan ở đầu trang, đăng nhập).
 - `tailwind.config.js` đọc cùng biến màu, chữ, cỡ chữ của token (bỏ bảng màu v7 và Be Vietnam Pro); DESIGN mục 3 viết lại thành bản hiện hành; e2e `tong-quan` thêm bài cỡ chữ.
+
+## 94. v3.36.0 (Đợt 1, phần 2) — Tổng quan ba tầng và bảng chụp số liệu hằng ngày (25/11/2026, chủ dự án duyệt — CAU-HOI V-1, V-9; migration **0140**)
+- Tầng 1 vừa một màn hình thay dải đầu: năm thẻ (quá hạn chưa hoàn thành là thẻ duy nhất có màu nhấn, cần lãnh đạo cho ý kiến, chỉ đạo chờ phản hồi, đang thực hiện trong hạn, đã hoàn thành trong kỳ), các phần của mỗi thẻ cộng đủ số thẻ; tỷ lệ đúng hạn chỉ ghi khi đủ dữ liệu (≥ 5 việc và ≥ 70% việc có hạn), luôn kèm mẫu số; câu kết luận tự động; xu hướng 12 tuần; dòng Nhiệm vụ quý của Ban Thường vụ.
+- So với tuần trước: migration 0140 thêm bảng `kl_chup_viec` (bản chụp việc chưa hoàn thành mỗi ngày, quyền đọc như nhiệm vụ) và hàm `kl_chup_so_lieu` (chỉ service_role); `canh-bao.yml` gọi lúc 07:30 cùng lượt cảnh báo; migration chụp bản đầu tiên.
+- Tầng 2: ma trận đơn vị theo trạng thái (Trưởng phòng: theo cán bộ) thay bảng theo phòng / cán bộ trong khối nội bộ; 10 điểm nghẽn (nội dung tối đa 2 dòng); xếp hạng. Mỗi thẻ, ô, cột tuần mở đúng danh sách trong ngăn chi tiết.
+- Kiểm thử: unit `tong-quan-tang` (22), RLS `kl-0140`, e2e Tổng quan / ngăn chi tiết / lãnh đạo sửa theo bố cục mới và thêm bài so với tuần trước; e2e chụp ảnh Tổng quan bốn cỡ, CI lưu artifact `…-anh-chup` để rà giao diện trên PR.

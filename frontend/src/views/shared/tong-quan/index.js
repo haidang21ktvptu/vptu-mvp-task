@@ -7,7 +7,9 @@
 // đạo + vướng mắc, 8 chất lượng → 9 quản lý nội bộ (KPI theo cán bộ, lãnh đạo VP phụ trách, theo phòng — gập) → ghi chú chất lượng dữ liệu.
 // Đợt E / C1 / 0103 giữ nguyên: KPI theo cán bộ, theo lãnh đạo VP phụ trách, chuyên viên xem cả phòng, "Toàn Văn phòng / Phạm vi của tôi".
 // v3.28 (0119): khối "Giải ngân vốn đầu tư công" ngay sau điểm nghẽn (giai-ngan.js; số liệu năm kế hoạch vốn đọc cùng lượt, lỗi thì giữ số cũ); số khối
-// đánh theo các khối đang hiện (danhSoKhoi).
+// đánh theo các khối đang hiện (danhSoKhoi). v3.36 (ba tầng, CAU-HOI V-1): tầng 1 (tang-1.js: năm thẻ, so với tuần trước theo bản chụp 0140, câu kết
+// luận, xu hướng 12 tuần, dòng Nhiệm vụ quý) thay dải đầu; tầng 2 mở đầu lưới: ma trận đơn vị (ma-tran.js, thay bảng theo phòng / cán bộ của khối nội
+// bộ), điểm nghẽn, xếp hạng; các khối phân tích còn lại xếp sau. Đọc thêm (tong-quan-db.js) lỗi thì bỏ phần đó, không chặn màn hình.
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
@@ -21,7 +23,7 @@ import { tuyChonLocMoi, chipLoc } from '../../../lib/kl/tq-bo-loc.js';
 import { loadChiDaoTu } from '../../../lib/kl/dieu-hanh.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { tenDoKhan } from '../../../lib/kl/do-khan.js';
-import { khoangKy, khoangTuyChon, soLieuChinh, theoThang, khoaNhom, theoNhom, theoVanBan, chatLuongKy, chiDaoKy, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
+import { khoangKy, khoangTuyChon, theoThang, khoaNhom, theoVanBan, chatLuongKy, chiDaoKy, theoCanBo, khoaCanBo, khoaPhongCanBo } from '../../../lib/kl/tong-quan.js';
 import { theoKhoi, diemNghen, capNghen, theoMucTieu, coGanMucTieu, phanLoaiMucTieu, ketQuaMoiNhat, xepHang, dungHanQuy, vuongMacCho, chatLuongDuLieu, thieuNganh, theoChuTri, khoaChuTri } from '../../../lib/kl/tong-quan-lanh-dao.js';
 import { dsNhom, mucTieuCua, timMucTieu, laTuDong, KHONG_THUOC } from '../../../lib/kl/muc-tieu.js';
 import { coRaSoat } from '../ra-soat-muc-tieu/index.js';   // v3.25: lối vào Rà soát mục tiêu then chốt
@@ -29,7 +31,11 @@ import { locChiTieu } from '../../../lib/kl/tong-quan-loc.js';
 import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNganDanhSach, moNganViec, khiGhiTrongNgan } from '../ngan-chi-tiet.js';
-import { dauTrangHtml, theThangHtml, bangNhomHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY, danhSoKhoi } from './template.js';
+import { theThangHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY, danhSoKhoi } from './template.js';
+import { tang1Html, theSoHtml, xuHuongHtml, nvqHtml, khungCho1Html } from './tang-1.js';
+import { maTranHtml } from './ma-tran.js';
+import { theTang1, tuanTruoc, cauKetLuan, nhieuQuaHanNhat, tuanGanDay, xuHuongTuan, maTran } from '../../../lib/kl/tong-quan-tang.js';
+import { loadChupTuanTruoc, loadQuaHanChuNhat, loadChiDaoChoTruoc, loadNvqHienTai } from '../../../lib/kl/tong-quan-db.js';
 import { kpiCanBoHtml } from './kpi-can-bo.js';
 import { thanhLocHtml, loaiVanBanHtml, lanhDaoVpHtml, tenLoai } from './loc-template.js';
 import { nghenHtml, mucTieuHtml, linhVucHtml } from './khoi-lanh-dao.js';
@@ -40,7 +46,7 @@ import { giaiNganHtml, hanhDongGn } from './giai-ngan.js';   // v3.28 (0119): kh
 import { docNam } from '../../../lib/kl/giai-ngan-db.js';
 import { namHienThi } from '../../../lib/kl/giai-ngan.js';
 
-const tq = { rows: [], tatCa: [], cds: [], phanCong: [], ketQua: [], gn: null, luc: null, ky: 'nam', loi: null, loc: { ...LOC_TRONG }, toanBo: true,
+const tq = { rows: [], tatCa: [], cds: [], phanCong: [], ketQua: [], gn: null, chup: null, qhCN: new Map(), nvq: null, luc: null, ky: 'nam', loi: null, loc: { ...LOC_TRONG }, toanBo: true,
   ui: { locMo: false, cap: '', tabMt: 'DOT_PHA', lvSap: 'qh', lvMo: new Set(), xh: 'dv', vbXem: 'vb', noiBo: null, gnDu: false, ...docUi() } };
 export const dongTongQuan = () => tq.rows;   // dòng đã nạp (Giao việc v9 liệt kê việc vừa nhập theo văn bản)
 const vai = () => state.user?.role_group;
@@ -85,14 +91,13 @@ const duocChiDaoViec = (r) => ['A0', 'A1', 'A2'].includes(vai()) && !chiXem(r);
 // Khung chờ (lần mở đầu chưa có số): dải đầu + khối nhấp nháy, không hiện số 0 gây hiểu nhầm.
 function khungChoHtml() {
   const [td, pv] = tieuDe();
-  const khoi = ['n12', 'n12', 'n7', 'n5', 'n4', 'n4', 'n4'].map((n) => `<article class="the-bd ${n}" aria-hidden="true"><span class="xuong" style="width:46%;height:16px"></span><span class="xuong" style="width:30%;margin-top:10px"></span><span class="xuong" style="width:100%;height:150px;margin-top:20px"></span></article>`).join('');
-  return `<section class="anh-hung" aria-busy="true"><div class="hung-dau"><div><h1>${escapeHtml(td)}</h1><p>${escapeHtml(pv)}. <span class="ngay-hung">Đang nạp số liệu…</span></p></div></div>
-    <div class="hung-so cho">${'<div><span class="xuong" style="width:70px;height:30px"></span></div>'.repeat(5)}</div></section><div class="luoi-tq">${khoi}</div>`;
+  const khoi = ['n12', 'n12', 'n7', 'n5'].map((n) => `<article class="the-bd ${n}" aria-hidden="true"><span class="xuong" style="width:46%;height:16px"></span><span class="xuong" style="width:30%;margin-top:10px"></span><span class="xuong" style="width:100%;height:150px;margin-top:20px"></span></article>`).join('');
+  return `${khungCho1Html(td, pv)}<div class="luoi-tq">${khoi}</div>`;
 }
 
 function ve() {
   const v = vai(); const vn = vaiNhom(); const homNay = homNayVN(); const k = kyHienTai(homNay); const rows = dongDaLoc(); const dm = danhMucKl();
-  const [td, pv] = tieuDe(); const s = soLieuChinh(rows, k); const thang = theoThang(rows, homNay); const kyTuy = Boolean(tq.loc.tu || tq.loc.den);
+  const [td, pv] = tieuDe(); const thang = theoThang(rows, homNay); const kyTuy = Boolean(tq.loc.tu || tq.loc.den);
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
   const tc = { ...tuyChonLoc(coSo(), { tenPhong: DEPT_NAMES, tenCanBo: (id) => state.accounts.find((a) => a.id === id)?.full_name, lanhDaoVP: lanhDaoVP(), tenLoai }),
     ...tuyChonLocMoi(coSo(), { mucTieuDm: coMucTieu() ? dm.mucTieu : [], nhomDm: coMucTieu() ? dm.nhomMucTieu : [], khoiDm: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganhDm: dm.nganh, linhVucDm: dm.linhVuc, nguonDm: dm.nguonNhiemVu }) };
@@ -102,19 +107,25 @@ function ve() {
   const nghen = diemNghen(rows); const cl = chatLuongKy(rows, k); const coCl = Boolean(cl.coDanhGia || cl.traLai);
   const nhomMt = dsNhom(dm.nhomMucTieu, dm.mucTieu); const theo = Object.fromEntries(nhomMt.map((n) => [n.ma, theoMucTieu(rows, dm.mucTieu, n.ma)]));
   const hienCt = tq.ketQua.length > 0 || coSo().some((r) => mucTieuCua(r).some((ma) => timMucTieu(dm.mucTieu, ma)?.nhom === 'CHI_TIEU'));
-  const noiBo = `${vn === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}${laCapVanPhong() ? lanhDaoVpHtml(theoLanhDaoVP(rows, k, tq.phanCong, lanhDaoVP(), DEPT_NAMES), k) : ''}`
-    + bangNhomHtml(theoNhom(rows, k, khoaNhom(vn, DEPT_NAMES, state.user?.department)), vn, k);
+  const noiBo = `${vn === 'A2' ? '' : kpiCanBoHtml(theoCanBo(rows, k, phongCua(), DEPT_NAMES), k)}${laCapVanPhong() ? lanhDaoVpHtml(theoLanhDaoVP(rows, k, tq.phanCong, lanhDaoVP(), DEPT_NAMES), k) : ''}`;
+  // v3.36: tầng 1 + ma trận; so với tuần trước bỏ khi đang lọc theo trạng thái / lọc nhanh (tập việc đã chọn theo trạng thái hôm nay).
+  const khoa = khoaNhom(vn, DEPT_NAMES, state.user?.department); const ctx = { cds: cdsLoc(), ctxCd: ctxCd(), homNay };
+  const t1 = theTang1(rows, k, ctx); const cu = tuanTruoc(rows, tq.loc.trangThai || tq.loc.nhanh ? null : tq.chup, ctx);
+  const ketLuan = cauKetLuan(t1, cu, { homNay, nhieuNhat: vn === 'A2' ? [] : nhieuQuaHanNhat(rows, khoa), daLoc: coLoc(tq.loc), tong: rows.length });
+  const tang1 = tang1Html({ tieuDe: td, phamVi: pv, luc: tq.luc, ten, kyChon: kyTuy ? null : tq.ky, coGiaoViec: coGiaoViec(), theHtml: theSoHtml(t1, cu, k), ketLuan,
+    xuHuong: xuHuongHtml(xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so)), nvq: nvqHtml(tq.nvq, homNay) });
   const focus = viTriFocus($('viewTongQuan'));
-  $('viewTongQuan').innerHTML = danhSoKhoi(dauTrangHtml({ tieuDe: td, phamVi: pv, k, ten, kyChon: kyTuy ? null : tq.ky, luc: tq.luc, s, thang, coGiaoViec: coGiaoViec(), tong: rows.length })
+  $('viewTongQuan').innerHTML = danhSoKhoi(tang1
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
-    + `<div class="luoi-tq">${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
+    + `<div class="luoi-tq">${maTranHtml(maTran(rows, k, khoa), vn, k)}${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
+    + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k)
     + giaiNganHtml(tq.gn, { rows, tatCa: tq.tatCa, homNay, user: state.user, ui: tq.ui, daLoc: coLoc(tq.loc) })   // v3.28: ẩn khi chưa có số (trừ lãnh đạo / người nhập)
     + (coMucTieu() ? mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua), nhom: nhomMt, tuDong: rows.filter(laTuDong).length,
       raSoat: coRaSoat(), pl: phanLoaiMucTieu(rows) }) : chuTriHtml(theoChuTri(rows, k), k))
     + linhVucHtml(theoKhoi(rows, k, { khoi: (dm.khoi || []).filter((x) => x.dang_dung !== false), nganh: dm.nganh, linhVuc: dm.linhVuc }, tq.ui.lvSap), tq.ui.lvMo, tq.ui.lvSap, k,
       { raSoat: coRaSoat(), soNganh: (dm.nganh || []).filter((n) => n.ma !== KHONG_THUOC).length, soKhoi: (dm.khoi || []).filter((x) => x.dang_dung !== false && x.ma !== KHONG_THUOC).length,
         thieu: thieuNganh(rows) })
-    + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k) + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
+    + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
     + chiDaoHtml(chiDaoKy(cdsLoc(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + (coCl ? chatLuongHtml(cl, k) : '')   // v3.27: khối 8 ẩn khi chưa có số
     + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2')}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`);   // v3.28: số khối đánh theo khối đang hiện
@@ -135,13 +146,24 @@ function onDoiLoc(e) {
 let dangNap = null; let canNapLai = false;
 // Chỉ đạo đọc từ đầu năm, hoặc từ đầu kỳ đang xem nếu sớm hơn (Nhiệm kỳ, khoảng ngày) — ve() nạp lại khi chọn kỳ sớm hơn phần đã đọc.
 const tuChiDao = () => { const dau = `${homNayVN().slice(0, 4)}-01-01`; const tu = kyHienTai(homNayVN()).tu; return tu && tu < dau ? tu : dau; };
+// v3.36 (tầng 1): bản chụp tuần trước và quá hạn các Chủ nhật đọc một lần mỗi ngày; Nhiệm vụ quý tối đa 10 phút một lần; chỉ đạo còn chờ gửi trước
+// mốc đọc chỉ đạo mỗi lượt. Lỗi → undefined: giữ số cũ, lượt sau đọc lại.
+async function docTang1(cdTu, homNay) {
+  const daCo = tq.chupNgay === homNay; const nvqMoi = Date.now() - (tq.nvqLuc || 0) < 600000;
+  const [chup, qhCN, cdCu, nvq] = await Promise.all([daCo ? tq.chup : loadChupTuanTruoc(homNay).catch(() => undefined),
+    daCo ? tq.qhCN : loadQuaHanChuNhat(tuanGanDay(homNay).slice(0, -1).map((w) => w.den)).catch(() => undefined),
+    loadChiDaoChoTruoc(cdTu).catch(() => []), nvqMoi ? tq.nvq : loadNvqHienTai(homNay).catch(() => undefined)]);
+  return { chup, qhCN, cdCu, nvq, homNay };
+}
 const docSoLieu = (cdTu) => Promise.all([loadDanhMucKl(), loadKlRows(), loadChiDaoTu(cdTu), laCapVanPhong() || xemToanBo() ? loadPhanCongHieuLuc() : [],
-  coMucTieu() ? loadKetQuaChiTieu() : [], docNam(namHienThi(homNayVN()), { moi: true }).catch(() => tq.gn)]);   // v3.27: mục tiêu tạm ẩn → không đọc kết quả chỉ tiêu; v3.28: giải ngân lỗi → giữ số cũ
+  coMucTieu() ? loadKetQuaChiTieu() : [], docNam(namHienThi(homNayVN()), { moi: true }).catch(() => tq.gn), docTang1(cdTu, homNayVN())]);   // v3.27: mục tiêu tạm ẩn → không đọc kết quả chỉ tiêu; v3.28: giải ngân lỗi → giữ số cũ
 async function napMotLan(lan = 0) {
   try {
     const cdTu = tuChiDao();
-    const [, r, cds, phanCong, ketQua, gn] = await docSoLieu(cdTu);
-    Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds, phanCong, ketQua, gn, cdTu, luc: r.luc, loi: null });
+    const [, r, cds, phanCong, ketQua, gn, t1] = await docSoLieu(cdTu);
+    Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds: [...t1.cdCu, ...cds], phanCong, ketQua, gn, cdTu, luc: r.luc, loi: null });
+    if (t1.chup !== undefined && t1.qhCN !== undefined) Object.assign(tq, { chup: t1.chup, qhCN: t1.qhCN, chupNgay: t1.homNay });
+    if (t1.nvq !== undefined) Object.assign(tq, { nvq: t1.nvq, nvqLuc: Date.now() });
     if (sectionDangHien('viewTongQuan')) ve();
   } catch (e) {
     if (lan < 1) { await new Promise((ok) => { setTimeout(ok, 800); }); return napMotLan(lan + 1); }

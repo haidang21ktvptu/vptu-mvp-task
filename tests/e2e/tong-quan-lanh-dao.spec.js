@@ -13,7 +13,8 @@ import { pageAs, moGiaoViec, moViec, nav, NAP, chonPhanLoai, HIEN_MUC_TIEU, LY_D
 import { khoaRieng, donVanBan, donNhiemVuTheoNoiDung } from './lib/du-lieu.mjs';
 import { ID, dbAdmin, homNay, cong, voiPhien } from './lib/pr2b.mjs';
 
-const KHOI = ['tqNghen', 'tqGiaiNgan', HIEN_MUC_TIEU ? 'tqMucTieu' : 'tqChuTri', 'tqLinhVuc', 'tqXepHang', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
+// v3.36 (ba tầng): tầng 2 mở đầu lưới — ma trận đơn vị, điểm nghẽn, xếp hạng; các khối phân tích còn lại sau.
+const KHOI = ['tqMaTran', 'tqNghen', 'tqXepHang', 'tqGiaiNgan', HIEN_MUC_TIEU ? 'tqMucTieu' : 'tqChuTri', 'tqLinhVuc', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
 const TUY_CHON = ['tqGiaiNgan', 'tqChatLuong'];   // v3.28: Giải ngân vốn (ẩn khi chưa có số liệu, trừ lãnh đạo / người nhập), Chất lượng (v3.27) — khối ẩn không làm hụt số
 // Đọc số và bấm TRONG CÙNG một lượt JS (realtime có thể vẽ lại giữa hai bước) — như ngan-chi-tiet.spec.js.
 const docVaBam = (page, docSel, bamSel = docSel) => page.evaluate(([d, b]) => {
@@ -35,7 +36,7 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
   });
   test.afterAll(async () => { if (db) await don(); });
 
-  test('1. Chánh VP: 9 khối (8 khi chưa có việc xếp loại); khối 2; lọc nhanh, chip, danh sách theo bộ lọc; bộ lọc chi tiết nhớ theo máy; khối 3; khối nội bộ gập sẵn', async ({ browser }, testInfo) => {
+  test('1. Chánh VP: các khối đúng thứ tự (ba tầng v3.36); khối chủ trì; lọc nhanh, chip, danh sách theo bộ lọc; bộ lọc chi tiết nhớ theo máy; lĩnh vực; khối nội bộ gập sẵn', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
     const tq = page.locator('#viewTongQuan'); const ngan = page.locator('#nganCT'); const viec = ngan.locator('.nct-viec');
     const dong = async () => { await page.keyboard.press('Escape'); await expect(ngan).toBeHidden(); };

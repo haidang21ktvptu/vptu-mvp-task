@@ -14,17 +14,6 @@ export function vongHtml(p, nhan = 'đúng hạn', chu = null) {
     + `<span class="giua-vong"><b>${chu ?? (p === null ? '—' : `${p}%`)}</b><span>${nhan}</span></span></span>`;
 }
 
-// Đường xu hướng nhỏ (tỷ lệ theo tháng); tháng chưa có số bị bỏ qua, chấm cuối là tháng gần nhất có số.
-export function duongHtml(ds) {
-  const co = ds.filter((d) => d.tyLe !== null);
-  if (co.length < 2) return '';
-  const w = 140; const h = 36; const vals = co.map((d) => d.tyLe);
-  const mn = Math.min(...vals) - 2; const mx = Math.max(...vals) + 2; const n = ds.length - 1 || 1;
-  const pts = co.map((d) => [((d.thang - ds[0].thang) / n) * w, h - ((d.tyLe - mn) / (mx - mn)) * h].map((v) => v.toFixed(1)));
-  const cuoi = pts[pts.length - 1];
-  return `<svg class="duong" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${pts.map((p) => p.join(',')).join(' ')}"/><circle cx="${cuoi[0]}" cy="${cuoi[1]}" r="4"/></svg>`;
-}
-
 // Trục dọc "đẹp": bước 1/2/5/10/20/50… sao cho ≤ 5 vạch.
 function truc(mx) {
   const buoc = [1, 2, 5, 10, 20, 50, 100, 200, 500].find((b) => Math.ceil(Math.max(mx, 1) / b) <= 5) || 1000;
