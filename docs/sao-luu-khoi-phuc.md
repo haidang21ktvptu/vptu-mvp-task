@@ -2,7 +2,7 @@
 
 Hướng dẫn cho chủ dự án tự làm trên máy Windows bằng **Git Bash** (chuột phải trong thư mục → *Open Git Bash here*, hoặc mở Git Bash rồi `cd`). Mọi lệnh dưới đây gõ trong Git Bash, không phải PowerShell/CMD. Hai script: `scripts/backup-db.sh` (sao lưu) và `scripts/restore-db.sh` (khôi phục); chi tiết kỹ thuật ở đầu mỗi file.
 
-**Chính sách đã chốt:** backup tự động **3 ngày/lần** (`backup-dinh-ky.yml`) → **cửa sổ mất dữ liệu tối đa là 3 ngày**; ngoài ra mỗi lần phát hành production có một bản (deploy-prod). Artifact trên GitHub giữ 90 ngày; bản trên máy cá nhân giữ ít nhất 2 bản gần nhất, chỉ xoá tay.
+**Chính sách đã chốt (25/11/2026, chủ dự án duyệt "sao lưu mức 1"):** backup tự động **mỗi ngày** (`backup-dinh-ky.yml`) → **cửa sổ mất dữ liệu tối đa là 1 ngày**; ngoài ra mỗi lần phát hành production có một bản (deploy-prod). Artifact định kỳ trên GitHub giữ 30 ngày (bản phát hành giữ 90 ngày); **hằng tuần tải một bản về thiết bị lưu trữ của Văn phòng**, giữ ít nhất 2 bản gần nhất, chỉ xoá tay.
 
 ## 1. Chuẩn bị máy (một lần)
 
@@ -29,7 +29,7 @@ Trong file có: `schema.sql` (tham khảo), `data.sql` (dữ liệu, không gồ
 
 ## 3. Bản dự phòng thứ hai: artifact trên GitHub và tải về máy tự động
 
-**Ai tạo artifact:** `deploy-prod.yml` mỗi lần phát hành (`prod-<ngày>-<tag>`) và `backup-dinh-ky.yml` **3 ngày/lần** (`prod-<ngày>-dinh-ky`, chạy 03:00 giờ Việt Nam các ngày 1, 4, 7, …, 28, 31; có nút *Run workflow* để chạy tay). Artifact giữ **90 ngày**, mã hoá bằng cùng passphrase. Xem tay: GitHub → **Actions** → *Backup định kỳ production* → chọn run → **Artifacts**.
+**Ai tạo artifact:** `deploy-prod.yml` mỗi lần phát hành (`prod-<ngày>-<tag>`) và `backup-dinh-ky.yml` **mỗi ngày** (`prod-<ngày>-dinh-ky`, chạy 03:00 giờ Việt Nam; có nút *Run workflow* để chạy tay). Artifact giữ **90 ngày** (bản phát hành) và **30 ngày** (bản định kỳ), mã hoá bằng cùng passphrase. Xem tay: GitHub → **Actions** → *Backup định kỳ production* → chọn run → **Artifacts**.
 
 Hạn chế của lịch GitHub (đã chấp nhận): đầu tháng hai bản có thể cách nhau 1–3 ngày (không bao giờ quá 3); GitHub có thể chạy trễ khi tải cao; **GitHub tự tắt lịch sau 60 ngày repo không có commit** — mỗi tháng nhìn Actions xem có run mới không, nếu thấy dòng "This scheduled workflow is disabled" thì bấm *Enable workflow*.
 

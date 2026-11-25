@@ -961,3 +961,9 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Nút gửi trong biểu mẫu (Tạo quý, Lưu, Thêm văn bản, Chốt báo cáo tuần, Chỉ định) không kéo hết bề ngang; nút lam giữ chữ khi rê chuột; "Tạo quý mới" mặc định quý hiện tại khi chưa có quý.
 - Không còn dải "Có cập nhật mới" ngay sau thao tác của chính mình; Cập nhật tuần mở sẵn "Cả phòng" / "Tất cả nhiệm vụ" cho người không trực tiếp theo dõi việc nào.
 - Câu số liệu báo cáo tuần ghi đúng "x/y nhiệm vụ chưa hoàn thành"; mở lại tuần thì ô Nhận xét điền sẵn nhận xét cũ; thẻ Phân công: nút "Bỏ chọn", ô "Chọn tất cả" theo đúng số việc đã chọn.
+
+## 92. CI theo loại thay đổi, kiểm thử staging hằng tuần, sao lưu hằng ngày (25/11/2026, chủ dự án duyệt Đợt 1 sau rà soát toàn diện; không đổi ứng dụng)
+- CI: `phan-loai.sh` thêm output `can_rls` (đổi `supabase/`, `tests/rls/`, `scripts/`, `.github/`); PR không đổi các thư mục đó bỏ job "Áp migration + lint schema" (test RLS cục bộ), thay bằng job rỗng cùng tên; build, unit, e2e vẫn chạy đủ.
+- `kiem-thu-dem.yml`: từ mỗi đêm sang 03:00 thứ Hai hằng tuần; nạp lại tài khoản và dữ liệu mẫu e2e (`seed-demo`) trước khi chạy; e2e chỉ kích thước desktop; RLS token thật được 25 phút.
+- `backup-dinh-ky.yml`: sao lưu production mỗi ngày (trước 3 ngày/lần), artifact giữ 30 ngày; hằng tuần tải một bản về thiết bị lưu trữ của Văn phòng (`docs/sao-luu-khoi-phuc.md`).
+- Tài liệu: `kien-truc.md`, `KIEM-THU.md`, `sao-luu-khoi-phuc.md`.
