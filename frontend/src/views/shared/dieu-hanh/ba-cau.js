@@ -2,6 +2,7 @@
 // khâu nghẽn nhiều nhất) và số, cùng nguồn với thanh trái (theoDonVi, theoKhau) và việc cần đồng chí quyết (canToiQuyet); bấm một ô = lọc danh sách
 // như bấm ở thanh trái (A0/A1; v3.36 bỏ dải ô số). A2 (màn hình phòng không có thanh trái) chỉ hiện câu trả lời.
 import { escapeHtml } from '../../../lib/dom.js';
+import { soLanHtml } from '../../../lib/chuyen-dong.js';   // v3.36 (V-12): hai con số của ba câu hỏi lăn khi vào mục
 import { KHAU, boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
 import { dh, theoKhau, theoDonVi, viecDo, canToiQuyet } from './du-lieu.js';
 
@@ -29,13 +30,13 @@ export function baCauHtml(coLoc = true) {
   const dv = (coLoc ? theoDonVi(tre) : theoNguoi(tre)).slice(0, 2); const khau = theoKhau().filter((x) => x.so > 0).sort((a, b) => b.so - a.so)[0];
   const quyet = tre.filter(canToiQuyet).length;
   const ai = tre.length
-    ? o('cham', 'Ai đang chậm?', `<b>${tre.length}</b> việc quá hạn${ddb ? ` <em class="ddb">${ddb} ${tenMuc('ddb')}</em>` : ''}`, escapeHtml(dv.map((d) => `${d.ten} ${d.so}`).join(', ')),
+    ? o('cham', 'Ai đang chậm?', `<b>${soLanHtml(tre.length)}</b> việc quá hạn${ddb ? ` <em class="ddb">${ddb} ${tenMuc('ddb')}</em>` : ''}`, escapeHtml(dv.map((d) => `${d.ten} ${d.so}`).join(', ')),
       `data-action="locKpi" data-loc="nghen" aria-pressed="${String(dh.loc.kpi === 'nghen')}"`, coLoc)
     : o('cham', 'Ai đang chậm?', '<b>0</b> việc quá hạn', 'Mọi việc trong phạm vi đang trong hạn', '', false);
   const nghen = khau
     ? o('nghen', 'Nghẽn ở đâu?', escapeHtml(KHAU[khau.khau].ten), `${khau.so} việc đang dừng ở khâu này`, `data-action="locKhau" data-khau="${khau.khau}" aria-pressed="${String(dh.loc.khau === khau.khau)}"`, coLoc)
     : o('nghen', 'Nghẽn ở đâu?', 'Không có điểm nghẽn', 'Chưa có việc quá hạn dừng ở một khâu', '', false);
-  const cq = o('quyet', 'Cần đồng chí quyết?', `<b>${quyet}</b> việc`, quyet ? 'Đã ghi cấp cần quyết là đồng chí' : 'Không có việc chờ đồng chí quyết',
+  const cq = o('quyet', 'Cần đồng chí quyết?', `<b>${soLanHtml(quyet)}</b> việc`, quyet ? 'Đã ghi cấp cần quyết là đồng chí' : 'Không có việc chờ đồng chí quyết',
     `data-action="locKpi" data-loc="quyet" aria-pressed="${String(dh.loc.kpi === 'quyet')}"`, coLoc && quyet > 0);
   return `<div class="ba-cau tam" role="group" aria-label="Ba câu hỏi điều hành">${ai}${nghen}${cq}</div>`;
 }

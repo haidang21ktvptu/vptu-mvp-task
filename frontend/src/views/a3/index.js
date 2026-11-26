@@ -7,6 +7,7 @@ import { $, setText, show, formatDateTime, giuONhap } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifySuccess, notifyError } from '../../components/toast.js';
+import { veSauNap } from '../../lib/chuyen-dong.js';
 import { registerView } from '../registry.js';
 import { moManDau } from '../shell/duong-dan.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
@@ -56,8 +57,9 @@ async function napVanBanNeuCan() {
 }
 async function loadViecCuaToi() {
   try {
+    const daCo = Boolean($('vctBang')?.hasAttribute('data-nap'));   // v3.36 (V-12): vào lại mục — vẽ lại sau khi hiệu ứng vào mục chạy xong
     await Promise.all([napDieuHanh(), napDnsCuaToi()]);
-    ve();
+    veSauNap($('viewDieuHanh'), daCo, ve, (e) => notifyError('Không vẽ được việc của đồng chí: ' + e.message));
     await napVanBanNeuCan();
   } catch (e) { notifyError('Không đọc được việc của đồng chí: ' + e.message); }
 }

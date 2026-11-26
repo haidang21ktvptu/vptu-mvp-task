@@ -33,11 +33,11 @@ export function batDauRa(cu) {
 }
 
 // Gọi SAU khi đã đổi .hidden: đóng cửa vào của mục cũ (việc chờ của nó tự bỏ qua vì mục đã ẩn), mở cửa vào của mục mới (quay lại đúng mục đang ra:
-// batDauRa đã kết thúc lần ra đó). Mục khai báo thời lượng
-// cửa vào riêng bằng data-cd-ms (index.html); mặc định MS_VAO.
+// batDauRa đã kết thúc lần ra đó). Mục khai báo thời lượng cửa vào riêng bằng data-cd-ms (index.html); mặc định MS_VAO. Mục đang mang data-cd-tu:
+// màn tự mở cửa vào khi nội dung của nó về (Nhiệm vụ quý — views/nvq/index.js), ở đây không mở trên nội dung cũ.
 export function batDauVao(cu, moi) {
   if (cu) dongCuaVao(cu);
-  if (!moi) return;
+  if (!moi || moi.dataset.cdTu) return;
   const lai = daVao.has(moi); daVao.add(moi);
   const ms = Number(moi.dataset.cdMs) || MS_VAO;
   moCuaVao(moi, { ms: lai ? Math.round(ms * HS_VAO_LAI) : ms, lai });

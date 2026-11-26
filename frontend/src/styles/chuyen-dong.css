@@ -22,7 +22,9 @@
   @keyframes cd-len { from { opacity: 0; transform: translateY(10px); } }
   @keyframes cd-mo { from { opacity: 0; } }
   @keyframes cd-chu { from { opacity: 0; transform: translateY(.4em) scale(.82); filter: blur(var(--cd-nhoe)); } }
-  @keyframes cd-lan { from { transform: translateY(0); } }
+  @keyframes cd-lan { from { transform: translateY(-.55em); } }
+  @keyframes cd-so-an { from { -webkit-text-fill-color: transparent; clip-path: inset(calc(50% - .55em) -.1em); } }
+  @keyframes cd-so-hien { from { opacity: 1; } }
   @keyframes cd-moc { from { transform: scaleY(0); } }
   @keyframes cd-quet { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
   @keyframes cd-ve { from { stroke-dashoffset: 1; } }
@@ -36,6 +38,8 @@
   @keyframes cd-tho { 0% { box-shadow: 0 0 0 0 var(--ben-chu-3); } 70%, 100% { box-shadow: 0 0 0 16px transparent; } }
 
   /* ---- Vào trang: các khối cấp một của mục hiện lần lượt (mọi mục; màn có nhịp riêng thì ghi đè ở tệp của màn đó) ---- */
+  /* Nội dung vẽ lại trong lúc cửa vào đang mở (lib/chuyen-dong.js canhVeLai): đứng yên ở trạng thái cuối, hiệu ứng không chạy lần hai */
+  .cd-tinh, .cd-tinh *, .cd-tinh::before, .cd-tinh::after, .cd-tinh *::before, .cd-tinh *::after { animation: none !important; }
   .vao-lai { --cd-hs: .55; }
   .dang-doi { --cd-hs: .6; --cd-tre: 0ms; }
   .dang-vao > * { animation: cd-len var(--cd-cham) var(--cd-em) both; animation-delay: calc(var(--cd-tre) + var(--cd-k, 0) * var(--cd-buoc)); }
@@ -46,13 +50,16 @@
   .hidden.dang-ra { display: var(--cd-hien, block) !important; }
   .dang-ra { position: fixed; z-index: 3; margin: 0; pointer-events: none; animation: cd-roi 200ms var(--cd-roi) both; }
 
-  /* ---- Số lăn (lib/chuyen-dong.js soLanHtml): chữ số thật giữ chỗ và giữ chữ trong DOM, dải 0–9 hai vòng lăn tới chữ số đích ---- */
-  .so-lan { display: inline-block; white-space: nowrap; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  /* ---- Số lăn (lib/chuyen-dong.js soLanHtml): chữ số thật giữ chỗ và giữ chữ trong DOM; trong lúc lăn chữ số thật ẩn (cd-so-an), dải 0–9 hai vòng
+     lăn tới chữ số đích trong khe cao 1,1em quanh tâm ô (đặt theo tâm nên đúng với mọi chiều cao dòng của nơi đặt số). Lăn xong, ngay trong hiệu ứng,
+     dải ẩn và chữ số thật hiện lại: hình cuối do chính chữ số thật vẽ nên lúc gỡ lớp cửa vào không còn gì xê dịch. ---- */
+  .so-lan { white-space: nowrap; }
   .so-lan .cs { display: inline-block; position: relative; }
-  .dang-vao .so-lan .cs, .dang-doi .so-lan .cs { -webkit-text-fill-color: transparent; clip-path: inset(0); }
+  .dang-vao .so-lan .cs, .dang-doi .so-lan .cs { animation: cd-so-an calc(var(--cd-so) * var(--cd-hs)) step-end both;
+    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + var(--i, 0) * 80ms); }
   .dang-vao .so-lan .cs::after, .dang-doi .so-lan .cs::after { content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
-    position: absolute; left: 0; right: 0; top: 0; white-space: pre; text-align: center; -webkit-text-fill-color: currentColor;
-    transform: translateY(calc((10 + var(--d, 0)) * -1.1em)); animation: cd-lan calc(var(--cd-so) * var(--cd-hs)) var(--cd-em) both;
+    position: absolute; left: 0; right: 0; top: 50%; line-height: 1.1; white-space: pre; text-align: center; -webkit-text-fill-color: currentColor; opacity: 0;
+    transform: translateY(calc((10.5 + var(--d, 0)) * -1.1em)); animation: cd-lan calc(var(--cd-so) * var(--cd-hs)) var(--cd-em) both, cd-so-hien calc(var(--cd-so) * var(--cd-hs)) step-end both;
     animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + var(--i, 0) * 80ms); }
 
   /* ---- Tiêu đề hiện từng chữ, cụm nhấn in nghiêng có chân (lib/chuyen-dong.js tieuDeHtml; DESIGN mục 3) ---- */
@@ -78,8 +85,8 @@
   .menu.co-dau button[aria-selected="true"] { background: transparent; }
   .menu button { position: relative; z-index: 1; }
 
-  /* ---- Hiện ra khi mở: menu bánh răng, ngăn chi tiết, hộp thoại, thông báo nổi (chạy mỗi lần phần tử được hiện) ---- */
-  .br-menu { transform-origin: top right; animation: cd-tha 180ms var(--cd-em); }
+  /* ---- Hiện ra khi mở: menu bánh răng, bảng chuông, ngăn chi tiết, hộp thoại, thông báo nổi (chạy mỗi lần phần tử được hiện) ---- */
+  .br-menu, .tb-panel { transform-origin: top right; animation: cd-tha 180ms var(--cd-em); }
   .ngan-ct { animation: cd-ngan 280ms var(--cd-em); }
   .modal-nen { animation: cd-mo 180ms ease-out; }
   .modal { animation: cd-noi 280ms var(--cd-em); }

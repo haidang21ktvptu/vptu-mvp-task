@@ -8,6 +8,7 @@ import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
+import { veSauNap } from '../../lib/chuyen-dong.js';
 import { registerView } from '../registry.js';
 import { moManDau } from '../shell/duong-dan.js';
 import { batKlRealtime, hienKetNoi } from '../../features/kl-realtime.js';
@@ -78,7 +79,11 @@ function ve() {
 }
 
 async function loadPhongToi() {
-  try { await napDieuHanh(); ve(); } catch (e) { notifyError('Không đọc được dữ liệu phòng: ' + e.message); }
+  try {
+    const daCo = Boolean($('dhBaCau')?.childElementCount);   // v3.36 (V-12): vào lại mục — vẽ lại sau khi hiệu ứng vào mục chạy xong
+    await napDieuHanh();
+    veSauNap($('viewDieuHanh'), daCo, ve, (e) => notifyError('Không vẽ được màn của phòng: ' + e.message));
+  } catch (e) { notifyError('Không đọc được dữ liệu phòng: ' + e.message); }
 }
 
 function openDieuHanh() {

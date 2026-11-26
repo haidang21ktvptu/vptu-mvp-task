@@ -5,6 +5,7 @@ import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { dongBoNutDanhGia } from '../chat-luong.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
+import { veSauNap } from '../../../lib/chuyen-dong.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { dh, napDieuHanh, locThe } from './du-lieu.js';
@@ -64,7 +65,11 @@ export function loadDieuHanh() {
   return dangNap;
 }
 async function napMotLan(lan = 0) {
-  try { await napDieuHanh(); veDieuHanh(); } catch (e) {
+  try {
+    const daCo = Boolean($('dhBaCau')?.childElementCount);   // v3.36 (V-12): số liệu lượt trước đang hiện (vào lại mục) → vẽ lại sau khi hiệu ứng vào mục chạy xong
+    await napDieuHanh();
+    veSauNap($('viewDieuHanh'), daCo, veDieuHanh, (e) => notifyError('Không vẽ được màn điều hành: ' + e.message));
+  } catch (e) {
     if (lan < 1) { await new Promise((r) => setTimeout(r, 800)); return napMotLan(lan + 1); }
     notifyError('Không đọc được dữ liệu điều hành: ' + e.message);
   }

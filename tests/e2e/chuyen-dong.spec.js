@@ -2,8 +2,11 @@
 // này bật chuyển động để kiểm TRẠNG THÁI CUỐI sau mỗi hiệu ứng: không còn lớp tạm (cho-phien, mo-dau, dang-vao, dang-doi, dang-ra), không còn kiểu
 // nội tuyến trên mục đã rời, chữ và số đủ và nhìn thấy được, dấu chọn menu nằm đúng mục; mục "Hiệu ứng chuyển động" ở bánh răng tắt được và nhớ
 // theo máy. Không kiểm khung hình giữa chừng (phụ thuộc tốc độ máy). Chỉ đọc — không tạo dữ liệu.
+// Phần 2 (các màn khác): bản dựng thật giữ đủ khai báo @keyframes (Tailwind không cắt) và hiệu ứng thật sự chạy khi vào mục; Nhiệm vụ, Cần xử lý,
+// Nhiệm vụ quý, ngăn chi tiết: vào lần đầu và vào lại (nội dung lượt trước đang hiện, số liệu mới về sau) đều kết thúc sạch — không còn lớp tạm,
+// không còn nội dung bị giữ yên (cd-tinh), số là chữ số thật, số dòng khớp.
 import { test, expect } from '@playwright/test';
-import { pageAs, NAP } from './lib/app.js';
+import { pageAs, nav, NAP } from './lib/app.js';
 
 const XONG = { timeout: 8_000 };   // cửa vào dài nhất 2,4 giây
 
@@ -73,6 +76,93 @@ test.describe('Chuyển động giao diện (v3.36)', () => {
     await expect(html).not.toHaveClass(/cho-phien|mo-dau/);
     await page.locator('#banhRangBtn').click();
     await expect(page.locator('#banhRangMenu [data-action="doiChuyenDong"]')).toHaveAttribute('aria-checked', 'false');
+    await page.context().close();
+  });
+
+  test('A1: bản dựng đủ hiệu ứng; Nhiệm vụ, Cần xử lý, Nhiệm vụ quý, ngăn chi tiết vào lần đầu và vào lại đều kết thúc sạch, số liệu đủ', async ({ browser }, testInfo) => {
+    const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true, chuyenDong: true });
+    const tq = page.locator('#viewTongQuan'); const kl = page.locator('#viewKl'); const dh = page.locator('#viewDieuHanh'); const nvq = page.locator('#viewNvq');
+    await expect(tq).toHaveAttribute('data-nap', /./, NAP);
+    await expect(tq).not.toHaveClass(/dang-vao/, XONG);
+    const soTinh = () => page.evaluate(() => globalThis.document.querySelectorAll('.cd-tinh').length);
+    const soHien = (vung) => vung.evaluate((el) => [...el.querySelectorAll('.so-lan')].filter((x) => x.getClientRects().length).map((x) => {
+      const cs = x.querySelector('.cs'); const kieu = cs ? globalThis.getComputedStyle(cs) : null;
+      return { chu: x.textContent, an: kieu ? kieu.webkitTextFillColor !== kieu.color : false };
+    }));
+
+    // Bản dựng thật giữ đủ khai báo hiệu ứng (kể cả khai báo nằm trong khối lồng)
+    const khung = await page.evaluate(() => {
+      const ra = new Set();
+      const quet = (ds) => { for (const r of ds) { if (r.type === globalThis.CSSRule.KEYFRAMES_RULE) ra.add(r.name); else if (r.cssRules) quet(r.cssRules); } };
+      for (const tep of globalThis.document.styleSheets) { try { quet(tep.cssRules); } catch { /* tệp kiểu khác nguồn */ } }
+      return [...ra];
+    });
+    for (const ten of ['cd-hien', 'cd-len', 'cd-mo', 'cd-chu', 'cd-lan', 'cd-so-an', 'cd-so-hien', 'cd-quet', 'cd-ve', 'cd-roi', 'cd-tron', 'cd-noi', 'cd-ngan']) expect(khung, `@keyframes ${ten}`).toContain(ten);
+
+    // Nhiệm vụ, lần đầu: cửa vào mở và hiệu ứng thật sự chạy; nạp xong thì đủ dòng, số của dải là chữ số thật, kết thúc sạch
+    await page.locator('#navKl').click();
+    await expect(kl).toHaveClass(/dang-vao/);
+    expect(await kl.evaluate((el) => el.getAnimations({ subtree: true }).length), 'có hiệu ứng đang chạy trong mục vừa vào').toBeGreaterThan(0);
+    const dong = () => page.evaluate(() => { const b = globalThis.document.getElementById('klBody'); return { hien: Number(b.dataset.soHien), dong: b.querySelectorAll('.hang-nv').length }; });
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+    await expect(kl).not.toHaveClass(/dang-vao/, XONG);
+    let d = await dong(); expect(d.dong).toBe(d.hien);
+    await expect(page.locator('#klSo-TONG')).toHaveText(/^\d+$/);
+    for (const x of await soHien(kl)) { expect(x.chu).toMatch(/^\d+$/); expect(x.an, `số ${x.chu} không còn bị ẩn chữ`).toBe(false); }
+    expect(await soTinh()).toBe(0);
+
+    // Nhiệm vụ, vào lại: dòng của lượt trước hiện ngay với nhịp vào lại; lượt nạp nền vẽ lại sau khi hiệu ứng xong; kết thúc sạch, số dòng khớp
+    await page.locator('#navTongQuan').click();
+    await expect(tq).toBeVisible();
+    await page.locator('#navKl').click();
+    await expect(kl).toHaveClass(/vao-lai/);
+    if (d.dong) expect(await kl.locator('#klBody .hang-nv').count(), 'dòng của lượt trước hiện ngay, không chờ nạp').toBeGreaterThan(0);
+    await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+    await expect(kl).not.toHaveClass(/dang-vao/, XONG);
+    d = await dong(); expect(d.dong).toBe(d.hien);
+    expect(await soTinh()).toBe(0);
+
+    // Cần xử lý: lần đầu rồi vào lại; hai con số của ba câu hỏi là chữ số thật
+    for (const lan of [1, 2]) {
+      await page.locator('#navDieuHanh').click();
+      await expect(dh.locator('#dhBaCau .ba-cau')).toBeVisible(NAP);
+      await expect(dh.locator('#dhTinhDen')).toContainText('số liệu lúc', NAP);
+      await expect(dh).not.toHaveClass(/dang-vao/, XONG);
+      const so = await dh.locator('#dhBaCau .bc-chinh b').allTextContents();
+      expect(so.length, `lần ${lan}: hai con số của ba câu hỏi`).toBe(2);
+      for (const x of so) expect(x).toMatch(/^\d+$/);
+      for (const x of await soHien(dh)) expect(x.an, `số ${x.chu} không còn bị ẩn chữ`).toBe(false);
+      expect(await soTinh()).toBe(0);
+      if (lan === 1) { await page.locator('#navTongQuan').click(); await expect(tq).toBeVisible(); }
+    }
+
+    // Nhiệm vụ quý: Tổng quan quý (lần nạp đầu) → Danh mục (vẽ ngay từ số liệu đang có) → Tổng quan quý (vào lại)
+    await nav(page, 'navNqTongQuan');
+    await expect(nvq.locator('.dau h1')).toContainText('Tổng quan nhiệm vụ quý', NAP);
+    await expect(nvq).not.toHaveClass(/dang-vao/, XONG);
+    await nav(page, 'navNqDanhMuc');
+    await expect(nvq.locator('.dau h1')).toContainText('Danh mục nhiệm vụ quý');
+    expect(await nvq.getAttribute('data-cd-tu'), 'màn chỉ xem đã có số liệu: cửa vào của khung, không tự mở').toBeNull();
+    await expect(nvq).not.toHaveClass(/dang-vao/, XONG);
+    await nav(page, 'navNqTongQuan');
+    await expect(nvq.locator('.dau h1')).toContainText('Tổng quan nhiệm vụ quý');
+    await expect(nvq).not.toHaveClass(/dang-vao/, XONG);
+    for (const x of await soHien(nvq)) { expect(x.chu).toMatch(/^\d+%?$/); expect(x.an, `số ${x.chu} không còn bị ẩn chữ`).toBe(false); }
+    expect(await soTinh()).toBe(0);
+
+    // Ngăn chi tiết: mở danh sách từ thẻ "đang thực hiện" của Tổng quan — đủ dòng, cửa của ngăn đóng
+    await page.locator('#navTongQuan').click();
+    await expect(tq).not.toHaveClass(/dang-vao/, XONG);
+    const the = tq.locator('#tqSo [data-so="th"]');
+    if (Number(await the.locator('.gia').textContent()) > 0) {
+      await the.click();
+      const ngan = page.locator('#nganCT');
+      await expect(ngan).toBeVisible();
+      await expect(ngan.locator('.nct-ds li').first()).toBeVisible(NAP);
+      await expect(ngan).not.toHaveClass(/dang-vao/, XONG);
+      expect(await ngan.locator('.nct-ds li').count()).toBeGreaterThan(0);
+    }
+    expect(await soTinh()).toBe(0);
     await page.context().close();
   });
 });

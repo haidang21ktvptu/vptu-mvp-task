@@ -6,7 +6,7 @@
 // Giảm chuyển động: không có hình tròn, màn chờ (nếu có) bỏ ngay khi khung ứng dụng hiện.
 import { coChuyenDong } from '../../lib/chuyen-dong.js';
 
-const MS_MO_DAU = 860;
+const MS_MO_DAU_TOI_DA = 2600;   // hình tròn 0,8 giây tính từ khung hình đầu; quá mốc này chưa thấy báo xong (máy rất chậm) thì gỡ lớp
 const MS_TU_BO = 12000;   // màn chờ tự bỏ nếu quá lâu chưa vào được ứng dụng (lỗi bất ngờ lúc nạp): màn đăng nhập hiện lại như trước v3.36
 const goc = () => document.documentElement;
 let hen = null;
@@ -33,8 +33,14 @@ export function chayMoDau() {
     g.style.setProperty('--mo-x', `${Math.round(r.left + r.width / 2)}px`);
     g.style.setProperty('--mo-y', `${Math.round(r.top + r.height / 2)}px`);
   }
+  const khung = document.getElementById('appShell');
+  const xong = (ev) => {   // gỡ lớp khi chính hiệu ứng của khung chạy xong (sự kiện của phần tử con nổi lên thì bỏ qua) — không cắt ngang khi khung hình đầu đến muộn
+    if (ev && ev.target !== khung) return;
+    clearTimeout(hen); khung?.removeEventListener('animationend', xong); g.classList.remove('mo-dau');
+  };
   g.classList.add('mo-dau');
   boManCho();
   clearTimeout(hen);
-  hen = setTimeout(() => g.classList.remove('mo-dau'), MS_MO_DAU);
+  khung?.addEventListener('animationend', xong);
+  hen = setTimeout(xong, MS_MO_DAU_TOI_DA);
 }
