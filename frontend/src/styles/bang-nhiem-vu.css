@@ -1,9 +1,10 @@
-/* Bảng nhiệm vụ theo cột (v3.25 — kiểu V-Office, mẫu 16/10/2026; docs/DESIGN.md mục "Bảng nhiệm vụ"): dùng chung cho Nhiệm vụ (#viewKl — dòng là
-   button.hang-nv), Việc của tôi (chuyên viên — dòng div.bnv-dong có khối thao tác dưới dòng), Theo văn bản (section.tvb-goc). Hàng ≥ 58px; mép
-   trái 4px theo mức (.stt của dòng nút / ::before của dòng div); không kẻ dọc, không sọc; giờ Lexend; ô số chọn một ô. Bộ cột .cot-nv / .cot-td /
-   .cot-vct / .cot-vb. Màn hẹp, thẻ, in: bang-man-hinh.css. Chỉ token màu; tên lớp viết nguyên văn trong JS (Tailwind giữ lớp). */
+/* Bảng nhiệm vụ theo cột (màn Nhiệm vụ, Theo văn bản): đủ cột, màn hẹp thành thẻ, điện thoại.
+   Gộp từ: nhiem-vu-v8.css, bang-nhiem-vu.css, bang-man-hinh.css, theo-van-ban.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
 @layer components {
-  /* ---- Ô số: các ô cách nhau 1px (nền viền lộ ra), chọn một ô; một hàng chia đều (bộ 8 ô .so-8: 4 + 4 ở màn vừa — bang-man-hinh.css) ---- */
+  @media (max-width: 860px) {
+    .kl-sap .pham-vi { flex-wrap: wrap; border-radius: 12px; max-width: 100%; }
+  }
+  /* ---- Ô số: các ô cách nhau 1px (nền viền lộ ra), chọn một ô; một hàng chia đều (bộ 8 ô .so-8: 4 + 4 ở màn vừa — bang-nhiem-vu.css) ---- */
   .bnv-so { display: flex; flex-wrap: wrap; gap: 1px; margin-top: 16px; background: var(--vien); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; box-shadow: var(--bong-the); }
   .bnv-so .o-so { flex: 1 1 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 12px 16px; border: 0; background: var(--the); text-align: left; }
   .bnv-so .o-so span { font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); line-height: 1.3; }
@@ -13,7 +14,6 @@
   .bnv-so .o-so[aria-pressed="true"] { background: var(--navy-dac); }
   .bnv-so .o-so[aria-pressed="true"] span { color: #fff; }
   .bnv-so .o-so[aria-pressed="true"] b { color: var(--vang-tren-dac); }
-
   /* ---- Mô tả, thanh lọc, chú giải ---- */
   .bnv-mo-ta { margin-top: 4px; font-size: var(--chu-bang); color: var(--chu-phu); max-width: 100ch; }
   .bnv-mo-ta #vctTom { display: block; margin-top: 2px; color: var(--chu); font-weight: 600; }
@@ -29,7 +29,6 @@
   .bnv-chu-giai i.lam { background: var(--lam); } .bnv-chu-giai i.luc { background: var(--luc); }
   .bnv-chu-giai b { color: var(--chu); }
   .bnv-chu-giai .cg-muc { display: contents; }   /* v3.29: khối chú giải vẽ lại theo ngưỡng cấu hình — các mục vẫn là phần tử của hàng flex */
-
   /* ---- Khung bảng, hàng tiêu đề, dòng ---- */
   .bnv { margin-top: 12px; background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; box-shadow: var(--bong-the); }
   .md .list.bnv { margin-top: 0; }
@@ -52,7 +51,6 @@
   .cot-td .bnv-dau, .cot-td .bnv-hang { grid-template-columns: 40px minmax(0, 2.5fr) minmax(0, 1.25fr) minmax(0, 1.1fr) 116px 150px minmax(0, 1.5fr); }
   .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 40px minmax(0, 2.6fr) minmax(0, 1.3fr) 96px 116px 152px 168px; }
   .cot-vb .bnv-dau, .cot-vb .bnv-hang { grid-template-columns: 40px minmax(0, 2.8fr) 100px minmax(0, 1.1fr) 116px minmax(0, 1.3fr) minmax(0, 1.3fr); }
-
   /* ---- Ô ---- */
   .bnv-c { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; overflow-wrap: anywhere; }
   .bnv-c-stt { color: var(--chu-mo); font-size: var(--chu-nho); font-variant-numeric: tabular-nums; }
@@ -83,8 +81,7 @@
   .bnv-ghi { font-size: var(--chu-nho); line-height: 1.4; color: var(--vang-chu-dam); }
   .bnv-c-viec { gap: 6px; }
   .bnv-c-viec .nut { min-height: 36px; padding: 5px 12px; font-size: var(--chu-bang); line-height: 1.25; white-space: normal; text-align: center; }
-  .bnv-chi-gon { display: none; }   /* chỉ hiện khi bảng gộp cột thời gian / thành thẻ (bang-man-hinh.css) */
-
+  .bnv-chi-gon { display: none; }   /* chỉ hiện khi bảng gộp cột thời gian / thành thẻ (bang-nhiem-vu.css) */
   /* ---- Hàng nhóm, khối dưới dòng, chân bảng ---- */
   .bnv-nhom { padding: 10px 16px 8px 20px; background: var(--nen-mo); border-bottom: 1px solid var(--vien-nhat); }
   .bnv-nhom > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
@@ -95,7 +92,6 @@
   .bnv-khoi.mo { display: block; }
   .bnv-khoi-tieu { margin: 0 0 8px; font-size: var(--chu-bang); font-weight: 600; color: var(--navy); }
   .bnv-khoi .mc-inline { margin-top: 0; }
-  .bnv-khoi .o.mo { margin-top: 8px; }
   .bnv-khoi .trich-phe { margin: 0; padding: 8px 12px; border-left: 3px solid var(--vach-tren); border-radius: 0 8px 8px 0; background: var(--the);
     font-family: var(--font-van-ban); font-size: var(--chu-bang); color: var(--chu); }
   .bnv-khoi .trich-phe + .o.mo { margin-top: 6px; }
@@ -107,4 +103,78 @@
   .bnv-trong { padding: 28px 20px; color: var(--chu-phu); font-size: var(--chu-than); }
   .vct-khoi { margin-top: 14px; }
   .vct-khoi > .muc:first-child { border-top: 0; }
+  @media (max-width: 1365px) {
+/* Bảng nhiệm vụ theo cột — màn hẹp, thẻ, in (v3.25; cùng lớp với bang-nhiem-vu.css). Ba bậc: từ 1366px đủ cột; 1024–1365px gộp cột thời gian
+   vào dòng phụ (.bnv-chi-gon); dưới 1024px — và khi ngăn chi tiết màn Nhiệm vụ đang mở trên màn hình dưới 1600px (.md.co-ct) — mỗi dòng thành thẻ:
+   nội dung trước, các ô sau xếp dòng có nhãn ngắn (data-nhan), nút thao tác rộng; điện thoại (≤ 600px) như mẫu DienThoai: nội dung 3 dòng, ô số
+   2 cột, nút 44px; 360px không cuộn ngang. Thẻ chỉ cho màn hình (screen) — bản in giữ dạng bảng (cột gộp như 1024–1365px, nội dung đủ dòng).
+   Tên lớp viết nguyên văn trong JS. */
+    .bnv-dau, .bnv-hang { column-gap: 12px; }
+    .bnv .bnv-c-tg { display: none; }
+    .bnv .bnv-chi-gon { display: block; }
+    .cot-nv .bnv-dau, .cot-nv .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.15fr) minmax(0, 1.25fr) 112px 140px; }
+    .cot-td .bnv-dau, .cot-td .bnv-hang { grid-template-columns: 36px minmax(0, 2.5fr) minmax(0, 1.25fr) minmax(0, 1.1fr) 112px 140px minmax(0, 1.5fr); }
+    .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.3fr) 112px 144px 160px; }
+    .cot-vb .bnv-dau, .cot-vb .bnv-hang { grid-template-columns: 36px minmax(0, 2.8fr) 92px minmax(0, 1.1fr) 108px minmax(0, 1.3fr) minmax(0, 1.3fr); }
+  }
+  @media screen and (max-width: 1023px) {
+    /* Thẻ: dưới 1024px, hoặc ngăn chi tiết đang mở cạnh bảng trên màn hình dưới 1600px. */
+    .bnv .bnv-dau { display: none; }
+    .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
+    .bnv .bnv-c-stt, .bnv .bnv-c-tg { display: none; }
+    .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: var(--chu-bang); }
+    .bnv .bnv-c-nv { flex-direction: column; align-items: flex-start; gap: 3px; }
+    .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
+    .bnv .bnv-c.han, .bnv .bnv-c-tt { flex: 0 1 auto; }
+    .bnv .bnv-c-tt::before, .bnv .bnv-c-viec::before { display: none; }
+    .bnv .bnv-c-viec { gap: 8px; } .bnv .bnv-c-viec .nut { flex: 1 1 auto; min-height: 44px; }
+    .bnv .bnv-chi-gon { display: block; }
+    .bnv-khoi { margin: 0 12px 12px 18px; padding: 12px; }
+    .bnv-khoi .mc-inline { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
+  @media screen and (max-width: 1599px) {
+    .md.co-ct .bnv .bnv-dau { display: none; }
+    .md.co-ct .bnv .bnv-hang { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; min-height: 0; padding: 12px 14px 12px 18px; }
+    .md.co-ct .bnv .bnv-c-stt, .md.co-ct .bnv .bnv-c-tg { display: none; }
+    .md.co-ct .bnv .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: var(--chu-bang); }
+    .md.co-ct .bnv .bnv-c-nv { flex-direction: column; align-items: flex-start; gap: 3px; }
+    .md.co-ct .bnv .bnv-c[data-nhan]::before { content: attr(data-nhan) ":"; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
+    .md.co-ct .bnv .bnv-c.han, .md.co-ct .bnv .bnv-c-tt { flex: 0 1 auto; }
+    .md.co-ct .bnv .bnv-c-tt::before { display: none; }
+    .md.co-ct .bnv .bnv-chi-gon { display: block; }
+  }
+  @media (min-width: 861px) and (max-width: 1199px) {
+    .bnv-so.so-8 .o-so { flex-basis: calc(25% - 1px); }   /* tám ô (Việc của tôi, Việc tôi theo dõi): hai hàng 4 + 4, không ô lẻ kéo dài */
+  }
+  @media (max-width: 860px) {
+    .bnv-so .o-so { flex: 1 1 40%; padding: 10px 12px; }
+    .bnv-so .o-so b { font-size: var(--chu-khoi); }
+    .bnv-loc .kl-tim, .bnv-loc > select { width: 100%; max-width: 100%; flex: 1 1 100%; }
+    .bnv-chu-giai { gap: 4px 12px; }
+  }
+  @media (max-width: 600px) {
+    .bnv { border-radius: 12px; }
+    .bnv .bnv-nd { font-size: var(--chu-than); -webkit-line-clamp: 3; }
+    .bnv .bnv-c-viec .nut { flex: 1 1 100%; }
+    .bnv-khoi { margin: 0 10px 12px 14px; }
+    .bnv-khoi .mc-inline { grid-template-columns: minmax(0, 1fr); }
+    .bnv-chan { padding: 10px 14px; }
+    .bnv-trang { flex-wrap: wrap; }
+  }
+  @media print {
+    .bnv-so, .bnv-chu-giai, .bnv-trang, .bnv-khoi, .bnv-c-viec { display: none !important; }
+    .bnv { box-shadow: none; border-color: #999; overflow: visible; }
+    .bnv-hang, .bnv-dong, .tvb-goc { break-inside: avoid; }
+    .bnv .bnv-nd, .tvb-trich-yeu, .tvb-nut .nd { display: block; -webkit-line-clamp: unset; overflow: visible; }   /* in đủ nội dung */
+    .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.3fr) 112px 144px; }   /* không in cột Việc cần làm */
+  }
+  /* Bảng con: hàng tiêu đề và nhánh việc cùng một lưới (nút gập 24px + 4 cột) */
+  .bnv-con { padding: 0 16px 12px 60px; border-top: 1px solid var(--vien-nhat); background: var(--nen-mo); }
+  .bnv-con-dau { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1.4fr) 116px 150px; column-gap: 12px; padding: 10px 8px 6px 32px; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
+  .bnv-con-chan { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 10px; border-top: 1px solid var(--vien-nhat); }
+  .bnv-con-chan > .o { flex-basis: 100%; margin-top: 0; }
+  @media (max-width: 1023px) {
+    .bnv-con { padding: 0 12px 12px 18px; }
+    .bnv-con-dau { display: none; }
+  }
 }

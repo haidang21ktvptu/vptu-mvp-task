@@ -99,5 +99,5 @@
 }
 /* Cỡ chữ lớn (menu bánh răng; lãnh đạo mặc định — shell/kieu-giao-dien.js): gốc 18px trên màn hình; bản in giữ 16px. */
 @media screen { html[data-co-chu="lon"] { font-size: 18px; } }
-/* Điện thoại (≤ 600px): thanh đầu trang 56px — dau-trang.css, menu-doc.css (ngăn kéo mở dưới thanh) đều đọc biến này. */
+/* Điện thoại (≤ 600px): thanh đầu trang 56px — khung.css, khung.css (ngăn kéo mở dưới thanh) đều đọc biến này. */
 @media (max-width: 600px) { :root { --cao-dau-trang: 56px; } }

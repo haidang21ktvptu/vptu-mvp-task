@@ -1,8 +1,12 @@
+/* Tấm và thẻ / hàng việc dùng chung các màn chính: .tam, .hai-cot, .the.hang (thẻ chính Cần xử lý), .muc, vướng mắc trên thẻ.
+   Gộp từ: gd22.css, gd23.css, v8-hang.css, han-nop.css, pr3.css, v9.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
+@layer components {
+  .the .db-khoi, .the-con .db-khoi, article.viec .db-khoi { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--vien); }
+  .cx-dong .hanh-dong { margin-top: 6px; }
 /* Giao diện v8 đợt 2 — tấm và hàng việc dùng chung 4 màn hình chính (mockup 02–05): .tam = thẻ trắng viền E3DED4 bo 12px có .tam-dau; .hai-cot = cột
    chính co giãn + cột phụ 300–380px (--rong-phu); hàng việc = chấm trạng thái 8px · mã · nội dung + dòng phụ xám · nhãn · hạn · nút hành động.
    Áp cho .the.hang (thẻ Đỏ A0/A1, the-viec.js), .the-con trong .muc (A2/A3, khối Thường trực giao, bị từ chối, đề nghị từ chối, chỉ đạo chờ) và
    .da-gui (minh chứng chờ, chỉ đạo đã gửi). Chỉ đổi trình bày — id, data-*, tên lớp cũ giữ nguyên. Tên lớp viết nguyên văn (Tailwind cắt lớp ghép). */
-@layer components {
   .tam { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); min-width: 0; }
   .tam + .tam, .hai-cot + .tam, .tam + .hai-cot, .can-xu-ly + .tam, .cx-chi-tiet + .tam { margin-top: 16px; }
   .tam-dau { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 14px 16px 10px; margin: 0; }
@@ -18,14 +22,12 @@
   .tam .them { padding: 12px 16px; border-top: 1px solid var(--vien-nhat); font-size: var(--chu-bang); }
   .hai-cot { display: grid; grid-template-columns: minmax(0, 1fr) var(--rong-phu, 380px); gap: 16px; align-items: start; margin-top: 16px; }
   .cot-phu, .cot-chinh { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-
   /* Chấm trạng thái, mã, nhãn, hạn */
   .stt { width: 8px; height: 8px; border-radius: 4px; flex: none; background: var(--navy); }
   .stt.lam { background: var(--lam); } .stt.do { background: var(--do); } .stt.dac-biet { background: var(--ddb); } .stt.vang { background: var(--vang-chu); } .stt.luc { background: var(--luc); } .stt.cam { background: var(--cam); }
   .ma { font-weight: 700; color: var(--navy); flex: none; min-width: 64px; }
   .han { flex: none; min-width: 96px; text-align: right; font-weight: 600; font-size: var(--chu-nho); color: var(--navy); }
   .han.do { color: var(--do); } .han.vang { color: var(--vang-chu); } .han.luc { color: var(--luc); }
-
   /* Thẻ Đỏ A0/A1 (.the.hang): một hàng, ô chỉ đạo / đôn đốc / giao lại mở bên dưới */
   .the.hang, .the.hang.do, .the.hang.dac-biet, .the.hang.tu-choi { border: 0; border-top: 1px solid var(--vien-nhat); border-radius: 0; margin: 0; padding: 12px 16px; background: var(--the); }
   .the.hang:first-child { border-top: 0; }
@@ -62,7 +64,6 @@
   .the.hang .vong em { display: inline-block; max-width: 100%; padding: 1px 7px; font-size: var(--chu-nho); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .the.hang .vong i { display: none; }
   .the.hang .o { margin-top: 8px; } .the.hang .db-khoi { margin-top: 10px; }
-
   /* .muc = khối trong tấm (tiêu đề Lora navy), .the-con = hàng có chấm trạng thái theo mức của khối */
   .muc, .muc.do, .muc.vang, .muc.lam, .muc.luc, .muc.dac-biet { border-left: 0; background: var(--the); padding: 0 0 6px; border-top: 1px solid var(--vien); }
   .muc.vien-vang { border: 1px solid var(--vien-vang); border-radius: var(--bo-the); margin: 8px; }
@@ -82,22 +83,43 @@
   .muc .the-con .hanh-dong { margin: 0; flex: none; gap: 6px; }
   .muc .the-con .o, .muc .the-con .mc-inline, .muc .the-con .ly-do, .muc .the-con .chu-canh-bao-inline, .muc .the-con .db-khoi { flex-basis: 100%; margin: 2px 0 0 22px; }
   .muc .ly-do { background: var(--nen-phu); } /* lý do từ chối: ghi chú kín, chỉ cấp duyệt đọc */
-
   /* Danh sách "đã gửi" / minh chứng chờ trong tấm */
   .tam .da-gui { margin: 0; border: 0; border-radius: 0; padding: 0; }
   .tam .da-gui > div { padding: 10px 16px; border-top: 1px solid var(--vien-nhat); }
   .tam .da-gui > div:first-child { border-top: 0; }
   .cot-phu .viec { margin: 0 12px 12px; padding: 12px 14px; border-left-width: 4px; } .cot-phu .viec h3 { font-size: var(--chu-bang); } .cot-phu .viec .ma { font-size: var(--chu-nho); }
-
   /* Cột phụ: tải việc từng cán bộ (A2) — v3.25: bỏ "hạn 7 ngày tới", "hướng dẫn nhanh" của A3 (Việc của tôi thành bảng) */
   .tai-nguoi { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: var(--chu-nho); border-top: 1px solid var(--vien-nhat); }
   .tai-nguoi .av { width: 30px; height: 30px; border-radius: 15px; background: var(--navy-nhat); color: var(--navy); font-weight: 800; font-size: var(--chu-nho); display: grid; place-items: center; flex: none; }
   .tai-nguoi > span { flex: 1; min-width: 0; display: flex; flex-direction: column; } .tai-nguoi > span b { font-weight: 600; } .tai-nguoi > span small { font-size: var(--chu-nho); color: var(--chu-phu); }
   .tai-nguoi .tai { width: 90px; flex: none; }
   .tai-chua { color: var(--chu-phu); } .tai-chua .av { background: transparent; }
-
-  @media (max-width: 900px) { .hai-cot { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) {
+    .hai-cot { grid-template-columns: 1fr; }
+  }
   @media (max-width: 600px) {
     .muc .the-con .o, .muc .the-con .mc-inline, .muc .the-con .ly-do { margin-left: 0; }
   }
+/* PR-2b — nghiệm thu (0077: bỏ hạn nộp minh chứng — nhóm "Chậm nộp minh chứng" không còn; các lớp .cam giữ lại cho bộ token CAM của DESIGN-V8
+   mục 1, chưa màn nào dùng). Tên lớp nguyên văn (Tailwind không cắt lớp @layer components khai báo trong nguồn). */
+  .tt-cam { background: var(--cam-nhat); color: var(--cam-chu); }
+  .the.cam, .nv-dong.cam, .muc.cam { border-left-color: var(--cam); }
+  .hang-nv.cam .han b, .han.cam { color: var(--cam-chu); }
+  .stt.cam { background: var(--cam); }
+  .tq .s-cam b { color: var(--cam-chu); } .s-cam { color: var(--cam-chu); }
+  .muc.cam .the-con::before, .muc .the-con.cam::before { background: var(--cam); }
+  /* Người nộp: "Đã nộp — chờ nghiệm thu" — trung tính (Mới 2), không đỏ dù việc đã quá hạn ở bước nghiệm thu */
+  .nhan-trung-tinh { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--nen-phu); color: var(--chu-phu); font-size: var(--chu-nho); font-weight: 600; }
+  /* Thẻ Đỏ: trường thứ 5 "Vướng mắc" — một dòng như dòng phụ, chữ vàng đậm để tách khỏi 4 trường 1400. */
+  .the.hang .the-vuong-mac { color: var(--vang-chu-dam); }   /* v3.36: tầng dưới của thẻ (.the-phu) */
+  .the.hang .the-vuong-mac b { font-weight: 600; }
+  /* Hộp nghiệm thu (chọn chất lượng) — dùng chung 3 nơi. */
+  .o-danh-gia .nhan { flex-basis: 100%; margin: 0; }
+  .o-danh-gia select { flex: 0 1 220px; }
+  .tam-dau h2, .tam-dau > b { font-weight: 600; font-size: var(--chu-o); }
+}
+@layer utilities {
+  /* v9 đợt 2 — "Việc của tôi" một thẻ mỗi việc: chỉ đạo chờ trả lời trích ngay trên thẻ; ô nộp minh chứng mở bằng nút (ngoài nhóm cần minh chứng) */
+  .muc .the-con .trich-phe { flex-basis: 100%; margin: 2px 0 0 22px; padding: 8px 12px; border-left: 3px solid var(--vach-tren); border-radius: 0 8px 8px 0;
+    background: var(--nen-mo); font-family: var(--font-van-ban); font-size: var(--chu-bang); color: var(--chu); }
 }

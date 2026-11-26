@@ -1,10 +1,7 @@
-/* Nhập Excel toàn trình (giao diện v9 đợt 2): thẻ "Nhập từ Excel" / "Chờ hoàn thiện" trên màn Giao việc, khối "Dữ liệu gốc" trong ngăn chi tiết.
-   Màu theo token (mức 1 vàng, mức 2 lam, mức 3 lục — cùng nền tiêu đề của Mẫu nhập chuẩn); kết quả dự kiến dùng nhãn trạng thái sẵn có
-   (giao = lam, xong = lục, chờ nghiệm thu / chờ hoàn thiện = vàng, bỏ = xám). Tên lớp ghi nguyên văn trong mã (Tailwind giữ). */
+/* Nhập từ Excel: các bước, bảng xem trước, bổ sung dữ liệu chuyển đổi.
+   Gộp từ: nhap-excel.css, ra-soat-muc-tieu.css, v327.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
 @layer components {
   .tab-hang .so-dem { display: inline-block; min-width: 20px; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--do); color: #fff; font-size: var(--chu-nho); line-height: 18px; text-align: center; }
-  .gv-hoan-thien { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-  .gv-hoan-thien .nut { margin-left: auto; }
   .nx-khu { margin-top: 14px; display: flex; flex-direction: column; gap: 14px; }
   .nx-phan { padding: 0 0 14px; }
   .nx-phan > .tam-dau { margin-bottom: 4px; }
@@ -66,11 +63,27 @@
   .nx-goc-ds dt, .nx-goc-ds dd { padding: 5px 0; border-top: 1px solid var(--vien-nhat); }
   .nx-goc-ds dt { color: var(--chu-phu); padding-right: 10px; }
   .nx-goc-ds dd { white-space: pre-wrap; overflow-wrap: anywhere; }
-  @media (max-width: 900px) { .nx-muc { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) {
+    .nx-muc { grid-template-columns: 1fr; }
+  }
   @media (max-width: 600px) {
     .nx-phan > *:not(.tam-dau):not(.bang-cuon) { margin-left: 12px; margin-right: 12px; }
     .nx-chan { justify-content: stretch; bottom: 56px; } .nx-chan .nut { flex: 1 1 auto; }   /* trên thanh điều hướng đáy (như .gv-tom-tat) */
     .nx-bang select.o-nhap { min-width: 180px; }
   }
-  @media print { .nx-khu, #gvTabs { display: none !important; } }
+  @media print {
+    .nx-khu, #gvTabs { display: none !important; }
+  }
+  /* Nhập Excel: ô tự gắn mục tiêu + dòng "mục tiêu tự gắn (dự kiến)" ở cột ghi chú */
+  .nx-tu-gan { display: flex; flex-direction: column; gap: 4px; margin: 12px 0; padding: 10px 12px; border: 1px solid var(--vien-nhat); border-radius: 12px; background: var(--nen-mo); }
+  .nx-tu-gan label { display: flex; align-items: center; gap: 8px; font-size: var(--chu-bang); font-weight: 600; color: var(--chu); cursor: pointer; }
+  .nx-tu-gan input { width: 16px; height: 16px; accent-color: var(--lam); }
+  .nx-tu-gan small { font-size: var(--chu-nho); line-height: 1.45; }
+  .nx-dk { display: block; margin-top: 2px; color: var(--lam); }
+  .nx-dk:empty { display: none; }
+  /* Nhập từ Excel: loại văn bản của cả tệp (bảng Phụ lục không có cột "Loại văn bản") */
+  .nx-loai-vb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 10px 0; }
+  .nx-loai-vb small { flex: 1 1 100%; }
+  /* Nhập từ Excel — "Bổ sung dữ liệu chuyển đổi" (chỉ toàn quyền): bảng kết quả cuộn trong khung */
+  .nx-bo-sung > summary { cursor: pointer; }
 }

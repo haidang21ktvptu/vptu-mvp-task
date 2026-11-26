@@ -11,7 +11,7 @@ const TIEU = { A0: ['Theo đơn vị chủ trì và trạng thái', 'Đơn vị 
 const COT = () => [['ddb', tenMuc('ddb', true), 'ddb', 'so c-ddb'], ['do', tenMuc('do', true), 'do', 'so c-do'], ['vang', 'Sắp đến hạn', 'vang', 'so c-vang'],
   ['th', 'Trong hạn', '', 'so'], ['ch', 'Chưa có hạn', '', 'so'], ['xong', 'Hoàn thành', '', 'so']];
 
-export const SO_DONG_IN = 6;   // bản in báo cáo nhanh (tong-quan-in.css): 6 dòng đầu (xếp theo mức quá hạn) để vừa một trang A4
+export const SO_DONG_IN = 6;   // bản in báo cáo nhanh (in.css): 6 dòng đầu (xếp theo mức quá hạn) để vừa một trang A4
 const dungHan = (d) => (d.tyLe !== null ? `<b>${d.tyLe}%</b><small>${d.dung}/${d.xet} việc</small>`
   : d.xet ? `<b class="chua-du">${d.dung}/${d.xet}</b><small>chưa đủ dữ liệu</small>` : '<span class="o-0">—</span>');
 

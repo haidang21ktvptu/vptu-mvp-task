@@ -4,7 +4,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { mo, dauKhoi, thuoc } from './template.js';
 
-// Không có việc quá hạn: bảng rộng ghi số 0 (cột số như bảng tổng hợp); màn hẹp ghi "Không" như khối 4 (v327.css).
+// Không có việc quá hạn: bảng rộng ghi số 0 (cột số như bảng tổng hợp); màn hẹp ghi "Không" như khối 4 (tong-quan.css).
 const KHONG_QH = '<span class="qh-0">0</span><span class="muc-tq tot qh-khong">Không</span>';
 // ds: theoChuTri(rows, k); k: kỳ.
 export function chuTriHtml(ds, k) {

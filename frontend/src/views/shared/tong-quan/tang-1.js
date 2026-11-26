@@ -72,7 +72,7 @@ export function nvqHtml(nvq, homNay) {
 
 // Tầng 1 đầy đủ. luc: thời điểm đọc số liệu; kyChon null = đang dùng kỳ tuỳ chọn của bộ lọc chi tiết (không nút nào sáng).
 // v3.36 (CAU-HOI V-1): bản in A4 "Báo cáo nhanh" — phần đầu theo thể thức Văn phòng (cơ quan, dòng Đảng, ngày), tên báo cáo, phạm vi, kỳ; chân ghi nguồn.
-// Chỉ hiện khi in (tong-quan-in.css); in tầng 1, ma trận đơn vị, điểm nghẽn. coQuan = [cấp trên, cơ quan].
+// Chỉ hiện khi in (in.css); in tầng 1, ma trận đơn vị, điểm nghẽn. coQuan = [cấp trên, cơ quan].
 // Ngày theo thể thức (ngayVanBanVN: chỉ tháng 1, 2 viết hai chữ số), ngày giờ theo giờ Việt Nam.
 const VN = { timeZone: 'Asia/Ho_Chi_Minh' };
 export function inDauHtml({ coQuan = ['TỈNH ỦY CAO BẰNG', 'VĂN PHÒNG'], phamVi, kyTen, luc = new Date() }) {

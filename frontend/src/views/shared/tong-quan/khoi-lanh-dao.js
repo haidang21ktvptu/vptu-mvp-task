@@ -30,7 +30,7 @@ function coQuanCanBo(r) {
 }
 
 // ds: diemNghen (đã sắp); cap: capNghen; chon: cấp đang lọc ('' = mọi cấp); duocChiDao(r) | boolean: người xem chỉ đạo được việc (chữ nút — DB là chốt).
-const SO_DONG_IN = 5;   // v3.36: "In báo cáo nhanh" một trang A4 — bản in chỉ ghi 5 việc quá hạn lâu nhất (tong-quan-in.css ẩn dòng thứ 6 trở đi)
+const SO_DONG_IN = 5;   // v3.36: "In báo cáo nhanh" một trang A4 — bản in chỉ ghi 5 việc quá hạn lâu nhất (in.css ẩn dòng thứ 6 trở đi)
 export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   const chon = chonUi && cap.some((c) => c.ma === chonUi) ? chonUi : '';   // cấp đang chọn hết việc (đổi bộ lọc / kỳ) → "Mọi cấp"
   const hien = chon ? ds.filter((r) => (r.cap_quyet_dinh || 'CHUA') === chon) : ds;

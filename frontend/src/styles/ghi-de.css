@@ -1,0 +1,27 @@
+/* Ghi đè phụ thuộc thứ tự: quy tắc của nhiều thành phần phải đứng sau tệp thành phần khác (đè lên quy tắc ở đó). Khi sửa, giữ vị trí tệp này trước in.css.
+   Gộp từ: nhiem-vu-v8.css, pr3.css, thong-ke.css, tong-quan-v324.css, tong-quan-tang.css, muc-tieu-v324.css, muc-tieu-v325.css, ra-soat-muc-tieu.css, phan-loai.css, quan-tri-muc-tieu.css, bang-nhiem-vu.css, v327.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
+@layer components {
+  .chi-tiet > .chi-tiet-noi > .hanh-dong { margin: 0; padding: 12px 18px; border-bottom: 1px solid var(--vien-nhat); gap: 8px; }
+  .chi-tiet .chi-tiet-noi > .o { margin: 0 18px 12px; }
+  .chi-tiet .ct-pr3 .hanh-dong { margin-top: 8px; }
+  @media (max-width: 860px) {
+    .tk-dau .pham-vi, .tk-loc .pham-vi { flex-wrap: wrap; border-radius: 12px; max-width: 100%; }   /* 360px: nhóm nút kỳ xuống dòng, không tràn ngang */
+  }
+  @container tq (max-width: 860px) {
+    .tq-loc-hang .pham-vi, #viewTongQuan .dau-bd .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 14px; }
+  }
+  @container tq (max-width: 640px) {
+    .tq1-phai .pham-vi { flex: 1 1 auto; min-width: 0; }
+    .tq1-phai .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 12px; }
+  }
+  .gv-mt > .nhan { display: block; margin-bottom: 8px; }
+  .mtg-dau .nhan { margin: 0; }
+  @media (max-width: 640px) {
+    .rs-loc .pham-vi { flex-wrap: wrap; border-radius: 14px; max-width: 100%; }
+  }
+  .rs-loc .pham-vi { flex-wrap: wrap; max-width: 100%; }
+  .qt-mt-truong .nhan { margin-top: 0; }
+  .bnv-khoi .o.mo { margin-top: 8px; }
+  .nx-loai-vb select.o-nhap { flex: 0 1 420px; min-width: 0; }
+  .nx-bo-sung .bang-cuon { max-height: 60vh; overflow: auto; }
+}
