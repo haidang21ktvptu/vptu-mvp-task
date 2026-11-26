@@ -53,7 +53,8 @@ BEGIN
      OR t LIKE 'Đóng nhiệm vụ ·%' OR t LIKE 'Đóng chỉ đạo%' OR t LIKE 'Đóng thay mặt Thường trực%'
      OR t LIKE 'Sửa thông tin giao ·%' OR t LIKE 'Điều chỉnh hạn ·%' OR t LIKE 'Tài khoản quản trị sửa thông tin nhiệm vụ ·%'
      OR (t LIKE 'Nhập Excel ·%' AND t NOT LIKE '%xác nhận đã nhận%')
-     OR t LIKE 'Gắn tệp minh chứng ·%' OR t LIKE 'Nghiệm thu và đóng nhiệm vụ ·%' OR t LIKE 'Đổi hạn nộp minh chứng ·%' THEN   -- nhãn cũ (tin trước 0077, 0090)
+     OR t LIKE 'Gắn tệp minh chứng ·%' OR t LIKE 'Nghiệm thu và đóng nhiệm vụ ·%' OR t LIKE 'Đổi hạn nộp minh chứng ·%'   -- nhãn cũ (tin trước 0077, 0090)
+     OR t LIKE 'Minh chứng hợp lệ (nghiệm thu) ·%' OR t LIKE 'Việc % đã có hạn hoàn thành % — đặt hạn nộp minh chứng%' THEN   -- nhãn cũ 0057–0077; nhắc hạn nộp đã bỏ ở 0077
     RETURN 'BIET';
   END IF;
 
@@ -112,7 +113,7 @@ BEGIN
   -- việc, người nghiệm thu được báo kèm để biết
   IF t LIKE 'Giao việc ·%' OR t LIKE 'Thường trực giao việc ·%' OR t LIKE 'Đôn đốc ·%' OR t LIKE 'Gia hạn ·%' OR t LIKE 'Giao lại ·%'
      OR t LIKE 'Yêu cầu minh chứng ·%' OR t LIKE 'Kiểm tra số liệu ·%' OR t LIKE 'Sắp đến hạn ·%' OR t LIKE 'Quá hạn dưới %' OR t LIKE 'Quá hạn từ %'
-     OR t LIKE 'Chậm nộp minh chứng ·%' OR t LIKE 'Việc Thường trực giao chưa xác nhận nhận ·%' OR t LIKE 'Minh chứng bị trả lại ·%'
+     OR t LIKE 'Chậm nộp minh chứng ·%' OR t LIKE 'Việc Thường trực giao chưa xác nhận nhận ·%' OR t LIKE 'Minh chứng bị trả lại ·%' OR t LIKE 'Minh chứng không hợp lệ ·%'
      OR t LIKE 'Mở lại nhiệm vụ ·%'
      OR t LIKE 'Giao việc thay mặt %' OR t LIKE 'Cảnh báo Vàng ·%' OR t LIKE 'Cảnh báo Đỏ ·%' OR t LIKE 'Cảnh báo Đỏ đặc biệt ·%' THEN   -- nhãn cũ (trước 0098, 0127)
     RETURN CASE WHEN v_ct THEN 'XU_LY' ELSE 'BIET' END;
