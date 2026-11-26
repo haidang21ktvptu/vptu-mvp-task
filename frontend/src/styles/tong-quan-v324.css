@@ -107,7 +107,6 @@
     .kv-hang.con .kv-ten { padding-left: 14px; }
     .tq-loc-hang { padding: 10px 12px; }
     .tq-loc-hang .pham-vi, #viewTongQuan .dau-bd .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 14px; }
-    .anh-hung .ky { flex-wrap: wrap; border-radius: 16px; } .anh-hung .ky button { white-space: nowrap; }   /* kỳ: + Nhiệm kỳ 2025–2030 */
     .tq-loc2 .nut.nho, .nhanh-tq { min-height: 40px; }
     /* Bảng điểm nghẽn: mỗi việc một thẻ — mức + trễ, nhiệm vụ, cơ quan, sản phẩm còn thiếu, cấp + nút */
     .bang-ng tr { grid-template-columns: minmax(0, 1fr) auto !important; }

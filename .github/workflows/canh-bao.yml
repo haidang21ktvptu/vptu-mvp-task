@@ -1,7 +1,8 @@
 # Cảnh báo tự động 3 cấp (GĐ17, SPEC 3.4 CB-2; KT-4 đổi 16/9: không pg_cron vì không có gói Pro): mỗi ngày 00:30 UTC
 # (07:30 giờ Việt Nam) gọi RPC canh_bao_quet() trên production bằng service_role qua REST; hàm idempotent theo
 # (nhiệm vụ, mức, N ngày) nên chạy trễ/chạy lặp không gửi trùng. Chạy tay (workflow_dispatch) chọn được staging để thử
-# trước khi cron chạm production; cron luôn production.
+# trước khi cron chạm production; cron luôn production. Cùng lượt: bản tin 7h30, nhắc Nhiệm vụ quý BTV (0139), chụp số liệu hằng ngày cho
+# Tổng quan (kl_chup_so_lieu, 0140).
 #
 # Secrets (repository): SUPABASE_SERVICE_ROLE_KEY (production), STAGING_SERVICE_ROLE_KEY (staging). Key chỉ đi trong
 # header, không đưa vào URL, không in ra log. Summary chỉ in số tổng hợp — không in tên tài khoản (repo public).
@@ -74,6 +75,17 @@ jobs:
             -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}')
           if [ "$HTTP" != 200 ]; then echo "::warning::nvq_nhac_quet trả HTTP $HTTP (hàm chưa có trước 0139?)."
           else jq -r '"Nhiệm vụ quý BTV: \(.tin_tuan) tin nhắc cập nhật tuần, \(.tin_muc) tin nhắc mốc / chậm tiến độ."' nvq.json >> "$GITHUB_STEP_SUMMARY"; fi
+      # v3.36 (0140): bảng chụp số liệu hằng ngày của Tổng quan (so với tuần trước, quá hạn 12 tuần). Chạy cả khi bước cảnh báo lỗi; lỗi ở bước này
+      # chỉ cảnh báo, không chặn job.
+      - name: Gọi RPC kl_chup_so_lieu (bảng chụp số liệu hằng ngày)
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -z "${URL:-}" ] || [ -z "${KEY:-}" ]; then echo "::warning::Chưa chọn được môi trường — bỏ qua chụp số liệu."; exit 0; fi
+          HTTP=$(curl --silent --show-error --retry 3 --retry-delay 10 --retry-all-errors --output chup.json --write-out '%{http_code}' \
+            --max-time 120 -X POST "$URL/rest/v1/rpc/kl_chup_so_lieu" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}') || HTTP=000
+          if [ "$HTTP" != 200 ]; then echo "::warning::kl_chup_so_lieu trả HTTP $HTTP (hàm chưa có trước 0140?)."
+          else jq -r '"Bảng chụp số liệu ngày \(.ngay): \(.so_viec) nhiệm vụ chưa hoàn thành."' chup.json >> "$GITHUB_STEP_SUMMARY"; fi
       - name: Ghi thống kê tổng hợp vào Summary (không tên tài khoản)
         run: |
           {

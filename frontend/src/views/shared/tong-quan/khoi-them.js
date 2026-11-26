@@ -1,6 +1,6 @@
-// Tổng quan cho lãnh đạo (v3.24): khối 4 "Xếp hạng thực hiện" (theo đơn vị chịu trách nhiệm / theo đồng chí Thường trực chỉ đạo), khối 9 "Quản lý
-// nội bộ Văn phòng" (KPI theo phòng, cán bộ chủ trì, theo lãnh đạo VP phụ trách — gập mặc định với Thường trực / lãnh đạo Văn phòng, mở sẵn với Trưởng
-// phòng, chuyên viên xem phòng) và ghi chú chất lượng dữ liệu (việc chưa gắn mục tiêu, chưa có ngành/lĩnh vực). Chỉ dựng HTML từ số đã tính.
+// Tổng quan cho lãnh đạo (v3.24): khối "Xếp hạng thực hiện" (theo đơn vị chịu trách nhiệm / theo đồng chí Thường trực chỉ đạo), khối "Quản lý
+// nội bộ Văn phòng" (KPI theo phòng, cán bộ chủ trì, theo lãnh đạo VP phụ trách — gập mặc định; v3.36: bảng theo phòng / cán bộ chuyển thành ma trận
+// tầng 2, Trưởng phòng không còn khối này) và ghi chú chất lượng dữ liệu (việc chưa gắn mục tiêu, chưa có ngành/lĩnh vực). Chỉ dựng HTML từ số đã tính.
 import { escapeHtml } from '../../../lib/dom.js';
 import { mo, dauKhoi, nhomNut, thuoc } from './template.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
@@ -25,6 +25,7 @@ export function xepHangHtml(ds, cach, k) {
 
 // than: HTML các bảng (KPI theo cán bộ, theo lãnh đạo VP phụ trách, theo phòng / cán bộ); moKhoi: đang mở; phong: góc nhìn phòng (Trưởng phòng).
 export function noiBoHtml(than, moKhoi, phong = false) {   // số khối: danhSoKhoi (v3.28) đánh theo các khối đang hiện
+  if (!than) return '';   // v3.36: bảng theo cán bộ của Trưởng phòng thành ma trận tầng 2 — phòng không còn bảng nào trong khối này
   const phu = phong ? 'Theo cán bộ của phòng — hoàn thành, đúng hạn trong kỳ; đang làm, cảnh báo đến hôm nay.'
     : 'KPI theo phòng, cán bộ chủ trì và theo lãnh đạo Văn phòng phụ trách — gập mặc định, mở khi cần.';
   const nut = `<button type="button" class="nut nho" id="tqNoiBoNut" data-action="tqNoiBo" aria-expanded="${String(moKhoi)}" aria-controls="tqNoiBoThan">${moKhoi ? 'Thu gọn' : 'Mở khối này'}</button>`;

@@ -1,14 +1,16 @@
 // Tổng quan (giao diện v9 đợt 2): bấm một số / cột / đoạn / dòng → danh sách đúng các việc làm nên con số đó, mở ngay trong ngăn chi tiết
 // dùng chung (views/shared/ngan-chi-tiet.js) — cùng quy ước đếm với lib/kl/tong-quan.js nên tổng của danh sách luôn bằng con số đã bấm.
 // ct (chỉ tiêu, do template gắn vào data-ct): { t: 'giao'|'xong'|'mo'|'canh'|'do'|'muc'|'dg'|'thang'|'nhom'|'vb'|'lv'|'cl'|'traLai'|'cd', … }.
+// v3.36 (ba tầng): + 'qh', 'quyet', 'cdCho', 'th' (năm thẻ tầng 1 cùng 'xong'), 'tuan' (cột tuần của xu hướng 12 tuần), 'nhom' m = 'th' | 'ch' | 'xong' (ma trận).
 // v3.24 (bố cục 9 khối): + 'nghen' (cấp), 'mt' / 'mtm' (mục tiêu, mức), 'khoi' (khối / ngành / chưa phân ngành), 'xh' (xếp hạng), 'quy', 'vm', 'cldl', 'loc'.
 // Trả { tieuDe, rows } hoặc { tieuDe, nhom: [{ ten, rows }] }. Thuần (không DOM, không Supabase); unit test ở frontend/tests/tong-quan.test.mjs.
 import { ngayGiao, ngayXong, laMo, laXong, laViecGoc, xongTrongKy, mucMo, chiDaoPhan } from './tong-quan.js';
 import { loaiCua } from './tong-quan-them.js';
 import { CHUA_PHAN_LOAI } from './tong-hop.js';
-import { tenMuc } from './nhan.js';
+import { tenMuc, tenMucHoa } from './nhan.js';
 import { mucTieuCua, HIEN_MUC_TIEU } from './muc-tieu.js';
 import { doanCua, DOAN, dongCuaKhoi, diemNghen, locCapNghen, khoaXepHang, vuongMacCho, chatLuongDuLieu } from './tong-quan-lanh-dao.js';
+import { laQuaHan, canYKien, chiDaoChoViec } from './tong-quan-tang.js';
 
 // v3.29: mức cảnh báo ghi bằng nghĩa (tenMuc — số ngày theo cấu hình đã nạp, nên đọc lúc dùng).
 export const TEN_MUC = { trongHan: 'Đang thực hiện, trong hạn', nt: 'Chờ xác nhận minh chứng (nộp trước v3.20)', get vang() { return `Nhiệm vụ ${tenMuc('vang')}`; },
@@ -32,6 +34,22 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'giao': return { tieuDe: `Nhiệm vụ giao ${k.trong}`, rows: rows.filter((r) => trongKy(ngayGiao(r), k)) };
     case 'xong': return { tieuDe: `Hoàn thành ${k.trong}`, rows: xong() };
     case 'mo': return { tieuDe: 'Nhiệm vụ đang thực hiện', rows: rows.filter(laMo) };
+    // v3.36 (Tổng quan ba tầng): năm thẻ tầng 1 — mỗi việc vào đúng một phần, tổng danh sách = số trên thẻ.
+    case 'qh': return { tieuDe: 'Nhiệm vụ quá hạn chưa hoàn thành', nhom: [{ ten: tenMucHoa('ddb'), rows: rows.filter((r) => laQuaHan(r) && mucMo(r) === 'ddb') },
+      { ten: tenMucHoa('do'), rows: rows.filter((r) => laQuaHan(r) && mucMo(r) === 'do') }] };
+    case 'quyet': {
+      const ds = rows.filter(canYKien);
+      return { tieuDe: 'Nhiệm vụ cần lãnh đạo cho ý kiến', nhom: [{ ten: 'Có vướng mắc hoặc đề xuất', rows: ds.filter((r) => r.vuong_mac) },
+        { ten: 'Quá hạn, đã ghi cấp cần quyết định', rows: ds.filter((r) => !r.vuong_mac) }] };
+    }
+    case 'cdCho': {
+      const c = chiDaoChoViec(rows, cds, ctxCd, homNay);
+      return { tieuDe: 'Nhiệm vụ có chỉ đạo chờ phản hồi', nhom: [{ ten: 'Quá hạn phản hồi', rows: c.quaHan }, { ten: 'Trong hạn phản hồi', rows: c.trongHan }] };
+    }
+    case 'th': return { tieuDe: 'Nhiệm vụ đang thực hiện trong hạn', nhom: [{ ten: 'Trong hạn', rows: rows.filter((r) => laMo(r) && ['trongHan', 'nt'].includes(mucMo(r))) },
+      { ten: TEN_MUC.vang, rows: rows.filter((r) => laMo(r) && mucMo(r) === 'vang') }, { ten: TEN_MUC.khac, rows: rows.filter((r) => laMo(r) && mucMo(r) === 'khac') }] };
+    case 'tuan': return { tieuDe: `Tuần ${ct.ten || ''}`.trim(), nhom: [{ ten: 'Giao mới', rows: rows.filter((r) => trongKy(ngayGiao(r), ct)) },
+      { ten: 'Hoàn thành', rows: rows.filter((r) => laXong(r) && trongKy(ngayXong(r), ct)) }] };
     case 'canh': return { tieuDe: `Nhiệm vụ có cảnh báo: ${tenMuc('vang')}, quá hạn`, rows: rows.filter((r) => laMo(r) && ['vang', 'do', 'ddb'].includes(mucMo(r))) };
     case 'do': return { tieuDe: 'Nhiệm vụ quá hạn cần chỉ đạo', rows: rows.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };
     case 'muc': return { tieuDe: TEN_MUC[ct.m] || 'Nhiệm vụ đang thực hiện', rows: rows.filter((r) => laMo(r) && mucMo(r) === ct.m) };
@@ -49,6 +67,10 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
     case 'nhom': {
       const cua = khoa ? rows.filter((r) => khoa(r)[0] === ct.ma) : [];
       if (ct.m === 'qh') return { tieuDe: `${ct.ten || 'Nhóm'} — Quá hạn`, rows: cua.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };   // v3.27: khối 2
+      // v3.36: ô của ma trận đơn vị — trong hạn (kể cả chờ xác nhận minh chứng), chưa có hạn, hoàn thành trong kỳ
+      if (ct.m === 'th') return { tieuDe: `${ct.ten || 'Nhóm'} — Đang thực hiện, trong hạn`, rows: cua.filter((r) => laMo(r) && ['trongHan', 'nt'].includes(mucMo(r))) };
+      if (ct.m === 'ch') return { tieuDe: `${ct.ten || 'Nhóm'} — Chưa có hạn, thường xuyên, chờ điều kiện`, rows: cua.filter((r) => laMo(r) && mucMo(r) === 'khac') };
+      if (ct.m === 'xong') return { tieuDe: `${ct.ten || 'Nhóm'} — Hoàn thành ${k.trong}`, rows: cua.filter((r) => xongTrongKy(r, k)) };
       if (ct.m) return { tieuDe: `${ct.ten || 'Nhóm'} — ${TEN_MUC[ct.m] || ''}`, rows: cua.filter((r) => laMo(r) && mucMo(r) === ct.m) };
       return { tieuDe: ct.ten || 'Nhóm', nhom: moVaXong(cua, k) };
     }

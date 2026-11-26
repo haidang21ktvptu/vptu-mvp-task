@@ -18,7 +18,6 @@
   .tq-dang-loc { font-size: var(--chu-nho); color: var(--chu-phu); flex-basis: 100%; }
 
   /* Hero: tỷ lệ % nhỏ dưới số (v3.30: bỏ dòng quy tắc / "Cách tính"). */
-  .hung-so .ty-le { font-size: var(--chu-nho); font-weight: 600; opacity: .85; }
 
   /* Lưới khối: thêm khối n5 / n7 theo vai nên cho phép lấp chỗ trống (dense) — khối sau vừa chỗ thì lên lấp, không để ô trắng. */
   .luoi-tq { grid-auto-flow: row dense; }

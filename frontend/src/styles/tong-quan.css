@@ -1,6 +1,5 @@
-/* Màn hình Tổng quan (giao diện v9, docs/DESIGN.md mục 5): dải đầu màu kiểu (lam / đỏ son), nền phẳng (v3.36 bỏ ảnh chụp mờ sau số liệu —
-   DESIGN mục 1 "không ảnh chụp làm nền") + vạch son–vàng ở chân; vòng
-   đúng hạn, xu hướng, 4 số; dải cảnh báo; lưới 12 cột 7 khối (7/5, 7/5, 4/4/4). Khung chờ .xuong; gợi ý #tqGoi. Tên lớp viết nguyên văn trong
+/* Màn hình Tổng quan (giao diện v9, docs/DESIGN.md mục 5; v3.36: dải đầu màu kiểu thay bằng tầng 1 nền phẳng ở tong-quan-tang.css): vòng tỷ lệ (khối
+   Giải ngân vốn); dải cảnh báo; lưới 12 cột các khối (7/5, 4/4/4). Khung chờ .xuong; gợi ý #tqGoi. Tên lớp viết nguyên văn trong
    JS (Tailwind cắt lớp ghép chuỗi); ≤ 1100px khối xếp lại, ≤ 860px một cột, bảng thành hàng hai dòng. v9 đợt 2: số, cột, đoạn, mục chú giải,
    dòng là nút (data-action="tqMo") mở danh sách việc trong ngăn chi tiết dùng chung (ngan-chi-tiet.css). */
 @layer components {
@@ -9,34 +8,6 @@
   @keyframes xuong-tq { to { background-position: -200% 0; } }
 
   #viewTongQuan { container-type: inline-size; container-name: tq; }
-  .anh-hung { position: relative; border-radius: 22px; overflow: hidden; color: #fff; padding: 26px 30px 28px; isolation: isolate;
-    background: linear-gradient(118deg, var(--hero-1) 0%, var(--hero-2) 58%, var(--hero-3) 100%); }
-  .anh-hung::after { content: ''; position: absolute; inset: auto 0 0 0; height: 4px; background: linear-gradient(90deg, var(--hero-vach) 0 72%, var(--hero-vong) 72% 100%); z-index: -1; }
-  .hung-dau { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px 24px; flex-wrap: wrap; }
-  .hung-dau h1 { font-size: var(--chu-trang); color: #fff; }
-  .hung-dau p { margin-top: 6px; color: rgba(255, 255, 255, .88); font-size: var(--chu-than); }
-  .ngay-hung { font-family: var(--font-van-ban); font-style: italic; }
-  .hung-phai { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .anh-hung .ky { display: inline-flex; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; padding: 3px; }
-  .anh-hung .ky button { height: 32px; padding: 0 13px; border-radius: 999px; font-weight: 600; font-size: var(--chu-bang); color: rgba(255, 255, 255, .9); }
-  .anh-hung .ky button[aria-pressed="true"] { background: #fff; color: var(--hero-1); }
-  .anh-hung .ky button:focus-visible, .anh-hung .nut:focus-visible { outline-color: #fff; }
-  .anh-hung .nut.chinh { min-height: 40px; padding: 0 16px; font-size: var(--chu-than); border-radius: 10px; }
-  :root[data-kieu="trang-nghiem"] .anh-hung .nut.chinh { background: #fff; border-color: #fff; color: var(--hero-2); }
-  .hung-so { display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)) minmax(0, 1.3fr); margin-top: 26px; }
-  .hung-so > * { padding: 2px 24px; border-left: 1px solid rgba(255, 255, 255, .18); display: flex; flex-direction: column; justify-content: center; min-width: 0; text-align: left; }
-  .hung-so > *:first-child { border-left: 0; padding-left: 0; flex-direction: row; align-items: center; gap: 16px; }
-  /* v9 đợt 2: mỗi ô số là nút mở danh sách việc trong ngăn chi tiết */
-  .o-hung { border-radius: 12px; transition: background-color .15s; }
-  .o-hung:hover { background-color: rgba(255, 255, 255, .08); }
-  .o-hung:hover .nhan-so { text-decoration: underline; text-underline-offset: 3px; }
-  .o-hung:focus-visible { outline-color: #fff; outline-offset: 0; }
-  .xh-tq { display: flex; flex-direction: column; min-width: 0; }
-  .hung-so .gia { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-so); letter-spacing: -.02em; line-height: 1.1; }
-  .hung-so .nhan-so { font-size: var(--chu-than); font-weight: 600; margin-top: 2px; }
-  .hung-so .phu-h { font-size: var(--chu-bang); color: rgba(255, 255, 255, .86); margin-top: 2px; }
-  .hung-so.cho > *:first-child { padding-left: 24px; border-left: 1px solid rgba(255, 255, 255, .18); }
-  .hung-so .xuong { opacity: .35; }
   .vong-tq { position: relative; display: block; width: 112px; height: 112px; flex: none; }
   .vong-tq svg { width: 100%; height: 100%; }
   .ray-vong { fill: none; stroke: rgba(255, 255, 255, .18); stroke-width: 10; }
@@ -45,11 +16,6 @@
   .giua-vong b { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-trang); line-height: 1; }
   .giua-vong b, .giua-vong span { display: block; }
   .giua-vong span { font-size: var(--chu-nho); color: rgba(255, 255, 255, .8); margin-top: 3px; }
-  .xh-tq .nhan-so { font-size: var(--chu-than); font-weight: 600; }
-  .xh-tq .phu-h { font-size: var(--chu-bang); color: rgba(255, 255, 255, .86); }
-  .duong { width: 140px; height: 40px; margin-top: 6px; overflow: visible; }
-  .duong polyline { fill: none; stroke: #fff; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; opacity: .9; }
-  .duong circle { fill: var(--hero-vong); stroke: var(--hero-2); stroke-width: 2; }
 
   .bao-dong { display: flex; align-items: center; gap: 14px 16px; flex-wrap: wrap; margin-top: 18px; padding: 14px 18px; border-radius: 16px; background: var(--do-nhat); border: 1px solid var(--vien-do); }
   .bao-dong.yen { background: var(--luc-nhat); border-color: var(--vien-luc); }
@@ -171,18 +137,10 @@
 
   @container tq (max-width: 1100px) {
     .n7, .n5 { grid-column: span 12; } .n4 { grid-column: span 6; }
-    .hung-so { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
-    .hung-so > *:first-child { grid-column: 1 / -1; }
-    .hung-so > *:nth-child(2), .hung-so > *:nth-child(4) { border-left: 0; padding-left: 0; }
   }
   @container tq (max-width: 860px) {
     .n4 { grid-column: span 12; }
-    .anh-hung { padding: 20px 18px 22px; border-radius: 18px; }
-    .hung-dau h1 { font-size: var(--chu-trang); }
-    .hung-so .gia { font-size: var(--chu-trang); } .hung-so > * { padding: 2px 14px; justify-content: flex-start; }
     .vong-tq { width: 92px; height: 92px; } .giua-vong b { font-size: var(--chu-khoi); }
-    .anh-hung .nut.chinh { padding: 0 12px; } .anh-hung .nut.chinh .chu-nut { display: none; }
-    .anh-hung .ky button { padding: 0 11px; font-size: var(--chu-bang); }
     .bao-dong { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 12px 14px; }
     .bao-dong .nut { grid-column: 1 / -1; width: 100%; }
     .vb-dong { grid-template-columns: minmax(0, 1fr); }

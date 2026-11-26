@@ -199,6 +199,11 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
   phép kiểm 0122 (việc giao phòng, Chánh VP chủ trì, đổi kiểu không mang mục tiêu, ghi / xoá kỳ); hai phiên psql ghi cùng một việc, ghi và xoá cùng kỳ cùng
   lúc (khoá: người sau thấy kết quả của người trước).
 
+## e2e + RLS v3.36 — Tổng quan ba tầng (`kl-0140`, `anh-chup-giao-dien.spec.js`; từ 25/11/2026)
+- RLS `kl-0140-chup-so-lieu`: chỉ service_role gọi `kl_chup_so_lieu`; nội dung bản chụp; tập bản chụp mỗi vai thấy = tập nhiệm vụ thấy được; authenticated không ghi; chạy lại trong ngày, xoá theo nhiệm vụ. Ngày chụp cố định 20/8/2026 (không đụng bản chụp thật).
+- e2e `tong-quan.spec.js` thêm bài "so với tuần trước": tạo bản chụp lùi 7 ngày bằng service_role — **chỉ Supabase cục bộ / staging, tự bỏ qua trên production**.
+- **Ảnh chụp giao diện trên PR**: `anh-chup-giao-dien.spec.js` (desktop) chụp Tổng quan của lãnh đạo Văn phòng 1366×768, 1920×1080, 375×812 và Trưởng phòng 1366×768 (màn hình đầu + cả trang) vào `tests/e2e/anh-chup/` (gitignore); action `e2e-playwright` luôn lưu thư mục này thành artifact `playwright-report-anh-chup` (7 ngày). Không so sánh điểm ảnh, không làm đỏ CI — để Claude và chủ dự án xem giao diện thật trước khi merge (máy làm việc của Claude không cài được gói npm).
+
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 
 Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAUDE.md`: **mặc định không bật**. Nơi kiểm tra migration và RLS là CI — job "Áp migration + lint schema" của `ci.yml` khởi động Supabase cục bộ trên runner, áp toàn bộ migration của PR, lint schema và chạy đủ bộ `tests/rls`; e2e chạy trên staging. Trên laptop chỉ cần Node + Supabase CLI đã `supabase login` và `supabase link` (staging).

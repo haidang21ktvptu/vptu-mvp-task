@@ -11,7 +11,7 @@ import { DOAN, tenKy, chuThieuNganh } from '../../../lib/kl/tong-quan-lanh-dao.j
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { mo, dauKhoi, nhomNut, thuoc } from './template.js';
 
-const SO_DONG_NGHEN = 8;
+const SO_DONG_NGHEN = 10;   // v3.36 (tầng 2): 10 điểm nghẽn, đủ danh sách ở nút cuối khối
 const mucCuaViec = (r) => (r.muc_canh_bao === 'DO_DAC_BIET' ? ['ddb', tenMuc('ddb', true)] : ['do', tenMuc('do', true)]);   // v3.29: ghi bằng nghĩa
 // Sản phẩm còn thiếu theo khâu nghẽn (v_nhiem_vu.khau, 0033): đã nộp chờ xác nhận / chưa nhận việc / bị từ chối; còn lại = sản phẩm đầu ra chưa có.
 function sanPhamThieu(r) {
