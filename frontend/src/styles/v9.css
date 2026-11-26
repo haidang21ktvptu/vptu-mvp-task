@@ -20,7 +20,8 @@
   .bc-cham { background: var(--do-nhat); color: var(--do); } .bc-nghen { background: var(--vang-nhat); color: var(--vang-chu); } .bc-quyet { background: var(--navy-nhat); color: var(--navy); }
   .bc-chinh { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-khoi); color: var(--chu); margin-top: 4px; line-height: 1.25; }
   .bc-chinh b { font-size: var(--chu-so); font-weight: 600; letter-spacing: -.02em; margin-right: 4px; }
-  .bc-chinh em { font-style: normal; font-family: var(--font-sans); font-size: var(--chu-nho); font-weight: 700; vertical-align: 6px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; }
+  .bc-chinh em { display: inline-block; max-width: 100%; font-style: normal; font-family: var(--font-sans); font-size: var(--chu-nho); font-weight: 700; line-height: 1.35;
+    vertical-align: 6px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; }   /* v3.36: một khối (nhãn mức theo nghĩa dài hơn không gãy viên) */
   .bc-chinh em.ddb { background: var(--f-ddb); color: var(--f-ddb-chu); }
   .bc-phu { font-size: var(--chu-bang); color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

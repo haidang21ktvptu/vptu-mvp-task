@@ -1,7 +1,7 @@
 // GĐ22 — từ chối hiện rõ ba phía: A3 (demo_e2e_nv) đề nghị từ chối trên dòng việc mới giao của "Việc của tôi" (v3.25 bảng) → dòng ghi "Đã đề
 // nghị từ chối, chờ Demo Trưởng phòng duyệt"; A2 (người giao, cấp duyệt) thấy đề nghị ở khối cần duyệt và việc mình giao trong khối "đang đề nghị từ chối" → Đồng ý → khối "Việc đồng
-// chí giao bị từ chối" có nút Giao lại; A3 quay lại thấy "Đã đồng ý từ chối, chờ giao lại", chuông (tin duyệt = tin hệ thống chưa đọc) có số và
-// danh sách thông báo có tin duyệt (v3.23: bỏ Nhắn tin). Dữ liệu tạo bằng service_role, tự dọn.
+// chí giao bị từ chối" có nút Giao lại; A3 quay lại thấy "Đã đồng ý từ chối, chờ giao lại", tin duyệt (chưa đọc) ở thẻ "Để biết" của chuông
+// (v3.23: bỏ Nhắn tin; v3.36: thông báo hai mức). Dữ liệu tạo bằng service_role, tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { pageAs, NAP } from './lib/app.js';
@@ -88,16 +88,17 @@ test.describe.serial('Từ chối nhận việc — người đề nghị, ngư�
     await page.context().close();
   });
 
-  test('A3: thấy "Đã đồng ý từ chối, chờ giao lại"; chuông có số; thông báo của việc có tin duyệt (v3.23: bỏ Nhắn tin)', async ({ browser }, testInfo) => {
+  test('A3: thấy "Đã đồng ý từ chối, chờ giao lại"; tin duyệt ở thẻ "Để biết" của chuông (v3.23: bỏ Nhắn tin; v3.36: thông báo hai mức)', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'E2E_NV', testInfo);
     await expect(page.locator('#vctThanhTuChoi')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator(`#vctThanhTuChoi p[data-nhiem-vu="${id}"]`)).toContainText('Đã đồng ý từ chối, chờ giao lại', NAP);
     await expect(page.locator(`#vct-${id}[data-kieu="tu-choi"]`)).toContainText('Đã đồng ý từ chối', NAP);
     await expect(page.locator('#dmBubbleLauncher')).toHaveCount(0);   // v3.23: không còn mục Nhắn tin
-    await expect(page.locator('#chuongBadge')).toHaveText(/^[1-9]\d*$/, NAP);
     await page.locator('#chuongBtn').click();
-    // v3.29: chuông chỉ có tin gửi TỚI mình — nhóm của việc chỉ còn tin duyệt (bỏ các tin "Đề nghị từ chối" chuyên viên tự gửi), nhóm một tin ghi
-    // "<mã> · mới" và phần nội dung sau nhãn.
+    // v3.36 (0142): "đồng ý từ chối, chờ giao lại" không còn việc cho chuyên viên ⇒ tin ở thẻ "Để biết" (không đếm trên huy hiệu); không đồng ý thì
+    // tin là "cần xử lý" (RLS kl-0142). v3.29: chuông chỉ có tin gửi TỚI mình — nhóm của việc chỉ còn tin duyệt, nhóm một tin ghi "<mã> · mới".
+    await page.locator('#tbTheBiet').click();
+    await expect(page.locator('#tbSoBiet')).toHaveText(/^[1-9]\d*\+?$/, NAP);
     const nhom = page.locator(`#thongBaoList [data-nv="${id}"]`);
     await expect(nhom).toContainText(`${ma} · mới`, NAP);
     await expect(nhom).toContainText('đồng ý từ chối, chờ giao lại');

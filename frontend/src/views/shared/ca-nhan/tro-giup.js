@@ -2,7 +2,7 @@
 const CHUNG = `
   <h3>Dải nhận diện</h3>
   <ul><li><b>Tìm</b> (kính lúp): gõ mã việc (NV-…) hoặc vài từ trong nội dung, Enter để mở danh sách nhiệm vụ đã lọc.</li>
-  <li><b>Chuông</b>: số thông báo hệ thống chưa đọc (chỉ đạo, minh chứng, cảnh báo) gom theo từng việc; bấm một dòng để mở đúng việc, hoặc "Đánh dấu đã đọc".</li>
+  <li><b>Chuông</b>: số thông báo cần đồng chí xử lý chưa đọc (việc mới giao, chỉ đạo chờ phản hồi, đề nghị chờ duyệt, nhắc hạn); thẻ "Để biết" giữ các tin kết quả, thay đổi đã áp dụng. Tin gom theo từng việc; bấm một dòng để mở đúng việc, hoặc "Đánh dấu đã đọc" cho thẻ đang mở.</li>
   <li><b>Bánh răng</b>: hồ sơ cá nhân (ảnh, điện thoại), đổi mật khẩu, tuỳ chọn thông báo, trợ giúp và Đăng xuất.</li></ul>
   <h3>Mật khẩu</h3>
   <p>Mật khẩu mới phải có tối thiểu 8 ký tự, gồm cả chữ và số, khác mật khẩu tạm. Quên mật khẩu: liên hệ quản trị hệ thống (Phòng Chuyển đổi số – Cơ yếu) để được cấp mật khẩu tạm mới.</p>`;

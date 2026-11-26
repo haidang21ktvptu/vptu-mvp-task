@@ -210,7 +210,16 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 
 ## e2e v3.36 phần 4 — menu nhóm, Cần xử lý gọn, In báo cáo nhanh (`v336-giao-dien.spec.js`, dự án desktop; từ 26/11/2026)
 - Menu lãnh đạo: nhóm Nhiệm vụ quý BTV mặc định thu, bấm mở / thu, nhớ sau khi tải lại; mở Tổng quan quý từ dòng nhiệm vụ quý thì nhóm tự mở. Hàm `nav()` của e2e mở nhóm đang thu trước khi bấm mục.
-- Cần xử lý: không còn `#dhKpi`; thẻ `.nd-gon` cắt hai dòng, có title. Bản in: thêm lớp `in-tq` + `emulateMedia('print')` (không mở hộp in) — phần đầu theo thể thức, chỉ tầng 1, ma trận, 5 điểm nghẽn, chân nguồn; trở lại màn hình thì như cũ.
+- Cần xử lý: không còn `#dhKpi`; thẻ `.nd-gon` cắt hai dòng, có title. Bản in: bấm nút thật (hộp in thay bằng hàm rỗng) + `emulateMedia('print')`, dispatch `afterprint` gỡ lớp `in-tq` và thẻ khổ A4 — phần đầu theo thể thức, chỉ tầng 1, ma trận, 5 điểm nghẽn, chân nguồn; trở lại màn hình thì như cũ.
+
+## RLS và e2e v3.36 phần 5 — thông báo hai mức (`kl-0142`, migration 0142; từ 26/11/2026)
+- RLS `kl-0142-thong-bao-hai-muc` (cả tệp `CHI_CUC_BO` — chạy ở CI cục bộ): luồng thật Chánh VP đôn đốc → chủ trì XU_LY, Trưởng phòng / PCVP BIET; chủ trì phản hồi → người ra chỉ đạo XU_LY; đề nghị từ chối → cấp duyệt XU_LY; không đồng ý → người đề nghị XU_LY; mức người gửi ghi bị trigger ghi đè; `kl_so_chua_xu_ly.thong_bao` / `thong_bao_biet` khớp số đếm; `tin_he_thong_doc_het` chỉ thẻ chọn, chỉ tin của mình; mức sai, chưa đăng nhập bị chặn; `kl_phan_muc_tin` không gọi được từ người dùng.
+- Chạy thử ngoài CI: 68 ca phân mức trên PostgreSQL 16 với khung giả (mọi nhãn tin của các hàm tạo tin, nhiệm vụ quý, tin cũ, đếm, bản tin 7h30).
+- e2e: `doi-mat-khau` (tài khoản tạm có 1 tin cần xử lý + 1 tin để biết: huy hiệu 1, hai thẻ, đánh dấu đã đọc từng thẻ); `tu-choi-ba-phia` (tin "đồng ý từ chối" ở thẻ Để biết); `dieu-hanh` (đôn đốc → toast, huy hiệu của chủ trì; phản hồi ở thẻ Cần xử lý của người ra chỉ đạo) giữ nguyên.
+
+## Dữ liệu giả staging (v3.36, workflow `du-lieu-gia-staging.yml`; từ 26/11/2026)
+- Actions → "Dữ liệu giả staging" → `nap` (mặc định 500 việc, tối đa 600 để tổng việc staging cùng fixture test RLS dưới 1000 dòng) / `xoa`. Chỉ staging; văn bản `DL-GIA-xx`, nội dung có đuôi `(DL-GIA nnn)`; tài khoản demo của seed.sql (không dùng tài khoản e2e, demo_cv2, phòng Quản trị — khối Quản trị của demo_pcvp2 giữ nguyên cho e2e kl-dashboard); khoảng 70% đã hoàn thành (có minh chứng hợp lệ), 10% quá hạn, còn lại trong hạn / thường xuyên; khoảng một phần tư thuộc hai đơn vị ngoài Văn phòng (Trưởng phòng theo dõi), demo_cv1 khoảng 14%. Cảnh báo 07:30 của staging sẽ gửi nhắc cho các việc quá hạn của bộ — dùng để kiểm chuông hai mức với lượng tin thật.
+- Kiểm thử đêm trên staging chạy cùng bộ này; test RLS đọc cả danh sách nhiệm vụ dùng `docHet` (đọc theo trang 1000, `tests/rls/lib.mjs`). Nếu e2e chậm vì khối lượng, chạy `xoa` rồi báo trong PR.
 
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 

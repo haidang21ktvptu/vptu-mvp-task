@@ -4,7 +4,7 @@
 // khớp ô Quá hạn, dat_cap_quyet_dinh, ghi trực tiếp chi_dao/tin hệ thống bị chặn, đã đọc. Mã NV-T9x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, assertOk, assertDenied, IDS, songSong } from './lib.mjs';
+import { adminClient, userClient, assertOk, assertDenied, docHet, IDS, songSong } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 const SKIP = (await klSchemaReady()) ? false : 'Chưa có migration KL trên project này.';
@@ -167,7 +167,7 @@ describe('0026 — điều hành ngoại lệ: chỉ đạo, phản hồi, tin h
   test('7. v_ngoai_le: chỉ DO/DO_DAC_BIET, tổng = ô Quá hạn + Đang đính chính, sắp số ngày trễ giảm dần, 4 trường bắt buộc có giá trị thay thế', async () => {
     const U = ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv1'];
     // Đọc độc lập theo vai: songSong 2 vai × 2 truy vấn = tối đa 4 lời gọi cùng lúc (D3, PR-2a).
-    const doc = await songSong(U.map((u) => async () => { const c = await userClient(u); return Promise.all([c.from('v_ngoai_le').select('*'), c.from('v_nhiem_vu').select('id, nhom_dem')]); }), 2);
+    const doc = await songSong(U.map((u) => async () => { const c = await userClient(u); return Promise.all([c.from('v_ngoai_le').select('*'), docHet(() => c.from('v_nhiem_vu').select('id, nhom_dem').order('id'), u)]); }), 2);
     for (const [k, u] of U.entries()) {
       const [nl, tat] = doc[k];
       assertOk(nl, u); assertOk(tat, u);

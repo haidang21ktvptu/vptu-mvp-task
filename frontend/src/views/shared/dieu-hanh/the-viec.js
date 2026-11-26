@@ -22,6 +22,10 @@ export function sanPhamThieu(r) {
   if (r.khau === 'CHO_MINH_CHUNG') return `${r.san_pham_ten} — đã nộp, chờ xác nhận`;
   return r.san_pham_ten;
 }
+// Điều thứ 3 trên dòng phụ: tên sản phẩm kèm "(sản phẩm còn thiếu)"; khâu đã nói rõ tình trạng thì ghi nguyên câu (bị từ chối, chưa nhận, đã nộp chờ
+// xác nhận) hoặc chỉ tên sản phẩm (đã trình chờ cấp trên quyết; chờ xác nhận minh chứng nộp trước v3.20 — sản phẩm đã có).
+const dieuSanPham = (r) => (['BI_TU_CHOI', 'CHUA_NHAN', 'CHO_MINH_CHUNG'].includes(r.khau) ? sanPhamThieu(r)
+  : ['CHO_QUYET', 'CHO_NGHIEM_THU'].includes(r.khau) ? r.san_pham_ten : `${r.san_pham_ten} (sản phẩm còn thiếu)`);
 
 // Vòng khép kín theo chỉ đạo Thường trực mới nhất trên việc (A0: mình gửi; A1: mình nhận); không có → "Chưa chỉ đạo" + chỉ đạo điều hành chờ.
 export function vongHtml(r) {
@@ -69,8 +73,10 @@ export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
     </form>`;
 }
 
-// Hàng việc (v8 đợt 2): chấm trạng thái · mã · nội dung (+ cần X quyết, nhãn) với dòng phụ xám (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết)
-// · số ngày trễ · nút; vòng khép kín và các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau, .vong, .dk, #the-<id>, data-*).
+// Hàng việc (v8 đợt 2): chấm trạng thái · mã · nội dung (+ cần X quyết) · số ngày trễ · nút; v3.36: tầng dưới (.the-phu, rộng từ cột nội dung tới mép
+// phải thẻ) gồm hàng nhãn (độ khẩn, Thường trực giao, vòng khép kín) rồi bốn điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết, tối đa hai dòng)
+// và vướng mắc — để cỡ chữ lớn trên máy 1280–1366px vẫn đọc đủ bốn điều. Các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau,
+// .vong, .dk, #the-<id>, data-*).
 export function theHtml(r) {
   const quyet = canToiQuyet(r);
   const lop = r.bi_tu_choi && !['DO', 'NGHIEM_THU'].includes(r.nhom) ? 'tu-choi' : r.muc_canh_bao === 'DO_DAC_BIET' ? 'dac-biet' : 'do';
@@ -85,8 +91,9 @@ export function theHtml(r) {
   const nutChinh = laA0() ? (daCo ? 'Chỉ đạo thêm' : 'Chỉ đạo') : 'Đôn đốc';
   return `<article class="the hang ${lop}" id="the-${r.id}" data-khau="${r.khau}" data-muc="${escapeHtml(r.muc_canh_bao)}" data-do-khan="${escapeHtml(r.do_khan || 'THUONG')}"${r.bi_tu_choi ? ' data-tu-choi="1"' : ''}${r.uu_tien ? ' data-uu-tien="1"' : ''}>
       <div class="the-dau"><span class="stt ${cham}"></span><span class="ma">${escapeHtml(r.ma)}</span>
-        <div class="ten"><b><span class="nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}</span> <span class="nhan-cum">${nhanTC}${vongHtml(r)}</span></b>
-          <span title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(sanPhamThieu(r))} (sản phẩm còn thiếu) · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
+        <div class="ten"><b><span class="nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}</span></b></div>
+        <div class="the-phu"><span class="nhan-cum">${nhanTC}${vongHtml(r)}</span>
+          <span class="bon-dieu" title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(dieuSanPham(r))} · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac" title="${escapeHtml(r.vuong_mac)}"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
         ${tre}
         <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
           <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div></div>

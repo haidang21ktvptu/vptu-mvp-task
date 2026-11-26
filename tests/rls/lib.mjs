@@ -155,6 +155,16 @@ export function assertNoRows(result, label) {
   assert.equal((result.data || []).length, 0, `${label}: phải 0 dòng`);
 }
 
+// Đọc đủ mọi dòng theo trang 1000 (max_rows của PostgREST) — staging có thể có hàng trăm việc giả (scripts/du-lieu-gia-staging.mjs) cộng
+// fixture; đọc một lượt sẽ bị cắt ở 1000 dòng mà không báo lỗi. taoTruyVan() trả truy vấn MỚI mỗi lần, đã có thứ tự ổn định (khoá duy nhất).
+export async function docHet(taoTruyVan, label) {
+  const data = [];
+  for (let tu = 0; ; tu += 1000) {
+    const r = await taoTruyVan().range(tu, tu + 999); assertOk(r, label); data.push(...r.data);
+    if (r.data.length < 1000) return { data, error: null };
+  }
+}
+
 export function assertOk(result, label) {
   assert.equal(result.error, null, `${label}: ${result.error?.message}`);
 }

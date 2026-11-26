@@ -42,7 +42,7 @@ const deNghiChoDuyet = () => (vai() === 'A0'
 // v3.23: bỏ nhắn tin 1-1 — mục này chỉ còn thông báo hệ thống trên nhiệm vụ (đọc ở chuông).
 function dongTin(so) {
   const tb = Number(so?.thong_bao || 0);
-  return tb ? [`<div class="cx-dong"><p><b>Thông báo trên nhiệm vụ</b><span class="chu-phu"> · ${tb} chưa đọc (chỉ đạo, minh chứng, vướng mắc, cảnh báo)</span></p>
+  return tb ? [`<div class="cx-dong"><p><b>Thông báo cần đồng chí xử lý</b><span class="chu-phu"> · ${tb} chưa đọc (việc mới giao, chỉ đạo chờ phản hồi, đề nghị chờ duyệt, vướng mắc, nhắc hạn)</span></p>
       <div class="hanh-dong">${nut('Mở chuông', 'cxMoChuong', {}, 'lam')}</div></div>`] : [];
 }
 const dongCanQuyet = () => canQuyet().map((r) => dong('quyet', r, `${escapeHtml(r.cap_quyet_dinh_ten || 'cấp cần quyết')} · ${lienQuan(r)}`,

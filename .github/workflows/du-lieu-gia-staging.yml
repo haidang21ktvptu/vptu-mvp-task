@@ -1,0 +1,59 @@
+# v3.36 (Đợt 1, CAU-HOI V-1): nạp / dọn bộ việc GIẢ trên STAGING (khoảng 500 việc, văn bản DL-GIA-xx) để kiểm giao diện và tốc độ với khối lượng gần
+# thật. Chỉ có job staging — không có đường chạy production; script tự dừng nếu địa chỉ không phải project staging. Không tạo tài khoản (CLAUDE.md mục
+# 11): dùng tài khoản demo của seed.sql. Nạp lại chỉ thêm phần còn thiếu; "xoa" xoá mọi việc của văn bản DL-GIA-xx rồi xoá văn bản. Gọi bằng service_role
+# qua supabase-js (key chỉ ở biến môi trường, không in log); Summary ghi số tạo / đã có / hoàn thành / lỗi.
+name: Dữ liệu giả staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      thao_tac:
+        description: 'Thao tác'
+        type: choice
+        options: [nap, xoa]
+        default: nap
+        required: true
+      so_viec:
+        description: 'Số việc (nạp, tối đa 600)'
+        type: string
+        default: '500'
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: du-lieu-gia-staging
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  staging:
+    name: Staging — ${{ inputs.thao_tac }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      THAO_TAC: ${{ inputs.thao_tac }}
+      SO_VIEC: ${{ inputs.so_viec }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: cd scripts && npm ci --no-audit --no-fund
+      - name: Chạy
+        env:   # key chỉ ở bước này (không lộ cho npm ci và các bước khác)
+          SUPABASE_URL: https://vojmrjezspdftovzinek.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
+        run: |
+          set -o pipefail
+          [[ "$SO_VIEC" =~ ^[0-9]{1,3}$ ]] && (( 10#$SO_VIEC >= 1 && 10#$SO_VIEC <= 600 )) || { echo "::error::Số việc phải là số từ 1 đến 600."; exit 1; }
+          node scripts/du-lieu-gia-staging.mjs "$THAO_TAC" "$SO_VIEC" | tee kq.json
+      - name: Tóm tắt
+        if: always()   # script báo lỗi (thoát 1) vẫn ghi số tạo / lỗi vào Summary
+        run: |
+          { echo "### Dữ liệu giả staging — $THAO_TAC"; echo '```'; cat kq.json 2>/dev/null || echo '(không có kết quả — xem log bước Chạy)'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
