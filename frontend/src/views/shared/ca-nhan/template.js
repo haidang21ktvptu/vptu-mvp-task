@@ -27,8 +27,8 @@ export const caNhanTemplate = `
   <div id="cnKhuThongBao" class="bang hidden">
     <div class="bang-dau"><h2>Thông báo<span class="chu-phu">áp dụng cho tài khoản này trên mọi thiết bị</span></h2></div>
     <div class="cn-tuy-chon">
-      <label class="cn-o"><input type="checkbox" id="cnAmChuong" data-khoa="am_chuong"><span><b>Âm chuông</b><small>Kêu một tiếng ngắn khi có thông báo mới trên nhiệm vụ.</small></span></label>
-      <label class="cn-o"><input type="checkbox" id="cnGomTin" data-khoa="gom_tin"><span><b>Gom tin hệ thống thành bản tin 7h30</b><small>Không hiện từng thông báo rời; mỗi sáng 7h30 nhận một bản tóm tắt số thông báo chưa đọc. Chuông vẫn cập nhật số.</small></span></label>
+      <label class="cn-o"><input type="checkbox" id="cnAmChuong" data-khoa="am_chuong"><span><b>Âm chuông</b><small>Kêu một tiếng ngắn khi có thông báo cần đồng chí xử lý.</small></span></label>
+      <label class="cn-o"><input type="checkbox" id="cnGomTin" data-khoa="gom_tin"><span><b>Gom tin hệ thống thành bản tin 7h30</b><small>Không hiện từng thông báo rời; mỗi sáng 7h30 nhận một bản tóm tắt số thông báo cần đồng chí xử lý chưa đọc. Chuông vẫn cập nhật số.</small></span></label>
     </div>
   </div>
 `;

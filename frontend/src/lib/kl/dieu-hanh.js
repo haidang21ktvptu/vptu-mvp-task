@@ -47,12 +47,16 @@ export const datCapQuyetDinh = (id, cap) => rpc('dat_cap_quyet_dinh', { p_id: id
 // Tin hệ thống của tôi (chuông), mới nhất trước.
 // RLS cho đọc tin mình gửi lẫn tin mình nhận. nguoiNhan (chuông): chỉ tin gửi TỚI người đó — tin hệ thống mỗi người nhận một dòng, người thao tác
 // (người gửi) không thấy các dòng báo người khác trong chuông của mình (v3.29, kiểm tay staging 22/10/2026). Hội thoại của việc đọc cả hai chiều.
-export async function loadTinHeThong(gioiHan = 60, { nguoiNhan = null } = {}) {
-  let q = supabase.from('direct_messages').select('id, sender_id, receiver_id, content, is_read, created_at, nhiem_vu_id, nvq_nhiem_vu_id').eq('loai', 'he_thong');   // v3.35: tin nhiệm vụ quý (0133)
+// muc (0142): 'XU_LY' (cần đồng chí xử lý) | 'BIET' (để biết) — mỗi thẻ của chuông đọc riêng để thẻ ít tin không bị thẻ nhiều tin đẩy khỏi giới hạn.
+export async function loadTinHeThong(gioiHan = 60, { nguoiNhan = null, muc = null } = {}) {
+  let q = supabase.from('direct_messages').select('id, sender_id, receiver_id, content, is_read, created_at, nhiem_vu_id, nvq_nhiem_vu_id, muc_tin')
+    .eq('loai', 'he_thong');   // v3.35: tin nhiệm vụ quý (0133); v3.36: mức tin (0142)
   if (nguoiNhan) q = q.eq('receiver_id', nguoiNhan);
+  if (muc) q = q.eq('muc_tin', muc);
   return loi(await q.order('created_at', { ascending: false }).limit(gioiHan), 'đọc thông báo') || [];
 }
 export const tinHeThongDaDoc = (nhiemVuId = null) => rpc('tin_he_thong_da_doc', { p_nhiem_vu: nhiemVuId });
+export const tinHeThongDocHet = (muc) => rpc('tin_he_thong_doc_het', { p_muc: muc });   // "Đánh dấu đã đọc" của một thẻ (0142)
 
 // Từ chối nhận việc (0034): đề nghị (Owner/người theo dõi chưa xác nhận nhận việc) và duyệt (chỉ cấp duyệt). Lý do chỉ đọc được qua RLS tu_choi.
 export const deNghiTuChoi = (nhiemVuId, lyDo) => rpc('de_nghi_tu_choi', { p_nhiem_vu: nhiemVuId, p_ly_do: lyDo });

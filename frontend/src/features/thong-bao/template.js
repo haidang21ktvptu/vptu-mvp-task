@@ -1,5 +1,6 @@
-// Chuông thông báo trên dải (GĐ23, mẫu dhtn): biểu tượng trắng không nền tròn, huy hiệu đỏ số tin hệ thống chưa đọc ("9+" khi > 9) —
-// chèn vào dải nhận diện trước cụm tên người dùng. Bảng thả xuống gom theo việc, nút "Đánh dấu đã đọc".
+// Chuông thông báo trên dải (GĐ23, mẫu dhtn): biểu tượng trắng không nền tròn, huy hiệu số tin CẦN ĐỒNG CHÍ XỬ LÝ chưa đọc ("9+" khi > 9) —
+// chèn vào dải nhận diện trước cụm tên người dùng. Bảng thả xuống: hai thẻ theo mức tin (v3.36, 0142) "Cần đồng chí xử lý" / "Để biết", mỗi thẻ
+// gom theo việc; nút "Đánh dấu đã đọc" áp cho thẻ đang mở.
 export const thongBaoTemplate = `
 <div class="chuong">
   <button type="button" id="chuongBtn" class="nut-dai chuong-nut" data-action="toggleThongBao" aria-haspopup="dialog" aria-expanded="false" aria-controls="thongBaoPanel" aria-label="Thông báo">
@@ -9,7 +10,11 @@ export const thongBaoTemplate = `
   <div id="thongBaoPanel" class="tb-panel hidden" role="dialog" aria-label="Thông báo trên nhiệm vụ">
     <div class="tb-dau"><b>Thông báo trên nhiệm vụ</b>
       <button type="button" id="thongBaoDocHet" class="nut nho hidden" data-action="docHetThongBao">Đánh dấu đã đọc</button></div>
-    <ul id="thongBaoList" class="tb-danh-sach"></ul>
+    <div class="tb-the" role="tablist" aria-label="Mức thông báo">
+      <button type="button" id="tbTheXuLy" role="tab" data-action="chonTheThongBao" data-muc="XU_LY" aria-selected="true" aria-controls="thongBaoList">Cần đồng chí xử lý<b id="tbSoXuLy" class="hidden"></b></button>
+      <button type="button" id="tbTheBiet" role="tab" data-action="chonTheThongBao" data-muc="BIET" aria-selected="false" aria-controls="thongBaoList">Để biết<b id="tbSoBiet" class="hidden"></b></button>
+    </div>
+    <ul id="thongBaoList" class="tb-danh-sach" role="tabpanel" aria-labelledby="tbTheXuLy"></ul>
   </div>
 </div>
 `;

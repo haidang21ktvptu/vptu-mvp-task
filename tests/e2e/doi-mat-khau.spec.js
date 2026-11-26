@@ -1,6 +1,7 @@
 // GĐ23 — đổi mật khẩu lần đầu (AUTH-2, 0041) và chuông: tạo tài khoản tạm bằng service_role (auth user + accounts is_system, must_change_password)
-// kèm 1 tin hệ thống chưa đọc → đăng nhập qua form → bị chặn ở trang "Đặt mật khẩu mới" (dải ẩn) → mật khẩu yếu / trùng tạm bị từ chối → đổi
-// đúng → vào app, huy hiệu chuông = 1, dải có Tìm · Chuông · avatar · bánh răng, không còn nút Đăng xuất lớn → đăng xuất qua bánh răng. Tự dọn.
+// kèm 2 tin hệ thống chưa đọc (1 cần xử lý, 1 để biết — 0142) → đăng nhập qua form → bị chặn ở trang "Đặt mật khẩu mới" (dải ẩn) → mật khẩu yếu /
+// trùng tạm bị từ chối → đổi đúng → vào app, huy hiệu chuông = 1 (chỉ tin cần xử lý), dải có Tìm · Chuông · avatar · bánh răng, không còn nút Đăng
+// xuất lớn → hai thẻ của chuông, đánh dấu đã đọc từng thẻ → đăng xuất qua bánh răng. Tự dọn.
 import { test, expect } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { getKeys, EMAIL_DOMAIN } from './lib/keys.mjs';
@@ -27,7 +28,10 @@ test.describe.serial('Đặt mật khẩu mới lần đầu', () => {
     const acc = await admin.from('accounts').insert({ id: userId, username: USERNAME, full_name: 'E2E Đổi Mật Khẩu', role_group: 'A3', position_title: 'Chuyên viên',
       department: 'CDS_CY', is_system: true, must_change_password: true });
     if (acc.error) throw new Error(`Tạo accounts thất bại: ${acc.error.message}`);
-    const tin = await admin.from('direct_messages').insert({ sender_id: null, receiver_id: userId, content: 'E2E-TEST · NV-T000: thông báo thử chuông', is_read: false, loai: 'he_thong' });
+    // v3.36 (0142): một tin cần xử lý (nhãn chưa phân loại ⇒ XU_LY) và một tin để biết (Điều chỉnh hạn ⇒ BIET); muc_tin do trigger đặt.
+    const tin = await admin.from('direct_messages').insert([
+      { sender_id: null, receiver_id: userId, content: 'E2E-TEST · NV-T000: thông báo thử chuông', is_read: false, loai: 'he_thong' },
+      { sender_id: null, receiver_id: userId, content: 'Điều chỉnh hạn · NV-T001: thông báo thử để biết', is_read: false, loai: 'he_thong', muc_tin: 'XU_LY' }]);
     if (tin.error) throw new Error(`Tạo tin hệ thống thất bại: ${tin.error.message}`);
   });
 
@@ -89,9 +93,24 @@ test.describe.serial('Đặt mật khẩu mới lần đầu', () => {
     const co = await admin.from('accounts').select('must_change_password').eq('id', userId).single();
     expect(co.data.must_change_password).toBe(false);
 
-    // Chuông: mở bảng, "Đánh dấu đã đọc" → huy hiệu ẩn.
+    // Chuông (v3.36, 0142): huy hiệu chỉ đếm tin cần xử lý; mở bảng vào thẻ "Cần đồng chí xử lý"; tin để biết ở thẻ riêng (trigger ghi đè mức
+    // người gửi ghi); "Đánh dấu đã đọc" chỉ áp cho thẻ đang mở.
+    const mtin = await admin.from('direct_messages').select('content, muc_tin').eq('receiver_id', userId);
+    expect(Object.fromEntries(mtin.data.map((t) => [t.content.includes('NV-T001') ? 'biet' : 'xuLy', t.muc_tin]))).toEqual({ xuLy: 'XU_LY', biet: 'BIET' });
     await page.locator('#chuongBtn').click();
+    await expect(page.locator('#tbTheXuLy')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#tbSoXuLy')).toHaveText('1');
+    await expect(page.locator('#tbSoBiet')).toHaveText('1');
     await expect(page.locator('#thongBaoList')).toContainText('NV-T000');
+    await expect(page.locator('#thongBaoList')).not.toContainText('NV-T001');
+    await page.locator('#tbTheBiet').click();
+    await expect(page.locator('#tbTheBiet')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#thongBaoList')).toContainText('NV-T001');
+    await expect(page.locator('#thongBaoList')).not.toContainText('NV-T000');
+    await page.locator('#thongBaoDocHet').click();
+    await expect(page.locator('#tbSoBiet')).toBeHidden();
+    await expect(page.locator('#chuongBadge')).toHaveText('1');   // đọc hết thẻ Để biết không đụng tin cần xử lý
+    await page.locator('#tbTheXuLy').click();
     await page.locator('#thongBaoDocHet').click();
     await expect(page.locator('#chuongBadge')).toBeHidden();
 

@@ -28,6 +28,7 @@
   .tq-loc2 .nut.nho { min-height: 30px; }
   @media (min-width: 861px) { .tq-loc2 { position: sticky; top: 0; z-index: 5; } }
   body:has(#thanhHoaToc:not(.hidden)) .tq-loc2 { position: static; }   /* thanh đỏ Hỏa tốc đang dính đầu trang: thanh lọc không dính (khỏi bị che) */
+  .tq-loc2:has(#tqLocChiTietNut[aria-expanded="true"]) { position: static; }   /* v3.36: bộ lọc chi tiết đang mở (cao gần cả màn hình) thì không dính, khỏi che ma trận, điểm nghẽn khi cuộn */
 
   /* ---- Tiêu đề khối có số ---- */
   .so-khoi { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--navy-nhat); color: var(--navy);
