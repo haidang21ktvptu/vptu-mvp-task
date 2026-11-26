@@ -14,7 +14,7 @@ on:
         default: nap
         required: true
       so_viec:
-        description: 'Số việc (nạp, tối đa 800)'
+        description: 'Số việc (nạp, tối đa 600)'
         type: string
         default: '500'
         required: true
@@ -50,7 +50,7 @@ jobs:
       - name: Chạy
         run: |
           set -o pipefail
-          [[ "$SO_VIEC" =~ ^[0-9]{1,3}$ ]] || { echo "::error::Số việc phải là số (1–800)."; exit 1; }
+          [[ "$SO_VIEC" =~ ^[0-9]{1,3}$ ]] && (( SO_VIEC >= 1 && SO_VIEC <= 600 )) || { echo "::error::Số việc phải là số từ 1 đến 600."; exit 1; }
           node scripts/du-lieu-gia-staging.mjs "$THAO_TAC" "$SO_VIEC" | tee kq.json
           echo "### Dữ liệu giả staging — $THAO_TAC" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"; cat kq.json >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"

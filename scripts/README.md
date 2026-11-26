@@ -111,7 +111,7 @@ Tải mọi artifact `prod-*` chưa hết hạn (deploy-prod + backup định k�
 
 Nạp khoảng 500 việc giả (văn bản `DL-GIA-01` … `DL-GIA-20`, nội dung có đuôi `(DL-GIA nnn)`) để kiểm giao diện và tốc độ với khối lượng gần thật; dọn
 bằng `xoa`. Chỉ chạy trên project staging (tự dừng với địa chỉ khác); không tạo tài khoản — dùng tài khoản demo của `seed.sql`; bộ việc tái tạo y hệt
-(PRNG hạt cố định), nạp lại chỉ thêm phần thiếu. Chạy qua Actions → "Dữ liệu giả staging" (key staging lấy từ secret, không cần trên máy).
+(PRNG hạt cố định), nạp lại chỉ thêm phần thiếu theo số thứ tự `nnn`; tối đa 600 việc. Chạy qua Actions → "Dữ liệu giả staging" (key staging lấy từ secret, không cần trên máy).
 
 ```
 SUPABASE_URL=https://vojmrjezspdftovzinek.supabase.co SUPABASE_SERVICE_ROLE_KEY=… node du-lieu-gia-staging.mjs nap 500

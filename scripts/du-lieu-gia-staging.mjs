@@ -3,7 +3,8 @@
 // (CLAUDE.md mục 11 — tài khoản staging chỉ từ seed.sql): dùng tài khoản demo sẵn có, đơn vị trong dm_don_vi. Không chạm phạm vi của tài khoản e2e
 // và của demo_pcvp2 / phòng Quản trị (e2e kl-dashboard đọc bộ số khối Quản trị): không dùng tài khoản e2e, demo_cv2, phòng QUAN_TRI, đơn vị E2E_*.
 // Dấu nhận biết: văn bản so_ket_luan 'DL-GIA-<số>' — mọi việc của bộ gắn các văn bản này; dọn = xoá việc của các văn bản đó (lịch sử, minh chứng, tin
-// theo khoá ngoại xoá dây chuyền) rồi xoá văn bản. Tái tạo y hệt mỗi lần (PRNG hạt cố định); nạp lại chỉ thêm phần còn thiếu (theo nội dung).
+// theo khoá ngoại xoá dây chuyền) rồi xoá văn bản. Tái tạo y hệt mỗi lần (PRNG hạt cố định, mỗi việc rút cùng số lượng số ngẫu nhiên); nạp lại
+// chỉ thêm phần còn thiếu (theo số thứ tự nnn). Tối đa 600 việc: tổng việc staging cùng fixture test RLS giữ dưới 1000 dòng (max_rows của API).
 // Dùng (workflow du-lieu-gia-staging.yml): SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/du-lieu-gia-staging.mjs nap 500 | xoa
 import { createClient } from '@supabase/supabase-js';
 
@@ -19,7 +20,6 @@ const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.mess
 // PRNG cố định (mulberry32) — cùng bộ việc mỗi lần chạy.
 let hat = 20261126;
 const rnd = () => { hat |= 0; hat = (hat + 0x6D2B79F5) | 0; let t = Math.imul(hat ^ (hat >>> 15), 1 | hat); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-const chon = (ds) => ds[Math.floor(rnd() * ds.length)];
 const homNay = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 const cong = (d, n) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 const nhoHon = (a, b) => (a < b ? a : b);
@@ -52,27 +52,29 @@ async function boiCanh() {
   return { tk, kieu };
 }
 
-// Một việc giả (thuần, theo PRNG): ngày giao 1/1–hôm nay; trạng thái theo hạn so với hôm nay.
+// Một việc giả (thuần, theo PRNG): mỗi việc luôn rút đúng 10 số ngẫu nhiên (r[0..9]) — chọn mẫu không phụ thuộc ngày chạy; ngày giao theo văn bản,
+// trạng thái theo hạn so với hôm nay.
 function sinhViec(i, ctx, vbs) {
+  const r = Array.from({ length: 10 }, rnd);
   const vb = vbs[i % vbs.length];
-  const [donVi, owner, theoDoi, taoBoi] = ctx.kieu[Math.floor(rnd() * ctx.kieu.length)];
-  const nhan = nhoHon(cong(vb.ngay_ban_hanh, Math.floor(rnd() * 5)), homNay);
-  const loaiHan = rnd() < 0.08 ? 'THUONG_XUYEN' : 'CO_HAN_CU_THE';
-  const han = loaiHan === 'CO_HAN_CU_THE' ? cong(nhan, 10 + Math.floor(rnd() * 80)) : null;
+  const [donVi, owner, theoDoi, taoBoi] = ctx.kieu[Math.floor(r[0] * ctx.kieu.length)];
+  const nhan = nhoHon(cong(vb.ngay_ban_hanh, Math.floor(r[1] * 5)), homNay);
+  const loaiHan = r[2] < 0.08 ? 'THUONG_XUYEN' : 'CO_HAN_CU_THE';
+  const han = loaiHan === 'CO_HAN_CU_THE' ? cong(nhan, 10 + Math.floor(r[3] * 80)) : null;
   // Tỷ lệ hoàn thành theo độ trễ của hạn (gần thật: việc hạn đã lâu phần lớn xong, việc còn hạn ít xong sớm) — quá hạn chưa xong khoảng 10–15%.
   const tre = han ? Math.round((Date.parse(homNay) - Date.parse(han)) / 864e5) : null;
   const pXong = tre === null ? 0 : tre > 30 ? 0.88 : tre > 0 ? 0.6 : tre > -15 ? 0.15 : 0.05;
-  const xong = han && rnd() < pXong;
-  const ngayXong = xong ? nhoHon(cong(han, Math.floor(rnd() * 14) - 9), homNay) : null;
+  const ngayXong = han && r[4] < pXong ? nhoHon(cong(han, Math.floor(r[5] * 14) - 9), homNay) : null;
   return {
-    nv: { van_ban_id: vb.id, noi_dung: `${chon(VIEC)} (${TAG} ${String(i + 1).padStart(3, '0')})`, owner_don_vi_ma: donVi, owner_tai_khoan: owner,
-      nguoi_theo_doi: theoDoi, tao_boi: taoBoi, loai_thoi_han_ma: loaiHan, han_xu_ly: han, ly_do_chua_co_han: han ? null : 'Nhiệm vụ thường xuyên',
-      ngay_nhan_van_ban: nhan, theo_1400: true, do_khan: chon(DO_KHAN), san_pham_loai: chon(SAN_PHAM), nguon: 'app',
-      vuong_mac: !xong && rnd() < 0.05 ? 'Chờ ý kiến của lãnh đạo về phạm vi số liệu' : null },
-    xacNhan: rnd() < 0.85,
-    xong: ngayXong && ngayXong >= vb.ngay_ban_hanh ? { ngay: ngayXong < nhan ? nhan : ngayXong, cap: chon(CAP_NHAN) } : null,
+    nv: { van_ban_id: vb.id, noi_dung: `${VIEC[Math.floor(r[6] * VIEC.length)]} (${TAG} ${String(i + 1).padStart(3, '0')})`, owner_don_vi_ma: donVi,
+      owner_tai_khoan: owner, nguoi_theo_doi: theoDoi, tao_boi: taoBoi, loai_thoi_han_ma: loaiHan, han_xu_ly: han,
+      ly_do_chua_co_han: han ? null : 'Nhiệm vụ thường xuyên', ngay_nhan_van_ban: nhan, theo_1400: true, do_khan: DO_KHAN[Math.floor(r[7] * DO_KHAN.length)],
+      san_pham_loai: SAN_PHAM[Math.floor(r[8] * SAN_PHAM.length)], nguon: 'app', vuong_mac: !ngayXong && r[9] < 0.05 ? 'Chờ ý kiến của lãnh đạo về phạm vi số liệu' : null },
+    xacNhan: r[9] < 0.85,
+    xong: ngayXong && ngayXong >= vb.ngay_ban_hanh ? { ngay: ngayXong < nhan ? nhan : ngayXong, cap: CAP_NHAN[Math.floor(r[5] * CAP_NHAN.length)] } : null,
   };
 }
+const soCua = (noiDung) => (noiDung.match(new RegExp(`\\(${TAG} (\\d{3})\\)$`)) || [])[1];
 
 async function vanBan() {
   const co = loi(await db.from('van_ban_giao_viec').select('id, so_ket_luan, ngay_ban_hanh').like('so_ket_luan', `${TAG}-%`).order('so_ket_luan'), 'Đọc văn bản giả');
@@ -85,11 +87,12 @@ async function vanBan() {
 
 async function nap(so) {
   const ctx = await boiCanh(); const vbs = await vanBan();
-  const daCo = new Set(loi(await db.from('nhiem_vu').select('noi_dung').in('van_ban_id', vbs.map((v) => v.id)), 'Đọc việc giả').map((r) => r.noi_dung));
+  // Đã có theo số thứ tự trong đuôi "(DL-GIA nnn)" — nạp lại ngày khác không tạo trùng dù mẫu nội dung khác.
+  const daCo = new Set(loi(await db.from('nhiem_vu').select('noi_dung').in('van_ban_id', vbs.map((v) => v.id)), 'Đọc việc giả').map((r) => soCua(r.noi_dung)));
   const kq = { tao: 0, daCo: 0, xong: 0, loi: 0, mau: [] };
   for (let i = 0; i < so; i++) {
     const { nv, xacNhan, xong } = sinhViec(i, ctx, vbs);
-    if (daCo.has(nv.noi_dung)) { kq.daCo++; continue; }
+    if (daCo.has(soCua(nv.noi_dung))) { kq.daCo++; continue; }
     try {
       const id = loi(await db.from('nhiem_vu').insert(nv).select('id').single(), 'Tạo việc').id;
       loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'giao_viec', nguoi_sua: nv.tao_boi, gia_tri_moi: `${TAG} giao việc`, nguon: 'app' }), 'Lịch sử giao');
@@ -115,7 +118,7 @@ async function xoa() {
   return { viec: n, vanBan: ids.length };
 }
 
-const so = Math.max(1, Math.min(800, Number(soArg) || 500));
+const so = Math.max(1, Math.min(600, Number(soArg) || 500));
 const kq = thaoTac === 'xoa' ? await xoa() : await nap(so);
 console.log(JSON.stringify(kq));
 if (kq.loi) process.exitCode = 1;

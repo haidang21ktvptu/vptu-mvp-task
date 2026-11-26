@@ -4,7 +4,7 @@
 // khớp mốc kl-moc-2026-09-14 (185 dòng Excel = MOC; phần dư ngoài 185 dòng tính bằng tinh_trang_thai). Mã NV-T33x, tự dọn.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminClient, userClient, anonClient, assertOk, assertDenied, IDS, CHI_CUC_BO } from './lib.mjs';
+import { adminClient, userClient, anonClient, assertOk, assertDenied, docHet, IDS, CHI_CUC_BO } from './lib.mjs';
 import { setupKlFixtures, klSchemaReady } from './fixtures-kl.mjs';
 
 // Giữ đồng bộ với kl-moc-2026-09-14.test.mjs (không import để node:test không đăng ký test đó hai lần).
@@ -59,7 +59,7 @@ describe('0033 — v_ngoai_le.khau và kl_so_lieu_tai', { skip: SKIP }, () => {
   for (const [vai, username] of [['A0', 'demo_a0'], ['A2', 'demo_truongphong'], ['A3', 'demo_cv1']]) {
     test(`kl_so_lieu_tai hôm nay = đếm trên v_nhiem_vu cùng phạm vi (${vai})`, async () => {
       const u = await userClient(username);
-      const rows = await u.from('v_nhiem_vu').select('nhom_dem, muc_canh_bao, ket_qua'); assertOk(rows, 'v_nhiem_vu');
+      const rows = await docHet(() => u.from('v_nhiem_vu').select('nhom_dem, muc_canh_bao, ket_qua').order('id'), 'v_nhiem_vu');
       const r = await u.rpc('kl_so_lieu_tai'); assertOk(r, 'kl_so_lieu_tai');
       assert.equal(r.data.tong, rows.data.length, `${vai}: tong`);
       assert.deepEqual(r.data.nhom_dem, dem(rows.data, 'nhom_dem'), `${vai}: nhom_dem`);

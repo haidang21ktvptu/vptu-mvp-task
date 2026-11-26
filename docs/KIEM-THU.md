@@ -218,8 +218,8 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - e2e: `doi-mat-khau` (tài khoản tạm có 1 tin cần xử lý + 1 tin để biết: huy hiệu 1, hai thẻ, đánh dấu đã đọc từng thẻ); `tu-choi-ba-phia` (tin "đồng ý từ chối" ở thẻ Để biết); `dieu-hanh` (đôn đốc → toast, huy hiệu của chủ trì; phản hồi ở thẻ Cần xử lý của người ra chỉ đạo) giữ nguyên.
 
 ## Dữ liệu giả staging (v3.36, workflow `du-lieu-gia-staging.yml`; từ 26/11/2026)
-- Actions → "Dữ liệu giả staging" → `nap` (mặc định 500 việc) / `xoa`. Chỉ staging; văn bản `DL-GIA-xx`, nội dung có đuôi `(DL-GIA nnn)`; tài khoản demo của seed.sql (không dùng tài khoản e2e, demo_cv2, phòng Quản trị — khối Quản trị của demo_pcvp2 giữ nguyên cho e2e kl-dashboard); khoảng 70% đã hoàn thành (có minh chứng hợp lệ), 11% quá hạn, còn lại trong hạn / thường xuyên. Cảnh báo 07:30 của staging sẽ gửi nhắc cho các việc quá hạn của bộ — dùng để kiểm chuông hai mức với lượng tin thật.
-- Kiểm thử đêm trên staging chạy cùng bộ này; nếu e2e chậm vì khối lượng, chạy `xoa` rồi báo trong PR.
+- Actions → "Dữ liệu giả staging" → `nap` (mặc định 500 việc, tối đa 600 để tổng việc staging cùng fixture test RLS dưới 1000 dòng) / `xoa`. Chỉ staging; văn bản `DL-GIA-xx`, nội dung có đuôi `(DL-GIA nnn)`; tài khoản demo của seed.sql (không dùng tài khoản e2e, demo_cv2, phòng Quản trị — khối Quản trị của demo_pcvp2 giữ nguyên cho e2e kl-dashboard); khoảng 70% đã hoàn thành (có minh chứng hợp lệ), 11% quá hạn, còn lại trong hạn / thường xuyên. Cảnh báo 07:30 của staging sẽ gửi nhắc cho các việc quá hạn của bộ — dùng để kiểm chuông hai mức với lượng tin thật.
+- Kiểm thử đêm trên staging chạy cùng bộ này; test RLS đọc cả danh sách nhiệm vụ dùng `docHet` (đọc theo trang 1000, `tests/rls/lib.mjs`). Nếu e2e chậm vì khối lượng, chạy `xoa` rồi báo trong PR.
 
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 

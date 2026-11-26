@@ -4,7 +4,7 @@
 // bảng kiêm nhiệm RỖNG (hiện trạng production) rồi có một kiêm nhiệm (mượn cách của rls-11), rồi kết thúc kiêm nhiệm.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { userClient, adminClient, assertOk, IDS } from './lib.mjs';
+import { userClient, adminClient, assertOk, docHet, IDS } from './lib.mjs';
 import { setupKlFixtures, linhVucReady } from './fixtures-kl.mjs';
 
 const SKIP = (await linhVucReady()) ? false : 'Chưa có migration 0018–0019 trên project này (chạy lại sau khi merge).';
@@ -27,7 +27,7 @@ async function kyVong(username) {
   const db = adminClient();
   // Ba lần đọc độc lập — một lượt khứ hồi (D3, PR-2a).
   const [{ data: rows }, { data: pc }, { data: dv }] = await Promise.all([
-    db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma, tao_boi'),
+    docHet(() => db.from('nhiem_vu').select('id, nguoi_theo_doi, nganh_ma, linh_vuc_ma, owner_tai_khoan, owner_don_vi_ma, tao_boi').order('id'), 'nhiem_vu'),
     db.from('phu_trach_phong').select('lanh_dao_id, phong, nganh_ma, linh_vuc_ma, tu_ngay, den_ngay'),
     db.from('dm_don_vi').select('ma, phong')]);
   const hieuLuc = (p) => p.tu_ngay <= homNay() && (!p.den_ngay || p.den_ngay >= homNay());
@@ -52,7 +52,8 @@ async function kyVong(username) {
 
 async function kiemMotVai(username, nhan) {
   const c = await userClient(username);
-  const [r, mong] = await Promise.all([c.from('v_nhiem_vu').select('id, nhom_dem, linh_vuc_ma, nganh_ma, nguoi_theo_doi'), kyVong(username)]);
+  const [r, mong] = await Promise.all([docHet(() => c.from('v_nhiem_vu').select('id, nhom_dem, linh_vuc_ma, nganh_ma, nguoi_theo_doi').order('id'), `${username} đọc v_nhiem_vu`),
+    kyVong(username)]);
   assertOk(r, `${username} đọc v_nhiem_vu`);
   const thay = new Set(r.data.map((x) => x.id));
   assert.deepEqual([...thay].sort(), [...mong].sort(), `${nhan}: ${username} thấy ${thay.size} dòng, kỳ vọng ${mong.size}`);
