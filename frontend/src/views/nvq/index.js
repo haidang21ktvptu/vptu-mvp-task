@@ -3,6 +3,7 @@
 // dẫn. Năm màn: Tổng quan quý (lãnh đạo nắm ngay), Danh mục, Cập nhật tuần (chủ trì theo dõi — người cập nhật chính), Báo cáo (Word / Excel, chốt tuần),
 // Quản lý danh mục quý (đầu mối). Ở đây: mở màn, nạp dữ liệu quý, gom hành động của các màn, uỷ quyền sự kiện change / input / Enter, thời gian thực.
 import { $, show } from '../../lib/dom.js';
+import { moCuaVao, sauKhiVao } from '../../lib/chuyen-dong.js';
 import { registerActions } from '../../lib/actions.js';
 import { onSessionLeave } from '../../auth/session.js';
 import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
@@ -29,20 +30,39 @@ const MAN = {
   'quan-ly': { nav: 'navNqQuanLy', ve: veQuanLy },
 };
 let man = 'tong-quan'; let luot = 0;
+let manDaVe = '';   // màn con đang có nội dung trên trang (v3.36: mở lại đúng màn đó thì không chạy lại hiệu ứng vào)
 const el = () => $('viewNvq');
 const veLai = (ds = {}) => MAN[man].ve(el(), { giu: true, ...ds });
+const dangGoO = () => el().contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+const dauVet = () => JSON.stringify([nq.ky?.id, nq.rows, nq.sp, nq.tuans, nq.vanBan, nq.quyen]);   // so trước / sau lượt nạp nền: có đổi mới vẽ lại
 
+// v3.36 (CAU-HOI V-12): màn chỉ xem (Tổng quan, Danh mục) khi đã có số liệu của phiên thì vẽ NGAY từ số liệu đang có — hiệu ứng vào mục chạy trên đúng
+// nội dung — rồi nạp lại nền, số liệu có đổi mới vẽ lại (sau khi hiệu ứng xong; đang gõ ô lọc thì hiện dải "Có cập nhật mới" như tín hiệu thời gian
+// thực). Lần nạp đầu và các màn có biểu mẫu: như trước (nạp xong mới vẽ); mục mang data-cd-tu để khung không mở cửa vào trên nội dung cũ
+// (shell/chuyen-trang.js), vẽ xong màn mới thì mở cửa vào ở đây. Mở lại đúng màn đang có trên trang: thay nội dung, không chạy lại hiệu ứng.
 async function mo(ten, ds = {}) {
   man = MAN[ten] ? ten : 'tong-quan';
   if (dangMo()) dongNgan({ doiMan: true });
+  let coSan = nq.daNap && Boolean(MAN[man].chiXem);
+  if (coSan) delete el().dataset.cdTu; else el().dataset.cdTu = '1';
   showSection('viewNvq'); setActiveNav(MAN[man].nav);
   if (!nq.daNap) el().innerHTML = '<p class="chu-phu nq-dang-tai">Đang tải nhiệm vụ quý…</p>';
   const l = ++luot;
   try {
+    let truoc = '';
+    if (coSan) {
+      try { await MAN[man].ve(el(), ds); manDaVe = man; truoc = dauVet(); } catch { coSan = false; }   // vẽ từ số liệu đang có không được: nạp xong mới vẽ như trước
+    }
     await napTatCa();
     if (l !== luot) return;
-    await MAN[man].ve(el(), ds);
-  } catch (err) { if (l === luot) el().innerHTML = `<p class="nq-chu-do">Không tải được dữ liệu nhiệm vụ quý: ${e(err.message)}</p>`; }
+    if (!coSan) {
+      const doiMan = man !== manDaVe; const lai = Boolean(manDaVe);
+      await MAN[man].ve(el(), ds); manDaVe = man;
+      if (doiMan && l === luot && sectionDangHien('viewNvq')) moCuaVao(el(), { lai });   // vẽ xong mới mở cửa: hiệu ứng chạy trên nội dung mới
+    } else if (dauVet() !== truoc) {
+      sauKhiVao(el(), () => { if (l !== luot || !sectionDangHien('viewNvq')) return; if (dangGoO()) show('nqCoMoi', true); else veLai().catch(() => show('nqCoMoi', true)); }, 'nap');
+    }
+  } catch (err) { if (l === luot) { manDaVe = ''; el().innerHTML = `<p class="nq-chu-do">Không tải được dữ liệu nhiệm vụ quý: ${e(err.message)}</p>`; } }
   batNvqRealtime(khiCoMoi);
 }
 // Sau mỗi lần ghi: nạp lại quý (và danh mục khi đổi đầu mối / danh mục), vẽ lại màn đang xem (ngăn chi tiết tự nạp lại — chi-tiet-hanh-dong.js).
@@ -50,7 +70,9 @@ let tuGhiLuc = 0;   // lúc vừa nạp lại sau thao tác ghi của chính mì
 async function napLaiSauGhi(op = {}) {
   await napTatCa(op);
   if (!op.khongGhi) tuGhiLuc = Date.now();
-  if (sectionDangHien('viewNvq')) await veLai();
+  if (!sectionDangHien('viewNvq')) return;
+  await veLai();
+  if (op.doiQuy) moCuaVao(el(), { lop: 'dang-doi', ms: 1300 });   // v3.36 (V-12): đổi quý — số của quý mới lăn, thanh vẽ lại (mở cửa sau khi đã vẽ)
 }
 // Sự kiện thời gian thực: màn chỉ xem (Tổng quan, Danh mục) không đang gõ → nạp lại ngay; màn có biểu mẫu → dải "Có cập nhật mới"; ngăn chi tiết đang
 // xem đúng nhiệm vụ đó và không mở biểu mẫu → nạp lại ngăn.
@@ -60,8 +82,7 @@ function khiCoMoi(ids) {
   henRt = setTimeout(async () => {
     if (dangMo() && (!ids.length || ids.includes(ct.id)) && !$('nqNganThan')?.querySelector('form')) napLaiNgan();
     if (!sectionDangHien('viewNvq')) return;   // mở lại màn nào của phân hệ cũng nạp lại quý
-    const dangGo = el().contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
-    if (MAN[man].chiXem && !dangGo) { try { await napTatCa(); await veLai(); } catch { show('nqCoMoi', true); } }
+    if (MAN[man].chiXem && !dangGoO()) { try { await napTatCa(); await veLai(); } catch { show('nqCoMoi', true); } }
     else if (!ids.length || Date.now() - tuGhiLuc > 4000) show('nqCoMoi', true);   // trong 4 giây sau khi mình ghi: tín hiệu của chính mình
   }, 300);
 }
@@ -81,7 +102,7 @@ function veLaiGiuO(chon) {
 function khiDoi(ev) {
   const t = ev.target; const d = t.dataset || {};
   if (ev.type === 'input' && !(t.type === 'search' || t.type === 'text')) return;
-  if (d.nqChonKy !== undefined && ev.type === 'change') { nq.kyChon = t.value; napLaiSauGhi({ khongGhi: true }); return; }
+  if (d.nqChonKy !== undefined && ev.type === 'change') { nq.kyChon = t.value; napLaiSauGhi({ khongGhi: true, doiQuy: true }); return; }
   if (d.nqLoc) { if (ev.type === 'change' && d.nqLoc === 'q') return; doiLoc(d.nqLoc, t.type === 'checkbox' ? t.checked : t.value, veLai); return; }
   if (d.nqPcLoc) { if (ev.type === 'change' && d.nqPcLoc === 'q') return; if (khiDoiPhanCong(t)) veLaiGiuO(d.nqPcLoc === 'q' ? '[data-nq-pc-loc="q"]' : ''); return; }
   if (ev.type !== 'change') return;
@@ -121,5 +142,5 @@ export function registerNvq() {
     const tr = ev.target.closest?.('tr[data-action="nqMo"]');
     if (tr && ev.target === tr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); moNhiemVuQuy(tr.dataset.id); }
   });
-  onSessionLeave(() => { tatNvqRealtime(); if (dangMo()) dongNgan({ doiMan: true }); Object.assign(nq, { daNap: false, rows: [], sp: [], kys: [], ky: null }); });
+  onSessionLeave(() => { tatNvqRealtime(); manDaVe = ''; if (dangMo()) dongNgan({ doiMan: true }); Object.assign(nq, { daNap: false, rows: [], sp: [], kys: [], ky: null }); });
 }

@@ -9,6 +9,7 @@ import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
+import { veSauNap } from '../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { calculateGroupKPI, laOwnerPhong } from './kpi.js';
 import { CHAT_LUONG, tenMuc } from '../../lib/kl/nhan.js';
@@ -82,8 +83,9 @@ function ve() {
 }
 
 async function napCanBo() {
+  const daCo = Boolean($('viewCanBo').childElementCount);   // v3.36 (V-12): vào lại mục — vẽ lại sau khi hiệu ứng vào mục chạy xong
   try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); ({ rows: trong, tatCa } = await loadKlRows()); } catch (e) { notifyError('Không đọc được nhiệm vụ: ' + e.message); return; }
-  ve();
+  veSauNap($('viewCanBo'), daCo, ve, (e) => notifyError('Không hiển thị được danh sách cán bộ: ' + e.message));
 }
 async function openCanBo() {
   showSection('viewCanBo');

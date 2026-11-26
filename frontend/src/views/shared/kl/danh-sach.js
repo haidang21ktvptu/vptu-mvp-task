@@ -7,6 +7,7 @@
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
+import { datSo, veSauNap } from '../../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, loadPhanCongHieuLuc, xemToanBo, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { trongPhamVi, locCanBo, tuyChonCanBo, chiXem } from '../../../lib/kl/pham-vi.js';
 import { tongHop, sapXep, locRows, kiemBatBien, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
@@ -85,12 +86,13 @@ async function napKl(lanThu = 0) {
   try {
     await Promise.all([loadDanhMucKl(), loadCauHinhKl()]);
     const [{ tatCa: rows, luc }, phanCong] = await Promise.all([loadKlRows(), loadPhanCongHieuLuc().catch(() => kl.phanCong)]);
+    const daCoDong = kl.rows.length > 0;   // màn đang hiện dòng của lượt nạp trước (vừa vào lại mục)
     kl.rows = rows; kl.luc = luc; kl.phanCong = phanCong;
     const bb = kiemBatBien(rows);
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
-    dienBoLoc();
-    render(true);
-    if (sauKhiNap) sauKhiNap(rows);
+    const ve = () => { dienBoLoc(); render(true); if (sauKhiNap) sauKhiNap(rows); };
+    // v3.36 (V-12): dòng cũ đang chạy hiệu ứng vào mục thì chờ hiệu ứng xong mới vẽ lại (không cắt ngang); lần nạp đầu vẽ ngay
+    veSauNap($('viewKl'), daCoDong, ve, (e) => notifyError('Không hiển thị được danh sách nhiệm vụ: ' + e.message));
   } catch (e) {
     if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return napKl(lanThu + 1); }
     notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);
@@ -146,8 +148,8 @@ export function render(veLaiNgan = false) {
   const homNay = homNayVN();
   const trongNguCanh = locCanBo(locRows(goc, { ...nguCanh, ...giaiLocThem(kl.loc, homNay), mucTieuDm: danhMucKl().mucTieu }), kl.loc, kl.phanCong);
   const t = tongHop(trongNguCanh);
-  setText('klSo-TONG', t.tong);
-  THU_TU_NHOM.forEach((k) => { setText(`klSo-${k}`, t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
+  datSo($('klSo-TONG'), t.tong);   // v3.36 (V-12): số của dải số lăn khi vào mục; chữ trong DOM vẫn là con số
+  THU_TU_NHOM.forEach((k) => { datSo($(`klSo-${k}`), t.nhom[k]); show($(`klSo-${k}`).closest('.o-so'), t.nhom[k] > 0 || nhom === k); });
   document.querySelectorAll('#klStats .o-so').forEach((el) => el.setAttribute('aria-pressed', String((el.dataset.nhom || '') === (nhom || ''))));
   // Việc tôi đã giao (theo-doi.js): ô số riêng thay dải trạng thái; sắp xếp "Mức cảnh báo" không dùng ở chế độ này.
   const theoDoi = laTheoDoi(kl.loc); const tdLoc = theoDoi ? locTheoDoi(trongNguCanh) : null;

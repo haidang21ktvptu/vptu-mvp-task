@@ -13,6 +13,7 @@ import { $, escapeHtml, show, setText } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
+import { moCuaVao } from '../../lib/chuyen-dong.js';
 import { sapXep } from '../../lib/kl/tong-hop.js';
 import { homNayVN } from '../../lib/kl/ngay.js';
 import { lopMep } from '../../lib/kl/nhan.js';
@@ -95,6 +96,7 @@ export function moNganDanhSach({ tieuDe, phu = '', rows = [], nhom = null, dauHt
   veDanhSach();
   show('nganCTDs', true); show('nganCTViec', false); show('nganCTLui', false);
   moKhung(tieuDe, ngan.ds.phu);
+  moCuaVao($('nganCT'), { ms: 900 });   // v3.36 (V-12): các dòng của danh sách vừa mở hiện lần lượt (vẽ lại sau đó hiện ngay)
 }
 
 // Tầng chi tiết một việc. row (tuỳ chọn) = dòng màn hình gọi đã có. Mở ngay bằng dòng đang có rồi đọc lại nền; chưa có dòng nào → đọc trước.

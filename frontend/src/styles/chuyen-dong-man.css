@@ -1,0 +1,37 @@
+/* Chuyển động theo màn (v3.36, CAU-HOI V-12; DESIGN mục 7), phần 2: dòng, thẻ, thanh, số của các màn ngoài Tổng quan. Khai báo gốc (mốc thời gian,
+   @keyframes, cửa vào dang-vao / dang-doi, lớp cd-tinh, số lăn) ở chuyen-dong.css; riêng Tổng quan ở tong-quan-tang.css, màn đăng nhập ở dang-nhap.css,
+   Nhiệm vụ quý ở nvq.css. Trạng thái nghỉ là trạng thái cuối của mọi hiệu ứng; nội dung vẽ lại trong lúc cửa mở thì đứng yên, nội dung lần đầu
+   đổ vào sau khi cửa mở thì chạy ngay (lib/chuyen-dong.js; --cd-g nhân vào mốc trễ gốc). */
+@layer components {
+  /* ---- Dòng, thẻ hiện lần lượt: 12 phần tử đầu của mỗi danh sách (phần còn lại hiện ngay) — bảng Nhiệm vụ, Việc của tôi, thẻ Cần xử lý, việc của
+     phòng, cán bộ, danh sách trong ngăn chi tiết, các khối và dòng của Nhiệm vụ quý. --cd-r: thứ tự trong danh sách. ---- */
+  .dang-vao .hang-nv:nth-child(-n+12), .dang-vao .bnv-dong:nth-child(-n+12), .dang-vao .the.hang:nth-child(-n+12), .dang-vao .the-con:nth-child(-n+12), .dang-vao .nguoi-hang:nth-child(-n+12), .dang-vao .nct-ds > li:nth-child(-n+12), .dang-vao .nq-luoi > :nth-child(-n+12) {
+    animation: cd-len 380ms var(--cd-em) both; animation-delay: calc((var(--cd-tre) + 160ms) * var(--cd-g, 1) * var(--cd-hs) + var(--cd-r, 0) * 30ms); }
+  .dang-vao .nq-bang tbody tr:nth-child(-n+12) { animation: cd-mo 360ms ease-out both; animation-delay: calc((var(--cd-tre) + 160ms) * var(--cd-g, 1) * var(--cd-hs) + var(--cd-r, 0) * 26ms); }
+  .hang-nv:nth-child(1), .bnv-dong:nth-child(1), .the.hang:nth-child(1), .the-con:nth-child(1), .nguoi-hang:nth-child(1), .nct-ds > li:nth-child(1), .nq-luoi > :nth-child(1), .nq-bang tbody tr:nth-child(1) { --cd-r: 0; }
+  .hang-nv:nth-child(2), .bnv-dong:nth-child(2), .the.hang:nth-child(2), .the-con:nth-child(2), .nguoi-hang:nth-child(2), .nct-ds > li:nth-child(2), .nq-luoi > :nth-child(2), .nq-bang tbody tr:nth-child(2) { --cd-r: 1; }
+  .hang-nv:nth-child(3), .bnv-dong:nth-child(3), .the.hang:nth-child(3), .the-con:nth-child(3), .nguoi-hang:nth-child(3), .nct-ds > li:nth-child(3), .nq-luoi > :nth-child(3), .nq-bang tbody tr:nth-child(3) { --cd-r: 2; }
+  .hang-nv:nth-child(4), .bnv-dong:nth-child(4), .the.hang:nth-child(4), .the-con:nth-child(4), .nguoi-hang:nth-child(4), .nct-ds > li:nth-child(4), .nq-luoi > :nth-child(4), .nq-bang tbody tr:nth-child(4) { --cd-r: 3; }
+  .hang-nv:nth-child(5), .bnv-dong:nth-child(5), .the.hang:nth-child(5), .the-con:nth-child(5), .nguoi-hang:nth-child(5), .nct-ds > li:nth-child(5), .nq-luoi > :nth-child(5), .nq-bang tbody tr:nth-child(5) { --cd-r: 4; }
+  .hang-nv:nth-child(6), .bnv-dong:nth-child(6), .the.hang:nth-child(6), .the-con:nth-child(6), .nguoi-hang:nth-child(6), .nct-ds > li:nth-child(6), .nq-luoi > :nth-child(6), .nq-bang tbody tr:nth-child(6) { --cd-r: 5; }
+  .hang-nv:nth-child(7), .bnv-dong:nth-child(7), .the.hang:nth-child(7), .the-con:nth-child(7), .nguoi-hang:nth-child(7), .nct-ds > li:nth-child(7), .nq-luoi > :nth-child(7), .nq-bang tbody tr:nth-child(7) { --cd-r: 6; }
+  .hang-nv:nth-child(8), .bnv-dong:nth-child(8), .the.hang:nth-child(8), .the-con:nth-child(8), .nguoi-hang:nth-child(8), .nct-ds > li:nth-child(8), .nq-luoi > :nth-child(8), .nq-bang tbody tr:nth-child(8) { --cd-r: 7; }
+  .hang-nv:nth-child(9), .bnv-dong:nth-child(9), .the.hang:nth-child(9), .the-con:nth-child(9), .nguoi-hang:nth-child(9), .nct-ds > li:nth-child(9), .nq-luoi > :nth-child(9), .nq-bang tbody tr:nth-child(9) { --cd-r: 8; }
+  .hang-nv:nth-child(10), .bnv-dong:nth-child(10), .the.hang:nth-child(10), .the-con:nth-child(10), .nguoi-hang:nth-child(10), .nct-ds > li:nth-child(10), .nq-luoi > :nth-child(10), .nq-bang tbody tr:nth-child(10) { --cd-r: 9; }
+  .hang-nv:nth-child(11), .bnv-dong:nth-child(11), .the.hang:nth-child(11), .the-con:nth-child(11), .nguoi-hang:nth-child(11), .nct-ds > li:nth-child(11), .nq-luoi > :nth-child(11), .nq-bang tbody tr:nth-child(11) { --cd-r: 10; }
+  .hang-nv:nth-child(12), .bnv-dong:nth-child(12), .the.hang:nth-child(12), .the-con:nth-child(12), .nguoi-hang:nth-child(12), .nct-ds > li:nth-child(12), .nq-luoi > :nth-child(12), .nq-bang tbody tr:nth-child(12) { --cd-r: 11; }
+  .dang-vao > .nq-luoi { animation: none; }   /* các khối bên trong tự hiện lần lượt */
+  .dang-vao .nq-luoi > :nth-child(-n+12) { animation-delay: calc((var(--cd-tre) + 220ms) * var(--cd-g, 1) * var(--cd-hs) + var(--cd-r, 0) * 60ms); }   /* cùng độ ưu tiên với quy tắc chung ở trên, đứng sau nên thắng */
+
+  /* ---- Ngăn chi tiết: ngăn đã tự trượt vào (chuyen-dong.css), đầu và thân ngăn không hiện lần lượt nữa; các dòng của danh sách hiện lần lượt ---- */
+  .ngan-ct.dang-vao { --cd-tre: 60ms; }
+  .ngan-ct.dang-vao > * { animation: none; }
+
+  /* ---- Cần xử lý: ba câu hỏi hiện lần lượt, hai con số lăn ---- */
+  .dang-vao .bc-o { animation: cd-len 440ms var(--cd-em) both; animation-delay: calc((var(--cd-tre) + 60ms) * var(--cd-g, 1) * var(--cd-hs) + var(--cd-r, 0) * 70ms); }
+  .bc-o:nth-child(1) { --cd-r: 0; } .bc-o:nth-child(2) { --cd-r: 1; } .bc-o:nth-child(3) { --cd-r: 2; }
+  .dang-vao .ba-cau, .dang-vao #klStats, .dang-vao #bcThan { --cd-tre-so: 160ms; }   /* số của ba câu hỏi, dải số Nhiệm vụ, dải tổng quan của Báo cáo lăn sớm hơn */
+
+  /* ---- Thanh tải việc (Cán bộ, việc của phòng, Tổng quan theo cán bộ, ngăn chi tiết cán bộ) dài ra từ trái, theo thứ tự dòng ---- */
+  .dang-vao .tai { animation: cd-quet 700ms var(--cd-em) backwards; animation-delay: calc((var(--cd-tre) + 300ms) * var(--cd-g, 1) * var(--cd-hs) + var(--cd-r, 0) * 30ms); }   /* backwards: chạy xong thì hết cắt, hộp gợi ý của thanh (data-goi) hiện đủ */
+}

@@ -70,6 +70,10 @@ button.nq-ct:hover { border-color: var(--vien-o); background: var(--the); }
 .nq-truc:hover { background: var(--nen-mo); }
 .nq-truc-ten { font-size: var(--chu-than); } .nq-truc-so { font-size: var(--chu-nho); color: var(--chu-phu); }
 .nq-thanh { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--nen-phu); }
+/* v3.36 (CAU-HOI V-12): thanh tiến độ, thanh chỉ tiêu dài ra từ trái khi trang vừa có nội dung (cửa vào) và khi đổi quý (dang-doi — views/nvq/index.js);
+   số của ô số lăn (khung.js oSo). Các khối, dòng bảng hiện lần lượt: chuyen-dong-man.css. */
+.dang-vao .nq-thanh, .dang-vao .nq-ct-thanh, .dang-doi .nq-thanh, .dang-doi .nq-ct-thanh { animation: cd-quet 800ms var(--cd-em) both; animation-delay: calc((var(--cd-tre) + 360ms) * var(--cd-g, 1) * var(--cd-hs)); }
+.dang-vao .nq-o-so, .dang-doi .nq-o-so { --cd-tre-so: 200ms; }
 .nq-luc { background: var(--f-tot); } .nq-lam { background: var(--f-nt); } .nq-do { background: var(--f-do); } .nq-xam { background: var(--f-tre); }
 .nq-chu-giai { display: flex; align-items: center; gap: 4px 12px; flex-wrap: wrap; margin-top: 10px; font-size: var(--chu-nho); color: var(--chu-phu); }
 .nq-chu-giai span { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: -6px; }

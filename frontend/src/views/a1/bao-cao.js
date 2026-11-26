@@ -15,6 +15,7 @@ import { registerActions } from '../../lib/actions.js';
 import { state } from '../../lib/state.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { notifyError, notifySuccess } from '../../components/toast.js';
+import { moCuaVao, soLanHtml, veSauNap } from '../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { sapXep } from '../../lib/kl/tong-hop.js';
 import { boSoThuTu, nguongCanhBao } from '../../lib/kl/nhan.js';
@@ -77,7 +78,7 @@ function bangCanQuyet(rows) {
 function tyLe(rows) {
   const dongs = rows.filter((r) => r.tien_do_ma === 'HOAN_THANH'); const dg = dongs.filter((r) => ['DUNG_HAN', 'TRE'].includes(r.nop_dung_han));
   const dung = dg.filter((r) => r.nop_dung_han === 'DUNG_HAN').length;
-  return `<span class="o-so s-luc" title="Nộp minh chứng trước hạn xử lý: ${dung} trên ${dg.length} nhiệm vụ được đánh giá (${dongs.length} nhiệm vụ đã hoàn thành)"><b>${dg.length ? Math.round((dung / dg.length) * 100) : 0}%</b> nộp minh chứng đúng hạn (${dung}/${dg.length})</span>`;
+  return `<span class="o-so s-luc" title="Nộp minh chứng trước hạn xử lý: ${dung} trên ${dg.length} nhiệm vụ được đánh giá (${dongs.length} nhiệm vụ đã hoàn thành)"><b>${soLanHtml(`${dg.length ? Math.round((dung / dg.length) * 100) : 0}%`)}</b> nộp minh chứng đúng hạn (${dung}/${dg.length})</span>`;
 }
 const khoi = (id, tieuDe, phu, than) => `<div class="bang" id="${id}"><div class="bang-dau"><h2>${tieuDe}</h2>${phu ? `<span class="chu-phu">${phu}</span>` : ''}</div><div class="bang-cuon">${than}</div></div>`;
 
@@ -113,7 +114,7 @@ function ve() {
   rowsHienTai = toanVP() ? tatCa : trong;
   const k = kyHienTai(); rowsKy = locTheoKy(rowsHienTai, k);
   const d = demCot(rowsKy); const n = nguongCanhBao();
-  const o = (so, nhan, lop) => `<span class="o-so ${lop}"><b>${so}</b> ${nhan}</span>`;
+  const o = (so, nhan, lop) => `<span class="o-so ${lop}"><b>${soLanHtml(so)}</b> ${nhan}</span>`;   // v3.36 (V-12): số của dải tổng quan lăn khi vào mục, khi đổi kỳ
   $('bcKyMoTa').textContent = `${ngayDaiVN()} · ${moTaKy(k)} · ${PHAM_VI()} · ${d.tong} nhiệm vụ của kỳ`;
   $('viewBaoCao').dataset.phamVi = toanVP() ? 'toan' : 'toi';   // e2e: phạm vi đang vẽ
   dongBoKy();
@@ -128,21 +129,23 @@ function ve() {
       ${khoi('bcTheoVanBan', 'Theo kết luận, văn bản giao việc', '', bangVanBan(rowsKy))}</div>`;
 }
 // Đổi kỳ: nút nhanh xoá hai ô ngày; điền một ô ngày thì tính theo khoảng (trống một đầu: từ đầu dữ liệu / đến hôm nay). Gập hàng đang mở rộng.
-const bcKy = ({ ky }) => { if (!KY_NUT.includes(ky)) return; kyBc = { ky, tu: '', den: '' }; hangMo = null; ve(); };
-const doiBcToanBo = ({ tb }) => { bcToanBo = tb === '1'; hangMo = null; ve(); };   // v3.33: Toàn Văn phòng / Phạm vi của tôi
+const veDoi = () => { moCuaVao($('viewBaoCao'), { lop: 'dang-doi', ms: 1100 }); ve(); };   // đổi kỳ / phạm vi theo thao tác của người dùng: số lăn lại
+const bcKy = ({ ky }) => { if (!KY_NUT.includes(ky)) return; kyBc = { ky, tu: '', den: '' }; hangMo = null; veDoi(); };
+const doiBcToanBo = ({ tb }) => { bcToanBo = tb === '1'; hangMo = null; veDoi(); };   // v3.33: Toàn Văn phòng / Phạm vi của tôi
 const oNgayCua = (e) => e.target.closest?.('#viewBaoCao [data-bc-ngay]');
 function khiDoiNgay(e) {
   const o = oNgayCua(e);
   if (!o) return;
   if (o.value && !/^2\d{3}-\d{2}-\d{2}$/.test(o.value)) return;   // đang gõ năm (0002, 0020…): chờ gõ đủ năm; dữ liệu không có trước năm 2000 (ô min)
-  kyBc = { ...kyBc, [o.dataset.bcNgay]: o.value || '' }; hangMo = null; ve();
+  kyBc = { ...kyBc, [o.dataset.bcNgay]: o.value || '' }; hangMo = null; veDoi();
 }
 // Rời ô ngày còn năm gõ dở (không được tính) → trả ô về ngày đang tính, khỏi hiểu nhầm báo cáo theo ngày trên ô.
 function khiRoiNgay(e) { const o = oNgayCua(e); if (o && o.value !== kyBc[o.dataset.bcNgay]) o.value = kyBc[o.dataset.bcNgay]; }
 
 async function napBaoCao() {
+  const daCo = Boolean($('bcThan')?.childElementCount);   // v3.36 (V-12): vào lại mục — số liệu lượt trước đang hiện, vẽ lại sau khi hiệu ứng vào mục chạy xong
   try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); ({ rows: trong, tatCa } = await loadKlRows()); } catch (e) { notifyError(e.message); return; }
-  ve();
+  veSauNap($('viewBaoCao'), daCo, ve, (e) => notifyError('Không hiển thị được báo cáo: ' + e.message));
 }
 async function openBaoCao() {
   showSection('viewBaoCao');

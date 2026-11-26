@@ -1,15 +1,17 @@
 // v3.36 (CAU-HOI V-12) chuyển động giao diện (lib/chuyen-dong.js): chuỗi HTML số lăn / tiêu đề từng chữ / đường xu hướng nhỏ giữ nguyên văn chữ và số;
-// "cửa vào" của một vùng: gắn – gỡ lớp, việc chờ cửa đóng, lần vẽ thứ hai đóng cửa, giảm chuyển động thì không gắn lớp nào.
+// "cửa vào" của một vùng: gắn – gỡ lớp, việc chờ cửa đóng, lần vẽ thứ hai đóng cửa, giảm chuyển động thì không gắn lớp nào; hết hẹn mà hiệu ứng
+// còn chạy thì cửa chờ thêm; số không đổi thì không vẽ lại; vẽ sau lượt nạp nền chờ cửa đóng. (Chốt giữ yên nội dung vẽ lại dùng MutationObserver
+// của trình duyệt — kiểm ở tests/e2e/chuyen-dong.spec.js.)
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { soLanHtml, tieuDeHtml, duongNhoSvg, coChuyenDong, moCuaVao, dongCuaVao, dangVao, truocKhiVe, sauKhiVao } from '../src/lib/chuyen-dong.js';
+import { soLanHtml, datSo, tieuDeHtml, duongNhoSvg, coChuyenDong, moCuaVao, dongCuaVao, dangVao, truocKhiVe, sauKhiVao, veSauNap } from '../src/lib/chuyen-dong.js';
 
 const boThe = (html) => html.replace(/<[^>]+>/g, '');
 // Môi trường giả tối thiểu: <html> có thuộc tính data-chuyen-dong, matchMedia, phần tử có classList.
 const moiTruong = { giam: null, heDieuHanhGiam: false };
 globalThis.document = { documentElement: { getAttribute: (k) => (k === 'data-chuyen-dong' ? moiTruong.giam : null) } };
 globalThis.window = { matchMedia: () => ({ matches: moiTruong.heDieuHanhGiam }) };
-const phanTu = () => { const lop = new Set(); return { lop, classList: { add: (...x) => x.forEach((c) => lop.add(c)), remove: (...x) => x.forEach((c) => lop.delete(c)) } }; };
+const phanTu = () => { const lop = new Set(); return { lop, classList: { add: (...x) => x.forEach((c) => lop.add(c)), remove: (...x) => x.forEach((c) => lop.delete(c)), contains: (c) => lop.has(c) } }; };
 beforeEach(() => { moiTruong.giam = null; moiTruong.heDieuHanhGiam = false; });
 
 test('soLanHtml: chữ trong DOM là con số thật; mỗi chữ số một ô mang chữ số đích và thứ tự cột; ký tự khác giữ nguyên, có thoát HTML', () => {
@@ -18,8 +20,19 @@ test('soLanHtml: chữ trong DOM là con số thật; mỗi chữ số một ô 
   assert.deepEqual([...h.matchAll(/--d:(\d);--i:(\d)/g)].map((m) => [m[1], m[2]]), [['1', '0'], ['2', '1'], ['4', '2'], ['0', '3']]);
   assert.equal(boThe(soLanHtml('69%')), '69%');
   assert.equal(boThe(soLanHtml(0)), '0');
-  assert.equal(soLanHtml(null), '<span class="so-lan"></span>');
-  assert.equal(soLanHtml('<5'), '<span class="so-lan">&lt;<span class="cs" style="--d:5;--i:0">5</span></span>');
+  assert.equal(soLanHtml(null), '<data class="so-lan" value=""></data>');
+  assert.equal(soLanHtml('<5'), '<data class="so-lan" value="&lt;5">&lt;<bdi class="cs" style="--d:5;--i:0">5</bdi></data>');
+  assert.ok(!soLanHtml(12).includes('<span'));   // không dùng thẻ span: quy tắc CSS viết theo thẻ của nơi đặt số (".nq-o span") không đổi cỡ, màu của số
+});
+
+test('datSo: số không đổi thì không vẽ lại (số đang lăn không bị cắt ngang); số đổi thì vẽ số lăn mới; chữ trong DOM vẫn là con số', () => {
+  let lanGhi = 0;
+  const el = { noiDung: '0', get textContent() { return boThe(this.noiDung); }, set innerHTML(v) { lanGhi += 1; this.noiDung = v; }, get innerHTML() { return this.noiDung; } };
+  datSo(el, 0); assert.equal(lanGhi, 0); assert.equal(el.innerHTML, '0');          // "0" của mẫu HTML giữ nguyên là chữ thường
+  datSo(el, 37); assert.equal(lanGhi, 1); assert.equal(el.textContent, '37'); assert.ok(el.innerHTML.includes('class="so-lan"'));
+  datSo(el, '37'); assert.equal(lanGhi, 1);
+  datSo(el, 41); assert.equal(lanGhi, 2); assert.equal(el.textContent, '41');
+  datSo(null, 5);   // không có phần tử: không lỗi
 });
 
 test('tieuDeHtml: giữ nguyên văn tiêu đề; hai từ đầu chữ thẳng, phần còn lại là cụm nhấn; thứ tự chữ liên tục; một – hai từ thì không có cụm nhấn', () => {
@@ -79,6 +92,43 @@ test('cửa vào: mở lại thì đóng cửa cũ trước (việc chờ của 
   assert.deepEqual(nhat, ['nap']);
   assert.deepEqual([...el.lop], ['dang-doi']);
   dongCuaVao(el);
+});
+
+test('veSauNap: lần nạp đầu (chưa có nội dung) hoặc không có cửa thì vẽ ngay; đang có nội dung và cửa đang mở thì chờ cửa đóng, lượt sau thay lượt trước; lỗi lần vẽ chờ báo qua khiLoi; vùng đã ẩn lúc cửa đóng thì bỏ lần vẽ', () => {
+  const el = phanTu(); const nhat = []; const loi = [];
+  veSauNap(el, true, () => nhat.push('khong-cua'));   // không có cửa
+  moCuaVao(el, { ms: 60000 });
+  veSauNap(el, false, () => nhat.push('lan-dau'));    // cửa mở, chưa có nội dung: vẽ ngay để nội dung mới chạy hiệu ứng
+  veSauNap(el, true, () => nhat.push('cho-1'));
+  veSauNap(el, true, () => { nhat.push('cho-2'); throw new Error('vẽ lỗi'); }, (e) => loi.push(e.message));
+  assert.deepEqual(nhat, ['khong-cua', 'lan-dau']);
+  dongCuaVao(el);
+  assert.deepEqual(nhat, ['khong-cua', 'lan-dau', 'cho-2']); assert.deepEqual(loi, ['vẽ lỗi']);
+  assert.throws(() => veSauNap(el, false, () => { throw new Error('ngay'); }), /ngay/);   // vẽ ngay: lỗi về nơi gọi như trước
+  moCuaVao(el, { ms: 60000 });
+  veSauNap(el, true, () => nhat.push('da-roi-muc'));
+  el.classList.add('hidden');   // người dùng rời mục trước khi cửa đóng: lần mở sau tự nạp và vẽ lại
+  dongCuaVao(el);
+  assert.ok(!nhat.includes('da-roi-muc'));
+});
+
+test('cửa vào: hết hẹn mà hiệu ứng hữu hạn còn chạy thì cửa chờ thêm (không cắt ngang); hiệu ứng lặp vô hạn không giữ cửa; có trần chờ', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const hieuUng = (endTime, playState = 'running') => ({ playState, effect: { getComputedTiming: () => ({ endTime }) } });
+  const el = phanTu(); let ds = [hieuUng(900), hieuUng(Infinity)]; el.getAnimations = () => ds;
+  moCuaVao(el, { ms: 200 });
+  t.mock.timers.tick(200); assert.equal(dangVao(el), true);    // còn hiệu ứng hữu hạn đang chạy
+  t.mock.timers.tick(150); t.mock.timers.tick(150); t.mock.timers.tick(150); assert.equal(dangVao(el), true);
+  ds = [hieuUng(900, 'finished'), hieuUng(Infinity)];
+  t.mock.timers.tick(150); assert.equal(dangVao(el), false);   // chỉ còn hiệu ứng lặp vô hạn: đóng
+  const el2 = phanTu(); el2.getAnimations = () => [hieuUng(900)];   // "chạy mãi": trần 1,8 giây
+  moCuaVao(el2, { ms: 100 });
+  t.mock.timers.tick(100);
+  for (let i = 0; i < 11; i += 1) t.mock.timers.tick(150);   // từng nhịp 150 ms (đồng hồ giả tính hẹn mới từ mốc cuối của mỗi lần tick)
+  assert.equal(dangVao(el2), true);
+  t.mock.timers.tick(150); assert.equal(dangVao(el2), false);
+  const el3 = phanTu();   // phần tử không có getAnimations (môi trường cũ): đóng đúng hẹn
+  moCuaVao(el3, { ms: 100 }); t.mock.timers.tick(100); assert.equal(dangVao(el3), false);
 });
 
 test('truocKhiVe: lần vẽ đầu trong cửa giữ cửa, lần vẽ thứ hai đóng cửa (nội dung mới hiện ngay)', () => {

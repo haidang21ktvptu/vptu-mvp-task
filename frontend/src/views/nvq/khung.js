@@ -1,6 +1,7 @@
 // Phân hệ Nhiệm vụ quý BTV (v3.35): phần dùng chung của các màn — đầu trang (tên màn, chọn quý, dòng căn cứ và tuần báo cáo), tên người / phòng /
 // đơn vị / lãnh đạo, nhãn trạng thái, ô số, dải "có thay đổi mới". Tên lớp viết nguyên văn (Tailwind cắt lớp ghép chuỗi).
 import { escapeHtml } from '../../lib/dom.js';
+import { soLanHtml } from '../../lib/chuyen-dong.js';   // v3.36 (V-12): số của ô số lăn khi vào trang
 import { state } from '../../lib/state.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { homNayVN } from '../../lib/kl/ngay.js';
@@ -43,7 +44,7 @@ export const chuaCoKy = (laQuanLy) => `<div class="trong nq-trong"><p>Chưa có 
 // Ô số (một hàng, bấm được): [{ khoa, nhan, so, lop }] → nút có data-action.
 export function oSo(ds, action, dangChon = '') {
   return `<div class="nq-o-so" role="group">${ds.map((x) => `<button type="button" class="nq-o ${x.lop || ''}${dangChon === x.khoa ? ' chon' : ''}" data-action="${action}" data-loc="${e(x.khoa)}" aria-pressed="${dangChon === x.khoa}">`
-    + `<b>${x.so}</b><span>${e(x.nhan)}</span></button>`).join('')}</div>`;
+    + `<b>${soLanHtml(x.so)}</b><span>${e(x.nhan)}</span></button>`).join('')}</div>`;
 }
 // Thanh tiến độ xếp chồng: [{ so, lop, nhan }] trên tổng.
 export function thanh(phan, tong) {
