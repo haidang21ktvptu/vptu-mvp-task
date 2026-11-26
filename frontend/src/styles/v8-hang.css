@@ -29,23 +29,38 @@
   /* Thẻ Đỏ A0/A1 (.the.hang): một hàng, ô chỉ đạo / đôn đốc / giao lại mở bên dưới */
   .the.hang, .the.hang.do, .the.hang.dac-biet, .the.hang.tu-choi { border: 0; border-top: 1px solid var(--vien-nhat); border-radius: 0; margin: 0; padding: 12px 16px; background: var(--the); }
   .the.hang:first-child { border-top: 0; }
-  .the.hang .the-dau { display: flex; align-items: center; gap: 12px; }
-  .the.hang .ten { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  /* v3.36 (CAU-HOI V-1): nội dung tối đa hai dòng (nguyên văn ở title, ngăn chi tiết); nhãn độ khẩn / vòng chỉ đạo đứng đầu dòng phụ — trước đây nhãn
-     cùng dòng với nội dung làm nội dung co còn vài chữ khi nhiều nhãn, cỡ chữ lớn */
+  /* v3.36 (CAU-HOI V-1): hai tầng. Tầng trên: chấm · mã · nội dung (tối đa hai dòng, nguyên văn ở title, ngăn chi tiết) · số ngày trễ · nút. Tầng dưới
+     (.the-phu) chạy từ cột nội dung tới mép phải thẻ: hàng nhãn (độ khẩn, Thường trực giao, vòng khép kín — mỗi nhãn không gãy dòng), bốn điều tối đa
+     hai dòng, vướng mắc. Trước đây nhãn và bốn điều chung cột nội dung (~250px ở 1280px, cỡ chữ lớn) nên khâu, sản phẩm, cấp cần quyết bị cắt. */
+  .the.hang .the-dau { display: grid; grid-template-columns: 8px auto minmax(0, 1fr) auto auto; grid-template-areas: "stt ma ten tre nut" ". . phu phu phu";
+    column-gap: 12px; row-gap: 6px; align-items: center; }
+  .the.hang .the-dau > .stt { grid-area: stt; } .the.hang .the-dau > .ma { grid-area: ma; } .the.hang .the-dau > .ten { grid-area: ten; }
+  .the.hang .the-dau > .the-phu { grid-area: phu; } .the.hang .the-dau > .tre { grid-area: tre; } .the.hang .the-dau > .hanh-dong { grid-area: nut; }
+  .the.hang .ten { min-width: 0; }
   .the.hang .ten b { display: block; font-size: var(--chu-nho); font-weight: 600; line-height: 1.4; min-width: 0; }
   .the.hang .ten b .nd { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
-  .the.hang .ten > span .nhan-cum { display: inline; margin-right: 6px; } /* nhãn trong span inline → .dk/.vong/.tag giữ inline-flex */
-  .the.hang .ten > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; font-size: var(--chu-nho); color: var(--chu-phu);
-    max-width: none; line-height: 1.45; overflow: hidden; } /* v3.36: nhãn + chủ trì, khâu, sản phẩm, cấp — tối đa hai dòng (nhãn đứng đầu không đẩy thông tin khỏi thẻ); tooltip đủ */
+  .the.hang .the-phu { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--chu-nho); color: var(--chu-phu); line-height: 1.45; }
+  .the.hang .nhan-cum { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+  .the.hang .nhan-cum:empty { display: none; }
+  .the.hang .nhan-cum > * { margin: 0; max-width: 100%; white-space: nowrap; }
+  .the.hang .bon-dieu, .the.hang .the-phu > .the-vuong-mac { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
+    overflow-wrap: anywhere; } /* tooltip đủ */
   .the.hang .khau { font-size: var(--chu-nho); padding: 1px 6px; }
+  /* Thẻ hẹp (điện thoại; máy tính 1000–1250px khi danh sách đứng cạnh thanh trái 300px): mã + số ngày trễ, nội dung, tầng dưới, nút xếp dọc — cột nội dung
+     không co về vài chục px; bốn điều hiện đủ. Truy vấn theo bề rộng thẻ (container), không theo màn hình. */
+  .the.hang { container-type: inline-size; container-name: the-hang; }
+  @container the-hang (max-width: 580px) {
+    .the.hang .the-dau { grid-template-columns: 8px auto minmax(0, 1fr) auto; grid-template-areas: "stt ma . tre" "ten ten ten ten" "phu phu phu phu" "nut nut nut nut"; }
+    .the.hang .bon-dieu { display: block; -webkit-line-clamp: unset; line-clamp: none; }
+  }
   .the.hang .tre { flex: none; min-width: 64px; font-family: var(--font-tieu-de); font-size: var(--chu-khoi); font-weight: 700; color: var(--do); text-align: right; line-height: 1; }
   .the.hang .tre.cam { color: var(--cam); } .the.hang.dac-biet .tre:not(.cam) { color: var(--ddb); }
   .the.hang .tre small { display: block; font-size: var(--chu-nho); font-weight: 500; color: var(--chu-phu); font-family: var(--font-sans); }
   .the.hang .hanh-dong { margin: 0; flex: none; gap: 6px; }
   .the.hang .ten b { overflow: hidden; }
-  .the.hang .vong { display: inline-flex; flex: none; flex-wrap: nowrap; gap: 4px; margin: 0 0 0 4px; font-size: var(--chu-nho); vertical-align: 2px; } /* nhãn vòng khép kín cùng hàng với nhãn độ khẩn, không xuống dòng */
-  .the.hang .vong em { padding: 1px 7px; font-size: var(--chu-nho); } .the.hang .vong i { display: none; }
+  .the.hang .vong { display: flex; flex: 0 1 auto; flex-wrap: wrap; gap: 4px; min-width: 0; margin: 0; font-size: var(--chu-nho); } /* bước của vòng khép kín xuống hàng theo từng nhãn */
+  .the.hang .vong em { display: inline-block; max-width: 100%; padding: 1px 7px; font-size: var(--chu-nho); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .the.hang .vong i { display: none; }
   .the.hang .o { margin-top: 8px; } .the.hang .db-khoi { margin-top: 10px; }
 
   /* .muc = khối trong tấm (tiêu đề Lora navy), .the-con = hàng có chấm trạng thái theo mức của khối */
@@ -83,7 +98,6 @@
 
   @media (max-width: 900px) { .hai-cot { grid-template-columns: 1fr; } }
   @media (max-width: 600px) {
-    .the.hang .the-dau { flex-wrap: wrap; } .the.hang .hanh-dong, .the.hang .ten { flex-basis: 100%; } .the.hang .tre { margin-left: auto; }
     .muc .the-con .o, .muc .the-con .mc-inline, .muc .the-con .ly-do { margin-left: 0; }
   }
 }

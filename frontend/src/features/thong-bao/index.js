@@ -14,13 +14,17 @@ import { tinDaDoc as tinDaDocNvq } from '../../lib/nvq/du-lieu.js';
 import { showDMToast, closeToast } from '../messages/chat.js';
 import { thongBaoTemplate } from './template.js';
 import { lamMoiHuyHieu, onSoChuaXuLy } from '../huy-hieu.js';
+import { onSessionLeave } from '../../auth/session.js';
 import { MUC_TIN, mucCua, demChuaDoc, canBaoNgay } from './muc.js';
 
 let tin = [];
 let theMo = 'XU_LY';   // thẻ đang mở
+// Số chưa đọc chính xác từ cơ sở dữ liệu (kl_so_chua_xu_ly: thong_bao = cần xử lý, thong_bao_biet = để biết) — ưu tiên hơn số đếm trên tối đa 60 tin
+// đã tải mỗi thẻ; null = chưa có kết quả hoặc schema cũ (chưa 0041) thì đếm cục bộ.
+let soDb = null;
 const maCua = (content) => (content.match(/· (NV-[\w-]+):/) || [])[1] || '';
-const THE = { XU_LY: { nut: 'tbTheXuLy', so: 'tbSoXuLy', trong: 'Không có thông báo cần đồng chí xử lý.' },
-  BIET: { nut: 'tbTheBiet', so: 'tbSoBiet', trong: 'Chưa có thông báo để biết.' } };
+const THE = { XU_LY: { nut: 'tbTheXuLy', so: 'tbSoXuLy', ten: 'Cần đồng chí xử lý', trong: 'Không có thông báo cần đồng chí xử lý.' },
+  BIET: { nut: 'tbTheBiet', so: 'tbSoBiet', ten: 'Để biết', trong: 'Chưa có thông báo để biết.' } };
 
 // Gom theo nhiệm vụ: mới nhất trước; số chưa đọc (chỉ tin gửi tới mình — dòng mình gửi người khác "chưa đọc" là của họ); dòng đầu = tin mới nhất.
 export function gomTheoViec(ds) {
@@ -56,18 +60,27 @@ function veSoThe(so) {
     const n = Number(so[muc] || 0);
     setText(t.so, n > 99 ? '99+' : String(n));
     show(t.so, n > 0);
+    $(t.nut)?.setAttribute('aria-label', n ? `${t.ten}, ${n} chưa đọc` : t.ten);
   });
 }
 
-function render() {
-  const so = demChuaDoc(tin);
+function soChuaDoc() {
+  const dem = demChuaDoc(tin);
+  return soDb ? { XU_LY: soDb.XU_LY, BIET: soDb.BIET ?? dem.BIET } : dem;
+}
+function veSo() {
+  const so = soChuaDoc();
   veHuyHieuChuong(so.XU_LY);
   veSoThe(so);
-  Object.entries(THE).forEach(([muc, t]) => $(t.nut)?.setAttribute('aria-selected', String(muc === theMo)));
-  $('thongBaoList').setAttribute('aria-labelledby', THE[theMo].nut);
+  show('thongBaoDocHet', so[theMo] > 0);
+}
+
+function render() {
+  veSo();
+  Object.entries(THE).forEach(([muc, t]) => { $(t.nut)?.setAttribute('aria-selected', String(muc === theMo)); $(t.nut)?.setAttribute('tabindex', muc === theMo ? '0' : '-1'); });
+  $('thongBaoBang').setAttribute('aria-labelledby', THE[theMo].nut);
   const nhom = gomTheoViec(tin.filter((t) => mucCua(t) === theMo));
   $('thongBaoList').innerHTML = nhom.length ? nhom.map(nhomHtml).join('') : `<li class="tb-trong chu-phu">${THE[theMo].trong}</li>`;
-  show('thongBaoDocHet', so[theMo] > 0);
 }
 
 // Chuông: chỉ tin gửi tới mình; mỗi mức đọc riêng (60 tin mới nhất mỗi thẻ).
@@ -90,6 +103,15 @@ function chonTheThongBao({ muc }) {
   if (!THE[muc]) return;
   theMo = muc;
   render();
+}
+// Bàn phím trên hàng thẻ (WAI-ARIA tabs): ← → chuyển vòng, Home / End về thẻ đầu / cuối; thẻ được chọn nhận tiêu điểm.
+function onPhimThe(e) {
+  const ds = Object.keys(THE); const i = ds.indexOf(theMo);
+  const moi = { ArrowRight: ds[(i + 1) % ds.length], ArrowLeft: ds[(i - 1 + ds.length) % ds.length], Home: ds[0], End: ds[ds.length - 1] }[e.key];
+  if (!moi) return;
+  e.preventDefault();
+  chonTheThongBao({ muc: moi });
+  $(THE[moi].nut)?.focus();
 }
 
 // Mở đúng nhiệm vụ của một nhóm tin: đã đọc mọi tin về nhiệm vụ đó → màn hình Nhiệm vụ lọc mã → ngăn chi tiết, con trỏ vào ô chỉ đạo/phản hồi.
@@ -128,7 +150,10 @@ function keuChuong() {
 // Tin hệ thống mới tới qua realtime (đã qua RLS: chỉ tin của tôi): cập nhật chuông; tin cần xử lý thì kêu (am_chuong) và toast có nút mở
 // nhiệm vụ (trừ khi gom_tin); tin để biết chỉ thêm vào thẻ "Để biết".
 export function onTinHeThongMoi(dm) {
+  const moi = !tin.some((t) => t.id === dm.id);
   tin = [dm, ...tin.filter((t) => t.id !== dm.id)];
+  // Tăng tạm số chính xác tới khi kl_so_chua_xu_ly trả số mới (realtime.js đã hẹn làm mới huy hiệu sau vài giây).
+  if (soDb && moi && !dm.is_read && soDb[mucCua(dm)] != null) soDb[mucCua(dm)] += 1;
   render();
   if (!canBaoNgay(dm)) return;
   if (state.user?.tuy_chon?.am_chuong) keuChuong();
@@ -145,10 +170,12 @@ function onClickNgoai(e) {
 export function mountThongBao() {
   $('currentUserDisplay').closest('.nguoi').insertAdjacentHTML('beforebegin', thongBaoTemplate);
   document.addEventListener('click', onClickNgoai);
+  $('tbTheXuLy')?.closest('.tb-the')?.addEventListener('keydown', onPhimThe);
   onSoChuaXuLy((so) => {   // số chính xác từ cơ sở dữ liệu (không giới hạn 60 tin mỗi thẻ); schema cũ (chưa 0041) giữ số đếm cục bộ
     if (!so || !('thong_bao' in so)) return;
-    veHuyHieuChuong(so.thong_bao);
-    if ('thong_bao_biet' in so) veSoThe({ XU_LY: so.thong_bao, BIET: so.thong_bao_biet });
+    soDb = { XU_LY: Number(so.thong_bao || 0), BIET: 'thong_bao_biet' in so ? Number(so.thong_bao_biet || 0) : null };
+    veSo();
   });
+  onSessionLeave(() => { soDb = null; tin = []; });   // đăng xuất: không giữ số, tin của phiên trước
   registerActions({ toggleThongBao, chonTheThongBao, moThongBao, docHetThongBao });
 }

@@ -37,8 +37,6 @@ jobs:
     permissions:
       contents: read
     env:
-      SUPABASE_URL: https://vojmrjezspdftovzinek.supabase.co
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
       THAO_TAC: ${{ inputs.thao_tac }}
       SO_VIEC: ${{ inputs.so_viec }}
     steps:
@@ -48,9 +46,14 @@ jobs:
           node-version: 22
       - run: cd scripts && npm ci --no-audit --no-fund
       - name: Chạy
+        env:   # key chỉ ở bước này (không lộ cho npm ci và các bước khác)
+          SUPABASE_URL: https://vojmrjezspdftovzinek.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
         run: |
           set -o pipefail
-          [[ "$SO_VIEC" =~ ^[0-9]{1,3}$ ]] && (( SO_VIEC >= 1 && SO_VIEC <= 600 )) || { echo "::error::Số việc phải là số từ 1 đến 600."; exit 1; }
+          [[ "$SO_VIEC" =~ ^[0-9]{1,3}$ ]] && (( 10#$SO_VIEC >= 1 && 10#$SO_VIEC <= 600 )) || { echo "::error::Số việc phải là số từ 1 đến 600."; exit 1; }
           node scripts/du-lieu-gia-staging.mjs "$THAO_TAC" "$SO_VIEC" | tee kq.json
-          echo "### Dữ liệu giả staging — $THAO_TAC" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"; cat kq.json >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Tóm tắt
+        if: always()   # script báo lỗi (thoát 1) vẫn ghi số tạo / lỗi vào Summary
+        run: |
+          { echo "### Dữ liệu giả staging — $THAO_TAC"; echo '```'; cat kq.json 2>/dev/null || echo '(không có kết quả — xem log bước Chạy)'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

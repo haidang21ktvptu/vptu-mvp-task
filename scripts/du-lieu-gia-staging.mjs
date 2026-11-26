@@ -12,7 +12,8 @@ const STAGING_REF = 'vojmrjezspdftovzinek';
 const TAG = 'DL-GIA';
 const [thaoTac = 'nap', soArg = '500'] = process.argv.slice(2);
 const url = process.env.SUPABASE_URL || ''; const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-if (!url.includes(STAGING_REF)) { console.error(`Dừng: chỉ chạy trên project staging (${STAGING_REF}).`); process.exit(1); }
+let host = ''; try { host = new URL(url).hostname; } catch { /* địa chỉ sai: dừng ở dưới */ }
+if (host !== `${STAGING_REF}.supabase.co`) { console.error(`Dừng: chỉ chạy trên project staging (${STAGING_REF}).`); process.exit(1); }
 if (!key) { console.error('Thiếu SUPABASE_SERVICE_ROLE_KEY.'); process.exit(1); }
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
@@ -48,14 +49,16 @@ async function boiCanh() {
   if (phong('CDS_CY') && tk.demo_qtht) kieu.push(['CDS_CY', tk.demo_qtht.id, tk.demo_qtht.id, tk.demo_cvp.id]);
   for (const ma of ['HC_LT', 'TAI_CHINH_DANG']) if (phong(ma)) kieu.push([ma, null, tk.demo_pcvp.id, tk.demo_cvp.id]);
   if (phong('VAN_PHONG_TINH_UY')) kieu.push(['VAN_PHONG_TINH_UY', tk.demo_pcvp.id, tk.demo_pcvp.id, tk.demo_cvp.id]);
-  dv.filter((d) => !d.trong_van_phong).slice(0, 8).forEach((d) => kieu.push([d.ma, null, tk.demo_cv1.id, tk.demo_cvp.id]));
+  // Đơn vị ngoài Văn phòng: chỉ 2 kiểu (dữ liệu chuyển đổi cũ; giao_viec không nhận chủ trì ngoài Văn phòng từ 0079), Trưởng phòng theo dõi — không dồn
+  // việc giả vào demo_cv1 (tài khoản A3 của e2e đêm).
+  dv.filter((d) => !d.trong_van_phong).slice(0, 2).forEach((d) => kieu.push([d.ma, null, tk.demo_truongphong.id, tk.demo_cvp.id]));
   return { tk, kieu };
 }
 
-// Một việc giả (thuần, theo PRNG): mỗi việc luôn rút đúng 10 số ngẫu nhiên (r[0..9]) — chọn mẫu không phụ thuộc ngày chạy; ngày giao theo văn bản,
-// trạng thái theo hạn so với hôm nay.
+// Một việc giả (thuần, theo PRNG): mỗi việc luôn rút đúng 12 số ngẫu nhiên, mỗi số cho một lựa chọn — chọn mẫu không phụ thuộc ngày chạy; ngày giao
+// theo văn bản, trạng thái theo hạn so với hôm nay.
 function sinhViec(i, ctx, vbs) {
-  const r = Array.from({ length: 10 }, rnd);
+  const r = Array.from({ length: 12 }, rnd);
   const vb = vbs[i % vbs.length];
   const [donVi, owner, theoDoi, taoBoi] = ctx.kieu[Math.floor(r[0] * ctx.kieu.length)];
   const nhan = nhoHon(cong(vb.ngay_ban_hanh, Math.floor(r[1] * 5)), homNay);
@@ -70,8 +73,8 @@ function sinhViec(i, ctx, vbs) {
       owner_tai_khoan: owner, nguoi_theo_doi: theoDoi, tao_boi: taoBoi, loai_thoi_han_ma: loaiHan, han_xu_ly: han,
       ly_do_chua_co_han: han ? null : 'Nhiệm vụ thường xuyên', ngay_nhan_van_ban: nhan, theo_1400: true, do_khan: DO_KHAN[Math.floor(r[7] * DO_KHAN.length)],
       san_pham_loai: SAN_PHAM[Math.floor(r[8] * SAN_PHAM.length)], nguon: 'app', vuong_mac: !ngayXong && r[9] < 0.05 ? 'Chờ ý kiến của lãnh đạo về phạm vi số liệu' : null },
-    xacNhan: r[9] < 0.85,
-    xong: ngayXong && ngayXong >= vb.ngay_ban_hanh ? { ngay: ngayXong < nhan ? nhan : ngayXong, cap: CAP_NHAN[Math.floor(r[5] * CAP_NHAN.length)] } : null,
+    xacNhan: r[10] < 0.85,
+    xong: ngayXong && ngayXong >= vb.ngay_ban_hanh ? { ngay: ngayXong < nhan ? nhan : ngayXong, cap: CAP_NHAN[Math.floor(r[11] * CAP_NHAN.length)] } : null,
   };
 }
 const soCua = (noiDung) => (noiDung.match(new RegExp(`\\(${TAG} (\\d{3})\\)$`)) || [])[1];
@@ -96,10 +99,13 @@ async function nap(so) {
     try {
       const id = loi(await db.from('nhiem_vu').insert(nv).select('id').single(), 'Tạo việc').id;
       loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'giao_viec', nguoi_sua: nv.tao_boi, gia_tri_moi: `${TAG} giao việc`, nguon: 'app' }), 'Lịch sử giao');
-      if (xacNhan || xong) loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'xac_nhan_nhan_viec', nguoi_sua: nv.nguoi_theo_doi, gia_tri_moi: `${TAG} xác nhận`, nguon: 'app' }), 'Xác nhận');
+      // Xác nhận nhận việc: lãnh đạo theo dõi đã được trigger tự xác nhận lúc tạo — không ghi dòng thứ hai.
+      const daXn = loi(await db.from('lich_su').select('id').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec').limit(1), 'Đọc xác nhận').length > 0;
+      if ((xacNhan || xong) && !daXn) loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'xac_nhan_nhan_viec', nguoi_sua: nv.nguoi_theo_doi, gia_tri_moi: `${TAG} xác nhận`, nguon: 'app' }), 'Xác nhận');
       if (xong) {
         loi(await db.from('minh_chung').insert({ nhiem_vu_id: id, nop_boi: nv.nguoi_theo_doi, loai: 'so_hieu', so_hieu: `${100 + i}/BC-VPTU (${TAG})`,
           ngay_van_ban: xong.ngay, cap_nhan: xong.cap, hop_le: true, xac_nhan_boi: nv.tao_boi, xac_nhan_luc: new Date().toISOString() }), 'Minh chứng');
+        // dong_luc = lúc nạp (trigger); số liệu theo kỳ tính theo ngay_hoan_thanh.
         loi(await db.from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: xong.ngay }).eq('id', id), 'Hoàn thành');
         kq.xong++;
       }

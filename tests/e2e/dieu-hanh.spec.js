@@ -55,16 +55,22 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(the).toContainText('Chưa ai xác nhận đã nhận việc');
     await expect(the).toContainText('chưa xác định');
     expect(Number((await the.locator('.tre').innerText()).split('\n')[0])).toBeGreaterThan(3);
-    // v3.36: nội dung tối đa hai dòng; nhãn + chủ trì, khâu, sản phẩm, cấp tối đa hai dòng — thẻ vẫn gọn (cỡ chữ lớn của lãnh đạo); project desktop
-    expect((await the.boundingBox()).height, 'hàng việc gọn (v3.36: nội dung ≤ 2 dòng + dòng phụ ≤ 2 dòng)').toBeLessThanOrEqual(136);
+    // v3.36: hai tầng — nội dung tối đa hai dòng; tầng dưới: hàng nhãn rồi bốn điều tối đa hai dòng. Ở 1280px, cỡ chữ lớn của lãnh đạo, bốn điều phải
+    // đọc đủ trên màn hình (không bị cắt), khâu nằm trong khung; thẻ vẫn gọn.
+    expect((await the.boundingBox()).height, 'hàng việc gọn (nội dung ≤ 2 dòng + một hàng nhãn + bốn điều ≤ 2 dòng)').toBeLessThanOrEqual(170);
     expect(await the.locator('.ten b .nd').evaluate((el) => globalThis.getComputedStyle(el).webkitLineClamp)).toBe('2');
+    const bonDieu = the.locator('.bon-dieu');
+    expect(await bonDieu.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), 'bốn điều không bị cắt').toBe(true);
+    const [khung, khau] = [await bonDieu.boundingBox(), await the.locator('.bon-dieu .khau').boundingBox()];
+    expect(khau.y + khau.height, 'khâu nằm trong khung bốn điều').toBeLessThanOrEqual(khung.y + khung.height + 1);
     await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe(await mauToken(a1, '--ddb'));   // v3.23.2: Đỏ đặc biệt tím
     await expect.poll(() => the.locator('.stt').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)).toBe(await mauToken(a1, '--ddb')); // v8: chấm trạng thái Đỏ đặc biệt (v3.23.2: tím)
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
-    // Nhãn độ khẩn trong tiêu đề thẻ phải là nhãn gọn (inline-flex), không bị `.the .ten span { display: block }` kéo giãn hết chiều ngang (lỗi v3.6.0).
-    const dk = the.locator('.ten .dk');
+    // Nhãn độ khẩn phải là nhãn gọn, không bị `display: block` kéo giãn hết chiều ngang (lỗi v3.6.0). v3.36: nhãn ở hàng nhãn (flex) của tầng dưới nên
+    // display tính ra là flex (phần tử con của flex), trước đây inline-flex.
+    const dk = the.locator('.nhan-cum .dk');
     await expect(dk).toHaveText(/Khẩn/);
-    await expect.poll(() => dk.evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('inline-flex');
+    await expect.poll(() => dk.evaluate((el) => globalThis.getComputedStyle(el).display)).toMatch(/^(inline-)?flex$/);
     expect((await dk.boundingBox()).width).toBeLessThan((await the.boundingBox()).width / 2);
     await expect(a3.locator('#chuongBadge')).toBeHidden();
     // GĐ22: Xem diễn biến mở dòng thời gian ngay dưới thẻ (v_dien_bien: có dòng tạo việc), không rời Điều hành; bấm lại để gập.

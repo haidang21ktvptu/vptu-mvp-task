@@ -1,6 +1,8 @@
 // 0142 (v3.36 — CAU-HOI V-1, V-10): thông báo hai mức. (1) Trigger đặt muc_tin theo nhãn đầu tin và vai của người nhận lúc gửi — kiểm bằng luồng
 // thật: Chánh VP đôn đốc → chủ trì "cần xử lý", Trưởng phòng / PCVP "để biết"; chủ trì phản hồi → người ra chỉ đạo "cần xử lý", người khác "để
-// biết"; đề nghị từ chối → cấp duyệt "cần xử lý"; không đồng ý → người đề nghị "cần xử lý". (2) Mức người gửi ghi bị trigger ghi đè; tin luôn để
+// biết"; người ra chỉ đạo trả lời thêm (trước hoặc sau khi chủ trì phản hồi) → chủ trì "cần xử lý"; đề nghị từ chối → cấp duyệt "cần xử lý"; không đồng ý →
+// người đề nghị "cần xử lý"; thư ký đổi chủ trì sang Trưởng phòng (lãnh đạo, tự xác nhận nhận việc) → chủ trì mới "cần xử lý", chủ trì cũ "để biết".
+// (2) Mức người gửi ghi bị trigger ghi đè; tin luôn để
 // biết (điều chỉnh hạn); nhãn chưa phân loại là "cần xử lý". (3) kl_so_chua_xu_ly: thong_bao chỉ đếm tin cần xử lý chưa đọc, thong_bao_biet đếm
 // tin để biết. (4) tin_he_thong_doc_het chỉ đánh dấu thẻ được chọn của chính mình; mức sai, chưa đăng nhập bị chặn. (5) kl_phan_muc_tin không
 // gọi được từ người dùng. Logic thuần: chạy ở CI cục bộ (job supabase-db), không chạy trên staging. Mã NV-T16x, tự dọn.
@@ -19,6 +21,8 @@ const them = async (row) => {
   assertOk(r, row.ma); id[row.ma] = r.data.id;
 };
 const rpc = async (username, fn, args) => (await userClient(username)).rpc(fn, args);
+const TK = '00000000-0000-4000-8000-000000000018';   // demo_e2e_tk — cờ thư ký Thường trực bật trong ca đổi chủ trì, tắt lại ngay (như kl-0124)
+const coThuKy = (bat) => db().from('accounts').update({ thu_ky_thuong_truc: bat }).eq('id', TK);
 // Mức của tin theo người nhận (một nhãn đầu tin trên một việc).
 const mucTheoNguoi = async (ma, nhan) => {
   const r = await db().from('direct_messages').select('receiver_id, muc_tin').eq('nhiem_vu_id', id[ma]).eq('loai', 'he_thong').like('content', `${nhan}%`);
@@ -36,16 +40,22 @@ describe('0142 — thông báo hai mức: phân mức theo vai người nhận, 
   before(async () => {
     fx = await setupKlFixtures();
     await don();
-    await songSong([() => them({ ma: 'NV-T160' }), () => them({ ma: 'NV-T161' })]);
+    await songSong([() => them({ ma: 'NV-T160' }), () => them({ ma: 'NV-T161' }), () => them({ ma: 'NV-T162' })]);
   });
-  after(don);
+  after(async () => { await coThuKy(false); await don(); });
 
   test('1. đôn đốc: chủ trì cần xử lý, lãnh đạo được báo kèm để biết; phản hồi: người ra chỉ đạo cần xử lý', async () => {
     const r = await rpc('demo_cvp', 'chi_dao_gui', { p: { nhiem_vu_id: id['NV-T160'], loai: 'DON_DOC', noi_dung: 'KL-0142 khẩn trương hoàn thành', han_phan_hoi: '2026-12-30' } });
     assertOk(r, 'Chánh VP đôn đốc');
     assert.deepEqual(await mucTheoNguoi('NV-T160', 'Đôn đốc'), { [IDS.cv1]: 'XU_LY', [IDS.truongphong]: 'BIET', [IDS.pcvp]: 'BIET' });
+    // Người ra chỉ đạo trả lời thêm trong luồng: chỉ đạo vẫn chờ phản hồi → chủ trì cần xử lý
+    assertOk(await rpc('demo_cvp', 'chi_dao_phan_hoi', { p: { chi_dao_id: r.data, noi_dung: 'KL-0142 bổ sung số liệu quý' } }), 'người ra chỉ đạo trả lời thêm');
+    assert.deepEqual(await mucTheoNguoi('NV-T160', 'Phản hồi · NV-T160: KL-0142 bổ sung'), { [IDS.cv1]: 'XU_LY', [IDS.truongphong]: 'BIET', [IDS.pcvp]: 'BIET' });
     assertOk(await rpc('demo_cv1', 'chi_dao_phan_hoi', { p: { chi_dao_id: r.data, noi_dung: 'KL-0142 đã trình dự thảo' } }), 'chủ trì phản hồi');
-    assert.deepEqual(await mucTheoNguoi('NV-T160', 'Phản hồi'), { [IDS.cvp]: 'XU_LY', [IDS.truongphong]: 'BIET', [IDS.pcvp]: 'BIET' });
+    assert.deepEqual(await mucTheoNguoi('NV-T160', 'Phản hồi · NV-T160: KL-0142 đã trình'), { [IDS.cvp]: 'XU_LY', [IDS.truongphong]: 'BIET', [IDS.pcvp]: 'BIET' });
+    // Chủ trì đã phản hồi (chỉ đạo DA_PHAN_HOI), người ra chỉ đạo trả lời "chưa đạt" → chủ trì vẫn cần xử lý
+    assertOk(await rpc('demo_cvp', 'chi_dao_phan_hoi', { p: { chi_dao_id: r.data, noi_dung: 'KL-0142 chưa đạt, bổ sung phụ lục' } }), 'người ra chỉ đạo trả lời sau phản hồi');
+    assert.equal((await mucTheoNguoi('NV-T160', 'Phản hồi · NV-T160: KL-0142 chưa đạt'))[IDS.cv1], 'XU_LY', 'chủ trì nhận "chưa đạt"');
   });
 
   test('2. đề nghị từ chối: cấp duyệt cần xử lý; không đồng ý thì người đề nghị cần xử lý', async () => {
@@ -54,6 +64,16 @@ describe('0142 — thông báo hai mức: phân mức theo vai người nhận, 
     assert.equal((await mucTheoNguoi('NV-T161', 'Đề nghị từ chối'))[IDS.truongphong], 'XU_LY', 'Trưởng phòng (người giao, cấp duyệt)');
     assertOk(await rpc('demo_truongphong', 'duyet_tu_choi', { p_id: tc.data, p_dong_y: false, p_y_kien: 'KL-0142 làm tiếp' }), 'không đồng ý');
     assert.deepEqual(await mucTheoNguoi('NV-T161', 'Duyệt đề nghị từ chối'), { [IDS.cv1]: 'XU_LY' });
+  });
+
+  test('2b. đổi chủ trì sang Trưởng phòng (tự xác nhận nhận việc): chủ trì mới cần xử lý, chủ trì cũ để biết', async () => {
+    assertOk(await coThuKy(true), 'bật cờ thư ký');
+    try {
+      assertOk(await rpc('demo_e2e_tk', 'doi_chu_tri', { p_id: id['NV-T162'], p: { chu_tri: IDS.truongphong }, p_ly_do: 'KL-0142 Trưởng phòng trực tiếp chủ trì' }), 'thư ký đổi chủ trì');
+    } finally { assertOk(await coThuKy(false), 'tắt cờ thư ký'); }
+    const muc = await mucTheoNguoi('NV-T162', 'Đổi chủ trì theo dõi');
+    assert.equal(muc[IDS.truongphong], 'XU_LY', 'chủ trì mới');
+    assert.equal(muc[IDS.cv1], 'BIET', 'chủ trì cũ');
   });
 
   test('3. mức người gửi ghi bị ghi đè; tin luôn để biết; nhãn chưa phân loại cần xử lý; tin người với người không phân mức để biết', async () => {

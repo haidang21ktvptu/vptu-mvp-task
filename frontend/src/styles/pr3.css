@@ -3,8 +3,8 @@
    the-viec.js, thong-tin-giao.js, giao-viec/template.js, theo-van-ban/index.js dùng đúng các tên này. */
 @layer components {
   /* Thẻ Đỏ: trường thứ 5 "Vướng mắc" — một dòng như dòng phụ, chữ vàng đậm để tách khỏi 4 trường 1400. */
-  .the.hang .ten > .the-vuong-mac { color: var(--vang-chu-dam); }
-  .the.hang .ten > .the-vuong-mac b { font-weight: 600; }
+  .the.hang .the-vuong-mac { color: var(--vang-chu-dam); }   /* v3.36: tầng dưới của thẻ (.the-phu) */
+  .the.hang .the-vuong-mac b { font-weight: 600; }
   /* Ngăn chi tiết: khối vướng mắc + sửa nguồn / đơn vị phối hợp. */
   .chi-tiet .ct-pr3 .ct-vuong-mac h4 { font-size: var(--chu-nho); color: var(--navy); margin-bottom: 4px; }
   .chi-tiet .ct-pr3 .ct-vuong-mac p[data-truong="vuong-mac"] { white-space: pre-wrap; background: var(--vang-nhat); color: var(--vang-chu-dam); border-radius: 6px; padding: 6px 10px; font-size: var(--chu-nho); }

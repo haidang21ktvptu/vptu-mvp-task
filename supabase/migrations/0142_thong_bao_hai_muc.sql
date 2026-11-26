@@ -3,9 +3,10 @@
 -- (BIET — kết quả, thay đổi đã áp dụng, tin báo kèm cấp trên). Chuông chỉ đếm tin cần xử lý chưa đọc; toast và âm chuông chỉ cho tin cần xử lý; tin để
 -- biết xem ở thẻ riêng của chuông, tin cũ vẫn xem được.
 -- 1. Cột direct_messages.muc_tin (mặc định XU_LY; giá trị hằng nên thêm cột không ghi lại bảng).
--- 2. kl_phan_muc_tin(nội dung, người nhận, nhiệm vụ, nhiệm vụ quý): phân mức theo nhãn đầu tin (hàm tạo tin ghi "<nhãn> · <mã>: …") và vai của người
---    nhận trên việc LÚC GỬI: chủ trì / người theo dõi, người có quyền duyệt, người nhận chỉ đạo Thường trực, người đã ra chỉ đạo còn mở. Nhãn chưa phân
---    loại ⇒ XU_LY (như trước: không giấu tin có thể cần xử lý). Không sửa ~30 hàm tạo tin.
+-- 2. kl_phan_muc_tin(nội dung, người nhận, nhiệm vụ, nhiệm vụ quý, người gửi): phân mức theo nhãn đầu tin (hàm tạo tin ghi "<nhãn> · <mã>: …") và vai
+--    của người nhận trên việc LÚC GỬI: chủ trì / người theo dõi, người có quyền duyệt, người nhận chỉ đạo Thường trực, người đã ra chỉ đạo còn mở. Phần
+--    nhãn sau mã (kết quả duyệt, loại tin nhiệm vụ quý) so ở đúng vị trí ngay sau ": " đầu tiên — không so trong phần chữ người dùng gõ. Nhãn chưa
+--    phân loại ⇒ XU_LY (như trước: không giấu tin có thể cần xử lý). Không sửa ~30 hàm tạo tin.
 -- 3. Trigger BEFORE INSERT ba_direct_messages_muc_tin: mọi tin được phân mức ở cơ sở dữ liệu (kể cả tin do hàm SECURITY DEFINER tạo); người dùng không
 --    tự chọn mức (UPDATE đã thu hồi từ 0008; INSERT luôn bị trigger ghi đè).
 -- 4. Tin cũ: phân mức một lần bằng cùng hàm theo dữ liệu hiện tại (chỉ ghi các dòng ra BIET).
@@ -18,10 +19,11 @@ ALTER TABLE "public"."direct_messages"
   ADD COLUMN "muc_tin" text NOT NULL DEFAULT 'XU_LY' CHECK ("muc_tin" IN ('XU_LY', 'BIET'));
 
 -- 2. Hàm phân mức
-CREATE FUNCTION "public"."kl_phan_muc_tin"("p_noi_dung" text, "p_nhan" uuid, "p_nv" uuid, "p_nvq" uuid) RETURNS text
+CREATE FUNCTION "public"."kl_phan_muc_tin"("p_noi_dung" text, "p_nhan" uuid, "p_nv" uuid, "p_nvq" uuid, "p_gui" uuid DEFAULT NULL) RETURNS text
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   t text := coalesce("p_noi_dung", '');
+  l text := split_part(coalesce("p_noi_dung", ''), ': ', 2);   -- phần ngay sau mã ("<nhãn> · <mã>: <phần này> — …"); mã không chứa ": "
   v "public"."nhiem_vu";
   v_ct boolean := false;   -- người nhận là chủ trì / người theo dõi của việc: người thực hiện, phản hồi chỉ đạo, nộp minh chứng
 BEGIN
@@ -32,12 +34,12 @@ BEGIN
 
   -- Nhiệm vụ quý của Ban Thường vụ (0133–0139): "Nhiệm vụ quý · <mã>: <loại tin> — …", nhắc tuần "Nhiệm vụ quý: đồng chí còn …"
   IF t LIKE 'Nhiệm vụ quý%' THEN
-    IF t LIKE 'Nhiệm vụ quý:%' OR t LIKE '%: đồng chí được phân công theo dõi — %' THEN RETURN 'XU_LY'; END IF;
-    IF t LIKE '%: có cập nhật tiến độ mới do đồng chí khác ghi%' OR t LIKE '%: trao đổi — %' THEN RETURN 'BIET'; END IF;
-    IF t LIKE '%: có vướng mắc / đề xuất mới — %' THEN   -- Chánh Văn phòng quyết; đầu mối tổng hợp để biết
+    IF t LIKE 'Nhiệm vụ quý:%' OR l LIKE 'đồng chí được phân công theo dõi — %' THEN RETURN 'XU_LY'; END IF;
+    IF l LIKE 'có cập nhật tiến độ mới do đồng chí khác ghi%' OR l LIKE 'trao đổi — %' THEN RETURN 'BIET'; END IF;
+    IF l LIKE 'có vướng mắc / đề xuất mới — %' THEN   -- Chánh Văn phòng quyết; đầu mối tổng hợp để biết
       RETURN CASE WHEN EXISTS (SELECT 1 FROM "public"."accounts" a WHERE a."id" = "p_nhan" AND a."is_chief" AND a."role_group" = 'A1') THEN 'XU_LY' ELSE 'BIET' END;
     END IF;
-    IF t LIKE '%: trả lời ý kiến — %' THEN   -- người đã ghi ý kiến chỉ đạo trên nhiệm vụ xem câu trả lời; người khác để biết
+    IF l LIKE 'trả lời ý kiến — %' THEN   -- người đã ghi ý kiến chỉ đạo trên nhiệm vụ xem câu trả lời; người khác để biết
       RETURN CASE WHEN EXISTS (SELECT 1 FROM "public"."nvq_y_kien" y WHERE y."nhiem_vu_id" = "p_nvq" AND y."nguoi_gui" = "p_nhan" AND y."loai" = 'CHI_DAO')
                   THEN 'XU_LY' ELSE 'BIET' END;
     END IF;
@@ -52,7 +54,7 @@ BEGIN
      OR t LIKE 'Nộp minh chứng ·%' OR t LIKE 'Minh chứng hợp lệ ·%' OR t LIKE 'Sửa minh chứng ·%' OR t LIKE 'Hoàn thành nhiệm vụ ·%'
      OR t LIKE 'Đóng nhiệm vụ ·%' OR t LIKE 'Đóng chỉ đạo%' OR t LIKE 'Đóng thay mặt Thường trực%'
      OR t LIKE 'Sửa thông tin giao ·%' OR t LIKE 'Điều chỉnh hạn ·%' OR t LIKE 'Tài khoản quản trị sửa thông tin nhiệm vụ ·%'
-     OR (t LIKE 'Nhập Excel ·%' AND t NOT LIKE '%xác nhận đã nhận%')
+     OR (t LIKE 'Nhập Excel ·%' AND t NOT LIKE '%— xác nhận đã nhận ở "Việc của tôi"%')
      OR t LIKE 'Gắn tệp minh chứng ·%' OR t LIKE 'Nghiệm thu và đóng nhiệm vụ ·%' OR t LIKE 'Đổi hạn nộp minh chứng ·%'   -- nhãn cũ (tin trước 0077, 0090)
      OR t LIKE 'Minh chứng hợp lệ (nghiệm thu) ·%' OR t LIKE 'Việc % đã có hạn hoàn thành % — đặt hạn nộp minh chứng%' THEN   -- nhãn cũ 0057–0077; nhắc hạn nộp đã bỏ ở 0077
     RETURN 'BIET';
@@ -67,7 +69,7 @@ BEGIN
 
   -- Kết quả duyệt đề nghị từ chối: không đồng ý thì người đề nghị tiếp tục thực hiện
   IF t LIKE 'Duyệt đề nghị từ chối ·%' THEN
-    RETURN CASE WHEN t LIKE '%không đồng ý, tiếp tục thực hiện%' THEN 'XU_LY' ELSE 'BIET' END;
+    RETURN CASE WHEN l LIKE 'không đồng ý, tiếp tục thực hiện%' THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
 
   -- Đề nghị chờ duyệt (từ chối nhận việc, sửa thông tin giao): cấp duyệt và nhóm thay mặt (kl_nguoi_duyet_tu_choi — 0079/0083) xử lý; người khác để biết
@@ -85,13 +87,15 @@ BEGIN
     RETURN CASE WHEN EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."loai" = 'CHI_DAO_TT'
                              AND c."trang_thai" = 'CHO_PHAN_HOI' AND "p_nhan" = ANY (c."nguoi_nhan")) THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
-  -- Phản hồi chỉ đạo: người đã ra chỉ đạo còn mở trên việc xem xét (đóng hoặc chỉ đạo tiếp); chủ trì / người theo dõi khi việc còn chỉ đạo điều hành
-  -- chờ phản hồi (người ra chỉ đạo trả lời thêm trong luồng của mình — chi_dao_phan_hoi); người khác để biết
+  -- Phản hồi chỉ đạo: người đã ra chỉ đạo còn mở trên việc xem xét (đóng hoặc chỉ đạo tiếp). Chủ trì / người theo dõi xử lý khi việc còn chỉ đạo điều
+  -- hành chờ phản hồi, hoặc khi người gửi là người ra một chỉ đạo điều hành chưa đóng trên việc (người ra chỉ đạo trả lời thêm trong luồng của mình —
+  -- chi_dao_phan_hoi giữ trạng thái khi chính người ra chỉ đạo trả lời, kể cả sau khi chủ trì đã phản hồi: "chưa đạt, bổ sung…"); người khác để biết
   IF t LIKE 'Phản hồi%' THEN
     RETURN CASE WHEN EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."nguoi_gui" = "p_nhan"
                              AND c."loai" NOT IN ('PHAN_HOI', 'Y_KIEN') AND c."trang_thai" <> 'DA_DONG')
-                  OR (v_ct AND EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."trang_thai" = 'CHO_PHAN_HOI'
-                                       AND c."loai" NOT IN ('PHAN_HOI', 'Y_KIEN', 'CHI_DAO_TT'))) THEN 'XU_LY' ELSE 'BIET' END;
+                  OR (v_ct AND EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."loai" NOT IN ('PHAN_HOI', 'Y_KIEN', 'CHI_DAO_TT')
+                                       AND (c."trang_thai" = 'CHO_PHAN_HOI' OR (c."nguoi_gui" = "p_gui" AND c."trang_thai" <> 'DA_DONG'))))
+           THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
   -- Hỏa tốc chưa "Đã nhận": người phải bấm Đã nhận xử lý; lãnh đạo trực tiếp, Chánh Văn phòng được báo kèm để biết
   IF t LIKE 'Hỏa tốc chưa Đã nhận ·%' THEN
@@ -127,7 +131,7 @@ CREATE FUNCTION "public"."kl_direct_messages_muc_tin"() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   NEW."muc_tin" := CASE WHEN NEW."loai" = 'he_thong'
-    THEN "public"."kl_phan_muc_tin"(NEW."content", NEW."receiver_id", NEW."nhiem_vu_id", NEW."nvq_nhiem_vu_id") ELSE 'XU_LY' END;
+    THEN "public"."kl_phan_muc_tin"(NEW."content", NEW."receiver_id", NEW."nhiem_vu_id", NEW."nvq_nhiem_vu_id", NEW."sender_id") ELSE 'XU_LY' END;
   RETURN NEW;
 END;
 $$;
@@ -136,7 +140,7 @@ CREATE TRIGGER "ba_direct_messages_muc_tin" BEFORE INSERT ON "public"."direct_me
 
 -- 4. Tin cũ: phân mức theo dữ liệu hiện tại (chỉ ghi dòng ra BIET; dòng còn lại giữ mặc định XU_LY)
 UPDATE "public"."direct_messages" d SET "muc_tin" = 'BIET'
-WHERE d."loai" = 'he_thong' AND "public"."kl_phan_muc_tin"(d."content", d."receiver_id", d."nhiem_vu_id", d."nvq_nhiem_vu_id") = 'BIET';
+WHERE d."loai" = 'he_thong' AND "public"."kl_phan_muc_tin"(d."content", d."receiver_id", d."nhiem_vu_id", d."nvq_nhiem_vu_id", d."sender_id") = 'BIET';
 
 -- 5. Số chưa xử lý (bản 0103 nguyên văn; đổi thong_bao, thêm thong_bao_biet)
 CREATE OR REPLACE FUNCTION "public"."kl_so_chua_xu_ly"() RETURNS jsonb
@@ -228,7 +232,7 @@ END;
 $$;
 
 -- Quyền: hàm phân mức và trigger chỉ dùng nội bộ; đánh dấu đã đọc theo mức cho người đăng nhập.
-REVOKE ALL ON FUNCTION "public"."kl_phan_muc_tin"(text, uuid, uuid, uuid) FROM public, "anon", "authenticated";
+REVOKE ALL ON FUNCTION "public"."kl_phan_muc_tin"(text, uuid, uuid, uuid, uuid) FROM public, "anon", "authenticated";
 REVOKE ALL ON FUNCTION "public"."kl_direct_messages_muc_tin"() FROM public, "anon", "authenticated";
 REVOKE ALL ON FUNCTION "public"."tin_he_thong_doc_het"(text) FROM public, "anon";
 GRANT EXECUTE ON FUNCTION "public"."tin_he_thong_doc_het"(text) TO "authenticated";
