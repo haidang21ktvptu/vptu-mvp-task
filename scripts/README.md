@@ -106,3 +106,14 @@ scripts\tai-backup.cmd                                                          
 ```
 
 Tải mọi artifact `prod-*` chưa hết hạn (deploy-prod + backup định kỳ) chưa có ở thư mục đích, bỏ qua bản đã có; cần `gh auth login`. **Không xoá gì theo mặc định** — `--giu N` chỉ xoá khi người dùng ghi rõ. Đăng ký chạy mỗi lần đăng nhập Windows: `docs/sao-luu-khoi-phuc.md` mục 3.
+
+## `du-lieu-gia-staging.mjs` — bộ việc giả trên staging (v3.36, Đợt 1)
+
+Nạp khoảng 500 việc giả (văn bản `DL-GIA-01` … `DL-GIA-20`, nội dung có đuôi `(DL-GIA nnn)`) để kiểm giao diện và tốc độ với khối lượng gần thật; dọn
+bằng `xoa`. Chỉ chạy trên project staging (tự dừng với địa chỉ khác); không tạo tài khoản — dùng tài khoản demo của `seed.sql`; bộ việc tái tạo y hệt
+(PRNG hạt cố định), nạp lại chỉ thêm phần thiếu. Chạy qua Actions → "Dữ liệu giả staging" (key staging lấy từ secret, không cần trên máy).
+
+```
+SUPABASE_URL=https://vojmrjezspdftovzinek.supabase.co SUPABASE_SERVICE_ROLE_KEY=… node du-lieu-gia-staging.mjs nap 500
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node du-lieu-gia-staging.mjs xoa
+```

@@ -217,6 +217,10 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - Chạy thử ngoài CI: 68 ca phân mức trên PostgreSQL 16 với khung giả (mọi nhãn tin của các hàm tạo tin, nhiệm vụ quý, tin cũ, đếm, bản tin 7h30).
 - e2e: `doi-mat-khau` (tài khoản tạm có 1 tin cần xử lý + 1 tin để biết: huy hiệu 1, hai thẻ, đánh dấu đã đọc từng thẻ); `tu-choi-ba-phia` (tin "đồng ý từ chối" ở thẻ Để biết); `dieu-hanh` (đôn đốc → toast, huy hiệu của chủ trì; phản hồi ở thẻ Cần xử lý của người ra chỉ đạo) giữ nguyên.
 
+## Dữ liệu giả staging (v3.36, workflow `du-lieu-gia-staging.yml`; từ 26/11/2026)
+- Actions → "Dữ liệu giả staging" → `nap` (mặc định 500 việc) / `xoa`. Chỉ staging; văn bản `DL-GIA-xx`, nội dung có đuôi `(DL-GIA nnn)`; tài khoản demo của seed.sql (không dùng tài khoản e2e); khoảng 70% đã hoàn thành (có minh chứng hợp lệ), 11% quá hạn, còn lại trong hạn / thường xuyên. Cảnh báo 07:30 của staging sẽ gửi nhắc cho các việc quá hạn của bộ — dùng để kiểm chuông hai mức với lượng tin thật.
+- Kiểm thử đêm trên staging chạy cùng bộ này; nếu e2e chậm vì khối lượng, chạy `xoa` rồi báo trong PR.
+
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 
 Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAUDE.md`: **mặc định không bật**. Nơi kiểm tra migration và RLS là CI — job "Áp migration + lint schema" của `ci.yml` khởi động Supabase cục bộ trên runner, áp toàn bộ migration của PR, lint schema và chạy đủ bộ `tests/rls`; e2e chạy trên staging. Trên laptop chỉ cần Node + Supabase CLI đã `supabase login` và `supabase link` (staging).
