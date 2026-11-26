@@ -84,6 +84,7 @@
   .bang-mt .dh-mt small { display: block; font-size: var(--chu-nho); color: var(--chu-phu); }
   .bang-mt tfoot th, .bang-mt tfoot td { border-bottom: 0; border-top: 1px solid var(--vien); background: var(--nen-mo); font-weight: 600; font-variant-numeric: tabular-nums; }
   .bang-mt tfoot th.c-ten { background: var(--nen-mo); }
+  .bang-mt tfoot .o-mt { background: var(--the); }   /* ô Tổng cộng bấm được (mở toàn bộ việc của cột) — nổi trên nền dòng tổng */
   /* Tầng 2: điểm nghẽn gọn — nội dung việc, dòng phụ tối đa 2 dòng (đủ nội dung ở ngăn chi tiết khi bấm; "tên ngắn" là việc của đợt sau) */
   .bang-ng .ten-bam b, .bang-ng td small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 

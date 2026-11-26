@@ -73,7 +73,7 @@ function ve() {
   show('ptMc', dh.mcCho.length > 0);
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
-  if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
+  if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu lúc ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 

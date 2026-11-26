@@ -4,7 +4,7 @@
    .da-gui (minh chứng chờ, chỉ đạo đã gửi). Chỉ đổi trình bày — id, data-*, tên lớp cũ giữ nguyên. Tên lớp viết nguyên văn (Tailwind cắt lớp ghép). */
 @layer components {
   .tam { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); min-width: 0; }
-  .tam + .tam, .hai-cot + .tam, .tam + .hai-cot, .kpi + .tam, .kpi + .hai-cot, .can-xu-ly + .tam, .cx-chi-tiet + .tam { margin-top: 16px; }
+  .tam + .tam, .hai-cot + .tam, .tam + .hai-cot, .can-xu-ly + .tam, .cx-chi-tiet + .tam { margin-top: 16px; }
   .tam-dau { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 14px 16px 10px; margin: 0; }
   .tam-dau h2, .tam-dau > b { font-family: var(--font-tieu-de); font-size: var(--chu-than); font-weight: 700; color: var(--navy); }
   .tam-dau h2 em { font-style: normal; color: var(--do); margin-right: 2px; }

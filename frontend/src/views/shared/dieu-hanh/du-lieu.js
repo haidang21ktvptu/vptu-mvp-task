@@ -71,13 +71,11 @@ export function theoDonVi(rows = viecDo()) {
   return [...m.values()].sort((a, b) => b.so - a.so || b.ngay - a.ngay);
 }
 
-// Lọc danh sách thẻ theo bộ lọc hiện tại: khâu, đơn vị, số-lọc (quyet | nghen | cho | tt | mc | tuchoi | tat); khâu/số-lọc từ chối lấy tập bị từ chối.
+// Lọc danh sách thẻ theo bộ lọc hiện tại: khâu, đơn vị, câu hỏi đầu trang (quyet | nghen — ba-cau.js); khâu bị từ chối lấy tập bị từ chối.
 export function locThe() {
   const { khau, dv, kpi } = dh.loc;
-  const goc = kpi === 'tuchoi' || khau === 'BI_TU_CHOI' ? viecTuChoi() : viecDo();
-  return goc.filter((r) => (!khau || r.khau === khau) && (!dv || (r.owner_don_vi_ma || '') === dv)
-    && (kpi !== 'quyet' || canToiQuyet(r)) && (kpi !== 'cho' && kpi !== 'tt' || ttCuaViec(r.id).some((c) => c.trang_thai === 'CHO_PHAN_HOI'))
-    && (kpi !== 'mc' || r.khau === 'CHO_MINH_CHUNG'))
+  const goc = khau === 'BI_TU_CHOI' ? viecTuChoi() : viecDo();
+  return goc.filter((r) => (!khau || r.khau === khau) && (!dv || (r.owner_don_vi_ma || '') === dv) && (kpi !== 'quyet' || canToiQuyet(r)))
     // Mức khẩn (GĐ22, v3.36): độ khẩn (Hỏa tốc trước), Thường trực giao, Đỏ đặc biệt trước Đỏ, cần tôi quyết, số ngày trễ (bị từ chối chưa quá hạn: NULL).
     .sort((a, b) => soSanhDoKhan(a, b) || soSanhMuc(a, b) || (canToiQuyet(b) ? 1 : 0) - (canToiQuyet(a) ? 1 : 0) || (b.so_ngay_qua || 0) - (a.so_ngay_qua || 0));
 }

@@ -50,12 +50,17 @@ test('A1: Cần xử lý không còn dải ô số; nội dung việc trong th�
   await page.context().close();
 });
 
-test('A1: In báo cáo nhanh — bản in có phần đầu theo thể thức, chỉ tầng 1, ma trận, 5 điểm nghẽn; màn hình không đổi', async ({ browser }, testInfo) => {
+test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, tầng 1, ma trận (6 dòng + Tổng cộng), 5 điểm nghẽn; afterprint trả lại màn hình', async ({ browser }, testInfo) => {
   const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
   await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
   await expect(page.locator('#tqIn')).toBeVisible();
   await expect(page.locator('#tqTang1 .tq-in-dau')).toBeHidden();
-  await page.evaluate(() => globalThis.document.body.classList.add('in-tq'));   // như bấm nút (không mở hộp in của trình duyệt)
+  // Bấm nút thật, hộp in của trình duyệt thay bằng hàm rỗng: nút gắn lớp in-tq và khổ A4 dọc tạm (chỉ cho bản in này), afterprint gỡ cả hai.
+  await page.evaluate(() => { globalThis.print = () => {}; });
+  await page.locator('#tqIn').click();
+  await expect(page.locator('body')).toHaveClass(/\bin-tq\b/);
+  await expect(page.locator('#tqInTrang')).toHaveCount(1);
+  expect(await page.locator('#tqInTrang').textContent()).toContain('A4 portrait');
   await page.emulateMedia({ media: 'print' });
   const dau = page.locator('#tqTang1 .tq-in-dau');
   await expect(dau).toBeVisible();
@@ -73,9 +78,19 @@ test('A1: In báo cáo nhanh — bản in có phần đầu theo thể thức, c
     await expect(dong.nth(5)).toBeHidden();
     await expect(page.locator('#tqNghen .chan-ng .chi-in')).toBeVisible();
   }
+  const dongMt = page.locator('#tqMaTran .bang-mt tbody tr');
+  if (await dongMt.count() > 6) {
+    await expect(dongMt.nth(5)).toBeVisible();
+    await expect(dongMt.nth(6)).toBeHidden();
+    await expect(page.locator('#tqMaTran .mt-chi-in')).toBeVisible();
+  }
+  await expect(page.locator('#tqMaTran .bang-mt tfoot tr')).toBeVisible();   // Tổng cộng luôn in
+  await expect(page.locator('.chan-in')).toBeHidden();   // chân in chung không lặp với chân của báo cáo nhanh
   await expect(page.locator('.tq-in-chan')).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
-  await page.evaluate(() => globalThis.document.body.classList.remove('in-tq'));
+  await page.evaluate(() => globalThis.dispatchEvent(new Event('afterprint')));
+  await expect(page.locator('body')).not.toHaveClass(/\bin-tq\b/);
+  await expect(page.locator('#tqInTrang')).toHaveCount(0);
   await expect(dau).toBeHidden();
   await expect(page.locator('#tqLoc')).toBeVisible();
   await page.context().close();

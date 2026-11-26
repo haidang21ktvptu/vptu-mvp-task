@@ -4,6 +4,7 @@
 // sách tạo nên con số (data-action="tqMo", lib/kl/tong-quan-loc.js). Chỉ dựng chuỗi HTML từ số đã tính (lib/kl/tong-quan-tang.js).
 import { escapeHtml } from '../../../lib/dom.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
+import { ngayVanBanVN } from '../../../lib/kl/ngay.js';
 import { soSanh } from '../../../lib/kl/tong-quan-tang.js';
 import { demTheoTrangThai, cauTomTat } from '../../../lib/nvq/tinh.js';
 import { tenKyNgan } from '../../../lib/nvq/nhan.js';
@@ -72,13 +73,13 @@ export function nvqHtml(nvq, homNay) {
 // Tầng 1 đầy đủ. luc: thời điểm đọc số liệu; kyChon null = đang dùng kỳ tuỳ chọn của bộ lọc chi tiết (không nút nào sáng).
 // v3.36 (CAU-HOI V-1): bản in A4 "Báo cáo nhanh" — phần đầu theo thể thức Văn phòng (cơ quan, dòng Đảng, ngày), tên báo cáo, phạm vi, kỳ; chân ghi nguồn.
 // Chỉ hiện khi in (tong-quan-in.css); in tầng 1, ma trận đơn vị, điểm nghẽn. coQuan = [cấp trên, cơ quan].
-const ngayChu = (d) => `ngày ${String(d.getDate()).padStart(2, '0')} tháng ${String(d.getMonth() + 1).padStart(2, '0')} năm ${d.getFullYear()}`;
+// Ngày theo thể thức (ngayVanBanVN: chỉ tháng 1, 2 viết hai chữ số), ngày giờ theo giờ Việt Nam.
+const VN = { timeZone: 'Asia/Ho_Chi_Minh' };
 export function inDauHtml({ coQuan = ['TỈNH ỦY CAO BẰNG', 'VĂN PHÒNG'], phamVi, kyTen, luc = new Date() }) {
-  const d = new Date(luc.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
   return `<div class="tq-in-dau" aria-hidden="true"><div class="tq-in-the-thuc"><div><span>${escapeHtml(coQuan[0])}</span><b>${escapeHtml(coQuan[1])}</b><span>*</span></div>
-      <div><b class="tq-in-dang">ĐẢNG CỘNG SẢN VIỆT NAM</b><i>Cao Bằng, ${ngayChu(d)}</i></div></div>
-    <p class="tq-in-ten">BÁO CÁO NHANH</p><p class="tq-in-trich-yeu">Tình hình thực hiện nhiệm vụ đến ngày ${d.toLocaleDateString('vi-VN')}</p>
-    <p class="tq-in-pham-vi">Phạm vi: ${escapeHtml(phamVi)}. Kỳ tính hoàn thành: ${escapeHtml(kyTen || '')}. Số liệu lúc ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}.</p></div>`;
+      <div><b class="tq-in-dang">ĐẢNG CỘNG SẢN VIỆT NAM</b><i>${ngayVanBanVN(luc)}</i></div></div>
+    <p class="tq-in-ten">BÁO CÁO NHANH</p><p class="tq-in-trich-yeu">Tình hình thực hiện nhiệm vụ đến ngày ${luc.toLocaleDateString('vi-VN', VN)}</p>
+    <p class="tq-in-pham-vi">Phạm vi: ${escapeHtml(phamVi)}. Kỳ tính hoàn thành: ${escapeHtml(kyTen || '')}. Số liệu lúc ${luc.toLocaleTimeString('vi-VN', { ...VN, hour: '2-digit', minute: '2-digit' })}.</p></div>`;
 }
 export const inChanHtml = () => '<p class="tq-in-chan" aria-hidden="true">In từ Hệ thống quản trị nhiệm vụ của Văn phòng Tỉnh ủy Cao Bằng; số liệu theo phạm vi của người in, việc đang mở và cảnh báo tính đến ngày in.</p>';
 

@@ -11,6 +11,7 @@ const TIEU = { A0: ['Theo đơn vị chủ trì và trạng thái', 'Đơn vị 
 const COT = () => [['ddb', tenMuc('ddb', true), 'ddb', 'so c-ddb'], ['do', tenMuc('do', true), 'do', 'so c-do'], ['vang', 'Sắp đến hạn', 'vang', 'so c-vang'],
   ['th', 'Trong hạn', '', 'so'], ['ch', 'Chưa có hạn', '', 'so'], ['xong', 'Hoàn thành', '', 'so']];
 
+export const SO_DONG_IN = 6;   // bản in báo cáo nhanh (tong-quan-in.css): 6 dòng đầu (xếp theo mức quá hạn) để vừa một trang A4
 const dungHan = (d) => (d.tyLe !== null ? `<b>${d.tyLe}%</b><small>${d.dung}/${d.xet} việc</small>`
   : d.xet ? `<b class="chua-du">${d.dung}/${d.xet}</b><small>chưa đủ dữ liệu</small>` : '<span class="o-0">—</span>');
 
@@ -25,11 +26,17 @@ export function maTranHtml(mt, vai, k) {
   };
   const dong = (d) => `<tr><th scope="row" class="c-ten"><button type="button" class="ten-bam" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten })}><b>${escapeHtml(d.ten)}</b>
       <small>${d.mo} đang thực hiện, ${d.xong} hoàn thành</small></button></th>${cot.map((c) => o(d, c)).join('')}<td class="dh-mt" data-n="Đúng hạn">${dungHan(d)}</td></tr>`;
+  // Dòng Tổng cộng: mỗi ô có việc cũng là nút — mở toàn bộ việc của cột trong phạm vi (ma '*'), ví dụ mọi việc sắp đến hạn để nhắc.
   const t = mt.tong;
+  const oTong = ([m, nhan]) => (t[m] ? `<td class="so" data-n="${escapeHtml(nhan)}"><button type="button" class="o-mt" ${mo({ t: 'nhom', ma: '*', ten: 'Toàn bộ phạm vi', m })}
+      aria-label="${escapeHtml(`${t[m]} nhiệm vụ ${m === 'xong' ? `hoàn thành ${k.trong}` : nhan.toLowerCase()}: toàn bộ phạm vi`)}">${t[m]}</button></td>`
+    : `<td class="so" data-n="${escapeHtml(nhan)}">0</td>`);
   const chan = `<tr class="tong-mt"><th scope="row" class="c-ten"><b>Tổng cộng</b><small>${t.mo} đang thực hiện, ${t.xong} hoàn thành</small></th>
-    ${cot.map(([m, nhan]) => `<td class="so" data-n="${escapeHtml(nhan)}">${t[m]}</td>`).join('')}<td class="dh-mt" data-n="Đúng hạn">${dungHan(t)}</td></tr>`;
+    ${cot.map(oTong).join('')}<td class="dh-mt" data-n="Đúng hạn">${dungHan(t)}</td></tr>`;
   const than = mt.dong.length ? `<div class="cuon-ngang mt-cuon"><table class="bang-mt"><caption class="sr">${escapeHtml(tieu)}</caption>
       <thead><tr><th scope="col">${cotTen}</th>${cot.map(([, nhan, , lopDau]) => `<th scope="col" class="${lopDau}">${escapeHtml(nhan)}</th>`).join('')}<th scope="col">Đúng hạn</th></tr></thead>
-      <tbody>${mt.dong.map(dong).join('')}</tbody><tfoot>${chan}</tfoot></table></div>` : '<p class="trong">Chưa có nhiệm vụ trong phạm vi.</p>';
+      <tbody>${mt.dong.map(dong).join('')}</tbody><tfoot>${chan}</tfoot></table></div>${mt.dong.length > SO_DONG_IN
+      ? `<p class="chi-in mt-chi-in">Bản in ghi ${SO_DONG_IN} trong ${mt.dong.length} ${cotTen.toLowerCase()} có nhiều việc quá hạn nhất; dòng Tổng cộng tính đủ.</p>` : ''}`
+    : '<p class="trong">Chưa có nhiệm vụ trong phạm vi.</p>';
   return `<article class="the-bd n12" id="tqMaTran">${dauKhoi(1, tieu, `Đang thực hiện tính đến hôm nay; hoàn thành và đúng hạn tính ${k.trong}. Bấm một ô để xem đúng các nhiệm vụ đó.`)}${than}</article>`;
 }

@@ -159,11 +159,12 @@ describe('maTran — ma trận đơn vị theo trạng thái', () => {
     for (const d of [...mt.dong, mt.tong]) assert.equal(d.ddb + d.do + d.vang + d.th + d.ch, d.mo, d.ten);
     assert.deepEqual([mt.tong.mo, mt.tong.xong, mt.tong.ddb, mt.tong.do], [8, 3, 2, 1]);
   });
-  test('ô bấm → danh sách đúng số ô', () => {
+  test('ô bấm → danh sách đúng số ô; ô Tổng cộng (ma *) → toàn bộ việc của cột', () => {
     const d = mt.dong[1];
     for (const m of ['ddb', 'do', 'vang', 'th', 'ch', 'xong']) {
       const kq = locChiTieu(MAU, { t: 'nhom', ma: d.ma, ten: d.ten, m }, nam, { khoa });
       assert.equal(kq.rows.length, d[m], m);
+      assert.equal(locChiTieu(MAU, { t: 'nhom', ma: '*', ten: 'Toàn bộ phạm vi', m }, nam, { khoa }).rows.length, mt.tong[m], `tổng ${m}`);
     }
   });
 });

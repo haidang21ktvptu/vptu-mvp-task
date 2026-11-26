@@ -991,5 +991,5 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Cần xử lý (Thường trực, lãnh đạo Văn phòng): bỏ dải 5 ô số trùng Tổng quan và lượt đọc số liệu so với tuần trước chỉ phục vụ dải đó; lọc bằng ba câu hỏi và thanh trái.
 - Thẻ việc ở mọi khối của Cần xử lý (cả Trưởng phòng): nội dung tối đa hai dòng (nguyên văn ở title, ngăn chi tiết), thông tin phụ một dòng riêng; xếp theo mức khẩn.
 - Menu bốn nhóm Điều hành, Nhiệm vụ, Nhiệm vụ quý BTV, Quản trị; bấm tên nhóm để thu gọn / mở (nhớ theo máy); lãnh đạo mặc định thu nhóm Nhiệm vụ quý BTV.
-- Tổng quan: nút "In báo cáo nhanh" — một trang A4: phần đầu theo thể thức Văn phòng, năm chỉ tiêu dạng bảng, kết luận, nhiệm vụ quý, ma trận đơn vị, 5 điểm nghẽn.
-- Kiểm thử: e2e `v336-giao-dien` (menu, Cần xử lý, bản in); sửa `a0`, `ngan-chi-tiet`, `bo-cuc-mobile`, hàm `nav` của e2e mở nhóm đang thu; unit.
+- Tổng quan: nút "In báo cáo nhanh" — một trang A4 dọc (khổ chỉ gắn cho bản in này): phần đầu theo thể thức Văn phòng, năm chỉ tiêu dạng bảng, kết luận, nhiệm vụ quý, ma trận đơn vị (6 dòng + Tổng cộng), 5 điểm nghẽn; ô Tổng cộng của ma trận bấm được (mở mọi việc của cột, như việc sắp đến hạn để nhắc).
+- Kiểm thử: e2e `v336-giao-dien` (menu, Cần xử lý, bấm nút in, afterprint); sửa `a0`, `ngan-chi-tiet`, `bo-cuc-mobile`, hàm `nav` của e2e mở nhóm đang thu; unit. Rà soát độc lập 26/11 — đã sửa: khổ A4 không áp cho bản in khác, bỏ chân in chung và thanh Hỏa tốc khỏi bản in, giới hạn dòng ma trận, cột Mức không cắt chữ, ngày theo thể thức; bỏ CSS ô số không còn dùng.

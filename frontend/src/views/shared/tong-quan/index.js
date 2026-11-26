@@ -97,9 +97,14 @@ function khungChoHtml() {
 
 // v3.36: in "Báo cáo nhanh" một trang A4 (tong-quan-in.css chỉ áp khi body.in-tq): Trưởng phòng in dưới tên phòng, lãnh đạo dưới tên Văn phòng.
 const coQuanIn = (vn) => (vn === 'A2' ? ['VĂN PHÒNG TỈNH ỦY CAO BẰNG', (DEPT_NAMES[state.user?.department] || 'Phòng').toUpperCase()] : ['TỈNH ỦY CAO BẰNG', 'VĂN PHÒNG']);
+// Khổ và lề A4 dọc chỉ gắn trong lúc in báo cáo nhanh (thẻ style tạm): bản in khác (Ctrl+P, In / lưu PDF, Báo cáo) giữ cách in chung, vẫn chọn được
+// khổ ngang.
+const TRANG_IN = '@page { size: A4 portrait; margin: 12mm 12mm 12mm 20mm; }';
 function tqIn() {
   document.body.classList.add('in-tq');
-  const bo = () => { document.body.classList.remove('in-tq'); window.removeEventListener('afterprint', bo); };
+  const trang = document.createElement('style'); trang.id = 'tqInTrang'; trang.textContent = TRANG_IN;
+  document.head.append(trang);
+  const bo = () => { document.body.classList.remove('in-tq'); trang.remove(); window.removeEventListener('afterprint', bo); };
   window.addEventListener('afterprint', bo);
   window.print();
   setTimeout(bo, 60000);   // trình duyệt không báo afterprint: lớp chỉ có tác dụng khi in, bỏ sau một phút

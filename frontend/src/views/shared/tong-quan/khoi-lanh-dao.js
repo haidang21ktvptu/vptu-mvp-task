@@ -56,7 +56,7 @@ export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   return `<article class="the-bd n12" id="tqNghen">${dauKhoi(1, 'Điểm nghẽn cần chỉ đạo', phu, nut)}
     <div class="cuon-ngang"><table class="bang-tq bang-ng"><thead><tr><th>Mức</th><th>Nhiệm vụ</th><th>Cơ quan, đơn vị · cán bộ</th><th class="so">Trễ</th><th>Sản phẩm còn thiếu</th><th>Cấp cần quyết định</th><th><span class="sr">Thao tác</span></th></tr></thead>
       <tbody>${hien.slice(0, SO_DONG_NGHEN).map(dong).join('')}</tbody></table></div>
-    <div class="chan-ng"><span class="chi-man">${chan}</span><span class="chi-in">Bản in ghi ${Math.min(SO_DONG_IN, hien.length)} việc quá hạn lâu nhất trong ${hien.length} việc; danh sách đủ xem trên hệ thống.</span><button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
+    <div class="chan-ng"><span class="chi-man">${chan}</span>${hien.length > SO_DONG_IN ? `<span class="chi-in">Bản in ghi ${SO_DONG_IN} việc quá hạn lâu nhất trong ${hien.length} việc; danh sách đầy đủ xem trên hệ thống.</span>` : ''}<button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
 }
 
 const pills = (m) => [[m.ddb, 'ddb'], [m.do, 'do'], [m.vang, 'vang']].filter(([n]) => n).map(([n, lop]) => `<span class="muc-tq ${lop}">${n} ${tenMuc(lop)}</span>`).join('')
