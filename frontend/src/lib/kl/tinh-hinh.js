@@ -3,7 +3,7 @@
 // theo dõi (locRows daGiaoCuaToi, tong-hop.js). Lớp th-* viết nguyên văn (Tailwind giữ lớp).
 import { ngayNgan, gioVN } from './bang-o.js';
 import { mo, GAP, choNghiemThu } from './viec-toi.js';   // một định nghĩa dùng chung với "Việc của tôi"
-import { nhanTheoNguong, tenMucHoa } from './nhan.js';
+import { nhanTheoNguong, tenMucHoa, ghiBoSungNht } from './nhan.js';
 
 const chuaNhan = (r) => mo(r) && Boolean(r.theo_1400) && !r.da_xac_nhan_nhan && !r.bi_tu_choi;   // CHỦ TRÌ chưa xác nhận nhận việc (khác chuaNhan của tôi)
 const chuaSanPham = (r) => mo(r) && GAP.includes(r.muc_canh_bao) && (r.so_minh_chung_hop_le || 0) === 0 && !choNghiemThu(r);
@@ -13,8 +13,9 @@ const rutGon = (s, n = 90) => (s && s.length > n ? `${s.slice(0, n - 1)}…` : s
 // việc, chưa có sản phẩm khi đã Vàng / Đỏ; lục (th-ok): đã nộp minh chứng / hoàn thành; xám (th-thuong): bình thường.
 export function tinhHinh(r) {
   if (!mo(r)) {
-    if (r.thieu_minh_chung) return { lop: 'th-canh', tieu: 'Hoàn thành, chưa có minh chứng', chu: r.ngay_hoan_thanh ? `hoàn thành ${ngayNgan(r.ngay_hoan_thanh)}` : '' };
-    return { lop: 'th-ok', tieu: 'Đã nộp minh chứng', chu: r.ngay_hoan_thanh ? `hoàn thành ${ngayNgan(r.ngay_hoan_thanh)}` : '' };
+    const xong = r.ngay_hoan_thanh ? `hoàn thành ${ngayNgan(r.ngay_hoan_thanh)}${ghiBoSungNht(r)}` : '';
+    if (r.thieu_minh_chung) return { lop: 'th-canh', tieu: 'Hoàn thành, chưa có minh chứng', chu: xong };
+    return { lop: 'th-ok', tieu: 'Đã nộp minh chứng', chu: xong };
   }
   if (r.bi_tu_choi) return { lop: 'th-vm', tieu: 'Bị từ chối', chu: 'chờ giao lại' };
   if ((r.so_chi_dao_cho_phan_hoi || 0) > 0) return { lop: 'th-vm', tieu: 'Có chỉ đạo chờ trả lời', chu: `${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi` };

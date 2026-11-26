@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { khoangKy, khoaNhom } from '../src/lib/kl/tong-quan.js';
 import { theTang1, tuanTruoc, soSanh, cauKetLuan, nhieuQuaHanNhat, tuanGanDay, xuHuongTuan, maTran, tyLeDungHan, canYKien } from '../src/lib/kl/tong-quan-tang.js';
 import { locChiTieu } from '../src/lib/kl/tong-quan-loc.js';
+import { ghiBoSungNht } from '../src/lib/kl/nhan.js';
 
 const HOM_NAY = '2026-11-25';   // thứ Tư
 const nam = khoangKy('nam', HOM_NAY);
@@ -53,7 +54,16 @@ describe('theTang1 — năm thẻ, các phần cộng đủ', () => {
   });
   test('hoàn thành trong kỳ: tỷ lệ đúng hạn không ghi khi dưới 5 việc xét được; 7 ngày qua theo ngày hoàn thành', () => {
     assert.equal(t.xong.so, 3); assert.equal(t.xong.xet, 2); assert.equal(t.xong.canXet, 3);
-    assert.equal(t.xong.tyLe, null); assert.equal(t.xong.tuan, 1);
+    assert.equal(t.xong.tyLe, null); assert.equal(t.xong.tuan, 1); assert.equal(t.xong.boSung, 0);
+  });
+  test('0141: ghi kèm ngày bổ sung — gọn ở ô, đủ ở ngăn chi tiết; ngày người dùng ghi thì không ghi gì', () => {
+    assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: 'UOC_TINH' }), ' (bổ sung)');
+    assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: 'LICH_SU' }, false), ' (ngày bổ sung theo lịch sử cập nhật)');
+    assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: null }), '');
+  });
+  test('0141: đếm việc xét đúng hạn có ngày hoàn thành bổ sung', () => {
+    const t2 = theTang1(MAU.map((r) => (r.id === 9 ? { ...r, ngay_hoan_thanh_bo_sung: 'UOC_TINH' } : r)), nam, ctx);
+    assert.equal(t2.xong.boSung, 1);
   });
 });
 

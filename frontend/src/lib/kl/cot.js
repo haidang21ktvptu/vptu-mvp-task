@@ -21,7 +21,9 @@ export const COT_VIEC = cot('id, ma, van_ban_id, van_ban_loai, so_hoi_nghi, so_k
   // Đợt C2 (0087): số thứ tự trong văn bản (mã theo nguồn), mức quan trọng, cơ quan trình, Thường trực chỉ đạo
   'stt_van_ban, muc_quan_trong, co_quan_trinh, co_quan_trinh_ten, thuong_truc_chi_dao, thuong_truc_chi_dao_ten',
   // v3.23 (0103): việc trong phạm vi xử lý của người xem (false = chỉ xem, cấu hình xem toàn bộ); người được đề nghị xử lý vướng mắc
-  'trong_pham_vi, vuong_mac_gui_cho');
+  'trong_pham_vi, vuong_mac_gui_cho',
+  // v3.36 (0141): ngày hoàn thành do hệ thống bổ sung (LICH_SU / UOC_TINH)
+  'ngay_hoan_thanh_bo_sung');
 export const COT_TU_CHOI = 'id, nhiem_vu_id, nguoi_de_nghi, cap_duyet, ly_do, tao_luc, trang_thai, y_kien_duyet, duyet_luc';
 export const COT_CHI_DAO = cot('id, nhiem_vu_id, nguoi_gui, loai, noi_dung, han_phan_hoi, han_moi, chu_tri_moi, trang_thai, phan_hoi, phan_hoi_boi, phan_hoi_luc',
   'created_at, tra_loi_cho, nguoi_nhan, do_khan, da_nhan, dong_boi, dong_luc');

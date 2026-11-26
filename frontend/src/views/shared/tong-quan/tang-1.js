@@ -37,7 +37,7 @@ export function theSoHtml(t, cu, k) {
   const th = the('th', t.th.so, 'nhiệm vụ đang thực hiện trong hạn',
     phan([[t.th.trongHan, 'trong hạn', true], [t.th.vang, tenMuc('vang'), true], [t.th.khac, 'chưa có hạn hoặc thường xuyên']]), coCu ? dongSoSanh(t.th.so, cu.th, false) : '');
   const x = t.xong;
-  const dh = x.tyLe !== null ? `Đúng hạn ${x.tyLe}%, tính trên ${x.xet} nhiệm vụ có đủ hạn và ngày hoàn thành`
+  const dh = x.tyLe !== null ? `Đúng hạn ${x.tyLe}%, tính trên ${x.xet} nhiệm vụ có đủ hạn và ngày hoàn thành${x.boSung ? ` (${x.boSung} ngày bổ sung)` : ''}`
     : x.so ? `Chưa tính tỷ lệ đúng hạn: ${x.xet}/${x.canXet} nhiệm vụ có hạn đã ghi ngày hoàn thành` : 'Chưa có nhiệm vụ hoàn thành trong kỳ';
   const xong = the('xong', x.so, `nhiệm vụ đã hoàn thành ${k.trong}`, dh, `<span class="ss-tq">${x.tuan} nhiệm vụ hoàn thành trong 7 ngày qua</span>`);
   return `<div class="tq1-the" id="tqSo">${qh}${quyet}${cd}${th}${xong}</div>`;

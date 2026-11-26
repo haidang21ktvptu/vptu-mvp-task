@@ -99,4 +99,11 @@
   .stb-o small { display: block; margin-top: 2px; }
   .stb-o-rong { grid-column: 1 / -1; }
   @media (max-width: 860px) { .stb-luoi { grid-template-columns: minmax(0, 1fr); } }
+  /* v3.36 (rà soát 25/11): đóng ngăn bằng dấu × ở góc đầu chi tiết (thay nút chữ "Đóng ngăn" đứng cạnh "Đóng nhiệm vụ"); trong ngăn dùng chung (#nganCT)
+     đã có × của ngăn nên ẩn. */
+  .chi-tiet-noi .ct-dau { position: relative; padding-right: 56px; }   /* đặc hiệu hơn .ct-dau của nhiem-vu-v8.css (nạp sau) */
+  #nganCT .chi-tiet-noi .ct-dau { padding-right: 18px; }
+  .ct-dong { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; color: var(--chu-phu); }
+  .ct-dong:hover { background: var(--nen-phu); color: var(--chu); }
+  #nganCT .ct-dong { display: none; }
 }

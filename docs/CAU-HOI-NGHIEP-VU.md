@@ -448,7 +448,7 @@ và tóm tắt chỉnh sửa; 14:58 duyệt; 15:07 yêu cầu dự toán một p
 | # | Câu hỏi | Quyết định | Kiểm bằng |
 |---|---|---|---|
 | V-1 | Đợt 1 giao diện, UI/UX? | **Duyệt**, kèm viết lại DESIGN.md thành một bản hiện hành; làm ngay, ưu tiên UI/UX | Kiểm staging các vai, chủ dự án duyệt trước phát hành |
-| V-2 | 275/337 việc hoàn thành chưa có ngày hoàn thành? | **"Tự thêm 30 ngày những việc chưa có ngày hoàn thành."** Cách hiểu: lấy ngày thật từ lịch sử chuyển trạng thái nếu có; còn lại ngày giao + 30 ngày, không quá ngày bổ sung; đánh dấu là ngày bổ sung | Báo số việc, chủ dự án xác nhận trước khi chạy production |
+| V-2 | 275/337 việc hoàn thành chưa có ngày hoàn thành? | **"Tự thêm 30 ngày những việc chưa có ngày hoàn thành."** Cách hiểu: lấy ngày thật từ lịch sử chuyển trạng thái nếu có; còn lại ngày giao + 30 ngày, không quá ngày bổ sung; đánh dấu là ngày bổ sung. Làm (0141, SPEC DL-8): thêm "không quá ngày nhập việc vào hệ thống" (việc nhập đã hoàn thành thì xong trước ngày nhập) và luôn trong khoảng ngày ban hành đến hôm nay (kiểm tra sẵn có của dữ liệu); có xem trước, hoàn tác | Báo số việc, chủ dự án xác nhận trước khi chạy production; RLS `kl-0141` |
 | V-3 | Xác thực hai lớp? | **Bỏ** | |
 | V-4 | Tailwind? | Theo đề xuất: **đồng bộ cấu hình với token DESIGN.md**, không đổi stack | |
 | V-5 | Kiểm tra kiểu TypeScript? | Theo đề xuất: **để sau Đợt 2** | |

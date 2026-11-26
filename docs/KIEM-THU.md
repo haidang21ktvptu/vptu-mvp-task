@@ -204,6 +204,10 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - e2e `tong-quan.spec.js` thêm bài "so với tuần trước": tạo bản chụp lùi 7 ngày bằng service_role — **chỉ Supabase cục bộ / staging, tự bỏ qua trên production**.
 - **Ảnh chụp giao diện trên PR**: `anh-chup-giao-dien.spec.js` (desktop) chụp Tổng quan của lãnh đạo Văn phòng 1366×768, 1920×1080, 375×812 và Trưởng phòng 1366×768 (màn hình đầu + cả trang) vào `tests/e2e/anh-chup/` (gitignore); action `e2e-playwright` luôn lưu thư mục này thành artifact `playwright-report-anh-chup` (7 ngày). Không so sánh điểm ảnh, không làm đỏ CI — để Claude và chủ dự án xem giao diện thật trước khi merge (máy làm việc của Claude không cài được gói npm).
 
+## RLS v3.36 — ngày hoàn thành bổ sung (`kl-0141`; workflow `bo-sung-ngay-hoan-thanh.yml`; từ 25/11/2026)
+- RLS `kl-0141-ngay-hoan-thanh-bo-sung`: chỉ service_role gọi ba hàm; xem trước không ghi; ngày theo lịch sử / ước tính; thực hiện ghi ngày + dấu, đúng hạn theo ngày mới, không đổi người / giờ cập nhật cuối; sửa ngày thì bỏ dấu; hoàn tác. Mọi lời gọi giới hạn `p_ids` = việc của test (không chạm fixture N7 hay dữ liệu khác).
+- Chạy thật: Actions → "Bổ sung ngày hoàn thành" → chọn môi trường, thao tác `xem-truoc` (đọc số trong Summary) → `thuc-hien`; production chờ chủ dự án duyệt (environment production). Sai thì `hoan-tac`.
+
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 
 Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAUDE.md`: **mặc định không bật**. Nơi kiểm tra migration và RLS là CI — job "Áp migration + lint schema" của `ci.yml` khởi động Supabase cục bộ trên runner, áp toàn bộ migration của PR, lint schema và chạy đủ bộ `tests/rls`; e2e chạy trên staging. Trên laptop chỉ cần Node + Supabase CLI đã `supabase login` và `supabase link` (staging).

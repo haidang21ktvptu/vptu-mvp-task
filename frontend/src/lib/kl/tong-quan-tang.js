@@ -46,6 +46,7 @@ export function theTang1(rows, k, { cds = [], ctxCd = {}, homNay = homNayVN() } 
     cd: { so: cd.quaHan.length + cd.trongHan.length, quaHan: cd.quaHan.length, trongHan: cd.trongHan.length, yKien: cd.yKien },
     th: { so: th.length, trongHan: dem(th, ['trongHan', 'nt']), vang: dem(th, ['vang']), khac: dem(th, ['khac']) },
     xong: { so: xong.length, dung, tre: dg.length - dung, chuaXet: xong.length - dg.length, xet: dg.length, canXet, tyLe: tyLeDungHan(dg.length, dung, canXet),
+      boSung: dg.filter((r) => r.ngay_hoan_thanh_bo_sung).length,   // 0141: việc xét đúng hạn có ngày hoàn thành do hệ thống bổ sung
       tuan: rows.filter((r) => laXong(r) && r.ngay_hoan_thanh && r.ngay_hoan_thanh > d7 && r.ngay_hoan_thanh <= homNay).length },
   };
 }

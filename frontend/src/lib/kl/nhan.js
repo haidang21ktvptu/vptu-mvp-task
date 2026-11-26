@@ -124,6 +124,7 @@ export const TEN_COT = {
   van_ban_trich_yeu: 'Trích yếu văn bản',   // 0046 dat_trich_yeu_van_ban — trước đây diễn biến hiện tên cột thô (kiểm tay 18/10)
   dieu_chinh_han: 'Điều chỉnh hạn', doi_chu_tri: 'Đổi chủ trì theo dõi', sua_toan_bo: 'Tài khoản quản trị sửa thông tin', mo_lai: 'Mở lại nhiệm vụ',   // 0123–0125
   van_ban_sua: 'Sửa văn bản giao', sua_minh_chung: 'Sửa minh chứng', go_minh_chung: 'Gỡ minh chứng',   // 0126
+  ngay_hoan_thanh_bo_sung: 'Ngày hoàn thành bổ sung',   // 0141
 };
 export const tenCot = (cot) => TEN_COT[cot] || cot;
 
@@ -139,6 +140,11 @@ export function tenTienDoHoanThanh(r) {
   if (r.tien_do_hoan_thanh === 'TRE') return `Trễ ${soNgay(r.han_xu_ly, r.ngay_hoan_thanh)} ngày`;
   return '';
 }
+
+// 0141 (v3.36, CAU-HOI V-2): ngày hoàn thành do hệ thống bổ sung (việc đã hoàn thành chưa ghi ngày) — luôn ghi kèm để người đọc biết đây không phải
+// ngày người dùng ghi. gon: ô, dòng phụ; đủ: ngăn chi tiết.
+export const TEN_BO_SUNG_NHT = { LICH_SU: 'ngày bổ sung theo lịch sử cập nhật', UOC_TINH: 'ngày bổ sung ước tính bằng ngày giao cộng 30 ngày' };
+export const ghiBoSungNht = (r, gon = true) => (!r?.ngay_hoan_thanh_bo_sung ? '' : gon ? ' (bổ sung)' : ` (${TEN_BO_SUNG_NHT[r.ngay_hoan_thanh_bo_sung] || 'ngày bổ sung'})`);
 
 // "6. Đảng ủy Ủy ban nhân dân tỉnh" → "Đảng ủy Ủy ban nhân dân tỉnh" (bỏ số thứ tự khi hiện trong ô).
 export const boSoThuTu = (ten) => (ten || '').replace(/^\d+\.\s*/, '');
