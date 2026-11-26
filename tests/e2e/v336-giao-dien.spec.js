@@ -88,7 +88,7 @@ test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, t�
   await expect(page.locator('.chan-in')).toBeHidden();   // chân in chung không lặp với chân của báo cáo nhanh
   await expect(page.locator('.tq-in-chan')).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
-  await page.evaluate(() => globalThis.dispatchEvent(new Event('afterprint')));
+  await page.evaluate(() => globalThis.dispatchEvent(new globalThis.Event('afterprint')));
   await expect(page.locator('body')).not.toHaveClass(/\bin-tq\b/);
   await expect(page.locator('#tqInTrang')).toHaveCount(0);
   await expect(dau).toBeHidden();

@@ -16,7 +16,7 @@ let nguoi = null; let nhomThu = null;   // tài khoản của lần vẽ menu g�
 const khoaThu = () => `vptu.menuNhomThu.${nguoi?.id || ''}`;
 function docNhomThu() {
   if (nhomThu) return nhomThu;
-  let luu = null;
+  let luu;
   try { luu = JSON.parse(localStorage.getItem(khoaThu()) || 'null'); } catch { luu = null; }
   nhomThu = new Set(Array.isArray(luu) ? luu : THU_MAC_DINH[nguoi?.role_group] || []);
   return nhomThu;
