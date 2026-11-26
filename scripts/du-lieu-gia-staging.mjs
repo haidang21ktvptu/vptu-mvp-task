@@ -1,6 +1,7 @@
 // v3.36 (Đợt 1, CAU-HOI V-1 "dữ liệu giả staging: khoảng 500 việc"): nạp / dọn bộ việc GIẢ trên project STAGING để kiểm giao diện, tốc độ với
 // khối lượng gần thật (Tổng quan, ma trận đơn vị, Cần xử lý, chuông). CHỈ STAGING: dừng ngay nếu địa chỉ không phải project staging. Không tạo tài khoản
-// (CLAUDE.md mục 11 — tài khoản staging chỉ từ seed.sql): dùng tài khoản demo sẵn có (không dùng tài khoản e2e), đơn vị trong dm_don_vi.
+// (CLAUDE.md mục 11 — tài khoản staging chỉ từ seed.sql): dùng tài khoản demo sẵn có, đơn vị trong dm_don_vi. Không chạm phạm vi của tài khoản e2e
+// và của demo_pcvp2 / phòng Quản trị (e2e kl-dashboard đọc bộ số khối Quản trị): không dùng tài khoản e2e, demo_cv2, phòng QUAN_TRI, đơn vị E2E_*.
 // Dấu nhận biết: văn bản so_ket_luan 'DL-GIA-<số>' — mọi việc của bộ gắn các văn bản này; dọn = xoá việc của các văn bản đó (lịch sử, minh chứng, tin
 // theo khoá ngoại xoá dây chuyền) rồi xoá văn bản. Tái tạo y hệt mỗi lần (PRNG hạt cố định); nạp lại chỉ thêm phần còn thiếu (theo nội dung).
 // Dùng (workflow du-lieu-gia-staging.yml): SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/du-lieu-gia-staging.mjs nap 500 | xoa
@@ -37,18 +38,17 @@ const DO_KHAN = [...Array(16).fill('THUONG'), 'KHAN', 'KHAN', 'KHAN', 'THUONG_KH
 
 async function boiCanh() {
   const tk = Object.fromEntries(loi(await db.from('accounts').select('id, username, role_group, department')
-    .in('username', ['demo_cvp', 'demo_pcvp', 'demo_pcvp2', 'demo_truongphong', 'demo_cv1', 'demo_cv2', 'demo_qtht']), 'Đọc tài khoản demo').map((a) => [a.username, a]));
-  for (const u of ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv1', 'demo_cv2']) if (!tk[u]) throw new Error(`Thiếu tài khoản ${u} (seed.sql).`);
+    .in('username', ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv1', 'demo_qtht']), 'Đọc tài khoản demo').map((a) => [a.username, a]));
+  for (const u of ['demo_cvp', 'demo_pcvp', 'demo_truongphong', 'demo_cv1']) if (!tk[u]) throw new Error(`Thiếu tài khoản ${u} (seed.sql).`);
   const dv = loi(await db.from('dm_don_vi').select('ma, trong_van_phong, phong').order('thu_tu'), 'Đọc dm_don_vi').filter((d) => !d.ma.startsWith('E2E'));
   // Kiểu chủ trì: [đơn vị, tài khoản chủ trì | null, người theo dõi khi phải tự ghi, người giao (tao_boi)]
   const kieu = [];
   const phong = (ma) => dv.find((d) => d.ma === ma);
   if (phong('TONG_HOP')) kieu.push(['TONG_HOP', tk.demo_cv1.id, tk.demo_cv1.id, tk.demo_truongphong.id], ['TONG_HOP', null, tk.demo_truongphong.id, tk.demo_pcvp.id]);
-  if (phong('QUAN_TRI')) kieu.push(['QUAN_TRI', tk.demo_cv2.id, tk.demo_cv2.id, (tk.demo_pcvp2 || tk.demo_pcvp).id]);
   if (phong('CDS_CY') && tk.demo_qtht) kieu.push(['CDS_CY', tk.demo_qtht.id, tk.demo_qtht.id, tk.demo_cvp.id]);
   for (const ma of ['HC_LT', 'TAI_CHINH_DANG']) if (phong(ma)) kieu.push([ma, null, tk.demo_pcvp.id, tk.demo_cvp.id]);
   if (phong('VAN_PHONG_TINH_UY')) kieu.push(['VAN_PHONG_TINH_UY', tk.demo_pcvp.id, tk.demo_pcvp.id, tk.demo_cvp.id]);
-  dv.filter((d) => !d.trong_van_phong).slice(0, 8).forEach((d, i) => kieu.push([d.ma, null, i % 2 ? tk.demo_cv2.id : tk.demo_cv1.id, tk.demo_cvp.id]));
+  dv.filter((d) => !d.trong_van_phong).slice(0, 8).forEach((d) => kieu.push([d.ma, null, tk.demo_cv1.id, tk.demo_cvp.id]));
   return { tk, kieu };
 }
 
