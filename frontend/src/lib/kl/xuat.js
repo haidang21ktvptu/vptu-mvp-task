@@ -69,7 +69,10 @@ export function xuatBaoCao({ ky, phamVi = '', nguoi = '', theoPhong, theoChuyenV
 
 // v3.16: xuất theo kỳ (tuần / tháng / quý / năm — lib/kl/ky.js). k = khoangKyChon(...); rows = toàn bộ việc trong phạm vi (hoặc danh sách đang lọc).
 // 6 sheet: Kỳ (thông tin), Tổng hợp theo phòng / đơn vị, Giao trong kỳ, Hoàn thành trong kỳ, Đến hạn trong kỳ, Còn mở cuối kỳ (15 cột + Ngày giao, Ngày hoàn thành).
-const COT_KY = [COT_NHIEM_VU[0], { nhan: 'Ngày giao nhiệm vụ', rong: 13, kieu: 'ngay', gt: ngayGiao }, { nhan: 'Ngày hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.ngay_hoan_thanh || '' }, ...COT_NHIEM_VU.slice(1)];
+// 0141: cột cạnh Ngày hoàn thành ghi ngày do hệ thống bổ sung (theo lịch sử / ước tính); trống = ngày người dùng ghi.
+const NGUON_NHT = { LICH_SU: 'Bổ sung theo lịch sử', UOC_TINH: 'Bổ sung ước tính' };
+const COT_KY = [COT_NHIEM_VU[0], { nhan: 'Ngày giao nhiệm vụ', rong: 13, kieu: 'ngay', gt: ngayGiao }, { nhan: 'Ngày hoàn thành', rong: 13, kieu: 'ngay', gt: (r) => r.ngay_hoan_thanh || '' },
+  { nhan: 'Ngày hoàn thành bổ sung', rong: 18, gt: (r) => NGUON_NHT[r.ngay_hoan_thanh_bo_sung] || '' }, ...COT_NHIEM_VU.slice(1)];
 export function xuatTheoKy(rows, k, { phamVi = 'Toàn bộ việc trong phạm vi', nguoi = '' } = {}) {
   const pl = phanLoaiTheoKy(rows, k); const th = tongHopTheoKy(rows, k);
   const thongTin = [['Kỳ', k.ten], ['Từ ngày', k.tu], ['Đến ngày', k.den], ['Phạm vi', phamVi], ['Người xuất', nguoi], ['Xuất lúc', new Date().toLocaleString('vi-VN')],

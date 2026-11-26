@@ -1,13 +1,14 @@
 // Ngăn chi tiết bên phải (v8 đợt 3: cố định 520px — đầu mã + nhãn + nội dung + văn bản, lưới 2 cột, hàng nút, chỉ đạo, minh chứng, diễn biến nền màu; thứ tự của mọi vai: thông tin then chốt → hành động → khối chỉ đạo → minh chứng → chi tiết và lịch sử
 // gập). Căn cứ từng trường từ lich_su (RLS theo phạm vi thấy nhiệm vụ); đính chính đang chờ; nguồn dòng. Một ngăn cho cả danh sách:
 // #klChiTiet chứa <div id="klChiTiet-<id>"> của việc đang chọn; toggleKlChiTiet({id, cheDo}) mở việc (cheDo 'chi-dao' → con trỏ vào ô nhập).
-// v3.29: mở việc → thanh địa chỉ "…/<chức năng>/<mã>" (ghiViec); bấm "Đóng ngăn" → bỏ mã (hành động dongKlChiTiet đăng ký ở kl/index.js).
+// v3.29: mở việc → thanh địa chỉ "…/<chức năng>/<mã>" (ghiViec); bấm dấu × ở góc (v3.36, thay nút chữ "Đóng ngăn") → bỏ mã (hành động dongKlChiTiet
+// đăng ký ở kl/index.js). v3.36: lãnh đạo (A0, A1, A2) thấy khối Chỉ đạo ngay dưới thông tin chính, trước các nút.
 import { $, escapeHtml, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
 import { loadLichSu, loadDinhChinhCho, tenTrongDanhMuc, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { formatNgay, ngayTruoc } from '../../../lib/kl/ngay.js';
-import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, lopQuaHan } from '../../../lib/kl/nhan.js';
+import { nhanTrangThai, TEN_NGUON, tenCot, boSoThuTu, nhomCua, laBenNop, lopQuaHan, ghiBoSungNht } from '../../../lib/kl/nhan.js';
 import { nhanPhuHtml } from '../../../lib/kl/do-khan.js';
 import { napDienBien } from '../dien-bien.js';
 import { timKlRow } from './danh-sach.js';
@@ -48,8 +49,7 @@ function capQuyetHtml(r) {
 function hanhDongHtml(r, nhanViec = []) {
   // 0103: việc ngoài phạm vi xử lý (cấu hình xem toàn bộ) — chỉ xem, không nút ghi nào; v3.29 (0124): trừ thư ký Thường trực ở việc chưa hoàn thành.
   if (chiXemVoi(r, state.user)) {
-    return `<div class="hanh-dong"><p class="chu-phu ct-chi-xem" data-chi-xem="1">Chỉ xem — việc ngoài phạm vi xử lý của đồng chí. Cần trao đổi, đồng chí liên hệ cán bộ chủ trì hoặc lãnh đạo phụ trách.</p>
-      <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>`;
+    return `<div class="hanh-dong"><p class="chu-phu ct-chi-xem" data-chi-xem="1">Chỉ xem — việc ngoài phạm vi xử lý của đồng chí. Cần trao đổi, đồng chí liên hệ cán bộ chủ trì hoặc lãnh đạo phụ trách.</p></div>`;
   }
   const mo = nhomCua(r.nhom_dem).mo;
   const nut = (action, nhan, lop = '', them = '') => `<button type="button" class="nut ${lop}" data-action="${action}" data-id="${r.id}" ${them}>${nhan}</button>`;
@@ -72,8 +72,7 @@ function hanhDongHtml(r, nhanViec = []) {
     ${duocDong(r) && mo && duocDongTay ? nut('openDongNhiemVu', 'Đóng nhiệm vụ', 'chinh', coMC ? '' : 'disabled title="Cần ít nhất một minh chứng hợp lệ (số hiệu, ngày văn bản, cấp nhận)"') : ''}
     ${giaoTiep ? nut('giaoTiepXuong', 'Giao tiếp xuống', '', `id="klGiaoTiep-${r.id}"`) : ''}
     ${nutGiaoThemHtml(r)}
-    ${nutHanhDongTang(r)}${nutQuyenHtml(r)}
-    <button type="button" class="nut" data-action="dongKlChiTiet">Đóng ngăn</button></div>${khoiQuyenHtml(r)}
+    ${nutHanhDongTang(r)}${nutQuyenHtml(r)}</div>${khoiQuyenHtml(r)}
     ${tuChoi ? `<form class="o" id="oTcNgan-${r.id}" data-submit="tuChoiNhanViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">
       <small>Lý do chỉ người xử lý đề nghị (người giao việc) và lãnh đạo cấp trên đọc được; hạn và trạng thái việc không đổi cho tới khi được duyệt.</small>
       <input name="noi_dung" required placeholder="Lý do từ chối (bắt buộc)" aria-label="Lý do từ chối">
@@ -93,8 +92,12 @@ export function chiTietHtml(r, ls, dc) {
   const nhanTT = `<span class="trang-thai ${lopTT}">${nhanTrangThai(r, me)}</span>`; // nhãn đã kèm số ngày trễ; người nộp: nhãn trung tính (Mới 2)
   // v9 đợt 2: ô do cấp giao điền có bút (sửa ngay) / khoá (đề nghị sửa) — sua-tang.js.
   const o = (nhan, gt, cot = '') => { const nt = cot ? nutTangHtml(r, cot) : ''; return `<div${nt ? ' class="co-tang"' : ''}><dt>${nhan}</dt><dd>${gt}</dd>${nt}</div>`; };
+  // v3.36 (rà soát 25/11, CAU-HOI V-1): đóng ngăn bằng dấu × ở góc (không còn nút chữ "Đóng ngăn" cạnh "Đóng nhiệm vụ"; trong ngăn dùng chung đã có × của
+  // ngăn nên ẩn bằng CSS); lãnh đạo (Thường trực, lãnh đạo Văn phòng, Trưởng phòng) thấy khối Chỉ đạo ngay dưới thông tin chính, trước các nút sửa.
+  const chiDaoLen = ['A0', 'A1', 'A2'].includes(state.user?.role_group);
+  const khoiCd = `<div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>`;
   return `<div id="klChiTiet-${r.id}" class="chi-tiet-noi" data-nhom="${r.nhom_dem}">
-      <div class="ct-dau"><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanTT}</div>
+      <div class="ct-dau"><button type="button" class="ct-dong" data-action="dongKlChiTiet" aria-label="Đóng ngăn chi tiết" title="Đóng ngăn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="ct-nhan"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${nhanMucHtml(r)}${nhanPhuHtml(r)}${nhanTT}</div>
         <h3>${escapeHtml(r.noi_dung)}${nutTangHtml(r, 'noi_dung')}</h3>
         <p class="ma">${r.so_ket_luan ? `${escapeHtml(r.so_ket_luan)} · ` : ''}ban hành ${formatNgay(r.ngay_ban_hanh)}${r.ngay_nhan_van_ban ? ` · giao ${formatNgay(r.ngay_nhan_van_ban)}` : ''} · ${nguonDong.toLowerCase()}${nguoiNhap ? ` bởi ${escapeHtml(nguoiNhap)}` : ''}</p></div>
       <dl class="ct-luoi">${o('Chủ trì theo dõi', `${escapeHtml(chuTriText(r))}${r.da_xac_nhan_nhan ? ' · đã nhận việc' : laBenTrong(r) && nhomCua(r.nhom_dem).mo ? ' · <span class="chu-canh-bao">chưa xác nhận nhận việc</span>' : ''}`)}
@@ -103,12 +106,13 @@ export function chiTietHtml(r, ls, dc) {
         ${o('Cấp quyết', capQuyetHtml(r))}
         ${o('Cấp nhận sản phẩm', escapeHtml(r.cap_nhan_san_pham_ten || '(trống)'), 'cap_nhan_san_pham')}
         ${oLuoiPr3Html(r, o)}${oLuoiNguonHtml(r, o)}${oMucTieuHtml(r)}</dl>
+      ${chiDaoLen ? khoiCd : ''}
       ${hanhDongHtml(r, nhanViec)}
       ${khoiMucTieuHtml(r)}
       ${khoiDeNghiSuaHtml(r)}
       ${khoiPr3Html(r)}
       ${khoiGiaiNganHtml(r)}
-      <div class="khoi-nho luong-cd" id="klChiDao-${r.id}"><p class="chu-phu">Đang tải chỉ đạo…</p></div>
+      ${chiDaoLen ? '' : khoiCd}
       <div class="khoi-nho khoi-mc" id="klMinhChung-${r.id}"><p class="chu-phu">Đang tải minh chứng…</p></div>
       <div class="khoi-nho db-khoi" id="klDienBien-${r.id}"><h4>Diễn biến <span class="chu-phu">mới nhất trên đầu</span></h4><div><p class="chu-phu">Đang tải diễn biến…</p></div></div>
       ${coNhapExcel(ls) ? khoiDuLieuGocHtml(r) : ''}
@@ -120,7 +124,7 @@ export function chiTietHtml(r, ls, dc) {
           ${hang('Hạn xử lý', hienGiaTri('han_xu_ly', r.han_xu_ly), r.loai_thoi_han_ma === 'KY_BAN_HANH' ? '<span class="chu-phu">tự tính = ngày ban hành + 10</span>' : canCu('han_xu_ly', ls))}
           ${hang('Loại thời hạn', r.loai_thoi_han_ten, canCu('loai_thoi_han_ma', ls))}
           ${hang('Tiến độ', tenTrongDanhMuc('tienDo', r.tien_do_ma), `${canCu('tien_do_ma', ls)}<br><span class="chu-phu">cập nhật lần cuối ${formatDateTime(r.cap_nhat_luc)}${capNhat !== null ? ` (${capNhat} ngày trước)` : ''}</span>`)}
-          ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày giao nhiệm vụ)` : ''}`, canCu('ngay_hoan_thanh', ls))}
+          ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${ghiBoSungNht(r, false)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined && r.ngay_hoan_thanh_bo_sung !== 'UOC_TINH' ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày giao nhiệm vụ)` : ''}`, canCu('ngay_hoan_thanh', ls))}
           ${r.minh_chung ? hang('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hang('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hang('Ngành/lĩnh vực', boSoThuTu(r.nganh_ten) || '(chưa có ngành/lĩnh vực)', canCu('nganh_ma', ls))}

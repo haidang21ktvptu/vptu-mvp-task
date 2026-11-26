@@ -35,9 +35,9 @@ function noiDung(d) {
 
 // v3.29: dòng của các ô đã được một dòng khác ghi CÙNG LẦN (cùng lúc) nói đủ thì ẩn — lĩnh vực tự đổi theo ngành (không còn ô Lĩnh vực; lĩnh vực
 // đổi riêng — rà soát bằng tệp, sửa lĩnh vực chi tiết — vẫn hiện); hạn, số lần gia hạn khi "Điều chỉnh hạn"; chủ trì, phòng khi "Đổi chủ trì
-// theo dõi"; tiến độ, ngày hoàn thành khi "Mở lại nhiệm vụ" (dòng tóm tắt có cũ → mới và lý do).
+// theo dõi"; tiến độ, ngày hoàn thành (cả dấu ngày bổ sung — 0141) khi "Mở lại nhiệm vụ" (dòng tóm tắt có cũ → mới và lý do).
 const AN_CUNG_LAN = { nganh_ma: ['linh_vuc_ma'], dieu_chinh_han: ['han_xu_ly', 'so_lan_gia_han'], doi_chu_tri: ['owner_tai_khoan', 'owner_don_vi_ma'],
-  mo_lai: ['tien_do_ma', 'ngay_hoan_thanh'] };
+  mo_lai: ['tien_do_ma', 'ngay_hoan_thanh', 'ngay_hoan_thanh_bo_sung'] };
 export function dienBienHtml(tatCa) {
   const ls = tatCa.filter((d) => d.nguon === 'lich_su');
   const an = new Set(ls.flatMap((d) => (AN_CUNG_LAN[d.loai] || []).map((c) => `${c}|${d.luc}`)));

@@ -233,6 +233,7 @@ Mọi danh sách nhiệm vụ (Nhiệm vụ, Việc tôi đã giao — trước 
 - **Việc cần làm** (Việc của tôi): một nút cho việc đầu tiên áp dụng — Xác nhận đã nhận việc (nút lam, kèm nút viền "Từ chối") → Trả lời chỉ đạo → Nộp minh chứng (nút lam khi việc gấp) → Cập nhật tiến độ; không có việc chờ thì chữ xám. Biểu mẫu mở **ngay dưới dòng** (khối viền trái theo mức), mỗi lúc một khối, Huỷ đưa con trỏ về nút đã mở.
 - **Trang**: 50 dòng mỗi trang; chân bảng "Hiển thị 1–50 trong 230 nhiệm vụ (lọc từ 812)" + "‹ Trang trước · Trang 1/5 · Trang sau ›"; đổi ô số / tìm / lọc / sắp xếp về trang 1. In và Xuất Excel lấy đủ danh sách.
 - **Ngăn chi tiết** (màn Nhiệm vụ) hiện **cạnh** bảng (520px; 420px khi ≤ 1180px), không phủ lên bảng; khi ngăn mở, dưới 1600px dòng thành thẻ gọn.
+  v3.36 (rà soát 25/11/2026): đóng ngăn bằng dấu × ở góc trên phải (36×36px, nhãn đọc "Đóng ngăn chi tiết"), không còn nút chữ "Đóng ngăn" đứng cạnh "Đóng nhiệm vụ"; trong ngăn dùng chung đã có × của ngăn nên ẩn. Thường trực, lãnh đạo Văn phòng, Trưởng phòng thấy khối Chỉ đạo ngay dưới thông tin chính, trước các nút sửa; chuyên viên giữ thứ tự cũ.
 - **Màn hẹp**: 1024–1365px gộp cột thời gian vào dòng phụ dưới nội dung; < 1024px mỗi dòng là thẻ, mỗi ô có nhãn (`data-nhan`); ≤ 600px nội dung 3 dòng, nút thao tác rộng hết thẻ (≥ 44px); 360px không cuộn ngang.
 - **In**: ẩn ô số, chú giải, nút trang, khối dưới dòng và cột Việc cần làm; dòng không bị cắt giữa trang.
 

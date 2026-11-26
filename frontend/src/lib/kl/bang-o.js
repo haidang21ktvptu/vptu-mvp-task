@@ -3,7 +3,7 @@
 // thái (một chỗ cho mọi bảng; lớp tt-* viết nguyên văn để Tailwind giữ lớp), giờ:phút + ngày theo giờ Việt Nam, tên văn bản ngắn, cách nhập,
 // phân trang 50 dòng. Màu ngày hạn theo lớp mức của dòng (lopMep — CSS), không tính ở đây.
 import { formatNgay, soNgay } from './ngay.js';
-import { MOC_RA_SOAT, laBenNop, lopQuaHan, nhanTrangThai, tenTienDoHoanThanh, boSoThuTu } from './nhan.js';
+import { MOC_RA_SOAT, laBenNop, lopQuaHan, nhanTrangThai, tenTienDoHoanThanh, boSoThuTu, ghiBoSungNht } from './nhan.js';
 
 export const CO_TRANG = 50;   // số dòng mỗi trang của màn Nhiệm vụ (mẫu: "50 dòng mỗi trang")
 const thuong = (s) => (s ? s[0].toLowerCase() + s.slice(1) : '');
@@ -13,7 +13,7 @@ export const ngayNgan = (s) => (s ? `${Number(s.slice(8, 10))}/${Number(s.slice(
 // Ô hạn xử lý: { ngay, chu } — ngày (đậm) và dòng phụ. Việc thường xuyên / chờ điều kiện: hạn là mốc rà soát, không bao giờ ghi "trễ".
 export function hanO(r, homNay) {
   if (r.nhom_dem === 'HOAN_THANH') {
-    const xong = r.ngay_hoan_thanh ? `xong ${ngayNgan(r.ngay_hoan_thanh)}` : 'không có ngày hoàn thành';
+    const xong = r.ngay_hoan_thanh ? `xong ${ngayNgan(r.ngay_hoan_thanh)}${ghiBoSungNht(r)}` : 'không có ngày hoàn thành';
     const td = thuong(tenTienDoHoanThanh(r));
     return { ngay: r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'Không có hạn', chu: td ? `${xong} · ${td}` : xong };
   }

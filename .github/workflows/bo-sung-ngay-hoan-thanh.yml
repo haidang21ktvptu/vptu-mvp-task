@@ -1,0 +1,67 @@
+# v3.36 (CAU-HOI V-2, migration 0141): bổ sung ngày hoàn thành cho việc đã hoàn thành chưa ghi ngày — chạy tay. Ba thao tác: xem-truoc (chạy thử rồi hoàn
+# lại: số sẽ ghi, số bị kiểm tra dữ liệu từ chối kèm mã việc, số sẽ đúng hạn / trễ hạn), thuc-hien, hoan-tac (bỏ ngày đã bổ sung của mọi việc còn dấu).
+# Staging chạy ngay (chọn nhánh main). Production: environment "production" chỉ nhận thẻ v* — ở "Use workflow from" chọn THẺ PHÁT HÀNH (ví dụ v3.36.0),
+# không chọn nhánh main (bị chặn); mỗi lần chờ chủ dự án duyệt (CLAUDE.md mục 12). Gọi RPC bằng service_role qua REST như canh-bao.yml (key chỉ trong
+# header, không in log). Summary ghi số tổng hợp và tối đa 5 "mã việc: lý do" bị từ chối (mã NV-<số> không chứa nội dung hay tên người).
+name: Bổ sung ngày hoàn thành
+
+on:
+  workflow_dispatch:
+    inputs:
+      moi_truong:
+        description: 'Môi trường'
+        type: choice
+        options: [staging, production]
+        default: staging
+        required: true
+      thao_tac:
+        description: 'Thao tác'
+        type: choice
+        options: [xem-truoc, thuc-hien, hoan-tac]
+        default: xem-truoc
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: bo-sung-nht-${{ inputs.moi_truong }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  staging:
+    name: Staging — ${{ inputs.thao_tac }}
+    if: ${{ inputs.moi_truong == 'staging' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    env:
+      URL: https://vojmrjezspdftovzinek.supabase.co
+      KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
+      MOI_TRUONG: staging
+      THAO_TAC: ${{ inputs.thao_tac }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .github/scripts/bo-sung-nht.sh
+
+  production:
+    name: Production — ${{ inputs.thao_tac }} (chờ duyệt)
+    if: ${{ inputs.moi_truong == 'production' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    environment:
+      name: production
+    env:
+      URL: https://frwyxcmbonjaimziiuqr.supabase.co
+      KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MOI_TRUONG: production
+      THAO_TAC: ${{ inputs.thao_tac }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .github/scripts/bo-sung-nht.sh

@@ -979,3 +979,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - So với tuần trước: migration 0140 thêm bảng `kl_chup_viec` (bản chụp việc chưa hoàn thành mỗi ngày, quyền đọc như nhiệm vụ) và hàm `kl_chup_so_lieu` (chỉ service_role); `canh-bao.yml` gọi lúc 07:30 cùng lượt cảnh báo; migration chụp bản đầu tiên.
 - Tầng 2: ma trận đơn vị theo trạng thái (Trưởng phòng: theo cán bộ) thay bảng theo phòng / cán bộ trong khối nội bộ; 10 điểm nghẽn (nội dung tối đa 2 dòng); xếp hạng. Mỗi thẻ, ô, cột tuần mở đúng danh sách trong ngăn chi tiết.
 - Kiểm thử: unit `tong-quan-tang` (22), RLS `kl-0140`, e2e Tổng quan / ngăn chi tiết / lãnh đạo sửa theo bố cục mới và thêm bài so với tuần trước; e2e chụp ảnh Tổng quan bốn cỡ, CI lưu artifact `…-anh-chup` để rà giao diện trên PR.
+
+## 95. v3.36.0 (Đợt 1, phần 3) — Ngày hoàn thành bổ sung, ngăn chi tiết (25–26/11/2026, chủ dự án duyệt — CAU-HOI V-1, V-2; migration **0141**)
+- Việc đã hoàn thành chưa ghi ngày (rà soát: 275/337) được bổ sung ngày: theo lịch sử chuyển sang Hoàn thành nếu có, không thì ngày giao + 30 ngày, không quá ngày nhập việc; đánh dấu ở cột `ngay_hoan_thanh_bo_sung`, sửa ngày hoặc mở lại việc thì dấu tự bỏ.
+- Hàm `kl_bo_sung_ngay_hoan_thanh` (xem trước chạy thử rồi hoàn lại / thực hiện, chỉ ghi việc còn chưa có ngày; chỉ service_role) và `…_hoan_tac` (từng việc); workflow `bo-sung-ngay-hoan-thanh.yml`, production chạy từ thẻ phát hành, chờ chủ dự án duyệt; không tự chạy khi áp migration.
+- Giao diện ghi "(bổ sung)" cạnh ngày ở bảng, dòng việc, tình hình; ngăn chi tiết ghi đủ cách lấy ngày (ước tính thì không ghi lead time); thẻ Đã hoàn thành ghi số việc có ngày bổ sung trong mẫu số đúng hạn, "7 ngày qua" chỉ tính ngày thật; Excel theo kỳ thêm cột ngày bổ sung.
+- Ngăn chi tiết: đóng bằng dấu × ở góc (bỏ nút chữ "Đóng ngăn" cạnh "Đóng nhiệm vụ"); lãnh đạo thấy khối Chỉ đạo trước các nút sửa.
+- Kiểm thử: RLS `kl-0141` (7 ca), unit thêm 2 bài; rà soát độc lập 26/11 (chạy thử trên PostgreSQL 16) — đã sửa: chạy thử khi xem trước, không ghi đè ngày người dùng vừa nhập, hoàn tác từng việc, ngày không trước ngày giao.

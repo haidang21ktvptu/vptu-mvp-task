@@ -6,7 +6,7 @@ import { $, escapeHtml, show } from '../../lib/dom.js';
 import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { formatNgay, soNgay, homNayVN } from '../../lib/kl/ngay.js';
-import { lopMep, MOC_RA_SOAT, tenMuc } from '../../lib/kl/nhan.js';
+import { lopMep, MOC_RA_SOAT, tenMuc, ghiBoSungNht } from '../../lib/kl/nhan.js';
 import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { nhanPhuHtml as nhanGd22 } from '../../lib/kl/do-khan.js';
 import { oGiaoLaiHtml } from './dieu-hanh/the-viec.js';
@@ -18,7 +18,7 @@ const duocChiDao = () => ['A1', 'A2'].includes(state.user?.role_group);
 
 // Hạn ngắn gọn cho dòng việc: "trễ 12 ngày · hạn 4/9", "còn 2 ngày · hạn 18/9", "xong 15/9", "chưa có hạn".
 export function hanNgan(r, homNay = homNayVN()) {
-  if (r.nhom_dem === 'HOAN_THANH') return r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}` : 'xong';
+  if (r.nhom_dem === 'HOAN_THANH') return r.ngay_hoan_thanh ? `xong ${formatNgay(r.ngay_hoan_thanh)}${ghiBoSungNht(r)}` : 'xong';
   if (!r.han_xu_ly) return 'chưa có hạn';
   if (MOC_RA_SOAT[r.nhom_dem]) return `${MOC_RA_SOAT[r.nhom_dem]} · mốc rà soát ${formatNgay(r.han_xu_ly)}`;   // không tính quá hạn (như DB)
   const n = soNgay(homNay, r.han_xu_ly);

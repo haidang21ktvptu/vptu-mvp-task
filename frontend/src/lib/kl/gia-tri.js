@@ -2,7 +2,7 @@
 // cho bảng căn cứ của ngăn chi tiết (kl/chi-tiet.js) và Diễn biến (dien-bien.js). v3.29: tách khỏi chi-tiet.js (tránh vòng import với dien-bien.js).
 import { findAccount } from '../state.js';
 import { tenTrongDanhMuc } from './du-lieu.js';
-import { tenChatLuong } from './nhan.js';
+import { tenChatLuong, TEN_BO_SUNG_NHT } from './nhan.js';
 import { tenMucQuanTrong } from './ma-nguon.js';
 import { formatNgay } from './ngay.js';
 
@@ -16,6 +16,7 @@ export function hienGiaTri(cot, v) {
   if (DANH_MUC_COT[cot]) return tenTrongDanhMuc(DANH_MUC_COT[cot], v);
   if (cot === 'chat_luong') return tenChatLuong(v) || v;
   if (cot === 'muc_quan_trong') return tenMucQuanTrong(v);   // C2 (0087)
+  if (cot === 'ngay_hoan_thanh_bo_sung') return TEN_BO_SUNG_NHT[v] || v;   // 0141
   if (COT_NGAY.includes(cot)) return formatNgay(v);
   if (COT_TAI_KHOAN.includes(cot)) return findAccount(v)?.full_name || v;
   if (cot === 'ngay_nhan_uoc_tinh' || cot === 'theo_1400' || cot === 'bi_tu_choi') return v === 'true' || v === true ? 'có' : 'không';
