@@ -35,6 +35,7 @@ const VIEC = ['Tham mưu xây dựng báo cáo sơ kết thực hiện nghị qu
   'Đánh giá kết quả thực hiện chương trình kiểm tra, giám sát năm', 'Chuẩn bị báo cáo quyết toán kinh phí hoạt động của Văn phòng'];
 const SAN_PHAM = ['BAO_CAO', 'DU_THAO_VAN_BAN', 'KE_HOACH', 'TO_TRINH', 'CONG_VAN'];
 const CAP_NHAN = ['CHANH_VAN_PHONG', 'PHO_CHANH_VAN_PHONG', 'THUONG_TRUC'];
+const CAP_QUYET = ['TRUONG_PHONG', 'PHO_CHANH_VAN_PHONG', 'CHANH_VAN_PHONG', 'THUONG_TRUC'];
 const DO_KHAN = [...Array(16).fill('THUONG'), 'KHAN', 'KHAN', 'KHAN', 'THUONG_KHAN'];
 
 async function boiCanh() {
@@ -55,10 +56,14 @@ async function boiCanh() {
   return { tk, kieu };
 }
 
-// Một việc giả (thuần, theo PRNG): mỗi việc luôn rút đúng 12 số ngẫu nhiên, mỗi số cho một lựa chọn — chọn mẫu không phụ thuộc ngày chạy; ngày giao
+// Thời điểm giả theo ngày giả (giờ Việt Nam) — thời điểm nhập, nộp, xác nhận khớp ngày nhận / ngày hoàn thành thay vì lúc chạy script (trước đây cả
+// 500 việc "mới nhập trong 24 giờ", mọi kết quả "nộp trong 7 ngày"); ngày là hôm nay thì lấy giờ chạy (không ghi giờ tương lai).
+const luc = (ngay, gio) => (ngay >= homNay ? new Date().toISOString() : `${ngay}T${gio}:00+07:00`);
+
+// Một việc giả (thuần, theo PRNG): mỗi việc luôn rút đúng 14 số ngẫu nhiên, mỗi số cho một lựa chọn — chọn mẫu không phụ thuộc ngày chạy; ngày giao
 // theo văn bản, trạng thái theo hạn so với hôm nay.
 function sinhViec(i, ctx, vbs) {
-  const r = Array.from({ length: 12 }, rnd);
+  const r = Array.from({ length: 14 }, rnd);
   const vb = vbs[i % vbs.length];
   const [donVi, owner, theoDoi, taoBoi] = ctx.kieu[Math.floor(r[0] * ctx.kieu.length)];
   const nhan = nhoHon(cong(vb.ngay_ban_hanh, Math.floor(r[1] * 5)), homNay);
@@ -72,7 +77,8 @@ function sinhViec(i, ctx, vbs) {
     nv: { van_ban_id: vb.id, noi_dung: `${VIEC[Math.floor(r[6] * VIEC.length)]} (${TAG} ${String(i + 1).padStart(3, '0')})`, owner_don_vi_ma: donVi,
       owner_tai_khoan: owner, nguoi_theo_doi: theoDoi, tao_boi: taoBoi, loai_thoi_han_ma: loaiHan, han_xu_ly: han,
       ly_do_chua_co_han: han ? null : 'Nhiệm vụ thường xuyên', ngay_nhan_van_ban: nhan, theo_1400: true, do_khan: DO_KHAN[Math.floor(r[7] * DO_KHAN.length)],
-      san_pham_loai: SAN_PHAM[Math.floor(r[8] * SAN_PHAM.length)], nguon: 'app', vuong_mac: !ngayXong && r[9] < 0.05 ? 'Chờ ý kiến của lãnh đạo về phạm vi số liệu' : null },
+      san_pham_loai: SAN_PHAM[Math.floor(r[8] * SAN_PHAM.length)], nguon: 'app', vuong_mac: !ngayXong && r[9] < 0.05 ? 'Chờ ý kiến của lãnh đạo về phạm vi số liệu' : null,
+      cap_quyet_dinh: r[12] < 0.7 ? CAP_QUYET[Math.floor(r[13] * CAP_QUYET.length)] : null, created_at: luc(nhan, '08:30') },
     xacNhan: r[10] < 0.85,
     xong: ngayXong && ngayXong >= vb.ngay_ban_hanh ? { ngay: ngayXong < nhan ? nhan : ngayXong, cap: CAP_NHAN[Math.floor(r[11] * CAP_NHAN.length)] } : null,
   };
@@ -98,13 +104,18 @@ async function nap(so) {
     if (daCo.has(soCua(nv.noi_dung))) { kq.daCo++; continue; }
     try {
       const id = loi(await db.from('nhiem_vu').insert(nv).select('id').single(), 'Tạo việc').id;
-      loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'giao_viec', nguoi_sua: nv.tao_boi, gia_tri_moi: `${TAG} giao việc`, nguon: 'app' }), 'Lịch sử giao');
+      loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'giao_viec', nguoi_sua: nv.tao_boi, gia_tri_moi: `${TAG} giao việc`, nguon: 'app',
+        luc: luc(nv.ngay_nhan_van_ban, '08:30') }), 'Lịch sử giao');
       // Xác nhận nhận việc: lãnh đạo theo dõi đã được trigger tự xác nhận lúc tạo — không ghi dòng thứ hai.
       const daXn = loi(await db.from('lich_su').select('id').eq('nhiem_vu_id', id).eq('cot', 'xac_nhan_nhan_viec').limit(1), 'Đọc xác nhận').length > 0;
-      if ((xacNhan || xong) && !daXn) loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'xac_nhan_nhan_viec', nguoi_sua: nv.nguoi_theo_doi, gia_tri_moi: `${TAG} xác nhận`, nguon: 'app' }), 'Xác nhận');
+      if ((xacNhan || xong) && !daXn) {
+        loi(await db.from('lich_su').insert({ nhiem_vu_id: id, cot: 'xac_nhan_nhan_viec', nguoi_sua: nv.nguoi_theo_doi, gia_tri_moi: `${TAG} xác nhận`, nguon: 'app',
+          luc: luc(nv.ngay_nhan_van_ban, '10:00') }), 'Xác nhận');
+      }
       if (xong) {
         loi(await db.from('minh_chung').insert({ nhiem_vu_id: id, nop_boi: nv.nguoi_theo_doi, loai: 'so_hieu', so_hieu: `${100 + i}/BC-VPTU (${TAG})`,
-          ngay_van_ban: xong.ngay, cap_nhan: xong.cap, hop_le: true, xac_nhan_boi: nv.tao_boi, xac_nhan_luc: new Date().toISOString() }), 'Minh chứng');
+          ngay_van_ban: xong.ngay, cap_nhan: xong.cap, hop_le: true, xac_nhan_boi: nv.tao_boi, nop_luc: luc(xong.ngay, '15:00'), xac_nhan_luc: luc(xong.ngay, '16:00') }),
+        'Minh chứng');
         // dong_luc = lúc nạp (trigger); số liệu theo kỳ tính theo ngay_hoan_thanh.
         loi(await db.from('nhiem_vu').update({ tien_do_ma: 'HOAN_THANH', ngay_hoan_thanh: xong.ngay }).eq('id', id), 'Hoàn thành');
         kq.xong++;
