@@ -7,13 +7,24 @@
   <!-- v3.29: không gửi đường dẫn trang cho trang ngoài; chính sách nội dung (CSP) do vite.config.js chèn lúc build. -->
   <meta name="referrer" content="same-origin">
   <title>Hệ thống quản trị nhiệm vụ — Tỉnh ủy Cao Bằng</title>
-  <!-- Kiểu giao diện nhớ theo máy (shell/kieu-giao-dien.js): đặt trước khi vẽ để không chớp kiểu mặc định. -->
-  <script>try { if (localStorage.getItem('vptu.kieu') === 'trang-nghiem') document.documentElement.setAttribute('data-kieu', 'trang-nghiem'); if (localStorage.getItem('vptu.nen-toi') === '1') document.documentElement.setAttribute('data-theme', 'dark'); if (localStorage.getItem('vptu.co-chu') === 'lon') document.documentElement.setAttribute('data-co-chu', 'lon'); } catch (e) { /* trình duyệt chặn lưu trữ: dùng mặc định */ }</script>
+  <!-- Kiểu giao diện nhớ theo máy (shell/kieu-giao-dien.js): đặt trước khi vẽ để không chớp kiểu mặc định. v3.36 (CAU-HOI V-12): thêm lựa chọn giảm
+       chuyển động; máy còn phiên đăng nhập (khoá sb-…-auth-token của Supabase Auth) thì hiện màn chờ thay cho màn đăng nhập trong lúc khôi phục phiên
+       (lớp cho-phien — shell/mo-dau.js bỏ khi vào ứng dụng hoặc về màn đăng nhập; quá 10 giây chưa xong thì tự bỏ để không kẹt màn chờ). -->
+  <script>(function () { try { var h = document.documentElement; if (localStorage.getItem('vptu.kieu') === 'trang-nghiem') h.setAttribute('data-kieu', 'trang-nghiem'); if (localStorage.getItem('vptu.nen-toi') === '1') h.setAttribute('data-theme', 'dark'); if (localStorage.getItem('vptu.co-chu') === 'lon') h.setAttribute('data-co-chu', 'lon'); if (localStorage.getItem('vptu.chuyen-dong') === 'giam') h.setAttribute('data-chuyen-dong', 'giam'); for (var i = 0; i < localStorage.length; i++) { if (/^sb-.+-auth-token$/.test(localStorage.key(i) || '')) { h.classList.add('cho-phien'); h.henChoPhien = setTimeout(function () { h.classList.remove('cho-phien'); }, 10000); break; } } } catch (e) { /* trình duyệt chặn lưu trữ: dùng mặc định */ } })();</script>
   <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon-180.png">
   <script type="module" src="/src/main.js"></script>
 </head>
 <body>
+
+  <!-- ================= MÀN CHỜ (v3.36, CAU-HOI V-12): nền màu menu, biểu trưng và tên cơ quan đúng vị trí thanh đầu trang; chỉ hiện khi <html> mang
+       lớp cho-phien / mo-dau (styles/chuyen-dong.css, shell/mo-dau.js) — khung ứng dụng mở ra theo hình tròn từ biểu trưng ================= -->
+  <div id="manCho" class="man-cho" aria-hidden="true">
+    <div class="dai"><div class="dai-trong"><span class="nut-dai menu-mo-nut"></span>
+      <img class="logo" src="/brand/bieu-trung.png" width="52" height="40" alt="">
+      <div class="ten"><span>Tỉnh ủy Cao Bằng</span><b>Văn phòng</b><i>*</i></div>
+    </div></div>
+  </div>
 
   <!-- ================= ĐĂNG NHẬP (v8, mockup-v8/01-dang-nhap.html) ================= -->
   <section id="loginSection" class="dn">
@@ -96,7 +107,7 @@
       <nav id="mainNav" class="menu" aria-label="Điều hướng chính"></nav>
       <div id="menuNen" class="menu-nen" data-action="toggleMenuDoc"></div>
     <main class="trang">
-      <section id="viewTongQuan" class="hidden"></section>
+      <section id="viewTongQuan" class="hidden" data-cd-ms="2400"></section>
       <section id="viewDieuHanh" class="hidden"></section>
       <section id="viewChiDaoDaGui" class="hidden"></section>
       <section id="viewKl" class="hidden"></section>

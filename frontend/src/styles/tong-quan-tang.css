@@ -1,4 +1,4 @@
-/* Tổng quan ba tầng (v3.36): tầng 1 dải điều hành, bốn thẻ, câu kết luận, hàng biểu đồ, dòng nhiệm vụ quý; ma trận đơn vị.
+/* Tổng quan ba tầng (v3.36): tầng 1 dải điều hành, bốn thẻ, câu kết luận, hàng biểu đồ, dòng nhiệm vụ quý; ma trận đơn vị; chuyển động vào trang (cuối tệp).
    Gộp từ: tong-quan-tang.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
 @layer components {
   .tq-tang1 { display: grid; gap: 16px; }
@@ -10,7 +10,9 @@
   .dai-nui { position: absolute; right: 0; bottom: 0; width: 56%; height: 78%; fill: var(--ben-hover); pointer-events: none; }
   .dai-than { position: relative; display: grid; gap: 8px; padding: 22px 28px 24px; }
   .dai-hang { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; min-width: 0; }
+  .dai-hang:first-child { min-height: 44px; } .dai-hang:nth-child(2) { min-height: 42px; }   /* hàng có nút / nhóm kỳ hay chưa đều cùng chiều cao */
   .tq-dai h1 { font-family: var(--font-tieu-de); font-size: var(--chu-trang); font-weight: 600; line-height: 1.2; letter-spacing: -.01em; color: var(--ben-chu); }
+  .tq-dai h1 .nhan-td { color: var(--hero-vong); }   /* cụm nhấn in nghiêng: màu của vòng tỷ lệ */
   .dai-pham-vi { min-width: 0; font-size: var(--chu-bang); color: var(--ben-chu-2); }
   .tq1-luc { font-family: var(--font-van-ban); font-style: italic; }
   .dai-nut { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -40,6 +42,13 @@
   .so-dai { flex: 1 1 170px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; padding: 2px 12px 2px 24px;
     border-left: 1px solid var(--ben-chon); border-radius: 0 12px 12px 0; color: var(--ben-chu); text-align: left; }
   .so-dai .gia { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-so); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  /* v3.36 (V-12): đường xu hướng nhỏ 12 tuần cạnh con số; thanh trong hạn – quá hạn dưới số đang thực hiện */
+  .so-hang { display: flex; align-items: flex-end; gap: 12px; max-width: 100%; }
+  .dn-bao { flex: none; margin-bottom: 6px; color: var(--ben-chu-2); }
+  .so-dai .duong-nho { width: 76px; }
+  .thanh-nho.tren-dai { align-self: stretch; max-width: 9.5rem; height: 6px; margin-top: 7px; border-radius: 3px; }
+  .p-sang { background: var(--ben-chu-2); }
+  .tren-dai .p-do { background: var(--hero-qua-han); }   /* phần quá hạn trên dải: đỏ ở Thanh lịch, sắc trầm trên dải đỏ son của Trang nghiêm (tokens.css) */
   .so-dai .nhan-so { font-size: var(--chu-than); font-weight: 700; line-height: 1.3; }
   .so-dai .phu-h { font-size: var(--chu-nho); line-height: 1.4; color: var(--ben-chu-2); }
   button.so-dai:hover .nhan-so, button.so-dung:hover .so-dung-chu b { text-decoration: underline; text-underline-offset: 3px; }
@@ -47,8 +56,12 @@
   /* Bốn thẻ việc cần quan tâm: cùng chiều cao trong một hàng; dòng so sánh luôn ở chân thẻ. */
   .tq1-the { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
   .the-so { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; padding: 16px 18px; text-align: left;
-    background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); box-shadow: var(--bong-the); transition: border-color .15s; }
+    background: var(--the-kinh); border: 1px solid var(--vien-kinh); border-radius: var(--bo-the); box-shadow: var(--bong-the); transition: border-color .15s; }
   button.the-so:hover { border-color: var(--vien-o); }
+  @media (hover: hover) and (pointer: fine) {   /* v3.36 (V-12): thẻ nhấc nhẹ khi rê chuột */
+    button.the-so { transition: transform var(--cd-vua) var(--cd-em), box-shadow var(--cd-vua) var(--cd-em), border-color .15s; }
+    button.the-so:hover { transform: translateY(-4px); box-shadow: var(--bong-nhac); }
+  }
   button.the-so:hover .nhan-so { text-decoration: underline; text-underline-offset: 3px; }
   .the-dau-so { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .the-so .gia { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-so); line-height: 1.1; color: var(--navy); font-variant-numeric: tabular-nums; }
@@ -77,7 +90,7 @@
   .tq1-ket-luan { flex: 1 1 420px; margin: 0; font-size: var(--chu-than); line-height: 1.5; color: var(--chu); text-wrap: pretty; }
   /* Hàng hai khối: quá hạn theo nhóm (thanh ngang) và giao mới – hoàn thành 12 tuần */
   .tq1-hang { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 16px; }
-  .tq1-khoi, .tq1-xu-huong { display: grid; align-content: start; gap: 12px; min-width: 0; margin: 0; padding: 18px 20px; background: var(--the); border: 1px solid var(--vien);
+  .tq1-khoi, .tq1-xu-huong { display: grid; align-content: start; gap: 12px; min-width: 0; margin: 0; padding: 18px 20px; background: var(--the-kinh); border: 1px solid var(--vien-kinh);
     border-radius: var(--bo-the); box-shadow: var(--bong-the); }
   .khoi-dau h2 { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-muc); line-height: 1.3; color: var(--navy); }
   .khoi-dau p { margin-top: 2px; font-size: var(--chu-nho); color: var(--chu-phu); }
@@ -146,6 +159,39 @@
   .bang-mt tfoot .o-mt { background: var(--the); }   /* ô Tổng cộng bấm được (mở toàn bộ việc của cột) — nổi trên nền dòng tổng */
   /* Tầng 2: điểm nghẽn gọn — nội dung việc, dòng phụ tối đa 2 dòng (đủ nội dung ở ngăn chi tiết khi bấm; "tên ngắn" là việc của đợt sau) */
   .bang-ng .ten-bam b, .bang-ng td small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  /* ---- v3.36 (CAU-HOI V-12, DESIGN mục 7): vào trang Tổng quan — dải → chữ tiêu đề → vòng tỷ lệ và ba số → bốn thẻ → câu kết luận → hai khối biểu đồ
+     → dòng nhiệm vụ quý → phần còn lại của trang. Mốc trễ nhân hệ số nhịp --cd-hs (vào lại mục: nhanh hơn); --cd-j: thứ tự trong hàng; --cd-tre-so:
+     lúc số bắt đầu lăn. Đổi kỳ / bộ lọc (dang-doi): chỉ số lăn và biểu đồ vẽ lại, không trễ. Khai báo gốc ở chuyen-dong.css. ---- */
+  .dai-so > :nth-child(2), .tq1-the > :nth-child(2), .tq1-hang > :nth-child(2) { --cd-j: 1; }
+  .dai-so > :nth-child(3), .tq1-the > :nth-child(3) { --cd-j: 2; }
+  .dai-so > :nth-child(4), .tq1-the > :nth-child(4) { --cd-j: 3; }
+  .dang-doi { --cd-tre-so: 0ms; }
+  #viewTongQuan.dang-vao > .tq-tang1 { animation: none; }
+  #viewTongQuan.dang-vao > :not(.tq-tang1) { animation-delay: calc(var(--cd-tre) + 1200ms * var(--cd-hs)); }
+  .dang-vao .tq-dai { animation: cd-hien 560ms var(--cd-em) both; animation-delay: var(--cd-tre); }
+  .dang-vao .dai-nui polygon { animation: cd-len 900ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + 200ms * var(--cd-hs)); }
+  .dang-vao .dai-nui polygon:nth-child(2) { animation-delay: calc(var(--cd-tre) + 320ms * var(--cd-hs)); }
+  .dang-vao .dai-nui polygon:nth-child(3) { animation-delay: calc(var(--cd-tre) + 440ms * var(--cd-hs)); }
+  .dang-vao .dai-pham-vi, .dang-vao .dai-nut, .dang-vao .tq-dai .pham-vi { animation: cd-len 440ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + 300ms * var(--cd-hs)); }
+  .dang-vao .dai-vach { animation: cd-quet 900ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + 260ms * var(--cd-hs)); }
+  .dang-vao .so-dung, .dang-vao .so-dai { animation: cd-len 460ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + (360ms + var(--cd-j, 0) * 70ms) * var(--cd-hs)); }
+  .dang-vao .so-dai { --cd-tre-so: calc(420ms + var(--cd-j, 0) * 70ms); }
+  .dang-vao .vd-gia, .dang-doi .vd-gia { animation: cd-vong calc(1100ms * var(--cd-hs)) var(--cd-em) both; animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs)); }
+  .dang-vao .the-so { --cd-tre-so: calc(640ms + var(--cd-j, 0) * 80ms); animation: cd-hien 520ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + (520ms + var(--cd-j, 0) * 80ms) * var(--cd-hs)); }
+  .dang-vao .the-ic { animation: cd-nay 440ms var(--cd-nay) both; animation-delay: calc(var(--cd-tre) + (780ms + var(--cd-j, 0) * 80ms) * var(--cd-hs)); }
+  .dang-vao .thanh-nho, .dang-vao .nvq-thanh, .dang-vao .qh-thanh, .dang-doi .thanh-nho, .dang-doi .nvq-thanh, .dang-doi .qh-thanh { animation: cd-quet 800ms var(--cd-em) both;
+    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms) + 240ms) * var(--cd-hs)); }
+  .dang-vao .tq1-kl { animation: cd-len 460ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + 860ms * var(--cd-hs)); }
+  .dang-vao .tq1-hang > * { --cd-tre-so: 860ms; animation: cd-hien 540ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + (940ms + var(--cd-j, 0) * 90ms) * var(--cd-hs)); }
+  .dang-vao .qh-dong { animation: cd-len 380ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + (1040ms + var(--i, 0) * 45ms) * var(--cd-hs)); }
+  .dang-vao .tuan-cot span, .dang-doi .tuan-cot span { transform-origin: 50% 100%; animation: cd-moc 640ms var(--cd-em) both;
+    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 0ms)) * var(--cd-hs) + 240ms * var(--cd-hs) + var(--i, 0) * 30ms); }
+  .dang-vao .tq1-nvq { --cd-tre-so: 980ms; animation: cd-len 460ms var(--cd-em) both; animation-delay: calc(var(--cd-tre) + 1120ms * var(--cd-hs)); }
+  /* Nội dung thật thay khung chờ (sau-cho): dải, tiêu đề, nút, nhóm kỳ, khung thẻ, các khối đã hiện ở khung chờ đứng yên; số lăn, vòng quét, khối mới hiện lần lượt */
+  .dang-vao.sau-cho { --cd-tre: -260ms; }
+  #viewTongQuan.dang-vao.sau-cho > *, .sau-cho .tq-dai, .sau-cho .dai-nui polygon, .sau-cho .dai-vach, .sau-cho .tach-chu .chu, .sau-cho .dai-pham-vi, .sau-cho .dai-nut, .sau-cho .tq-dai .pham-vi,
+  .sau-cho .so-dung, .sau-cho .so-dai, .sau-cho .the-so, #viewTongQuan.dang-vao > .goi-tq { animation: none; }   /* .goi-tq: hộp gợi ý phải hiện ngay khi rê chuột */
+  .dai-so.cho .xuong { display: block; opacity: .35; }
   @container tq (max-width: 900px) {
     .tq1-hang { grid-template-columns: minmax(0, 1fr); }
     .tq1-the { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -160,13 +206,14 @@
   }
   @container tq (max-width: 640px) {
     .dai-than { padding: 16px 16px 18px; }
+    .tq-dai h1 { font-size: var(--chu-khoi); }
     .dai-nut .nut { padding: 0 12px; }
     .dai-nut .chu-nut { display: none; }
     .tq-dai .pham-vi { flex-wrap: wrap; border-radius: 12px; }
     .vong-dai { width: 88px; height: 88px; }
     .so-dai { padding: 0 6px 0 12px; }
     .so-dai .gia { font-size: var(--chu-trang); }
-    .so-dai .phu-h { display: none; }
+    .so-dai .phu-h, .dn-bao, .thanh-nho.tren-dai { display: none; }
     .tq1-the { gap: 10px; }
     .tq1-the > :first-child, .tq1-the > :last-child { grid-column: 1 / -1; }
     .the-so { padding: 12px 14px; }

@@ -94,6 +94,7 @@
     .tq-dai { background: none; border: 1px solid #999; box-shadow: none; color: var(--chu); }   /* v3.36: dải điều hành không in nền màu — chữ màu mực */
     .tq-dai h1, .tq-dai .so-dai, .tq-dai .so-dung, .tq-dai .dai-pham-vi, .tq-dai .so-dai .phu-h, .tq-dai .so-dung-chu small, .tq-dai .vd-chu small { color: var(--chu); }
     .tq-dai .dai-nui, .tq-dai .dai-vach, .tq-dai .pham-vi { display: none; } .tq-dai .vd-ranh { stroke: #ddd; } .tq-dai .so-dai { border-left-color: #ccc; }
+    .tq-dai h1 .nhan-td, .tq-dai .dn-bao { color: var(--chu); } .tq-dai .p-sang { background: #999; }   /* v3.36 (V-12): cụm nhấn, đường xu hướng nhỏ, thanh trong hạn in màu mực */
     .than { background: none; } .dai::before { display: none; } .dai .ten { color: var(--chu); }   /* v9: dải màu thanh bên không in */
     .max { max-width: none; padding: 0; }
     .trang { padding: 0; }

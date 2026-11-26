@@ -46,11 +46,12 @@ export async function phienMoi(role) {
 }
 
 // Context mới theo kích thước/thiết bị của project hiện tại, đã có phiên riêng của vai trong localStorage.
-export async function contextAs(browser, role, testInfo) {
+// v3.36 (CAU-HOI V-12): mặc định giảm chuyển động (ứng dụng không chạy hiệu ứng); chuyenDong: true → bật chuyển động (chuyen-dong.spec.js).
+export async function contextAs(browser, role, testInfo, { chuyenDong = false } = {}) {
   const session = await phienMoi(role);
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
   const context = await browser.newContext({
-    viewport, isMobile, hasTouch, baseURL, locale,
+    viewport, isMobile, hasTouch, baseURL, locale, reducedMotion: chuyenDong ? 'no-preference' : 'reduce',
     storageState: { cookies: [], origins: [{ origin: new URL(baseURL).origin, localStorage: [{ name: storageKey(), value: JSON.stringify(session) }] }] },
   });
   await ganTre(context);   // E2E_TRE_MS (mặc định tắt): độ trễ giả lập để bắt lỗi đua
@@ -59,8 +60,8 @@ export async function contextAs(browser, role, testInfo) {
 
 // v9: lãnh đạo (A0/A1/A2) vào Tổng quan — mở tiếp "Cần xử lý" (#viewDieuHanh) như trang mở đầu cũ để các kịch bản dựa vào nó chạy nguyên;
 // kịch bản cần đứng ở Tổng quan truyền { oTongQuan: true }.
-export async function pageAs(browser, role, testInfo, { oTongQuan = false } = {}) {
-  const context = await contextAs(browser, role, testInfo);
+export async function pageAs(browser, role, testInfo, { oTongQuan = false, chuyenDong = false } = {}) {
+  const context = await contextAs(browser, role, testInfo, { chuyenDong });
   const page = await context.newPage();
   await page.goto('./');
   await expectLoggedIn(page, role);

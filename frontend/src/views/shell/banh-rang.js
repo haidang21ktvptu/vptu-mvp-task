@@ -1,4 +1,4 @@
-// Menu bánh răng trên dải (GĐ23): mục chung (Hồ sơ, Đổi mật khẩu, Thông báo, Trợ giúp) → Kiểu giao diện (v9: Thanh lịch / Trang nghiêm, Nền tối, v3.36 Cỡ chữ lớn;
+// Menu bánh răng trên dải (GĐ23): mục chung (Hồ sơ, Đổi mật khẩu, Thông báo, Trợ giúp) → Kiểu giao diện (v9: Thanh lịch / Trang nghiêm, Nền tối, v3.36 Cỡ chữ lớn, Hiệu ứng chuyển động;
 // shell/kieu-giao-dien.js, nhớ theo máy) → mục theo vai (A0 Bản gọn; A1 Phân công phụ trách,
 // Ngưỡng cảnh báo; Danh mục lĩnh vực cho mọi vai trừ A0 — Đợt F v3.21; v3.25: Danh mục mục tiêu cùng nhóm đó, Cấu hình AI trong nhóm quản trị hệ thống) → nhóm
 // Quản trị hệ thống (chỉ cờ quan_tri_he_thong) → Đăng xuất (đỏ, cuối). Gạch ngăn giữa nhóm.
@@ -7,7 +7,7 @@ import { $, show, escapeHtml } from '../../lib/dom.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { handleLogout } from '../../auth/session.js';
-import { kieuHienTai, nenToiDangBat, coChuLon } from './kieu-giao-dien.js';
+import { kieuHienTai, nenToiDangBat, coChuLon, chuyenDongBat } from './kieu-giao-dien.js';
 import { laNguoiNhap } from '../../lib/kl/nhap/du-lieu.js';
 import { HIEN_MUC_TIEU } from '../../lib/kl/muc-tieu.js';
 
@@ -28,6 +28,7 @@ export function menuBanhRang(user) {
     ...[['thanh-lich', 'Thanh lịch, xanh lam'], ['trang-nghiem', 'Trang nghiêm, đỏ son']].map(([kieu, ten]) => muc(ten, 'datKieuGiaoDien', { kieu }, ['menuitemradio', kieuHienTai() === kieu])),
     muc('Nền tối', 'doiNenToi', {}, ['menuitemcheckbox', nenToiDangBat()]),
     muc('Cỡ chữ lớn', 'doiCoChu', {}, ['menuitemcheckbox', coChuLon()]),
+    muc('Hiệu ứng chuyển động', 'doiChuyenDong', {}, ['menuitemcheckbox', chuyenDongBat()]),
   ]];
   if (user.role_group === 'A0') nhom.push([muc('Bản gọn', 'toggleBanGon', {}, ['menuitemcheckbox', user.tuy_chon?.ban_gon === true])]);
   if (user.role_group === 'A1') nhom.push([qt('Phân công phụ trách', 'qtKhuPhuTrach'), qt('Ngưỡng cảnh báo', 'qtKhuCauHinh')]);

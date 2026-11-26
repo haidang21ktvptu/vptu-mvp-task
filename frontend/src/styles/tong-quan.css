@@ -25,7 +25,7 @@
   .noi-bd span { color: var(--chu-phu); font-size: var(--chu-than); }
   .luoi-tq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
   .n7 { grid-column: span 7; } .n5 { grid-column: span 5; } .n4 { grid-column: span 4; } .n12 { grid-column: span 12; }
-  .the-bd { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); box-shadow: var(--bong-the); padding: 20px 22px 22px; min-width: 0; display: flex; flex-direction: column; }
+  .the-bd { background: var(--the-kinh); border: 1px solid var(--vien-kinh); border-radius: var(--bo-the); box-shadow: var(--bong-the); padding: 20px 22px 22px; min-width: 0; display: flex; flex-direction: column; }
   .dau-bd { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 16px; }
   .dau-bd h2 { font-size: var(--chu-muc); color: var(--chu); }
   .dau-bd p { margin-top: 3px; color: var(--chu-phu); font-size: var(--chu-bang); }

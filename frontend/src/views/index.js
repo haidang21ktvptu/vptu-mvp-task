@@ -7,6 +7,8 @@ import { registerQuanTriView } from './shared/quan-tri/index.js';
 import { registerCaNhanView } from './shared/ca-nhan/index.js';
 import { mountBanhRang } from './shell/banh-rang.js';
 import { mountKieuGiaoDien } from './shell/kieu-giao-dien.js';
+import { mountDauChon } from './shell/dau-chon.js';
+import { khoiDongChuyenDong } from '../lib/chuyen-dong.js';
 import { mountTimNhanh } from './shell/tim-nhanh.js';
 import { registerKlView } from './shared/kl/index.js';
 import { registerGiaoViec, openGiaoViec } from './shared/giao-viec/index.js';
@@ -51,6 +53,8 @@ export function registerViews() {
   registerCaNhanView();  // Hồ sơ cá nhân, Thông báo, Trợ giúp, Bản gọn (bánh răng)
   mountBanhRang();       // menu bánh răng trên dải (Đăng xuất ở cuối)
   mountKieuGiaoDien();   // v9: Thanh lịch / Trang nghiêm, nền tối (nhớ theo máy)
+  mountDauChon();        // v3.36 (V-12): dấu chọn menu trượt theo mục đang chọn
+  khoiDongChuyenDong();  // v3.36 (V-12): máy yếu thì bỏ phần nhòe của hiệu ứng
   mountTimNhanh();       // ô tìm nhanh trên dải
   mountMessages();       // Nhắn tin gom theo việc
   mountThongBao();       // chuông gom theo việc, mọi vai trò

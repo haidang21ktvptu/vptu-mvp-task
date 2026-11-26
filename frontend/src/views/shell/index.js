@@ -10,6 +10,8 @@ import { getView } from '../registry.js';
 import { renderNav, toggleNavKhac, toggleMenuDoc, doiNhomMenu } from './nav.js';
 import { renderBanhRang } from './banh-rang.js';
 import { ngayVanBanVN } from '../../lib/kl/ngay.js';
+import { batDauRa, batDauVao } from './chuyen-trang.js';   // v3.36 (V-12): mục cũ nhòe rồi mờ, mục mới hiện lần lượt
+import { chayMoDau } from './mo-dau.js';
 
 export { setActiveNav, setNavBadge } from './nav.js';
 
@@ -17,11 +19,16 @@ const SECTIONS = ['viewTongQuan', 'viewDieuHanh', 'viewChiDaoDaGui', 'viewKl', '
 
 // Hiện đúng một section trong vùng nội dung.
 // Đổi mục: phát sự kiện 'doi-man' (ngăn chi tiết dùng chung tự đóng); mở lại đúng mục đang xem thì không phát.
+// v3.36 (CAU-HOI V-12): đổi mục có chuyển động (chuyen-trang.js) — lớp .hidden vẫn đổi ngay tại đây như trước.
 export function showSection(id) {
   const cu = SECTIONS.find((s) => sectionDangHien(s));
+  const doi = cu !== id;
+  if (doi) batDauRa($(cu));
   SECTIONS.forEach((s) => show(s, s === id));
   window.scrollTo({ top: 0 });
-  if (cu !== id) document.dispatchEvent(new CustomEvent('doi-man', { detail: id }));
+  if (!doi) return;
+  batDauVao($(cu), $(id));
+  document.dispatchEvent(new CustomEvent('doi-man', { detail: id }));
 }
 
 export const sectionDangHien = (id) => !$(id)?.classList.contains('hidden');
@@ -47,6 +54,7 @@ export function initUserInterface() {
   const view = getView(user.role_group);
   show('loginSection', false);
   show('appShell', true);
+  chayMoDau();   // v3.36: bỏ màn chờ, khung ứng dụng mở ra theo hình tròn từ biểu trưng
   setText('currentUserDisplay', user.full_name);
   setText('ngayVanBan', ngayVanBanVN());
   setText('currentRoleDisplay', nhanChucDanh(user));

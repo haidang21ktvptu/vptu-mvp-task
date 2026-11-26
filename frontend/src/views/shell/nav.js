@@ -8,6 +8,8 @@ import { menuCuaVai } from './menu.js';
 import { chuyenVienXemPhong, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { ghiDuongDan, datMenuDuongDan } from './duong-dan.js';   // v3.29: đường dẫn riêng từng chức năng
 import { nq } from '../../lib/nvq/du-lieu.js';   // v3.35: quyền phân hệ Nhiệm vụ quý BTV
+import { DAU_CHON_HTML, datDauChon } from './dau-chon.js';   // v3.36 (V-12): dấu chọn trượt theo mục đang chọn
+import { vaoCungMuc } from './chuyen-trang.js';
 
 let items = [];
 const NHOM = ['Điều hành', 'Nhiệm vụ', 'Nhiệm vụ quý BTV', 'Quản trị'];   // v3.23: bỏ nhóm Trao đổi; v3.35: Nhiệm vụ quý BTV; v3.36: đổi tên nhóm
@@ -35,6 +37,7 @@ function datNhom(nut, mo, luu = true) {
   if (!ds) return;
   nut.setAttribute('aria-expanded', String(mo)); ds.hidden = !mo;
   if (luu) { docNhomThu()[mo ? 'delete' : 'add'](nut.dataset.nhom); ghiNhomThu(); }
+  datDauChon({ ngay: true });   // các mục bên dưới đổi chỗ: dấu chọn theo ngay, không trượt
 }
 export const doiNhomMenu = (_d, el) => datNhom(el, el.getAttribute('aria-expanded') !== 'true');
 
@@ -75,8 +78,9 @@ export function renderNav(user) {
     nvq: { quanLy: Boolean(nq.quyen.quan_ly), phanQuyen: Boolean(nq.quyen.phan_quyen) } });   // v3.35: quyền nạp lúc vào app (auth/session.js)
   datMenuDuongDan(items);
   nguoi = user; nhomThu = null;   // đọc lại lựa chọn thu nhóm của tài khoản đang đăng nhập
+  $('mainNav').classList.remove('co-dau');   // menu vẽ lại: lần đặt dấu chọn kế tiếp vào thẳng chỗ, không trượt từ góc
   $('mainNav').innerHTML = NHOM.map((n, i) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? nhomHtml(n, i, ds) : ''; }).join('')
-    + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>';
+    + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>' + DAU_CHON_HTML;   // dấu chọn đặt cuối: không đổi con đầu của menu (.menu-khoi:first-child)
   veChanMenu();
   const chinh = items.filter((it) => it.duoi).slice(0, 3);
   const khac = items.filter((it) => !chinh.includes(it));
@@ -91,10 +95,14 @@ export function setNavBadge(badgeId, n) {
   [badgeId, `${badgeId}Duoi`].forEach((id) => { const el = $(id); if (el) { el.innerText = n; show(el, n > 0); } });
 }
 
+let navDangChon = null;   // mục menu của lần setActiveNav gần nhất
 export function setActiveNav(id) {
+  // v3.36: đổi mục menu trong cùng mục nội dung (trang của Nhiệm vụ quý…) cũng có hiệu ứng vào trang — xét sau khi lệnh mở màn chạy xong (showSection có thể gọi sau)
+  if (id !== navDangChon) { navDangChon = id; queueMicrotask(vaoCungMuc); }
   document.querySelectorAll('#mainNav [data-nav], #thanhDuoi [data-nav], #thanhKhac [data-nav]').forEach((el) => el.setAttribute('aria-selected', String(el.dataset.nav === id)));
   const ds = $(id)?.closest('.menu-ds');
   if (ds?.hidden) datNhom(ds.parentElement.querySelector('.menu-nhom'), true, false);   // mục đang mở nằm trong nhóm đang thu: mở nhóm, không lưu
+  datDauChon();   // v3.36: dấu chọn trượt sang mục mới
   show('thanhKhac', false);
   $('navKhacDuoi')?.setAttribute('aria-expanded', 'false');
   if (document.body.classList.contains('menu-mo')) toggleMenuDoc();
@@ -106,6 +114,7 @@ export function toggleMenuDoc() {
   const mo = !document.body.classList.contains('menu-mo');
   document.body.classList.toggle('menu-mo', mo);
   $('menuMoBtn')?.setAttribute('aria-expanded', String(mo));
+  if (mo) datDauChon({ ngay: true });   // ngăn kéo vừa hiện: giờ mới đo được vị trí mục đang chọn
 }
 
 async function veChanMenu() {

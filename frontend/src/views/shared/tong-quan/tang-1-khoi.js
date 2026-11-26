@@ -23,11 +23,11 @@ export function quaHanNhomHtml(dong, vai) {
   const hien = co.length > SO_DONG_QUA_HAN ? co.slice(0, SO_DONG_QUA_HAN - 1) : co; const conLai = co.slice(hien.length);
   const lon = hien[0].qh;
   const thanh = (d) => `<span class="qh-thanh" aria-hidden="true">${d.ddb ? `<i class="p-ddb" style="width:${(d.ddb / lon) * 100}%"></i>` : ''}${d.do ? `<i class="p-do" style="width:${Math.max((d.do / lon) * 100, 2.5)}%"></i>` : ''}</span>`;
-  const hang = hien.map((d) => `<button type="button" class="qh-dong" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten, m: 'qh' })} aria-label="${escapeHtml(`${d.ten}: ${d.qh} nhiệm vụ quá hạn trong ${d.mo} nhiệm vụ đang thực hiện, xem danh sách`)}">
+  const hang = hien.map((d, i) => `<button type="button" class="qh-dong" style="--i:${i}" ${mo({ t: 'nhom', ma: d.ma, ten: d.ten, m: 'qh' })} aria-label="${escapeHtml(`${d.ten}: ${d.qh} nhiệm vụ quá hạn trong ${d.mo} nhiệm vụ đang thực hiện, xem danh sách`)}">
     <span class="qh-ten">${escapeHtml(d.ten)}</span>${thanh(d)}<b class="qh-so">${d.qh}</b></button>`).join('');
   const gop = conLai.length ? (() => {
     const g = { ddb: conLai.reduce((s, d) => s + d.ddb, 0), do: conLai.reduce((s, d) => s + d.do, 0) }; const n = g.ddb + g.do;
-    return `<button type="button" class="qh-dong" ${mo({ t: 'qh' })} aria-label="${escapeHtml(`${conLai.length} ${nhom} còn lại: ${n} nhiệm vụ quá hạn, xem toàn bộ nhiệm vụ quá hạn`)}">
+    return `<button type="button" class="qh-dong" style="--i:${hien.length}" ${mo({ t: 'qh' })} aria-label="${escapeHtml(`${conLai.length} ${nhom} còn lại: ${n} nhiệm vụ quá hạn, xem toàn bộ nhiệm vụ quá hạn`)}">
       <span class="qh-ten">${conLai.length} ${nhom} còn lại</span>${thanh({ ddb: Math.min(g.ddb, lon), do: Math.min(g.do, Math.max(lon - g.ddb, 0)) })}<b class="qh-so">${n}</b></button>`;
   })() : '';
   return `<article class="tq1-khoi" id="tqQuaHanNhom"><div class="khoi-dau"><h2>${tieu}</h2><p>${tong} nhiệm vụ, ${nhom} nhiều việc quá hạn đứng trước</p></div>
@@ -43,7 +43,7 @@ export function xuHuongHtml(ds) {
   const luoi = Array.from({ length: nac + 1 }, (_, i) => `<span style="bottom:${pt(i * buoc)}"><b>${i * buoc}</b><i></i></span>`).join('');
   const cot = ds.map((w, i) => {
     const chu = `Tuần ${w.nhan}${i === ds.length - 1 ? ' (tuần này)' : ''}: ${w.giao} giao mới, ${w.xong} hoàn thành`;
-    return `<button type="button" class="tuan-cot" ${mo({ t: 'tuan', tu: w.tu, den: w.den, ten: w.nhan })} ${goi(chu)} aria-label="${escapeHtml(chu)}">
+    return `<button type="button" class="tuan-cot" style="--i:${i}" ${mo({ t: 'tuan', tu: w.tu, den: w.den, ten: w.nhan })} ${goi(chu)} aria-label="${escapeHtml(chu)}">
       <span class="${w.giao ? 's1' : 's1 s-0'}" style="height:${pt(w.giao)}"></span><span class="${w.xong ? 's2' : 's2 s-0'}" style="height:${pt(w.xong)}"></span></button>`;
   }).join('');
   const nhan = ds.map((w, i) => `<span>${i === ds.length - 1 ? 'Tuần này' : i % 3 === 0 ? escapeHtml(w.nhan.split('–')[0]) : ''}</span>`).join('');
