@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase.js';
 import { veAnh } from '../../lib/anh-ho-so.js';
 import { registerActions } from '../../lib/actions.js';
 import { getView } from '../registry.js';
-import { renderNav, toggleNavKhac, toggleMenuDoc } from './nav.js';
+import { renderNav, toggleNavKhac, toggleMenuDoc, doiNhomMenu } from './nav.js';
 import { renderBanhRang } from './banh-rang.js';
 import { ngayVanBanVN } from '../../lib/kl/ngay.js';
 
@@ -63,4 +63,4 @@ export function reloadCurrentView() {
   getView(state.user?.role_group)?.reload();
 }
 
-registerActions({ toggleNavKhac, toggleMenuDoc });
+registerActions({ toggleNavKhac, toggleMenuDoc, doiNhomMenu });

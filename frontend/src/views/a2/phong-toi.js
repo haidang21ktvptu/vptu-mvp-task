@@ -5,7 +5,8 @@ import { state, findAccount } from '../../lib/state.js';
 import { formatNgay, ghiChuHan, homNayVN } from '../../lib/kl/ngay.js';
 import { TEN_LOAI_CHI_DAO } from '../../lib/kl/dieu-hanh.js';
 import { tenKhau, tenSapDenHan } from '../../lib/kl/nhan.js';
-import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
+import { nhanPhuHtml, soSanhKhan } from '../../lib/kl/do-khan.js';
+import { ndGonHtml, ndPhuHtml } from '../../lib/kl/nd-gon.js';
 import { chuTriText } from '../../lib/kl/chu-tri.js';   // v3.31 (0128): chỉ còn chủ trì theo dõi
 import { dh, timRow, viecDo } from '../shared/dieu-hanh/du-lieu.js';
 import { sanPhamThieu } from '../shared/dieu-hanh/the-viec.js';
@@ -20,7 +21,7 @@ export function mucChiDaoChoHtml() {
   if (ds.length === 0) return '';
   return `<div class="muc do" id="ptMucChiDao"><b>Chỉ đạo từ Văn phòng chờ phòng phản hồi (${ds.length})</b>${ds.map((c) => {
     const r = timRow(c.nhiem_vu_id);
-    return `<div class="the-con" id="cdCho-${c.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(findAccount(c.nguoi_gui)?.full_name || 'Lãnh đạo')} ${TEN_LOAI_CHI_DAO[c.loai]?.toLowerCase() || ''} ${formatDateTime(c.created_at)}: "${escapeHtml(c.noi_dung)}"${c.han_phan_hoi ? ` · hạn phản hồi ${formatNgay(c.han_phan_hoi)}` : ''} · chủ trì theo dõi: ${escapeHtml(chuTriText(r, '—'))}</p>
+    return `<div class="the-con" id="cdCho-${c.id}"><p>${ndGonHtml(r.ma, `${findAccount(c.nguoi_gui)?.full_name || 'Lãnh đạo'} ${TEN_LOAI_CHI_DAO[c.loai]?.toLowerCase() || ''}: "${c.noi_dung}"`)}${ndPhuHtml(`${formatDateTime(c.created_at)}${c.han_phan_hoi ? ` · hạn phản hồi ${formatNgay(c.han_phan_hoi)}` : ''} · chủ trì theo dõi: ${escapeHtml(chuTriText(r, '—'))}`)}</p>
       <div class="hanh-dong"><button type="button" class="nut chinh" data-action="moO" data-o="oNhac-${c.id}">Nhắc chuyên viên</button><button type="button" class="nut" data-action="moO" data-o="oThay-${c.id}">Phản hồi thay</button>
         <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>
       ${oHtml(`oNhac-${c.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung nhắc chuyên viên', 'Gửi nhắc')}
@@ -29,10 +30,10 @@ export function mucChiDaoChoHtml() {
 }
 
 export function mucViecDoHtml() {
-  const ds = viecDo();
+  const ds = [...viecDo()].sort(soSanhKhan);   // v3.36: xếp theo mức khẩn
   if (ds.length === 0) return '<div class="muc luc"><b>Việc quá hạn của phòng</b><p>Hôm nay phòng không có việc quá hạn.</p></div>';
   return `<div class="muc do" id="ptMucDo"><b>Việc quá hạn của phòng (${ds.length})</b>${ds.map((r) => `
-    <div class="the-con${r.muc_canh_bao === 'DO_DAC_BIET' ? ' dac-biet' : ''}" id="ptDo-${r.id}" data-khau="${r.khau}"><p><b>${escapeHtml(r.ma)}</b> ${nhanPhuHtml(r)} ${escapeHtml(r.noi_dung)}, trễ <b>${r.so_ngay_qua}</b> ngày, ${tenKhau(r.khau).toLowerCase()}: ${escapeHtml(sanPhamThieu(r))}${r.so_chi_dao_cho_phan_hoi ? `; ${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi` : ''}${r.cap_quyet_dinh ? `; cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}` : ''}${r.vuong_mac ? `; <span data-truong="vuong-mac">vướng mắc: ${escapeHtml(r.vuong_mac)}</span>` : ''}</p>
+    <div class="the-con${r.muc_canh_bao === 'DO_DAC_BIET' ? ' dac-biet' : ''}" id="ptDo-${r.id}" data-khau="${r.khau}"><p>${ndGonHtml(r.ma, r.noi_dung)}${ndPhuHtml(`${nhanPhuHtml(r)} trễ <b>${r.so_ngay_qua}</b> ngày, ${tenKhau(r.khau).toLowerCase()}: ${escapeHtml(sanPhamThieu(r))}${r.so_chi_dao_cho_phan_hoi ? `; ${r.so_chi_dao_cho_phan_hoi} chỉ đạo chờ phản hồi` : ''}${r.cap_quyet_dinh ? `; cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}` : ''}${r.vuong_mac ? `; <span data-truong="vuong-mac">vướng mắc: ${escapeHtml(r.vuong_mac)}</span>` : ''}`)}</p>
       <div class="hanh-dong"><button type="button" class="nut chinh" data-action="moO" data-o="oDo-${r.id}">Đôn đốc</button>
         <button type="button" class="nut" data-action="moChiDaoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Giao lại / Gia hạn</button>
         <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>
@@ -41,10 +42,10 @@ export function mucViecDoHtml() {
 
 export function mucSapHanHtml() {
   const homNay = homNayVN();
-  const ds = dh.rows.filter((r) => r.nhom_dem === 'SAP_DEN_HAN').sort((a, b) => (a.han_xu_ly < b.han_xu_ly ? -1 : 1));
+  const ds = dh.rows.filter((r) => r.nhom_dem === 'SAP_DEN_HAN').sort(soSanhKhan);   // v3.36: độ khẩn trước, rồi hạn gần
   if (ds.length === 0) return '';
   return `<div class="muc vang" id="ptMucVang"><b>Việc ${tenSapDenHan()} trong phòng (${ds.length})</b>${ds.map((r) => `
-    <div class="the-con" id="ptVang-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${nhanPhuHtml(r)} ${escapeHtml(r.noi_dung)}, hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})${(r.so_minh_chung_hop_le || 0) === 0 ? ', chưa có minh chứng' : ''} · ${escapeHtml(chuTriText(r, ''))}</p>
+    <div class="the-con" id="ptVang-${r.id}"><p>${ndGonHtml(r.ma, r.noi_dung)}${ndPhuHtml(`${nhanPhuHtml(r)} hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})${(r.so_minh_chung_hop_le || 0) === 0 ? ', chưa có minh chứng' : ''} · ${escapeHtml(chuTriText(r, ''))}`)}</p>
       <div class="hanh-dong"><button type="button" class="nut" data-action="moO" data-o="oVang-${r.id}">Nhắc</button><button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>
       ${oHtml(`oVang-${r.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung nhắc', 'Gửi nhắc')}</div>`).join('')}</div>`;
 }

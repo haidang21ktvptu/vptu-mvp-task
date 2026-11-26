@@ -127,7 +127,7 @@ export function registerA3View() {
       const trang = $('viewDieuHanh').querySelector('.vct-trang');   // phần tử mới mỗi lần init — không gắn trùng
       trang.addEventListener('change', onDoiTrenTrang); trang.addEventListener('input', (e) => { if (e.target.id === 'vctTim') onDoiTrenTrang(e); });
       datNapLai(loadViecCuaToi);
-      datCauHinhDieuHanh({ kpi: () => [], phuDe: () => '', veThem: ve }); // napLaiViec → veDieuHanh → vẽ lại bảng ngay sau mỗi hành động ghi
+      datCauHinhDieuHanh({ phuDe: () => '', veThem: ve }); // napLaiViec → veDieuHanh → vẽ lại bảng ngay sau mỗi hành động ghi
       onSoChuaXuLy(lamMoiDnsThe);   // hàm cấp module: đăng nhập lại không đăng ký trùng (Set)
       moManDau(openDieuHanh);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },

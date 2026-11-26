@@ -11,7 +11,8 @@
   .tq1-ten p { margin-top: 4px; font-size: var(--chu-than); color: var(--chu-phu); }
   .tq1-luc { white-space: nowrap; }
   .tq1-phai { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .tq1-phai .nut.chinh { min-height: 40px; padding: 0 16px; font-size: var(--chu-than); }
+  .tq1-phai .nut.chinh, .tq1-phai #tqIn { min-height: 40px; padding: 0 16px; font-size: var(--chu-than); }
+  .tq1-phai #tqIn { display: inline-flex; align-items: center; gap: 8px; }   /* v3.36: In báo cáo nhanh (A4) */
 
   /* Năm thẻ số: cùng chiều cao trong một hàng; dòng so sánh luôn ở chân thẻ. */
   .tq1-the { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
@@ -99,8 +100,8 @@
     .tq1-phai { width: 100%; flex-wrap: nowrap; align-items: flex-start; }
     .tq1-phai .pham-vi { flex: 1 1 auto; min-width: 0; }
     .tq1-phai .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 12px; }
-    .tq1-phai .nut.chinh { padding: 0 12px; }
-    .tq1-phai .nut.chinh .chu-nut { display: none; }
+    .tq1-phai .nut.chinh, .tq1-phai #tqIn { padding: 0 12px; }
+    .tq1-phai .nut.chinh .chu-nut, .tq1-phai #tqIn .chu-nut { display: none; }
     .tq1-the { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .tq1-the > *, .tq1-the > *:nth-child(n+4) { grid-column: auto; }
     .tq1-the > *:first-child { grid-column: 1 / -1; }

@@ -39,6 +39,7 @@
 @import './v328.css';
 @import './nvq.css';   /* v3.35: phân hệ Nhiệm vụ quý BTV */
 @import './in.css';
+@import './tong-quan-in.css';   /* v3.36: In báo cáo nhanh A4 từ Tổng quan (sau in.css) */
 
 @tailwind base;
 @tailwind components;

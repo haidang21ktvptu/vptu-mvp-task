@@ -153,6 +153,9 @@ export async function nav(page, id) {
     await page.locator('#viewDieuHanh [data-action="openKl"]').click();
     return;
   }
+  // v3.36: nhóm menu thu gọn được (lãnh đạo mặc định thu nhóm Nhiệm vụ quý BTV) — mục nằm trong nhóm đang thu thì mở nhóm trước
+  const thu = page.locator(`#mainNav .menu-khoi:has(#${id}) > .menu-nhom[aria-expanded="false"]`);
+  if (await thu.count() && await thu.isVisible()) await thu.click();
   if (await pill.isVisible()) { await pill.click(); return; }
   const duoi = page.locator(`#${id}Duoi`);
   if (!(await duoi.isVisible())) await page.locator('#navKhacDuoi').click();

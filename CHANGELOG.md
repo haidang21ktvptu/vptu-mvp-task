@@ -986,3 +986,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Giao diện ghi "(bổ sung)" cạnh ngày ở bảng, dòng việc, tình hình; ngăn chi tiết ghi đủ cách lấy ngày (ước tính thì không ghi lead time); thẻ Đã hoàn thành ghi số việc có ngày bổ sung trong mẫu số đúng hạn, "7 ngày qua" chỉ tính ngày thật; Excel theo kỳ thêm cột ngày bổ sung.
 - Ngăn chi tiết: đóng bằng dấu × ở góc (bỏ nút chữ "Đóng ngăn" cạnh "Đóng nhiệm vụ"); lãnh đạo thấy khối Chỉ đạo trước các nút sửa.
 - Kiểm thử: RLS `kl-0141` (7 ca), unit thêm 2 bài; rà soát độc lập 26/11 (chạy thử trên PostgreSQL 16) — đã sửa: chạy thử khi xem trước, không ghi đè ngày người dùng vừa nhập, hoàn tác từng việc, ngày không trước ngày giao.
+
+## 96. v3.36.0 (Đợt 1, phần 4) — Cần xử lý gọn, menu nhóm thu gọn, In báo cáo nhanh A4 (26/11/2026, chủ dự án duyệt — CAU-HOI V-1; chỉ giao diện, không migration)
+- Cần xử lý (Thường trực, lãnh đạo Văn phòng): bỏ dải 5 ô số trùng Tổng quan và lượt đọc số liệu so với tuần trước chỉ phục vụ dải đó; lọc bằng ba câu hỏi và thanh trái.
+- Thẻ việc ở mọi khối của Cần xử lý (cả Trưởng phòng): nội dung tối đa hai dòng (nguyên văn ở title, ngăn chi tiết), thông tin phụ một dòng riêng; xếp theo mức khẩn.
+- Menu bốn nhóm Điều hành, Nhiệm vụ, Nhiệm vụ quý BTV, Quản trị; bấm tên nhóm để thu gọn / mở (nhớ theo máy); lãnh đạo mặc định thu nhóm Nhiệm vụ quý BTV.
+- Tổng quan: nút "In báo cáo nhanh" — một trang A4: phần đầu theo thể thức Văn phòng, năm chỉ tiêu dạng bảng, kết luận, nhiệm vụ quý, ma trận đơn vị, 5 điểm nghẽn.
+- Kiểm thử: e2e `v336-giao-dien` (menu, Cần xử lý, bản in); sửa `a0`, `ngan-chi-tiet`, `bo-cuc-mobile`, hàm `nav` của e2e mở nhóm đang thu; unit.

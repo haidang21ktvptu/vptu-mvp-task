@@ -32,7 +32,7 @@ import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNganDanhSach, moNganViec, khiGhiTrongNgan } from '../ngan-chi-tiet.js';
 import { theThangHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY, danhSoKhoi } from './template.js';
-import { tang1Html, theSoHtml, xuHuongHtml, nvqHtml, khungCho1Html } from './tang-1.js';
+import { tang1Html, theSoHtml, xuHuongHtml, nvqHtml, khungCho1Html, inChanHtml } from './tang-1.js';
 import { maTranHtml } from './ma-tran.js';
 import { theTang1, tuanTruoc, cauKetLuan, nhieuQuaHanNhat, tuanGanDay, xuHuongTuan, maTran } from '../../../lib/kl/tong-quan-tang.js';
 import { loadChupTuanTruoc, loadQuaHanChuNhat, loadChiDaoChoTruoc, loadNvqHienTai } from '../../../lib/kl/tong-quan-db.js';
@@ -95,6 +95,16 @@ function khungChoHtml() {
   return `${khungCho1Html(td, pv)}<div class="luoi-tq">${khoi}</div>`;
 }
 
+// v3.36: in "Báo cáo nhanh" một trang A4 (tong-quan-in.css chỉ áp khi body.in-tq): Trưởng phòng in dưới tên phòng, lãnh đạo dưới tên Văn phòng.
+const coQuanIn = (vn) => (vn === 'A2' ? ['VĂN PHÒNG TỈNH ỦY CAO BẰNG', (DEPT_NAMES[state.user?.department] || 'Phòng').toUpperCase()] : ['TỈNH ỦY CAO BẰNG', 'VĂN PHÒNG']);
+function tqIn() {
+  document.body.classList.add('in-tq');
+  const bo = () => { document.body.classList.remove('in-tq'); window.removeEventListener('afterprint', bo); };
+  window.addEventListener('afterprint', bo);
+  window.print();
+  setTimeout(bo, 60000);   // trình duyệt không báo afterprint: lớp chỉ có tác dụng khi in, bỏ sau một phút
+}
+
 function ve() {
   const v = vai(); const vn = vaiNhom(); const homNay = homNayVN(); const k = kyHienTai(homNay); const rows = dongDaLoc(); const dm = danhMucKl();
   const [td, pv] = tieuDe(); const thang = theoThang(rows, homNay); const kyTuy = Boolean(tq.loc.tu || tq.loc.den);
@@ -113,7 +123,7 @@ function ve() {
   const t1 = theTang1(rows, k, ctx); const cu = tuanTruoc(rows, tq.loc.trangThai || tq.loc.nhanh ? null : tq.chup, ctx);
   const ketLuan = cauKetLuan(t1, cu, { homNay, nhieuNhat: vn === 'A2' ? [] : nhieuQuaHanNhat(rows, khoa), daLoc: coLoc(tq.loc), tong: rows.length });
   const tang1 = tang1Html({ tieuDe: td, phamVi: pv, luc: tq.luc, ten, kyChon: kyTuy ? null : tq.ky, coGiaoViec: coGiaoViec(), theHtml: theSoHtml(t1, cu, k), ketLuan,
-    xuHuong: xuHuongHtml(xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so)), nvq: nvqHtml(tq.nvq, homNay) });
+    xuHuong: xuHuongHtml(xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so)), nvq: nvqHtml(tq.nvq, homNay), coQuan: coQuanIn(vn), kyTen: k.ten });
   const focus = viTriFocus($('viewTongQuan'));
   $('viewTongQuan').innerHTML = danhSoKhoi(tang1
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
@@ -128,7 +138,7 @@ function ve() {
     + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(theoVanBan(rows), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
     + chiDaoHtml(chiDaoKy(cdsLoc(), k, ctxCd()), toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + (coCl ? chatLuongHtml(cl, k) : '')   // v3.27: khối 8 ẩn khi chưa có số
-    + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2')}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div><div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`);   // v3.28: số khối đánh theo khối đang hiện
+    + `${noiBoHtml(noiBo, noiBoMo(), vn === 'A2')}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div>${inChanHtml()}<div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`);   // v3.28: số khối đánh theo khối đang hiện
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
   if (focus) $('viewTongQuan').querySelector(focus)?.focus({ preventScroll: true });   // vẽ lại sau khi đổi ô lọc / bấm nút: giữ tiêu điểm đúng chỗ (bàn phím)
   if (tq.cdTu && tuChiDao() < tq.cdTu) napTongQuan();   // kỳ sớm hơn phần chỉ đạo đã đọc → đọc lại
@@ -218,7 +228,7 @@ function tqMo({ ct }) {
 const dongTq = (id) => coSo().find((r) => r.id === id) || tq.tatCa.find((r) => r.id === id) || null;
 
 export function registerTongQuan() {
-  registerActions({ openTongQuan, tqMo, ...taoHanhDong(tq, ve, noiBoMo), ...hanhDongGn(tq, ve),
+  registerActions({ openTongQuan, tqMo, tqIn, ...taoHanhDong(tq, ve, noiBoMo), ...hanhDongGn(tq, ve),
     tqMoViec: ({ id }) => moNganViec(id, { row: dongTq(id) }), tqChiDao: ({ id }) => moNganViec(id, { cheDo: 'chi-dao', row: dongTq(id) }) });
   $('viewTongQuan').addEventListener('change', onDoiLoc);
   khiGhiTrongNgan('viewTongQuan', napTongQuan);   // v3.24: ghi trong ngăn (gắn mục tiêu không qua realtime) → số liệu mới ngay

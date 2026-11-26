@@ -13,6 +13,7 @@
     .dieu-hanh { grid-template-columns: 1fr; }
     .the, .bang, .bc-khoi, .khung { break-inside: avoid; border-color: #999; }
     .chan-in { display: block; margin-top: 24px; font-size: 12px; color: var(--chu-phu); border-top: 1px solid #999; padding-top: 8px; }
+    .nd-gon { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }   /* v3.36: bản in ghi đủ nội dung việc */
   }
 }
 @layer components { .chan-in { display: none; } }

@@ -1,4 +1,5 @@
-// Điều hành ngoại lệ (GĐ15, migration 0026; GĐ20 0033): đọc v_ngoai_le (có cột khau), luồng chỉ đạo, tin hệ thống, số liệu tại ngày.
+// Điều hành ngoại lệ (GĐ15, migration 0026; GĐ20 0033): đọc v_ngoai_le (có cột khau), luồng chỉ đạo, tin hệ thống. v3.36: bỏ số liệu tại ngày
+// (kl_so_lieu_cac_moc — dải ô số của Cần xử lý đã bỏ; Tổng quan so với tuần trước theo bản chụp 0140).
 // MỌI thao tác ghi đi qua hàm SECURITY DEFINER của 0026/0032 (chi_dao_gui / chi_dao_phan_hoi / chi_dao_dong / dat_cap_quyet_dinh /
 // đánh dấu đã đọc) — frontend không INSERT/UPDATE thẳng bảng chi_dao hay direct_messages loại hệ thống; quyền thật nằm trong hàm.
 import { supabase } from '../supabase.js';
@@ -6,15 +7,6 @@ import { COT_CHI_DAO, COT_CHI_DAO_TT, COT_DIEN_BIEN, taiTheoTrang } from './cot.
 
 const loi = (r, viec) => { if (r.error) throw new Error(`${viec}: ${r.error.message}`); return r.data; };
 const rpc = async (ham, thamSo) => loi(await supabase.rpc(ham, thamSo), 'không thực hiện được');
-
-// Số liệu trong phạm vi tại nhiều ngày trong MỘT lời gọi (kl_so_lieu_cac_moc 0051, SECURITY INVOKER — một lần RLS): mỗi phần tử
-// {ngay, tong, nhom_dem, muc_canh_bao, ket_qua} y hệt kl_so_lieu_tai. Điều hành gọi [hôm nay, hôm nay − 7] cho "so với tuần trước" —
-// không tính xu hướng ở client (không có lịch sử).
-const SO_LIEU_RONG = { tong: 0, nhom_dem: {}, muc_canh_bao: {}, ket_qua: {} };
-export async function loadSoLieuCacMoc(ngay) {
-  const ds = loi(await supabase.rpc('kl_so_lieu_cac_moc', { p_ngay: ngay }), 'đọc số liệu tại ngày') || [];
-  return ngay.map((_, i) => ds[i] || SO_LIEU_RONG);
-}
 
 // Kết quả vừa nộp (Đợt D v3.20, 0090): minh chứng số hiệu nộp trong 7 ngày còn hợp lệ (nộp là hoàn thành) + minh chứng nộp trước v3.20 còn chờ
 // (hop_le NULL); không lấy minh chứng chữ cũ (chu_cu) của việc chuyển đổi. RLS minh_chung theo phạm vi nhiệm vụ — khối Cần xử lý A1/A2.

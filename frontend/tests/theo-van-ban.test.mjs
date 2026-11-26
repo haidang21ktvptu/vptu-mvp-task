@@ -8,9 +8,9 @@ import { nhanPhamViTvb } from '../src/views/shared/theo-van-ban/template.js';
 const tk = (role_group, o = {}) => ({ id: 'x', role_group, department: 'TONG_HOP', ...o });
 const tvb = (u, o) => menuCuaVai(u, o).find((m) => m.id === 'navTheoVanBan');
 
-test('Mọi vai có "Theo văn bản" ở nhóm Theo dõi; Trưởng phòng / chuyên viên không lên thanh dưới điện thoại', () => {
+test('Mọi vai có "Theo văn bản" ở nhóm Nhiệm vụ (v3.36, trước là Theo dõi); Trưởng phòng / chuyên viên không lên thanh dưới điện thoại', () => {
   for (const u of [tk('A0'), tk('A1', { is_chief: true }), tk('A1'), tk('A2'), tk('A3'), tk('A3', { quan_tri_he_thong: true })]) {
-    const m = tvb(u); assert.ok(m, u.role_group); assert.equal(m.nhom, 'Theo dõi'); assert.equal(m.action, 'openTheoVanBan');
+    const m = tvb(u); assert.ok(m, u.role_group); assert.equal(m.nhom, 'Nhiệm vụ'); assert.equal(m.action, 'openTheoVanBan');
   }
   assert.ok(!tvb(tk('A2')).duoi); assert.ok(!tvb(tk('A3')).duoi);
   const xp = menuCuaVai(tk('A3'), { xemPhong: true }).map((m) => m.id);   // chuyên viên xem cả phòng (0086): vẫn một mục, không trùng

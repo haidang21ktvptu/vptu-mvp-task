@@ -208,6 +208,10 @@ Thiếu hoặc thừa ⇒ dừng mã 2 ngay khi nạp module, trước mọi l�
 - RLS `kl-0141-ngay-hoan-thanh-bo-sung`: chỉ service_role gọi ba hàm; xem trước chạy thử rồi hoàn lại (không ghi, không để lại lịch sử, đếm đúng số sẽ ghi); ngày theo lịch sử / ước tính, không trước ngày giao nhiệm vụ; thực hiện ghi ngày + dấu, đúng hạn theo ngày mới, không đổi người / giờ cập nhật cuối, gọi lại không ghi thêm; sửa ngày thì bỏ dấu; hoàn tác từng việc. Mọi lời gọi giới hạn `p_ids` = việc của test (không chạm fixture N7 hay dữ liệu khác).
 - Chạy thật: Actions → "Bổ sung ngày hoàn thành" → Run workflow → chọn môi trường, thao tác `xem-truoc` (đọc số trong Summary: số sẽ ghi, số bị kiểm tra dữ liệu từ chối kèm mã việc) → `thuc-hien`. **Staging**: ô "Use workflow from" để nhánh `main`. **Production**: environment `production` chỉ nhận thẻ `v*` — ô "Use workflow from" chọn **thẻ phát hành** (ví dụ `v3.36.0`, sau khi migration 0141 đã lên production), chọn `main` sẽ bị chặn; mỗi lần chờ chủ dự án duyệt. Sai thì `hoan-tac`.
 
+## e2e v3.36 phần 4 — menu nhóm, Cần xử lý gọn, In báo cáo nhanh (`v336-giao-dien.spec.js`, dự án desktop; từ 26/11/2026)
+- Menu lãnh đạo: nhóm Nhiệm vụ quý BTV mặc định thu, bấm mở / thu, nhớ sau khi tải lại; mở Tổng quan quý từ dòng nhiệm vụ quý thì nhóm tự mở. Hàm `nav()` của e2e mở nhóm đang thu trước khi bấm mục.
+- Cần xử lý: không còn `#dhKpi`; thẻ `.nd-gon` cắt hai dòng, có title. Bản in: thêm lớp `in-tq` + `emulateMedia('print')` (không mở hộp in) — phần đầu theo thể thức, chỉ tầng 1, ma trận, 5 điểm nghẽn, chân nguồn; trở lại màn hình thì như cũ.
+
 ## Làm việc không cần Docker Desktop (từ 4/10/2026, v3.14.2)
 
 Docker Desktop (WSL2) chiếm nhiều RAM trên laptop; quy tắc 13 trong `CLAUDE.md`: **mặc định không bật**. Nơi kiểm tra migration và RLS là CI — job "Áp migration + lint schema" của `ci.yml` khởi động Supabase cục bộ trên runner, áp toàn bộ migration của PR, lint schema và chạy đủ bộ `tests/rls`; e2e chạy trên staging. Trên laptop chỉ cần Node + Supabase CLI đã `supabase login` và `supabase link` (staging).

@@ -10,6 +10,7 @@ import { tenTrongDanhMuc } from '../../../lib/kl/du-lieu.js';
 import { nhanChatLuongHtml } from '../../../lib/kl/nhan.js';
 import { duocXemLaiMinhChung } from '../../../lib/kl/minh-chung.js';
 import { dh, timRow } from './du-lieu.js';
+import { ndGonHtml } from '../../../lib/kl/nd-gon.js';
 import { oDanhGiaHtml } from '../chat-luong.js';
 import { tepHtml } from '../kl/minh-chung-tep.js';
 
@@ -30,7 +31,7 @@ export function minhChungChoHtml() {
       : r.tien_do_ma === 'HOAN_THANH' ? `<span class="trang-thai tt-xong">hoàn thành</span> ${nhanChatLuongHtml(r.chat_luong) || ''}` : '';
     return `<div id="mcCho-${m.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(`Văn bản ${m.so_hieu || ''}`)}${m.ngay_van_ban ? ` ngày ${formatNgay(m.ngay_van_ban)}` : ''}${m.cap_nhan ? `, cấp nhận: ${escapeHtml(tenTrongDanhMuc('cap', m.cap_nhan))}` : ''} ${tt}
         ${m.trich_yeu ? `<span class="mc-trich-yeu">${escapeHtml(m.trich_yeu)}</span>` : ''}${m.mo_ta_ket_qua ? `<span class="mc-mo-ta">${escapeHtml(m.mo_ta_ket_qua)}</span>` : ''}
-        <small>${escapeHtml(r.noi_dung)} · ${escapeHtml(nguoi?.full_name || 'không xác định')}${nguoi?.department ? ` (${escapeHtml(DEPT_NAMES[nguoi.department] || nguoi.department)})` : ''} nộp ${formatDateTime(m.nop_luc)}</small>${tepHtml(m, true)}</p>
+        <small>${ndGonHtml('', r.noi_dung)}${escapeHtml(nguoi?.full_name || 'không xác định')}${nguoi?.department ? ` (${escapeHtml(DEPT_NAMES[nguoi.department] || nguoi.department)})` : ''} nộp ${formatDateTime(m.nop_luc)}</small>${tepHtml(m, true)}</p>
       ${nutHtml(r, m)}
       ${m.hop_le === true && r.tien_do_ma === 'HOAN_THANH' && duocXemLaiMinhChung(r, m) ? oDanhGiaHtml(`oDgDh-${m.id}`, 'mcDanhGiaThe', { id: m.id, nv: r.id }) : ''}
       <form class="o" id="oMc-${m.id}" data-submit="mcKhongHopLeThe" data-id="${m.id}"><input name="noi_dung" required placeholder="Lý do trả lại (bắt buộc)" aria-label="Lý do trả lại">

@@ -1,18 +1,17 @@
 // Dữ liệu và bộ lọc của Trung tâm điều hành (A0) / Điều hành hôm nay (A1) / Phòng tôi (A2) / Việc của tôi (A3). PR-2a B6 — một lần nạp:
 // danh mục (1 RPC, nhớ trong phiên) + v_nhiem_vu (cột tường minh; nhom_ngoai_le / khau / da_xac_nhan_nhan của 0051 thay cho v_ngoai_le và
-// lich_su) + tu_choi + v_chi_dao_tt + minh chứng chờ + chỉ đạo chờ + kl_so_lieu_cac_moc([hôm nay, −7]).
+// lich_su) + tu_choi + v_chi_dao_tt + minh chứng chờ + chỉ đạo chờ. v3.36: bỏ kl_so_lieu_cac_moc (chỉ phục vụ dải ô số đã bỏ — so với tuần trước ở Tổng quan).
 // Thuần tổng hợp trên dòng RLS trả về (DB-5): đếm theo khâu / đơn vị làm ở đây, không thêm hàm DB.
 import { state } from '../../../lib/state.js';
 import { loadDanhMucKl, loadKlRows } from '../../../lib/kl/du-lieu.js';
-import { loadChiDaoTT, loadSoLieuCacMoc, loadMinhChungCho, loadChiDaoCho } from '../../../lib/kl/dieu-hanh.js';
-import { homNayVN, congNgay } from '../../../lib/kl/ngay.js';
+import { loadChiDaoTT, loadMinhChungCho, loadChiDaoCho } from '../../../lib/kl/dieu-hanh.js';
 import { THU_TU_KHAU, boSoThuTu } from '../../../lib/kl/nhan.js';
-import { soSanhDoKhan } from '../../../lib/kl/do-khan.js';
+import { soSanhDoKhan, soSanhMuc } from '../../../lib/kl/do-khan.js';
 import { ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
 import { duyetThayNhom, laNguoiGiao } from '../../../lib/kl/thay-mat.js';
 import { locTheoViec } from '../../../lib/kl/pham-vi.js';
 
-export const dh = { rows: [], tatCa: [], ngoaiLe: [], chiDaoTT: [], soLieu: null, soLieuTuanTruoc: null, mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
+export const dh = { rows: [], tatCa: [], ngoaiLe: [], chiDaoTT: [], mcCho: [], chiDaoCho: [], tuChoiCho: [], luc: null, loc: { khau: null, dv: null, kpi: null } };
 
 // Lượt nạp đang chạy (nap-lai-viec chờ nó xong trước khi thay một dòng); lượt cũ về sau lượt mới thì bỏ (không ghi đè dữ liệu mới hơn).
 let luotDh = 0;
@@ -24,19 +23,11 @@ export function napDieuHanh() {
 }
 async function napDieuHanhMot(lan) {
   await loadDanhMucKl();
-  // Hai đợt: dòng (nặng, tính trạng thái từng dòng) trước; số liệu hai mốc (một RPC, tính trạng thái toàn phạm vi) sau — bớt truy vấn nặng
-  // chạy chồng trên một kết nối (staging nhỏ).
   const [r, tt, mc, cd] = await Promise.all([loadKlRows(), loadChiDaoTT(), loadMinhChungCho(), loadChiDaoCho()]);
   if (lan !== luotDh) return dh;
   // 0103 (cấu hình xem toàn bộ): chỉ đạo chờ, kết quả vừa nộp đọc theo RLS (mọi việc) — giữ đúng việc trong phạm vi xử lý như trước.
   Object.assign(dh, { rows: r.rows, tatCa: r.tatCa, ngoaiLe: ngoaiLeTu(r.rows), chiDaoTT: tt, mcCho: locTheoViec(mc, r.rows), chiDaoCho: locTheoViec(cd, r.rows), tuChoiCho: r.tuChoiCho, luc: r.luc });
-  await napSoLieu();
   return dh;
-}
-// Ô số và xu hướng tuần (một RPC) — cũng gọi riêng sau khi realtime nạp lại một việc (trạng thái một dòng đổi thì số đổi).
-export async function napSoLieu() {
-  const homNay = homNayVN();
-  [dh.soLieu, dh.soLieuTuanTruoc] = await loadSoLieuCacMoc([homNay, congNgay(homNay, -7)]);
 }
 
 export { dongNgoaiLe, soSanhNgoaiLe, ngoaiLeTu } from '../../../lib/kl/ngoai-le.js';
@@ -87,20 +78,6 @@ export function locThe() {
   return goc.filter((r) => (!khau || r.khau === khau) && (!dv || (r.owner_don_vi_ma || '') === dv)
     && (kpi !== 'quyet' || canToiQuyet(r)) && (kpi !== 'cho' && kpi !== 'tt' || ttCuaViec(r.id).some((c) => c.trang_thai === 'CHO_PHAN_HOI'))
     && (kpi !== 'mc' || r.khau === 'CHO_MINH_CHUNG'))
-    // GĐ22: độ khẩn (Hỏa tốc trước) → Thường trực giao → cần tôi quyết → số ngày trễ (việc bị từ chối chưa quá hạn: so_ngay_qua NULL).
-    .sort((a, b) => soSanhDoKhan(a, b) || (canToiQuyet(b) ? 1 : 0) - (canToiQuyet(a) ? 1 : 0) || (b.so_ngay_qua || 0) - (a.so_ngay_qua || 0));
-}
-
-// Xu hướng so với tuần trước từ kl_so_lieu_tai: { hienTai, truoc, chenh } cho một tập khoá của muc_canh_bao hoặc nhom_dem.
-export function xuHuong(bang, khoa) {
-  const dem = (s) => khoa.reduce((t, k) => t + Number(s?.[bang]?.[k] || 0), 0);
-  const hienTai = dem(dh.soLieu); const truoc = dem(dh.soLieuTuanTruoc);
-  return { hienTai, truoc, chenh: hienTai - truoc };
-}
-// "tăng 1 so với tuần trước" / "giảm 2 so với tuần trước" / "không đổi so với tuần trước"; tot = tăng là tốt (hoàn thành).
-export function chuXuHuong(chenh, tot = false) {
-  if (!dh.soLieuTuanTruoc) return { chu: '', lop: '' };
-  if (chenh === 0) return { chu: 'không đổi so với tuần trước', lop: '' };
-  const tang = chenh > 0;
-  return { chu: `${tang ? 'tăng' : 'giảm'} ${Math.abs(chenh)} so với tuần trước`, lop: `${tang ? 'tang' : 'giam'}${tot ? ' tot' : ''}` };
+    // Mức khẩn (GĐ22, v3.36): độ khẩn (Hỏa tốc trước), Thường trực giao, Đỏ đặc biệt trước Đỏ, cần tôi quyết, số ngày trễ (bị từ chối chưa quá hạn: NULL).
+    .sort((a, b) => soSanhDoKhan(a, b) || soSanhMuc(a, b) || (canToiQuyet(b) ? 1 : 0) - (canToiQuyet(a) ? 1 : 0) || (b.so_ngay_qua || 0) - (a.so_ngay_qua || 0));
 }

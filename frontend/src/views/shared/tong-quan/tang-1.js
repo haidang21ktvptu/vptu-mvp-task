@@ -10,6 +10,7 @@ import { tenKyNgan } from '../../../lib/nvq/nhan.js';
 import { mo, KY } from './template.js';
 
 const ICON_GIAO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>';
+const ICON_IN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>';
 const phan = (ds) => ds.filter(([n, , luon]) => n || luon).map(([n, chu]) => `${n} ${chu}`).join(', ');
 const goi = (s) => `data-goi="${escapeHtml(s)}"`;
 
@@ -69,11 +70,24 @@ export function nvqHtml(nvq, homNay) {
 }
 
 // Tầng 1 đầy đủ. luc: thời điểm đọc số liệu; kyChon null = đang dùng kỳ tuỳ chọn của bộ lọc chi tiết (không nút nào sáng).
-export function tang1Html({ tieuDe, phamVi, luc, ten, kyChon, coGiaoViec, theHtml, ketLuan, xuHuong, nvq }) {
+// v3.36 (CAU-HOI V-1): bản in A4 "Báo cáo nhanh" — phần đầu theo thể thức Văn phòng (cơ quan, dòng Đảng, ngày), tên báo cáo, phạm vi, kỳ; chân ghi nguồn.
+// Chỉ hiện khi in (tong-quan-in.css); in tầng 1, ma trận đơn vị, điểm nghẽn. coQuan = [cấp trên, cơ quan].
+const ngayChu = (d) => `ngày ${String(d.getDate()).padStart(2, '0')} tháng ${String(d.getMonth() + 1).padStart(2, '0')} năm ${d.getFullYear()}`;
+export function inDauHtml({ coQuan = ['TỈNH ỦY CAO BẰNG', 'VĂN PHÒNG'], phamVi, kyTen, luc = new Date() }) {
+  const d = new Date(luc.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+  return `<div class="tq-in-dau" aria-hidden="true"><div class="tq-in-the-thuc"><div><span>${escapeHtml(coQuan[0])}</span><b>${escapeHtml(coQuan[1])}</b><span>*</span></div>
+      <div><b class="tq-in-dang">ĐẢNG CỘNG SẢN VIỆT NAM</b><i>Cao Bằng, ${ngayChu(d)}</i></div></div>
+    <p class="tq-in-ten">BÁO CÁO NHANH</p><p class="tq-in-trich-yeu">Tình hình thực hiện nhiệm vụ đến ngày ${d.toLocaleDateString('vi-VN')}</p>
+    <p class="tq-in-pham-vi">Phạm vi: ${escapeHtml(phamVi)}. Kỳ tính hoàn thành: ${escapeHtml(kyTen || '')}. Số liệu lúc ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}.</p></div>`;
+}
+export const inChanHtml = () => '<p class="tq-in-chan" aria-hidden="true">In từ Hệ thống quản trị nhiệm vụ của Văn phòng Tỉnh ủy Cao Bằng; số liệu theo phạm vi của người in, việc đang mở và cảnh báo tính đến ngày in.</p>';
+
+export function tang1Html({ tieuDe, phamVi, luc, ten, kyChon, coGiaoViec, theHtml, ketLuan, xuHuong, nvq, coQuan, kyTen }) {
   const capNhat = luc ? `Số liệu cập nhật ${luc.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' })} ngày ${luc.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}` : 'Đang nạp số liệu…';
-  return `<section class="tq-tang1" id="tqTang1" aria-labelledby="tqTieuDe">
+  return `<section class="tq-tang1" id="tqTang1" aria-labelledby="tqTieuDe">${inDauHtml({ coQuan, phamVi, kyTen, luc: luc || new Date() })}
     <div class="tq1-dau"><div class="tq1-ten"><h1 id="tqTieuDe">${escapeHtml(tieuDe)}</h1><p>${escapeHtml(phamVi)}. <span class="tq1-luc">${capNhat}</span></p></div>
       <div class="tq1-phai"><div class="pham-vi" role="group" aria-label="Kỳ tính hoàn thành và các bảng phân tích" id="tqKy">${KY.map((ky) => `<button type="button" data-action="tqKy" data-ky="${ky}" aria-pressed="${String(kyChon === ky)}">${escapeHtml(ten[ky])}</button>`).join('')}</div>
+        <button type="button" class="nut" data-action="tqIn" id="tqIn" aria-label="In báo cáo nhanh trên một trang A4">${ICON_IN}<span class="chu-nut">In báo cáo nhanh</span></button>
         ${coGiaoViec ? `<button type="button" class="nut chinh" data-action="openGiaoViec" aria-label="Giao việc">${ICON_GIAO}<span class="chu-nut">Giao việc</span></button>` : ''}</div></div>
     ${theHtml}
     <div class="tq1-duoi"><p class="tq1-ket-luan" id="tqKetLuan">${escapeHtml(ketLuan)}</p>${xuHuong}</div>${nvq}</section>`;

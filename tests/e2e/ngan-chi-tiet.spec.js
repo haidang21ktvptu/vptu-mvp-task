@@ -1,7 +1,7 @@
 // Giao diện v9 đợt 2 — ngăn chi tiết dùng chung: mọi chỗ "bấm để xem" mở NGAY TẠI CHỖ, không đổi mục. Tổng quan (v3.36 ba tầng): năm thẻ tầng 1,
 // tên và một ô của ma trận đơn vị, một tháng của biểu đồ → danh sách đúng bằng con số đã bấm; danh sách → chi tiết → Quay lại (tiêu điểm về việc vừa xem) →
 // Esc đóng; khi đang mở chi tiết không có id trùng (#klChiTiet chuyển vào ngăn, không dựng bản thứ hai); chọn mục khác ở menu → ngăn tự đóng,
-// #klChiTiet về màn Nhiệm vụ. Cần xử lý: ô toàn cảnh mở danh sách trong ngăn. Tìm nhanh ngoài màn Nhiệm vụ: gõ đúng một mã → mở thẳng việc đó.
+// #klChiTiet về màn Nhiệm vụ. Tìm nhanh ngoài màn Nhiệm vụ (Cần xử lý — v3.36 không còn ô toàn cảnh): gõ đúng một mã → mở thẳng việc đó.
 // Vai A1 (toàn Văn phòng) và A2 (phòng mình). Chỉ đọc — không tạo dữ liệu. Chỉ máy tính (ngăn che phải 560px; điện thoại là toàn màn hình).
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP } from './lib/app.js';
@@ -67,17 +67,18 @@ for (const vai of ['A1', 'A2']) {
   });
 }
 
-test('A1: Cần xử lý — ô toàn cảnh mở danh sách trong ngăn; tìm nhanh đúng một mã → mở thẳng việc, không rời trang', async ({ browser }, testInfo) => {
-  const page = await pageAs(browser, 'A1', testInfo);   // đứng ở Cần xử lý
-  await page.locator('#dhKpi [data-loc="tat"]').click();
-  await expect(page.locator('#dsThe .toan-canh button').first()).toBeVisible(NAP);
-  const so = await docVaBam(page, '#dsThe .toan-canh button');
+test('A1: Cần xử lý — tìm nhanh đúng một mã → mở thẳng việc trong ngăn, không rời trang', async ({ browser }, testInfo) => {
+  const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
+  await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
   const ngan = page.locator('#nganCT');
-  await expect(ngan.locator('.nct-viec')).toHaveCount(so);
-  await expect(page.locator('#viewDieuHanh')).toBeVisible();
+  await page.locator('#tqSo [data-so="th"]').click();   // lấy một mã việc từ danh sách của thẻ Đang thực hiện trong hạn
+  await expect(ngan.locator('.nct-ma').first()).toBeVisible(NAP);
   const ma = (await ngan.locator('.nct-ma').first().textContent()).trim();
   await page.keyboard.press('Escape');
   await expect(ngan).toBeHidden();
+  await nav(page, 'navDieuHanh');
+  await expect(page.locator('#viewDieuHanh')).toBeVisible(NAP);
+  await expect(page.locator('#dhKpi')).toHaveCount(0);   // v3.36: dải ô số trùng Tổng quan đã bỏ
 
   const o = page.locator('#timNhanhO');
   await o.fill(ma);
