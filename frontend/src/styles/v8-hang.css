@@ -31,9 +31,11 @@
   .the.hang:first-child { border-top: 0; }
   .the.hang .the-dau { display: flex; align-items: center; gap: 12px; }
   .the.hang .ten { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .the.hang .ten b { display: flex; align-items: center; gap: 6px; font-size: var(--chu-nho); font-weight: 600; line-height: 1.4; white-space: nowrap; min-width: 0; } /* một dòng: nội dung co (…) trước, nhãn luôn thấy */
-  .the.hang .ten b .nd { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .the.hang .ten b .nhan-cum { flex: none; display: inline; white-space: nowrap; } /* nhãn nằm trong span inline → .dk/.vong/.tag giữ inline-flex (flex item trực tiếp bị đổi thành flex) */
+  /* v3.36 (CAU-HOI V-1): nội dung tối đa hai dòng (nguyên văn ở title, ngăn chi tiết); nhãn độ khẩn / vòng chỉ đạo đứng đầu dòng phụ — trước đây nhãn
+     cùng dòng với nội dung làm nội dung co còn vài chữ khi nhiều nhãn, cỡ chữ lớn */
+  .the.hang .ten b { display: block; font-size: var(--chu-nho); font-weight: 600; line-height: 1.4; min-width: 0; }
+  .the.hang .ten b .nd { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+  .the.hang .ten > span .nhan-cum { display: inline; margin-right: 6px; } /* nhãn trong span inline → .dk/.vong/.tag giữ inline-flex */
   .the.hang .ten > span { display: block; font-size: var(--chu-nho); color: var(--chu-phu); max-width: none; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* một dòng, tooltip đủ */
   .the.hang .khau { font-size: var(--chu-nho); padding: 1px 6px; }
   .the.hang .tre { flex: none; min-width: 64px; font-family: var(--font-tieu-de); font-size: var(--chu-khoi); font-weight: 700; color: var(--do); text-align: right; line-height: 1; }

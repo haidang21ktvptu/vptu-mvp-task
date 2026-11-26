@@ -60,7 +60,7 @@ export function canXuLyHtml(so = soChuaXuLy()) {
   const n = (k) => Number(so[k] || 0);
   const nut = (muc, so_, chu, lop = '') => (so_ ? `<button type="button" class="${lop}" data-action="moCanXuLy" data-muc="${muc}" aria-expanded="${String(mucDangMo === muc)}"><b>${so_}</b> ${chu}</button>` : '');
   const muc = [
-    nut('tin', n('thong_bao'), 'thông báo chưa đọc'),   // v3.23: bỏ nhắn tin 1-1 — chỉ thông báo hệ thống (chuông)
+    nut('tin', n('thong_bao'), 'thông báo cần xử lý chưa đọc'),   // v3.23: chỉ thông báo hệ thống (chuông); v3.36 (0142): chỉ tin cần xử lý
     vai() !== 'A3' ? nut('quyet', n('can_quyet'), 'việc cần quyết') : '',
     nut('denghi', n('de_nghi_cho_duyet'), 'đề nghị từ chối chờ duyệt'),   // Đợt D (0091): cả chuyên viên đã nhập / giao việc
     nut('dnsua', n('de_nghi_sua'), 'đề nghị sửa chờ duyệt'),

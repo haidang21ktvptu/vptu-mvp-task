@@ -55,7 +55,9 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(the).toContainText('Chưa ai xác nhận đã nhận việc');
     await expect(the).toContainText('chưa xác định');
     expect(Number((await the.locator('.tre').innerText()).split('\n')[0])).toBeGreaterThan(3);
-    expect((await the.boundingBox()).height, 'hàng việc gọn (v8 đợt 3)').toBeLessThanOrEqual(80); // dòng phụ một dòng, nhãn cùng hàng; project desktop
+    // v3.36: nội dung tối đa hai dòng, nhãn đầu dòng phụ (dòng phụ một dòng) — thẻ vẫn gọn; project desktop
+    expect((await the.boundingBox()).height, 'hàng việc gọn (v3.36: nội dung ≤ 2 dòng + dòng phụ)').toBeLessThanOrEqual(112);
+    expect(await the.locator('.ten b .nd').evaluate((el) => globalThis.getComputedStyle(el).webkitLineClamp)).toBe('2');
     await expect.poll(() => the.locator('.tre').evaluate((el) => globalThis.getComputedStyle(el).color)).toBe(await mauToken(a1, '--ddb'));   // v3.23.2: Đỏ đặc biệt tím
     await expect.poll(() => the.locator('.stt').evaluate((el) => globalThis.getComputedStyle(el).backgroundColor)).toBe(await mauToken(a1, '--ddb')); // v8: chấm trạng thái Đỏ đặc biệt (v3.23.2: tím)
     await expect(a1.locator('#dhRay [data-khau="CHUA_NHAN"] b')).not.toHaveText('0');
