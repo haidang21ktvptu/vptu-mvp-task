@@ -36,7 +36,8 @@
   .the.hang .ten b { display: block; font-size: var(--chu-nho); font-weight: 600; line-height: 1.4; min-width: 0; }
   .the.hang .ten b .nd { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
   .the.hang .ten > span .nhan-cum { display: inline; margin-right: 6px; } /* nhãn trong span inline → .dk/.vong/.tag giữ inline-flex */
-  .the.hang .ten > span { display: block; font-size: var(--chu-nho); color: var(--chu-phu); max-width: none; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* một dòng, tooltip đủ */
+  .the.hang .ten > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; font-size: var(--chu-nho); color: var(--chu-phu);
+    max-width: none; line-height: 1.45; overflow: hidden; } /* v3.36: nhãn + chủ trì, khâu, sản phẩm, cấp — tối đa hai dòng (nhãn đứng đầu không đẩy thông tin khỏi thẻ); tooltip đủ */
   .the.hang .khau { font-size: var(--chu-nho); padding: 1px 6px; }
   .the.hang .tre { flex: none; min-width: 64px; font-family: var(--font-tieu-de); font-size: var(--chu-khoi); font-weight: 700; color: var(--do); text-align: right; line-height: 1; }
   .the.hang .tre.cam { color: var(--cam); } .the.hang.dac-biet .tre:not(.cam) { color: var(--ddb); }

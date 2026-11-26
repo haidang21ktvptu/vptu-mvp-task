@@ -52,7 +52,8 @@ BEGIN
      OR t LIKE 'Nộp minh chứng ·%' OR t LIKE 'Minh chứng hợp lệ ·%' OR t LIKE 'Sửa minh chứng ·%' OR t LIKE 'Hoàn thành nhiệm vụ ·%'
      OR t LIKE 'Đóng nhiệm vụ ·%' OR t LIKE 'Đóng chỉ đạo%' OR t LIKE 'Đóng thay mặt Thường trực%'
      OR t LIKE 'Sửa thông tin giao ·%' OR t LIKE 'Điều chỉnh hạn ·%' OR t LIKE 'Tài khoản quản trị sửa thông tin nhiệm vụ ·%'
-     OR (t LIKE 'Nhập Excel ·%' AND t NOT LIKE '%xác nhận đã nhận%') THEN
+     OR (t LIKE 'Nhập Excel ·%' AND t NOT LIKE '%xác nhận đã nhận%')
+     OR t LIKE 'Gắn tệp minh chứng ·%' OR t LIKE 'Nghiệm thu và đóng nhiệm vụ ·%' OR t LIKE 'Đổi hạn nộp minh chứng ·%' THEN   -- nhãn cũ (tin trước 0077, 0090)
     RETURN 'BIET';
   END IF;
 
@@ -83,10 +84,13 @@ BEGIN
     RETURN CASE WHEN EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."loai" = 'CHI_DAO_TT'
                              AND c."trang_thai" = 'CHO_PHAN_HOI' AND "p_nhan" = ANY (c."nguoi_nhan")) THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
-  -- Phản hồi chỉ đạo: người đã ra chỉ đạo còn mở trên việc xem xét (đóng hoặc chỉ đạo tiếp); người khác để biết
+  -- Phản hồi chỉ đạo: người đã ra chỉ đạo còn mở trên việc xem xét (đóng hoặc chỉ đạo tiếp); chủ trì / người theo dõi khi việc còn chỉ đạo điều hành
+  -- chờ phản hồi (người ra chỉ đạo trả lời thêm trong luồng của mình — chi_dao_phan_hoi); người khác để biết
   IF t LIKE 'Phản hồi%' THEN
     RETURN CASE WHEN EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."nguoi_gui" = "p_nhan"
-                             AND c."loai" NOT IN ('PHAN_HOI', 'Y_KIEN') AND c."trang_thai" <> 'DA_DONG') THEN 'XU_LY' ELSE 'BIET' END;
+                             AND c."loai" NOT IN ('PHAN_HOI', 'Y_KIEN') AND c."trang_thai" <> 'DA_DONG')
+                  OR (v_ct AND EXISTS (SELECT 1 FROM "public"."chi_dao" c WHERE c."nhiem_vu_id" = "p_nv" AND c."trang_thai" = 'CHO_PHAN_HOI'
+                                       AND c."loai" NOT IN ('PHAN_HOI', 'Y_KIEN', 'CHI_DAO_TT'))) THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
   -- Hỏa tốc chưa "Đã nhận": người phải bấm Đã nhận xử lý; lãnh đạo trực tiếp, Chánh Văn phòng được báo kèm để biết
   IF t LIKE 'Hỏa tốc chưa Đã nhận ·%' THEN
@@ -94,10 +98,10 @@ BEGIN
                                      AND c."trang_thai" <> 'DA_DONG' AND "p_nhan" = ANY (c."nguoi_nhan")
                                      AND NOT ("p_nhan" = ANY (coalesce(c."da_nhan", '{}'::uuid[])))) THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
-  -- Đổi chủ trì theo dõi: người mới nhận việc (chưa xác nhận đã nhận) xử lý; người khác để biết
+  -- Đổi chủ trì theo dõi: chủ trì mới xử lý (0128: chủ trì = người theo dõi; không xét đã xác nhận — lãnh đạo được tự xác nhận trước khi tin được
+  -- phân mức); chủ trì cũ, người giao, lãnh đạo để biết
   IF t LIKE 'Đổi chủ trì theo dõi ·%' THEN
-    RETURN CASE WHEN v_ct AND NOT EXISTS (SELECT 1 FROM "public"."lich_su" l WHERE l."nhiem_vu_id" = "p_nv" AND l."cot" = 'xac_nhan_nhan_viec'
-                                           AND l."nguoi_sua" = "p_nhan") THEN 'XU_LY' ELSE 'BIET' END;
+    RETURN CASE WHEN v_ct THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
   -- Gỡ minh chứng: việc trở lại đang thực hiện thì chủ trì nộp lại; còn hoàn thành thì để biết
   IF t LIKE 'Gỡ minh chứng ·%' THEN
@@ -109,7 +113,8 @@ BEGIN
   IF t LIKE 'Giao việc ·%' OR t LIKE 'Thường trực giao việc ·%' OR t LIKE 'Đôn đốc ·%' OR t LIKE 'Gia hạn ·%' OR t LIKE 'Giao lại ·%'
      OR t LIKE 'Yêu cầu minh chứng ·%' OR t LIKE 'Kiểm tra số liệu ·%' OR t LIKE 'Sắp đến hạn ·%' OR t LIKE 'Quá hạn dưới %' OR t LIKE 'Quá hạn từ %'
      OR t LIKE 'Chậm nộp minh chứng ·%' OR t LIKE 'Việc Thường trực giao chưa xác nhận nhận ·%' OR t LIKE 'Minh chứng bị trả lại ·%'
-     OR t LIKE 'Mở lại nhiệm vụ ·%' THEN
+     OR t LIKE 'Mở lại nhiệm vụ ·%'
+     OR t LIKE 'Giao việc thay mặt %' OR t LIKE 'Cảnh báo Vàng ·%' OR t LIKE 'Cảnh báo Đỏ ·%' OR t LIKE 'Cảnh báo Đỏ đặc biệt ·%' THEN   -- nhãn cũ (trước 0098, 0127)
     RETURN CASE WHEN v_ct THEN 'XU_LY' ELSE 'BIET' END;
   END IF;
   RETURN 'XU_LY';   -- nhãn chưa phân loại: đếm trên chuông như trước
