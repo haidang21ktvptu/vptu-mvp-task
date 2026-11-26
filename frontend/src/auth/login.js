@@ -10,6 +10,7 @@ import { datMatKhauTam, moTrangDoiMatKhau } from './change-password.js';
 import { cauLyDoThoat } from './het-phien.js';
 import { ghiNhanDangNhap } from '../features/nhat-ky-dang-nhap.js';
 import { ghiDangNhap } from '../views/shell/duong-dan.js';
+import { hienManCho, boManCho } from '../views/shell/mo-dau.js';   // v3.36 (V-12): màn chờ trong lúc nạp hồ sơ, bỏ khi không vào ứng dụng
 
 function loginErrorMessage(error) {
   // Giới hạn theo IP của Supabase (30 lượt/5 phút): cả cơ quan chung IP nên có thể bị chặn oan giờ cao điểm.
@@ -42,6 +43,7 @@ async function handleLogin(e) {
       return;
     }
     datMatKhauTam(password); // để trang đặt mật khẩu mới chặn trùng mật khẩu tạm (chỉ giữ trong bộ nhớ)
+    hienManCho();
     await startSession(data.session);
   } finally {
     btn.disabled = false;
@@ -55,13 +57,13 @@ export async function startSession(session) {
   if (error?.code === 'PGRST116' || (!error && !profile)) {
     // Có tài khoản Auth nhưng không có dòng accounts tương ứng: không cho vào.
     await supabase.auth.signOut();
-    ghiDangNhap();
+    boManCho(); ghiDangNhap();
     showInlineError('loginError', 'Tài khoản chưa được khai báo trong danh mục cán bộ. Đồng chí liên hệ Văn phòng để được hỗ trợ.');
     return;
   }
   if (error) {
     // Lỗi mạng/máy chủ tạm thời: giữ phiên, chỉ báo để thử lại (màn đăng nhập → "/Dang-nhap"; tải lại vẫn vào đúng chức năng).
-    ghiDangNhap();
+    boManCho(); ghiDangNhap();
     showInlineError('loginError', 'Không tải được hồ sơ cán bộ. Đồng chí vui lòng tải lại trang hoặc thử lại sau.');
     return;
   }
@@ -69,6 +71,7 @@ export async function startSession(session) {
   ghiNhanDangNhap();   // v3.24 (0104): nhật ký đăng nhập — không chờ, lỗi bỏ qua
   await loadAccountsCache();
   if (profile.must_change_password) {
+    boManCho();
     moTrangDoiMatKhau(true); // chặn mọi màn hình tới khi đặt mật khẩu mới (AUTH-2)
     return;
   }

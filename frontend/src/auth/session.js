@@ -10,6 +10,7 @@ import { batDemPhien, tatDemPhien, phienDaQuaHan, soPhut } from './het-phien.js'
 import { CAU_HET_PHIEN } from '../lib/het-phien.js';
 import { ghiDangNhap, boMaTruocKhiThoat } from '../views/shell/duong-dan.js';
 import { DUONG_DANG_NHAP } from '../lib/tuyen.js';
+import { hienManCho, boManCho } from '../views/shell/mo-dau.js';   // v3.36 (V-12): màn chờ tới khi khung ứng dụng hiện
 
 // Hook cho các tính năng gắn thêm khi phiên bắt đầu/kết thúc (realtime ở PR c của GĐ4).
 const hooks = { onEnter: [], onLeave: [] };
@@ -24,6 +25,7 @@ export async function loadAccountsCache() {
 }
 
 export async function enterApp() {
+  hienManCho();   // vừa đặt xong mật khẩu mới: che màn đăng nhập trong lúc nạp cấu hình (đăng nhập / tải lại trang thì đã có màn chờ)
   show('changePasswordModal', false);
   nq.quyen = {}; nq.daNap = false; nq.kyChon = '';   // v3.35: tài khoản khác đăng nhập trên cùng máy — quyền phân hệ Nhiệm vụ quý đọc lại
   await Promise.all([
@@ -50,11 +52,11 @@ export async function handleLogout() {
 // Khôi phục phiên do Supabase Auth lưu (localStorage) khi tải lại trang.
 export async function restoreSession(startSession) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) { ghiDangNhap(); return; }   // v3.29: chưa đăng nhập → "/Dang-nhap" (nhớ chức năng đang mở)
+  if (!session) { boManCho(); ghiDangNhap(); return; }   // v3.29: chưa đăng nhập → "/Dang-nhap" (nhớ chức năng đang mở)
   if (phienDaQuaHan()) {   // treo qua đêm rồi mở lại: coi như hết phiên, không vào app, giải thích ngay trên màn đăng nhập
     tatDemPhien();
     await supabase.auth.signOut({ scope: 'local' });
-    boMaTruocKhiThoat(); ghiDangNhap();   // như tự đăng xuất: giữ chức năng, không giữ mã việc
+    boManCho(); boMaTruocKhiThoat(); ghiDangNhap();   // như tự đăng xuất: giữ chức năng, không giữ mã việc
     showInlineError('loginError', CAU_HET_PHIEN(soPhut()));
     return;
   }

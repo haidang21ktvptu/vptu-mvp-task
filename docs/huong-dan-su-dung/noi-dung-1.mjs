@@ -56,7 +56,7 @@ export function phan1den4({ P1, P2, hinh, p, steps, bullets, luuY, bang, khoangT
       '**(2) Ô tìm nhanh**: gõ mã việc (NV-…) hoặc vài từ trong nội dung rồi bấm Enter — danh sách việc khớp hiện ra bên phải, bấm một dòng để mở.',
       '**(3) Chuông**: thông báo chưa đọc, gom theo từng việc (xem 2.4).',
       '**(4) Tên, chức danh, phòng** của người đang đăng nhập.',
-      '**(5) Bánh răng**: hồ sơ cá nhân, đổi mật khẩu, tuỳ chọn thông báo, trợ giúp; **kiểu giao diện** (Thanh lịch xanh lam / Trang nghiêm đỏ son), **Nền tối**, **Cỡ chữ lớn** (chữ to hơn, dễ đọc; lãnh đạo mặc định chữ lớn, lựa chọn nhớ trên máy); **Danh mục lĩnh vực** (thêm / sửa lĩnh vực theo ngành, có lý do — mọi cán bộ trừ Thường trực) và **Đăng xuất**.',
+      '**(5) Bánh răng**: hồ sơ cá nhân, đổi mật khẩu, tuỳ chọn thông báo, trợ giúp; **kiểu giao diện** (Thanh lịch xanh lam / Trang nghiêm đỏ son), **Nền tối**, **Cỡ chữ lớn** (chữ to hơn, dễ đọc; lãnh đạo mặc định chữ lớn, lựa chọn nhớ trên máy); **Hiệu ứng chuyển động** (bỏ chọn để tắt các hiệu ứng mở đầu, chuyển trang, số lăn trên máy chạy chậm; lựa chọn nhớ trên máy); **Danh mục lĩnh vực** (thêm / sửa lĩnh vực theo ngành, có lý do — mọi cán bộ trừ Thường trực) và **Đăng xuất**.',
       '**(6) Vùng nội dung**: thay đổi theo mục menu đang chọn; nút **Tải lại** ở góc trên bên phải nạp lại số liệu.',
       '**(7) Phiên bản** đang dùng ở chân menu — khi báo lỗi, chụp màn hình kèm dòng này.',
     ]),

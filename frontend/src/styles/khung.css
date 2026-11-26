@@ -43,7 +43,7 @@
    trưng, tên cơ quan nằm cạnh; ≤ 600px: thanh 56px màu menu, nút ☰ mở menu dọc (khung.css), ẩn tên cơ quan.
    Header KHÔNG overflow: hidden (hộp chuông / bánh răng / tìm nhanh thả xuống ngoài dải). z-index 48: hộp thả xuống nổi trên thanh dưới (41),
    thanh Hỏa tốc (45), lớp mờ + ngăn kéo menu điện thoại (46–47); dưới modal (50), trang chặn (70), toast (100). */
-  .dai { position: relative; z-index: 48; height: var(--cao-dau-trang); background: var(--nen-phu); color: var(--chu); box-shadow: inset 0 3px 0 var(--vach-tren); }
+  .dai { position: relative; z-index: 48; height: var(--cao-dau-trang); background: transparent; color: var(--chu); box-shadow: inset 0 3px 0 var(--vach-tren); }   /* v3.36: nền trong, quầng màu của trang liền qua thanh */
   .dai::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--rong-menu); background: var(--ben-mau); box-shadow: inset 0 3px 0 var(--vach-tren); }
   .dai-trong { position: relative; height: 100%; display: flex; align-items: center; gap: 16px; padding: 3px 24px 0 18px; }
   .logo { flex: none; width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 12px; padding: 5px; display: block; }

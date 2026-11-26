@@ -8,11 +8,13 @@ import { state } from '../../lib/state.js';
 import { onSessionEnter } from '../../auth/session.js';
 
 const goc = () => document.documentElement;
-const KHOA_KIEU = 'vptu.kieu'; const KHOA_TOI = 'vptu.nen-toi'; const KHOA_CO_CHU = 'vptu.co-chu';
+const KHOA_KIEU = 'vptu.kieu'; const KHOA_TOI = 'vptu.nen-toi'; const KHOA_CO_CHU = 'vptu.co-chu'; const KHOA_CHUYEN_DONG = 'vptu.chuyen-dong';
 
 export const kieuHienTai = () => (goc().getAttribute('data-kieu') === 'trang-nghiem' ? 'trang-nghiem' : 'thanh-lich');
 export const nenToiDangBat = () => goc().getAttribute('data-theme') === 'dark';
 export const coChuLon = () => goc().getAttribute('data-co-chu') === 'lon';
+// v3.36 (CAU-HOI V-12): "Hiệu ứng chuyển động" — bỏ chọn thì <html data-chuyen-dong="giam"> tắt mọi hiệu ứng (styles/chuyen-dong.css, lib/chuyen-dong.js).
+export const chuyenDongBat = () => goc().getAttribute('data-chuyen-dong') !== 'giam';
 
 function ghiNho(khoa, giaTri) {
   try { if (giaTri) localStorage.setItem(khoa, giaTri); else localStorage.removeItem(khoa); } catch { /* chặn lưu trữ: chỉ đổi trong phiên */ }
@@ -33,6 +35,7 @@ function danhDauMenu() {
   document.querySelectorAll('#banhRangMenu [data-action="datKieuGiaoDien"]').forEach((el) => el.setAttribute('aria-checked', String(el.dataset.kieu === kieuHienTai())));
   document.querySelectorAll('#banhRangMenu [data-action="doiNenToi"]').forEach((el) => el.setAttribute('aria-checked', String(nenToiDangBat())));
   document.querySelectorAll('#banhRangMenu [data-action="doiCoChu"]').forEach((el) => el.setAttribute('aria-checked', String(coChuLon())));
+  document.querySelectorAll('#banhRangMenu [data-action="doiChuyenDong"]').forEach((el) => el.setAttribute('aria-checked', String(chuyenDongBat())));
 }
 
 function datKieuGiaoDien({ kieu }) {
@@ -57,6 +60,12 @@ function doiCoChu() {
   datCoChu(lon); ghiNho(KHOA_CO_CHU, lon ? 'lon' : 'vua'); danhDauMenu();
 }
 
+function doiChuyenDong() {
+  const bat = !chuyenDongBat();
+  if (bat) goc().removeAttribute('data-chuyen-dong'); else goc().setAttribute('data-chuyen-dong', 'giam');
+  ghiNho(KHOA_CHUYEN_DONG, bat ? null : 'giam'); danhDauMenu();
+}
+
 // Gọi sau mỗi lần vào phiên: máy đã chọn thì giữ; chưa chọn thì lãnh đạo cỡ lớn, người khác cỡ vừa (đổi người trên cùng máy không mang theo).
 export function apDungCoChuMacDinh(user) {
   const daChon = docNho(KHOA_CO_CHU);
@@ -66,7 +75,7 @@ export function apDungCoChuMacDinh(user) {
 }
 
 export function mountKieuGiaoDien() {
-  registerActions({ datKieuGiaoDien, doiNenToi, doiCoChu });
+  registerActions({ datKieuGiaoDien, doiNenToi, doiCoChu, doiChuyenDong });
   onSessionEnter(() => apDungCoChuMacDinh(state.user));
   capNhatMauThanh();
 }

@@ -10,11 +10,14 @@
 // đánh theo các khối đang hiện (danhSoKhoi). v3.36 (ba tầng, CAU-HOI V-1): tầng 1 (tang-1.js: năm thẻ, so với tuần trước theo bản chụp 0140, câu kết
 // luận, xu hướng 12 tuần, dòng Nhiệm vụ quý) thay dải đầu; tầng 2 mở đầu lưới: ma trận đơn vị (ma-tran.js, thay bảng theo phòng / cán bộ của khối nội
 // bộ), điểm nghẽn, xếp hạng; các khối phân tích còn lại xếp sau. Đọc thêm (tong-quan-db.js) lỗi thì bỏ phần đó, không chặn màn hình.
+// v3.36 (CAU-HOI V-12, DESIGN mục 7): hiệu ứng vào trang chạy ở lần vẽ đầu sau khi đổi mục (cửa vào do showSection mở) hoặc lần vẽ thật đầu tiên sau
+// khung chờ; đổi kỳ / bộ lọc thì số lăn lại (ve({ doi: true })); nạp lại nền và realtime vẽ ngay, không chạy lại hiệu ứng (lib/chuyen-dong.js).
 import { $, escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
+import { moCuaVao, sauKhiVao, truocKhiVe } from '../../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, xemToanBo, chuyenVienXemPhong, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { loadKetQuaChiTieu } from '../../../lib/kl/muc-tieu-db.js';
 import { locTheoViec, chiXem } from '../../../lib/kl/pham-vi.js';
@@ -93,7 +96,8 @@ const duocChiDaoViec = (r) => ['A0', 'A1', 'A2'].includes(vai()) && !chiXem(r);
 function khungChoHtml() {
   const [td, pv] = tieuDe();
   const khoi = ['n12', 'n12', 'n7', 'n5'].map((n) => `<article class="the-bd ${n}" aria-hidden="true"><span class="xuong" style="width:46%;height:16px"></span><span class="xuong" style="width:30%;margin-top:10px"></span><span class="xuong" style="width:100%;height:150px;margin-top:20px"></span></article>`).join('');
-  return `${khungCho1Html(td, pv)}<div class="luoi-tq">${khoi}</div>`;
+  const homNay = homNayVN(); const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
+  return `${khungCho1Html(td, pv, { ten, kyChon: tq.loc.tu || tq.loc.den ? null : tq.ky, coGiaoViec: coGiaoViec() })}<div class="luoi-tq">${khoi}</div>`;
 }
 
 // v3.36: in "Báo cáo nhanh" một trang A4 (in.css chỉ áp khi body.in-tq): Trưởng phòng in dưới tên phòng, lãnh đạo dưới tên Văn phòng.
@@ -111,7 +115,10 @@ function tqIn() {
   setTimeout(bo, 60000);   // trình duyệt không báo afterprint: lớp chỉ có tác dụng khi in, bỏ sau một phút
 }
 
-function ve() {
+const MS_VAO_TQ = 2400;   // cửa vào của Tổng quan: đủ cho số lăn và khối cuối của tầng 1 (khớp data-cd-ms trong index.html)
+function ve({ doi = false } = {}) {
+  if (doi) moCuaVao($('viewTongQuan'), { lop: 'dang-doi', ms: 1300 });   // số liệu đổi theo thao tác: số lăn, biểu đồ vẽ lại
+  truocKhiVe($('viewTongQuan'));   // bấm tiếp trong lúc hiệu ứng vào trang còn chạy: lần vẽ này hiện ngay
   const v = vai(); const vn = vaiNhom(); const homNay = homNayVN(); const k = kyHienTai(homNay); const rows = dongDaLoc(); const dm = danhMucKl();
   const [td, pv] = tieuDe(); const thang = theoThang(rows, homNay); const kyTuy = Boolean(tq.loc.tu || tq.loc.den);
   const ten = Object.fromEntries(KY.map((x) => [x, khoangKy(x, homNay).ten]));
@@ -129,9 +136,10 @@ function ve() {
   const t1 = theTang1(rows, k, ctx); const cu = tuanTruoc(rows, tq.loc.trangThai || tq.loc.nhanh ? null : tq.chup, ctx);
   const ketLuan = cauKetLuan(t1, cu, { homNay, nhieuNhat: vn === 'A2' ? [] : nhieuQuaHanNhat(rows, khoa), daLoc: coLoc(tq.loc), tong: rows.length });
   const mt = maTran(rows, k, khoa);   // dùng chung: thanh quá hạn theo nhóm của tầng 1 và ma trận tầng 2
+  const xh = xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so);   // 12 tuần: biểu đồ tuần và đường xu hướng nhỏ trên dải
   const tang1 = tang1Html({ tieuDe: td, phamVi: pv, luc: tq.luc, ten, kyChon: kyTuy ? null : tq.ky, coGiaoViec: coGiaoViec(), t: t1, cu, k, ketLuan,
-    duocChiDao: ['A0', 'A1', 'A2'].includes(v), nvq: nvqHtml(tq.nvq, homNay), coQuan: coQuanIn(vn),
-    hang: `<div class="tq1-hang">${quaHanNhomHtml(mt.dong, vn)}${xuHuongHtml(xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so))}</div>` });
+    duocChiDao: ['A0', 'A1', 'A2'].includes(v), nvq: nvqHtml(tq.nvq, homNay), coQuan: coQuanIn(vn), tuan: xh,
+    hang: `<div class="tq1-hang">${quaHanNhomHtml(mt.dong, vn)}${xuHuongHtml(xh)}</div>` });
   const focus = viTriFocus($('viewTongQuan'));
   $('viewTongQuan').innerHTML = danhSoKhoi(tang1
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
@@ -156,7 +164,13 @@ function onDoiLoc(e) {
   const el = e.target;
   if (!(el instanceof HTMLSelectElement || el instanceof HTMLInputElement) || !el.dataset.loc || !el.closest('#tqLoc')) return;
   if (el.type === 'date' && el.value && !/^(19[9]\d|2\d{3})-\d{2}-\d{2}$/.test(el.value)) return;   // đang gõ năm (0002, 0020…): chờ gõ đủ năm
-  tq.loc = { ...tq.loc, [el.dataset.loc]: el.value }; if (tq.luc) ve();
+  tq.loc = { ...tq.loc, [el.dataset.loc]: el.value }; if (tq.luc) ve({ doi: true });
+}
+
+// Lần vẽ lại của nền bị hoãn tới khi hiệu ứng vào trang xong (lib/chuyen-dong.js sauKhiVao): chạy ngoài napMotLan nên tự báo lỗi vẽ.
+function veSauNap() {
+  if (!sectionDangHien('viewTongQuan')) return;
+  try { ve(); } catch (e) { notifyError('Không đọc được số liệu tổng quan: ' + e.message); }
 }
 
 // Một lượt nạp tại một thời điểm; lượt tới trong lúc đang nạp chạy một lần sau khi xong (realtime + mở lại màn). Lỗi (DB bận) thử lại một
@@ -182,7 +196,10 @@ async function napMotLan(lan = 0) {
     Object.assign(tq, { rows: r.rows, tatCa: r.tatCa, cds: [...t1.cdCu, ...cds], phanCong, ketQua, gn, cdTu, luc: r.luc, loi: null });
     if (t1.chup !== undefined && t1.qhCN !== undefined) Object.assign(tq, { chup: t1.chup, qhCN: t1.qhCN, chupNgay: t1.homNay });
     if (t1.nvq !== undefined) Object.assign(tq, { nvq: t1.nvq, nvqLuc: Date.now() });
-    if (sectionDangHien('viewTongQuan')) ve();
+    const vung = $('viewTongQuan');
+    if (!sectionDangHien('viewTongQuan')) return;
+    if (!vung.hasAttribute('data-nap')) { moCuaVao(vung, { ms: MS_VAO_TQ, them: ['sau-cho'] }); ve(); }   // lần vẽ thật đầu tiên sau khung chờ: số lăn, khối mới hiện lần lượt
+    else sauKhiVao(vung, veSauNap, 'nap');   // nạp lại nền: chờ hiệu ứng đang chạy xong rồi mới vẽ lại
   } catch (e) {
     if (lan < 1) { await new Promise((ok) => { setTimeout(ok, 800); }); return napMotLan(lan + 1); }
     tq.loi = e.message;

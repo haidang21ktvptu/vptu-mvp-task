@@ -1,0 +1,106 @@
+/* Chuyển động giao diện (v3.36, chủ dự án chọn 26/11/2026 — CAU-HOI V-12; DESIGN mục 7). Tám nhóm: mở đầu hình tròn, khối hiện lần lượt, tiêu đề
+   hiện từng chữ, số lăn, biểu đồ tự vẽ, chuyển trang, dấu chọn menu trượt, thẻ nhấc khi rê chuột. Quy ước:
+   - Trạng thái gốc của mọi phần tử là trạng thái ĐÃ HIỆN XONG: hiệu ứng chỉ khai báo khung hình đầu (from) và chỉ chạy trong "cửa vào" của vùng
+     (lớp dang-vao / dang-doi do lib/chuyen-dong.js gắn rồi gỡ). Mã lỗi hay tắt hiệu ứng thì nội dung vẫn hiện đủ.
+   - Hiệu ứng vào trang, chuyển trang chỉ đổi transform, opacity, filter, clip-path, stroke-dashoffset. Chuyển tiếp nhỏ khác (bóng của thẻ và của biểu
+     trưng màn chờ, màu nền nút, kích thước dấu chọn menu — phần tử đặt tuyệt đối) không làm đổi bố cục của phần tử nào khác. Máy yếu (≤ 2 luồng xử
+     lý hoặc ≤ 2 GB bộ nhớ — lớp may-yeu trên <html>, lib/chuyen-dong.js) bỏ phần nhòe (blur) và hình tròn mở đầu, giữ mờ và trượt.
+   - Tắt toàn bộ khi: hệ điều hành đặt giảm chuyển động (base.css), người dùng bỏ chọn "Hiệu ứng chuyển động" ở bánh răng, bản in.
+   - --cd-hs: hệ số nhịp (vào lại một mục đã xem trong lần mở ứng dụng thì nhanh hơn — lớp vao-lai). Tên lớp viết nguyên văn trong JS. */
+@layer base {
+  :root {
+    --cd-nhanh: 160ms; --cd-vua: 320ms; --cd-cham: 520ms; --cd-so: 900ms; --cd-buoc: 60ms; --cd-tre: 200ms; --cd-hs: 1; --cd-nhoe: 6px; --cd-nhoe-ra: 8px;
+    --cd-em: cubic-bezier(.22, 1, .36, 1); --cd-nay: cubic-bezier(.34, 1.45, .64, 1); --cd-roi: cubic-bezier(.4, 0, 1, 1);
+  }
+  :root.may-yeu { --cd-nhoe: 0px; --cd-nhoe-ra: 0px; }
+  :root[data-chuyen-dong="giam"] *, :root[data-chuyen-dong="giam"] *::before, :root[data-chuyen-dong="giam"] *::after { animation: none !important; transition: none !important; }
+  @media print { *, *::before, *::after { animation: none !important; transition: none !important; } }
+}
+
+@layer components {
+  @keyframes cd-hien { from { opacity: 0; transform: translateY(16px); filter: blur(var(--cd-nhoe)); } }
+  @keyframes cd-len { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes cd-mo { from { opacity: 0; } }
+  @keyframes cd-chu { from { opacity: 0; transform: translateY(.4em) scale(.82); filter: blur(var(--cd-nhoe)); } }
+  @keyframes cd-lan { from { transform: translateY(0); } }
+  @keyframes cd-moc { from { transform: scaleY(0); } }
+  @keyframes cd-quet { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+  @keyframes cd-ve { from { stroke-dashoffset: 1; } }
+  @keyframes cd-vong { from { stroke-dashoffset: var(--cung, 0); } }
+  @keyframes cd-nay { from { opacity: 0; transform: scale(.55); } }
+  @keyframes cd-tha { from { opacity: 0; transform: translateY(-8px) scale(.97); } }
+  @keyframes cd-noi { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+  @keyframes cd-ngan { from { opacity: 0; transform: translateX(36px); } }
+  @keyframes cd-roi { to { opacity: 0; transform: scale(.985); filter: blur(var(--cd-nhoe-ra)); } }
+  @keyframes cd-tron { from { clip-path: circle(28px at var(--mo-x, 40px) var(--mo-y, 38px)); } to { clip-path: circle(150vmax at var(--mo-x, 40px) var(--mo-y, 38px)); } }
+  @keyframes cd-tho { 0% { box-shadow: 0 0 0 0 var(--ben-chu-3); } 70%, 100% { box-shadow: 0 0 0 16px transparent; } }
+
+  /* ---- Vào trang: các khối cấp một của mục hiện lần lượt (mọi mục; màn có nhịp riêng thì ghi đè ở tệp của màn đó) ---- */
+  .vao-lai { --cd-hs: .55; }
+  .dang-doi { --cd-hs: .6; --cd-tre: 0ms; }
+  .dang-vao > * { animation: cd-len var(--cd-cham) var(--cd-em) both; animation-delay: calc(var(--cd-tre) + var(--cd-k, 0) * var(--cd-buoc)); }
+  .dang-vao > :nth-child(2) { --cd-k: 1; } .dang-vao > :nth-child(3) { --cd-k: 2; } .dang-vao > :nth-child(4) { --cd-k: 3; }
+  .dang-vao > :nth-child(5) { --cd-k: 4; } .dang-vao > :nth-child(n+6) { --cd-k: 5; }
+
+  /* ---- Chuyển trang: mục cũ nhòe rồi mờ hẳn tại chỗ (đã mang .hidden, giữ hiển thị 0,2 giây — shell/chuyen-trang.js đặt vị trí), khung đứng yên ---- */
+  .hidden.dang-ra { display: var(--cd-hien, block) !important; }
+  .dang-ra { position: fixed; z-index: 3; margin: 0; pointer-events: none; animation: cd-roi 200ms var(--cd-roi) both; }
+
+  /* ---- Số lăn (lib/chuyen-dong.js soLanHtml): chữ số thật giữ chỗ và giữ chữ trong DOM, dải 0–9 hai vòng lăn tới chữ số đích ---- */
+  .so-lan { display: inline-block; white-space: nowrap; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .so-lan .cs { display: inline-block; position: relative; }
+  .dang-vao .so-lan .cs, .dang-doi .so-lan .cs { -webkit-text-fill-color: transparent; clip-path: inset(0); }
+  .dang-vao .so-lan .cs::after, .dang-doi .so-lan .cs::after { content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
+    position: absolute; left: 0; right: 0; top: 0; white-space: pre; text-align: center; -webkit-text-fill-color: currentColor;
+    transform: translateY(calc((10 + var(--d, 0)) * -1.1em)); animation: cd-lan calc(var(--cd-so) * var(--cd-hs)) var(--cd-em) both;
+    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + var(--i, 0) * 80ms); }
+
+  /* ---- Tiêu đề hiện từng chữ, cụm nhấn in nghiêng có chân (lib/chuyen-dong.js tieuDeHtml; DESIGN mục 3) ---- */
+  .tach-chu .tu { display: inline-block; white-space: nowrap; }
+  .tach-chu .chu { display: inline-block; }
+  .nhan-td { font-family: var(--font-van-ban); font-style: italic; font-weight: 500; letter-spacing: 0; }
+  .dang-vao .tach-chu .chu { animation: cd-chu 480ms var(--cd-em) both; animation-delay: calc((var(--cd-tre) + var(--cd-tre-chu, 200ms)) * var(--cd-hs) + var(--i, 0) * 22ms); }
+
+  /* ---- Đường xu hướng nhỏ (lib/chuyen-dong.js duongNhoSvg): nét vẽ dần từ trái sang phải, vùng tô hiện sau, chấm cuối nảy nhẹ ---- */
+  .duong-nho { display: block; width: 84px; height: auto; overflow: visible; }
+  .dn-net { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+  .dn-vung { fill: currentColor; opacity: .16; }
+  .dn-diem { fill: currentColor; transform-box: fill-box; transform-origin: center; }
+  .dang-vao .dn-net, .dang-doi .dn-net { animation: cd-ve 900ms var(--cd-em) both; animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs)); }
+  .dang-vao .dn-vung, .dang-doi .dn-vung { animation: cd-mo 500ms ease-out both; animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + 500ms); }
+  .dang-vao .dn-diem, .dang-doi .dn-diem { animation: cd-nay 360ms var(--cd-nay) both; animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + 760ms); }
+
+  /* ---- Dấu chọn menu trượt (shell/dau-chon.js đặt vị trí và kích thước theo mục đang chọn; chưa đặt thì mục tự tô nền như cũ) ---- */
+  .menu-dau { position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 10px; background: var(--ben-chon); pointer-events: none; opacity: 0;
+    transition: transform 360ms var(--cd-em), width 360ms var(--cd-em), height 360ms var(--cd-em), opacity 160ms; }
+  .menu-dau.dat-ngay { transition: none; }
+  .menu.co-dau .menu-dau { opacity: 1; }
+  .menu.co-dau button[aria-selected="true"] { background: transparent; }
+  .menu button { position: relative; z-index: 1; }
+
+  /* ---- Hiện ra khi mở: menu bánh răng, ngăn chi tiết, hộp thoại, thông báo nổi (chạy mỗi lần phần tử được hiện) ---- */
+  .br-menu { transform-origin: top right; animation: cd-tha 180ms var(--cd-em); }
+  .ngan-ct { animation: cd-ngan 280ms var(--cd-em); }
+  .modal-nen { animation: cd-mo 180ms ease-out; }
+  .modal { animation: cd-noi 280ms var(--cd-em); }
+  .toast { animation: cd-noi 240ms var(--cd-em); }
+
+  /* ---- Rê chuột, bấm: thẻ số nhấc nhẹ, nút lún nhẹ ---- */
+  .nut { transition: transform 90ms ease-out, background-color .12s, border-color .12s; }
+  .nut:active:not(:disabled) { transform: scale(.97); }
+
+  /* ---- Màn chờ và mở đầu hình tròn (index.html #manCho; shell/mo-dau.js): nền màu menu, biểu trưng và tên cơ quan đúng vị trí thanh đầu trang;
+     khi vào ứng dụng, khung ứng dụng mở ra theo hình tròn từ biểu trưng. Lớp cho-phien / mo-dau gắn trên <html>. ---- */
+  .man-cho { display: none; }
+  .cho-phien .man-cho, .mo-dau .man-cho { display: block; position: fixed; inset: 0; z-index: 0; background: var(--ben-nen); }
+  .cho-phien.tu-form .man-cho { animation: cd-mo 220ms ease-out; }   /* vừa đăng nhập xong: màn chờ hiện dần trên nền trang (màn đăng nhập đã ẩn); tải lại trang: có ngay từ đầu */
+  .man-cho .dai { background: transparent; }
+  .man-cho .dai::before { display: none; }
+  .man-cho .dai .ten { color: var(--ben-chu); }
+  .man-cho .dai .ten i { color: var(--ben-chon-icon); }
+  .man-cho .menu-mo-nut { visibility: hidden; }
+  .cho-phien .man-cho .logo { animation: cd-tho 1.8s ease-in-out infinite; }
+  .cho-phien #loginSection { display: none; }
+  .mo-dau #appShell { position: relative; z-index: 1; min-height: 100vh; background: var(--nen-phu); animation: cd-tron 820ms cubic-bezier(.62, .02, .3, 1) both; }
+  .may-yeu.mo-dau #appShell { animation: cd-mo 320ms ease-out both; }   /* máy yếu: hiện dần, không cắt hình tròn cả trang */
+}

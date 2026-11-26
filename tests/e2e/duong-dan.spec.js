@@ -68,7 +68,7 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
 
   test('Chưa đăng nhập: gốc, "/dang-nhap", "/Bao-cao" → "/Dang-nhap" (ô đăng nhập); có phiên → vào đúng "/Bao-cao" thay bước đăng nhập (không thêm bước)', async ({ browser }, testInfo) => {
     const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
-    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale });
+    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale, reducedMotion: 'reduce' });
     const page = await context.newPage();
     for (const d of ['./', './dang-nhap', './Bao-cao']) {
       await page.goto(d);
@@ -127,7 +127,7 @@ test.describe('Đường dẫn riêng từng chức năng (v3.29)', () => {
   test('Chưa đăng nhập mở đường dẫn một việc → "/Dang-nhap"; có phiên → đúng màn và đúng việc', async ({ browser }, testInfo) => {
     const v = await viecSeed('đang thực hiện, còn thời gian');
     const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
-    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale });
+    const context = await browser.newContext({ viewport, isMobile, hasTouch, baseURL, locale, reducedMotion: 'reduce' });
     const page = await context.newPage();
     await page.goto(`./Theo-van-ban/${v.ma}`);
     await expect(page.locator('#loginSection')).toBeVisible(); await expect.poll(() => duong(page)).toBe('/Dang-nhap');

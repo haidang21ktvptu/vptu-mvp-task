@@ -17,15 +17,19 @@
   --vien: #D8E1EC; --vien-nhat: #E6ECF3; --chu: #14243B; --chu-phu: #4F607A;
   --vien-focus: #2A78D6; --vien-o: #C1CDDB; --vien-vang: #F1D98A; --chu-mo: #5A6A81; --nen-toi: #14243B;
   --vien-luc: #A9D8BC; --vien-do: #F2B8B2; --vang-tren-dac: #E0A526;   /* viền khối xanh / đỏ nhạt; số vàng trên nền --navy-dac */
-  --bong-the: 0 1px 2px rgba(20, 36, 59, .05), 0 2px 10px -6px rgba(20, 36, 59, .08);
+  --bong-the: 0 1px 2px rgba(20, 36, 59, .04), 0 14px 32px -18px rgba(20, 36, 59, .2);
   --bong-noi: 0 16px 40px -20px rgba(16, 24, 40, .45);
+  /* v3.36 (CAU-HOI V-12, DESIGN mục 2): quầng màu nhạt cố định sau nội dung (base.css), mặt thẻ hơi trong và viền sáng của thẻ Tổng quan, bóng khi thẻ nhấc lên */
+  --quang-1: rgba(42, 120, 214, .2); --quang-2: rgba(124, 116, 232, .14); --quang-3: rgba(233, 196, 106, .12);
+  --the-kinh: rgba(255, 255, 255, .82); --vien-kinh: rgba(255, 255, 255, .95);
+  --bong-nhac: 0 2px 4px rgba(20, 36, 59, .05), 0 24px 44px -22px rgba(20, 36, 59, .36);
 
   /* Khung: menu trái (đặc, chữ trắng), dải đầu trang Tổng quan, số đếm trên menu */
   --ben-nen: linear-gradient(180deg, #15395F 0%, #0E2A49 100%); --ben-mau: #15395F; --ben-cuoi: #0E2A49;
   --ben-chu: #FFFFFF; --ben-chu-2: rgba(255, 255, 255, .86); --ben-chu-3: rgba(255, 255, 255, .7);
   --ben-hover: rgba(255, 255, 255, .08); --ben-chon: rgba(255, 255, 255, .14); --ben-chon-icon: #E9C46A; --ben-dem: #C8323A; --ben-dem-chu: #FFFFFF;
   --vach-tren: #C0262D;
-  --hero-1: #0F2F55; --hero-2: #1A4C82; --hero-3: #2667AA; --hero-vong: #E9C46A; --hero-vach: #C0262D;
+  --hero-1: #0F2F55; --hero-2: #1A4C82; --hero-3: #2667AA; --hero-vong: #E9C46A; --hero-vach: #C0262D; --hero-qua-han: var(--f-do);   /* --hero-qua-han: phần quá hạn của thanh nhỏ trên dải */
 
   /* Biểu đồ */
   --du-lieu: #2A78D6; --du-lieu-2: #1BAF7A; --du-lieu-nhat: #D6E6F8;
@@ -58,8 +62,10 @@
   --navy: #5C1A20; --navy-nhat: #F6E9E8; --navy-dac: #7E1D24;
   --nut: #A61E27; --nut-dam: #86181F;
   --ben-nen: linear-gradient(180deg, #A82029 0%, #84181F 100%); --ben-mau: #A82029; --ben-cuoi: #84181F; --ben-dem: #E9C46A; --ben-dem-chu: #3B0910;
-  --hero-1: #84161F; --hero-2: #A21D26; --hero-3: #AE262E; --hero-vach: #E9C46A;
-  --bong-the: 0 1px 2px rgba(43, 27, 29, .05), 0 2px 10px -6px rgba(43, 27, 29, .1);
+  --hero-1: #84161F; --hero-2: #A21D26; --hero-3: #AE262E; --hero-vach: #E9C46A; --hero-qua-han: rgba(43, 8, 12, .6);
+  --bong-the: 0 1px 2px rgba(43, 27, 29, .04), 0 14px 32px -18px rgba(43, 27, 29, .2);
+  --bong-nhac: 0 2px 4px rgba(43, 27, 29, .05), 0 24px 44px -22px rgba(43, 27, 29, .36);
+  --quang-1: rgba(192, 38, 45, .1); --quang-2: rgba(233, 196, 106, .24); --quang-3: rgba(192, 38, 45, .06);
 }
 /* Nền tối chỉ áp trên màn hình: bản in / PDF luôn dùng token sáng (in.css). */
 @media screen {
@@ -78,7 +84,10 @@
     --vien: #28405F; --vien-nhat: #22385A; --chu: #E7EEF8; --chu-phu: #A9B8CE;
     --vien-focus: #5AA0F0; --vien-o: #3A5478; --vien-vang: #6B5422; --chu-mo: #8496B1; --nen-toi: #050E1C;
     --vien-luc: #2E6B4C; --vien-do: #7A2E36; --vang-tren-dac: #FFD27A;
-    --bong-the: 0 1px 2px rgba(0, 0, 0, .25); --bong-noi: 0 16px 40px -18px rgba(0, 0, 0, .7);
+    --bong-the: 0 1px 2px rgba(0, 0, 0, .25), 0 14px 32px -18px rgba(0, 0, 0, .55); --bong-noi: 0 16px 40px -18px rgba(0, 0, 0, .7);
+    --bong-nhac: 0 2px 4px rgba(0, 0, 0, .3), 0 24px 44px -20px rgba(0, 0, 0, .75);
+    --quang-1: rgba(42, 120, 214, .24); --quang-2: rgba(108, 92, 220, .18); --quang-3: rgba(233, 196, 106, .05);
+    --the-kinh: rgba(21, 39, 64, .8); --vien-kinh: rgba(255, 255, 255, .08);
     --ben-nen: linear-gradient(180deg, #0C1E36 0%, #081628 100%); --ben-mau: #0C1E36; --ben-cuoi: #081628; --vach-tren: #D23A44;
     --hero-1: #0B2342; --hero-2: #123761; --hero-3: #18487D;
     --du-lieu: #4A93EA; --du-lieu-2: #2CC28E; --du-lieu-nhat: #21406A;
@@ -95,6 +104,8 @@
     --nut: #C2303A; --nut-dam: #A62731;
     --ben-nen: linear-gradient(180deg, #7E1820 0%, #5F1219 100%); --ben-mau: #7E1820; --ben-cuoi: #5F1219;
     --hero-1: #5F1219; --hero-2: #7E1820; --hero-3: #982129;
+    --quang-1: rgba(194, 48, 58, .22); --quang-2: rgba(233, 196, 106, .08); --quang-3: rgba(194, 48, 58, .08);
+    --the-kinh: rgba(38, 28, 31, .82);
   }
 }
 /* Cỡ chữ lớn (menu bánh răng; lãnh đạo mặc định — shell/kieu-giao-dien.js): gốc 18px trên màn hình; bản in giữ 16px. */

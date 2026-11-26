@@ -1,4 +1,4 @@
-/* Điểm vào CSS (v3.36: gộp theo thành phần): phông → token → nền tảng → khung trang → thành phần dùng chung → từng màn hình → in, rồi Tailwind (tiện ích
+/* Điểm vào CSS (v3.36: gộp theo thành phần): phông → token → nền tảng → khung trang → thành phần dùng chung → chuyển động → từng màn hình → in, rồi Tailwind (tiện ích
    nhỏ). Mỗi tệp một thành phần hoặc một màn hình; ghi đè theo thứ tự giữ như trước khi gộp (kiểm bằng công cụ so thứ tự quy tắc). */
 @import './fonts.css';
 @import './tokens.css';
@@ -6,6 +6,7 @@
 @import './khung.css';
 @import './dang-nhap.css';
 @import './thanh-phan.css';
+@import './chuyen-dong.css';
 @import './can-xu-ly.css';
 @import './nhiem-vu.css';
 @import './chi-tiet.css';

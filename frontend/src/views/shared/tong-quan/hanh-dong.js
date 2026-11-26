@@ -28,9 +28,10 @@ export function viTriFocus(vung) {
 }
 
 // tq: trạng thái màn hình (index.js); ve: vẽ lại; noiBoMo(): khối 9 đang mở (mặc định theo vai khi người xem chưa chọn).
+// v3.36 (CAU-HOI V-12): đổi kỳ / bộ lọc làm đổi số liệu → ve({ doi: true }) (số lăn, biểu đồ vẽ lại); đổi cách xem một khối thì vẽ lại ngay.
 export function taoHanhDong(tq, ve, noiBoMo) {
-  const veLai = () => { if (tq.luc) ve(); };
-  const dat = (loc) => { tq.loc = loc; veLai(); };
+  const veLai = (doi = false) => { if (tq.luc) ve({ doi }); };
+  const dat = (loc) => { tq.loc = loc; veLai(true); };
   return {
     tqKy: ({ ky }) => { if (KY.includes(ky)) { tq.ky = ky; dat({ ...tq.loc, tu: '', den: '' }); } },   // chọn kỳ có sẵn → bỏ kỳ tuỳ chọn
     tqLocDat: ({ k, v }) => { if (Object.hasOwn(LOC_TRONG, k)) dat({ ...tq.loc, [k]: v || '' }); },
