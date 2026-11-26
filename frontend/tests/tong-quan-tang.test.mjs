@@ -58,12 +58,13 @@ describe('theTang1 — năm thẻ, các phần cộng đủ', () => {
   });
   test('0141: ghi kèm ngày bổ sung — gọn ở ô, đủ ở ngăn chi tiết; ngày người dùng ghi thì không ghi gì', () => {
     assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: 'UOC_TINH' }), ' (bổ sung)');
-    assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: 'LICH_SU' }, false), ' (ngày bổ sung theo lịch sử cập nhật)');
+    assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: 'LICH_SU' }, false), ' · ngày bổ sung theo lịch sử cập nhật');
     assert.equal(ghiBoSungNht({ ngay_hoan_thanh_bo_sung: null }), '');
   });
-  test('0141: đếm việc xét đúng hạn có ngày hoàn thành bổ sung', () => {
+  test('0141: đếm việc xét đúng hạn có ngày hoàn thành bổ sung; "hoàn thành trong 7 ngày qua" chỉ tính ngày thật', () => {
     const t2 = theTang1(MAU.map((r) => (r.id === 9 ? { ...r, ngay_hoan_thanh_bo_sung: 'UOC_TINH' } : r)), nam, ctx);
     assert.equal(t2.xong.boSung, 1);
+    assert.equal(t2.xong.tuan, 0, 'ngày ước tính rơi vào 7 ngày qua không tính là vừa hoàn thành');
   });
 });
 

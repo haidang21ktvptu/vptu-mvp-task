@@ -1,7 +1,8 @@
 // Ngăn chi tiết bên phải (v8 đợt 3: cố định 520px — đầu mã + nhãn + nội dung + văn bản, lưới 2 cột, hàng nút, chỉ đạo, minh chứng, diễn biến nền màu; thứ tự của mọi vai: thông tin then chốt → hành động → khối chỉ đạo → minh chứng → chi tiết và lịch sử
 // gập). Căn cứ từng trường từ lich_su (RLS theo phạm vi thấy nhiệm vụ); đính chính đang chờ; nguồn dòng. Một ngăn cho cả danh sách:
 // #klChiTiet chứa <div id="klChiTiet-<id>"> của việc đang chọn; toggleKlChiTiet({id, cheDo}) mở việc (cheDo 'chi-dao' → con trỏ vào ô nhập).
-// v3.29: mở việc → thanh địa chỉ "…/<chức năng>/<mã>" (ghiViec); bấm "Đóng ngăn" → bỏ mã (hành động dongKlChiTiet đăng ký ở kl/index.js).
+// v3.29: mở việc → thanh địa chỉ "…/<chức năng>/<mã>" (ghiViec); bấm dấu × ở góc (v3.36, thay nút chữ "Đóng ngăn") → bỏ mã (hành động dongKlChiTiet
+// đăng ký ở kl/index.js). v3.36: lãnh đạo (A0, A1, A2) thấy khối Chỉ đạo ngay dưới thông tin chính, trước các nút.
 import { $, escapeHtml, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
@@ -123,7 +124,7 @@ export function chiTietHtml(r, ls, dc) {
           ${hang('Hạn xử lý', hienGiaTri('han_xu_ly', r.han_xu_ly), r.loai_thoi_han_ma === 'KY_BAN_HANH' ? '<span class="chu-phu">tự tính = ngày ban hành + 10</span>' : canCu('han_xu_ly', ls))}
           ${hang('Loại thời hạn', r.loai_thoi_han_ten, canCu('loai_thoi_han_ma', ls))}
           ${hang('Tiến độ', tenTrongDanhMuc('tienDo', r.tien_do_ma), `${canCu('tien_do_ma', ls)}<br><span class="chu-phu">cập nhật lần cuối ${formatDateTime(r.cap_nhat_luc)}${capNhat !== null ? ` (${capNhat} ngày trước)` : ''}</span>`)}
-          ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${ghiBoSungNht(r, false)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày giao nhiệm vụ)` : ''}`, canCu('ngay_hoan_thanh', ls))}
+          ${hang('Ngày hoàn thành', `${hienGiaTri('ngay_hoan_thanh', r.ngay_hoan_thanh)}${ghiBoSungNht(r, false)}${r.lead_time_ngay !== null && r.lead_time_ngay !== undefined && r.ngay_hoan_thanh_bo_sung !== 'UOC_TINH' ? ` · lead time ${r.lead_time_ngay} ngày (từ ngày giao nhiệm vụ)` : ''}`, canCu('ngay_hoan_thanh', ls))}
           ${r.minh_chung ? hang('Minh chứng dạng chữ (dữ liệu cũ)', hienGiaTri('minh_chung', r.minh_chung), canCu('minh_chung', ls)) : ''}
           ${hang('Xác nhận đã nhận việc', nhanViec.length ? nhanViec.map((l) => `${tenNguoi(l)} ${l.gia_tri_moi}`).join('; ') : 'chưa', '')}
           ${hang('Ngành/lĩnh vực', boSoThuTu(r.nganh_ten) || '(chưa có ngành/lĩnh vực)', canCu('nganh_ma', ls))}

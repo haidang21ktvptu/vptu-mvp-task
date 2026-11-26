@@ -1,12 +1,14 @@
 -- 0141 (v3.36 — CAU-HOI V-2, chủ dự án duyệt 25/11/2026 "Tự thêm 30 ngày những việc chưa có ngày hoàn thành"): bổ sung ngày hoàn thành cho việc đã
 -- hoàn thành mà chưa ghi ngày (rà soát 25/11: 275/337 việc, chủ yếu nhập từ Excel "đã xong ngoài hệ thống"), để tỷ lệ đúng hạn tính trên đủ việc.
 -- Cách lấy ngày, theo thứ tự: (1) LICH_SU — lần gần nhất việc được chuyển sang Hoàn thành trong lịch sử cập nhật (UPDATE tiến độ, không tính lúc nhập
--- việc đã hoàn thành); (2) UOC_TINH — ngày giao + 30 ngày, không quá ngày nhập việc vào hệ thống (việc nhập đã hoàn thành thì xong trước ngày nhập) và
--- không quá ngày bổ sung. Ngày bổ sung được đánh dấu ở cột ngay_hoan_thanh_bo_sung (giao diện ghi "ngày bổ sung"); người dùng sửa ngày hoàn thành hoặc
--- mở lại việc thì dấu tự bỏ (trigger). Không tự chạy khi áp migration: hàm kl_bo_sung_ngay_hoan_thanh (chỉ service_role, workflow
--- bo-sung-ngay-hoan-thanh.yml) — xem trước trả số việc theo từng cách và số việc sẽ đúng hạn / trễ hạn; chủ dự án xác nhận rồi mới thực hiện trên
--- production. Hoàn tác: kl_bo_sung_ngay_hoan_thanh_hoan_tac (chỉ việc còn dấu bổ sung). Lịch sử cập nhật ghi mỗi thay đổi (trigger lịch sử, người sửa trống
--- = hệ thống).
+-- việc đã hoàn thành); (2) UOC_TINH — ngày giao + 30 ngày, không quá ngày nhập việc vào hệ thống (việc nhập đã hoàn thành thì xong trước ngày nhập).
+-- Cả hai luôn không trước ngày ban hành và ngày giao nhiệm vụ (lead time không âm — DL-4), không sau hôm nay. Ngày bổ sung được đánh dấu ở cột
+-- ngay_hoan_thanh_bo_sung (giao diện ghi "bổ sung"); người dùng sửa ngày hoàn thành hoặc mở lại việc thì dấu tự bỏ (trigger).
+-- Không tự chạy khi áp migration: hàm kl_bo_sung_ngay_hoan_thanh (chỉ service_role, workflow bo-sung-ngay-hoan-thanh.yml) — xem trước CHẠY THỬ từng việc
+-- rồi hoàn lại (đúng số sẽ ghi, số bị kiểm tra dữ liệu từ chối, đúng hạn / trễ hạn theo hạn sau khi ghi); chủ dự án xác nhận rồi mới thực hiện trên
+-- production. Hoàn tác: kl_bo_sung_ngay_hoan_thanh_hoan_tac (chỉ việc còn dấu bổ sung, từng việc một). Lịch sử cập nhật ghi mỗi thay đổi (trigger lịch
+-- sử, người sửa trống = hệ thống). Rà soát độc lập 26/11: chỉ ghi việc còn đúng điều kiện lúc ghi (người dùng vừa ghi ngày thì giữ ngày của người dùng;
+-- gọi lại khi mạng chập chờn không ghi đè).
 
 ALTER TABLE "public"."nhiem_vu" ADD COLUMN "ngay_hoan_thanh_bo_sung" text CHECK ("ngay_hoan_thanh_bo_sung" IN ('LICH_SU', 'UOC_TINH'));
 COMMENT ON COLUMN "public"."nhiem_vu"."ngay_hoan_thanh_bo_sung" IS '0141: ngày hoàn thành do hệ thống bổ sung — LICH_SU (theo lịch sử cập nhật) / UOC_TINH (ngày giao + 30 ngày); NULL = người dùng ghi';
@@ -171,12 +173,13 @@ CREATE OR REPLACE VIEW "public"."v_nhiem_vu" WITH (security_invoker = true) AS
      LEFT JOIN "public"."dm_don_vi" cqt ON cqt.ma = nv.co_quan_trinh
      LEFT JOIN "public"."accounts_public" ttcd ON ttcd.id = nv.thuong_truc_chi_dao;
 
--- Việc cần bổ sung và ngày sẽ ghi (một nguồn cho xem trước và thực hiện). Ngày luôn trong khoảng ngày ban hành văn bản → hôm nay (kiểm tra của
--- kl_nhiem_vu_truoc_ghi); văn bản ban hành sau hôm nay thì bỏ qua. p_ids: chỉ xét các việc này (kiểm thử, chạy thử một nhóm); NULL = mọi việc.
+-- Việc cần bổ sung và ngày sẽ ghi (một nguồn cho xem trước và thực hiện). Ngày luôn trong khoảng [ngày ban hành văn bản, ngày giao nhiệm vụ] → hôm nay
+-- (kiểm tra của kl_nhiem_vu_truoc_ghi; lead time không âm, DL-4); văn bản ban hành sau hôm nay thì bỏ qua. p_ids: chỉ xét các việc này (kiểm thử, chạy
+-- thử một nhóm); NULL = mọi việc.
 CREATE FUNCTION "public"."kl_nht_ung_vien"("p_ids" uuid[] DEFAULT NULL) RETURNS TABLE ("id" uuid, "ma" text, "han_xu_ly" date, "ngay" date, "nguon" text)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   WITH u AS (
-    SELECT nv."id", nv."ma", nv."han_xu_ly", vb."ngay_ban_hanh",
+    SELECT nv."id", nv."ma", nv."han_xu_ly", vb."ngay_ban_hanh", nv."ngay_nhan_van_ban",
       (SELECT (l."luc" AT TIME ZONE 'Asia/Ho_Chi_Minh')::date FROM "public"."lich_su" l
         WHERE l."nhiem_vu_id" = nv."id" AND l."cot" = 'tien_do_ma' AND l."gia_tri_moi" = 'HOAN_THANH' AND l."gia_tri_cu" IS DISTINCT FROM 'HOAN_THANH'
         ORDER BY l."luc" DESC LIMIT 1) AS ngay_ls,
@@ -186,58 +189,78 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
     WHERE nv."tien_do_ma" = 'HOAN_THANH' AND nv."ngay_hoan_thanh" IS NULL AND (vb."ngay_ban_hanh" IS NULL OR vb."ngay_ban_hanh" <= "public"."kl_hom_nay"())
       AND ("p_ids" IS NULL OR nv."id" = ANY ("p_ids"))
   )
-  SELECT u."id", u."ma", u."han_xu_ly", least(greatest(coalesce(u.ngay_ls, u.ngay_uoc), u."ngay_ban_hanh"), "public"."kl_hom_nay"()),
+  SELECT u."id", u."ma", u."han_xu_ly", least(greatest(coalesce(u.ngay_ls, u.ngay_uoc), u."ngay_ban_hanh", u."ngay_nhan_van_ban"), "public"."kl_hom_nay"()),
          CASE WHEN u.ngay_ls IS NULL THEN 'UOC_TINH' ELSE 'LICH_SU' END
   FROM u;
 $$;
 REVOKE ALL ON FUNCTION "public"."kl_nht_ung_vien"(uuid[]) FROM public, "anon", "authenticated";
 GRANT EXECUTE ON FUNCTION "public"."kl_nht_ung_vien"(uuid[]) TO "service_role";
 
--- Xem trước (p_thuc_hien = false) hoặc thực hiện. Thực hiện từng việc một (việc nào bị kiểm tra dữ liệu từ chối thì bỏ qua, ghi số lỗi và tối đa 5 mã
--- việc kèm lý do); không đổi người / giờ cập nhật cuối (kl.minh_chung_tinh_lai — như tính lại cờ thiếu minh chứng). Trả { tong, lich_su, uoc_tinh,
--- co_han, dung_han, tre_han, thuc_hien, da_ghi, loi, mau_loi, ngay }.
+-- Xem trước (p_thuc_hien = false) hoặc thực hiện — cùng một vòng, từng việc một trong khối con: ghi ngày + dấu, chỉ khi việc vẫn hoàn thành và chưa có ngày
+-- lúc ghi (người dùng vừa ghi ngày / mở lại việc trong lúc chạy: giữ nguyên, đếm "khong_con"); xem trước chạy thử rồi hoàn lại khối con (mã lỗi riêng
+-- ZZ141) nên đếm đúng số sẽ ghi, số bị kiểm tra dữ liệu từ chối và đúng hạn / trễ hạn theo hạn SAU khi ghi (Ký ban hành tự tính lại hạn). Việc bị từ chối:
+-- bỏ qua, ghi số lỗi và tối đa 5 "mã việc: lý do". Không đổi người / giờ cập nhật cuối (kl.minh_chung_tinh_lai — như tính lại cờ thiếu minh chứng).
+-- Trả { tong, lich_su, uoc_tinh, ghi, khong_con, loi, mau_loi, co_han, dung_han, tre_han, thuc_hien, ngay } (co_han / dung_han / tre_han trong số ghi).
 CREATE FUNCTION "public"."kl_bo_sung_ngay_hoan_thanh"("p_thuc_hien" boolean DEFAULT false, "p_ids" uuid[] DEFAULT NULL) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v jsonb; c record; v_n integer := 0; v_loi integer := 0; v_mau text[] := '{}';
+DECLARE c record; v_han date; v_tong integer := 0; v_ls integer := 0; v_ghi integer := 0; v_khong integer := 0; v_loi integer := 0;
+        v_co_han integer := 0; v_dung integer := 0; v_tre integer := 0; v_mau text[] := '{}';
 BEGIN
-  SELECT jsonb_build_object('tong', count(*), 'lich_su', count(*) FILTER (WHERE u."nguon" = 'LICH_SU'), 'uoc_tinh', count(*) FILTER (WHERE u."nguon" = 'UOC_TINH'),
-    'co_han', count(*) FILTER (WHERE u."han_xu_ly" IS NOT NULL), 'dung_han', count(*) FILTER (WHERE u."han_xu_ly" IS NOT NULL AND u."ngay" <= u."han_xu_ly"),
-    'tre_han', count(*) FILTER (WHERE u."han_xu_ly" IS NOT NULL AND u."ngay" > u."han_xu_ly"))
-  INTO v FROM "public"."kl_nht_ung_vien"("p_ids") u;
-  IF "p_thuc_hien" THEN
-    PERFORM set_config('kl.bo_sung_nht', '1', true);
-    PERFORM set_config('kl.minh_chung_tinh_lai', '1', true);
-    FOR c IN SELECT * FROM "public"."kl_nht_ung_vien"("p_ids") LOOP
-      BEGIN
-        UPDATE "public"."nhiem_vu" SET "ngay_hoan_thanh" = c."ngay", "ngay_hoan_thanh_bo_sung" = c."nguon" WHERE "id" = c."id";
-        v_n := v_n + 1;
-      EXCEPTION WHEN others THEN
+  PERFORM set_config('kl.bo_sung_nht', '1', true);
+  PERFORM set_config('kl.minh_chung_tinh_lai', '1', true);
+  FOR c IN SELECT * FROM "public"."kl_nht_ung_vien"("p_ids") LOOP
+    v_tong := v_tong + 1;
+    IF c."nguon" = 'LICH_SU' THEN v_ls := v_ls + 1; END IF;
+    BEGIN
+      UPDATE "public"."nhiem_vu" SET "ngay_hoan_thanh" = c."ngay", "ngay_hoan_thanh_bo_sung" = c."nguon"
+      WHERE "id" = c."id" AND "ngay_hoan_thanh" IS NULL AND "tien_do_ma" = 'HOAN_THANH'
+      RETURNING "han_xu_ly" INTO v_han;
+      IF FOUND THEN
+        v_ghi := v_ghi + 1;
+        IF v_han IS NOT NULL THEN
+          v_co_han := v_co_han + 1;
+          IF c."ngay" <= v_han THEN v_dung := v_dung + 1; ELSE v_tre := v_tre + 1; END IF;
+        END IF;
+      ELSE
+        v_khong := v_khong + 1;
+      END IF;
+      IF NOT "p_thuc_hien" THEN RAISE EXCEPTION 'chạy thử' USING ERRCODE = 'ZZ141'; END IF;   -- xem trước: hoàn lại khối con
+    EXCEPTION
+      WHEN SQLSTATE 'ZZ141' THEN NULL;   -- biến đếm không bị hoàn lại; dữ liệu đã hoàn lại
+      WHEN others THEN
         v_loi := v_loi + 1;
         IF cardinality(v_mau) < 5 THEN v_mau := v_mau || (c."ma" || ': ' || SQLERRM); END IF;
-      END;
-    END LOOP;
-    PERFORM set_config('kl.bo_sung_nht', '', true);
-    PERFORM set_config('kl.minh_chung_tinh_lai', '', true);
-  END IF;
-  RETURN v || jsonb_build_object('thuc_hien', "p_thuc_hien", 'da_ghi', v_n, 'loi', v_loi, 'mau_loi', to_jsonb(v_mau), 'ngay', "public"."kl_hom_nay"());
+    END;
+  END LOOP;
+  PERFORM set_config('kl.bo_sung_nht', '', true);
+  PERFORM set_config('kl.minh_chung_tinh_lai', '', true);
+  RETURN jsonb_build_object('tong', v_tong, 'lich_su', v_ls, 'uoc_tinh', v_tong - v_ls, 'ghi', v_ghi, 'khong_con', v_khong, 'loi', v_loi, 'mau_loi', to_jsonb(v_mau),
+    'co_han', v_co_han, 'dung_han', v_dung, 'tre_han', v_tre, 'thuc_hien', "p_thuc_hien", 'ngay', "public"."kl_hom_nay"());
 END;
 $$;
 REVOKE ALL ON FUNCTION "public"."kl_bo_sung_ngay_hoan_thanh"(boolean, uuid[]) FROM public, "anon", "authenticated";
 GRANT EXECUTE ON FUNCTION "public"."kl_bo_sung_ngay_hoan_thanh"(boolean, uuid[]) TO "service_role";
 
--- Hoàn tác: bỏ ngày đã bổ sung của mọi việc còn dấu (việc người dùng đã sửa ngày thì không còn dấu — giữ nguyên). Trả { hoan_tac }.
+-- Hoàn tác: bỏ ngày đã bổ sung của mọi việc còn dấu (việc người dùng đã sửa ngày thì không còn dấu — giữ nguyên), từng việc một trong khối con: việc bị
+-- kiểm tra dữ liệu từ chối (dữ liệu đổi sau khi bổ sung) thì bỏ qua, ghi số lỗi và tối đa 5 "mã việc: lý do". Trả { hoan_tac, loi, mau_loi }.
 CREATE FUNCTION "public"."kl_bo_sung_ngay_hoan_thanh_hoan_tac"("p_ids" uuid[] DEFAULT NULL) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_n integer;
+DECLARE c record; v_n integer := 0; v_loi integer := 0; v_mau text[] := '{}';
 BEGIN
   PERFORM set_config('kl.bo_sung_nht', '1', true);
   PERFORM set_config('kl.minh_chung_tinh_lai', '1', true);
-  UPDATE "public"."nhiem_vu" SET "ngay_hoan_thanh" = NULL, "ngay_hoan_thanh_bo_sung" = NULL
-  WHERE "ngay_hoan_thanh_bo_sung" IS NOT NULL AND ("p_ids" IS NULL OR "id" = ANY ("p_ids"));
-  GET DIAGNOSTICS v_n = ROW_COUNT;
+  FOR c IN SELECT n."id", n."ma" FROM "public"."nhiem_vu" n WHERE n."ngay_hoan_thanh_bo_sung" IS NOT NULL AND ("p_ids" IS NULL OR n."id" = ANY ("p_ids")) LOOP
+    BEGIN
+      UPDATE "public"."nhiem_vu" SET "ngay_hoan_thanh" = NULL, "ngay_hoan_thanh_bo_sung" = NULL WHERE "id" = c."id" AND "ngay_hoan_thanh_bo_sung" IS NOT NULL;
+      IF FOUND THEN v_n := v_n + 1; END IF;
+    EXCEPTION WHEN others THEN
+      v_loi := v_loi + 1;
+      IF cardinality(v_mau) < 5 THEN v_mau := v_mau || (c."ma" || ': ' || SQLERRM); END IF;
+    END;
+  END LOOP;
   PERFORM set_config('kl.bo_sung_nht', '', true);
   PERFORM set_config('kl.minh_chung_tinh_lai', '', true);
-  RETURN jsonb_build_object('hoan_tac', v_n);
+  RETURN jsonb_build_object('hoan_tac', v_n, 'loi', v_loi, 'mau_loi', to_jsonb(v_mau));
 END;
 $$;
 REVOKE ALL ON FUNCTION "public"."kl_bo_sung_ngay_hoan_thanh_hoan_tac"(uuid[]) FROM public, "anon", "authenticated";

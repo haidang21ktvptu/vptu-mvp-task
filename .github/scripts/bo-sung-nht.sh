@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Gọi hàm bổ sung ngày hoàn thành (0141) — dùng chung cho job staging / production của bo-sung-ngay-hoan-thanh.yml. Đầu vào: URL, KEY (service_role),
-# THAO_TAC (xem-truoc | thuc-hien | hoan-tac), MOI_TRUONG (staging | production). Key chỉ đi trong header, không in ra log. Repo công khai nên Summary
-# production chỉ ghi số tổng hợp và nội dung lỗi (không mã việc); staging (dữ liệu giả) ghi kèm mã việc lỗi.
+# THAO_TAC (xem-truoc | thuc-hien | hoan-tac), MOI_TRUONG (staging | production). Key chỉ đi trong header, không in ra log. Summary: số tổng hợp và tối
+# đa 5 "mã việc: lý do" bị từ chối (mã NV-<số> không chứa nội dung việc hay tên người). Gọi lại khi mạng chập chờn an toàn: hàm chỉ ghi việc còn chưa có ngày.
 set -euo pipefail
 if [ -z "${KEY:-}" ]; then echo "::error::Thiếu secret service_role của môi trường (docs/TRANG-THAI.md mục 3)."; exit 1; fi
 echo "::add-mask::$KEY"
-MOI_TRUONG="${MOI_TRUONG:-production}"   # thiếu thì coi như production: Summary không ghi mã việc
+MOI_TRUONG="${MOI_TRUONG:-?}"
 case "$THAO_TAC" in
   xem-truoc) HAM=kl_bo_sung_ngay_hoan_thanh; BODY='{"p_thuc_hien":false}'; TEN='xem trước' ;;
   thuc-hien) HAM=kl_bo_sung_ngay_hoan_thanh; BODY='{"p_thuc_hien":true}'; TEN='thực hiện' ;;
@@ -18,12 +18,13 @@ if [ "$HTTP" != 200 ]; then echo "::error::$HAM trả HTTP $HTTP."; jq -r '.mess
 {
   echo "### Bổ sung ngày hoàn thành ($MOI_TRUONG): $TEN"
   if [ "$THAO_TAC" = hoan-tac ]; then
-    jq -r '"Đã bỏ ngày bổ sung của \(.hoan_tac) nhiệm vụ."' kq.json
+    jq -r '"- Đã bỏ ngày bổ sung của \(.hoan_tac) nhiệm vụ; bị kiểm tra dữ liệu từ chối: \(.loi)", (.mau_loi[]? | "- Lỗi: \(.)")' kq.json
   else
-    jq -r --arg mt "$MOI_TRUONG" '"- Việc đã hoàn thành chưa ghi ngày: **\(.tong)** (theo lịch sử cập nhật: \(.lich_su); ước tính ngày giao cộng 30 ngày: \(.uoc_tinh))",
-      "- Có hạn để xét đúng hạn: \(.co_han); sẽ đúng hạn: \(.dung_han); trễ hạn: \(.tre_han)",
-      "- Ngày tính: \(.ngay); \(if .thuc_hien then "đã ghi \(.da_ghi) việc, lỗi \(.loi) việc" else "chưa ghi gì (xem trước)" end)",
-      (.mau_loi[]? | if $mt == "staging" then "- Lỗi: \(.)" else "- Lỗi: \(sub("^[^:]*: "; ""))" end)' kq.json
+    jq -r '"- Việc đã hoàn thành chưa ghi ngày: **\(.tong)** (theo lịch sử cập nhật: \(.lich_su); ước tính ngày giao cộng 30 ngày: \(.uoc_tinh))",
+      "- \(if .thuc_hien then "Đã ghi" else "Sẽ ghi" end): **\(.ghi)** việc; bị kiểm tra dữ liệu từ chối: \(.loi); đã có ngày trong lúc chạy: \(.khong_con)",
+      "- Trong số ghi, có hạn để xét đúng hạn: \(.co_han); đúng hạn: \(.dung_han); trễ hạn: \(.tre_han)",
+      "- Ngày tính: \(.ngay); \(if .thuc_hien then "đã thực hiện" else "xem trước (chạy thử rồi hoàn lại, chưa ghi gì)" end)",
+      (.mau_loi[]? | "- Lỗi: \(.)")' kq.json
   fi
 } >> "$GITHUB_STEP_SUMMARY"
 cat "$GITHUB_STEP_SUMMARY" | tail -n 8

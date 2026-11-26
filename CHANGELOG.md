@@ -982,7 +982,7 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 
 ## 95. v3.36.0 (Đợt 1, phần 3) — Ngày hoàn thành bổ sung, ngăn chi tiết (25–26/11/2026, chủ dự án duyệt — CAU-HOI V-1, V-2; migration **0141**)
 - Việc đã hoàn thành chưa ghi ngày (rà soát: 275/337) được bổ sung ngày: theo lịch sử chuyển sang Hoàn thành nếu có, không thì ngày giao + 30 ngày, không quá ngày nhập việc; đánh dấu ở cột `ngay_hoan_thanh_bo_sung`, sửa ngày hoặc mở lại việc thì dấu tự bỏ.
-- Hàm `kl_bo_sung_ngay_hoan_thanh` (xem trước / thực hiện, chỉ service_role) và `…_hoan_tac`; workflow `bo-sung-ngay-hoan-thanh.yml`, production chờ chủ dự án duyệt; không tự chạy khi áp migration.
-- Giao diện ghi "(bổ sung)" cạnh ngày ở bảng, dòng việc, tình hình; ngăn chi tiết ghi đủ cách lấy ngày; thẻ Đã hoàn thành ghi số ngày bổ sung trong mẫu số đúng hạn.
+- Hàm `kl_bo_sung_ngay_hoan_thanh` (xem trước chạy thử rồi hoàn lại / thực hiện, chỉ ghi việc còn chưa có ngày; chỉ service_role) và `…_hoan_tac` (từng việc); workflow `bo-sung-ngay-hoan-thanh.yml`, production chạy từ thẻ phát hành, chờ chủ dự án duyệt; không tự chạy khi áp migration.
+- Giao diện ghi "(bổ sung)" cạnh ngày ở bảng, dòng việc, tình hình; ngăn chi tiết ghi đủ cách lấy ngày (ước tính thì không ghi lead time); thẻ Đã hoàn thành ghi số việc có ngày bổ sung trong mẫu số đúng hạn, "7 ngày qua" chỉ tính ngày thật; Excel theo kỳ thêm cột ngày bổ sung.
 - Ngăn chi tiết: đóng bằng dấu × ở góc (bỏ nút chữ "Đóng ngăn" cạnh "Đóng nhiệm vụ"); lãnh đạo thấy khối Chỉ đạo trước các nút sửa.
-- Kiểm thử: RLS `kl-0141`, unit thêm 2 bài.
+- Kiểm thử: RLS `kl-0141` (7 ca), unit thêm 2 bài; rà soát độc lập 26/11 (chạy thử trên PostgreSQL 16) — đã sửa: chạy thử khi xem trước, không ghi đè ngày người dùng vừa nhập, hoàn tác từng việc, ngày không trước ngày giao.

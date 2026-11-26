@@ -1,7 +1,8 @@
-# v3.36 (CAU-HOI V-2, migration 0141): bổ sung ngày hoàn thành cho việc đã hoàn thành chưa ghi ngày — chạy tay. Ba thao tác: xem-truoc (không ghi gì:
-# số việc theo từng cách lấy ngày, số sẽ đúng hạn / trễ hạn), thuc-hien, hoan-tac (bỏ ngày đã bổ sung của mọi việc còn dấu). Staging chạy ngay;
-# production qua environment "production" — CHỜ CHỦ DỰ ÁN DUYỆT mỗi lần (CLAUDE.md mục 12: thay đổi dữ liệu production cần chủ dự án đồng ý trong phiên).
-# Gọi RPC bằng service_role qua REST như canh-bao.yml (key chỉ trong header, không in log). Summary production chỉ ghi số tổng hợp và nội dung lỗi.
+# v3.36 (CAU-HOI V-2, migration 0141): bổ sung ngày hoàn thành cho việc đã hoàn thành chưa ghi ngày — chạy tay. Ba thao tác: xem-truoc (chạy thử rồi hoàn
+# lại: số sẽ ghi, số bị kiểm tra dữ liệu từ chối kèm mã việc, số sẽ đúng hạn / trễ hạn), thuc-hien, hoan-tac (bỏ ngày đã bổ sung của mọi việc còn dấu).
+# Staging chạy ngay (chọn nhánh main). Production: environment "production" chỉ nhận thẻ v* — ở "Use workflow from" chọn THẺ PHÁT HÀNH (ví dụ v3.36.0),
+# không chọn nhánh main (bị chặn); mỗi lần chờ chủ dự án duyệt (CLAUDE.md mục 12). Gọi RPC bằng service_role qua REST như canh-bao.yml (key chỉ trong
+# header, không in log). Summary ghi số tổng hợp và tối đa 5 "mã việc: lý do" bị từ chối (mã NV-<số> không chứa nội dung hay tên người).
 name: Bổ sung ngày hoàn thành
 
 on:
@@ -35,7 +36,9 @@ jobs:
     name: Staging — ${{ inputs.thao_tac }}
     if: ${{ inputs.moi_truong == 'staging' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
+    permissions:
+      contents: read
     env:
       URL: https://vojmrjezspdftovzinek.supabase.co
       KEY: ${{ secrets.STAGING_SERVICE_ROLE_KEY }}
@@ -49,7 +52,9 @@ jobs:
     name: Production — ${{ inputs.thao_tac }} (chờ duyệt)
     if: ${{ inputs.moi_truong == 'production' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
+    permissions:
+      contents: read
     environment:
       name: production
     env:

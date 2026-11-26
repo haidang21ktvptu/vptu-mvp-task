@@ -142,9 +142,10 @@ export function tenTienDoHoanThanh(r) {
 }
 
 // 0141 (v3.36, CAU-HOI V-2): ngày hoàn thành do hệ thống bổ sung (việc đã hoàn thành chưa ghi ngày) — luôn ghi kèm để người đọc biết đây không phải
-// ngày người dùng ghi. gon: ô, dòng phụ; đủ: ngăn chi tiết.
-export const TEN_BO_SUNG_NHT = { LICH_SU: 'ngày bổ sung theo lịch sử cập nhật', UOC_TINH: 'ngày bổ sung ước tính bằng ngày giao cộng 30 ngày' };
-export const ghiBoSungNht = (r, gon = true) => (!r?.ngay_hoan_thanh_bo_sung ? '' : gon ? ' (bổ sung)' : ` (${TEN_BO_SUNG_NHT[r.ngay_hoan_thanh_bo_sung] || 'ngày bổ sung'})`);
+// ngày người dùng ghi. gon: ô, dòng phụ "(bổ sung)"; đủ: ngăn chi tiết " · <cách lấy ngày>" (ước tính thì không ghi lead time — chi-tiet.js).
+export const TEN_BO_SUNG_NHT = { LICH_SU: 'ngày bổ sung theo lịch sử cập nhật',
+  UOC_TINH: 'ngày bổ sung ước tính: ngày giao cộng 30 ngày, không quá ngày nhập việc vào hệ thống' };
+export const ghiBoSungNht = (r, gon = true) => (!r?.ngay_hoan_thanh_bo_sung ? '' : gon ? ' (bổ sung)' : ` · ${TEN_BO_SUNG_NHT[r.ngay_hoan_thanh_bo_sung] || 'ngày bổ sung'}`);
 
 // "6. Đảng ủy Ủy ban nhân dân tỉnh" → "Đảng ủy Ủy ban nhân dân tỉnh" (bỏ số thứ tự khi hiện trong ô).
 export const boSoThuTu = (ten) => (ten || '').replace(/^\d+\.\s*/, '');
