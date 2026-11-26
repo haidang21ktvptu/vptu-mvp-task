@@ -22,15 +22,18 @@ export function tongDieuHanh(s, vai = state.user?.role_group) {
   return vai === 'A0' ? chung : chung + Number(s.tt_cho_nhan || 0);
 }
 
-let dangNap = null;
+let dangNap = null; let canNapLai = false;
 export async function lamMoiHuyHieu() {
   if (!state.user) return null;
-  if (dangNap) return dangNap;   // một RPC tại một thời điểm (nhiều sự kiện realtime dồn về không gọi chồng)
+  // Một RPC tại một thời điểm (nhiều sự kiện realtime dồn về không gọi chồng); gọi trong lúc đang chờ (vừa đánh dấu đã đọc, vừa mở việc) thì hẹn gọi
+  // lại đúng một lần khi xong — số của lượt đang chờ có thể đã cũ (v3.36: chuông, thẻ thông báo lấy số từ đây).
+  if (dangNap) { canNapLai = true; return dangNap; }
   dangNap = (async () => {
-    try { so = await loadSoChuaXuLy(); } catch { return so; } finally { dangNap = null; }
+    try { so = await loadSoChuaXuLy(); } catch { canNapLai = false; return so; } finally { dangNap = null; }
     setNavBadge('dhBadge', tongDieuHanh(so));
     setNavBadge('dmBubbleBadge', Number(so.nhan_tin || 0));
     nghe.forEach((fn) => fn(so));
+    if (canNapLai) { canNapLai = false; return lamMoiHuyHieu(); }
     return so;
   })();
   return dangNap;
@@ -46,7 +49,7 @@ function onVisible() { if (document.visibilityState === 'visible' && bat) lamMoi
 function tat() {
   clearTimeout(hen); hen = null;
   document.removeEventListener('visibilitychange', onVisible);
-  bat = false; so = null;
+  bat = false; so = null; canNapLai = false;
 }
 
 export function initHuyHieu() {

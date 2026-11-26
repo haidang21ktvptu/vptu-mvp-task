@@ -23,9 +23,9 @@ export function sanPhamThieu(r) {
   return r.san_pham_ten;
 }
 // Điều thứ 3 trên dòng phụ: tên sản phẩm kèm "(sản phẩm còn thiếu)"; khâu đã nói rõ tình trạng thì ghi nguyên câu (bị từ chối, chưa nhận, đã nộp chờ
-// xác nhận) hoặc chỉ tên sản phẩm (chờ xác nhận minh chứng nộp trước v3.20 — sản phẩm đã nộp).
+// xác nhận) hoặc chỉ tên sản phẩm (đã trình chờ cấp trên quyết; chờ xác nhận minh chứng nộp trước v3.20 — sản phẩm đã có).
 const dieuSanPham = (r) => (['BI_TU_CHOI', 'CHUA_NHAN', 'CHO_MINH_CHUNG'].includes(r.khau) ? sanPhamThieu(r)
-  : r.khau === 'CHO_NGHIEM_THU' ? r.san_pham_ten : `${r.san_pham_ten} (sản phẩm còn thiếu)`);
+  : ['CHO_QUYET', 'CHO_NGHIEM_THU'].includes(r.khau) ? r.san_pham_ten : `${r.san_pham_ten} (sản phẩm còn thiếu)`);
 
 // Vòng khép kín theo chỉ đạo Thường trực mới nhất trên việc (A0: mình gửi; A1: mình nhận); không có → "Chưa chỉ đạo" + chỉ đạo điều hành chờ.
 export function vongHtml(r) {

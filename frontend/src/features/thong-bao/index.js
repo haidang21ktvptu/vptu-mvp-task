@@ -134,7 +134,11 @@ const moThongBao = ({ nhiemVu, ma, nvq }) => moNhiemVuCuaTin(nhiemVu, ma, nvq ||
 
 // "Đánh dấu đã đọc": chỉ tin của thẻ đang mở.
 async function docHetThongBao() {
-  try { await tinHeThongDocHet(theMo); loadThongBao(); lamMoiHuyHieu(); } catch (e) { notifyError(e.message); }
+  try {
+    await tinHeThongDocHet(theMo);
+    if (soDb && soDb[theMo] != null) soDb[theMo] = 0;   // số của thẻ vừa đọc hết về 0 ngay; số chính xác về sau lamMoiHuyHieu
+    loadThongBao(); lamMoiHuyHieu();
+  } catch (e) { notifyError(e.message); }
 }
 
 // Tiếng chuông ngắn (WebAudio, không tệp âm thanh) khi người dùng bật am_chuong.
