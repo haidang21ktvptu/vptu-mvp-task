@@ -10,10 +10,6 @@
   @container tq (max-width: 860px) {
     .tq-loc-hang .pham-vi, #viewTongQuan .dau-bd .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 14px; }
   }
-  @container tq (max-width: 640px) {
-    .tq1-phai .pham-vi { flex: 1 1 auto; min-width: 0; }
-    .tq1-phai .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 12px; }
-  }
   .gv-mt > .nhan { display: block; margin-bottom: 8px; }
   .mtg-dau .nhan { margin: 0; }
   @media (max-width: 600px) {

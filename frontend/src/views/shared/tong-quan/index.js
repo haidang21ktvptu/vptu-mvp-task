@@ -32,7 +32,8 @@ import { batKlRealtime } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { moNganDanhSach, moNganViec, khiGhiTrongNgan } from '../ngan-chi-tiet.js';
 import { theThangHtml, vanBanHtml, chatLuongHtml, chiDaoHtml, KY, danhSoKhoi } from './template.js';
-import { tang1Html, theSoHtml, xuHuongHtml, nvqHtml, khungCho1Html, inChanHtml } from './tang-1.js';
+import { tang1Html, khungCho1Html, inChanHtml } from './tang-1.js';
+import { quaHanNhomHtml, xuHuongHtml, nvqHtml } from './tang-1-khoi.js';
 import { maTranHtml } from './ma-tran.js';
 import { theTang1, tuanTruoc, cauKetLuan, nhieuQuaHanNhat, tuanGanDay, xuHuongTuan, maTran } from '../../../lib/kl/tong-quan-tang.js';
 import { loadChupTuanTruoc, loadQuaHanChuNhat, loadChiDaoChoTruoc, loadNvqHienTai } from '../../../lib/kl/tong-quan-db.js';
@@ -127,12 +128,14 @@ function ve() {
   const khoa = khoaNhom(vn, DEPT_NAMES, state.user?.department); const ctx = { cds: cdsLoc(), ctxCd: ctxCd(), homNay };
   const t1 = theTang1(rows, k, ctx); const cu = tuanTruoc(rows, tq.loc.trangThai || tq.loc.nhanh ? null : tq.chup, ctx);
   const ketLuan = cauKetLuan(t1, cu, { homNay, nhieuNhat: vn === 'A2' ? [] : nhieuQuaHanNhat(rows, khoa), daLoc: coLoc(tq.loc), tong: rows.length });
-  const tang1 = tang1Html({ tieuDe: td, phamVi: pv, luc: tq.luc, ten, kyChon: kyTuy ? null : tq.ky, coGiaoViec: coGiaoViec(), theHtml: theSoHtml(t1, cu, k), ketLuan,
-    xuHuong: xuHuongHtml(xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so)), nvq: nvqHtml(tq.nvq, homNay), coQuan: coQuanIn(vn), kyTen: k.ten });
+  const mt = maTran(rows, k, khoa);   // dùng chung: thanh quá hạn theo nhóm của tầng 1 và ma trận tầng 2
+  const tang1 = tang1Html({ tieuDe: td, phamVi: pv, luc: tq.luc, ten, kyChon: kyTuy ? null : tq.ky, coGiaoViec: coGiaoViec(), t: t1, cu, k, ketLuan,
+    duocChiDao: ['A0', 'A1', 'A2'].includes(v), nvq: nvqHtml(tq.nvq, homNay), coQuan: coQuanIn(vn),
+    hang: `<div class="tq1-hang">${quaHanNhomHtml(mt.dong, vn)}${xuHuongHtml(xuHuongTuan(rows, tuanGanDay(homNay), tq.qhCN, t1.qh.so))}</div>` });
   const focus = viTriFocus($('viewTongQuan'));
   $('viewTongQuan').innerHTML = danhSoKhoi(tang1
     + thanhLocHtml({ loc: tq.loc, tc, hien: hienLoc, soHien: rows.length, soTong: coSo().length, chip, mo: tq.ui.locMo, coLoc: coLoc(tq.loc) })
-    + `<div class="luoi-tq">${maTranHtml(maTran(rows, k, khoa), vn, k)}${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
+    + `<div class="luoi-tq">${maTranHtml(mt, vn, k)}${nghenHtml(nghen, capNghen(nghen, dm.cap), tq.ui.cap, { duocChiDao: duocChiDaoViec })}`
     + xepHangHtml(xepHang(rows, k, tq.ui.xh), tq.ui.xh, k)
     + giaiNganHtml(tq.gn, { rows, tatCa: tq.tatCa, homNay, user: state.user, ui: tq.ui, daLoc: coLoc(tq.loc) })   // v3.28: ẩn khi chưa có số (trừ lãnh đạo / người nhập)
     + (coMucTieu() ? mucTieuHtml(theo, tq.ui.tabMt, { hienCt, coGan: coGanMucTieu(coSo()), kq: ketQuaMoiNhat(tq.ketQua), nhom: nhomMt, tuDong: rows.filter(laTuDong).length,
