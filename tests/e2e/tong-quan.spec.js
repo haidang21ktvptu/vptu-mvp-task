@@ -16,15 +16,18 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
     await expect(tq).toHaveAttribute('data-nap', /./, NAP);
     await expect(page.locator('#navTongQuan')).toHaveAttribute('aria-selected', 'true');
     await expect(tq.locator('h1')).toHaveText('Tổng quan thực hiện nhiệm vụ');
-    // v3.36 (ba tầng): năm thẻ — các phần của mỗi thẻ cộng đủ số thẻ (ghi bằng nghĩa, DESIGN mục 13); dòng Tổng cộng của ma trận đơn vị khớp thẻ.
+    // v3.36 (ba tầng, dải điều hành — CAU-HOI V-11): dải mang ba số tổng, bốn thẻ — các phần của mỗi thẻ cộng đủ số thẻ (ghi bằng nghĩa, DESIGN mục 13);
+    // số của dải cộng đủ; dòng Tổng cộng của ma trận đơn vị khớp thẻ.
     const so = await tq.evaluate((el) => {
       const the = (k) => el.querySelector(`#tqSo [data-so="${k}"]`);
       const gia = (k) => Number(the(k).querySelector('.gia').textContent);
       const tong = [...el.querySelectorAll('#tqMaTran tfoot td')].map((td) => Number(td.textContent.replace(/\D/g, '') || 0));
-      return { qh: gia('qh'), th: gia('th'), xong: gia('xong'), the: el.querySelectorAll('#tqSo .the-so').length,
+      return { qh: gia('qh'), th: gia('th'), xong: gia('xong'), tongKy: gia('tong'), dangMo: gia('mo'), the: el.querySelectorAll('#tqSo .the-so').length,
         phuQh: the('qh').querySelector('.phu-h').textContent, phuTh: the('th').querySelector('.phu-h').textContent, tong };
     });
-    expect(so.the, 'năm thẻ tầng 1').toBe(5);
+    expect(so.the, 'bốn thẻ tầng 1').toBe(4);
+    expect(so.dangMo, 'dải: đang thực hiện = quá hạn + trong hạn').toBe(so.qh + so.th);
+    expect(so.tongKy, 'dải: nhiệm vụ của kỳ = hoàn thành trong kỳ + đang thực hiện').toBe(so.xong + so.dangMo);
     const qh = so.phuQh.match(/^(\d+) quá hạn dưới \d+ ngày, (\d+) quá hạn từ \d+ ngày trở lên$/);
     if (so.qh) expect(Number(qh?.[1]) + Number(qh?.[2]), `thẻ quá hạn cộng đủ: "${so.phuQh}"`).toBe(so.qh);
     else expect(so.phuQh).toBe('Không có nhiệm vụ quá hạn');
@@ -58,7 +61,7 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
 
     await page.locator('#tqKy [data-ky="thang"]').click();
     await expect(page.locator('#tqKy [data-ky="thang"]')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#tqSo [data-so="xong"] .nhan-so')).toContainText('trong tháng');
+    await expect(page.locator('#tqSo [data-so="tong"] .nhan-so')).toContainText('của tháng');
 
     await nav(page, 'navDieuHanh');
     await expect(page.locator('#viewDieuHanh')).toBeVisible();
@@ -143,7 +146,7 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
     for (const k of ['qh', 'quyet', 'th']) {
       await expect(page.locator(`#tqSo [data-so="${k}"] .ss-tq`)).toHaveText(/^(?:(?:tăng|giảm) \d+ nhiệm vụ so với tuần trước|không đổi so với tuần trước)$/);
     }
-    await expect(page.locator('#tqSo [data-so="xong"] .ss-tq')).toHaveText(/^\d+ nhiệm vụ hoàn thành trong 7 ngày qua$/);
+    await expect(page.locator('#tqSo [data-so="xong"] .phu-h')).toHaveText(/^\d+ nhiệm vụ trong 7 ngày qua$/);
     await expect(page.locator('#tqKetLuan')).toContainText(`Đến ngày ${Number(homNay().slice(8))}/${Number(homNay().slice(5, 7))}/${homNay().slice(0, 4)}`);
     const cot = page.locator('#tqXuHuong .tuan-cot');
     await expect(cot).toHaveCount(12);

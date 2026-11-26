@@ -11,13 +11,13 @@
   @media print {
     :root:has(body.in-tq) { font-size: 11.5px; }
     body.in-tq #viewTongQuan { container-type: normal; zoom: .9; }   /* bỏ bố cục hẹp theo khung (@container tq); thu 90% để vừa một trang A4 */
-    body.in-tq #mainHeader, body.in-tq .tq1-dau, body.in-tq #tqXuHuong, body.in-tq #tqGoi, body.in-tq .chan-in, body.in-tq #thanhHoaToc { display: none !important; }
+    body.in-tq #mainHeader, body.in-tq .tq-so, body.in-tq .tq1-hang, body.in-tq .kl-ic, body.in-tq #tqGoi, body.in-tq .chan-in, body.in-tq #thanhHoaToc { display: none !important; }
     body.in-tq #viewTongQuan > :not(#tqTang1):not(.luoi-tq):not(.tq-in-chan) { display: none !important; }
     body.in-tq .luoi-tq > :not(#tqMaTran):not(#tqNghen) { display: none !important; }
     body.in-tq .luoi-tq { display: block; }
     body.in-tq .luoi-tq > article { margin: 2mm 0 0; padding: 0; border: 0; box-shadow: none; }
-    body.in-tq #viewTongQuan tr, body.in-tq .the-so { break-inside: avoid; }   /* trang sau (nếu có) không cắt ngang một dòng */
-    body.in-tq .the, body.in-tq .the-so, body.in-tq .o-mt, body.in-tq .tq1-ket-luan { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.in-tq #viewTongQuan tr, body.in-tq .dong-in { break-inside: avoid; }   /* trang sau (nếu có) không cắt ngang một dòng */
+    body.in-tq .the, body.in-tq .o-mt, body.in-tq .tq1-ket-luan { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body.in-tq .tq-in-dau { display: block; margin-bottom: 3mm; font-family: 'Times New Roman', 'Noto Serif', serif; color: #000; }
     .tq-in-the-thuc { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6mm; text-align: center; font-size: 13pt; line-height: 1.3; }
     .tq-in-the-thuc > div { display: flex; flex-direction: column; align-items: center; }
@@ -28,19 +28,19 @@
     .tq-in-trich-yeu { margin: 1mm 0 0; text-align: center; font-size: 13pt; font-weight: 700; }
     .tq-in-pham-vi { margin: 1mm 0 0; text-align: center; font-size: 10.5pt; font-style: italic; }
     body.in-tq .tq-tang1 { gap: 2.5mm; break-inside: avoid; }
-    /* Năm thẻ thành bảng năm dòng: số, tên, phần tách, so với tuần trước */
-    body.in-tq .tq1-the { display: block; border: 1px solid #999; border-radius: 6px; }
-    body.in-tq .the-so { display: grid; grid-template-columns: 11mm 59mm minmax(0, 1fr) 40mm; align-items: baseline; column-gap: 2mm; width: 100%;
-      padding: 1mm 2mm; border: 0; border-bottom: 1px solid #ccc; border-radius: 0; background: none; box-shadow: none; }
-    body.in-tq .the-so:last-child { border-bottom: 0; }
-    body.in-tq .the-so .gia { font-size: 14pt; text-align: right; }
-    body.in-tq .the-so .nhan-so { margin: 0; font-size: 9.5pt; line-height: 1.25; white-space: normal; }
-    body.in-tq .the-so .nhan-so::first-letter { text-transform: uppercase; }
-    body.in-tq .the-so .phu-h, body.in-tq .the-so .ss-tq { display: block; margin: 0; padding: 0; font-size: 8.5pt; line-height: 1.3; }
-    body.in-tq .tq1-duoi { display: block; }
-    body.in-tq .tq1-ket-luan { padding: 2mm 3mm; font-size: 10pt; line-height: 1.4; border: 1px solid #999; }
-    body.in-tq .tq1-nvq { padding: 2mm 3mm; font-size: 10pt; border: 1px solid #999; }
-    body.in-tq .tq1-nvq .nut { display: none !important; }
+    /* Bảng năm chỉ tiêu (tang-1.js bangInHtml): số, tên, phần tách, so với tuần trước */
+    body.in-tq .tq1-bang-in { display: block; border: 1px solid #999; border-radius: 6px; }
+    body.in-tq .dong-in { display: grid; grid-template-columns: 11mm 59mm minmax(0, 1fr) 40mm; align-items: baseline; column-gap: 2mm; padding: 1mm 2mm; border-bottom: 1px solid #ccc;
+      font-size: 8.5pt; line-height: 1.3; }
+    body.in-tq .dong-in:last-child { border-bottom: 0; }
+    body.in-tq .dong-in b { font-family: var(--font-tieu-de); font-size: 14pt; font-weight: 600; line-height: 1.1; text-align: right; }
+    body.in-tq .dong-in .ten-in { font-size: 9.5pt; font-weight: 600; line-height: 1.25; }
+    body.in-tq .tq1-kl { display: block; padding: 0; border: 0; background: none; }
+    body.in-tq .tq1-ket-luan { padding: 2mm 3mm; font-size: 10pt; line-height: 1.4; border: 1px solid #999; border-radius: 6px; }
+    body.in-tq .tq1-ket-luan b { font-weight: 600; }
+    body.in-tq .tq1-nvq { display: block; padding: 2mm 3mm; font-size: 10pt; border: 1px solid #999; }
+    body.in-tq .tq1-nvq .nvq-ten, body.in-tq .tq1-nvq .nvq-co-cau, body.in-tq .tq1-nvq .nut { display: none !important; }
+    body.in-tq .nvq-cau-in { display: block; margin: 0; }
     body.in-tq .bang-mt, body.in-tq .bang-ng { font-size: 9pt; }
     body.in-tq .bang-mt th, body.in-tq .bang-mt td, body.in-tq .bang-ng th, body.in-tq .bang-ng td { padding: .7mm 1.5mm; line-height: 1.25; }
     body.in-tq .bang-mt thead th { white-space: normal; line-height: 1.15; font-size: 8pt; }
@@ -91,6 +91,9 @@
     .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc, .kl-sap,
     .ray, .tb-panel, .bc-ky { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề */
     body { background: #fff; }
+    .tq-dai { background: none; border: 1px solid #999; box-shadow: none; color: var(--chu); }   /* v3.36: dải điều hành không in nền màu — chữ màu mực */
+    .tq-dai h1, .tq-dai .so-dai, .tq-dai .so-dung, .tq-dai .dai-pham-vi, .tq-dai .so-dai .phu-h, .tq-dai .so-dung-chu small, .tq-dai .vd-chu small { color: var(--chu); }
+    .tq-dai .dai-nui, .tq-dai .dai-vach, .tq-dai .pham-vi { display: none; } .tq-dai .vd-ranh { stroke: #ddd; } .tq-dai .so-dai { border-left-color: #ccc; }
     .than { background: none; } .dai::before { display: none; } .dai .ten { color: var(--chu); }   /* v9: dải màu thanh bên không in */
     .max { max-width: none; padding: 0; }
     .trang { padding: 0; }

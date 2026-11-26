@@ -67,7 +67,9 @@ test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, t�
   await expect(dau).toContainText('VĂN PHÒNG');
   await expect(dau).toContainText('ĐẢNG CỘNG SẢN VIỆT NAM');
   await expect(dau).toContainText('BÁO CÁO NHANH');
-  await expect(page.locator('#tqSo')).toBeVisible();
+  await expect(page.locator('#tqSo')).toBeHidden();   // dải điều hành và bốn thẻ không in — bản in dùng bảng năm chỉ tiêu
+  await expect(page.locator('#tqTang1 .tq1-bang-in .dong-in')).toHaveCount(5);
+  await expect(page.locator('#tqTang1 .tq1-bang-in')).toBeVisible();
   await expect(page.locator('#tqMaTran')).toBeVisible();
   await expect(page.locator('#tqLoc')).toBeHidden();
   await expect(page.locator('#mainHeader')).toBeHidden();

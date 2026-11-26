@@ -1,6 +1,6 @@
 // v3.36 (Tổng quan ba tầng): ảnh chụp màn hình để rà soát giao diện ngay trên PR — CI lưu thư mục tests/e2e/anh-chup thành artifact
 // "…-anh-chup" (không so sánh điểm ảnh, không làm đỏ CI vì ảnh khác). Lãnh đạo Văn phòng (cỡ chữ lớn mặc định) ở 1366×768, 1920×1080 và điện thoại
-// 375×812; Trưởng phòng 1366×768. Mỗi cỡ hai ảnh: màn hình đầu (tầng 1 phải vừa) và cả trang; kiểm năm thẻ nằm trong màn hình đầu (≥ 1366px) và
+// 375×812; Trưởng phòng 1366×768. Mỗi cỡ hai ảnh: màn hình đầu (tầng 1 phải vừa) và cả trang; kiểm dải và bốn thẻ nằm trong màn hình đầu (≥ 1366px) và
 // không cuộn ngang. Chỉ đọc — không tạo dữ liệu.
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -17,12 +17,12 @@ test.describe('Ảnh chụp giao diện Tổng quan (rà soát trên PR)', () =>
       const page = await pageAs(browser, vai, testInfo, { oTongQuan: true });
       await page.setViewportSize({ width: w, height: h });
       await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
-      await expect(page.locator('#tqSo .the-so')).toHaveCount(5);
+      await expect(page.locator('#tqSo .the-so')).toHaveCount(4);
       await page.evaluate(() => globalThis.document.fonts.ready);
-      // Tầng 1: năm thẻ nằm trong màn hình đầu (không cuộn) ở cỡ máy tính phổ biến nhất; mọi cỡ không cuộn ngang.
+      // Tầng 1: dải điều hành và bốn thẻ nằm trong màn hình đầu (không cuộn) ở cỡ máy tính phổ biến nhất; mọi cỡ không cuộn ngang.
       if (w >= 1366) {
         const b = await page.locator('#tqSo').boundingBox();
-        expect(b.y + b.height, 'năm thẻ tầng 1 nằm trong màn hình đầu').toBeLessThanOrEqual(h);
+        expect(b.y + b.height, 'dải và bốn thẻ tầng 1 nằm trong màn hình đầu').toBeLessThanOrEqual(h);
       }
       const { sw, vw } = await page.evaluate(() => ({ sw: globalThis.document.documentElement.scrollWidth, vw: globalThis.innerWidth }));
       expect(sw, 'không cuộn ngang').toBeLessThanOrEqual(vw);
