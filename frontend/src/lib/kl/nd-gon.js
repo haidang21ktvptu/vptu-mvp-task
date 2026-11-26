@@ -1,4 +1,4 @@
-// v3.36 (CAU-HOI V-1, rà soát 25/11/2026): thẻ việc ở Cần xử lý hiện nội dung tối đa hai dòng (lớp .nd-gon — v8-hang.css), mã việc đứng đầu cùng
+// v3.36 (CAU-HOI V-1, rà soát 25/11/2026): thẻ việc ở Cần xử lý hiện nội dung tối đa hai dòng (lớp .nd-gon — the-viec.css), mã việc đứng đầu cùng
 // khối; nguyên văn ở title (rê chuột) và ở ngăn chi tiết. Thông tin phụ (hạn, người, nhãn) xuống dòng riêng bằng .nd-phu nên không bị cắt.
 import { escapeHtml } from '../dom.js';
 

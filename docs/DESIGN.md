@@ -2,65 +2,74 @@
 
 Mục tiêu: giao diện **trang trọng như một văn bản của Đảng**, **mang dấu ấn Cao Bằng**, và **dùng được cả ngày** cho 49 cán bộ trên máy tính văn phòng lẫn điện thoại. Không phải giao diện "startup". Không màu mè. Một điểm nhấn duy nhất, còn lại kỷ luật.
 
-**Đặc tả UI/UX hiện hành: giao diện v9 — mục 10 dưới đây và bản mẫu `docs/ui-ux/mockup-v9.html`** (bản 6, chốt 02/10/2026; từ v3.14.0). Khi khác với các mục 1–9 hay với `docs/ui-ux/mockup-v8/` (`DESIGN-V8.md`, chốt 21/9/2026), **v9 thắng** (ví dụ hai kiểu giao diện, chữ Lexend / Source Sans 3 / Noto Serif, trang Tổng quan). Phần v9 không nói tới thì v8 rồi các mục 1–9 vẫn áp dụng. Bản cũ `docs/ui-ux/mockup-v7.html` và `mockup/index.html` giữ làm lịch sử. Khi phân vân, chọn phương án **trầm và ít hơn**.
+**Đây là bản hiện hành duy nhất** (viết lại ngày 26/11/2026, v3.36): gộp các mục cũ, giao diện v8, v9 và các đợt sau thành một bản, không còn thứ tự "bản sau thắng bản trước". Số mục giữ như trước để các chú thích `DESIGN mục N` trong mã và tài liệu khác vẫn đúng. Đổi giao diện thì sửa mục tương ứng ở đây trong cùng PR. Bản mẫu `docs/ui-ux/mockup-v9.html` (chốt 02/10/2026) chỉ minh hoạ bố cục và màu; khi khác tài liệu này thì tài liệu này đúng. `docs/ui-ux/mockup-v8/`, `DESIGN-V8.md`, `mockup-v7.html` và `mockup/index.html` giữ làm lịch sử. Khi phân vân, chọn phương án **trầm và ít hơn**.
 
 ---
 
 ## 1. Ý tưởng dẫn dắt
 
-Ba nguồn hình ảnh, mỗi nguồn cho đúng một thứ:
-
 | Nguồn | Lấy gì | Không lấy gì |
 |---|---|---|
-| **Văn bản của Đảng** | Màu đỏ sẫm dùng tiết chế, chữ có chân cho tên cơ quan, bố cục thẳng hàng, khoảng trắng rộng | Không dùng đỏ tràn nền; không gradient đỏ-vàng |
-| **Non nước Cao Bằng** (núi đá vôi, suối Lê-nin, thác Bản Giốc) | Nền trang màu đá vôi ấm; xanh ngọc cho "hoàn thành"; hình núi lớp chồng ở trang đăng nhập | Không ảnh chụp làm nền; không icon phong cảnh rải rác |
-| **Thổ cẩm Tày – Nùng** | Nền chàm cho thanh bên; một dải hoa văn hình thoi mảnh ở đầu trang | Không hoa văn lặp toàn màn hình |
+| **Văn bản của Đảng** | Đỏ son dùng tiết chế (nút chính, vạch son đầu trang); tên cơ quan theo thể thức (TỈNH ỦY CAO BẰNG / VĂN PHÒNG / dấu sao) và dòng ngày "Cao Bằng, ngày … tháng … năm …" bằng chữ có chân; bố cục thẳng hàng, khoảng trắng rộng | Không đỏ tràn nền vùng nội dung; không gradient đỏ – vàng |
+| **Non nước Cao Bằng** (thác Bản Giốc, núi đá vôi) | Ảnh thác Bản Giốc và ba lớp núi SVG **chỉ ở trang đăng nhập**; xanh lục cho "hoàn thành" | Không ảnh trong các màn làm việc (bỏ ảnh nền sau số liệu từ v3.36); không biểu tượng phong cảnh rải rác |
+| **Màu thanh bên** | Menu trái và khối trái đầu trang cùng một màu đặc (lam đậm ở kiểu Thanh lịch, đỏ son ở kiểu Trang nghiêm), mục chọn có biểu tượng vàng sao | Không hoa văn lặp; dải hoa văn thổ cẩm của bản v7 không còn dùng |
 
-**Điểm nhấn duy nhất:** trang đăng nhập với hình núi đá vôi xếp lớp bằng SVG màu chàm và dải hoa văn thổ cẩm. Toàn bộ phần bên trong (dashboard, bảng, form) giữ yên tĩnh để dữ liệu nổi lên.
+**Điểm nhấn duy nhất:** trang đăng nhập (mục 4). Toàn bộ phần bên trong (Tổng quan, bảng, biểu mẫu) giữ yên tĩnh để số liệu nổi lên.
 
-**Biểu tượng tỉnh Cao Bằng** (`frontend/public/brand/logo-cao-bang.png`, PNG nền trong suốt 1280×819, do Văn phòng cung cấp): không tự vẽ, **không đổi màu, không kéo méo tỷ lệ**. Dùng ở đúng 3 chỗ: trang đăng nhập (rộng 112px, căn giữa, phía trên tên cơ quan), thanh bên (rộng 40px trong ô nền trắng bo 4px để đủ tương phản trên nền chàm, cạnh chữ "Văn phòng Tỉnh ủy") và favicon (`favicon-32.png`, `apple-touch-icon-180.png` nền trắng — xuất từ file gốc bằng script, không vẽ lại). Biểu tượng Đảng (búa liềm) và Quốc huy: không tự vẽ, không tải từ nguồn không rõ; chỉ dùng khi Văn phòng cung cấp file chính thức. Trong mockup còn để ô trống có nhãn "Biểu tượng chính thức".
+**Biểu tượng tỉnh Cao Bằng** (`frontend/public/brand/`, do Văn phòng cung cấp; bản nhỏ `bieu-trung.png`): không tự vẽ, **không đổi màu, không kéo méo tỷ lệ** (`object-fit: contain`). Dùng ở ba chỗ: trang đăng nhập (ô nền trắng 84×68px), khối trái thanh đầu trang (ô nền trắng 44px, bo 12px) và favicon (`favicon-32.png`, `apple-touch-icon-180.png` — xuất từ tệp gốc bằng script). Biểu tượng Đảng và Quốc huy: chỉ dùng khi Văn phòng cung cấp tệp chính thức; không tải từ nguồn không rõ.
 
 ---
 
 ## 2. Màu sắc
 
-Token CSS (đặt trong `frontend/src/styles/tokens.css` và `tailwind.config.js`):
+Token khai báo một nơi: `frontend/src/styles/tokens.css`; `tailwind.config.js` đọc lại cùng biến. **Không viết mã màu trong CSS thành phần** — thêm token ở đây và ở `tokens.css` trước.
 
-| Token | Hex | Tên gọi | Dùng cho |
+**Hai kiểu giao diện và nền tối.** Mặc định là **Thanh lịch** (lam); `<html data-kieu="trang-nghiem">` là **Trang nghiêm** (đỏ son); `<html data-theme="dark">` là **nền tối**, đi được với cả hai kiểu. Người dùng chọn ở menu bánh răng (nhóm "Kiểu giao diện": hai mục chọn một và mục bật / tắt "Nền tối"); lựa chọn nhớ theo máy (`localStorage` `vptu.kieu`, `vptu.nen-toi`), gắn bằng đoạn script đầu `index.html` trước khi vẽ để không nháy màu (`views/shell/kieu-giao-dien.js`).
+
+| Token | Thanh lịch | Trang nghiêm | Dùng cho |
 |---|---|---|---|
-| `--cb-do` | `#A6192E` | Đỏ Đảng | Nút hành động chính, tiêu đề mục quan trọng, viền trên thẻ đăng nhập. **Tối đa 1–2 chỗ mỗi màn hình.** |
-| `--cb-vang` | `#C9A227` | Vàng sao | Gạch nhấn dưới tên cơ quan, hoa văn thổ cẩm, huy hiệu số. Không dùng làm nền. |
-| `--cb-cham` | `#1C2A44` | Chàm Tày–Nùng | Thanh bên, đầu trang, nền hình núi. Tạo sự trang trọng thay cho màu đỏ. |
-| `--cb-ngoc` | `#2E7D6E` | Ngọc Pác Bó | Trạng thái hoàn thành, thông báo thành công, mức XANH. |
-| `--cb-da` | `#F4F2ED` | Đá vôi | Nền trang. |
-| `--cb-giay` | `#FFFFFF` | Giấy | Nền bảng, thẻ, form. |
-| `--cb-muc` | `#1D2433` | Mực | Chữ chính. |
-| `--cb-muc-nhat` | `#5B6474` | Mực nhạt | Chữ phụ, nhãn cột. |
-| `--cb-vien` | `#DDD8CE` | Viền | Đường kẻ bảng, viền input. |
+| `--nut` / `--nut-dam` | `#C0262D` / `#A01F25` | `#A61E27` / `#86181F` | Nút chính (đỏ son), lúc rê chuột. **Một nút chính mỗi vùng** |
+| `--ben-mau` → `--ben-cuoi` | `#15395F` → `#0E2A49` | `#A82029` → `#84181F` | Menu trái, khối trái thanh đầu trang (`--ben-nen` là dải chuyển hai màu này) |
+| `--vach-tren` | `#C0262D` | `#C0262D` | Vạch son 3px trên cùng thanh đầu trang |
+| `--ben-chon-icon` · `--ben-dem` | `#E9C46A` · `#C8323A` | `#E9C46A` · `#E9C46A` | Biểu tượng mục đang chọn · nền số đếm trên menu |
+| `--navy` | `#17365D` | `#5C1A20` | Tiêu đề, màu cấu trúc |
+| `--navy-dac` · `--vang-tren-dac` | `#17365D` · `#E0A526` | `#7E1D24` · `#E0A526` | Nền khối đặc có chữ trắng (ô số, nút nhóm đang chọn) · số vàng trên nền đó |
+| `--nen-phu` · `--nen-mo` | `#E9EEF5` · `#F4F7FB` | `#F3EEED` · `#FBF7F6` | Nền trang · nền nhạt (hàng tiêu đề bảng, khối phụ) |
+| `--the` (= `--nen`) | `#FFFFFF` | `#FFFFFF` | Mặt thẻ, bảng, ô nhập, hộp thoại |
+| `--chu` · `--chu-phu` · `--chu-mo` | `#14243B` · `#4F607A` · `#5A6A81` | `#2B1B1D` · `#6A5557` · `#7A6568` | Chữ chính · chữ phụ, nhãn · chữ mờ |
+| `--vien` · `--vien-nhat` · `--vien-o` | `#D8E1EC` · `#E6ECF3` · `#C1CDDB` | `#E8DEDC` · `#F0E8E6` · `#D7C9C6` | Đường kẻ, viền thẻ · kẻ trong bảng · viền ô nhập |
+| `--vien-focus` | `#2A78D6` | `#2A78D6` | Viền tiêu điểm bàn phím |
 
-Màu mức cảnh báo (khớp `alert_level` của view):
+**Màu trạng thái và mức cảnh báo — cùng nghĩa ở mọi kiểu** (cách ghi bằng chữ: mục 13):
 
-| Mức | Hex nền | Hex chữ/viền | Cách hiển thị |
+| Mức / trạng thái | Màu chính | Nền nhạt | Chữ trên nền nhạt |
 |---|---|---|---|
-| XANH | `#E6F2EF` | `#2A7365` | Dải màu 4px bên trái dòng. Chữ/viền đậm hơn ngọc một bậc vì `#2E7D6E` trên nền nhạt chỉ đạt 4.28:1 với chữ 12px |
-| VANG | `#FBF3DF` | `#8A6512` | Dải màu bên trái |
-| DO | `#FDECEA` | `#C92A1E` | Dải màu bên trái, nhãn trạng thái đỏ |
-| DO_DAC_BIET | `#F3E8FF` | `#6B21A8` | **Tím đậm** (v3.23.2): dải bên trái, chấm, nhãn trạng thái tím có ‼ |
-| HOAN_THANH | `#E6F2EF` | `#2A7365` | Chữ mực nhạt, dải ngọc |
+| Đang thực hiện, trong hạn | `--lam` `#2563B8` | `--lam-nhat` `#E3EEFB` | `--lam` |
+| Vàng — sắp đến hạn | `--vang` `#E0A526` | `--vang-nhat` `#FFF1D6`; khối `--nen-vang-mo` | `--vang-chu` `#8A5300` |
+| Đỏ — quá hạn dưới 3 ngày | `--do` `#C92A1E` | `--do-nhat` `#FDECEA`; khối `--nen-do-mo` | `--do-chu` `#8E1520` |
+| Đỏ đặc biệt — quá hạn từ 3 ngày | **tím đậm** `--ddb` `#6B21A8` | `--ddb-nhat` `#F3E8FF`; nền dòng `--nen-ddb` | `--ddb`, nhãn có ‼ |
+| Hoàn thành | `--luc` `#18794E` | `--luc-nhat` `#E2F3EA` | `--luc` |
+| Hỏa tốc, chỉ đạo của Thường trực | `--do-dam` `#8E1520` | — | — |
 
-v3.23.2 (chủ dự án 14/10/2026): Đỏ và Đỏ đặc biệt phải phân biệt được bằng mắt ngay — Đỏ đặc biệt đổi sang **tím đậm** (token `--ddb`, `--ddb-nhat`, `--nen-ddb`; biểu đồ `--f-ddb`, chữ trên nó `--f-ddb-chu`); nền tối: Đỏ `#F97A70`, Đỏ đặc biệt `#C4A1F5`. `--do-dam` (đỏ rượu) chỉ còn cho Hỏa tốc và chỉ đạo Thường trực, không dùng cho mức cảnh báo.
+Đỏ và Đỏ đặc biệt phải phân biệt được bằng mắt ngay (v3.23.2); `--do` không dùng cho nút. Bộ `--cam` (cam) giữ cho nghiệm thu, hiện chưa màn nào dùng.
 
-Quy tắc: **màu là thông tin, không phải trang trí.** Mỗi màu xuất hiện vì nó nói lên trạng thái hoặc vai trò, không vì "cho đẹp".
+**Biểu đồ** dùng bộ `--f-*` (`--f-tot` đúng hạn, `--f-tre` trễ, `--f-nt` nghiệm thu, `--f-vang`, `--f-do`, `--f-ddb` kèm `--f-ddb-chu` cho chữ trên nó) và `--du-lieu`, `--du-lieu-2` cho chuỗi số liệu; trạng thái luôn kèm nhãn chữ.
+
+**Nền tối** chỉ áp trên màn hình (bản in, PDF luôn dùng token sáng): Thanh lịch xanh đêm (nền trang `#0E1B2D`, thẻ `#152740`), Trang nghiêm đêm ấm (`#1A1315` / `#261C1F`); không dùng đen. Màu trạng thái sáng lên một bậc (Đỏ `#F97A70`, Đỏ đặc biệt `#C4A1F5`); khối đặc màu sáng dùng chữ tối.
+
+**Tương phản và tương thích:** chữ / nền đạt 4.5:1 ở cả bốn chế độ (hai kiểu × sáng / tối); viền tiêu điểm trên nền đặc của menu màu trắng. Không dùng `color-mix()` hay tính năng CSS cần trình duyệt mới hơn Chrome 109 (máy Windows 7 / 8.1 của cơ quan).
+
+Quy tắc: **màu là thông tin, không phải trang trí.**
 
 ---
 
 ## 3. Chữ
 
-**Bản hiện hành từ v3.36 (25/11/2026, CAU-HOI V-1), thay cả phần chữ của mục 10.** Ba họ chữ, đều có bộ dấu tiếng Việt đầy đủ, **tự host** tại `frontend/public/fonts/` (woff2 biến thiên 400–700, subset Vietnamese + Latin, khai báo ở `src/styles/fonts.css`) vì mạng cơ quan có thể chặn Google Fonts:
+Ba họ chữ, đều có bộ dấu tiếng Việt đầy đủ, **tự host** tại `frontend/public/fonts/` (woff2 biến thiên 400–700, subset Vietnamese + Latin, khai báo ở `src/styles/fonts.css`) vì mạng cơ quan có thể chặn Google Fonts:
 
 | Họ chữ | Vai trò |
 |---|---|
-| **Lexend** (`--font-tieu-de`) | Tiêu đề trang, tiêu đề khối, con số lớn |
+| **Lexend** (`--font-tieu-de`) | Tiêu đề trang, tiêu đề khối, con số lớn, giờ và số trong bảng |
 | **Source Sans 3** (`--font-sans`) | Thân chữ, bảng, nút, ô nhập |
 | **Noto Serif** (`--font-van-ban`) | Tên cơ quan ở đầu trang, dòng ngày theo thể thức (in nghiêng), nội dung ý kiến chỉ đạo |
 
@@ -75,60 +84,50 @@ Quy tắc: **màu là thông tin, không phải trang trí.** Mỗi màu xuất 
 | `--chu-muc` | 17 | Tiêu đề mục, khối |
 | `--chu-khoi` | 20 | Tên cơ quan, tiêu đề hộp, số trung bình |
 | `--chu-trang` | 24 | Tiêu đề trang, số trong thẻ |
-| `--chu-so` | 32 | Con số lớn ở dải đầu, thẻ tổng quan |
+| `--chu-so` | 32 | Con số lớn ở thẻ Tổng quan |
 
-**Cỡ chữ lớn:** mục "Cỡ chữ lớn" ở menu bánh răng đặt `<html data-co-chu="lon">`, gốc 18px, cả thang lớn theo (13 thành 14,6; 15 thành 16,9). Máy chưa chọn thì lãnh đạo (Thường trực, lãnh đạo Văn phòng) mặc định cỡ lớn, người khác cỡ vừa; chọn rồi thì nhớ theo máy (`shell/kieu-giao-dien.js`). Bản in luôn cỡ vừa.
+**Cỡ chữ lớn:** mục "Cỡ chữ lớn" ở menu bánh răng đặt `<html data-co-chu="lon">`, gốc 18px, cả thang lớn theo (13 thành 14,6; 15 thành 16,9). Máy chưa chọn thì lãnh đạo (Thường trực, lãnh đạo Văn phòng) mặc định cỡ lớn, người khác cỡ vừa; chọn rồi thì nhớ theo máy. Bản in luôn cỡ vừa.
 
-Nhãn viết hoa chữ đầu, **không viết hoa toàn bộ** (trừ tên cơ quan theo thể thức văn bản của Đảng ở đầu trang và trang đăng nhập). Không in nghiêng để nhấn một từ. Không dùng chữ đơn cách (monospace) cho số liệu; số dùng `tabular-nums`. Tailwind (`tailwind.config.js`) đọc cùng biến màu, chữ, cỡ chữ; `text-xs` là 13px.
+Nhãn viết hoa chữ đầu, **không viết hoa toàn bộ** (trừ tên cơ quan theo thể thức ở đầu trang, trang đăng nhập và bản in). Không in nghiêng để nhấn một từ. Không dùng chữ đơn cách (monospace) cho số liệu; số dùng `tabular-nums`. Tailwind đọc cùng biến cỡ chữ (`text-xs` = 13px).
 
 ---
 
 ## 4. Bố cục
 
-**Khung ứng dụng (sau đăng nhập):**
+**Khung ứng dụng (sau đăng nhập, màn rộng):**
 ```
-┌──────────────┬─────────────────────────────────────────┐
-│  THANH BÊN   │  ĐẦU TRANG: Tỉnh ủy Cao Bằng · Văn phòng │
-│  (chàm)      │  ─ dải hoa văn thổ cẩm mảnh ─            │
-│              ├─────────────────────────────────────────┤
-│  Bảng điều   │  Tiêu đề trang              [Giao việc] │
-│  khiển       │                                         │
-│  Nhiệm vụ    │  Thanh số liệu: 12 · 3 · 5 · 20 (1 hàng)│
-│  Ý kiến      │                                         │
-│  Nhắn tin    │  Bảng dữ liệu (nền giấy, viền mảnh)     │
-│              │  ▌ dòng có dải màu mức cảnh báo         │
-│  ── ─ ──     │  ▌                                      │
-│  Tên · vai   │                                         │
-└──────────────┴─────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ vạch son 3px ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│ [biểu trưng] TỈNH ỦY CAO BẰNG │ Cao Bằng, ngày …   [Tìm] (chuông) Tên ⚙ │
+│              VĂN PHÒNG  *     │                                      │
+├───────────────────────────────┼──────────────────────────────────────┤
+│ MENU 236px (màu thanh bên)    │ Tiêu đề trang  phụ đề    [nút chính] │
+│ Điều hành ▾                   │                                      │
+│   Tổng quan                   │ Thẻ trắng bo 16px, viền mảnh         │
+│   Cần xử lý  (20)             │ Bảng: kẻ ngang mảnh, mép trái 4px    │
+│ Nhiệm vụ ▾                    │ theo mức cảnh báo                    │
+│ Nhiệm vụ quý BTV ▸            │                                      │
+│ Quản trị ▾                    │                                      │
+└───────────────────────────────┴──────────────────────────────────────┘
 ```
-- Thanh bên 240px, nền chàm, chữ trắng 90%. Mục đang chọn: nền chàm sáng hơn + dải vàng 3px bên trái.
-- Nội dung căn trái, lề 32px, rộng tối đa 1280px.
-- Thanh số liệu là **một hàng có đường kẻ dọc phân cách**, không phải 4 thẻ rời.
-- Bảng: dòng cao 44px, kẻ ngang mảnh màu viền, không kẻ dọc, dòng chẵn không tô màu. Mức cảnh báo là dải 4px bên trái dòng.
-- Bo góc: 4px cho input và nút, 6px cho thẻ. Không bo tròn lớn. Bóng đổ: chỉ modal, `0 8px 24px rgba(28,42,68,.18)`.
+- **Thanh đầu trang** cao 72px (điện thoại 56px): khối trái rộng bằng menu, cùng màu menu, mang biểu trưng và tên cơ quan theo thể thức; cạnh đó dòng ngày (chữ có chân, nghiêng); bên phải ô tìm nhanh, chuông (mục 10), tên người dùng, menu bánh răng (kiểu giao diện, nền tối, cỡ chữ, Cá nhân, Đổi mật khẩu, Trợ giúp, Quản trị, Đăng xuất).
+- **Menu trái** 236px, nền đặc `--ben-nen`, chữ trắng; bốn nhóm thu gọn được (mục 10); mục đang chọn nền sáng hơn, biểu tượng vàng sao; số đếm nền `--ben-dem`.
+- **Vùng nội dung** lề 26px trên, 32px hai bên, 64px dưới; giãn hết bề rộng còn lại (bảng, ma trận cần chỗ); khối chữ đọc dài giới hạn 78ch.
+- **Trang đăng nhập** (điểm nhấn duy nhất): ảnh thác Bản Giốc toàn nền (`public/brand/ban-gioc.jpg`) + hai lớp phủ + ba lớp núi SVG + vệt vàng; trên ảnh chỉ có biểu trưng, dòng cơ quan chữ nhỏ và tên hệ thống; thẻ đăng nhập 440px nổi bên phải (cách mép 120px, ≤ 1200px cách 48px); chân trang ghi đầu mối hỗ trợ. Không số liệu hay nội dung nội bộ trên ảnh. Điện thoại: ảnh thành dải 220px trên cùng, thẻ rộng hết chiều ngang.
 
-**Trang đăng nhập:**
-```
-┌─────────────────────────────────────────────┐
-│ (nền chàm, núi đá vôi xếp lớp mờ dần)       │
-│                                             │
-│        ┌───────────────────────┐            │
-│        │ ▔▔ viền đỏ 4px ▔▔     │            │
-│        │ [ô biểu tượng]        │            │
-│        │ TỈNH ỦY CAO BẰNG      │  serif     │
-│        │ Văn phòng Tỉnh ủy     │            │
-│        │ Hệ thống quản trị     │            │
-│        │ nhiệm vụ              │            │
-│        │ ─ dải thổ cẩm ─       │            │
-│        │ Tên đăng nhập         │            │
-│        │ Mật khẩu              │            │
-│        │ [ Đăng nhập ]  đỏ     │            │
-│        └───────────────────────┘            │
-│  Phòng Chuyển đổi số – Cơ yếu · 0869 134 298│
-└─────────────────────────────────────────────┘
-```
+**Bốn mốc bề rộng (v3.36).** Mọi thay đổi bố cục theo bề rộng cửa sổ chỉ xảy ra ở bốn mốc 600 / 900 / 1200 / 1600px:
 
-**Điện thoại (≤768px):** thanh bên thu thành thanh dưới 4 mục; bảng chuyển thành danh sách thẻ, mỗi thẻ vẫn có dải màu mức cảnh báo bên trái.
+| Bề rộng cửa sổ | Thiết bị điển hình | Khung | Nội dung |
+|---|---|---|---|
+| ≤ 600px | Điện thoại | Thanh đầu 56px cả dải màu menu, nút ☰ mở ngăn menu ngay dưới thanh; thanh dưới các mục chính theo vai; ô tìm nổi dưới thanh | Một cột; bảng thành thẻ, nội dung 3 dòng; nút thao tác rộng hết thẻ, cao ≥ 44px; đăng nhập xếp dọc |
+| 601–900px | Máy tính bảng dọc, cửa sổ hẹp | Menu thành thanh biểu tượng 56px (tên ở `title`, không tên nhóm, mọi nhóm mở); khối trái đầu trang 56px, ẩn dòng ngày và tên người dùng; lề nội dung 16px | Lưới hai, ba cột của biểu mẫu xếp một cột; ngăn chi tiết màn Nhiệm vụ xếp dưới danh sách; ô số hai ô một hàng; bảng nhập tệp thành khối |
+| 901–1200px | Máy tính bảng ngang, laptop đặt thu phóng 125–150% | Menu đủ 236px | Bảng nhiệm vụ thành thẻ, mỗi ô có nhãn; bộ 8 ô số xếp 4 + 4; ngăn chi tiết cạnh bảng rộng 420px; Quản trị tài khoản một cột |
+| 1201–1600px | Laptop 1280–1536px | Menu đủ | Bảng nhiệm vụ gộp cột thời gian vào dòng phụ dưới nội dung; ngăn chi tiết mở thì dòng thành thẻ |
+| > 1600px | Màn 1920px | Menu đủ | Bảng nhiệm vụ đủ cột, ngăn chi tiết 520px đứng cạnh |
+
+- CSS chỉ viết `@media (max-width: 600px | 900px | 1200px | 1600px)` và chiều ngược lại `(min-width: 601px | 901px | 1201px | 1601px)`; JS (`matchMedia`) và `screens` của Tailwind dùng đúng các mốc này. Không thêm mốc khác; cần mốc mới thì sửa mục này trước.
+- Thành phần co theo chỗ của **chính nó** (không theo cửa sổ) dùng `@container` với ngưỡng theo bề rộng thành phần — không phải mốc màn hình: vùng Tổng quan `tq` (640 / 860 / 900 / 1100px), thẻ việc Cần xử lý `the-hang` (580px), thẻ Giao việc `gv-the` (560px), khung văn bản Giao việc `gv-doc` (520 / 980px).
+- Bản in không theo mốc: `@media print` ở `in.css` và cuối tệp của từng thành phần.
 
 ---
 
@@ -136,112 +135,109 @@ Nhãn viết hoa chữ đầu, **không viết hoa toàn bộ** (trừ tên cơ 
 
 | Thành phần | Quy định |
 |---|---|
-| Nút chính | Nền đỏ Đảng, chữ trắng, 40px cao, chữ 15/500. Một nút chính mỗi vùng. |
-| Nút phụ | Viền 1px mực nhạt, nền trong suốt. |
-| Nút nguy hiểm (từ chối, xoá) | Viền đỏ, chữ đỏ, nền trắng. Chỉ đổi nền đỏ khi rê chuột. |
-| Input | Cao 40px, viền 1px, focus: viền chàm 2px. Nhãn trên input, không placeholder thay nhãn. |
-| Huy hiệu số chưa đọc | Tròn 18px, nền vàng sao, chữ mực đậm 12px. Chuông: chỉ đếm tin cần đồng chí xử lý (v3.36). |
-| Modal bắt buộc (A3 tiếp nhận) | Viền trên 4px đỏ, tiêu đề serif, không có nút đóng ở góc. |
-| Toast | Góc dưới phải, nền chàm, chữ trắng, 4 giây. Không rung, không trượt vào. |
-| Trạng thái trống | Một câu hướng dẫn + nút hành động. Không hình minh hoạ. |
+| Nút (`.nut`) | Cao ≥ 32px, chữ 13 đậm vừa, viền `--vien-o`, bo `--bo-nut` 8px. `.nut.chinh` nền `--nut` chữ trắng — một nút chính mỗi vùng; `.nut.lam` nền `--lam` cho thao tác cần làm ngay trên dòng; `.nut.nho` cao 28px. Điện thoại: nút thao tác cao ≥ 44px |
+| Ô nhập (`.o-nhap`) | Cao ≥ 42px (ô gọn `.o-nhap.nho` 40px, chữ 14), viền 1px `--vien-o`, bo 8px; nhãn đặt trên ô, không dùng chữ mờ thay nhãn; tiêu điểm viền `--vien-focus` |
+| Thẻ, khối | Nền `--the`, viền mảnh, bo `--bo-the` 16px, bóng nhẹ `--bong-the`. Không bo tròn lớn hơn |
+| Nhóm nút chọn một (`.pham-vi`) | Viên thuốc viền mảnh; nút đang chọn nền `--navy-dac` chữ trắng (kỳ Tháng · Quý · Năm · Nhiệm kỳ, phạm vi, sắp xếp) |
+| Huy hiệu số | Viên 18px, nền `--ben-dem`, chữ 13; chuông chỉ đếm tin cần đồng chí xử lý (mục 10) |
+| Nhãn trạng thái | Viên nền nhạt + chữ đậm cùng sắc (mục 2); mức cảnh báo ghi bằng nghĩa (mục 13) |
+| Hộp thoại (`.modal`) | Rộng 480px (`.modal-rong` 640px), bo 16px, bóng `--bong-noi`; hộp bắt buộc (tiếp nhận việc) có viền trên 4px đỏ, không nút đóng ở góc. Hộp sửa có lý do: mục 15 |
+| Thông báo nhanh (`components/toast.js`) | Góc dưới phải, nền `--nen-toi` chữ trắng, vạch trái 4px vàng, tự đóng sau 4 giây. Không dùng `alert()` |
+| Trạng thái trống (`.trong`) | Một câu hướng dẫn (và nút hành động nếu có), khung viền đứt; không hình minh hoạ |
+| Biểu đồ | HTML / SVG thuần, không thư viện; chữ dùng màu chữ, không màu dữ liệu; điểm, cột bấm được thì nhận tiêu điểm bàn phím và có gợi ý; nét không co giãn (`vector-effect`) |
+
+**Tổ chức CSS (v3.36, gộp theo thành phần).** `frontend/src/styles/main.css` nạp phông, token, nền tảng, khung, rồi các tệp thành phần và màn hình theo thứ tự ghi trong tệp (giữ đúng thứ tự ghi đè trước khi gộp — không đảo khi chưa kiểm), cuối cùng `ghi-de.css` và `in.css`. Mỗi quy tắc nằm ở tệp của thành phần hoặc màn hình nó thuộc về; **không tạo tệp theo đợt hay theo phiên bản** (kiểu `v9.css`, `pr3.css`, `gd22.css` đã gộp hết). Lớp dùng trong JS viết nguyên văn (Tailwind cắt lớp ghép chuỗi).
+
+| Tệp | Nội dung |
+|---|---|
+| `fonts.css`, `tokens.css`, `base.css` | Phông tự host; token (mục 2, 3); nền tảng (chữ gốc, tiêu điểm, giảm chuyển động) |
+| `khung.css`, `dang-nhap.css` | Thanh đầu trang, menu, thanh dưới, ngăn menu điện thoại; trang đăng nhập, đổi mật khẩu |
+| `thanh-phan.css`, `bang.css`, `the-viec.css`, `chi-tiet.css` | Nút, ô nhập, nhãn, huy hiệu, hộp thoại, thông báo; bảng và hàng tab; tấm, thẻ / hàng việc; ngăn chi tiết dùng chung |
+| `tong-quan.css`, `tong-quan-tang.css`, `tong-quan-khoi.css`, `giai-ngan.css`, `muc-tieu.css` | Tổng quan và các khối của nó; giải ngân vốn; mục tiêu then chốt |
+| `can-xu-ly.css`, `nhiem-vu.css`, `bang-nhiem-vu.css`, `theo-van-ban.css`, `can-bo-bao-cao.css` | Các màn điều hành và danh sách nhiệm vụ |
+| `giao-viec.css`, `giao-viec-ai.css`, `nhap-excel.css` | Giao việc, đề xuất của trợ lý AI, nhập từ Excel |
+| `nhan-tin.css`, `ca-nhan.css`, `quan-tri.css`, `nvq.css` | Nhắn tin; Cá nhân, Trợ giúp; Quản trị; Nhiệm vụ quý BTV |
+| `ghi-de.css` | Ít quy tắc của nhiều thành phần buộc phải đứng sau các tệp màn hình (ghi rõ lý do từng quy tắc). Thêm vào đây chỉ khi không đặt được ở tệp thành phần |
+| `in.css` | Bản in chung, màn Nhiệm vụ, In báo cáo nhanh Tổng quan (A4 dọc) |
 
 ---
 
-## 6. Hoa văn thổ cẩm (SVG gốc, tự vẽ)
+## 6. Hoa văn và hình ảnh
 
-Dải cao 6px lặp ngang, hình thoi lồng nhau, màu vàng sao 60% trên nền chàm. Dùng đúng 3 chỗ: dưới đầu trang, trên form đăng nhập, chân trang in. Không dùng ở bảng, thẻ, nút.
-
-```html
-<svg width="0" height="0"><defs>
-<pattern id="thocam" width="16" height="6" patternUnits="userSpaceOnUse">
-  <path d="M0 3 L4 0 L8 3 L4 6 Z M8 3 L12 0 L16 3 L12 6 Z"
-        fill="none" stroke="#C9A227" stroke-opacity=".6" stroke-width="1"/>
-</pattern></defs></svg>
-<div style="height:6px;background:url(#thocam)"></div>
-```
+- Không hoa văn trang trí trong ứng dụng. Dải hoa văn thổ cẩm của bản v7 **đã bỏ** (thay bằng vạch son 3px và màu thanh bên).
+- Ảnh chụp chỉ ở trang đăng nhập. Ảnh thác Bản Giốc hiện là **ảnh tạm, chưa xác định bản quyền** — phải thay bằng ảnh cơ quan tự chụp hoặc ảnh có giấy phép trước khi dùng chính thức (`public/brand/README.md`). Không ảnh trong các màn làm việc, kể cả sau con số.
+- Biểu tượng chức năng (menu, nút) là SVG nét cùng một kiểu, màu theo chữ; không dùng biểu tượng cảm xúc.
 
 ---
 
 ## 7. Chuyển động
 
-- Không hiệu ứng khi tải trang, trừ **một** lần: hình núi ở trang đăng nhập hiện dần trong 600ms.
-- Mở/đóng luồng ý kiến, mở chi tiết inline: trượt dọc 160ms.
-- Tôn trọng `prefers-reduced-motion`: tắt toàn bộ.
+- Không hiệu ứng khi tải trang. Chỉ có: khung xương nhấp nháy khi Tổng quan đang nạp số liệu; mũi tên nhóm menu và mục mở rộng xoay khi thu / mở (khoảng 0,12 giây); viền thẻ Tổng quan đổi màu khi rê chuột.
+- Mở biểu mẫu dưới dòng, mở ngăn chi tiết: hiện ngay, không trượt.
+- Tôn trọng `prefers-reduced-motion`: tắt toàn bộ hiệu ứng và chuyển tiếp (`base.css`).
 
 ---
 
 ## 8. Giọng văn trong giao diện
 
-- Trang trọng, ngắn, chủ động. "Giao việc", "Tiếp nhận", "Nộp minh chứng", "Duyệt hoàn thành".
-- Xưng hô: "đồng chí" trong thông báo gửi tới người dùng ("Đồng chí có 2 việc chờ tiếp nhận").
-- Lỗi nói rõ việc gì và làm gì tiếp: "Hạn hoàn thành phải sau hôm nay. Chọn lại ngày."
+- Trang trọng, ngắn, chủ động. "Giao việc", "Xác nhận đã nhận việc", "Nộp minh chứng", "Nghiệm thu".
+- Xưng hô: "đồng chí" trong thông báo gửi tới người dùng ("Đồng chí có 2 việc chờ xác nhận").
+- Lỗi nói rõ việc gì và làm gì tiếp: "Hạn xử lý phải sau hôm nay. Chọn lại ngày."
+- Con số luôn kèm danh từ ("8 nhiệm vụ quá hạn"); tên ô theo bảng Phụ lục (mục 12).
 - Không dấu chấm than, không biểu tượng cảm xúc, không tiếng Anh.
 
 ---
 
 ## 9. Kiểm tra trước khi nộp giao diện
 
-- [ ] Màu đỏ xuất hiện không quá 2 chỗ trên màn hình
-- [ ] Tương phản chữ ≥ 4.5:1 (kiểm bằng Lighthouse)
-- [ ] Dùng được bằng bàn phím, focus nhìn thấy
-- [ ] 360px không vỡ bố cục
-- [ ] Không chữ hoa toàn bộ ở nhãn, không tiếng Anh
-- [ ] Hoa văn thổ cẩm đúng 3 chỗ
-- [ ] So với `docs/ui-ux/mockup-v9.html` (màn hình tương ứng), đúng bố cục, màu, chữ — xem ở cả hai kiểu và nền tối
+- [ ] Chỉ dùng token (mục 2, 3): không mã màu, không cỡ chữ px trong CSS thành phần; không chữ dưới 13px
+- [ ] Một nút chính mỗi vùng; đỏ chỉ ở nút chính và trạng thái
+- [ ] Tương phản chữ ≥ 4.5:1 ở cả hai kiểu, sáng và tối (kiểm bằng Lighthouse)
+- [ ] Dùng được bằng bàn phím, tiêu điểm nhìn thấy
+- [ ] Chỉ dùng bốn mốc bề rộng (mục 4); xem ở 390, 768, 1280, 1366 và 1920px, cỡ chữ vừa và lớn; 360px không cuộn ngang
+- [ ] Không chữ hoa toàn bộ ở nhãn, không tiếng Anh; tên ô đúng mục 12, mức cảnh báo ghi đúng mục 13
+- [ ] Quy tắc mới đặt đúng tệp thành phần (mục 5); bản in (Ctrl+P) không vỡ
+- [ ] Không tính năng CSS mới hơn Chrome 109
 
 ---
 
-## 10. Giao diện v9 (từ v3.14.0 — đợt 1)
+## 10. Các màn hình chính
 
-**Hai kiểu giao diện và nền tối.** Token ở `frontend/src/styles/tokens.css`; mặc định là Thanh lịch, `<html data-kieu="trang-nghiem">` là Trang nghiêm, `<html data-theme="dark">` là nền tối (đi được với cả hai kiểu). Người dùng chọn ở menu bánh răng, nhóm "Kiểu giao diện" (hai mục chọn một và mục bật/tắt "Nền tối"); lựa chọn nhớ **theo máy** (`localStorage` `vptu.kieu`, `vptu.nen-toi`), được gắn bằng đoạn script đầu `index.html` trước khi vẽ để không nháy màu.
+**Tổng quan** (trang mở đầu của Thường trực, lãnh đạo Văn phòng, Trưởng phòng; v3.36 — ba tầng, CAU-HOI V-1, V-9; SPEC DB-13). *Tầng 1 vừa một màn hình* (1366×768, cỡ chữ lớn), nền phẳng, không dải màu, không ảnh: đầu trang (tên, phạm vi, giờ cập nhật; nhóm nút kỳ `.pham-vi` Tháng · Quý · Năm · Nhiệm kỳ; nút Giao việc; nút In báo cáo nhanh) → năm thẻ `.the-so` cùng cỡ, mỗi thẻ: số lớn (Lexend, `--chu-so`), tên bắt đầu bằng "nhiệm vụ…", dòng các phần cộng đủ số thẻ, dòng so với tuần trước ghi bằng chữ ("tăng 3 nhiệm vụ so với tuần trước"; đỏ khi tăng là xấu, lục khi giảm). **Thẻ Quá hạn chưa hoàn thành là thẻ duy nhất có màu nhấn** (nền `--nen-do-mo`, viền `--vien-do`, số `--do-chu`); khi không có việc quá hạn thì như thẻ thường → câu kết luận (một câu, không nêu tên cán bộ) cạnh xu hướng 12 tuần (cột giao mới `--du-lieu`, hoàn thành `--du-lieu-2`, chấm quá hạn `--f-do`) → dòng Nhiệm vụ quý của Ban Thường vụ nền `--nen-mo`. Theo bề rộng vùng Tổng quan (`@container tq`): > 900px năm thẻ một hàng; 641–900px ba rồi hai; ≤ 640px hai cột, thẻ quá hạn hết hàng, thẻ nhỏ ẩn dòng các phần. *Tầng 2*: ma trận đơn vị theo trạng thái `.bang-mt` (ô có việc tô nền theo mức: tím, đỏ, vàng; đầu cột có ô màu kèm nhãn; tỷ lệ đúng hạn kèm mẫu số, "chưa đủ dữ liệu" khi dưới ngưỡng; ô của dòng Tổng cộng cũng bấm được — mở toàn bộ việc của cột trong phạm vi; vùng ≤ 640px mỗi đơn vị thành một khối, ô 0 ẩn), 10 điểm nghẽn (nội dung tối đa 2 dòng), xếp hạng, rồi các khối phân tích. *Tầng 3*: ngăn chi tiết dùng chung. Mỗi thẻ, ô, cột, dòng bấm được → đúng danh sách tạo nên con số. Phạm vi số liệu do RLS quyết định; frontend chỉ đếm (`lib/kl/tong-quan.js`, `tong-quan-tang.js`).
 
-| | Thanh lịch (xanh lam) | Trang nghiêm (đỏ son) | Nền tối |
-|---|---|---|---|
-| Nền trang / thẻ | sương `#E9EEF5` / trắng | ấm `#F3EEED` / trắng | xanh đêm `#0E1B2D` / `#152740`; Trang nghiêm: đêm ấm `#1A1315` / `#261C1F` |
-| Thanh bên, khối trái đầu trang | `#15395F` → `#0E2A49`, chữ trắng | đỏ son `#A82029` → `#84181F` | sẫm hơn cùng sắc |
-| Nhấn | vạch son 3px trên cùng; nút chính son `#C0262D`; mục chọn sáng hơn + biểu tượng vàng sao `#E9C46A`; số đếm nền son | nút chính `#A61E27`; số đếm và vạch dải đầu vàng sao | khối đặc màu sáng dùng chữ tối `#0B1626` (`v9.css`) |
+**Giải ngân vốn đầu tư công trên Tổng quan** (v3.28): khối rộng hết hàng ngay sau Điểm nghẽn. Vòng % và chip mức dùng màu trạng thái sẵn có (lục: đạt / đúng tiến độ, vàng: chậm, đỏ: chậm nhiều) **luôn kèm chữ mức** — chữ khác "Vàng / Đỏ" của cảnh báo hạn. Biểu đồ % qua các kỳ: đường liền `--du-lieu` = lũy kế, đường đứt `--chu-mo` = tiến độ đều tới mục tiêu, chấm rỗng = số ước tính; chấm và chữ là HTML đặt theo % nên không méo ở mọi độ rộng. Bảng chủ đầu tư: tỷ lệ thấp trước, đơn vị dưới mức chung của tỉnh nền `--nen-vang-mo` kèm chữ "dưới mức chung của tỉnh". Hộp "Nhập kỳ số liệu" rộng 1000px (bảng xem trước cuộn trong khung, tiêu đề cột dính trên).
 
-Màu mức cảnh báo (Vàng, Đỏ, Đỏ đặc biệt) và trạng thái giữ **cùng nghĩa ở mọi kiểu**; biểu đồ dùng bộ `--f-*` (đúng hạn, trễ, nghiệm thu, vàng, đỏ, đỏ đặc biệt). Không thêm màu ngoài token. Nền tối chỉ áp trên màn hình — bản in / PDF luôn dùng token sáng. **Tương thích:** không dùng `color-mix()` hay tính năng CSS cần trình duyệt mới hơn Chrome 109 (máy Windows 7/8.1 của cơ quan); chữ / nền phải đạt 4.5:1 ở cả bốn chế độ (viền tiêu điểm trên nền đặc của thanh bên màu trắng).
+**In báo cáo nhanh (v3.36):** nút ở đầu Tổng quan (biểu tượng máy in; điện thoại chỉ biểu tượng). Bản in một trang A4 dọc: phần đầu theo thể thức Văn phòng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG — Trưởng phòng: VĂN PHÒNG TỈNH ỦY CAO BẰNG / tên phòng; ĐẢNG CỘNG SẢN VIỆT NAM; Cao Bằng, ngày … tháng … năm …; BÁO CÁO NHANH, tình hình thực hiện nhiệm vụ đến ngày …; phạm vi, kỳ, giờ số liệu), năm chỉ tiêu tầng 1 dạng bảng (số, tên, phần tách, so với tuần trước), câu kết luận, dòng nhiệm vụ quý, ma trận đơn vị (6 dòng nhiều việc quá hạn nhất và dòng Tổng cộng; nhiều hơn thì ghi câu chú thích), 5 điểm nghẽn quá hạn lâu nhất (ghi chú thích khi bị cắt), chân ghi nguồn; không in menu, thanh Hỏa tốc, bộ lọc, biểu đồ xu hướng, các khối phân tích khác, chân in chung (`in.css`, chỉ khi bấm nút; khổ A4 dọc chỉ gắn cho bản in này — Ctrl+P, In / lưu PDF, Báo cáo giữ cách in chung, chọn được khổ ngang).
 
-**Chữ:** xem mục 3 (bản hiện hành từ v3.36: họ chữ Lexend, Source Sans 3, Noto Serif; thang tám bậc bằng biến rem; cỡ chữ lớn). Dòng ngày theo thể thức viết "Cao Bằng, ngày 02 tháng 10 năm 2026", in nghiêng.
+**Cần xử lý** (tiêu đề "Cần xử lý hôm nay"): đầu trang là ba câu hỏi — *Ai đang chậm? Nghẽn ở đâu? Cần đồng chí quyết?* — trả lời bằng tên và số; bấm một ô lọc danh sách như bấm thanh trái. Trưởng phòng xem câu trả lời theo cán bộ, không lọc. Không còn dải 5 ô số (trùng Tổng quan). Mọi thẻ việc của trang (khối Thường trực giao, đề nghị từ chối, bị từ chối, dải Cần xử lý ngay, kết quả nộp, chỉ đạo Thường trực, khối của Trưởng phòng) ghi nội dung **tối đa hai dòng** (`.nd-gon`, nguyên văn ở `title` và ngăn chi tiết) và thông tin phụ một dòng riêng (`.nd-phu`). Thẻ chính `.the.hang` hai tầng (lưới): tầng trên chấm · mã · nội dung tối đa hai dòng · số ngày trễ · nút; tầng dưới (`.the-phu`) chạy từ cột nội dung tới mép phải thẻ — hàng nhãn (độ khẩn, Thường trực giao, vòng khép kín; mỗi nhãn không gãy dòng) rồi bốn điều theo Công văn 1400 (`.bon-dieu`: ai chậm · khâu · sản phẩm thiếu · cấp cần quyết) tối đa hai dòng, vướng mắc; thẻ hẹp dưới 580px (điện thoại, hoặc máy 1000–1250px khi danh sách đứng cạnh thanh trái) xếp dọc theo bề rộng thẻ (`@container the-hang`), bốn điều hiện đủ. Nghiệm thu ngay trên dòng; chỉ đạo chờ trả lời. Danh sách xếp **theo mức khẩn**: độ khẩn, việc Thường trực giao, quá hạn từ N ngày trước quá hạn dưới N ngày, số ngày trễ, hạn gần. Việc sắp đến hạn (để nhắc) mở từ ô Tổng cộng × Sắp đến hạn của ma trận đơn vị ở Tổng quan.
 
-**Khung.** Đầu trang: khối trái cùng màu thanh bên mang biểu trưng và tên cơ quan theo thể thức văn bản của Đảng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG / dấu sao vàng), cạnh đó dòng ngày; bỏ ảnh Bản Giốc ở đầu trang. 601–900px: khối trái thu còn 56px, tên cơ quan nằm cạnh. Điện thoại (≤600px): cả dải đầu màu thanh bên, thanh dưới 4 mục, mục đang chọn có gạch son phía trên.
+**Menu:** bốn nhóm **Điều hành, Nhiệm vụ, Nhiệm vụ quý BTV, Quản trị**; tên nhóm là nút thu gọn / mở (mũi tên xoay, `aria-expanded`), lựa chọn nhớ theo máy và tài khoản; lãnh đạo (Thường trực, lãnh đạo Văn phòng, Trưởng phòng) mặc định thu nhóm Nhiệm vụ quý BTV (tầng 1 Tổng quan đã có dòng nhiệm vụ quý); mở một chức năng nằm trong nhóm đang thu thì nhóm tự mở. Thanh biểu tượng 601–900px không có tên nhóm, mọi nhóm mở.
 
-**Tổng quan** (trang mở đầu của Thường trực, lãnh đạo Văn phòng, Trưởng phòng; v3.36 — ba tầng, CAU-HOI V-1, V-9; SPEC DB-13). *Tầng 1 vừa một màn hình* (1366×768, cỡ chữ lớn), nền phẳng, không dải màu, không ảnh: đầu trang (tên, phạm vi, giờ cập nhật; nhóm nút kỳ `.pham-vi` Tháng · Quý · Năm · Nhiệm kỳ; nút Giao việc) → năm thẻ `.the-so` cùng cỡ, mỗi thẻ: số lớn (Lexend, `--chu-so`), tên bắt đầu bằng "nhiệm vụ…", dòng các phần cộng đủ số thẻ, dòng so với tuần trước ghi bằng chữ ("tăng 3 nhiệm vụ so với tuần trước"; đỏ khi tăng là xấu, lục khi giảm). **Thẻ Quá hạn chưa hoàn thành là thẻ duy nhất có màu nhấn** (nền `--nen-do-mo`, viền `--vien-do`, số `--do-chu`); khi không có việc quá hạn thì như thẻ thường → câu kết luận (một câu, không nêu tên cán bộ) cạnh xu hướng 12 tuần (cột giao mới `--du-lieu`, hoàn thành `--du-lieu-2`, chấm quá hạn `--f-do`) → dòng Nhiệm vụ quý của Ban Thường vụ nền `--nen-mo`. Rộng > 900px năm thẻ một hàng; 641–900px ba rồi hai; ≤ 640px hai cột, thẻ quá hạn hết hàng, thẻ nhỏ ẩn dòng các phần. *Tầng 2*: ma trận đơn vị theo trạng thái `.bang-mt` (ô có việc tô nền theo mức: tím, đỏ, vàng; đầu cột có ô màu kèm nhãn; tỷ lệ đúng hạn kèm mẫu số, "chưa đủ dữ liệu" khi dưới ngưỡng; ô của dòng Tổng cộng cũng bấm được — mở toàn bộ việc của cột trong phạm vi; ≤ 640px mỗi đơn vị thành một khối, ô 0 ẩn), 10 điểm nghẽn (nội dung tối đa 2 dòng), xếp hạng, rồi các khối phân tích. *Tầng 3*: ngăn chi tiết dùng chung. Mỗi thẻ, ô, cột, dòng bấm được → đúng danh sách tạo nên con số. Phạm vi số liệu do RLS quyết định; frontend chỉ đếm (`lib/kl/tong-quan.js`, `tong-quan-tang.js`).
+**Chuông (v3.36, migration 0142):** hai thẻ trong bảng chuông — **Cần đồng chí xử lý** (mở mặc định) và **Để biết**, số chưa đọc cạnh tên thẻ; thẻ chọn gạch chân lam, `role="tablist"` theo mẫu tab của WAI-ARIA (← → / Home / End chuyển thẻ; số chưa đọc đọc qua `aria-label` của thẻ; danh sách nằm trong khung `tabpanel`). Số trên huy hiệu và cạnh tên thẻ lấy từ `kl_so_chua_xu_ly` (không giới hạn 60 tin đã tải mỗi thẻ). Huy hiệu trên chuông, thông báo nhanh và âm chuông chỉ cho tin cần xử lý; tin để biết thêm vào thẻ của nó, không bật thông báo nhanh. Mỗi thẻ gom tin theo việc; "Đánh dấu đã đọc" áp cho thẻ đang mở; bấm một dòng mở việc và đánh dấu đã đọc mọi tin của việc đó. Ô trống: "Không có thông báo cần đồng chí xử lý." / "Chưa có thông báo để biết."
 
-**Giải ngân vốn đầu tư công trên Tổng quan** (v3.28): khối rộng hết hàng ngay sau Điểm nghẽn. Vòng % và chip mức dùng màu trạng thái sẵn có (lục: đạt / đúng tiến độ, vàng: chậm, đỏ: chậm nhiều) **luôn kèm chữ mức** — chữ khác "Vàng / Đỏ" của cảnh báo hạn. Biểu đồ % qua các kỳ: đường liền `--du-lieu` = lũy kế, đường đứt `--chu-mo` = tiến độ đều tới mục tiêu, chấm rỗng = số ước tính; nét không co giãn (`vector-effect`), chấm và chữ là HTML đặt theo % nên không méo ở mọi độ rộng; mỗi chấm nhận tiêu điểm bàn phím, có gợi ý. Bảng chủ đầu tư: tỷ lệ thấp trước, đơn vị dưới mức chung của tỉnh nền `--nen-vang-mo` kèm chữ "dưới mức chung của tỉnh". Hộp "Nhập kỳ số liệu" rộng 1000px (bảng xem trước cuộn trong khung, tiêu đề cột dính trên).
+**Giao việc.** Trên biểu mẫu là dải quy tắc **1-1-1-1-3** (một chủ trì, một sản phẩm, một hạn hoàn thành, một minh chứng, ba mức cảnh báo) sáng dần theo ô đã điền. Dưới các ô Chủ trì theo dõi / Sản phẩm đầu ra / Hạn xử lý có hàng "Chọn nhanh" (chọn nhanh = chọn trong ô, cùng kiểm tra; hạn 7 / 14 / 30 ngày, cuối tháng tính từ ngày nhận văn bản, nhãn ghi rõ ngày). Giao tiếp xuống: khối "Kế thừa từ cấp trên" (nội dung, văn bản, hạn, sản phẩm của việc cha — chỉ xem) và hạn gợi ý "Sớm 3 / 5 / 7 ngày" trước hạn của cấp trên. Cột phải "Văn bản đang nhập": đã nhập / dự kiến và các việc vừa nhập, dùng cùng nút "Giao, nhập tiếp" để nhập liền một văn bản.
 
-**Cần xử lý** (đổi tên từ "Điều hành", tiêu đề "Cần xử lý hôm nay"): đầu trang là ba câu hỏi — *Ai đang chậm? Nghẽn ở đâu? Cần đồng chí quyết?* — trả lời bằng tên và số; bấm một ô lọc danh sách như bấm thanh trái. Trưởng phòng xem câu trả lời theo cán bộ, không lọc. Phần còn lại giữ như v8: dòng việc đủ bốn thông tin theo Công văn 1400, nghiệm thu ngay trên dòng, chỉ đạo chờ trả lời. **v3.36 (CAU-HOI V-1):** bỏ dải 5 ô số (trùng Tổng quan) — lọc bằng ba câu hỏi và thanh trái; mọi thẻ việc của trang (khối Thường trực giao, đề nghị từ chối, bị từ chối, dải Cần xử lý ngay, kết quả nộp, chỉ đạo Thường trực, khối của Trưởng phòng) ghi nội dung **tối đa hai dòng** (`.nd-gon`, nguyên văn ở title và ngăn chi tiết) và thông tin phụ một dòng riêng (`.nd-phu`). Thẻ chính `.the.hang` hai tầng (lưới): tầng trên chấm · mã · nội dung tối đa hai dòng · số ngày trễ · nút; tầng dưới (`.the-phu`) chạy từ cột nội dung tới mép phải thẻ — hàng nhãn (độ khẩn, Thường trực giao, vòng khép kín; mỗi nhãn không gãy dòng) rồi bốn điều (`.bon-dieu`: ai chậm · khâu · sản phẩm thiếu · cấp cần quyết) tối đa hai dòng, vướng mắc; thẻ hẹp dưới 580px (điện thoại, máy 1000–1250px khi danh sách đứng cạnh thanh trái) xếp dọc theo truy vấn bề rộng thẻ (`@container`), bốn điều hiện đủ; danh sách xếp **theo mức khẩn**: độ khẩn, việc Thường trực giao, quá hạn từ N ngày trước quá hạn dưới N ngày, số ngày trễ, hạn gần. Việc sắp đến hạn (để nhắc) mở từ ô Tổng cộng × Sắp đến hạn của ma trận đơn vị ở Tổng quan.
+**Ngăn chi tiết dùng chung:** mọi chỗ "bấm để xem" (số, biểu đồ, bảng ở Tổng quan; ô ở Cần xử lý; dòng ở Theo văn bản, Báo cáo, Cán bộ, Cần nghiệm thu; chuông, tìm nhanh) mở ngay tại chỗ một tấm cố định bên phải rộng `min(560px, 100vw)` (điện thoại toàn màn dưới thanh đầu trang), hai tầng Danh sách → Chi tiết, không đổi mục, không lớp phủ; đóng bằng dấu × ở góc trên phải (36×36px, nhãn đọc "Đóng ngăn chi tiết") hoặc Esc.
 
-**Menu (v3.36):** bốn nhóm **Điều hành, Nhiệm vụ, Nhiệm vụ quý BTV, Quản trị**; tên nhóm là nút thu gọn / mở (mũi tên xoay, `aria-expanded`), lựa chọn nhớ theo máy và tài khoản; lãnh đạo (Thường trực, lãnh đạo Văn phòng, Trưởng phòng) mặc định thu nhóm Nhiệm vụ quý BTV (tầng 1 Tổng quan đã có dòng nhiệm vụ quý); mở một chức năng nằm trong nhóm đang thu thì nhóm tự mở. Thanh biểu tượng 601–900px không có tên nhóm, mọi nhóm mở.
+**Nhập theo tầng:** cấp dưới chỉ xem ô cấp giao đã điền (biểu tượng khoá), muốn đổi thì gửi **Đề nghị sửa** (lý do bắt buộc; người giao Chấp nhận / Giữ nguyên kèm ý kiến; người gửi rút được). Cấp giao, chủ trì theo dõi (việc chưa hoàn thành, v3.34) và thư ký Thường trực sửa ngay (biểu tượng bút, "Sửa thông tin giao", lý do bắt buộc, lịch sử và tin báo người liên quan).
 
-**Chuông (v3.36, 0142):** hai thẻ trong bảng chuông — **Cần đồng chí xử lý** (mở mặc định; số cạnh tên nền vàng sao như huy hiệu) và **Để biết** (số nền nhạt); thẻ chọn gạch chân chàm, `role="tablist"` theo mẫu tab của WAI-ARIA (← → / Home / End chuyển thẻ; số chưa đọc đọc qua `aria-label` của thẻ; danh sách nằm trong khung `tabpanel`). Số trên huy hiệu và cạnh tên thẻ lấy từ `kl_so_chua_xu_ly` (không giới hạn 60 tin đã tải mỗi thẻ). Huy hiệu trên chuông, toast và âm chuông chỉ cho tin cần xử lý; tin để biết thêm vào thẻ của nó, không bật toast. Mỗi thẻ gom tin theo việc như trước; "Đánh dấu đã đọc" áp cho thẻ đang mở; bấm một dòng mở việc và đánh dấu đã đọc mọi tin của việc đó. Ô trống: "Không có thông báo cần đồng chí xử lý." / "Chưa có thông báo để biết."
-
-**In báo cáo nhanh (v3.36):** nút ở đầu Tổng quan (biểu tượng máy in; điện thoại chỉ biểu tượng). Bản in một trang A4 dọc: phần đầu theo thể thức Văn phòng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG — Trưởng phòng: VĂN PHÒNG TỈNH ỦY CAO BẰNG / tên phòng; ĐẢNG CỘNG SẢN VIỆT NAM; Cao Bằng, ngày … tháng … năm …; BÁO CÁO NHANH, tình hình thực hiện nhiệm vụ đến ngày …; phạm vi, kỳ, giờ số liệu), năm chỉ tiêu tầng 1 dạng bảng (số, tên, phần tách, so với tuần trước), câu kết luận, dòng nhiệm vụ quý, ma trận đơn vị (6 dòng nhiều việc quá hạn nhất và dòng Tổng cộng; nhiều hơn thì ghi câu chú thích), 5 điểm nghẽn quá hạn lâu nhất (ghi chú thích khi bị cắt), chân ghi nguồn; không in menu, thanh Hỏa tốc, bộ lọc, biểu đồ xu hướng, các khối phân tích khác, chân in chung (`tong-quan-in.css`, chỉ khi bấm nút; khổ A4 dọc chỉ gắn cho bản in này — Ctrl+P, In / lưu PDF, Báo cáo giữ cách in chung, chọn được khổ ngang).
-
-**Giao việc.** Trên biểu mẫu là dải quy tắc **1-1-1-1-3** (một chủ trì, một sản phẩm, một hạn hoàn thành, một minh chứng, ba mức cảnh báo) sáng dần theo ô đã điền. Dưới các ô Chịu trách nhiệm / Sản phẩm / Hạn hoàn thành có hàng "Chọn nhanh" (chọn nhanh = chọn trong ô, cùng kiểm tra; hạn 7 / 14 / 30 ngày, cuối tháng tính từ ngày nhận văn bản, nhãn ghi rõ ngày). Giao tiếp xuống: khối "Kế thừa từ cấp trên" (nội dung, văn bản, hạn, sản phẩm của việc cha — chỉ xem) và hạn gợi ý "Sớm 3 / 5 / 7 ngày" trước hạn của cấp trên. Cột phải "Văn bản đang nhập": đã nhập / dự kiến và các việc vừa nhập, dùng cùng nút "Giao, nhập tiếp" để nhập liền một văn bản.
-
-**Đợt 2 (đã làm, migration 0070–0075).**
-- **Ngăn chi tiết dùng chung:** mọi chỗ "bấm để xem" (số, biểu đồ, bảng ở Tổng quan; ô ở Cần xử lý; dòng ở Theo văn bản, Báo cáo, Cán bộ, Cần nghiệm thu; chuông, tìm nhanh) mở ngay tại chỗ, hai tầng Danh sách → Chi tiết, không đổi mục.
-- **Nhập theo tầng:** cấp dưới chỉ xem ô cấp giao đã điền (biểu tượng khoá), muốn đổi thì gửi **Đề nghị sửa** (lý do bắt buộc; người giao Chấp nhận / Giữ nguyên kèm ý kiến; người gửi rút được). Cấp giao sửa ngay (biểu tượng bút, "Sửa thông tin giao", lý do bắt buộc, lịch sử + tin cho chủ trì). "Việc của tôi" của Chuyên viên: từ v3.25 là bảng theo cột, thao tác mở ngay dưới dòng (mục 11).
-- **Nhập Excel toàn trình** (thẻ "Nhập từ Excel" / "Chờ hoàn thiện (n)" trên màn Giao việc; chuyên viên quản trị nhiệm vụ và quản trị hệ thống):
-  - Chuẩn ba mức, tô màu ở mẫu: mức 1 vàng (đủ để giao), mức 2 lam (tiến độ), mức 3 lục (đủ để đóng: minh chứng 4 yếu tố + chất lượng).
-  - Hai bước. *1. Ghép cột:* tự nhận sheet, dòng tiêu đề, hồ sơ (Mẫu nhập chuẩn, Phụ lục 2, hồ sơ đã lưu dùng chung); ví dụ ngày dạng dd/mm/yyyy. *2. Xem trước* (chưa ghi gì): kết quả dự kiến từng dòng; giá trị chưa khớp / khớp gần đúng → chọn mục đúng, lưu từ điển dùng chung; điền hàng loạt ô trống (lĩnh vực theo từng ngành); một dòng tóm tắt các ô tự điền theo quy tắc mặc định; chọn cách xử lý việc đã hoàn thành của tệp.
-  - Nhập theo lô (mã LO-…): lỗi giữa chừng → "Nhập tiếp" đúng lô đó. Hoàn tác lô trong 24 giờ. Dòng thiếu vào "Chờ hoàn thiện" → Hoàn thiện bằng biểu mẫu Giao việc điền sẵn, hoặc bỏ.
-  - Ngăn chi tiết có khối "Dữ liệu gốc từ Excel" (mọi cột của dòng tệp). Màn Nhiệm vụ có "Xuất theo mẫu nhập" để sửa rồi nhập lại theo mã.
+**Nhập Excel toàn trình** (thẻ "Nhập từ Excel" / "Chờ hoàn thiện (n)" trên màn Giao việc; chuyên viên quản trị nhiệm vụ và quản trị hệ thống):
+- Chuẩn ba mức, tô màu ở mẫu: mức 1 vàng (đủ để giao), mức 2 lam (tiến độ), mức 3 lục (đủ để đóng: minh chứng 4 yếu tố + chất lượng).
+- Hai bước. *1. Ghép cột:* tự nhận sheet, dòng tiêu đề, hồ sơ (Mẫu nhập chuẩn, Phụ lục 2, hồ sơ đã lưu dùng chung); ví dụ ngày dạng dd/mm/yyyy. *2. Xem trước* (chưa ghi gì): kết quả dự kiến từng dòng; giá trị chưa khớp / khớp gần đúng → chọn mục đúng, lưu từ điển dùng chung; điền hàng loạt ô trống; một dòng tóm tắt các ô tự điền theo quy tắc mặc định; chọn cách xử lý việc đã hoàn thành của tệp.
+- Nhập theo lô (mã LO-…): lỗi giữa chừng → "Nhập tiếp" đúng lô đó. Hoàn tác lô trong 24 giờ. Dòng thiếu vào "Chờ hoàn thiện" → Hoàn thiện bằng biểu mẫu Giao việc điền sẵn, hoặc bỏ.
+- Ngăn chi tiết có khối "Dữ liệu gốc từ Excel" (mọi cột của dòng tệp). Màn Nhiệm vụ có "Xuất theo mẫu nhập" để sửa rồi nhập lại theo mã.
 
 ## 11. Bảng nhiệm vụ theo cột (v3.25.0 — mẫu 16/10/2026, chủ dự án duyệt 18/10/2026)
 
-Mọi danh sách nhiệm vụ (Nhiệm vụ, Việc tôi đã giao — trước v3.31 là "Việc tôi theo dõi", Việc của tôi, Theo văn bản) là **bảng có cột** kiểu V-Office; thay "dòng cao 44px" của mục 4 cho các bảng này. CSS `styles/bang-nhiem-vu.css` (khung, cột) + `styles/bang-man-hinh.css` (màn hẹp, in); lớp tiền tố `bnv-` (tên trong mẫu như `.bang .han .stt` đã là lớp chung), viết nguyên văn trong JS.
-- **Ô số** trên bảng: một khối, các ô cách nhau 1px, chia đều một hàng; ô đang chọn nền `--navy-dac`, chữ trắng, số `--vang-tren-dac`; chọn một ô một lúc; số của ô = số dòng khi chọn ô đó (cùng một mảng). Bộ 8 ô: 4 + 4 ở 861–1199px; ≤ 860px hai ô một hàng.
-- **Dòng**: cao ≥ 58px, kẻ ngang mảnh, không kẻ dọc, không sọc; **mép trái 4px theo mức** (lam trong hạn, vàng, đỏ, tím Đỏ đặc biệt — nền tím nhạt cả dòng, lục hoàn thành); hàng tiêu đề chữ 13px đậm vừa màu `--chu-phu` trên nền `--nen-mo`; giờ và con số bằng Lexend; mã việc đậm màu navy; ô Hạn: ngày đậm theo màu mức + dòng phụ "còn 3 ngày / trễ 4 ngày / xong 29/9 · trước hạn 1 ngày"; Trạng thái là nhãn màu. Chú giải màu ngay trên bảng.
+Mọi danh sách nhiệm vụ (Nhiệm vụ, Việc tôi đã giao — trước v3.31 là "Việc tôi theo dõi", Việc của tôi, Theo văn bản) là **bảng có cột** kiểu V-Office. CSS `styles/bang-nhiem-vu.css` (khung, cột, màn hẹp, in); lớp tiền tố `bnv-`, viết nguyên văn trong JS.
+- **Ô số** trên bảng: một khối, các ô cách nhau 1px, chia đều một hàng; ô đang chọn nền `--navy-dac`, chữ trắng, số `--vang-tren-dac`; chọn một ô một lúc; số của ô = số dòng khi chọn ô đó (cùng một mảng). Bộ 8 ô: 4 + 4 ở 901–1200px; ≤ 900px hai ô một hàng.
+- **Dòng**: cao ≥ 58px, kẻ ngang mảnh, không kẻ dọc, không sọc; **mép trái 4px theo mức** (lam trong hạn, vàng, đỏ, tím Đỏ đặc biệt — nền tím nhạt cả dòng, lục hoàn thành); hàng tiêu đề chữ 13px đậm vừa màu `--chu-phu` trên nền `--nen-mo`; giờ và con số bằng Lexend; mã việc đậm màu cấu trúc; ô Hạn: ngày đậm theo màu mức + dòng phụ "còn 3 ngày / trễ 4 ngày / xong 29/9 · trước hạn 1 ngày"; Trạng thái là nhãn màu. Chú giải màu ngay trên bảng.
 - **Cột**: Nhiệm vụ — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì theo dõi | Hạn xử lý | Trạng thái; Việc tôi đã giao — STT | Nhiệm vụ | Chủ trì theo dõi | Văn bản giao | Hạn xử lý | Trạng thái | Tình hình (xám bình thường, vàng cần đôn đốc, đỏ vướng mắc / chỉ đạo chờ, lục đã nộp minh chứng); Việc của tôi — STT | Nhiệm vụ | Văn bản giao | Thời gian giao | Hạn xử lý | Trạng thái | Việc cần làm; Theo văn bản — STT | Văn bản | Ngày nhận | Người giao | Nhiệm vụ (đã nhập / dự kiến) | Tiến độ (thanh lục / đỏ / vàng + "x/n hoàn thành") | Cảnh báo, bấm tên văn bản mở bảng con (Nhiệm vụ của văn bản | Chủ trì theo dõi | Hạn xử lý | Trạng thái; việc giao tiếp xuống thụt "↳").
 - **Việc cần làm** (Việc của tôi): một nút cho việc đầu tiên áp dụng — Xác nhận đã nhận việc (nút lam, kèm nút viền "Từ chối") → Trả lời chỉ đạo → Nộp minh chứng (nút lam khi việc gấp) → Cập nhật tiến độ; không có việc chờ thì chữ xám. Biểu mẫu mở **ngay dưới dòng** (khối viền trái theo mức), mỗi lúc một khối, Huỷ đưa con trỏ về nút đã mở.
 - **Trang**: 50 dòng mỗi trang; chân bảng "Hiển thị 1–50 trong 230 nhiệm vụ (lọc từ 812)" + "‹ Trang trước · Trang 1/5 · Trang sau ›"; đổi ô số / tìm / lọc / sắp xếp về trang 1. In và Xuất Excel lấy đủ danh sách.
-- **Ngăn chi tiết** (màn Nhiệm vụ) hiện **cạnh** bảng (520px; 420px khi ≤ 1180px), không phủ lên bảng; khi ngăn mở, dưới 1600px dòng thành thẻ gọn.
-  v3.36 (rà soát 25/11/2026): đóng ngăn bằng dấu × ở góc trên phải (36×36px, nhãn đọc "Đóng ngăn chi tiết"), không còn nút chữ "Đóng ngăn" đứng cạnh "Đóng nhiệm vụ"; trong ngăn dùng chung đã có × của ngăn nên ẩn. Thường trực, lãnh đạo Văn phòng, Trưởng phòng thấy khối Chỉ đạo ngay dưới thông tin chính, trước các nút sửa; chuyên viên giữ thứ tự cũ.
-- **Màn hẹp**: 1024–1365px gộp cột thời gian vào dòng phụ dưới nội dung; < 1024px mỗi dòng là thẻ, mỗi ô có nhãn (`data-nhan`); ≤ 600px nội dung 3 dòng, nút thao tác rộng hết thẻ (≥ 44px); 360px không cuộn ngang.
-- **In**: ẩn ô số, chú giải, nút trang, khối dưới dòng và cột Việc cần làm; dòng không bị cắt giữa trang.
+- **Ngăn chi tiết** (màn Nhiệm vụ) hiện **cạnh** bảng (520px; 420px khi ≤ 1200px), không phủ lên bảng; ≤ 900px xếp dưới bảng. Đóng bằng dấu × ở góc trên phải (trong ngăn dùng chung đã có × của ngăn nên ẩn). Thường trực, lãnh đạo Văn phòng, Trưởng phòng thấy khối Chỉ đạo ngay dưới thông tin chính, trước các nút sửa; chuyên viên giữ thứ tự cũ.
+- **Theo bề rộng** (bốn mốc, mục 4): > 1600px đủ cột; 1201–1600px gộp cột thời gian vào dòng phụ dưới nội dung; ≤ 1200px — và khi ngăn chi tiết đang mở trên màn ≤ 1600px — mỗi dòng là thẻ, mỗi ô có nhãn (`data-nhan`); ≤ 600px nội dung 3 dòng, nút thao tác rộng hết thẻ (≥ 44px); 360px không cuộn ngang. Thẻ chỉ cho màn hình — bản in giữ dạng bảng.
+- **In**: ẩn ô số, chú giải, nút trang, khối dưới dòng và cột Việc cần làm; cột gộp như 1201–1600px; dòng không bị cắt giữa trang.
 
 ## 12. Tên ô nhiệm vụ theo bảng Phụ lục (v3.28.1 — chủ dự án quyết 22/10/2026)
 
@@ -272,7 +268,7 @@ mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại
 
 ## 13. Mức cảnh báo ghi bằng nghĩa (v3.29 — chủ dự án quyết 22/10/2026)
 
-"Ghi đúng quy tắc" ở **mọi màn hình**, giữ nguyên màu (mục 2, 10). Một chỗ đặt tên: `lib/kl/nhan.js` `tenMuc` — số ngày đọc theo `kl_cau_hinh`
+"Ghi đúng quy tắc" ở **mọi màn hình**, giữ nguyên màu (mục 2). Một chỗ đặt tên: `lib/kl/nhan.js` `tenMuc` — số ngày đọc theo `kl_cau_hinh`
 (`nguong_vang_ngay`, `nguong_do_dac_biet_ngay`, `do_khan_KHAN_vang`; mặc định 3 · 3 · 5, cùng số hàm trạng thái của cơ sở dữ liệu dùng).
 
 | Mức (Công văn 1400) | Ghi đầy đủ (giữa câu, tiêu đề) | Ghi gọn (chip, ô hẹp) |
@@ -282,7 +278,7 @@ mô tả kết quả); màn và tệp rà soát phân loại (tệp đọc lại
 | Đỏ đặc biệt | quá hạn từ 3 ngày trở lên | Quá hạn ≥ 3 ngày |
 
 - Tên Vàng / Đỏ / Đỏ đặc biệt chỉ còn ở **chú giải màu**, luôn sau nghĩa: "Quá hạn dưới 3 ngày (mức Đỏ)". v3.30 (chủ dự án 23/10/2026): **không ghi dòng "Cách tính"** trên màn hình (Tổng quan, khối Giải ngân vốn, Báo cáo) cho đỡ rối mắt — cách tính ghi ở Hướng dẫn sử dụng.
-- Báo cáo (v3.30): thanh **kỳ** dưới tiêu đề — nhóm nút `.pham-vi` (Tháng · Quý · Năm · Nhiệm kỳ, nút đang chọn nền xanh đậm) + "Từ ngày" / "Đến ngày" (ô ngày `o-nhap nho`, như màn Thống kê sử dụng); điền ngày thì không nút nào sáng; kỳ ghi ở dòng phụ đề (in cùng trang), thanh kỳ không in; màn ≤ 860 px nhóm nút xuống dòng.
+- Báo cáo (v3.30): thanh **kỳ** dưới tiêu đề — nhóm nút `.pham-vi` (Tháng · Quý · Năm · Nhiệm kỳ) + "Từ ngày" / "Đến ngày" (ô ngày `o-nhap nho`, như màn Thống kê sử dụng); điền ngày thì không nút nào sáng; kỳ ghi ở dòng phụ đề (in cùng trang), thanh kỳ không in; màn ≤ 900px nhóm nút xuống dòng.
 - Con số luôn kèm danh từ: "8 nhiệm vụ sắp đến hạn (còn ≤ 3 ngày), 0 nhiệm vụ quá hạn dưới 3 ngày, 5 nhiệm vụ quá hạn từ 3 ngày trở lên"; tỷ lệ ghi mẫu
   số ("21% số nhiệm vụ đang thực hiện"); các phần của một ô cộng đủ số của ô.
 - Nơi gộp Đỏ + Đỏ đặc biệt (tải việc cán bộ, nhãn văn bản, Báo cáo) ghi "quá hạn".
@@ -308,6 +304,7 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 | Theo văn bản / Cán bộ / Báo cáo | `/Theo-van-ban`, `/Can-bo`, `/Bao-cao` |
 | Chỉ đạo đã gửi / Chỉ đạo Thường trực | `/Chi-dao-da-gui`, `/Chi-dao-Thuong-truc` |
 | Rà soát phân loại | `/Ra-soat-phan-loai` |
+| Nhiệm vụ quý BTV | `/Tong-quan-quy`, `/Danh-muc-quy`, `/Cap-nhat-tuan`, `/Bao-cao-quy`, `/Quan-ly-danh-muc-quy` |
 | Quản trị và từng thẻ | `/Quan-tri`, `/Quan-tri/Tai-khoan`, `/Quan-tri/Phan-cong-phu-trach`, `/Quan-tri/Nguong-canh-bao`… |
 | Cá nhân / Trợ giúp | `/Ca-nhan`, `/Tro-giup` |
 | Chi tiết một nhiệm vụ (mở ở màn nào thì theo màn đó) | `/<chức năng>/<mã việc>`, ví dụ `/Nhiem-vu/NV-9601`, `/Tong-quan/NV-9601` |
@@ -331,10 +328,10 @@ Excel, Thường trực); gõ chữ thường, thừa gạch chéo cuối hay đ
 ## 15. Hộp sửa có lý do (v3.29 — chủ dự án quyết 22/10/2026, CAU-HOI O-4…O-6)
 
 Điều chỉnh hạn, Đổi chủ trì theo dõi, Sửa toàn bộ thông tin, Sửa văn bản giao, Sửa minh chứng dùng chung một khuôn với "Sửa thông tin giao" (mục 5,
-modal): tiêu đề "Tên hộp · mã việc", dòng mô tả chữ phụ (nội dung việc hoặc điều sẽ xảy ra), ô "Đang ghi" (giá trị hiện tại, chữ đậm), ô mới, một dòng
+hộp thoại): tiêu đề "Tên hộp · mã việc", dòng mô tả chữ phụ (nội dung việc hoặc điều sẽ xảy ra), ô "Đang ghi" (giá trị hiện tại, chữ đậm), ô mới, một dòng
 chữ phụ nói hệ quả ngay khi nhập ("Lùi hạn: tính là gia hạn lần 2.", "Phòng, đơn vị chủ trì sau khi đổi: …", "Sẽ sửa: Hạn xử lý, Ghi chú."), ô **Lý do**
 bắt buộc ngay trên chân hộp, nút chính "Lưu …" bên phải. Thao tác một bước trên một việc (Mở lại nhiệm vụ, Gỡ minh chứng) dùng ô lý do mở tại chỗ
-dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với người có quyền; việc đã quá hạn thì chủ trì thấy một dòng chữ phụ thay cho nút Điều chỉnh hạn.
+dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với người có quyền (chốt quyền ở cơ sở dữ liệu); từ v3.34 chủ trì theo dõi điều chỉnh hạn cả khi việc đã quá hạn.
 
 ## 16. Phân hệ Nhiệm vụ quý BTV (v3.35 — chủ dự án 13/11/2026, CAU-HOI U-5)
 
@@ -343,6 +340,6 @@ dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với 
   chậm / chưa) → **Cần lãnh đạo quan tâm** (đơn vị, số ngày chậm so với mốc, kết quả còn thiếu, lãnh đạo phụ trách, vướng mắc / đề xuất) → kết quả mới trong
   tuần, đến mốc trong tháng → bảng theo lãnh đạo phụ trách, đơn vị, chủ trì theo dõi → diễn biến các tuần đã chốt. Mọi số, tên bấm được → Danh mục đã lọc.
 - **Danh mục** đúng cột bảng Phụ lục (nhóm theo trục → nhóm), thêm Kết quả thực hiện mới nhất (kèm ngày), Trạng thái, Chủ trì theo dõi; mép trái theo mức
-  (Đỏ đặc biệt tím, Đỏ, Vàng, xanh, lục); kết quả / sản phẩm thu gọn một chấm màu một dòng; màn hẹp: mỗi dòng thành thẻ có nhãn ô.
+  (Đỏ đặc biệt tím, Đỏ, Vàng, xanh, lục); kết quả / sản phẩm thu gọn một chấm màu một dòng; ≤ 900px mỗi dòng thành thẻ có nhãn ô.
 - **Cập nhật tuần** (nơi làm việc của chủ trì theo dõi): thẻ "Chưa báo cáo tuần này" trước, biểu mẫu mở ngay trên thẻ, ô theo loại kết quả.
 - Ngăn chi tiết `#nqNgan` như ngăn dùng chung (mục 10): khối **Kết quả thực hiện** nền lam nhạt ngay dưới nội dung; hộp lý do như mục 15. Chỉ token sẵn có.

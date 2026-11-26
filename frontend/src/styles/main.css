@@ -1,45 +1,33 @@
-/* Điểm vào CSS (v8 đợt 3; v9: tong-quan.css, v9.css — tinh chỉnh chung theo hai kiểu giao diện; v9 đợt 2: ngan-chi-tiet.css — ngăn chi tiết dùng chung; v3.25: bang-nhiem-vu.css + bang-man-hinh.css — bảng nhiệm vụ theo cột, theo-van-ban.css đứng sau để ghi đè; v3.27: v327.css — bảng đề xuất AI sửa được, mục gập thẻ, bảng chủ trì theo dõi; v3.28: v328.css — giải ngân vốn đầu tư công): phông → token → nền tảng → bố cục → thành phần → màn hình, rồi Tailwind (tiện ích nhỏ). */
+/* Điểm vào CSS (v3.36: gộp theo thành phần): phông → token → nền tảng → khung trang → thành phần dùng chung → từng màn hình → in, rồi Tailwind (tiện ích
+   nhỏ). Mỗi tệp một thành phần hoặc một màn hình; ghi đè theo thứ tự giữ như trước khi gộp (kiểm bằng công cụ so thứ tự quy tắc). */
 @import './fonts.css';
 @import './tokens.css';
 @import './base.css';
-@import './layout.css';
-@import './dau-trang.css';
-@import './menu-doc.css';
+@import './khung.css';
 @import './dang-nhap.css';
-@import './components.css';
-@import './dieu-hanh.css';
+@import './thanh-phan.css';
+@import './can-xu-ly.css';
 @import './nhiem-vu.css';
 @import './chi-tiet.css';
-@import './man-hinh.css';
-@import './gd22.css';
-@import './gd23.css';
-@import './v8-hang.css';
-@import './nhiem-vu-v8.css';
-@import './han-nop.css';
-@import './pr3.css';
+@import './can-bo-bao-cao.css';
+@import './nhan-tin.css';
+@import './bang.css';
+@import './giao-viec.css';
+@import './ca-nhan.css';
+@import './the-viec.css';
 @import './tong-quan.css';
-@import './v9.css';
-@import './dot-c.css';
-@import './dot-d.css';
-@import './ngan-chi-tiet.css';
 @import './nhap-excel.css';
-@import './v323.css';
-@import './thong-ke.css';
-@import './tong-quan-v324.css';
-@import './tong-quan-tang.css';   /* v3.36: Tổng quan ba tầng (tầng 1, ma trận đơn vị) */
-@import './muc-tieu-v324.css';
-@import './muc-tieu-v325.css';
-@import './ra-soat-muc-tieu.css';
-@import './phan-loai.css';
-@import './quan-tri-muc-tieu.css';
+@import './quan-tri.css';
+@import './tong-quan-khoi.css';
+@import './tong-quan-tang.css';
+@import './muc-tieu.css';
 @import './bang-nhiem-vu.css';
-@import './bang-man-hinh.css';
 @import './theo-van-ban.css';
-@import './v327.css';
-@import './v328.css';
-@import './nvq.css';   /* v3.35: phân hệ Nhiệm vụ quý BTV */
+@import './giao-viec-ai.css';
+@import './giai-ngan.css';
+@import './nvq.css';
+@import './ghi-de.css';
 @import './in.css';
-@import './tong-quan-in.css';   /* v3.36: In báo cáo nhanh A4 từ Tổng quan (sau in.css) */
 
 @tailwind base;
 @tailwind components;

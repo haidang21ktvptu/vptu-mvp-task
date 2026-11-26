@@ -95,7 +95,7 @@ function khungChoHtml() {
   return `${khungCho1Html(td, pv)}<div class="luoi-tq">${khoi}</div>`;
 }
 
-// v3.36: in "Báo cáo nhanh" một trang A4 (tong-quan-in.css chỉ áp khi body.in-tq): Trưởng phòng in dưới tên phòng, lãnh đạo dưới tên Văn phòng.
+// v3.36: in "Báo cáo nhanh" một trang A4 (in.css chỉ áp khi body.in-tq): Trưởng phòng in dưới tên phòng, lãnh đạo dưới tên Văn phòng.
 const coQuanIn = (vn) => (vn === 'A2' ? ['VĂN PHÒNG TỈNH ỦY CAO BẰNG', (DEPT_NAMES[state.user?.department] || 'Phòng').toUpperCase()] : ['TỈNH ỦY CAO BẰNG', 'VĂN PHÒNG']);
 // Khổ và lề A4 dọc chỉ gắn trong lúc in báo cáo nhanh (thẻ style tạm): bản in khác (Ctrl+P, In / lưu PDF, Báo cáo) giữ cách in chung, vẫn chọn được
 // khổ ngang.

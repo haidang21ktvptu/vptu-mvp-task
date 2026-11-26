@@ -68,7 +68,7 @@ export function nganNguoiHtml(a, rows, dongAction = 'dongNganCanBo') {
 export function moNgan(idAside, html) {
   const o = $(idAside); if (!o) return;
   o.innerHTML = html; show(o, true); o.closest('.hai-ngan')?.classList.add('mo');
-  if (window.matchMedia('(max-width: 860px)').matches) o.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  if (window.matchMedia('(max-width: 900px)').matches) o.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 export function dongNgan(idAside) {
   const o = $(idAside); if (!o) return;

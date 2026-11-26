@@ -1,7 +1,93 @@
-/* In / PDF (Báo cáo A1 và mọi màn hình): bỏ dải điều hướng, nút, ô nhập; giữ dải tổng quan và bảng. Trong @layer utilities để đứng
-   sau mọi quy tắc thành phần. */
+/* Bản in: ẩn khung trang, màn Nhiệm vụ, In báo cáo nhanh Tổng quan A4.
+   Gộp từ: pr3.css, in.css, tong-quan-in.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
+@layer components {
+  .chan-in { display: none; }
+/* v3.36 (CAU-HOI V-1): "In báo cáo nhanh" từ Tổng quan — một trang A4 dọc: phần đầu theo thể thức Văn phòng (tang-1.js inDauHtml), năm thẻ tầng 1,
+   câu kết luận, dòng Nhiệm vụ quý, ma trận đơn vị (6 dòng đầu + Tổng cộng — ma-tran.js SO_DONG_IN), điểm nghẽn (5 dòng — khoi-lanh-dao.js), chân ghi
+   nguồn. Chỉ áp khi bấm nút "In báo cáo nhanh" (body.in-tq; khổ A4 dọc và lề gắn bằng thẻ style tạm trong tqIn); in bằng Ctrl+P không có lớp này thì
+   giữ cách in chung của in.css. Tailwind v3 gom @layer components vào nhóm thành phần (không phải lớp xếp chồng của trình duyệt): các quy tắc ở đây
+   thắng !important của bảng điểm nghẽn (tong-quan-khoi.css) nhờ độ đặc hiệu cao hơn (body.in-tq …) cùng !important. */
+  .tq-in-dau, .tq-in-chan, .chan-ng .chi-in, .mt-chi-in { display: none; }
+  @media print {
+    :root:has(body.in-tq) { font-size: 11.5px; }
+    body.in-tq #viewTongQuan { container-type: normal; zoom: .9; }   /* bỏ bố cục hẹp theo khung (@container tq); thu 90% để vừa một trang A4 */
+    body.in-tq #mainHeader, body.in-tq .tq1-dau, body.in-tq #tqXuHuong, body.in-tq #tqGoi, body.in-tq .chan-in, body.in-tq #thanhHoaToc { display: none !important; }
+    body.in-tq #viewTongQuan > :not(#tqTang1):not(.luoi-tq):not(.tq-in-chan) { display: none !important; }
+    body.in-tq .luoi-tq > :not(#tqMaTran):not(#tqNghen) { display: none !important; }
+    body.in-tq .luoi-tq { display: block; }
+    body.in-tq .luoi-tq > article { margin: 2mm 0 0; padding: 0; border: 0; box-shadow: none; }
+    body.in-tq #viewTongQuan tr, body.in-tq .the-so { break-inside: avoid; }   /* trang sau (nếu có) không cắt ngang một dòng */
+    body.in-tq .the, body.in-tq .the-so, body.in-tq .o-mt, body.in-tq .tq1-ket-luan { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body.in-tq .tq-in-dau { display: block; margin-bottom: 3mm; font-family: 'Times New Roman', 'Noto Serif', serif; color: #000; }
+    .tq-in-the-thuc { display: grid; grid-template-columns: 1fr 1.25fr; gap: 6mm; text-align: center; font-size: 13pt; line-height: 1.3; }
+    .tq-in-the-thuc > div { display: flex; flex-direction: column; align-items: center; }
+    .tq-in-the-thuc b { font-weight: 700; }
+    .tq-in-the-thuc .tq-in-dang { text-decoration: underline; text-underline-offset: 3px; }
+    .tq-in-the-thuc i { margin-top: 2mm; font-style: italic; }
+    .tq-in-ten { margin: 3mm 0 0; text-align: center; font-size: 14pt; font-weight: 700; }
+    .tq-in-trich-yeu { margin: 1mm 0 0; text-align: center; font-size: 13pt; font-weight: 700; }
+    .tq-in-pham-vi { margin: 1mm 0 0; text-align: center; font-size: 10.5pt; font-style: italic; }
+    body.in-tq .tq-tang1 { gap: 2.5mm; break-inside: avoid; }
+    /* Năm thẻ thành bảng năm dòng: số, tên, phần tách, so với tuần trước */
+    body.in-tq .tq1-the { display: block; border: 1px solid #999; border-radius: 6px; }
+    body.in-tq .the-so { display: grid; grid-template-columns: 11mm 59mm minmax(0, 1fr) 40mm; align-items: baseline; column-gap: 2mm; width: 100%;
+      padding: 1mm 2mm; border: 0; border-bottom: 1px solid #ccc; border-radius: 0; background: none; box-shadow: none; }
+    body.in-tq .the-so:last-child { border-bottom: 0; }
+    body.in-tq .the-so .gia { font-size: 14pt; text-align: right; }
+    body.in-tq .the-so .nhan-so { margin: 0; font-size: 9.5pt; line-height: 1.25; white-space: normal; }
+    body.in-tq .the-so .nhan-so::first-letter { text-transform: uppercase; }
+    body.in-tq .the-so .phu-h, body.in-tq .the-so .ss-tq { display: block; margin: 0; padding: 0; font-size: 8.5pt; line-height: 1.3; }
+    body.in-tq .tq1-duoi { display: block; }
+    body.in-tq .tq1-ket-luan { padding: 2mm 3mm; font-size: 10pt; line-height: 1.4; border: 1px solid #999; }
+    body.in-tq .tq1-nvq { padding: 2mm 3mm; font-size: 10pt; border: 1px solid #999; }
+    body.in-tq .tq1-nvq .nut { display: none !important; }
+    body.in-tq .bang-mt, body.in-tq .bang-ng { font-size: 9pt; }
+    body.in-tq .bang-mt th, body.in-tq .bang-mt td, body.in-tq .bang-ng th, body.in-tq .bang-ng td { padding: .7mm 1.5mm; line-height: 1.25; }
+    body.in-tq .bang-mt thead th { white-space: normal; line-height: 1.15; font-size: 8pt; }
+    body.in-tq .bang-mt td.so, body.in-tq .bang-mt thead th.so { width: auto; }
+    body.in-tq .bang-mt th.c-ten { min-width: 0; width: 25%; }
+    body.in-tq .bang-mt .ten-bam { display: block; text-align: left; }
+    body.in-tq .bang-mt th.c-ten b { display: inline; }
+    body.in-tq .bang-mt th.c-ten small { display: none; }
+    body.in-tq .bang-mt .dh-mt b, body.in-tq .bang-mt .dh-mt small { display: inline; margin-left: 1mm; }
+    body.in-tq .bang-mt tbody tr:nth-child(n+7) { display: none; }   /* 6 dòng đầu (SO_DONG_IN, ma-tran.js); Tổng cộng ở tfoot vẫn in */
+    body.in-tq .mt-chi-in { display: block; margin: 1mm 0 0; font-size: 8.5pt; font-style: italic; }
+    /* Điểm nghẽn: bảng cột cố định, mỗi việc một dòng; bỏ dòng phụ, cột thao tác, nút lọc cấp */
+    body.in-tq .bang-ng { table-layout: fixed; width: 100%; }
+    body.in-tq .bang-ng th, body.in-tq .bang-ng td { width: auto !important; white-space: normal !important; }
+    body.in-tq .bang-ng th:nth-child(1) { width: 28mm !important; } body.in-tq .bang-ng th:nth-child(2) { width: auto !important; }
+    body.in-tq .bang-ng th:nth-child(3) { width: 30mm !important; } body.in-tq .bang-ng th:nth-child(4) { width: 10mm !important; text-align: center; }
+    body.in-tq .bang-ng th:nth-child(5) { width: 26mm !important; } body.in-tq .bang-ng th:nth-child(6) { width: 30mm !important; }
+    body.in-tq .bang-ng th:nth-child(7), body.in-tq .bang-ng td.c-nut, body.in-tq .bang-ng small, body.in-tq #tqNghen .pham-vi { display: none !important; }
+    body.in-tq .bang-ng .c-ten { min-width: 0; }
+    body.in-tq .bang-ng td { overflow: hidden; }
+    body.in-tq .bang-ng td:nth-child(2) { white-space: nowrap !important; text-overflow: ellipsis; }   /* nội dung việc: một dòng (đủ ở hệ thống) */
+    body.in-tq .bang-ng td:nth-child(3) .nd-ng, body.in-tq .bang-ng td:nth-child(5) .nd-ng { display: -webkit-box; -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; line-height: 1.25; }
+    body.in-tq .bang-ng .ten-bam { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
+    body.in-tq .bang-ng .ten-bam .ma-ng, body.in-tq .bang-ng .ten-bam b { display: inline; font-weight: 600; white-space: nowrap; }
+    body.in-tq .bang-ng .ten-bam .ma-ng { margin-right: 1.5mm; }
+    body.in-tq .bang-ng .nd-ng { display: inline; }
+    body.in-tq .bang-ng td.so { text-align: center; }
+    body.in-tq .bang-ng .muc-tq { display: inline; padding: 0; border: 0; background: none; font-size: 8.5pt; font-weight: 600; line-height: 1.25; color: var(--ddb);
+      white-space: normal; }
+    body.in-tq .bang-ng .tre-ng { font-size: 10pt; } body.in-tq .bang-ng .cap-ng { padding: 0; border: 0; background: none; font-size: 8.5pt; }
+    body.in-tq .chan-ng { font-size: 8.5pt; padding: 1mm 0 0; }
+    body.in-tq .bang-ng tbody tr:nth-child(n+6) { display: none; }   /* 5 việc quá hạn lâu nhất (SO_DONG_IN, khoi-lanh-dao.js) */
+    body.in-tq .chan-ng .chi-man { display: none; } body.in-tq .chan-ng .chi-in { display: inline; font-style: italic; }
+    body.in-tq .o-mt { min-width: 0; height: auto; padding: 0 1.5mm; box-shadow: none; }
+    body.in-tq .mt-cuon { overflow: visible; margin: 0; padding: 0; }
+    body.in-tq .the-bd .dau-bd { margin: 0 0 1mm; } body.in-tq .the-bd .dau-bd h2 { font-size: 11.5pt; }
+    body.in-tq .the-bd .dau-bd p { display: none; }   /* lời dẫn "bấm để xem" không cần trên giấy */
+    body.in-tq .tq-in-chan { display: block; margin-top: 2mm; padding-top: 1mm; border-top: 1px solid #999; font-size: 8.5pt; font-style: italic; color: #333; }
+  }
+}
 @layer utilities {
   @media print {
+    #viewKl .md .list { border-color: #999; }
+    #viewKl .hang-nv { break-inside: avoid; }
+/* In / PDF (Báo cáo A1 và mọi màn hình): bỏ dải điều hướng, nút, ô nhập; giữ dải tổng quan và bảng. Trong @layer utilities để đứng
+   sau mọi quy tắc thành phần. */
     .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc, .kl-sap,
     .ray, .tb-panel, .bc-ky { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề */
     body { background: #fff; }
@@ -16,4 +102,3 @@
     .nd-gon { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }   /* v3.36: bản in ghi đủ nội dung việc */
   }
 }
-@layer components { .chan-in { display: none; } }

@@ -5,7 +5,7 @@ import { escapeHtml } from '../../../lib/dom.js';
 import { KHAU, boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
 import { dh, theoKhau, theoDonVi, viecDo, canToiQuyet } from './du-lieu.js';
 
-// [lớp màu (viết nguyên văn để Tailwind giữ), hình] — không dùng .cham / .nghen: trùng lớp cũ của dieu-hanh.css.
+// [lớp màu (viết nguyên văn để Tailwind giữ), hình] — không dùng .cham / .nghen: trùng lớp cũ của can-xu-ly.css.
 const ICON = {
   cham: ['bc-cham', '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>'],
   nghen: ['bc-nghen', '<path d="M6 3h12M6 21h12M7 3c0 5 10 6 10 9s-10 4-10 9M17 3c0 5-10 6-10 9"/>'],

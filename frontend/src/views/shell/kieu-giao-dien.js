@@ -1,4 +1,4 @@
-// Kiểu giao diện v9 (docs/DESIGN.md mục 1): Thanh lịch (mặc định, lam) / Trang nghiêm (đỏ son), nền tối bật/tắt — chọn ở menu bánh răng, nhớ
+// Kiểu giao diện v9 (docs/DESIGN.md mục 2): Thanh lịch (mặc định, lam) / Trang nghiêm (đỏ son), nền tối bật/tắt — chọn ở menu bánh răng, nhớ
 // THEO MÁY (localStorage; trình duyệt chặn lưu trữ thì vẫn đổi được trong phiên). index.html đặt sẵn các thuộc tính trên <html> trước khi vẽ
 // để không chớp kiểu mặc định. Chỉ là trình bày: không ghi gì lên máy chủ.
 // v3.36 (CAU-HOI V-1): "Cỡ chữ lớn" — <html data-co-chu="lon"> đặt gốc 18px, cả thang chữ rem (tokens.css) lớn theo. Máy chưa chọn thì theo

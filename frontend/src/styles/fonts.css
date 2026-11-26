@@ -1,4 +1,4 @@
-/* Phông tự chứa giao diện v9 (docs/DESIGN.md mục 2): Lexend — tiêu đề, con số; Source Sans 3 — nội dung, bảng; Noto Serif — dòng thể thức
+/* Phông tự chứa giao diện v9 (docs/DESIGN.md mục 3): Lexend — tiêu đề, con số; Source Sans 3 — nội dung, bảng; Noto Serif — dòng thể thức
    văn bản Đảng (tên cơ quan, dòng "Cao Bằng, ngày … tháng … năm …", bút phê). Nguồn google/fonts (OFL), phông biến thiên cắt trục wght 400–700
    (Noto Serif ghim wdth 100), tách tập vietnamese / latin như Google Fonts — trình duyệt chỉ tải tập có ký tự cần. Sinh bằng script, không sửa tay. */
 /* Lexend — vietnamese */

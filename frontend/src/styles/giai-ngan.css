@@ -1,7 +1,9 @@
+/* Giải ngân vốn đầu tư công: kỳ số liệu, bảng giải ngân, vòng tiến độ.
+   Gộp từ: v328.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
+@layer components {
 /* v3.28 — Giải ngân vốn đầu tư công (0119): khối Tổng quan #tqGiaiNgan (vòng %, biểu đồ % qua các kỳ, bảng nguồn vốn / chủ đầu tư, nhiệm vụ theo dõi),
    mục "Giải ngân vốn" của ngăn chi tiết, hộp "Nhập kỳ số liệu". Màu mức dùng token sẵn có (lục / vàng / đỏ nhạt + chữ đậm — đạt 4.5:1 ở bốn chế độ);
    chữ mức khác "Vàng / Đỏ" của cảnh báo hạn. Tên lớp viết nguyên văn trong JS (Tailwind cắt lớp ghép chuỗi). Mốc container tq như tong-quan.css. */
-@layer components {
   .gn-nut { display: flex; gap: 8px; flex-wrap: wrap; }
   .gn-tren { display: grid; grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr); gap: 20px 32px; align-items: center; }
   .gn-tong { display: flex; gap: 20px; align-items: center; min-width: 0; }
@@ -42,7 +44,6 @@
   .gn-thanh b { font-variant-numeric: tabular-nums; }
   .bang-gn-viec .c-ten small { display: block; }
   .gn-huong-dan { font-size: var(--chu-than); color: var(--chu); line-height: 1.55; max-width: 90ch; }
-
   /* Biểu đồ % qua các kỳ: SVG co giãn cho đường, HTML cho chấm / chữ */
   .gn-bd { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-rows: 176px auto; column-gap: 8px; }
   .gn-ve { position: relative; border-bottom: 1px solid var(--vien-o); }
@@ -61,7 +62,6 @@
   .gn-chu-giai i.gn-cg-thuc { height: 3px; width: 16px; border-radius: 2px; background: var(--du-lieu); vertical-align: 3px; }
   .gn-chu-giai i.gn-cg-deu { height: 0; width: 16px; border-top: 2px dashed var(--chu-mo); border-radius: 0; vertical-align: 3px; }
   .gn-chu-giai i.gn-cg-uoc { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--du-lieu); background: var(--the); }
-
   /* Ngăn chi tiết — mục "Giải ngân vốn" */
   .gn-ct-so { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; margin: 4px 0; }
   .gn-ct-so > b { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-trang); line-height: 1.1; color: var(--chu); font-variant-numeric: tabular-nums; }
@@ -85,7 +85,6 @@
   /* .nut:hover đổi nền sang --nen-phu mà giữ màu chữ của nút đỏ → chữ mất khi rê chuột; nút xoá / bỏ của phần này giữ nền đỏ (chỉ tối đi một chút) */
   .gn-td-xn .nut.nguy-hiem:hover:not(:disabled), .gn-ct-bang .nut.nguy-hiem:hover:not(:disabled) { background: var(--do); filter: brightness(.92); }
   .gn-trong .dau-bd { margin-bottom: 8px; }
-
   /* Hộp "Nhập kỳ số liệu" */
   .modal-gn { max-width: 1000px; }
   .gn-nhap-luoi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
@@ -117,11 +116,10 @@
   .gn-ten-moi { color: var(--vang-chu); font-weight: 600; }
   .gn-ten-cu { display: inline-flex; gap: 6px; align-items: flex-start; color: var(--vang-chu); }
   .gn-cong { margin-top: 8px; font-size: var(--chu-bang); color: var(--chu); }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .gn-nhap-luoi { grid-template-columns: minmax(0, 1fr); } .gn-nhap-luoi .gn-rong { grid-column: auto; }
     .gn-uoc .nhan-checkbox { margin-top: 0; }
   }
-
   @container tq (max-width: 1100px) {
     .gn-hai-bang { grid-template-columns: minmax(0, 1fr); }
   }

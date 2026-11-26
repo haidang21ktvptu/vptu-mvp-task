@@ -1,8 +1,5 @@
-/* Tổng quan ba tầng (v3.36, DESIGN mục 10; CAU-HOI V-1). Tầng 1 nền phẳng, không dải màu, không ảnh: đầu trang (tên, phạm vi, giờ cập nhật, kỳ, Giao
-   việc), năm thẻ số (thẻ quá hạn là thẻ duy nhất có màu nhấn: nền đỏ rất nhạt, viền và số màu đỏ), câu kết luận + xu hướng 12 tuần, dòng Nhiệm vụ quý.
-   Tầng 2: ma trận đơn vị theo trạng thái (ô có việc tô nền theo mức, đầu cột có ô màu kèm nhãn). Kích thước theo container tq (#viewTongQuan, khai báo
-   ở tong-quan.css): rộng > 900px năm thẻ một hàng; 641–900px ba thẻ rồi hai thẻ; ≤ 640px hai cột, thẻ quá hạn hết hàng; ≤ 900px câu kết luận và
-   xu hướng xếp chồng. */
+/* Tổng quan ba tầng (v3.36): tầng 1 số chính, ma trận đơn vị, xu hướng.
+   Gộp từ: tong-quan-tang.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
 @layer components {
   .tq-tang1 { display: grid; gap: 14px; }
   .tq1-dau { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap; }
@@ -13,7 +10,6 @@
   .tq1-phai { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .tq1-phai .nut.chinh, .tq1-phai #tqIn { min-height: 40px; padding: 0 16px; font-size: var(--chu-than); }
   .tq1-phai #tqIn { display: inline-flex; align-items: center; gap: 8px; }   /* v3.36: In báo cáo nhanh (A4) */
-
   /* Năm thẻ số: cùng chiều cao trong một hàng; dòng so sánh luôn ở chân thẻ. */
   .tq1-the { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
   .the-so { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 14px 16px 14px 18px; text-align: left;
@@ -29,7 +25,6 @@
   .the-so.nhan { background: var(--nen-do-mo); border-color: var(--vien-do); }
   .the-so.nhan .gia, .the-so.nhan .nhan-so { color: var(--do-chu); }
   .the-so.cho { gap: 0; }
-
   /* Câu kết luận và xu hướng 12 tuần */
   .tq1-duoi { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 12px; }
   .tq1-ket-luan { margin: 0; padding: 14px 18px; background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the);
@@ -50,15 +45,11 @@
   .tuan-truc { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); }
   .tuan-truc span { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }
   .tuan-truc span:last-child { display: flex; justify-content: flex-end; }   /* nhãn "Tuần này" rộng hơn cột: tràn sang trái, không ra ngoài khung */
-
   /* Dòng Nhiệm vụ quý của Ban Thường vụ */
   .tq1-nvq { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 16px;
     background: var(--nen-mo); border: 1px solid var(--vien); border-radius: var(--bo-the); }
   .tq1-nvq p { flex: 1 1 420px; margin: 0; font-size: var(--chu-than); color: var(--chu); }
   .tq1-nvq b { font-weight: 600; }
-
-  /* Tầng 2: ma trận đơn vị theo trạng thái */
-  .mt-cuon { margin: 0 -4px; padding: 0 4px; }
   .bang-mt { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--chu-than); }
   .bang-mt th, .bang-mt td { padding: 8px 10px; border-bottom: 1px solid var(--vien-nhat); vertical-align: middle; }
   .bang-mt thead th { font-size: var(--chu-bang); font-weight: 600; color: var(--chu-phu); text-align: left; white-space: nowrap; border-bottom-color: var(--vien); }
@@ -87,7 +78,6 @@
   .bang-mt tfoot .o-mt { background: var(--the); }   /* ô Tổng cộng bấm được (mở toàn bộ việc của cột) — nổi trên nền dòng tổng */
   /* Tầng 2: điểm nghẽn gọn — nội dung việc, dòng phụ tối đa 2 dòng (đủ nội dung ở ngăn chi tiết khi bấm; "tên ngắn" là việc của đợt sau) */
   .bang-ng .ten-bam b, .bang-ng td small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
   @container tq (max-width: 900px) {
     .tq1-duoi { grid-template-columns: minmax(0, 1fr); }
     .tq1-the { grid-template-columns: repeat(6, minmax(0, 1fr)); }
@@ -99,8 +89,6 @@
   }
   @container tq (max-width: 640px) {
     .tq1-phai { width: 100%; flex-wrap: nowrap; align-items: flex-start; }
-    .tq1-phai .pham-vi { flex: 1 1 auto; min-width: 0; }
-    .tq1-phai .pham-vi { flex-wrap: wrap; max-width: 100%; border-radius: 12px; }
     .tq1-phai .nut.chinh, .tq1-phai #tqIn { padding: 0 12px; }
     .tq1-phai .nut.chinh .chu-nut, .tq1-phai #tqIn .chu-nut { display: none; }
     .tq1-the { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

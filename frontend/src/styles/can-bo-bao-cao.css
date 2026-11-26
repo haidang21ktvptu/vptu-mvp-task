@@ -1,0 +1,46 @@
+/* Màn Cán bộ thuộc quyền (tải việc theo người) và Báo cáo (kỳ báo cáo, bảng theo chuyên viên); ngăn bên phải trong trang dùng chung.
+   Gộp từ: man-hinh.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
+@layer components {
+  /* ---- Cán bộ: tải việc ---- */
+  .cb { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+  .cb section { background: var(--the); border: 1px solid var(--vien); border-radius: 12px; overflow: hidden; }
+  .cb .tieu { padding: 12px 16px; border-bottom: 1px solid var(--vien); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .cb .tieu b { font-size: var(--chu-than); } .cb .tieu span { font-size: var(--chu-nho); color: var(--chu-phu); }
+  .nguoi-hang { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--vien); width: 100%; text-align: left; }
+  .nguoi-hang:first-of-type { border-top: 0; }
+  .nguoi-hang:hover { background: var(--nen-phu); }
+  .nguoi-hang b { display: block; font-size: var(--chu-bang); } .nguoi-hang small { color: var(--chu-phu); font-size: var(--chu-nho); }
+  .tai { display: flex; height: 8px; width: 120px; border-radius: 4px; overflow: hidden; background: var(--vien); }
+  .tai span { display: block; height: 100%; }
+  .tai .t-do { background: var(--do); } .tai .t-vang { background: var(--vang); } .tai .t-lam { background: var(--lam); }
+  .tai-so { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; } .tai-so b { color: var(--do); }
+  .nguoi-hang.dang { background: var(--lam-nhat); }
+  /* ---- Ngăn bên phải trong trang (Cán bộ, Báo cáo — GĐ21, không rời mục) ---- */
+  .hai-ngan { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+  .hai-ngan.mo { grid-template-columns: 1fr 380px; }
+  .hai-ngan.mo .cb { grid-template-columns: 1fr; }
+  .ngan-ben { position: sticky; top: 12px; background: var(--the); border: 1px solid var(--vien); border-radius: 12px; padding: 14px 16px; margin-top: 14px; max-height: calc(100vh - 24px); overflow-y: auto; }
+  .ngan-dau { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .ngan-dau b { font-size: var(--chu-than); display: block; } .ngan-dau small { font-size: var(--chu-nho); color: var(--chu-phu); display: block; }
+  .ngan-noi h3 { font-size: var(--chu-o); margin-top: 8px; } .ngan-noi h4 { font-size: var(--chu-nho); color: var(--chu-phu); font-weight: 600; margin-top: 14px; letter-spacing: .02em; }
+  .ngan-noi > .tai { width: 100%; margin-top: 10px; } .ngan-noi > .chu-phu { font-size: var(--chu-nho); margin-top: 6px; }
+  .ngan-noi dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: var(--chu-bang); margin-top: 10px; }
+  .ngan-noi dt { color: var(--chu-phu); font-size: var(--chu-nho); } .ngan-noi .hanh-dong { margin-top: 10px; } .ngan-noi .o { margin-top: 8px; }
+  .nv-dong { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 10px; border-left: 4px solid var(--vien); border-top: 1px solid var(--vien); }
+  .nv-dong:first-of-type { border-top: 0; }
+  .nv-dong.do { border-left-color: var(--do); } .nv-dong.dac-biet { border-left-color: var(--ddb); } .nv-dong.vang { border-left-color: var(--vang); }
+  .nv-dong.luc { border-left-color: var(--luc); } .nv-dong.lam { border-left-color: var(--lam); }
+  .nv-dong p { font-size: var(--chu-bang); min-width: 0; } .nv-dong p b { font-weight: 700; } .nv-dong small { display: block; font-size: var(--chu-nho); color: var(--chu-phu); }
+  .nv-ds { padding: 4px 8px 8px; }
+  .bc-hang { cursor: pointer; } .bc-hang:hover { background: var(--nen-phu); } .bc-hang.dang { background: var(--lam-nhat); }
+  /* v3.29: bảng "Theo chuyên viên thực hiện" — dòng phòng đậm, dòng cán bộ thụt vào */
+  .bc-hang.bc-phong td.tieude { font-weight: 700; } .bc-hang.bc-phong { background: var(--nen-phu); }
+  .bc-hang.bc-con td.tieude { padding-left: 28px; }
+  .bc-ky { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }   /* v3.30: kỳ báo cáo (như .tk-loc, màn Thống kê) */
+  .bc-ky label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }
+  .bc-ky-trong { display: contents; }   /* v3.33: khối kỳ (#bcKy) chung hàng với nhóm phạm vi Toàn Văn phòng / Phạm vi của tôi */
+  .mo-rong > td { background: var(--nen-phu); padding: 6px 12px 10px; }
+  /* ---- Báo cáo ---- */
+  .bc-khoi { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 16px 20px; margin-top: 14px; }
+  .bc-khoi h3 { font-size: var(--chu-than); margin-bottom: 8px; }
+}

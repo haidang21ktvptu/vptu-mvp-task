@@ -1,11 +1,10 @@
-/* Màn hình Nhiệm vụ (mockup "Các mục còn lại"): dải tổng quan bấm để lọc (.tq), danh sách gọn (.md .list, .hang-nv) và ngăn chi
-   tiết bên phải (.md .chi-tiet); giao việc ba bước một trang (.buoc); khung/mục của A2/A3 (.khung, .muc, .mc-inline). */
+/* Màn Nhiệm vụ: dải số bấm để lọc, hàng lọc, danh sách gọn, giao việc ba bước, khung / mục của Trưởng phòng và chuyên viên, nút phạm vi.
+   Gộp từ: nhiem-vu.css, nhiem-vu-v8.css, dot-c.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
 @layer components {
-  /* .tq / .md / .hang-nv / .chi-tiet: v8 đợt 3 ở nhiem-vu-v8.css. Ở đây còn chip lọc, giao việc cũ (.buoc), khung/mục A2/A3, ô nộp minh chứng. */
+  /* .tq / .md / .hang-nv / .chi-tiet: v8 đợt 3 ở nhiem-vu.css. Ở đây còn chip lọc, giao việc cũ (.buoc), khung/mục A2/A3, ô nộp minh chứng. */
   .chip-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 10px; border-radius: 999px; background: var(--the); border: 1px solid var(--vien); font-size: var(--chu-nho); }
   .chip button { color: var(--chu-phu); font-size: var(--chu-nho); line-height: 1; padding: 2px; }
-
   /* Giao việc ba bước một trang */
   .buoc { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 20px 24px; margin-top: 16px; }
   .buoc h2 { font-size: var(--chu-muc); display: flex; align-items: center; gap: 10px; }
@@ -13,7 +12,6 @@
   .buoc .nhan { margin-top: 14px; }
   .buoc .o-nhap { margin-top: 6px; }
   .buoc-chan { position: sticky; bottom: 0; background: var(--nen-phu); padding: 12px 0; margin-top: 16px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; border-top: 1px solid var(--vien); }
-
   /* Khung (A2 phòng tôi, A3 việc của tôi): mục có mép trái theo mức */
   .khung { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; margin-top: 14px; }
   .khung .tieu { padding: 14px 18px; border-bottom: 1px solid var(--vien); display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -26,15 +24,50 @@
   .muc p b { color: var(--chu); } .muc .hanh-dong { margin-top: 10px; } .muc .o { margin-top: 10px; }
   .muc .the-con { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--vien); }
   .muc .the-con:first-of-type { margin-top: 6px; padding-top: 0; border-top: 0; }
-  .mc-inline { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; margin-top: 10px; }
-  .mc-inline input, .mc-inline select, .mc-inline textarea { font-size: var(--chu-nho); padding: 9px 10px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: var(--the); min-width: 0; font-family: inherit; }
-  .mc-inline .mc-rong { grid-column: 1 / -1; } /* v8 đợt 4: trích yếu + mô tả kết quả chiếm cả hàng; nút Nộp xuống hàng cuối */
-  .mc-inline button[type="submit"] { grid-column: -2 / -1; justify-self: end; }
   .khung .them { padding: 12px 18px; border-top: 1px solid var(--vien); font-size: var(--chu-bang); }
-
-  @media (max-width: 860px) {
-    .mc-inline { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) {
     .buoc { padding: 16px; }
     .buoc-chan { bottom: 56px; }
   }
+  /* ---- Hàng lọc ---- */
+  .kl-loc { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+  .tq { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; background: none; border: 0; border-radius: 0; overflow: visible; }
+  .tq .o-so { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--vien); border-left: 1px solid var(--vien); border-radius: 16px; background: var(--the); font-size: var(--chu-nho); font-weight: 600; color: var(--chu); white-space: nowrap; }
+  .tq .o-so b { font-size: var(--chu-nho); font-weight: 800; color: var(--do); }
+  .tq .o-so[aria-pressed="true"] { background: var(--navy-dac); border-color: var(--navy-dac); color: #fff; }
+  .tq .o-so[aria-pressed="true"] b { color: var(--vang-tren-dac); }
+  .tq .s-vang b { color: var(--vang-chu); } .tq .s-lam b { color: var(--navy); } .tq .s-luc b { color: var(--luc); }
+  .kl-tim { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; background: var(--the); border: 1px solid var(--vien); border-radius: 8px; width: 300px; max-width: 100%; margin-left: auto; color: var(--chu-phu); }
+  .kl-tim svg { width: 16px; height: 16px; flex: none; }
+  .kl-tim input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: var(--chu-nho); color: var(--chu); outline: 0; padding: 0; }
+  .kl-loc > select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho); max-width: 220px; }
+  .kl-them { flex-basis: 100%; font-size: var(--chu-nho); }
+  .kl-them summary { cursor: pointer; color: var(--do); }
+  .kl-them .them-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .kl-them .them-loc select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho);
+    max-width: 100%; min-width: 0; text-overflow: ellipsis; }   /* kiểm tay 18/10: tên ngành / mục tiêu dài làm ô tràn mép phải trên điện thoại 390px */
+  /* ---- Danh sách + ngăn — v3.25: bảng theo cột (bang-nhiem-vu.css); ngăn chỉ chiếm chỗ khi đang mở một việc (.md.co-ct, chi-tiet.js) ---- */
+  .md { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 14px; align-items: start; }
+  .md.co-ct { grid-template-columns: minmax(0, 1fr) 520px; }
+  .md .list { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; }
+  .ds-chan { padding: 10px 16px; font-size: var(--chu-nho); color: var(--chu-phu); border-top: 1px solid var(--vien-nhat); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  /* v3.24: thanh sắp xếp đầu danh sách, ô ngày của "khoảng ngày…", số bộ lọc đang áp dụng, nhãn Mới, thời điểm nhập trên dòng */
+  .kl-sap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--vien-nhat); }
+  .kl-them .them-loc input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho); color: var(--chu); }
+  .kl-them summary .so-loc { color: var(--chu-phu); font-weight: 600; }
+  .nhan-moi { margin-left: 4px; font-size: var(--chu-nho); vertical-align: 1px; background: var(--lam-nhat); color: var(--lam); }
+  @media (max-width: 1200px) {
+    .md.co-ct { grid-template-columns: minmax(0, 1fr) 420px; }
+  }
+  @media (max-width: 900px) {
+    .md, .md.co-ct { grid-template-columns: 1fr; }
+    .kl-tim { margin-left: 0; width: 100%; }
+    .kl-sap > .chu-phu { display: none; }   /* nhóm nút đã có aria-label "Sắp xếp danh sách" */
+  }
+  .pham-vi { display: inline-flex; border: 1px solid var(--vien); border-radius: 18px; padding: 2px; background: var(--the); }
+  .pham-vi button { height: 30px; padding: 0 12px; border-radius: 16px; font-size: var(--chu-nho); font-weight: 600; color: var(--chu); white-space: nowrap; }
+  .pham-vi button[aria-pressed="true"] { background: var(--navy-dac); color: #fff; }
+  /* Hộp Cập nhật: mục "Nộp minh chứng nhanh" đóng khung nhẹ để tách khỏi các ô cập nhật. */
+  .khung-mc { border: 1px solid var(--vien); border-radius: 10px; padding: 10px 12px 12px; margin: 0; }
+  .khung-mc > legend { padding: 0 6px; }
 }

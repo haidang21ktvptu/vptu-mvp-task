@@ -1,0 +1,164 @@
+/* Khung trang: bố cục chung, thanh đầu trang (tìm, chuông, người dùng), menu dọc theo nhóm, thanh Hỏa tốc cố định.
+   Gộp từ: layout.css, dau-trang.css, menu-doc.css, v9.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
+@layer components {
+/* Bố cục chung (v8 đợt 1, màu v9): thanh đầu trang ở khung.css, menu dọc + vùng nội dung ở khung.css. Ở đây: trang chặn, bản gọn, tiêu đề
+   trang / chương / tầng, thanh dưới 3 mục theo vai (≤ 600px, giữ từ v7). Đăng nhập ở dang-nhap.css; tấm/hàng việc ở the-viec.css. */
+  /* Trang chặn đặt mật khẩu mới: che toàn màn hình, không có nút đóng khi bắt buộc */
+  .trang-chan { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--nen); overflow-y: auto; }
+  /* Bản gọn (A0): ẩn xu hướng và thanh trái */
+  body.ban-gon #dhRay, body.ban-gon .xu-huong { display: none; }
+  /* ================= TRANG ================= */
+  .dau { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .dau h1 { font-size: var(--chu-trang); color: var(--navy); }
+  .dau > span { color: var(--chu-phu); font-size: var(--chu-nho); }
+  .dau .phai-dau { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .cau { margin-top: 40px; }
+  .cau:first-child, .dau + .cau { margin-top: 20px; }
+  .cau h2 { font-size: var(--chu-khoi); color: var(--navy); display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .cau h2 em { font-style: normal; font-weight: 700; font-size: var(--chu-so); line-height: 1; }
+  .cau h2 em.do { color: var(--do); } .cau h2 em.cam { color: var(--cam); } .cau h2 em.lam { color: var(--lam); } .cau h2 em.luc { color: var(--luc); }
+  .tang { margin-top: 26px; }
+  .tang h2 { font-size: var(--chu-muc); color: var(--navy); }
+  .tang > p { color: var(--chu-phu); font-size: var(--chu-bang); margin-top: 4px; max-width: 78ch; }
+  /* ================= THANH DƯỚI ĐIỆN THOẠI ================= */
+  .thanh-duoi { display: none; }
+  @media (max-width: 600px) {
+    /* ================= ≤ 600px: ĐIỆN THOẠI ================= */
+    .max { padding: 0 16px; }
+    html { scroll-padding-bottom: 76px; }
+    .dau h1 { font-size: var(--chu-khoi); } .cau h2 { font-size: var(--chu-khoi); } .cau h2 em { font-size: var(--chu-trang); }
+    .thanh-duoi { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+      background: var(--the); border-top: 1px solid var(--vien); }
+    .thanh-duoi button { text-align: center; padding: 10px 4px 12px; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); position: relative; }
+    .thanh-duoi button[aria-selected="true"] { color: var(--navy); font-weight: 700; box-shadow: inset 0 3px 0 var(--nut); }
+    .thanh-duoi .huy-hieu { position: absolute; top: 4px; right: 12%; }
+    .thanh-khac { position: fixed; left: 12px; right: 12px; bottom: 56px; z-index: 42; background: var(--the); border: 1px solid var(--vien); border-radius: 12px;
+      padding: 6px; display: grid; gap: 2px; box-shadow: var(--bong-noi); }
+    .thanh-khac button { text-align: left; padding: 10px 14px; border-radius: 8px; font-size: var(--chu-bang); }
+    .thanh-khac button[aria-selected="true"] { background: var(--navy-nhat); color: var(--navy); font-weight: 600; }
+  }
+/* Thanh đầu trang v9 (docs/DESIGN.md mục 4): vạch son 3px trên cùng; khối trái cùng màu menu dọc (--ben-mau) mang biểu trưng và tên cơ quan
+   theo thể thức văn bản Đảng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG / *); phần còn lại trên nền trang: dòng "Cao Bằng, ngày … tháng … năm …" (chữ
+   nghiêng có chân), ô tìm 280px, chuông, avatar + tên hai dòng, bánh răng — nút vuông 40px nền mặt thẻ. 601–900px: khối trái 56px chỉ biểu
+   trưng, tên cơ quan nằm cạnh; ≤ 600px: thanh 56px màu menu, nút ☰ mở menu dọc (khung.css), ẩn tên cơ quan.
+   Header KHÔNG overflow: hidden (hộp chuông / bánh răng / tìm nhanh thả xuống ngoài dải). z-index 48: hộp thả xuống nổi trên thanh dưới (41),
+   thanh Hỏa tốc (45), lớp mờ + ngăn kéo menu điện thoại (46–47); dưới modal (50), trang chặn (70), toast (100). */
+  .dai { position: relative; z-index: 48; height: var(--cao-dau-trang); background: var(--nen-phu); color: var(--chu); box-shadow: inset 0 3px 0 var(--vach-tren); }
+  .dai::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--rong-menu); background: var(--ben-mau); box-shadow: inset 0 3px 0 var(--vach-tren); }
+  .dai-trong { position: relative; height: 100%; display: flex; align-items: center; gap: 16px; padding: 3px 24px 0 18px; }
+  .logo { flex: none; width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 12px; padding: 5px; display: block; }
+  .dai .ten { display: flex; flex-direction: column; align-items: center; min-width: 0; width: calc(var(--rong-menu) - 18px - 44px - 16px - 12px); color: #fff;
+    font-family: var(--font-van-ban); text-align: center; line-height: 1.2; }
+  .dai .ten span { font-size: var(--chu-nho); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
+  .dai .ten b { font-weight: 700; font-size: var(--chu-bang); letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+  .dai .ten i { font-style: normal; font-size: var(--chu-nho); line-height: 1; margin-top: 2px; color: var(--ben-chon-icon); }
+  .ngay-vb { margin-left: 12px; font-family: var(--font-van-ban); font-style: italic; font-size: var(--chu-than); color: var(--chu-phu); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .dai .phai { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: var(--chu-nho); }
+  /* Nút trên thanh: ô vuông 40px bo 10px, nền mặt thẻ, viền nhạt */
+  .nut-dai { position: relative; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--chu-phu); background: var(--the); border: 1px solid var(--vien); flex: none; }
+  .nut-dai:hover, .nut-dai[aria-expanded="true"] { color: var(--chu); border-color: var(--vien-o); }
+  .nut-dai svg { display: block; }
+  .menu-mo-nut { display: none; }
+  /* Tìm nhanh: hộp 280px chứa kính lúp + ô nhập; ≥ 601px ô luôn hiện (shell/tim-nhanh.js), điện thoại bấm kính lúp mới hiện ô nổi */
+  .tim-nhanh { display: flex; align-items: center; height: 40px; border-radius: 10px; background: var(--the); border: 1px solid var(--vien); }
+  .tim-nhanh:focus-within { border-color: var(--vien-focus); }
+  .tim-nhanh .nut-dai { background: transparent; border: 0; }
+  .tim-nhanh-o input { width: 236px; max-width: 34vw; height: 38px; padding: 0 12px 0 0; border: 0; background: transparent; color: var(--chu); font: inherit; font-size: var(--chu-bang); outline: 0; }
+  .tim-nhanh-o input::placeholder { color: var(--chu-mo); }
+  .chuong { position: relative; }
+  .chuong-nut i { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; display: grid; place-items: center; background: var(--vang); color: #14243B;
+    font-style: normal; font-size: var(--chu-nho); font-weight: 800; line-height: 1; border-radius: 9px; }
+  .chuong-nut i.hidden { display: none; }
+  .dai .nguoi { display: flex; align-items: center; gap: 10px; padding-left: 10px; border-left: 1px solid var(--vien); text-align: left; line-height: 1.2; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--navy-dac); color: #fff; font-weight: 700; font-size: var(--chu-nho); display: grid; place-items: center; flex: none; overflow: hidden; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .dai .nguoi b { display: block; font-weight: 600; font-size: var(--chu-bang); white-space: nowrap; }
+  .dai .nguoi span { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }
+  .dai .nguoi .avatar { font-size: var(--chu-nho); color: #fff; } /* avatar là span: không ăn cỡ chữ / màu dòng 2 */
+  .banh-rang { position: relative; }
+  .br-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 60; min-width: 260px; background: var(--the); color: var(--chu); border: 1px solid var(--vien); border-radius: 12px;
+    box-shadow: var(--bong-noi); padding: 6px; font-size: var(--chu-bang); }
+  .br-menu button, .br-menu a { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; color: var(--chu); text-decoration: none; }
+  .br-menu button:hover, .br-menu a:hover { background: var(--nen-phu); }
+  .br-menu hr { border: 0; border-top: 1px solid var(--vien); margin: 6px 4px; }
+  .br-menu .br-nhom { display: block; padding: 6px 12px 2px; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
+  .br-menu .br-thoat { color: var(--do); font-weight: 600; }
+  .br-menu [aria-checked="true"]::after { content: "✓"; margin-left: auto; color: var(--luc); font-weight: 700; }
+  @media (max-width: 900px) {
+    /* 601–900px: khối trái 56px chỉ biểu trưng (khớp menu thu gọn), tên cơ quan nằm cạnh trên nền trang; rút ngày, tên người dùng, ô tìm */
+    .dai::before { width: 56px; }
+    .dai-trong { padding: 3px 16px 0 6px; gap: 12px; }
+    .logo { width: 44px; height: 40px; padding: 4px; border-radius: 10px; }
+    .dai .ten { width: auto; color: var(--navy); align-items: flex-start; text-align: left; margin-left: 8px; }
+    .dai .ten i { color: var(--do); }
+    .ngay-vb, .dai .nguoi-chu { display: none; }
+    .tim-nhanh-o input { width: 150px; max-width: 22vw; }
+  }
+  @media (max-width: 600px) {
+    /* ≤ 600px: 56px, cả thanh màu menu, nút ☰, ẩn tên cơ quan; ô tìm nổi dưới thanh */
+    .dai { position: sticky; top: 0; background: var(--ben-mau); color: #fff; } /* dính để nút ☰ luôn bấm được và ngăn kéo menu mở ngay dưới thanh */
+    .dai::before { display: none; }
+    .dai-trong { gap: 8px; padding: 3px 12px 0; }
+    .menu-mo-nut { display: grid; }
+    .logo { width: 40px; height: 34px; padding: 3px; border-radius: 9px; }
+    .dai .ten { display: none; }
+    .dai .phai { gap: 6px; }
+    .dai .nguoi { padding-left: 2px; border-left: 0; }
+    .avatar { width: 32px; height: 32px; font-size: var(--chu-nho); background: rgba(255, 255, 255, .18); }
+    .nut-dai { width: 36px; height: 36px; color: #fff; background: rgba(255, 255, 255, .12); border: 0; }
+    .nut-dai:hover, .nut-dai[aria-expanded="true"] { color: #fff; background: rgba(255, 255, 255, .24); }
+    .tim-nhanh { background: transparent; border: 0; }
+    .tim-nhanh-o { position: absolute; left: 12px; right: 12px; top: calc(100% + 4px); z-index: 55; background: var(--the); border: 1px solid var(--vien); border-radius: 10px; padding: 0 10px; box-shadow: var(--bong-noi); }
+    .tim-nhanh-o input { width: 100%; max-width: none; }
+    .br-menu { position: fixed; left: 12px; right: 12px; top: 60px; min-width: 0; max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; }
+    .dai .nut-dai:focus-visible { outline-color: #fff; }   /* cả dải đầu trang màu thanh bên */
+  }
+/* Menu dọc v9 (docs/DESIGN.md mục 4): 236px bên trái, nền đặc --ben-nen (lam đậm — Thanh lịch; đỏ son — Trang nghiêm), chữ trắng; nhóm Điều
+   hành / Nhiệm vụ / Nhiệm vụ quý BTV / Quản trị bằng nhãn nhỏ, bấm để thu gọn (v3.36); mục đang chọn nền trắng mờ, biểu tượng vàng sao; số đếm tròn (nguồn số giữ nguyên:
+   features/huy-hieu.js, messages); chân menu ghi phiên bản + giờ build. 601–900px: thu thành thanh biểu tượng 56px (nhãn ở title). ≤ 600px:
+   ẩn, bấm ☰ trên thanh đầu trang mở thành ngăn kéo (body.menu-mo); thanh dưới (khung.css) giữ nguyên. Vùng nội dung .trang nằm cạnh menu. */
+  /* Dải nền cột trái cùng màu đáy menu: menu dính cao một màn hình, cột trái vẫn liền màu tới cuối trang dài */
+  .than { display: flex; align-items: flex-start; min-height: calc(100vh - var(--cao-dau-trang)); background: linear-gradient(90deg, var(--ben-cuoi) 0 var(--rong-menu), transparent var(--rong-menu)); }
+  .menu { flex: none; width: var(--rong-menu); position: sticky; top: 0; min-height: calc(100vh - var(--cao-dau-trang)); max-height: 100vh; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 3px;
+    padding: 18px 14px; background: var(--ben-nen); color: var(--ben-chu); scrollbar-color: rgba(255, 255, 255, .25) transparent; }
+  /* v3.36: tiêu đề nhóm là nút thu gọn / mở nhóm (nav.js); mũi tên xoay khi thu */
+  .menu-khoi, .menu-ds { display: flex; flex-direction: column; gap: 3px; }
+  .menu-ds[hidden] { display: none; }
+  .menu .menu-nhom { min-height: 0; justify-content: space-between; gap: 8px; padding: 16px 12px 6px; border-radius: 8px; font-size: var(--chu-nho); font-weight: 600; letter-spacing: .02em; color: var(--ben-chu-3); }
+  .menu .menu-nhom:hover { background: transparent; color: var(--ben-chu); }
+  .menu .menu-nhom .mui { width: 15px; height: 15px; flex: none; transition: transform .12s; }
+  .menu .menu-nhom[aria-expanded="false"] .mui { transform: rotate(-90deg); }
+  .menu-khoi:first-child .menu-nhom { padding-top: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .menu .menu-nhom .mui { transition: none; }
+  }
+  .menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; padding: 8px 12px; border-radius: 10px; color: var(--ben-chu-2); font-size: var(--chu-than); font-weight: 500; text-align: left; transition: background-color .12s; }
+  .menu button:hover { background: var(--ben-hover); color: var(--ben-chu); }
+  .menu button .ico { width: 19px; height: 19px; flex: none; color: var(--ben-chu-3); }
+  .menu button .nhan-menu { flex: 1; min-width: 0; line-height: 1.25; overflow-wrap: anywhere; } /* nhãn hiện đủ, xuống dòng khi dài; số đếm không đè chữ */
+  .menu button[aria-selected="true"] { background: var(--ben-chon); color: var(--ben-chu); font-weight: 600; }
+  .menu button[aria-selected="true"] .ico { color: var(--ben-chon-icon); }
+  .menu button .huy-hieu { flex: none; min-width: 22px; height: 22px; border-radius: 11px; font-size: var(--chu-nho); padding: 0 7px; background: var(--ben-dem); color: var(--ben-dem-chu); }
+  .menu-chan { margin-top: auto; padding: 14px 12px 4px; font-size: var(--chu-nho); color: var(--ben-chu-3); line-height: 1.5; overflow-wrap: anywhere; border-top: 1px solid rgba(255, 255, 255, .12); }
+  .menu-nen { display: none; }
+  .trang { flex: 1; min-width: 0; padding: 26px 32px 64px; }
+  @media (min-width: 601px) and (max-width: 900px) {
+    .than { background: linear-gradient(90deg, var(--ben-cuoi) 0 56px, transparent 56px); }
+    .menu { width: 56px; padding: 10px 6px; }
+    .menu-chan, .menu button .nhan-menu { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .menu .menu-nhom { display: none; } .menu-ds[hidden] { display: flex; }   /* thanh biểu tượng: không có tiêu đề nhóm, mọi nhóm mở */
+    .menu button { position: relative; width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 12px; }
+    .menu button .ico { width: 22px; height: 22px; }
+    .menu button .huy-hieu { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; font-size: var(--chu-nho); padding: 0 5px; }
+    .trang { padding: 20px 16px 60px; }
+  }
+  @media (max-width: 600px) {
+    .than { display: block; background: none; }
+    .menu { display: none; }
+    /* Ngăn kéo mở DƯỚI thanh đầu trang (dính, 56px) để nút ☰ vẫn bấm được để đóng; lớp mờ .menu-nen cũng đóng khi chạm */
+    body.menu-mo .menu { display: flex; position: fixed; left: 0; top: var(--cao-dau-trang); bottom: 0; z-index: 47; max-height: none; width: min(var(--rong-menu), 84vw); box-shadow: 0 0 40px rgba(0, 0, 0, .3); }
+    body.menu-mo .menu-nen { display: block; position: fixed; left: 0; right: 0; top: var(--cao-dau-trang); bottom: 0; z-index: 46; background: rgba(10, 18, 30, .5); }
+    .trang { padding: 18px 16px 92px; }
+  }
+  .menu :focus-visible { outline-color: #fff; }   /* nền đặc thanh bên: viền tiêu điểm trắng đủ tương phản */
+}
