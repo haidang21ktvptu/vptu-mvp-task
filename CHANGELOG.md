@@ -1004,3 +1004,8 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 ## 98. v3.36.0 (Đợt 1, phần 5b) — Dữ liệu giả staging theo ngày giả (26/11/2026; chỉ script, không migration)
 - Kiểm staging sau khi nạp 500 việc giả: Cần xử lý của Chánh Văn phòng ghi "359 kết quả nộp trong 7 ngày", cả 500 việc "mới nhập trong 24 giờ" vì thời điểm nhập, nộp, xác nhận lấy giờ chạy script.
 - `scripts/du-lieu-gia-staging.mjs`: thời điểm nhập việc (`created_at`), lịch sử giao / xác nhận (`luc`), nộp và xác nhận minh chứng (`nop_luc`, `xac_nhan_luc`) theo ngày nhận / ngày hoàn thành giả; khoảng 70% việc có cấp cần quyết. Staging dọn rồi nạp lại 500 việc sau merge.
+
+## 99. v3.36.0 (Đợt 1, phần 6) — CSS gộp theo thành phần, bốn mốc bề rộng, DESIGN.md một bản hiện hành (26/11/2026, chủ dự án duyệt; chỉ giao diện, không migration)
+- 42 tệp CSS đặt tên theo đợt (`v9.css`, `pr3.css`, `gd22.css`…) gộp thành 29 tệp theo thành phần / màn hình; 2.542 quy tắc giữ nguyên nội dung và thứ tự ghi đè (kiểm tĩnh; so kiểu tính toán của 14 trạng thái màn hình staging × 4 chế độ ở 1366 và 390px: không khác); `ghi-de.css` giữ 15 quy tắc phụ thuộc thứ tự.
+- Bốn mốc bề rộng 600 / 900 / 1200 / 1600px thay 14 mốc cũ (560, 640, 700, 760, 767, 860, 1023, 1100, 1180, 1199, 1365, 1599px…); `matchMedia` và `screens` của Tailwind theo cùng mốc. Thấy được: 861–900px nội dung xếp như máy tính bảng (khớp menu thanh biểu tượng); 1201–1600px bảng nhiệm vụ gộp cột thời gian (cột nội dung rộng hơn); 1024–1200px bảng thành thẻ; trang đăng nhập giữ bố cục ảnh nền tới 601px.
+- `docs/DESIGN.md` viết lại một bản hiện hành (bỏ thứ tự "v9 thắng v8 thắng mục 1–9"; token, khung, thành phần, bốn mốc, tổ chức CSS đúng mã hiện tại; giữ số mục).

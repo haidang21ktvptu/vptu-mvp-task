@@ -25,7 +25,7 @@
   .muc .the-con { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--vien); }
   .muc .the-con:first-of-type { margin-top: 6px; padding-top: 0; border-top: 0; }
   .khung .them { padding: 12px 18px; border-top: 1px solid var(--vien); font-size: var(--chu-bang); }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .buoc { padding: 16px; }
     .buoc-chan { bottom: 56px; }
   }
@@ -56,10 +56,10 @@
   .kl-them .them-loc input[type="date"] { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho); color: var(--chu); }
   .kl-them summary .so-loc { color: var(--chu-phu); font-weight: 600; }
   .nhan-moi { margin-left: 4px; font-size: var(--chu-nho); vertical-align: 1px; background: var(--lam-nhat); color: var(--lam); }
-  @media (max-width: 1180px) {
+  @media (max-width: 1200px) {
     .md.co-ct { grid-template-columns: minmax(0, 1fr) 420px; }
   }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .md, .md.co-ct { grid-template-columns: 1fr; }
     .kl-tim { margin-left: 0; width: 100%; }
     .kl-sap > .chu-phu { display: none; }   /* nhóm nút đã có aria-label "Sắp xếp danh sách" */

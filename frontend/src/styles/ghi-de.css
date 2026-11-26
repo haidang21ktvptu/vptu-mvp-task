@@ -4,7 +4,7 @@
   .chi-tiet > .chi-tiet-noi > .hanh-dong { margin: 0; padding: 12px 18px; border-bottom: 1px solid var(--vien-nhat); gap: 8px; }
   .chi-tiet .chi-tiet-noi > .o { margin: 0 18px 12px; }
   .chi-tiet .ct-pr3 .hanh-dong { margin-top: 8px; }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .tk-dau .pham-vi, .tk-loc .pham-vi { flex-wrap: wrap; border-radius: 12px; max-width: 100%; }   /* 360px: nhóm nút kỳ xuống dòng, không tràn ngang */
   }
   @container tq (max-width: 860px) {
@@ -16,7 +16,7 @@
   }
   .gv-mt > .nhan { display: block; margin-bottom: 8px; }
   .mtg-dau .nhan { margin: 0; }
-  @media (max-width: 640px) {
+  @media (max-width: 600px) {
     .rs-loc .pham-vi { flex-wrap: wrap; border-radius: 14px; max-width: 100%; }
   }
   .rs-loc .pham-vi { flex-wrap: wrap; max-width: 100%; }

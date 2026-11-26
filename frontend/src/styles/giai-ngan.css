@@ -116,7 +116,7 @@
   .gn-ten-moi { color: var(--vang-chu); font-weight: 600; }
   .gn-ten-cu { display: inline-flex; gap: 6px; align-items: flex-start; color: var(--vang-chu); }
   .gn-cong { margin-top: 8px; font-size: var(--chu-bang); color: var(--chu); }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .gn-nhap-luoi { grid-template-columns: minmax(0, 1fr); } .gn-nhap-luoi .gn-rong { grid-column: auto; }
     .gn-uoc .nhan-checkbox { margin-top: 0; }
   }

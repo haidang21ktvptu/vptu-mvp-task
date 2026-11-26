@@ -45,7 +45,7 @@
   .ket-noi { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }
   .ket-noi-truc-tiep::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--luc); margin-right: 5px; vertical-align: 1px; }
   .ket-noi-du-phong { color: var(--vang-chu); } .ket-noi-dang-noi { color: var(--chu-phu); }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .dieu-hanh { grid-template-columns: 1fr; }
     .ray { position: static; display: flex; overflow-x: auto; padding: 6px; gap: 4px; border-radius: 12px; }
     .ray h3 { display: none; }
@@ -92,7 +92,7 @@
     vertical-align: 6px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; }   /* v3.36: một khối (nhãn mức theo nghĩa dài hơn không gãy viên) */
   .bc-chinh em.ddb { background: var(--f-ddb); color: var(--f-ddb-chu); }
   .bc-phu { font-size: var(--chu-bang); color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .ba-cau { grid-template-columns: minmax(0, 1fr); }
     .bc-o { border-left: 0; border-top: 1px solid var(--vien); } .bc-o:first-child { border-top: 0; }
   }

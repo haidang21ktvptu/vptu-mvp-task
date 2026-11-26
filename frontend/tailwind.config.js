@@ -5,6 +5,9 @@
 export default {
   content: ['./index.html', './src/**/*.js'],
   theme: {
+    // v3.36: 4 mốc bề rộng của docs/DESIGN.md mục 4 — điện thoại ≤ 600px, máy tính bảng ≤ 900px, màn nhỏ ≤ 1200px, laptop ≤ 1600px. Tiện ích
+    // theo màn (sm:, md:…) nếu sau này dùng thì lấy đúng các mốc này (min-width = mốc + 1px), không thêm mốc khác.
+    screens: { sm: '601px', md: '901px', lg: '1201px', xl: '1601px' },
     fontSize: {
       xs: 'var(--chu-nho)', sm: 'var(--chu-bang)', base: 'var(--chu-than)', md: 'var(--chu-o)', lg: 'var(--chu-muc)',
       xl: 'var(--chu-khoi)', '2xl': 'var(--chu-trang)', '3xl': 'var(--chu-so)',

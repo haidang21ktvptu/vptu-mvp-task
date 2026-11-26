@@ -5,7 +5,7 @@
   .mc-inline input, .mc-inline select, .mc-inline textarea { font-size: var(--chu-nho); padding: 9px 10px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: var(--the); min-width: 0; font-family: inherit; }
   .mc-inline .mc-rong { grid-column: 1 / -1; } /* v8 đợt 4: trích yếu + mô tả kết quả chiếm cả hàng; nút Nộp xuống hàng cuối */
   .mc-inline button[type="submit"] { grid-column: -2 / -1; justify-self: end; }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .mc-inline { grid-template-columns: 1fr 1fr; }
   }
 /* Ngăn chi tiết (mọi vai, thứ tự: chỉ đạo → minh chứng → lịch sử), luồng chỉ đạo (.cd-*), khối minh chứng (.mc-*), lịch sử. */
@@ -92,7 +92,7 @@
   .tb-dong b { display: block; font-weight: 700; } .tb-dong span { display: block; color: var(--chu); } .tb-dong small { display: block; color: var(--chu-phu); font-size: var(--chu-nho); margin-top: 2px; }
   .tb-chua-doc button { background: var(--vang-nhat); border-left: 3px solid var(--vang); }
   .tb-trong { padding: 16px 14px; font-size: var(--chu-nho); }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .tb-panel { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; }
   }
   /* v9 đợt 2 — nhập theo tầng (0070–0071): bút = cấp giao sửa ngay, khoá = cấp nhận đề nghị sửa; khối đề nghị sửa đang chờ; hộp thoại. */
@@ -113,7 +113,7 @@
   .stb-o { min-width: 0; }
   .stb-o small { display: block; margin-top: 2px; }
   .stb-o-rong { grid-column: 1 / -1; }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .stb-luoi { grid-template-columns: minmax(0, 1fr); }
   }
   /* v3.36 (rà soát 25/11): đóng ngăn bằng dấu × ở góc đầu chi tiết (thay nút chữ "Đóng ngăn" đứng cạnh "Đóng nhiệm vụ"); trong ngăn dùng chung (#nganCT)
@@ -161,7 +161,7 @@
   .chi-tiet .dien-bien li::before { display: none; }
   .chi-tiet .dien-bien li.db-canh-bao { background: var(--do-nhat); } .chi-tiet .dien-bien li.db-chi-dao, .chi-tiet .dien-bien li.db-phan-hoi { background: var(--navy-nhat); }
   .chi-tiet .dien-bien li.db-minh-chung { background: var(--luc-nhat); } .chi-tiet .dien-bien li.db-tu-choi { background: var(--vang-nhat); }
-  @media (max-width: 860px) {
+  @media (max-width: 900px) {
     .md .chi-tiet { position: static; max-height: none; }
     .chi-tiet .ct-luoi { grid-template-columns: 1fr; }
   }

@@ -45,7 +45,7 @@
   .tvb-la .tt-cho, .tvb-la .tt-xong, .tvb-la .tt-qua { padding: 0 6px; border-radius: 6px; font-weight: 600; }
   .tvb-ra-soat-dong { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0; }
   .tvb-ra-soat { font-size: var(--chu-nho); white-space: normal; }   /* câu rà soát dài xuống dòng (360px) */
-  @media (max-width: 1023px) {
+  @media (max-width: 1200px) {
     .tvb-nut { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
     .tvb-nut .bnv-c { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; gap: 2px 6px; }
     .tvb-nut .bnv-c-nv { flex-direction: column; padding-left: calc(var(--cap, 0) * 10px); }

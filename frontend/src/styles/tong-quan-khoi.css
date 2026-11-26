@@ -25,7 +25,7 @@
   .tq-loc2 .tq-dang-loc { flex-basis: auto; font-size: var(--chu-nho); color: var(--chu-phu); }
   .tq-loc2 .tq-dang-loc b { color: var(--chu); }
   .tq-loc2 .nut.nho { min-height: 30px; }
-  @media (min-width: 861px) {
+  @media (min-width: 901px) {
     .tq-loc2 { position: sticky; top: 0; z-index: 5; }
   }
   body:has(#thanhHoaToc:not(.hidden)) .tq-loc2 { position: static; }   /* thanh đỏ Hỏa tốc đang dính đầu trang: thanh lọc không dính (khỏi bị che) */

@@ -1,4 +1,4 @@
-/* Token thiết kế giao diện v9 (docs/DESIGN.md mục 10): hai kiểu Thanh lịch (mặc định) / Trang nghiêm + nền tối, chọn ở menu bánh răng
+/* Token thiết kế giao diện v9 (docs/DESIGN.md mục 2): hai kiểu Thanh lịch (mặc định) / Trang nghiêm + nền tối, chọn ở menu bánh răng
    (shell/kieu-giao-dien.js ghi <html data-kieu="trang-nghiem"> và <html data-theme="dark">, nhớ theo máy). Chỉ khai báo biến.
    Giữ TÊN biến v7/v8 để CSS cũ chạy nguyên, chỉ đổi GIÁ TRỊ: --nen-phu = nền trang (sương lam / ấm), --the = mặt thẻ, --navy = mực tiêu đề và
    màu cấu trúc, --navy-dac = nền khối đặc có chữ trắng (tách riêng để nền tối giữ tương phản). --do = trạng thái Đỏ (không dùng cho nút);

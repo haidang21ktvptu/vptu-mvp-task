@@ -4,7 +4,7 @@
 /* Trang đăng nhập v8 (mockup 01-dang-nhap.html; màu, chữ theo v9): ảnh Bản Giốc gốc toàn nền (public/brand/ban-gioc.jpg — ảnh tạm, xem brand/README.md) + 2 lớp phủ
    + 3 lớp dải núi SVG + vệt vàng; trên ảnh CHỈ có biểu trưng, dòng cơ quan chữ nhỏ, tên hệ thống IN HOA 26px giãn .04em; thẻ đăng nhập 440px nổi
    bên phải (bóng + lớp trắng mờ lệch phía sau); chân trang ghi đầu mối hỗ trợ. Không số liệu hay nội dung nội bộ trên ảnh.
-   ≤ 700px: ảnh thành dải trên cùng, thẻ full chiều ngang. .dn-the dùng chung với trang đặt mật khẩu (.trang-chan, căn giữa). */
+   ≤ 600px: ảnh thành dải trên cùng, thẻ full chiều ngang. .dn-the dùng chung với trang đặt mật khẩu (.trang-chan, căn giữa). */
   .dn { position: relative; min-height: max(100vh, 760px); background: var(--ben-mau); color: #fff; display: flex; flex-direction: column; }
   .dn-nen { position: absolute; inset: 0; overflow: hidden; }
   .dn-anh { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -33,10 +33,10 @@
   .trang-chan .dn-the .phu { margin-top: 0; }
   .dmk-thoat { width: auto; min-height: 0; margin: 4px auto 0; padding: 4px 8px; border: 0; background: none; font-size: var(--chu-nho); font-weight: 500; color: var(--chu-phu); text-decoration: underline; text-underline-offset: 3px; } /* lối ra phụ, không lấn át nút Lưu */
   .dmk-thoat:hover:not(:disabled) { background: none; color: var(--do); }
-  @media (max-width: 1100px) {
+  @media (max-width: 1200px) {
     .dn .dn-the { right: 48px; } .dn-hieu { padding: 48px 48px 0; } .dn-chan { left: 48px; }
   }
-  @media (max-width: 700px) {
+  @media (max-width: 600px) {
     .dn { display: block; min-height: 100vh; background: var(--nen-phu); }
     .dn-nen { position: relative; height: 220px; } .dn-nui { height: 90px; }
     .dn-hieu { position: absolute; top: 0; left: 0; right: 0; padding: 20px 16px; gap: 12px; z-index: 1; }

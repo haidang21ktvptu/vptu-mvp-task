@@ -15,7 +15,7 @@
   .o-mt { align-items: flex-start; }
   .o-mt .mt-chon, .o-mt small { flex-basis: 100%; }
   .o-mt small { color: var(--chu-phu); font-size: var(--chu-nho); line-height: 1.45; }
-  @media (max-width: 640px) {
+  @media (max-width: 600px) {
     .mt-chon { grid-template-columns: minmax(0, 1fr); }
   }
   .mtg { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--vien); }
@@ -56,7 +56,7 @@
   .o-mt .mtg { margin-top: 0; padding-top: 0; border-top: 0; }
   .o-mt .mtg small { flex-basis: auto; }   /* .o-mt small (v3.24) chiếm cả dòng — không áp cho chữ trong chip */
   .o-mt .mtg .mtg-them-chan small { flex-basis: 100%; }
-  @media (max-width: 640px) {
+  @media (max-width: 600px) {
     .mtg-chip .mtg-ten { max-width: 22ch; }
     .mtg-nguon { display: none; }
   }
@@ -82,7 +82,7 @@
   .rs-mt { grid-area: mt; min-width: 0; }
   .rs-mt .mtg { margin-top: 8px; padding-top: 10px; }
   .rs-trang { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin: 16px 0 4px; }
-  @media (max-width: 640px) {
+  @media (max-width: 600px) {
     .rs-dong { grid-template-columns: minmax(0, 1fr); grid-template-areas: "viec" "mt" "chan"; padding: 12px; }
     .rs-chan { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; text-align: left; }
     .rs-chan .chu-phu { max-width: none; }
@@ -112,7 +112,7 @@
   .rs-tep-bang .c-nd { min-width: 240px; max-width: 420px; }
   .rs-tep-bang .c-pl { min-width: 200px; }
   .rs-tep-bang .c-ghi { min-width: 220px; }
-  @media (max-width: 760px) {
+  @media (max-width: 900px) {
     /* điện thoại: mỗi việc một khối, nhãn cột đứng trước giá trị */
     .rs-tep-bang thead { display: none; }
     .rs-tep-bang, .rs-tep-bang tbody, .rs-tep-bang tr { display: block; }

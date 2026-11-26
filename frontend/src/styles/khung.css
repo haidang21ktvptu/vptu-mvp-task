@@ -37,7 +37,7 @@
     .thanh-khac button { text-align: left; padding: 10px 14px; border-radius: 8px; font-size: var(--chu-bang); }
     .thanh-khac button[aria-selected="true"] { background: var(--navy-nhat); color: var(--navy); font-weight: 600; }
   }
-/* Thanh đầu trang v9 (docs/DESIGN.md mục 3): vạch son 3px trên cùng; khối trái cùng màu menu dọc (--ben-mau) mang biểu trưng và tên cơ quan
+/* Thanh đầu trang v9 (docs/DESIGN.md mục 4): vạch son 3px trên cùng; khối trái cùng màu menu dọc (--ben-mau) mang biểu trưng và tên cơ quan
    theo thể thức văn bản Đảng (TỈNH ỦY CAO BẰNG / VĂN PHÒNG / *); phần còn lại trên nền trang: dòng "Cao Bằng, ngày … tháng … năm …" (chữ
    nghiêng có chân), ô tìm 280px, chuông, avatar + tên hai dòng, bánh răng — nút vuông 40px nền mặt thẻ. 601–900px: khối trái 56px chỉ biểu
    trưng, tên cơ quan nằm cạnh; ≤ 600px: thanh 56px màu menu, nút ☰ mở menu dọc (khung.css), ẩn tên cơ quan.
@@ -113,7 +113,7 @@
     .br-menu { position: fixed; left: 12px; right: 12px; top: 60px; min-width: 0; max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; }
     .dai .nut-dai:focus-visible { outline-color: #fff; }   /* cả dải đầu trang màu thanh bên */
   }
-/* Menu dọc v9 (docs/DESIGN.md mục 3): 236px bên trái, nền đặc --ben-nen (lam đậm — Thanh lịch; đỏ son — Trang nghiêm), chữ trắng; nhóm Điều
+/* Menu dọc v9 (docs/DESIGN.md mục 4): 236px bên trái, nền đặc --ben-nen (lam đậm — Thanh lịch; đỏ son — Trang nghiêm), chữ trắng; nhóm Điều
    hành / Nhiệm vụ / Nhiệm vụ quý BTV / Quản trị bằng nhãn nhỏ, bấm để thu gọn (v3.36); mục đang chọn nền trắng mờ, biểu tượng vàng sao; số đếm tròn (nguồn số giữ nguyên:
    features/huy-hieu.js, messages); chân menu ghi phiên bản + giờ build. 601–900px: thu thành thanh biểu tượng 56px (nhãn ở title). ≤ 600px:
    ẩn, bấm ☰ trên thanh đầu trang mở thành ngăn kéo (body.menu-mo); thanh dưới (khung.css) giữ nguyên. Vùng nội dung .trang nằm cạnh menu. */

@@ -1,6 +1,6 @@
 /* Màn Tổng quan: lưới khối, vòng tỷ lệ, dải cảnh báo, thanh lọc, theo loại văn bản, theo lãnh đạo phụ trách, theo chủ trì theo dõi.
    Gộp từ: tong-quan.css, dot-c.css, v327.css (v3.36, gộp theo thành phần — nội dung quy tắc giữ nguyên). */
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   .loai-vb { grid-template-columns: minmax(0, 1fr); justify-items: center; }
   .tq-loc select { max-width: 100%; }
 }

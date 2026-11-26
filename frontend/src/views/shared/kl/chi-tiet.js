@@ -183,7 +183,7 @@ export async function toggleKlChiTiet({ id, cheDo }) {
   document.querySelectorAll('#klBody .hang-nv').forEach((el) => { const on = el.dataset.id === id; el.classList.toggle('dang', on); el.setAttribute('aria-pressed', String(on)); });
   $('klChiTiet').innerHTML = '<p class="trong-nho">Đang tải căn cứ…</p>';
   dongBoNgan();
-  if (window.matchMedia('(max-width: 860px)').matches && !$('klChiTiet').closest('#nganCT')) $('klChiTiet').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  if (window.matchMedia('(max-width: 900px)').matches && !$('klChiTiet').closest('#nganCT')) $('klChiTiet').scrollIntoView({ block: 'start', behavior: 'smooth' });
   await nap(id, cheDo, false);
 }
 // Vẽ lại ngăn đang mở sau khi danh sách nạp lại (realtime, sau hành động) — giữ bảng chi tiết đang mở/gập.
