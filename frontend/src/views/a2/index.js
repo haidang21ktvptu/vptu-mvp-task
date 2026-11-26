@@ -82,7 +82,7 @@ async function loadPhongToi() {
   try {
     const daCo = Boolean($('dhBaCau')?.childElementCount);   // v3.36 (V-12): vào lại mục — vẽ lại sau khi hiệu ứng vào mục chạy xong
     await napDieuHanh();
-    veSauNap($('viewDieuHanh'), daCo, ve, (e) => notifyError('Không vẽ được màn của phòng: ' + e.message));
+    veSauNap($('viewDieuHanh'), daCo, ve, (e) => notifyError('Không hiển thị được việc của phòng: ' + e.message));
   } catch (e) { notifyError('Không đọc được dữ liệu phòng: ' + e.message); }
 }
 

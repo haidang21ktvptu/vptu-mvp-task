@@ -145,7 +145,7 @@ function khiRoiNgay(e) { const o = oNgayCua(e); if (o && o.value !== kyBc[o.data
 async function napBaoCao() {
   const daCo = Boolean($('bcThan')?.childElementCount);   // v3.36 (V-12): vào lại mục — số liệu lượt trước đang hiện, vẽ lại sau khi hiệu ứng vào mục chạy xong
   try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); ({ rows: trong, tatCa } = await loadKlRows()); } catch (e) { notifyError(e.message); return; }
-  veSauNap($('viewBaoCao'), daCo, ve, (e) => notifyError('Không vẽ được báo cáo: ' + e.message));
+  veSauNap($('viewBaoCao'), daCo, ve, (e) => notifyError('Không hiển thị được báo cáo: ' + e.message));
 }
 async function openBaoCao() {
   showSection('viewBaoCao');

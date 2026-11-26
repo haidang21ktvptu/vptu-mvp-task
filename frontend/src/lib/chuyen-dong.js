@@ -6,9 +6,11 @@
 //   đóng rồi thì mọi lần vẽ lại (realtime, nạp lại nền) hiện ngay, không chạy lại hiệu ứng. Lần vẽ lại của nền đến trong lúc cửa đang mở thì chờ
 //   cửa đóng (sauKhiVao) để không cắt ngang hiệu ứng đang chạy. Hai chốt chung của cửa: (1) hết hẹn mà hiệu ứng còn chạy (máy chậm, khung hình đầu
 //   đến muộn) thì cửa chờ thêm, không cắt ngang; (2) nội dung vẽ lại trong lúc cửa mở, thay cho nội dung thật đã hiện, thì đứng yên (lớp cd-tinh) —
-//   hiệu ứng không chạy lần hai, khối không chớp.
+//   hiệu ứng không chạy lần hai, khối không chớp; nội dung lần đầu đổ vào chỗ còn trống sau khi cửa đã mở (số liệu vừa về) thì chạy ngay, không
+//   chờ mốc trễ gốc của cửa (lớp cd-sau).
 // - soLanHtml / tieuDeHtml: chuỗi HTML cho số lăn từng chữ số và tiêu đề hiện từng chữ có cụm nhấn in nghiêng. Chữ trong DOM giữ nguyên văn (kiểm
-//   thử và trình đọc màn hình đọc như cũ); phần chuyển động là phần tử giả và thuộc tính do CSS vẽ.
+//   thử đọc như cũ; lúc nghỉ các ô chữ số là phần tử nội dòng nên trình đọc màn hình đọc liền thành một số); phần chuyển động là phần tử giả và
+//   thuộc tính do CSS vẽ.
 import { escapeHtml } from './dom.js';
 
 export const MS_VAO = 1500;   // cửa vào mặc định (các khối cấp một của một mục hiện lần lượt)
@@ -29,7 +31,8 @@ export function khoiDongChuyenDong() {
 const CUA = new WeakMap();   // vùng → { lop, hen, cho: việc chờ cửa đóng (theo khoá, việc sau thay việc trước), canh, tinh }
 const MS_CHO_THEM = 150;     // hết hẹn mà hiệu ứng còn chạy: xem lại sau từng nhịp
 const MS_CHO_TOI_DA = 1800;  // trần chờ thêm
-const TAM = '.trong, .trong-nho, .nq-dang-tai, .xuong, [data-cd-cho]';   // dòng "đang tải…" / "không có…", khung chờ: không tính là nội dung thật
+// Dòng "đang tải…" / "không có…", khung chờ: không tính là nội dung thật. Màn mới có dòng chờ kiểu khác thì gắn data-cd-cho cho dòng đó.
+const TAM = '.trong, .trong-nho, .bnv-trong, .nq-dang-tai, .xuong, [data-cd-cho]';
 
 // Còn hiệu ứng hữu hạn đang chạy trong vùng (hiệu ứng lặp vô hạn không tính).
 function conChay(el) {
@@ -42,28 +45,24 @@ function henDong(el, ms, daCho = 0) {
   }, ms);
 }
 
-// Canh vẽ lại trong lúc cửa mở. Được chạy hiệu ứng: nội dung vẽ cùng lượt lệnh với lúc mở cửa (bản vẽ từ số liệu đang có) và lần đầu đổ nội dung vào
-// chỗ còn trống hoặc đang là dòng "đang tải". Nội dung thay cho nội dung thật (số liệu mới về sau khi mở, người dùng bấm lọc…) nhận lớp cd-tinh:
-// đứng yên ở trạng thái cuối. Trình quan sát chạy ngay sau lệnh vẽ, trước khi trình duyệt vẽ khung hình — không có khung hình nào kịp chớp.
-const laThat = (n) => n.nodeType === 1 && !n.matches(TAM);
-function canhVeLai(el, c, veSau) {
+// Canh vẽ lại trong lúc cửa mở. Nội dung vẽ cùng lượt lệnh với lúc mở cửa (bản vẽ từ số liệu đang có) chạy hiệu ứng theo kịch bản của cửa. Sau đó:
+// lần đầu đổ nội dung vào chỗ còn trống hoặc đang là dòng "đang tải" (số liệu vừa về) nhận lớp cd-sau — chạy hiệu ứng ngay, không chờ mốc trễ gốc;
+// nội dung thay cho nội dung thật (số liệu mới về sau khi mở, người dùng bấm lọc…) nhận lớp cd-tinh — đứng yên ở trạng thái cuối. Trình quan sát
+// chạy ngay sau lệnh vẽ, trước khi trình duyệt vẽ khung hình — không có khung hình nào kịp chớp.
+const laTam = (n) => n.matches(TAM) || (n.childElementCount === 1 && n.firstElementChild.matches(TAM));   // cả hàng bảng chỉ chứa một ô "đang tải"
+const laThat = (n) => n.nodeType === 1 && !laTam(n);
+function canhVeLai(el, c) {
   if (typeof MutationObserver === 'undefined') return;
-  const hetDau = () => setTimeout(() => { c.dau = false; }, 0);
-  c.dau = true; if (!veSau) hetDau();   // veSau: nơi gọi mở cửa cho lần vẽ SẮP TỚI (số liệu đang nạp) — lần vẽ ấy được chạy hiệu ứng dù đến ở lượt lệnh sau
+  c.dau = true; setTimeout(() => { c.dau = false; }, 0);
   const day = new WeakSet(); c.tinh = [];
-  c.canh = new MutationObserver((ds) => {
-    let coThem = false;
-    ds.forEach((m) => {
-      const them = [...m.addedNodes].filter((n) => n.nodeType === 1);
-      if (!them.length) return;
-      coThem = true;
-      const thay = day.has(m.target) || [...m.removedNodes].some(laThat);
-      if (them.some(laThat)) day.add(m.target);
-      if (c.dau || !thay) return;
-      them.forEach((n) => { n.classList.add('cd-tinh'); c.tinh.push(n); });
-    });
-    if (veSau && coThem) { veSau = false; hetDau(); }
-  });
+  c.canh = new MutationObserver((ds) => ds.forEach((m) => {
+    const them = [...m.addedNodes].filter((n) => n.nodeType === 1);
+    if (!them.length) return;
+    const thay = day.has(m.target) || [...m.removedNodes].some(laThat);
+    if (them.some(laThat)) day.add(m.target);
+    if (c.dau) return;
+    them.forEach((n) => { n.classList.add(thay ? 'cd-tinh' : 'cd-sau'); c.tinh.push(n); });
+  }));
   c.canh.observe(el, { childList: true, subtree: true });
 }
 
@@ -73,15 +72,16 @@ export function dongCuaVao(el) {
   clearTimeout(c.hen);
   CUA.delete(el);
   c.canh?.disconnect();
-  (c.tinh || []).forEach((n) => n.classList.remove('cd-tinh'));
+  (c.tinh || []).forEach((n) => n.classList.remove('cd-tinh', 'cd-sau'));
   el.classList.remove(...c.lop);
   [...c.cho.values()].forEach((fn) => { try { fn(); } catch (e) { setTimeout(() => { throw e; }); } });   // việc chờ lỗi: báo ra ngoài, không cắt ngang nơi đóng cửa
 }
 
 // lop: 'dang-vao' (vào trang) | 'dang-doi' (số liệu đổi tại chỗ); lai: đã vào mục này trong lần mở ứng dụng → nhịp nhanh hơn (lớp vao-lai); them: lớp
-// kèm theo của riêng màn (ví dụ 'sau-cho': nội dung thật thay khung chờ — phần khung đã hiện không chạy lại); veSau: lần vẽ đến sau (xem canhVeLai).
+// kèm theo của riêng màn (ví dụ 'sau-cho': nội dung thật thay khung chờ — phần khung đã hiện không chạy lại). Mở cửa SAU khi đã vẽ nội dung cần chạy
+// hiệu ứng (hoặc vẽ ngay trong cùng lượt lệnh): nội dung đang có trên vùng lúc mở cửa là nội dung được chạy.
 // Trả về true khi cửa mở (false: đang giảm chuyển động — không gắn lớp nào).
-export function moCuaVao(el, { lop = 'dang-vao', ms = MS_VAO, lai = false, them = [], veSau = false } = {}) {
+export function moCuaVao(el, { lop = 'dang-vao', ms = MS_VAO, lai = false, them = [] } = {}) {
   if (!el) return false;
   dongCuaVao(el);
   if (!coChuyenDong()) return false;
@@ -89,7 +89,7 @@ export function moCuaVao(el, { lop = 'dang-vao', ms = MS_VAO, lai = false, them 
   el.classList.add(...ds);
   const c = { lop: ds, cho: new Map(), hen: henDong(el, ms) };
   CUA.set(el, c);
-  canhVeLai(el, c, veSau);
+  canhVeLai(el, c);
   return true;
 }
 
@@ -110,10 +110,14 @@ export function sauKhiVao(el, fn, khoa = fn) {
 }
 
 // Vẽ sau một lượt nạp nền. daCo: vùng đang hiện nội dung của lượt nạp trước (vừa vào lại mục) — đang chạy hiệu ứng vào mục thì chờ hiệu ứng xong mới vẽ
-// lại, không cắt ngang (lỗi của lần vẽ chờ báo qua khiLoi). Chưa có nội dung (lần nạp đầu): vẽ ngay, nội dung mới chạy hiệu ứng của nó.
+// lại, không cắt ngang (lỗi của lần vẽ chờ báo qua khiLoi); lúc cửa đóng mà vùng đã ẩn (người dùng rời mục) thì bỏ lần vẽ đó — lần mở sau tự nạp
+// và vẽ lại. Chưa có nội dung (lần nạp đầu): vẽ ngay, nội dung mới chạy hiệu ứng của nó.
 export function veSauNap(el, daCo, ve, khiLoi) {
   if (!daCo || !dangVao(el)) { ve(); return; }
-  sauKhiVao(el, () => { try { ve(); } catch (e) { if (khiLoi) khiLoi(e); else throw e; } }, 'nap');
+  sauKhiVao(el, () => {
+    if (el.classList.contains('hidden')) return;
+    try { ve(); } catch (e) { if (khiLoi) khiLoi(e); else throw e; }
+  }, 'nap');
 }
 
 // Số lăn: mỗi chữ số một ô .cs mang --d (chữ số đích) và --i (thứ tự cột, lệch pha); ký tự khác (dấu chấm, %) giữ nguyên. Dùng thẻ <data> / <bdi>

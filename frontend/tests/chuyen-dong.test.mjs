@@ -11,7 +11,7 @@ const boThe = (html) => html.replace(/<[^>]+>/g, '');
 const moiTruong = { giam: null, heDieuHanhGiam: false };
 globalThis.document = { documentElement: { getAttribute: (k) => (k === 'data-chuyen-dong' ? moiTruong.giam : null) } };
 globalThis.window = { matchMedia: () => ({ matches: moiTruong.heDieuHanhGiam }) };
-const phanTu = () => { const lop = new Set(); return { lop, classList: { add: (...x) => x.forEach((c) => lop.add(c)), remove: (...x) => x.forEach((c) => lop.delete(c)) } }; };
+const phanTu = () => { const lop = new Set(); return { lop, classList: { add: (...x) => x.forEach((c) => lop.add(c)), remove: (...x) => x.forEach((c) => lop.delete(c)), contains: (c) => lop.has(c) } }; };
 beforeEach(() => { moiTruong.giam = null; moiTruong.heDieuHanhGiam = false; });
 
 test('soLanHtml: chữ trong DOM là con số thật; mỗi chữ số một ô mang chữ số đích và thứ tự cột; ký tự khác giữ nguyên, có thoát HTML', () => {
@@ -94,7 +94,7 @@ test('cửa vào: mở lại thì đóng cửa cũ trước (việc chờ của 
   dongCuaVao(el);
 });
 
-test('veSauNap: lần nạp đầu (chưa có nội dung) hoặc không có cửa thì vẽ ngay; đang có nội dung và cửa đang mở thì chờ cửa đóng, lượt sau thay lượt trước; lỗi lần vẽ chờ báo qua khiLoi', () => {
+test('veSauNap: lần nạp đầu (chưa có nội dung) hoặc không có cửa thì vẽ ngay; đang có nội dung và cửa đang mở thì chờ cửa đóng, lượt sau thay lượt trước; lỗi lần vẽ chờ báo qua khiLoi; vùng đã ẩn lúc cửa đóng thì bỏ lần vẽ', () => {
   const el = phanTu(); const nhat = []; const loi = [];
   veSauNap(el, true, () => nhat.push('khong-cua'));   // không có cửa
   moCuaVao(el, { ms: 60000 });
@@ -105,13 +105,18 @@ test('veSauNap: lần nạp đầu (chưa có nội dung) hoặc không có cử
   dongCuaVao(el);
   assert.deepEqual(nhat, ['khong-cua', 'lan-dau', 'cho-2']); assert.deepEqual(loi, ['vẽ lỗi']);
   assert.throws(() => veSauNap(el, false, () => { throw new Error('ngay'); }), /ngay/);   // vẽ ngay: lỗi về nơi gọi như trước
+  moCuaVao(el, { ms: 60000 });
+  veSauNap(el, true, () => nhat.push('da-roi-muc'));
+  el.classList.add('hidden');   // người dùng rời mục trước khi cửa đóng: lần mở sau tự nạp và vẽ lại
+  dongCuaVao(el);
+  assert.ok(!nhat.includes('da-roi-muc'));
 });
 
 test('cửa vào: hết hẹn mà hiệu ứng hữu hạn còn chạy thì cửa chờ thêm (không cắt ngang); hiệu ứng lặp vô hạn không giữ cửa; có trần chờ', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const hieuUng = (endTime, playState = 'running') => ({ playState, effect: { getComputedTiming: () => ({ endTime }) } });
   const el = phanTu(); let ds = [hieuUng(900), hieuUng(Infinity)]; el.getAnimations = () => ds;
-  moCuaVao(el, { ms: 200, veSau: true });
+  moCuaVao(el, { ms: 200 });
   t.mock.timers.tick(200); assert.equal(dangVao(el), true);    // còn hiệu ứng hữu hạn đang chạy
   t.mock.timers.tick(150); t.mock.timers.tick(150); t.mock.timers.tick(150); assert.equal(dangVao(el), true);
   ds = [hieuUng(900, 'finished'), hieuUng(Infinity)];

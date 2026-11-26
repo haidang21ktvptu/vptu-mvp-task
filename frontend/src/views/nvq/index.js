@@ -38,23 +38,27 @@ const dauVet = () => JSON.stringify([nq.ky?.id, nq.rows, nq.sp, nq.tuans, nq.van
 
 // v3.36 (CAU-HOI V-12): màn chỉ xem (Tổng quan, Danh mục) khi đã có số liệu của phiên thì vẽ NGAY từ số liệu đang có — hiệu ứng vào mục chạy trên đúng
 // nội dung — rồi nạp lại nền, số liệu có đổi mới vẽ lại (sau khi hiệu ứng xong; đang gõ ô lọc thì hiện dải "Có cập nhật mới" như tín hiệu thời gian
-// thực). Lần nạp đầu và các màn có biểu mẫu: như trước (nạp xong mới vẽ), cửa vào mở lúc số liệu về (data-cd-tu — shell/chuyen-trang.js) khi đổi màn.
+// thực). Lần nạp đầu và các màn có biểu mẫu: như trước (nạp xong mới vẽ); mục mang data-cd-tu để khung không mở cửa vào trên nội dung cũ
+// (shell/chuyen-trang.js), vẽ xong màn mới thì mở cửa vào ở đây. Mở lại đúng màn đang có trên trang: thay nội dung, không chạy lại hiệu ứng.
 async function mo(ten, ds = {}) {
   man = MAN[ten] ? ten : 'tong-quan';
   if (dangMo()) dongNgan({ doiMan: true });
-  const coSan = nq.daNap && Boolean(MAN[man].chiXem);
+  let coSan = nq.daNap && Boolean(MAN[man].chiXem);
   if (coSan) delete el().dataset.cdTu; else el().dataset.cdTu = '1';
   showSection('viewNvq'); setActiveNav(MAN[man].nav);
   if (!nq.daNap) el().innerHTML = '<p class="chu-phu nq-dang-tai">Đang tải nhiệm vụ quý…</p>';
   const l = ++luot;
   try {
     let truoc = '';
-    if (coSan) { await MAN[man].ve(el(), ds); manDaVe = man; truoc = dauVet(); }
+    if (coSan) {
+      try { await MAN[man].ve(el(), ds); manDaVe = man; truoc = dauVet(); } catch { coSan = false; }   // vẽ từ số liệu đang có không được: nạp xong mới vẽ như trước
+    }
     await napTatCa();
     if (l !== luot) return;
     if (!coSan) {
-      if (man !== manDaVe && sectionDangHien('viewNvq')) moCuaVao(el(), { lai: Boolean(manDaVe), veSau: true });   // đã rời phân hệ trong lúc nạp: vẽ, không mở cửa trên mục đang ẩn
+      const doiMan = man !== manDaVe; const lai = Boolean(manDaVe);
       await MAN[man].ve(el(), ds); manDaVe = man;
+      if (doiMan && l === luot && sectionDangHien('viewNvq')) moCuaVao(el(), { lai });   // vẽ xong mới mở cửa: hiệu ứng chạy trên nội dung mới
     } else if (dauVet() !== truoc) {
       sauKhiVao(el(), () => { if (l !== luot || !sectionDangHien('viewNvq')) return; if (dangGoO()) show('nqCoMoi', true); else veLai().catch(() => show('nqCoMoi', true)); }, 'nap');
     }
@@ -66,7 +70,9 @@ let tuGhiLuc = 0;   // lúc vừa nạp lại sau thao tác ghi của chính mì
 async function napLaiSauGhi(op = {}) {
   await napTatCa(op);
   if (!op.khongGhi) tuGhiLuc = Date.now();
-  if (sectionDangHien('viewNvq')) await veLai();
+  if (!sectionDangHien('viewNvq')) return;
+  await veLai();
+  if (op.doiQuy) moCuaVao(el(), { lop: 'dang-doi', ms: 1300 });   // v3.36 (V-12): đổi quý — số của quý mới lăn, thanh vẽ lại (mở cửa sau khi đã vẽ)
 }
 // Sự kiện thời gian thực: màn chỉ xem (Tổng quan, Danh mục) không đang gõ → nạp lại ngay; màn có biểu mẫu → dải "Có cập nhật mới"; ngăn chi tiết đang
 // xem đúng nhiệm vụ đó và không mở biểu mẫu → nạp lại ngăn.
@@ -96,7 +102,7 @@ function veLaiGiuO(chon) {
 function khiDoi(ev) {
   const t = ev.target; const d = t.dataset || {};
   if (ev.type === 'input' && !(t.type === 'search' || t.type === 'text')) return;
-  if (d.nqChonKy !== undefined && ev.type === 'change') { nq.kyChon = t.value; moCuaVao(el(), { lop: 'dang-doi', ms: 1300, veSau: true }); napLaiSauGhi({ khongGhi: true }); return; }   // đổi quý: số lăn, thanh vẽ lại
+  if (d.nqChonKy !== undefined && ev.type === 'change') { nq.kyChon = t.value; napLaiSauGhi({ khongGhi: true, doiQuy: true }); return; }
   if (d.nqLoc) { if (ev.type === 'change' && d.nqLoc === 'q') return; doiLoc(d.nqLoc, t.type === 'checkbox' ? t.checked : t.value, veLai); return; }
   if (d.nqPcLoc) { if (ev.type === 'change' && d.nqPcLoc === 'q') return; if (khiDoiPhanCong(t)) veLaiGiuO(d.nqPcLoc === 'q' ? '[data-nq-pc-loc="q"]' : ''); return; }
   if (ev.type !== 'change') return;

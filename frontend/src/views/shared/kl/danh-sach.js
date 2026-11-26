@@ -92,7 +92,7 @@ async function napKl(lanThu = 0) {
     if (!bb.dung) notifyError(`Số liệu không khớp: ${bb.tongNhom} theo nhóm, ${bb.tongLV} theo lĩnh vực, ${bb.tong} dòng. Báo người quản trị KL.`);
     const ve = () => { dienBoLoc(); render(true); if (sauKhiNap) sauKhiNap(rows); };
     // v3.36 (V-12): dòng cũ đang chạy hiệu ứng vào mục thì chờ hiệu ứng xong mới vẽ lại (không cắt ngang); lần nạp đầu vẽ ngay
-    veSauNap($('viewKl'), daCoDong, ve, (e) => notifyError('Không vẽ được danh sách nhiệm vụ: ' + e.message));
+    veSauNap($('viewKl'), daCoDong, ve, (e) => notifyError('Không hiển thị được danh sách nhiệm vụ: ' + e.message));
   } catch (e) {
     if (lanThu < 1) { await new Promise((r) => setTimeout(r, 800)); return napKl(lanThu + 1); }
     notifyError('Không đọc được dữ liệu nhiệm vụ: ' + e.message);

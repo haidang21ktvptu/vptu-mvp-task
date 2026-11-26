@@ -59,7 +59,7 @@ async function loadViecCuaToi() {
   try {
     const daCo = Boolean($('vctBang')?.hasAttribute('data-nap'));   // v3.36 (V-12): vào lại mục — vẽ lại sau khi hiệu ứng vào mục chạy xong
     await Promise.all([napDieuHanh(), napDnsCuaToi()]);
-    veSauNap($('viewDieuHanh'), daCo, ve, (e) => notifyError('Không vẽ được việc của đồng chí: ' + e.message));
+    veSauNap($('viewDieuHanh'), daCo, ve, (e) => notifyError('Không hiển thị được việc của đồng chí: ' + e.message));
     await napVanBanNeuCan();
   } catch (e) { notifyError('Không đọc được việc của đồng chí: ' + e.message); }
 }

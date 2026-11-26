@@ -85,7 +85,7 @@ function ve() {
 async function napCanBo() {
   const daCo = Boolean($('viewCanBo').childElementCount);   // v3.36 (V-12): vào lại mục — vẽ lại sau khi hiệu ứng vào mục chạy xong
   try { await Promise.all([loadDanhMucKl(), loadCauHinhKl()]); ({ rows: trong, tatCa } = await loadKlRows()); } catch (e) { notifyError('Không đọc được nhiệm vụ: ' + e.message); return; }
-  veSauNap($('viewCanBo'), daCo, ve, (e) => notifyError('Không vẽ được màn cán bộ: ' + e.message));
+  veSauNap($('viewCanBo'), daCo, ve, (e) => notifyError('Không hiển thị được danh sách cán bộ: ' + e.message));
 }
 async function openCanBo() {
   showSection('viewCanBo');

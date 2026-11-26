@@ -40,9 +40,11 @@
   /* ---- Vào trang: các khối cấp một của mục hiện lần lượt (mọi mục; màn có nhịp riêng thì ghi đè ở tệp của màn đó) ---- */
   /* Nội dung vẽ lại trong lúc cửa vào đang mở (lib/chuyen-dong.js canhVeLai): đứng yên ở trạng thái cuối, hiệu ứng không chạy lần hai */
   .cd-tinh, .cd-tinh *, .cd-tinh::before, .cd-tinh::after, .cd-tinh *::before, .cd-tinh *::after { animation: none !important; }
+  /* Nội dung lần đầu đổ vào chỗ còn trống sau khi cửa đã mở (số liệu vừa về): bỏ mốc trễ gốc của cửa (--cd-g nhân vào mốc trễ gốc), chạy ngay */
+  .cd-sau { --cd-g: 0; }
   .vao-lai { --cd-hs: .55; }
   .dang-doi { --cd-hs: .6; --cd-tre: 0ms; }
-  .dang-vao > * { animation: cd-len var(--cd-cham) var(--cd-em) both; animation-delay: calc(var(--cd-tre) + var(--cd-k, 0) * var(--cd-buoc)); }
+  .dang-vao > * { animation: cd-len var(--cd-cham) var(--cd-em) both; animation-delay: calc(var(--cd-tre) * var(--cd-g, 1) + var(--cd-k, 0) * var(--cd-buoc)); }
   .dang-vao > :nth-child(2) { --cd-k: 1; } .dang-vao > :nth-child(3) { --cd-k: 2; } .dang-vao > :nth-child(4) { --cd-k: 3; }
   .dang-vao > :nth-child(5) { --cd-k: 4; } .dang-vao > :nth-child(n+6) { --cd-k: 5; }
 
@@ -54,13 +56,15 @@
      lăn tới chữ số đích trong khe cao 1,1em quanh tâm ô (đặt theo tâm nên đúng với mọi chiều cao dòng của nơi đặt số). Lăn xong, ngay trong hiệu ứng,
      dải ẩn và chữ số thật hiện lại: hình cuối do chính chữ số thật vẽ nên lúc gỡ lớp cửa vào không còn gì xê dịch. ---- */
   .so-lan { white-space: nowrap; }
-  .so-lan .cs { display: inline-block; position: relative; }
-  .dang-vao .so-lan .cs, .dang-doi .so-lan .cs { animation: cd-so-an calc(var(--cd-so) * var(--cd-hs)) step-end both;
-    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + var(--i, 0) * 80ms); }
+  /* Lúc nghỉ ô chữ số là phần tử nội dòng (trình đọc màn hình đọc liền thành một số); chỉ trong cửa vào mới thành ô riêng để đặt dải. overflow: clip
+     giữ dải trong ô (không làm trang cao thêm, không chớp thanh cuộn); lề .12em đủ cho nét chữ số tràn ô ở nơi chữ sít nhau. */
+  .dang-vao .so-lan .cs, .dang-doi .so-lan .cs { display: inline-block; position: relative; overflow: clip; overflow-clip-margin: .12em;
+    animation: cd-so-an calc(var(--cd-so) * var(--cd-hs)) step-end both;
+    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-g, 1) * var(--cd-hs) + var(--i, 0) * 80ms); }
   .dang-vao .so-lan .cs::after, .dang-doi .so-lan .cs::after { content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
     position: absolute; left: 0; right: 0; top: 50%; line-height: 1.1; white-space: pre; text-align: center; -webkit-text-fill-color: currentColor; opacity: 0;
     transform: translateY(calc((10.5 + var(--d, 0)) * -1.1em)); animation: cd-lan calc(var(--cd-so) * var(--cd-hs)) var(--cd-em) both, cd-so-hien calc(var(--cd-so) * var(--cd-hs)) step-end both;
-    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-hs) + var(--i, 0) * 80ms); }
+    animation-delay: calc((var(--cd-tre) + var(--cd-tre-so, 420ms)) * var(--cd-g, 1) * var(--cd-hs) + var(--i, 0) * 80ms); }
 
   /* ---- Tiêu đề hiện từng chữ, cụm nhấn in nghiêng có chân (lib/chuyen-dong.js tieuDeHtml; DESIGN mục 3) ---- */
   .tach-chu .tu { display: inline-block; white-space: nowrap; }

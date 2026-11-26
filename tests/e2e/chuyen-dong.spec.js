@@ -8,7 +8,7 @@
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP } from './lib/app.js';
 
-const XONG = { timeout: 8_000 };   // cửa vào dài nhất 2,4 giây
+const XONG = { timeout: 8_000 };   // cửa vào dài nhất 2,4 giây, chờ thêm tối đa 1,8 giây khi hiệu ứng còn chạy
 
 test.describe('Chuyển động giao diện (v3.36)', () => {
   test('A1: mở đầu, vào trang, chuyển trang, đổi kỳ đều kết thúc sạch; tắt hiệu ứng ở bánh răng thì không còn lớp chuyển động, nhớ sau khi tải lại', async ({ browser }, testInfo) => {
@@ -100,9 +100,14 @@ test.describe('Chuyển động giao diện (v3.36)', () => {
     for (const ten of ['cd-hien', 'cd-len', 'cd-mo', 'cd-chu', 'cd-lan', 'cd-so-an', 'cd-so-hien', 'cd-quet', 'cd-ve', 'cd-roi', 'cd-tron', 'cd-noi', 'cd-ngan']) expect(khung, `@keyframes ${ten}`).toContain(ten);
 
     // Nhiệm vụ, lần đầu: cửa vào mở và hiệu ứng thật sự chạy; nạp xong thì đủ dòng, số của dải là chữ số thật, kết thúc sạch
-    await page.locator('#navKl').click();
-    await expect(kl).toHaveClass(/dang-vao/);
-    expect(await kl.evaluate((el) => el.getAnimations({ subtree: true }).length), 'có hiệu ứng đang chạy trong mục vừa vào').toBeGreaterThan(0);
+    // (bấm và đọc trong cùng một lượt lệnh của trang: bộ điều phối hành động chạy đồng bộ nên kết quả không phụ thuộc tốc độ máy)
+    const bamVaDoc = (id) => page.evaluate((i) => {
+      globalThis.document.getElementById(i).click();
+      const v = globalThis.document.getElementById('viewKl');
+      return { lop: v.className, chay: v.getAnimations({ subtree: true }).length, dong: v.querySelectorAll('#klBody .hang-nv').length };
+    }, id);
+    const luc = await bamVaDoc('navKl');
+    expect(luc.lop).toContain('dang-vao'); expect(luc.chay, 'có hiệu ứng đang chạy trong mục vừa vào').toBeGreaterThan(0);
     const dong = () => page.evaluate(() => { const b = globalThis.document.getElementById('klBody'); return { hien: Number(b.dataset.soHien), dong: b.querySelectorAll('.hang-nv').length }; });
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
     await expect(kl).not.toHaveClass(/dang-vao/, XONG);
@@ -114,9 +119,9 @@ test.describe('Chuyển động giao diện (v3.36)', () => {
     // Nhiệm vụ, vào lại: dòng của lượt trước hiện ngay với nhịp vào lại; lượt nạp nền vẽ lại sau khi hiệu ứng xong; kết thúc sạch, số dòng khớp
     await page.locator('#navTongQuan').click();
     await expect(tq).toBeVisible();
-    await page.locator('#navKl').click();
-    await expect(kl).toHaveClass(/vao-lai/);
-    if (d.dong) expect(await kl.locator('#klBody .hang-nv').count(), 'dòng của lượt trước hiện ngay, không chờ nạp').toBeGreaterThan(0);
+    const lai = await bamVaDoc('navKl');
+    expect(lai.lop).toContain('vao-lai');
+    if (d.dong) expect(lai.dong, 'dòng của lượt trước hiện ngay, không chờ nạp').toBeGreaterThan(0);
     await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
     await expect(kl).not.toHaveClass(/dang-vao/, XONG);
     d = await dong(); expect(d.dong).toBe(d.hien);

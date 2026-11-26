@@ -68,7 +68,7 @@ async function napMotLan(lan = 0) {
   try {
     const daCo = Boolean($('dhBaCau')?.childElementCount);   // v3.36 (V-12): số liệu lượt trước đang hiện (vào lại mục) → vẽ lại sau khi hiệu ứng vào mục chạy xong
     await napDieuHanh();
-    veSauNap($('viewDieuHanh'), daCo, veDieuHanh, (e) => notifyError('Không vẽ được màn điều hành: ' + e.message));
+    veSauNap($('viewDieuHanh'), daCo, veDieuHanh, (e) => notifyError('Không hiển thị được màn Cần xử lý: ' + e.message));
   } catch (e) {
     if (lan < 1) { await new Promise((r) => setTimeout(r, 800)); return napMotLan(lan + 1); }
     notifyError('Không đọc được dữ liệu điều hành: ' + e.message);
