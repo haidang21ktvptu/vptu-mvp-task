@@ -19,6 +19,8 @@ export function rayHtml() {
     <button type="button" class="tat" data-action="boLocDieuHanh">Bỏ lọc, xem cả ${tong} việc</button>`;
 }
 
+// Nhãn đuôi cho tiêu đề danh sách theo bộ lọc đang chọn (ba câu hỏi đầu trang: nghen / quyet).
+export const NHAN_LOC = { quyet: ' cần đồng chí quyết', nghen: ' đang nghẽn', null: ' đang nghẽn' };
 // Tiêu đề danh sách theo bộ lọc: "8 việc đang nghẽn, khâu chờ cấp trên quyết, Phòng Tổng hợp".
 export function tieuDeDanhSach(soThe, nhanKpi) {
   const { khau, dv } = dh.loc;

@@ -15,6 +15,8 @@ import { setActiveNav, showSection, sectionDangHien } from '../shell/index.js';
 import { openTongQuan } from '../shared/tong-quan/index.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { tenMuc } from '../../lib/kl/nhan.js';
+import { soSanhKhan } from '../../lib/kl/do-khan.js';
+import { ndGonHtml, ndPhuHtml } from '../../lib/kl/nd-gon.js';
 import { dh, napDieuHanh, viecDo } from '../shared/dieu-hanh/du-lieu.js';
 import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
@@ -47,11 +49,11 @@ function taiViecHtml() {
       <span class="tai"><span class="t-do" style="width:${pc(doN)}"></span><span class="t-vang" style="width:${pc(vangN)}"></span><span class="t-lam" style="width:${pc(n - doN - vangN)}"></span></span></div>`).join('') + dongChua;
 }
 
-// Việc do chính Trưởng phòng chủ trì, đang mở, hạn gần nhất trước.
+// Việc do chính Trưởng phòng chủ trì, đang mở, theo mức khẩn (v3.36: độ khẩn, mức cảnh báo, rồi hạn gần nhất).
 function viecCuaToiHtml() {
-  const ds = dh.rows.filter((r) => r.owner_tai_khoan === state.user.id && mo(r)).sort((a, b) => ((a.han_xu_ly || '9') < (b.han_xu_ly || '9') ? -1 : 1));
+  const ds = dh.rows.filter((r) => r.owner_tai_khoan === state.user.id && mo(r)).sort(soSanhKhan);
   if (!ds.length) return '<p class="trong">Đồng chí không trực tiếp chủ trì việc nào đang mở.</p>';
-  return ds.map((r) => `<div class="the-con ${{ DO: 'do', DO_DAC_BIET: 'dac-biet' }[r.muc_canh_bao] || ''}" id="ptToi-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}<br><small class="chu-phu">hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}</small></p>
+  return ds.map((r) => `<div class="the-con ${{ DO: 'do', DO_DAC_BIET: 'dac-biet' }[r.muc_canh_bao] || ''}" id="ptToi-${r.id}"><p>${ndGonHtml(r.ma, r.noi_dung)}${ndPhuHtml(`hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'}`)}</p>
       <div class="hanh-dong"><button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div></div>`).join('');
 }
 
@@ -71,7 +73,7 @@ function ve() {
   show('ptMc', dh.mcCho.length > 0);
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
-  if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}`);
+  if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu lúc ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 

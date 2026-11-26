@@ -1,4 +1,6 @@
 // Vẽ menu theo vai (v8 đợt 1): menu dọc bên trái chia nhóm (máy tính, ≥ 901px; 601–900px thu thành thanh biểu tượng, nhãn ở title),
+// v3.36 (CAU-HOI V-1): tiêu đề nhóm là nút thu gọn / mở nhóm (aria-expanded); lãnh đạo mặc định thu nhóm Nhiệm vụ quý BTV (Tổng quan đã có dòng nhiệm
+// vụ quý); lựa chọn lưu trên máy theo tài khoản (localStorage — lỗi thì chỉ giữ trong phiên); nhóm chứa mục đang mở luôn mở; thanh biểu tượng mở mọi nhóm.
 // ≤ 600px menu dọc thành ngăn kéo (body.menu-mo, nút ☰ trên thanh đầu trang) và thanh dưới 3 mục + "Khác". Cùng một bảng MENU; nút điện thoại
 // có id <id>Duoi để không trùng id. Chân menu ghi phiên bản + giờ build đọc từ phien-ban.json (không có khi chạy local → để trống).
 import { $, show, setText, escapeHtml } from '../../lib/dom.js';
@@ -8,7 +10,33 @@ import { ghiDuongDan, datMenuDuongDan } from './duong-dan.js';   // v3.29: đư�
 import { nq } from '../../lib/nvq/du-lieu.js';   // v3.35: quyền phân hệ Nhiệm vụ quý BTV
 
 let items = [];
-const NHOM = ['Điều hành', 'Theo dõi', 'Nhiệm vụ quý BTV', 'Hệ thống'];   // v3.23: bỏ nhóm Trao đổi (Nhắn tin); v3.35: nhóm Nhiệm vụ quý BTV
+const NHOM = ['Điều hành', 'Nhiệm vụ', 'Nhiệm vụ quý BTV', 'Quản trị'];   // v3.23: bỏ nhóm Trao đổi; v3.35: Nhiệm vụ quý BTV; v3.36: đổi tên nhóm
+const THU_MAC_DINH = { A0: ['Nhiệm vụ quý BTV'], A1: ['Nhiệm vụ quý BTV'], A2: ['Nhiệm vụ quý BTV'] };
+let nguoi = null; let nhomThu = null;   // tài khoản của lần vẽ menu gần nhất; tập nhóm đang thu
+const khoaThu = () => `vptu.menuNhomThu.${nguoi?.id || ''}`;
+function docNhomThu() {
+  if (nhomThu) return nhomThu;
+  let luu;
+  try { luu = JSON.parse(localStorage.getItem(khoaThu()) || 'null'); } catch { luu = null; }
+  nhomThu = new Set(Array.isArray(luu) ? luu : THU_MAC_DINH[nguoi?.role_group] || []);
+  return nhomThu;
+}
+function ghiNhomThu() { try { localStorage.setItem(khoaThu(), JSON.stringify([...nhomThu])); } catch { /* trình duyệt chặn lưu: giữ trong phiên */ } }
+const MUI = '<svg class="mui" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+function nhomHtml(n, i, ds) {
+  const thu = docNhomThu().has(n);
+  return `<div class="menu-khoi" role="group" aria-labelledby="menuNhom${i}"><button type="button" class="menu-nhom" id="menuNhom${i}" data-action="doiNhomMenu" data-nhom="${escapeHtml(n)}"
+    aria-expanded="${String(!thu)}" aria-controls="menuDs${i}"><span>${n}</span>${MUI}</button>
+    <div class="menu-ds" id="menuDs${i}" role="tablist" aria-label="${escapeHtml(n)}"${thu ? ' hidden' : ''}>${ds.map(pillHtml).join('')}</div></div>`;
+}
+// Mở / thu một nhóm. Người dùng bấm tiêu đề nhóm thì lưu lựa chọn; mở vì mục đang chọn nằm trong nhóm đang thu (luu = false) thì không lưu.
+function datNhom(nut, mo, luu = true) {
+  const ds = nut && $(nut.getAttribute('aria-controls'));
+  if (!ds) return;
+  nut.setAttribute('aria-expanded', String(mo)); ds.hidden = !mo;
+  if (luu) { docNhomThu()[mo ? 'delete' : 'add'](nut.dataset.nhom); ghiNhomThu(); }
+}
+export const doiNhomMenu = (_d, el) => datNhom(el, el.getAttribute('aria-expanded') !== 'true');
 
 // Biểu tượng nét đơn (viewBox 24, stroke = màu chữ) theo id mục; mục lạ dùng dấu chấm tròn.
 const ICON = {
@@ -46,7 +74,8 @@ export function renderNav(user) {
   items = menuCuaVai(user, { xemPhong: user?.role_group === 'A3' && chuyenVienXemPhong(), xemToanBo: xemToanBo(),
     nvq: { quanLy: Boolean(nq.quyen.quan_ly), phanQuyen: Boolean(nq.quyen.phan_quyen) } });   // v3.35: quyền nạp lúc vào app (auth/session.js)
   datMenuDuongDan(items);
-  $('mainNav').innerHTML = NHOM.map((n) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? `<div class="menu-nhom">${n}</div>${ds.map(pillHtml).join('')}` : ''; }).join('')
+  nguoi = user; nhomThu = null;   // đọc lại lựa chọn thu nhóm của tài khoản đang đăng nhập
+  $('mainNav').innerHTML = NHOM.map((n, i) => { const ds = items.filter((it) => it.nhom === n); return ds.length ? nhomHtml(n, i, ds) : ''; }).join('')
     + '<div class="menu-chan">Hệ thống quản trị nhiệm vụ<br><span id="menuPhienBan"></span></div>';
   veChanMenu();
   const chinh = items.filter((it) => it.duoi).slice(0, 3);
@@ -64,6 +93,8 @@ export function setNavBadge(badgeId, n) {
 
 export function setActiveNav(id) {
   document.querySelectorAll('#mainNav [data-nav], #thanhDuoi [data-nav], #thanhKhac [data-nav]').forEach((el) => el.setAttribute('aria-selected', String(el.dataset.nav === id)));
+  const ds = $(id)?.closest('.menu-ds');
+  if (ds?.hidden) datNhom(ds.parentElement.querySelector('.menu-nhom'), true, false);   // mục đang mở nằm trong nhóm đang thu: mở nhóm, không lưu
   show('thanhKhac', false);
   $('navKhacDuoi')?.setAttribute('aria-expanded', 'false');
   if (document.body.classList.contains('menu-mo')) toggleMenuDoc();

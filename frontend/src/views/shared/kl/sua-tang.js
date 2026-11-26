@@ -19,6 +19,7 @@ import { laThuKyTT } from '../../../lib/kl/quyen-them.js';
 import { O_GIAO, tenOGiao, cheDoTang, laTangGiao, laChuTriSua, suaThongTinGiao, guiDeNghiSua, duyetDeNghiSua, rutDeNghiSua, deNghiChoCuaViec, deNghiChoToiDuyet } from '../../../lib/kl/sua-tang.js';
 import { timKlRow } from './danh-sach.js';
 import { dh } from '../dieu-hanh/du-lieu.js';
+import { ndGonHtml, ndPhuHtml } from '../../../lib/kl/nd-gon.js';
 
 let sauHanhDong = async () => {};
 export const BUT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
@@ -92,7 +93,7 @@ export const dongDeNghiSuaCx = () => (choToi || []).map((d) => {
   const ma = d.nhiem_vu?.ma || 'Nhiệm vụ'; const thay = Object.entries(d.thay_doi).map(([c, v]) => `${escapeHtml(tenOGiao(c))}: ${escapeHtml(giaTriO(c, d.gia_tri_cu?.[c]))} → <b>${escapeHtml(giaTriO(c, v))}</b>`).join('; ');
   return `<div class="cx-dong the-con" id="cx-dnsua-${d.id}" data-nhiem-vu="${d.nhiem_vu_id}">
     <p><button type="button" class="cx-ma" data-action="xemDienBien" data-id="${d.nhiem_vu_id}" data-ma="${escapeHtml(ma)}" aria-expanded="false"><b>${escapeHtml(ma)}</b></button>
-      ${escapeHtml((d.nhiem_vu?.noi_dung || '').slice(0, 110))}<span class="chu-phu"> · ${escapeHtml(findAccount(d.nguoi_de_nghi)?.full_name || 'cán bộ')} đề nghị ${formatDateTime(d.tao_luc)}</span></p>
+      ${ndGonHtml('', d.nhiem_vu?.noi_dung || '')}${ndPhuHtml(`${escapeHtml(findAccount(d.nguoi_de_nghi)?.full_name || 'cán bộ')} đề nghị ${formatDateTime(d.tao_luc)}`)}</p>
     <p>${thay}</p><p class="ly-do">Lý do: ${escapeHtml(d.ly_do)}</p>
     <div class="hanh-dong">${nutCx('Chấp nhận', 'dnsChapNhan', d, 'chinh')}<button type="button" class="nut nho" data-action="moO" data-o="oDnsCx-${d.id}">Giữ nguyên</button></div>
     <form class="o" id="oDnsCx-${d.id}" data-submit="dnsGiuNguyen" data-id="${d.id}" data-nv="${d.nhiem_vu_id}">

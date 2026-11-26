@@ -78,15 +78,15 @@ for (const v of VAI) {
   });
 }
 
-test('A0: thanh dưới Tổng quan · Cần xử lý · Chỉ đạo; số-lọc xếp 2 cột; thanh trái thành hàng cuộn ngang', async ({ browser }, testInfo) => {
+test('A0: thanh dưới Tổng quan · Cần xử lý · Chỉ đạo; ba câu hỏi đầu trang, không còn dải ô số; thanh trái thành hàng cuộn ngang', async ({ browser }, testInfo) => {
   test.skip(!existsSync(storageStatePath('A0')), 'Chưa có demo_a0 trên project này.');
   const page = await (await contextAs(browser, 'A0', testInfo)).newPage();
   await page.goto('./');
   await expect(page.locator('#currentUserDisplay')).toContainText(OPTIONAL_USERS.A0.fullName);
   await expect(page.locator('#thanhDuoi button')).toHaveText(['Tổng quan', /^Cần xử lý/, 'Chỉ đạo', 'Khác']); // v9: Giao việc, Tra cứu, Cán bộ, Nhắn tin vào "Khác"; Cần xử lý có thể kèm huy hiệu số
   await nav(page, 'navDieuHanh');
-  await expect(page.locator('#dhKpi button')).toHaveCount(5);
-  await expect.poll(() => page.locator('#dhKpi').evaluate((el) => globalThis.getComputedStyle(el).gridTemplateColumns.split(' ').length)).toBe(2);
+  await expect(page.locator('#dhBaCau .bc-o')).toHaveCount(3, NAP);   // v3.36: dải 5 ô số (trùng Tổng quan) đã bỏ
+  await expect(page.locator('#dhKpi')).toHaveCount(0);
   await expect.poll(() => page.locator('#dhRay').evaluate((el) => globalThis.getComputedStyle(el).display)).toBe('flex');
   await khongCuonNgang(page);
   await page.context().close();

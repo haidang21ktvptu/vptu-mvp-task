@@ -4,6 +4,7 @@
 import { escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
 import { chiDaoTTCuaToi, timRow } from '../shared/dieu-hanh/du-lieu.js';
+import { ndGonHtml, ndPhuHtml } from '../../lib/kl/nd-gon.js';
 
 function theTTHtml(c) {
   const r = timRow(c.nhiem_vu_id);
@@ -11,7 +12,7 @@ function theTTHtml(c) {
   return `<article class="viec" id="tt-${c.id}" data-trang-thai="${c.trang_thai}">
       <p class="ma">${escapeHtml(c.ma)}, gửi ${formatDateTime(c.created_at)}, hạn phản hồi ${formatNgay(c.han_phan_hoi)}${c.qua_han_phan_hoi ? ' <span class="chu-canh-bao-inline">— đã quá hạn</span>' : ''}</p>
       <h3>${escapeHtml(c.noi_dung)}</h3>
-      <p class="chu-phu" style="margin-top:6px">${escapeHtml(c.nhiem_vu_noi_dung)}${owner ? ` · ${escapeHtml(owner)}` : ''}${r?.so_ngay_qua ? ` · trễ ${r.so_ngay_qua} ngày` : ''}</p>
+      <p class="chu-phu" style="margin-top:6px">${ndGonHtml('', c.nhiem_vu_noi_dung)}${ndPhuHtml(`${owner ? escapeHtml(owner) : ''}${r?.so_ngay_qua ? `${owner ? ' · ' : ''}trễ ${r.so_ngay_qua} ngày` : ''}`)}</p>
       <div class="hanh-dong"><button type="button" class="nut chinh" data-action="moO" data-o="oTTph-${c.id}">Phản hồi Thường trực</button>
         <button type="button" class="nut lam" data-action="moO" data-o="oTTdd-${c.id}">Đôn đốc phòng</button>
         <button type="button" class="nut" data-action="xemDienBien" data-id="${c.nhiem_vu_id}" data-ma="${escapeHtml(c.ma)}">Xem diễn biến</button></div>

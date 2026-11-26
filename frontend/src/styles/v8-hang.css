@@ -4,7 +4,7 @@
    .da-gui (minh chứng chờ, chỉ đạo đã gửi). Chỉ đổi trình bày — id, data-*, tên lớp cũ giữ nguyên. Tên lớp viết nguyên văn (Tailwind cắt lớp ghép). */
 @layer components {
   .tam { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); min-width: 0; }
-  .tam + .tam, .hai-cot + .tam, .tam + .hai-cot, .kpi + .tam, .kpi + .hai-cot, .can-xu-ly + .tam, .cx-chi-tiet + .tam { margin-top: 16px; }
+  .tam + .tam, .hai-cot + .tam, .tam + .hai-cot, .can-xu-ly + .tam, .cx-chi-tiet + .tam { margin-top: 16px; }
   .tam-dau { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 14px 16px 10px; margin: 0; }
   .tam-dau h2, .tam-dau > b { font-family: var(--font-tieu-de); font-size: var(--chu-than); font-weight: 700; color: var(--navy); }
   .tam-dau h2 em { font-style: normal; color: var(--do); margin-right: 2px; }
@@ -51,11 +51,16 @@
   .muc > b { display: block; padding: 14px 16px 6px; font-family: var(--font-tieu-de); font-size: var(--chu-than); color: var(--navy); }
   .muc > p { padding: 0 16px 6px; }
   .muc .the-con, .muc .the-con:first-of-type { margin: 0; padding: 10px 16px; border-top: 1px solid var(--vien-nhat); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-  .muc .the-con::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--navy); flex: none; }
+  .muc .the-con::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--navy); flex: none; align-self: flex-start; margin-top: .6em; }   /* v3.36: chấm ngang dòng đầu của nội dung */
   .muc.do .the-con::before { background: var(--do); } .muc.vang .the-con::before { background: var(--vang-chu); } .muc.luc .the-con::before { background: var(--luc); }
   .muc .the-con.do::before { background: var(--do); } .muc .the-con.dac-biet::before { background: var(--ddb); }   /* v3.23.2: mức của từng việc đứng sau màu nhóm */
-  .muc .the-con > p { flex: 1 1 320px; min-width: 0; margin: 0; font-size: var(--chu-nho); color: var(--chu); }
+  .muc .the-con > p { flex: 1 1 240px; min-width: 0; margin: 0; font-size: var(--chu-nho); color: var(--chu); }   /* v3.36: 240px — điện thoại: chấm mức cùng dòng với nội dung */
   .muc .the-con > p > b:first-child { color: var(--navy); margin-right: 4px; }
+  /* v3.36 (CAU-HOI V-1): nội dung việc tối đa hai dòng (lib/kl/nd-gon.js; nguyên văn ở title và ngăn chi tiết), thông tin phụ một dòng riêng bên dưới */
+  .nd-gon { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; color: var(--chu); }
+  .nd-gon > b:first-child { color: var(--navy); margin-right: 2px; }
+  .nd-phu { display: block; margin-top: 2px; color: var(--chu-phu); font-size: var(--chu-nho); line-height: 1.45; }
+  .da-gui small .nd-gon, .viec .chu-phu .nd-gon { color: inherit; }
   .muc .the-con .hanh-dong { margin: 0; flex: none; gap: 6px; }
   .muc .the-con .o, .muc .the-con .mc-inline, .muc .the-con .ly-do, .muc .the-con .chu-canh-bao-inline, .muc .the-con .db-khoi { flex-basis: 100%; margin: 2px 0 0 22px; }
   .muc .ly-do { background: var(--nen-phu); } /* lý do từ chối: ghi chú kín, chỉ cấp duyệt đọc */

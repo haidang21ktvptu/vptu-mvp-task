@@ -1,19 +1,16 @@
-// Phần chung của màn hình điều hành A0/A1: đầu trang (ngày, "số liệu tính đến", kết nối realtime, Tải lại), 4 số-lọc, thanh trái + danh sách
-// thẻ (hoặc Toàn cảnh N nhiệm vụ khi bấm số hoàn thành). Mỗi vai truyền cấu hình KPI và phần đầu/cuối trang riêng.
+// Phần chung của màn hình điều hành A0/A1: đầu trang (ngày, giờ số liệu, kết nối realtime, Tải lại), thanh trái + danh sách thẻ việc nghẽn.
+// v3.36 (CAU-HOI V-1): bỏ dải 5 ô số (trùng số liệu với Tổng quan) và chế độ Toàn cảnh; lọc bằng ba câu hỏi đầu trang và thanh trái. Mỗi vai truyền
+// phần đầu / giữa / cuối trang riêng.
 import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { dongBoNutDanhGia } from '../chat-luong.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
-import { tongHop, locRows } from '../../../lib/kl/tong-hop.js';
-import { THU_TU_NHOM, tenNhom } from '../../../lib/kl/nhan.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
-import { moNganDanhSach } from '../ngan-chi-tiet.js';
-import { dh, napDieuHanh, locThe, viecDo } from './du-lieu.js';
-import { rayHtml, tieuDeDanhSach } from './ray.js';
+import { dh, napDieuHanh, locThe } from './du-lieu.js';
+import { rayHtml, tieuDeDanhSach, NHAN_LOC } from './ray.js';
 import { theHtml } from './the-viec.js';
 import { giuDienBien } from '../dien-bien.js';
-import { kpiHtml, NHAN_KPI } from './kpi.js';
 import { datNapLai, mountHanhDongDieuHanh } from './hanh-dong.js';
 import { dieuHanhTheoSuKien } from './su-kien.js';
 
@@ -23,12 +20,12 @@ export function ngayDaiVN(d = new Date()) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// v8 đợt 2: ba tầng — tiêu đề + ngày; dải Cần xử lý ngay (trong `dau`); KPI; `giua` (A1: hai cột minh chứng chờ / chỉ đạo Thường trực); thanh trái 300px + tấm danh sách hàng việc.
+// Tiêu đề + ngày; `dau` (ba câu hỏi, dải Cần xử lý ngay, khối việc chờ đồng chí); `giua` (A1: hai cột kết quả nộp / chỉ đạo Thường trực); thanh trái
+// 300px + tấm danh sách hàng việc nghẽn.
 export const khungHtml = (tieuDe, phu, dau = '', cuoi = '', giua = '') => `
   <div class="dau"><h1 id="dhTieuDeTrang">${tieuDe}</h1><span id="dhTinhDen">${phu}</span>
     <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
   ${dau}
-  <div class="kpi" id="dhKpi"></div>
   ${giua}
   <div class="dieu-hanh">
     <aside class="ray tam" id="dhRay" aria-label="Lọc theo khâu và đơn vị"></aside>
@@ -36,39 +33,21 @@ export const khungHtml = (tieuDe, phu, dau = '', cuoi = '', giua = '') => `
   </div>
   ${cuoi}`;
 
-let cauHinh = { kpi: () => [], veThem: () => {}, phuDe: () => '' };
+let cauHinh = { veThem: () => {}, phuDe: () => '' };
 export function datCauHinhDieuHanh(c) { cauHinh = { ...cauHinh, ...c }; }
 
-// Toàn cảnh: đếm theo nhóm trạng thái, mỗi ô mở danh sách việc của đúng nhóm trong ngăn chi tiết (v9 đợt 2: không chuyển mục).
-function toanCanhHtml() {
-  const t = tongHop(dh.rows);
-  return `<div class="toan-canh">${THU_TU_NHOM.filter((k) => t.nhom[k] > 0).map((k) =>
-    `<button type="button" data-action="moKlDanhSach" data-loc='${JSON.stringify({ nhom: k })}'><b>${t.nhom[k]}</b> ${tenNhom(k).toLowerCase()}</button>`).join('')}
-    <button type="button" data-action="moKlDanhSach" data-loc="{}"><b>${t.tong}</b> tổng · xem toàn bộ danh sách</button></div>`;
-}
-
 export function veDieuHanh() {
-  if (!$('dhKpi')) { cauHinh.veThem(); return; } // màn hình không có dải KPI (A3 "Việc của tôi") vẽ bằng hàm vai đăng ký — napLaiViec vẫn vẽ lại thẻ ngay
+  if (!$('dsThe')) { cauHinh.veThem(); return; } // màn hình không có danh sách việc nghẽn (A2, A3) vẽ bằng hàm vai đăng ký — napLaiViec vẫn vẽ lại ngay
   const traNhap = giuONhap($('viewDieuHanh')); // ô đang mở / đang gõ giữ qua lần vẽ lại (nạp lại nền, realtime — PR-2a lỗi đua)
-  const kpi = cauHinh.kpi();
-  $('dhKpi').innerHTML = kpiHtml(kpi);
-  $('dhKpi').classList.toggle('nam', kpi.length === 5);
   $('dhRay').innerHTML = rayHtml();
   const traDienBien = giuDienBien($('dsThe')); // khối "Xem diễn biến" đang mở không mất khi danh sách vẽ lại (nạp lại nền / realtime)
-  if (dh.loc.kpi === 'tat') {
-    const t = tongHop(dh.rows);
-    setText('dsTieuDe', `Toàn cảnh ${t.tong} nhiệm vụ`);
-    setText('dsPhu', `${t.nhom.HOAN_THANH} hoàn thành, ${t.dangMo} đang mở, ${viecDo().length} quá hạn — bấm số quá hạn hoặc bộ lọc bên trái để quay về việc nghẽn`);
-    $('dsThe').innerHTML = toanCanhHtml();
-  } else {
-    const ds = locThe();
-    setText('dsTieuDe', tieuDeDanhSach(ds.length, NHAN_KPI[dh.loc.kpi] || ''));
-    setText('dsPhu', cauHinh.phuDe());
-    $('dsThe').innerHTML = ds.length ? ds.map(theHtml).join('') : '<p class="trong">Không có việc nào ở bộ lọc này.</p>';
-    traDienBien();
-  }
+  const ds = locThe();
+  setText('dsTieuDe', tieuDeDanhSach(ds.length, NHAN_LOC[dh.loc.kpi] || ''));
+  setText('dsPhu', cauHinh.phuDe());
+  $('dsThe').innerHTML = ds.length ? ds.map(theHtml).join('') : '<p class="trong">Không có việc nào ở bộ lọc này.</p>';
+  traDienBien();
   cauHinh.veThem();
-  if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu ${formatDateTime(dh.luc).split(' ')[1]}, so sánh với tuần trước`);
+  if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu lúc ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
 }
 
@@ -99,25 +78,16 @@ export function openDieuHanh() {
   batKlRealtime((su) => { if (sectionDangHien('viewDieuHanh')) dieuHanhTheoSuKien(su, loadDieuHanh, veDieuHanh); }, (m) => hienKetNoi('dhKetNoi', m));
 }
 
-const locKhau = ({ khau }) => { dh.loc.khau = dh.loc.khau === khau ? null : khau; if (dh.loc.kpi === 'tat') dh.loc.kpi = null; veDieuHanh(); };
-const locDonVi = ({ dv }) => { dh.loc.dv = dh.loc.dv === dv ? null : dv; if (dh.loc.kpi === 'tat') dh.loc.kpi = null; veDieuHanh(); };
+const locKhau = ({ khau }) => { dh.loc.khau = dh.loc.khau === khau ? null : khau; veDieuHanh(); };
+const locDonVi = ({ dv }) => { dh.loc.dv = dh.loc.dv === dv ? null : dv; veDieuHanh(); };
 const locKpi = ({ loc }) => { dh.loc = { khau: null, dv: null, kpi: dh.loc.kpi === loc ? null : loc }; veDieuHanh(); };
 const boLocDieuHanh = () => { dh.loc = { khau: null, dv: null, kpi: null }; veDieuHanh(); };
-// Ô toàn cảnh / số "sắp đến hạn": danh sách việc của nhóm (cùng mảng dòng của màn hình) mở trong ngăn chi tiết, ngay trên Cần xử lý.
-function moKlDanhSach({ loc }) {
-  let bo; try { bo = JSON.parse(loc || '{}'); } catch { bo = {}; }
-  if (bo.ketQuaMoi) {   // Đợt D: việc có kết quả nộp trong 7 ngày (ô số "kết quả" A1/A2)
-    const ids = new Set(dh.mcCho.map((m) => m.nhiem_vu_id));
-    moNganDanhSach({ tieuDe: 'Việc có kết quả nộp trong 7 ngày', rows: dh.rows.filter((r) => ids.has(r.id)) }); return;
-  }
-  moNganDanhSach({ tieuDe: bo.nhom ? tenNhom(bo.nhom) : 'Toàn bộ nhiệm vụ trong phạm vi', rows: locRows(dh.rows, bo) });
-}
 
 // Hành động dùng chung (đăng ký một lần lúc khởi động). openDieuHanh / loadDieuHanh do từng vai đăng ký ở init() vì mỗi vai một màn hình
 // điều hành khác nhau (A0/A1 dùng hàm ở đây; A2 Phòng tôi; A3 Việc của tôi) — đăng ký sớm sẽ bị vai đăng ký sau đè.
 export function mountDieuHanh() {
   mountHanhDongDieuHanh();
-  registerActions({ locKhau, locDonVi, locKpi, boLocDieuHanh, moKlDanhSach });
+  registerActions({ locKhau, locDonVi, locKpi, boLocDieuHanh });
 }
 export function dangKyDieuHanhVai() {
   datNapLai(loadDieuHanh);

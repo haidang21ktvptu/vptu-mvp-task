@@ -5,7 +5,8 @@
 import { $, escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { formatNgay } from '../../lib/kl/ngay.js';
-import { nhanPhuHtml } from '../../lib/kl/do-khan.js';
+import { nhanPhuHtml, soSanhKhan } from '../../lib/kl/do-khan.js';
+import { ndGonHtml, ndPhuHtml } from '../../lib/kl/nd-gon.js';
 import { chuTriText } from '../../lib/kl/chu-tri.js';
 import { laNguoiGiao, tenCapDuyet } from '../../lib/kl/thay-mat.js';
 import { soChuaXuLy, onSoChuaXuLy, lamMoiHuyHieu } from '../../features/huy-hieu.js';
@@ -75,11 +76,12 @@ export function canXuLyHtml(so = soChuaXuLy()) {
 
 // Việc Thường trực giao cho tôi, chưa xác nhận nhận (A1: cán bộ chủ trì; A2: Trưởng phòng khi giao cho phòng — nguoi_theo_doi nội bộ, 0128).
 export function khoiThuongTrucHtml() {
-  const ds = dh.rows.filter((r) => r.uu_tien === 'THUONG_TRUC' && mo(r) && !r.bi_tu_choi && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()));
+  const ds = dh.rows.filter((r) => r.uu_tien === 'THUONG_TRUC' && mo(r) && !r.bi_tu_choi && !r.toi_da_xac_nhan && (r.owner_tai_khoan === me() || r.nguoi_theo_doi === me()))
+    .sort(soSanhKhan);
   if (ds.length === 0) return '';
   return `<div class="muc do" id="khoiTT"><b>Việc Thường trực giao, chờ đồng chí xác nhận đã nhận (${ds.length})</b>
     <p>Xác nhận trong 1 ngày làm việc; quá hạn hệ thống nhắc đồng chí và Chánh Văn phòng. Từ chối cần lý do, Thường trực duyệt.</p>
-    ${ds.map((r) => `<div class="the-con" id="tt-viec-${r.id}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)}, hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} ${nhanPhuHtml(r)}</p>
+    ${ds.map((r) => `<div class="the-con" id="tt-viec-${r.id}"><p>${ndGonHtml(r.ma, r.noi_dung)}${ndPhuHtml(`hạn ${r.han_xu_ly ? formatNgay(r.han_xu_ly) : 'chưa có'} ${nhanPhuHtml(r)}`)}</p>
       ${r.tu_choi_cho ? `<p class="chu-canh-bao-inline">Đã đề nghị từ chối ${formatDateTime(r.tu_choi_cho.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, r.tu_choi_cho.cap_duyet) || 'Thường trực')} duyệt.</p><div class="hanh-dong">${xem(r)}</div>`
     : `<div class="hanh-dong"><button type="button" class="nut lam" data-action="xacNhanNhanTT" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xác nhận đã nhận</button>
         <button type="button" class="nut" data-action="moO" data-o="oTcTT-${r.id}">Từ chối</button>${xem(r)}</div>
@@ -90,7 +92,7 @@ export function khoiThuongTrucHtml() {
 
 // Việc TÔI giao (kể cả giao thay mặt cho tôi) bị từ chối (đã duyệt đồng ý) hoặc đang có đề nghị từ chối chờ duyệt.
 export function khoiBiTuChoiHtml() {
-  const ds = dh.rows.filter((r) => mo(r) && (r.bi_tu_choi || r.tu_choi_cho) && laNguoiGiao(r));
+  const ds = dh.rows.filter((r) => mo(r) && (r.bi_tu_choi || r.tu_choi_cho) && laNguoiGiao(r)).sort(soSanhKhan);
   if (ds.length === 0) return '';
   const giaoLai = vai() !== 'A0';   // Đợt D (0092): chuyên viên giao lại việc mình giao (cho chuyên viên khác)
   return `<div class="muc do" id="khoiBiTuChoi"><b>Việc đồng chí giao bị từ chối / đang đề nghị từ chối (${ds.length})</b>
@@ -98,7 +100,7 @@ export function khoiBiTuChoiHtml() {
     ${ds.map((r) => {
     const dn = r.tu_choi_cho; const nd = dn ? findAccount(dn.nguoi_de_nghi) : null;
     const tt = r.bi_tu_choi ? '<span class="nhan-tu-choi">Bị từ chối</span>' : `<span class="nhan-xam">${escapeHtml(nd?.full_name || 'Cán bộ')} đề nghị từ chối ${formatDateTime(dn.tao_luc)}, chờ ${escapeHtml(tenCapDuyet(r, dn.cap_duyet) || 'cấp duyệt')} duyệt</span>`;
-    return `<div class="the-con" id="btc-${r.id}" data-tu-choi="${r.bi_tu_choi ? 'da' : 'cho'}"><p><b>${escapeHtml(r.ma)}</b> ${escapeHtml(r.noi_dung)} · ${escapeHtml(chuTriText(r, ''))} ${tt}</p>
+    return `<div class="the-con" id="btc-${r.id}" data-tu-choi="${r.bi_tu_choi ? 'da' : 'cho'}"><p>${ndGonHtml(r.ma, r.noi_dung)}${ndPhuHtml(`${escapeHtml(chuTriText(r, ''))} ${tt}`)}</p>
       <div class="hanh-dong">${giaoLai && r.bi_tu_choi ? `<button type="button" class="nut lam" data-action="moO" data-o="oGiaoLai-${r.id}">Giao lại</button>` : ''}${xem(r)}</div>
       ${giaoLai && r.bi_tu_choi ? oGiaoLaiHtml(r) : ''}</div>`;
   }).join('')}</div>`;

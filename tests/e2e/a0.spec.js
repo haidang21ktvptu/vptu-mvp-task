@@ -1,6 +1,6 @@
 // GĐ20 — vai trò A0 Thường trực Tỉnh ủy (mockup bản 5 "Trung tâm điều hành Thường trực"; v9: vào Tổng quan, màn hình điều hành đổi tên
 // "Cần xử lý hôm nay"): đăng nhập → Tổng quan → mở Cần xử lý
-// (4 số-lọc, thanh trái 4 khâu, thẻ việc Đỏ có nút Chỉ đạo + Xem diễn biến) → menu chỉ 3 mục (không Nhắn tin, không Quản trị) → Toàn bộ
+// (ba câu hỏi lọc danh sách — v3.36 bỏ dải ô số trùng Tổng quan; thanh trái các khâu, thẻ việc Đỏ có nút Chỉ đạo + Xem diễn biến) → menu (không Nhắn tin, không Quản trị) → Toàn bộ
 // nhiệm vụ: chỉ đọc + Ý kiến/Chỉ đạo (quyền thật: hàm 0030 từ chối A0 tường minh — test RLS kl-0030). Không tạo dữ liệu; bỏ qua khi thiếu demo_a0.
 import { existsSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
@@ -19,16 +19,17 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
   });
   test.afterAll(async () => { await page?.context().close(); });
 
-  test('vào Tổng quan rồi Cần xử lý: 5 số-lọc, khâu ở thanh trái, menu, nhãn vai trò đúng', async () => {
+  test('vào Tổng quan rồi Cần xử lý: ba câu hỏi, không còn dải ô số, khâu ở thanh trái, menu, nhãn vai trò đúng', async () => {
     await expect(page.locator('#currentRoleDisplay')).toContainText(OPTIONAL_USERS.A0.roleLabel);
     await expect(page.locator('#viewTongQuan')).not.toHaveClass(/\bhidden\b/); // v9: trang mở đầu của Thường trực
     await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
     await nav(page, 'navDieuHanh');
     await expect(page.locator('#viewDieuHanh')).not.toHaveClass(/\bhidden\b/);
     await expect(page.locator('#dhTieuDeTrang')).toHaveText('Cần xử lý hôm nay');
-    await expect(page.locator('#dhTinhDen')).toContainText('so sánh với tuần trước', NAP);
-    await expect(page.locator('#dhKpi button')).toHaveCount(5); // GĐ21: thêm ô "bị từ chối" riêng
-    await expect(page.locator('#dhKpi [data-loc="tuchoi"]')).toContainText('bị từ chối');
+    await expect(page.locator('#dhTinhDen')).toContainText('số liệu lúc', NAP);
+    await expect(page.locator('#dhBaCau .bc-o')).toHaveCount(3);
+    await expect(page.locator('#dhKpi')).toHaveCount(0);   // v3.36: dải ô số trùng Tổng quan đã bỏ; việc bị từ chối lọc ở thanh trái (khâu)
+    await expect(page.locator('#dhRay [data-khau="BI_TU_CHOI"]')).toHaveCount(1);
     await expect(page.locator('#dhRay [data-khau]')).toHaveCount(6); // PR-2b: thêm khâu "Chờ nghiệm thu"
     await expect(page.locator('#navTongQuan')).toBeVisible();
     await expect(page.locator('#navDieuHanh')).toBeVisible();
@@ -42,7 +43,7 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     await page.locator('#navDieuHanh').click();
   });
 
-  test('số-lọc và thanh trái là bộ lọc: bấm khâu → aria-pressed, danh sách đổi tiêu đề; số hoàn thành → toàn cảnh', async () => {
+  test('ba câu hỏi và thanh trái là bộ lọc: bấm khâu → aria-pressed, danh sách đổi tiêu đề; "Ai đang chậm?" lọc việc nghẽn', async () => {
     const theTruoc = await page.locator('#dsThe .the').count();
     const khau = page.locator('#dhRay [data-khau="CHUA_NHAN"]');
     await khau.click();
@@ -52,11 +53,13 @@ test.describe.serial('Thường trực Tỉnh ủy (A0) — trung tâm điều h
     for (const t of await page.locator('#dsThe .the').all()) await expect(t).toHaveAttribute('data-khau', 'CHUA_NHAN');
     await page.locator('#dhRay .tat').click();
     await expect(khau).toHaveAttribute('aria-pressed', 'false');
-    await page.locator('#dhKpi [data-loc="tat"]').click();
-    await expect(page.locator('#dsTieuDe')).toContainText('Toàn cảnh');
-    await expect(page.locator('#dsThe .toan-canh')).toBeVisible(NAP);
-    await page.locator('#dhKpi [data-loc="tat"]').click();
+    const ai = page.locator('#dhBaCau button[data-loc="nghen"]');
+    if (await ai.count() === 0) return;   // phạm vi không có việc quá hạn: ô chỉ là câu trả lời, không lọc
+    await ai.click();
+    await expect(ai).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#dsTieuDe')).toContainText('đang nghẽn');
+    await ai.click();
+    await expect(page.locator('#dhBaCau button[data-loc="nghen"]')).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('thẻ việc Đỏ: số ngày trễ, khâu, nút Chỉ đạo mở ô một dòng có gợi ý; Xem diễn biến mở ngăn chi tiết ở Toàn bộ nhiệm vụ', async () => {

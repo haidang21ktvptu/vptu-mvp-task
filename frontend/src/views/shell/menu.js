@@ -1,6 +1,6 @@
 // Bảng menu theo vai (mockup v7 "Menu theo từng vai trò"): mục đầu là hộp thư việc của chính người đó; mọi hành động làm ngay trên
 // dòng; menu còn lại để tra cứu và cấu hình. Trên điện thoại mỗi vai có thanh dưới 3 mục (duoi: true), mục còn lại vào "Khác".
-// nhom: nhóm trên menu dọc v8 (Điều hành / Theo dõi / Hệ thống). id giữ tên cũ ở những mục e2e đã dùng (navKl, navQuanTri); action là tên hành động đã đăng ký (lib/actions.js).
+// nhom: nhóm trên menu dọc (v3.36: Điều hành / Nhiệm vụ / Nhiệm vụ quý BTV / Quản trị — CAU-HOI V-1; nav.js vẽ tiêu đề nhóm thu gọn được). id giữ tên cũ ở những mục e2e đã dùng (navKl, navQuanTri); action là tên hành động đã đăng ký (lib/actions.js).
 // GĐ22: mục đầu của mọi vai có huy hiệu số chưa xử lý (dhBadge, features/huy-hieu.js); A0 có "Giao việc" (biểu mẫu chung, bản rút gọn).
 // v9: A0/A1/A2 mở đầu bằng "Tổng quan" (shared/tong-quan); màn hình điều hành đổi tên "Cần xử lý" (id navDieuHanh giữ nguyên cho e2e).
 // Đợt E v3.18 (0085): mọi chuyên viên có "Giao việc" (giao thẳng cho chuyên viên, không thay mặt). Đợt D v3.20 (0090): bỏ màn "Cần nghiệm thu" —
@@ -18,40 +18,40 @@ export const MENU = {
     { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
     { id: 'navChiDaoDaGui', label: 'Chỉ đạo đã gửi', ngan: 'Chỉ đạo', action: 'openChiDaoDaGui', section: 'viewChiDaoDaGui', duoi: true, nhom: 'Điều hành' },
-    { id: 'navKl', label: 'Toàn bộ nhiệm vụ', ngan: 'Tra cứu', action: 'openKl', section: 'viewKl', nhom: 'Theo dõi' },
-    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },
-    { id: 'navCanBo', label: 'Cán bộ', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
+    { id: 'navKl', label: 'Toàn bộ nhiệm vụ', ngan: 'Tra cứu', action: 'openKl', section: 'viewKl', nhom: 'Nhiệm vụ' },
+    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Nhiệm vụ' },
+    { id: 'navCanBo', label: 'Cán bộ', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Nhiệm vụ' },
   ],
   A1: [
     { id: 'navTongQuan', label: 'Tổng quan', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
     { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
-    { id: 'navKl', label: 'Nhiệm vụ', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
-    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },
-    { id: 'navCanBo', label: 'Cán bộ thuộc quyền', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
-    { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao', nhom: 'Theo dõi' },
+    { id: 'navKl', label: 'Nhiệm vụ', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Nhiệm vụ' },
+    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Nhiệm vụ' },
+    { id: 'navCanBo', label: 'Cán bộ thuộc quyền', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Nhiệm vụ' },
+    { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao', nhom: 'Nhiệm vụ' },
   ],
   A2: [
     { id: 'navTongQuan', label: 'Tổng quan phòng', ngan: 'Tổng quan', action: 'openTongQuan', section: 'viewTongQuan', duoi: true, nhom: 'Điều hành' },
     { id: 'navDieuHanh', label: 'Cần xử lý', ngan: 'Cần xử lý', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc trong phòng', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', nhom: 'Điều hành' },
-    { id: 'navKl', label: 'Nhiệm vụ của phòng', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },
-    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },   // v3.22.1
-    { id: 'navCanBo', label: 'Cán bộ trong phòng', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Theo dõi' },
-    { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao', nhom: 'Theo dõi' },   // v3.33
+    { id: 'navKl', label: 'Nhiệm vụ của phòng', ngan: 'Nhiệm vụ', action: 'openKl', section: 'viewKl', duoi: true, nhom: 'Nhiệm vụ' },
+    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Nhiệm vụ' },   // v3.22.1
+    { id: 'navCanBo', label: 'Cán bộ trong phòng', ngan: 'Cán bộ', action: 'openCanBo', section: 'viewCanBo', nhom: 'Nhiệm vụ' },
+    { id: 'navBaoCao', label: 'Báo cáo', ngan: 'Báo cáo', action: 'openBaoCao', section: 'viewBaoCao', nhom: 'Nhiệm vụ' },   // v3.33
   ],
   A3: [
     { id: 'navDieuHanh', label: 'Việc của tôi', ngan: 'Việc của tôi', action: 'openDieuHanh', section: 'viewDieuHanh', duoi: true, badgeId: 'dhBadge', nhom: 'Điều hành' },
     { id: 'navGiaoViec', label: 'Giao việc', ngan: 'Giao việc', action: 'openGiaoViec', section: 'viewGiaoViec', duoi: true, nhom: 'Điều hành' },
-    { id: 'navDaGiao', label: 'Việc tôi đã giao', ngan: 'Đã giao', action: 'openDaGiao', section: 'viewKl', duoi: true, nhom: 'Theo dõi' },   // v3.31 (0128)
-    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Theo dõi' },   // v3.22.1
+    { id: 'navDaGiao', label: 'Việc tôi đã giao', ngan: 'Đã giao', action: 'openDaGiao', section: 'viewKl', duoi: true, nhom: 'Nhiệm vụ' },   // v3.31 (0128)
+    { id: 'navTheoVanBan', label: 'Theo văn bản', ngan: 'Văn bản', action: 'openTheoVanBan', section: 'viewTheoVanBan', nhom: 'Nhiệm vụ' },   // v3.22.1
   ],
 };
 
 // Mục dùng chung mọi vai: Quản trị chỉ khi có cờ. (Nhắn tin 1-1 bỏ ở v3.23 — tin cũ giữ trong cơ sở dữ liệu.)
-export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Quản trị', action: 'openQuanTri', section: 'viewQuanTri', nhom: 'Hệ thống' };
+export const QUAN_TRI_NAV = { id: 'navQuanTri', label: 'Quản trị', ngan: 'Quản trị', action: 'openQuanTri', section: 'viewQuanTri', nhom: 'Quản trị' };
 // Thư ký Thường trực (0047, cờ thu_ky_thuong_truc, mọi vai trừ A0): đóng chỉ đạo Thường trực thay mặt.
-export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thường trực', ngan: 'Chỉ đạo TT', action: 'openChiDaoTTThuKy', section: 'viewChiDaoTTThuKy', nhom: 'Theo dõi' };
+export const THU_KY_TT_NAV = { id: 'navChiDaoTTThuKy', label: 'Chỉ đạo Thường trực', ngan: 'Chỉ đạo TT', action: 'openChiDaoTTThuKy', section: 'viewChiDaoTTThuKy', nhom: 'Nhiệm vụ' };
 // v9 đợt 2: quản trị hệ thống không giữ quyền giao việc vẫn nhập Excel (thẻ trong màn Giao việc); vai đã có Giao việc dùng thẻ ở đó.
 export const NHAP_EXCEL_NAV = { id: 'navNhapExcel', label: 'Nhập từ Excel', ngan: 'Nhập Excel', action: 'openNhapExcel', section: 'viewGiaoViec', nhom: 'Điều hành' };
 
@@ -62,7 +62,7 @@ const QTKL_A3 = [{ ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ' }];
 const PHONG_A3 = { tongQuan: { ...MENU.A2[0], label: 'Tổng quan phòng', duoi: false }, nhiemVu: { ...MENU.A2[3], label: 'Nhiệm vụ của phòng', duoi: false, action: 'openKlPhong' } };
 // 0103: cấu hình xem toàn bộ — Tổng quan chung, Toàn bộ nhiệm vụ (chuyên viên chưa có mục Nhiệm vụ nào khác).
 const TOAN_BO_A3 = { tongQuan: { ...MENU.A1[0], duoi: false }, nhiemVu: { ...MENU.A1[3], label: 'Toàn bộ nhiệm vụ', duoi: false, action: 'openKlToanBo' } };
-const BAO_CAO = MENU.A1.find((m) => m.id === 'navBaoCao');   // v3.33: chuyên viên có Tổng quan thì có Báo cáo (cuối nhóm Theo dõi)
+const BAO_CAO = MENU.A1.find((m) => m.id === 'navBaoCao');   // v3.33: chuyên viên có Tổng quan thì có Báo cáo (cuối nhóm Nhiệm vụ)
 // v3.33: xem toàn bộ → tên mục không còn giới hạn "của phòng" / "thuộc quyền" (màn mở mặc định Toàn Văn phòng).
 const TEN_TOAN_BO = { navTongQuan: 'Tổng quan', navCanBo: 'Cán bộ', navKl: 'Nhiệm vụ' };
 

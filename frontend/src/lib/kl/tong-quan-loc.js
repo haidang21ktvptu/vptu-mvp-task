@@ -65,7 +65,7 @@ export function locChiTieu(rows, ct, k, { khoa = null, cds = [], ctxCd = {}, hom
         { ten: 'Hoàn thành', rows: rows.filter((r) => laXong(r) && trongThang(ngayXong(r), y, ct.th)) }] };
     }
     case 'nhom': {
-      const cua = khoa ? rows.filter((r) => khoa(r)[0] === ct.ma) : [];
+      const cua = ct.ma === '*' ? rows : khoa ? rows.filter((r) => khoa(r)[0] === ct.ma) : [];   // '*': dòng Tổng cộng của ma trận
       if (ct.m === 'qh') return { tieuDe: `${ct.ten || 'Nhóm'} — Quá hạn`, rows: cua.filter((r) => laMo(r) && ['do', 'ddb'].includes(mucMo(r))) };   // v3.27: khối 2
       // v3.36: ô của ma trận đơn vị — trong hạn (kể cả chờ xác nhận minh chứng), chưa có hạn, hoàn thành trong kỳ
       if (ct.m === 'th') return { tieuDe: `${ct.ten || 'Nhóm'} — Đang thực hiện, trong hạn`, rows: cua.filter((r) => laMo(r) && ['trongHan', 'nt'].includes(mucMo(r))) };

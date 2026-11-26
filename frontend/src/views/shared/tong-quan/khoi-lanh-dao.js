@@ -30,6 +30,7 @@ function coQuanCanBo(r) {
 }
 
 // ds: diemNghen (đã sắp); cap: capNghen; chon: cấp đang lọc ('' = mọi cấp); duocChiDao(r) | boolean: người xem chỉ đạo được việc (chữ nút — DB là chốt).
+const SO_DONG_IN = 5;   // v3.36: "In báo cáo nhanh" một trang A4 — bản in chỉ ghi 5 việc quá hạn lâu nhất (tong-quan-in.css ẩn dòng thứ 6 trở đi)
 export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   const chon = chonUi && cap.some((c) => c.ma === chonUi) ? chonUi : '';   // cấp đang chọn hết việc (đổi bộ lọc / kỳ) → "Mọi cấp"
   const hien = chon ? ds.filter((r) => (r.cap_quyet_dinh || 'CHUA') === chon) : ds;
@@ -55,7 +56,7 @@ export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   return `<article class="the-bd n12" id="tqNghen">${dauKhoi(1, 'Điểm nghẽn cần chỉ đạo', phu, nut)}
     <div class="cuon-ngang"><table class="bang-tq bang-ng"><thead><tr><th>Mức</th><th>Nhiệm vụ</th><th>Cơ quan, đơn vị · cán bộ</th><th class="so">Trễ</th><th>Sản phẩm còn thiếu</th><th>Cấp cần quyết định</th><th><span class="sr">Thao tác</span></th></tr></thead>
       <tbody>${hien.slice(0, SO_DONG_NGHEN).map(dong).join('')}</tbody></table></div>
-    <div class="chan-ng"><span>${chan}</span><button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
+    <div class="chan-ng"><span class="chi-man">${chan}</span>${hien.length > SO_DONG_IN ? `<span class="chi-in">Bản in ghi ${SO_DONG_IN} việc quá hạn lâu nhất trong ${hien.length} việc; danh sách đầy đủ xem trên hệ thống.</span>` : ''}<button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
 }
 
 const pills = (m) => [[m.ddb, 'ddb'], [m.do, 'do'], [m.vang, 'vang']].filter(([n]) => n).map(([n, lop]) => `<span class="muc-tq ${lop}">${n} ${tenMuc(lop)}</span>`).join('')

@@ -49,3 +49,8 @@ export function nhanPhuHtml(r) {
 
 // So sánh cho mọi danh sách: độ khẩn (Hỏa tốc trước) → Thường trực giao → phần còn lại do màn hình quyết.
 export const soSanhDoKhan = (a, b) => thuTuDoKhan(a) - thuTuDoKhan(b) || (b.uu_tien === 'THUONG_TRUC' ? 1 : 0) - (a.uu_tien === 'THUONG_TRUC' ? 1 : 0);
+// v3.36 (Cần xử lý xếp theo mức khẩn): Đỏ đặc biệt trước Đỏ, rồi Vàng; mức khác sau cùng. soSanhKhan = độ khẩn, Thường trực giao, mức, số ngày trễ, hạn gần.
+const THU_TU_MUC = { DO_DAC_BIET: 0, DO: 1, VANG: 2 };
+export const soSanhMuc = (a, b) => (THU_TU_MUC[a.muc_canh_bao] ?? 3) - (THU_TU_MUC[b.muc_canh_bao] ?? 3);
+export const soSanhKhan = (a, b) => soSanhDoKhan(a, b) || soSanhMuc(a, b) || (b.so_ngay_qua || 0) - (a.so_ngay_qua || 0)
+  || String(a.han_xu_ly || '9999').localeCompare(String(b.han_xu_ly || '9999'));

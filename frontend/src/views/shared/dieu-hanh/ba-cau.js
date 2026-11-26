@@ -1,6 +1,6 @@
 // Ba câu hỏi đầu màn hình "Cần xử lý" (giao diện v9): Ai đang chậm? Nghẽn ở đâu? Cần đồng chí quyết? — trả lời bằng tên (đơn vị chậm nhiều nhất,
-// khâu nghẽn nhiều nhất) và số, cùng nguồn với thanh trái (theoDonVi, theoKhau) và số-lọc (canToiQuyet); bấm một ô = lọc danh sách như bấm ở
-// thanh trái / ô số (A0/A1). A2 (màn hình phòng không có thanh trái) chỉ hiện câu trả lời.
+// khâu nghẽn nhiều nhất) và số, cùng nguồn với thanh trái (theoDonVi, theoKhau) và việc cần đồng chí quyết (canToiQuyet); bấm một ô = lọc danh sách
+// như bấm ở thanh trái (A0/A1; v3.36 bỏ dải ô số). A2 (màn hình phòng không có thanh trái) chỉ hiện câu trả lời.
 import { escapeHtml } from '../../../lib/dom.js';
 import { KHAU, boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
 import { dh, theoKhau, theoDonVi, viecDo, canToiQuyet } from './du-lieu.js';
