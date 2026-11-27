@@ -88,6 +88,38 @@ test('A1: Cần xử lý hiện 10 việc đầu, "Xem tất cả" nhớ theo m�
   await page.context().close();
 });
 
+// v3.36 (CAU-HOI V-13, DESIGN mục 11 và 17): màn Nhiệm vụ — phụ đề chỉ còn phạm vi; chú giải ghi ngắn, câu đầy đủ ở gợi ý; bốn nút xuất, in gom sau
+// nút "Xuất, in" (bấm ra ngoài thì đóng); mỗi dòng tối đa hai dòng chữ: mã việc đứng đầu khối nội dung, dòng "nhập lúc" chỉ còn ở bản in.
+test('A1: Nhiệm vụ — dòng hai dòng chữ, phụ đề ngắn, chú giải có gợi ý, nút xuất và in gom sau "Xuất, in"', async ({ browser }, testInfo) => {
+  const page = await pageAs(browser, 'A1', testInfo);
+  await nav(page, 'navKl');
+  await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+  await expect(page.locator('#klPhuDe')).toHaveText(/^(trong phạm vi của đồng chí|toàn Văn phòng)$/);
+  await expect(page.locator('#viewKl .bnv-chu-giai [data-goi]').first()).toHaveAttribute('data-goi', /^Quá hạn từ \d+ ngày trở lên \(mức Đỏ đặc biệt\)$/);
+  await expect(page.locator('#viewKl .bnv-chu-giai .nhan-moi')).toHaveCount(0);
+  for (const id of ['klXuatExcel', 'klXuatKy', 'klIn']) await expect(page.locator(`#${id}`)).toBeHidden();
+  await page.locator('#klXuatMo').click();
+  await expect(page.locator('#klXuatMo')).toHaveAttribute('aria-expanded', 'true');
+  for (const id of ['klXuatExcel', 'klXuatKy', 'klIn']) await expect(page.locator(`#${id}`)).toBeVisible();
+  await page.locator('#klTieuDe').click();   // bấm ra ngoài
+  await expect(page.locator('#klXuatMo')).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#klIn')).toBeHidden();
+  const dong = page.locator('#klBody .hang-nv').first();
+  if (await dong.count()) {
+    await expect(dong.locator('.bnv-nd .ma')).toBeVisible();
+    await expect(dong.locator('.bnv-chi-gon')).toHaveCount(0);
+    if (await dong.locator('.bnv-chi-in').count()) await expect(dong.locator('.bnv-chi-in')).toBeHidden();
+    expect((await dong.locator('.bnv-c-nv').getAttribute('title')).length, 'nguyên văn nội dung ở title của ô').toBeGreaterThan(0);
+    const o = await dong.locator('.bnv-c-nv').evaluate((el) => { const cs = globalThis.getComputedStyle(el.querySelector('.bnv-nd')); return { clamp: cs.webkitLineClamp, cao: el.getBoundingClientRect().height, dong: parseFloat(cs.lineHeight) }; });
+    expect(o.clamp).toBe('2');
+    expect(o.cao, 'ô Nhiệm vụ: mã, nhãn và nội dung trong hai dòng chữ').toBeLessThanOrEqual(o.dong * 2 + 12);
+    await page.emulateMedia({ media: 'print' });
+    if (await dong.locator('.bnv-chi-in').count()) await expect(dong.locator('.bnv-chi-in')).toBeVisible();   // bản in vẫn ghi lúc nhập, người nhập
+    await page.emulateMedia({ media: 'screen' });
+  }
+  await page.context().close();
+});
+
 test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, tầng 1, ma trận (6 dòng + Tổng cộng), 5 điểm nghẽn; afterprint trả lại màn hình', async ({ browser }, testInfo) => {
   // V-13: in từ trạng thái mặc định của người dùng thật — mọi khối phân tích đang gập trên màn hình; bản in vẫn có ma trận, điểm nghẽn, câu kết luận đủ.
   const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true, tqGap: true });

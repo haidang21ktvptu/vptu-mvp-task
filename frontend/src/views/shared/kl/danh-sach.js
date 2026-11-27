@@ -7,6 +7,7 @@
 import { $, show, setText, escapeHtml, formatDateTime } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { notifyError } from '../../../components/toast.js';
+import { nutGoi } from '../../../components/goi.js';
 import { datSo, veSauNap } from '../../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, loadPhanCongHieuLuc, xemToanBo, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { trongPhamVi, locCanBo, tuyChonCanBo, chiXem } from '../../../lib/kl/pham-vi.js';
@@ -171,10 +172,12 @@ export function render(veLaiNgan = false) {
   $('klTrang').innerHTML = kl.inDayDu ? '' : nutTrangHtml(p, 'klTrang');
   const toanVP = kl.loc.toanBo && coNutToanBo();   // v3.33: đang Toàn Văn phòng (người xem có việc ngoài phạm vi)
   const td = $('klTieuDe'); if (td?.dataset.thuong) td.textContent = theoDoi ? 'Việc tôi đã giao' : toanVP && td.dataset.toanVp ? td.dataset.toanVp : td.dataset.thuong;   // bỏ chip / Toàn VP → tên thường
-  setText('klPhuDe', theoDoi ? 'việc đồng chí đã giao hoặc nhập, do cán bộ, phòng khác chủ trì theo dõi — cột Tình hình cho biết việc cần đôn đốc'
-    : toanVP ? (laThuKyTT(state.user) ? 'toàn Văn phòng — thư ký Thường trực xử lý được mọi việc chưa hoàn thành; việc đã hoàn thành ngoài phạm vi ghi "Chỉ xem"'
-      : 'toàn Văn phòng — việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem"; bấm một dòng để mở ngăn chi tiết')
-      : 'trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải');
+  // V-13: dòng phụ đề chỉ còn phạm vi; ghi chú thêm (khi có) ở nút "i" cạnh phụ đề.
+  setText('klPhuDe', theoDoi ? 'do cán bộ, phòng khác chủ trì theo dõi' : toanVP ? 'toàn Văn phòng' : 'trong phạm vi của đồng chí');
+  const ghiChu = theoDoi ? 'Việc đồng chí đã giao hoặc nhập. Cột Tình hình cho biết việc cần đôn đốc.'
+    : toanVP ? (laThuKyTT(state.user) ? 'Thư ký Thường trực xử lý được mọi việc chưa hoàn thành; việc đã hoàn thành ngoài phạm vi ghi "Chỉ xem".'
+      : 'Việc ngoài phạm vi xử lý của đồng chí ghi "Chỉ xem".') : '';
+  if ($('klGhiChu') && $('klGhiChu').dataset.chu !== ghiChu) { $('klGhiChu').innerHTML = nutGoi(ghiChu); $('klGhiChu').dataset.chu = ghiChu; }
   dongBoNgan();
   if (kl.inDayDu) document.querySelector('#viewKl .md')?.classList.remove('co-ct');   // in: bảng đủ khổ giấy (ngăn chi tiết không in)
   // Dấu hiệu "đã nạp xong" cho mọi màn / vai (e2e chờ thuộc tính này, không dựa vào "có dòng đầu"): đặt ở đây để cả danh sách rỗng cũng có.

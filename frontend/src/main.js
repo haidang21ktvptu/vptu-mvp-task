@@ -8,6 +8,7 @@ import { registerViews } from './views/index.js';
 import { khoiPhucTu404 } from './views/shell/duong-dan.js';
 import { mountGoi } from './components/goi.js';
 import { mountDsGon } from './components/ds-gon.js';
+import { mountMenuTha } from './components/menu-tha.js';
 
 // v3.29 (CAU-HOI O-7): không chạy khi bị trang khác nhúng trong khung (chống lừa bấm — GitHub Pages không đặt được tiêu đề chống nhúng, frame-ancestors
 // không có tác dụng trong thẻ meta CSP).
@@ -18,6 +19,7 @@ if (window.top !== window.self) {
   initActionDelegation();
   mountGoi();     // v3.36 (V-13): hộp gợi ý data-goi dùng chung mọi màn hình
   mountDsGon();   // v3.36 (V-13): danh sách dài hiện các dòng đầu, "Xem tất cả"
+  mountMenuTha(); // v3.36 (V-13): nhóm nút gom sau một nút (Xuất, in)
   registerViews();
   initLogin();
   initChangePassword();

@@ -43,7 +43,10 @@ test.describe.serial('PR-3 — chất lượng, Trước hạn, Báo cáo, Theo 
       // Xuất Excel: danh sách đang lọc theo khoá (2 việc của spec)
       await p.locator('#klTimKiem').fill(khoa);
       await expect(p.locator('#klBody .hang-nv')).toHaveCount(2, NAP);
+      await expect(p.locator('#klXuatExcel')).toBeHidden();   // V-13: bốn nút xuất, in gom sau nút "Xuất, in"
+      await p.locator('#klXuatMo').click();
       const [tai] = await Promise.all([p.waitForEvent('download'), p.locator('#klXuatExcel').click()]);
+      await expect(p.locator('#klXuatMo')).toHaveAttribute('aria-expanded', 'false');   // chọn xong thì danh sách đóng
       expect(tai.suggestedFilename()).toMatch(/^vptu-nhiem-vu-\d{8}\.xlsx$/);
       const tep = testInfo.outputPath('xuat.xlsx'); await tai.saveAs(tep);
       const [sheet] = docXlsx(tep);
