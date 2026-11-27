@@ -11,7 +11,7 @@
   @media print {
     :root:has(body.in-tq) { font-size: 11.5px; }
     body.in-tq #viewTongQuan { container-type: normal; zoom: .9; }   /* bỏ bố cục hẹp theo khung (@container tq); thu 90% để vừa một trang A4 */
-    body.in-tq #mainHeader, body.in-tq .tq-so, body.in-tq .tq1-hang, body.in-tq .kl-ic, body.in-tq #tqGoi, body.in-tq .chan-in, body.in-tq #thanhHoaToc { display: none !important; }
+    body.in-tq #mainHeader, body.in-tq .tq-so, body.in-tq .tq1-hang, body.in-tq .kl-ic, body.in-tq .chan-in, body.in-tq #thanhHoaToc { display: none !important; }
     body.in-tq #viewTongQuan > :not(#tqTang1):not(.luoi-tq):not(.tq-in-chan) { display: none !important; }
     body.in-tq .luoi-tq > :not(#tqMaTran):not(#tqNghen) { display: none !important; }
     body.in-tq .luoi-tq { display: block; }
@@ -90,7 +90,7 @@
 /* In / PDF (Báo cáo A1 và mọi màn hình): bỏ dải điều hướng, nút, ô nhập; giữ dải tổng quan và bảng. Trong @layer utilities để đứng
    sau mọi quy tắc thành phần. */
     .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc, .kl-sap,
-    .ray, .tb-panel, .bc-ky, .nut-goi, .khoi-mui { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề; v3.36: nút "i", mũi tên khối */
+    .ray, .tb-panel, .bc-ky, .nut-goi, .khoi-mui, .goi-tq, .ds-them { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề; v3.36: nút "i", mũi tên khối, hộp gợi ý, nút "Xem tất cả" (bản in đủ dòng) */
     body { background: #fff; }
     .tq-dai { background: none; border: 1px solid #999; box-shadow: none; color: var(--chu); }   /* v3.36: dải điều hành không in nền màu — chữ màu mực */
     .tq-dai h1, .tq-dai .so-dai, .tq-dai .so-dung, .tq-dai .dai-pham-vi, .tq-dai .vd-chu small { color: var(--chu); }

@@ -19,6 +19,7 @@ import { state } from '../../../lib/state.js';
 import { DEPT_NAMES } from '../../../lib/constants.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
+import { anGoi } from '../../../components/goi.js';
 import { moCuaVao, sauKhiVao, truocKhiVe } from '../../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadKlRows, loadPhanCongHieuLuc, xemToanBo, chuyenVienXemPhong, danhMucKl, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { loadKetQuaChiTieu } from '../../../lib/kl/muc-tieu-db.js';
@@ -163,7 +164,7 @@ function ve({ doi = false } = {}) {
     + theThangHtml(thang, homNay.slice(0, 4), dungHanQuy(rows, homNay))
     + vanBanHtml(vanBan.slice(0, 5), tq.ui.vbXem, loaiVanBanHtml(theoLoaiVanBan(rows), tq.loc.loai))
     + chiDaoHtml(chiDao, toanVP() ? 'A1' : v, k, vuongMacCho(rows).length) + (coCl ? chatLuongHtml(cl, k) : '')   // v3.27: khối chất lượng ẩn khi chưa có số
-    + `${noiBoHtml(noiBo)}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div>${inChanHtml()}<div id="tqGoi" class="goi-tq" role="tooltip" hidden></div>`;
+    + `${noiBoHtml(noiBo)}${duLieuHtml(chatLuongDuLieu(rows), coMucTieu())}</div>${inChanHtml()}`;
   apKhoi($('viewTongQuan'), tq.ui.khoiMo, soKhoi);   // V-13: khối gập / mở theo lựa chọn đã nhớ, ghi số chính — cùng nhịp với lần vẽ
   $('viewTongQuan').dataset.nap = tq.luc.toISOString();
   if (focus) $('viewTongQuan').querySelector(focus)?.focus({ preventScroll: true });   // vẽ lại sau khi đổi ô lọc / bấm nút: giữ tiêu điểm đúng chỗ (bàn phím)
@@ -240,24 +241,13 @@ export function openTongQuan() {
   return napTongQuan();
 }
 
-// Gợi ý khi rê chuột / đưa tiêu điểm vào phần tử có data-goi (cột, đoạn thanh xếp chồng).
-function hienGoi(e) {
-  const el = e.target.closest?.('#viewTongQuan [data-goi]'); const goi = $('tqGoi');
-  if (!goi) return;
-  if (!el) { goi.hidden = true; return; }
-  goi.textContent = el.dataset.goi; goi.hidden = false;
-  const r = el.getBoundingClientRect(); const w = goi.offsetWidth;
-  goi.style.left = `${Math.min(window.innerWidth - w - 8, Math.max(8, r.left + r.width / 2 - w / 2))}px`;
-  goi.style.top = `${Math.max(8, r.top - goi.offsetHeight - 8)}px`;
-}
-
 // Bấm một chỉ tiêu: lọc đúng tập việc trên CÙNG dữ liệu (đã qua thanh lọc) và kỳ đang hiện (tổng danh sách = con số đã bấm), mở trong ngăn chi tiết.
 function tqMo({ ct }) {
   let c; try { c = JSON.parse(ct || '{}'); } catch { return; }
   const homNay = homNayVN(); const k = kyHienTai(homNay);
   const kq = locChiTieu(dongDaLoc(), c, k, { khoa: khoaCua(c), cds: cdsLoc(), ctxCd: ctxCd(), homNay, nganhDm: danhMucKl().nganh || [], linhVucDm: danhMucKl().linhVuc || [] });
   if (coLoc(tq.loc) && c.t !== 'loc') kq.tieuDe = `${kq.tieuDe} (đã lọc)`;
-  const goi = document.getElementById('tqGoi'); if (goi) goi.hidden = true;
+  anGoi();
   moNganDanhSach(kq);
 }
 // Khối 1: bấm việc → chi tiết trong ngăn; "Chỉ đạo" → ngăn mở sẵn ô chỉ đạo (cheDo 'chi-dao').
@@ -269,7 +259,4 @@ export function registerTongQuan() {
   $('viewTongQuan').addEventListener('change', onDoiLoc);
   khiGhiTrongNgan('viewTongQuan', napTongQuan);   // v3.24: ghi trong ngăn (gắn mục tiêu không qua realtime) → số liệu mới ngay
   document.addEventListener('giai-ngan-da-ghi', () => { if (sectionDangHien('viewTongQuan')) napTongQuan(); });   // v3.28: nhập / xoá kỳ, gắn theo dõi giải ngân
-  document.addEventListener('mouseover', hienGoi);
-  document.addEventListener('focusin', hienGoi);
-  window.addEventListener('scroll', () => { const g = $('tqGoi'); if (g) g.hidden = true; }, { passive: true });
 }

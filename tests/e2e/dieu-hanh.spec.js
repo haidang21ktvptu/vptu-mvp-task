@@ -52,12 +52,16 @@ test.describe.serial('Điều hành ngoại lệ — thẻ việc Đỏ, đôn �
     await expect(the).toContainText('Phòng Tổng hợp');
     await expect(the).toContainText('Demo E2E Chuyên viên DH');
     await expect(the.locator('.khau')).toHaveText('Chưa nhận việc');
-    await expect(the).toContainText('Chưa ai xác nhận đã nhận việc');
+    // V-13: điều thứ 3 chỉ ghi tên sản phẩm (tình trạng đã ở tên khâu); câu đầy đủ ở gợi ý của dòng; không còn nhãn mặc định "chưa chỉ đạo".
+    await expect(the.locator('.bon-dieu')).toContainText('chưa định nghĩa');
+    await expect(the.locator('.bon-dieu')).toHaveAttribute('title', /Chưa ai xác nhận đã nhận việc/);
+    await expect(the.locator('.vong')).toHaveCount(0);
+    await expect(the).not.toContainText('chưa chỉ đạo');
     await expect(the).toContainText('chưa xác định');
     expect(Number((await the.locator('.tre').innerText()).split('\n')[0])).toBeGreaterThan(3);
-    // v3.36: hai tầng — nội dung tối đa hai dòng; tầng dưới: hàng nhãn rồi bốn điều tối đa hai dòng. Ở 1280px, cỡ chữ lớn của lãnh đạo, bốn điều phải
-    // đọc đủ trên màn hình (không bị cắt), khâu nằm trong khung; thẻ vẫn gọn.
-    expect((await the.boundingBox()).height, 'hàng việc gọn (nội dung ≤ 2 dòng + một hàng nhãn + bốn điều ≤ 2 dòng)').toBeLessThanOrEqual(170);
+    // v3.36: hai tầng — nội dung tối đa hai dòng; tầng dưới: nhãn đứng cùng hàng với bốn điều (tối đa hai dòng). Ở 1280px, cỡ chữ lớn của lãnh đạo, bốn
+    // điều phải đọc đủ trên màn hình (không bị cắt), khâu nằm trong khung; thẻ vẫn gọn.
+    expect((await the.boundingBox()).height, 'hàng việc gọn (nội dung ≤ 2 dòng + nhãn và bốn điều ≤ 2 dòng)').toBeLessThanOrEqual(170);
     expect(await the.locator('.ten b .nd').evaluate((el) => globalThis.getComputedStyle(el).webkitLineClamp)).toBe('2');
     const bonDieu = the.locator('.bon-dieu');
     expect(await bonDieu.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), 'bốn điều không bị cắt').toBe(true);

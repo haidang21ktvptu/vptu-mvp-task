@@ -187,7 +187,7 @@
   /* Nội dung thật thay khung chờ (sau-cho): dải, tiêu đề, nút, nhóm kỳ, khung thẻ, các khối đã hiện ở khung chờ đứng yên; số lăn, vòng quét, khối mới hiện lần lượt */
   .dang-vao.sau-cho { --cd-tre: -260ms; }
   #viewTongQuan.dang-vao.sau-cho > *, .sau-cho .tq-dai, .sau-cho .dai-nui polygon, .sau-cho .dai-vach, .sau-cho .tach-chu .chu, .sau-cho .dai-pham-vi, .sau-cho .dai-nut, .sau-cho .tq-dai .pham-vi,
-  .sau-cho .so-dung, .sau-cho .so-dai, .sau-cho .the-so, #viewTongQuan.dang-vao > .goi-tq { animation: none; }   /* .goi-tq: hộp gợi ý phải hiện ngay khi rê chuột */
+  .sau-cho .so-dung, .sau-cho .so-dai, .sau-cho .the-so { animation: none; }
   .dai-so.cho .xuong { display: block; opacity: .35; }
   @container tq (max-width: 900px) {
     .tq1-hang { grid-template-columns: minmax(0, 1fr); }

@@ -1,6 +1,7 @@
 // v3.36 (Đợt 1, phần 4 — CAU-HOI V-1): menu bốn nhóm thu gọn được (lãnh đạo mặc định thu nhóm Nhiệm vụ quý BTV; lựa chọn nhớ theo máy; mở chức năng
 // nằm trong nhóm đang thu thì nhóm tự mở); Cần xử lý bỏ dải ô số trùng Tổng quan, nội dung việc trong thẻ tối đa hai dòng; "In báo cáo nhanh" từ Tổng
-// quan: bản in có phần đầu theo thể thức Văn phòng, chỉ tầng 1, ma trận đơn vị và 5 điểm nghẽn. Chỉ đọc — không tạo dữ liệu.
+// quan: bản in có phần đầu theo thể thức Văn phòng, chỉ tầng 1, ma trận đơn vị và 5 điểm nghẽn. Cần xử lý hiện các dòng đầu (V-13). Chỉ đọc — không tạo
+// dữ liệu.
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP } from './lib/app.js';
 
@@ -47,6 +48,43 @@ test('A1: Cần xử lý không còn dải ô số; nội dung việc trong th�
     expect(kieu.clamp).toBe('2');
     expect(kieu.title.length).toBeGreaterThan(0);
   }
+  await page.context().close();
+});
+
+// v3.36 (CAU-HOI V-13, DESIGN mục 17): Cần xử lý ở trạng thái mặc định của người dùng thật (dsGon) — danh sách việc nghẽn hiện 10 việc đầu, nút "Xem tất
+// cả N việc" mở hết và nhớ theo máy; thứ tự xếp ở nút "i"; thanh trái chỉ còn tên và số (lời giải thích ở gợi ý); không còn nhãn mặc định "chưa chỉ đạo".
+test('A1: Cần xử lý hiện 10 việc đầu, "Xem tất cả" nhớ theo máy; ghi chú ở nút "i", thanh trái không còn dòng giải thích', async ({ browser }, testInfo) => {
+  const page = await pageAs(browser, 'A1', testInfo, { dsGon: true });
+  await expect(page.locator('#dhTinhDen')).toContainText('số liệu lúc', NAP);
+  const the = page.locator('#dsThe .the'); const nut = page.locator('[data-action="dsHet"][data-ds="dhThe"]');
+  await expect(page.locator('#dsPhu')).toHaveCount(0);
+  await expect(page.locator('#dsTieuDe + .nut-goi')).toHaveAttribute('data-goi', /^Xếp theo mức khẩn/);
+  await expect(page.locator('#dhRay button small')).toHaveCount(0);
+  for (const b of await page.locator('#dhRay button[data-khau]').all()) await expect(b).toHaveAttribute('data-goi', /.+: .+/);
+  await expect(page.locator('#dsThe')).not.toContainText('chưa chỉ đạo');
+  if (await the.count() <= 10) {   // phạm vi ít việc nghẽn: không có nút, mọi thẻ hiện
+    await expect(nut).toHaveCount(0);
+    await expect(page.locator('#dsThe .the[data-sau]')).toHaveCount(0);
+    await page.context().close();
+    return;
+  }
+  await expect(page.locator('#dsThe .the:not([data-sau])')).toHaveCount(10);
+  await expect(the.nth(10)).toBeHidden();
+  await expect(nut).toHaveText(/^Xem tất cả \d+ việc$/);
+  await expect(nut).toHaveAttribute('aria-expanded', 'false');
+  await nut.click();
+  await expect(nut).toHaveText('Chỉ hiện 10 việc đầu');
+  await expect(nut).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#dsThe .the[data-sau]')).toHaveCount(0);
+  await expect(the.nth(10)).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#mainHeader')).toBeVisible(NAP);
+  await nav(page, 'navDieuHanh');
+  await expect(nut, 'lựa chọn "Xem tất cả" nhớ theo máy').toHaveText('Chỉ hiện 10 việc đầu', NAP);
+  await expect(page.locator('#dsThe .the[data-sau]')).toHaveCount(0);
+  await nut.click();
+  await expect(nut).toHaveText(/^Xem tất cả \d+ việc$/);
+  await expect(page.locator('#dsThe .the:not([data-sau])')).toHaveCount(10);
   await page.context().close();
 });
 

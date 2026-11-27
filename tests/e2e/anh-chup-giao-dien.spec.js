@@ -14,7 +14,7 @@ test.describe('Ảnh chụp giao diện Tổng quan (rà soát trên PR)', () =>
   test.beforeAll(() => { mkdirSync(THU_MUC, { recursive: true }); });
   for (const [vai, w, h] of CO) {
     test(`${vai} ${w}×${h}`, async ({ browser }, testInfo) => {
-      const page = await pageAs(browser, vai, testInfo, { oTongQuan: true, tqGap: true });   // V-13: chụp trạng thái mặc định (các khối phân tích gập)
+      const page = await pageAs(browser, vai, testInfo, { oTongQuan: true, tqGap: true, dsGon: true });   // V-13: chụp trạng thái mặc định (các khối phân tích gập, danh sách hiện các dòng đầu)
       await page.setViewportSize({ width: w, height: h });
       await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
       await expect(page.locator('#tqSo .the-so')).toHaveCount(4);

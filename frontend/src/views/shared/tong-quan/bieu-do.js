@@ -1,6 +1,6 @@
 // Biểu đồ của màn hình Tổng quan — HTML/SVG thuần, không thư viện (docs/DESIGN.md mục 5, theo dataviz): chữ dùng màu chữ, không màu dữ liệu;
 // cột ≤ 24px bo đầu 4px, khe 2px giữa các phần xếp chồng; chú giải khi ≥ 2 chuỗi; mỗi phần tử có data-goi = câu gợi ý khi rê chuột / chạm
-// (tong-quan/index.js hiện #tqGoi). Màu trạng thái luôn đi kèm nhãn chữ ở chú giải — không dùng màu làm kênh duy nhất. v9 đợt 2: cột, đoạn,
+// (hộp gợi ý dùng chung, components/goi.js). Màu trạng thái luôn đi kèm nhãn chữ ở chú giải — không dùng màu làm kênh duy nhất. v9 đợt 2: cột, đoạn,
 // mục chú giải nhận thuộc tính hành động (hd = chuỗi data-action + data-ct) → bấm mở danh sách việc trong ngăn chi tiết.
 import { escapeHtml } from '../../../lib/dom.js';
 

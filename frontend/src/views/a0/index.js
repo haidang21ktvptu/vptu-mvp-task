@@ -11,7 +11,6 @@ import { canXuLyHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
 import { baCauHtml } from '../shared/dieu-hanh/ba-cau.js';
 import { registerChiDaoDaGui } from './chi-dao-da-gui.js';
 import { registerCanBo } from '../shared/can-bo.js';
-import { tenMuc } from '../../lib/kl/nhan.js';
 
 // Đầu trang (GĐ22): dải "Cần xử lý ngay" + việc Thường trực giao bị từ chối / đang đề nghị từ chối (Văn phòng giao lại).
 const DAU = '<div id="dhBaCau"></div><div id="dhCanXuLy"></div><section class="cau hidden" id="dhTC"></section>';
@@ -29,10 +28,7 @@ export function registerA0View() {
     init() {
       dangKyDieuHanhVai();
       $('viewDieuHanh').innerHTML = khungHtml('Cần xử lý hôm nay', `${ngayDaiVN()}, đang nạp số liệu…`, DAU);
-      datCauHinhDieuHanh({
-        phuDe: () => `xếp theo mức khẩn: độ khẩn, việc Thường trực giao, việc ${tenMuc('ddb')} trước, việc cần Thường trực quyết, rồi số ngày trễ`,
-        veThem,
-      });
+      datCauHinhDieuHanh({ veThem });
       moManDau(openTongQuan);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },
     reload() { if (sectionDangHien('viewTongQuan')) openTongQuan(); else openDieuHanh(); },

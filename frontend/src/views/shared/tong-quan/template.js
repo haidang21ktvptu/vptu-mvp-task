@@ -7,14 +7,15 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { cotThangHtml, xepHtml, chuGiaiHtml } from './bieu-do.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
+import { nutGoi } from '../../../components/goi.js';
 
 export const mo = (ct) => `data-action="tqMo" data-ct='${escapeHtml(JSON.stringify(ct))}'`;
 // v3.36 (CAU-HOI V-13, DESIGN mục 17 "số trước, chi tiết bấm mới mở"): câu ghi chú của khối (phu: mốc tính, cách xếp) không ghi trên màn hình — thành gợi ý của nút
-// "i" đứng cạnh tên khối (data-goi: rê chuột, đưa tiêu điểm, chạm; index.js hienGoi). Tiêu đề khối phân tích là nút mở / gập khối (tqKhoi, khoi-gap.js):
+// "i" đứng cạnh tên khối (data-goi: rê chuột, đưa tiêu điểm, chạm; hộp gợi ý dùng chung components/goi.js). Tiêu đề khối phân tích là nút mở / gập khối (tqKhoi, khoi-gap.js):
 // khối gập chỉ còn một dòng tên khối + số chính (.khoi-so, do apKhoi điền); các nút chọn của khối nằm bên phải (.khoi-phai); số thứ tự khối bỏ (tham
 // số `so` giữ chỗ cho lời gọi cũ).
 const ICON_MUI = '<svg class="khoi-mui" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
-export const nutGoi = (chu) => (chu ? `<button type="button" class="nut-goi" data-goi="${escapeHtml(chu)}" aria-label="${escapeHtml(`Ghi chú: ${chu}`)}">i</button>` : '');
+export { nutGoi };   // các khối của Tổng quan lấy qua tệp này
 const phaiKhoi = (phai) => (phai ? `<div class="khoi-phai">${phai}</div>` : '');
 export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><h2>${tieu}</h2>${nutGoi(phu)}${phaiKhoi(phai)}</div>`;
 export const dauKhoi = (so, tieu, phu, phai = '', id = '') => `<div class="dau-bd"><h2${id ? ` id="${id}"` : ''}><button type="button" class="khoi-mo" data-action="tqKhoi" aria-expanded="true"><span class="khoi-ten">${tieu}</span><span class="khoi-so"></span>${ICON_MUI}</button></h2>${nutGoi(phu)}${phaiKhoi(phai)}</div>`;
