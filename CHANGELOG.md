@@ -1056,3 +1056,11 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Chú giải màu của các bảng nhiệm vụ ghi ngắn (2 đến 4 chữ mỗi mục), câu đầy đủ theo ngưỡng cấu hình ở gợi ý; bỏ mục "Mới nhập trong 24 giờ" (nhãn "Mới" trên dòng đã có gợi ý).
 - Danh sách hiện các dòng đầu: khi thu gọn, tiêu điểm về nút trước khi đánh dấu dòng (dòng vừa giữ tiêu điểm không bị giữ lại).
 - e2e: `pr3-hien-thi`, `xuat-theo-ky` mở nút "Xuất, in" trước khi chọn; thêm kịch bản màn Nhiệm vụ ở `v336-giao-dien`. Unit không đổi số lượng (417 đạt).
+
+## 107. v3.36.0 (Đợt 1, phần 14) — Số trước, chi tiết bấm mới mở, phần 4: Báo cáo, Cán bộ (27/11/2026, CAU-HOI V-13; chỉ giao diện, không migration)
+- Đo trên staging trước khi sửa (demo_cvp, 1366×768): Báo cáo dài 19,2 màn hình, 4.866 chữ, riêng bảng "Việc cần lãnh đạo quyết định" 125 dòng dài 9.320 px. Nay bảng này hiện 5 dòng đầu, "Theo kết luận, văn bản giao việc" hiện 10 dòng đầu, nút "Xem tất cả" ở cuối khối (nhớ theo máy; hàng đang mở rộng không bị ẩn; bản in đủ dòng); nội dung, vướng mắc tối đa hai dòng.
+- Báo cáo: phụ đề chỉ ghi kỳ và phạm vi (ngày lập chỉ ở bản in); dải số nhãn ngắn, phần giải thích ở gợi ý; ghi chú của khối ở nút "i"; dòng phụ của tên dòng đứng cùng dòng với tên. Phần dựng HTML tách sang `views/a1/bao-cao-khoi.js`.
+- Màn hẹp và bản in khổ dọc của Báo cáo: mỗi số có nhãn ngắn, sáu số của một dòng đứng cùng hàng (trước đây sáu số xếp dọc, không nhãn). Sửa lỗi có từ trước: bản in không có số trong bốn bảng (số là nút bấm, bản in ẩn mọi nút).
+- Cán bộ: ghi chú của màn ở nút "i"; dòng số của phòng ghi ngắn, cách tính ở gợi ý; số quá hạn của từng người đứng cùng dòng với nhãn.
+- `components/ds-gon.js`: cấu hình `giu` (dòng không bị ẩn); thu gọn thì nút về giữa màn hình khi ra khỏi tầm nhìn.
+- e2e: thêm kịch bản Báo cáo, Cán bộ ở `v336-giao-dien`; phiên e2e mở sẵn hai danh sách mới. Unit 417 đạt.

@@ -7,7 +7,7 @@
    nguồn. Chỉ áp khi bấm nút "In báo cáo nhanh" (body.in-tq; khổ A4 dọc và lề gắn bằng thẻ style tạm trong tqIn); in bằng Ctrl+P không có lớp này thì
    giữ cách in chung của in.css. Tailwind v3 gom @layer components vào nhóm thành phần (không phải lớp xếp chồng của trình duyệt): các quy tắc ở đây
    thắng !important của bảng điểm nghẽn (tong-quan-khoi.css) nhờ độ đặc hiệu cao hơn (body.in-tq …) cùng !important. */
-  .tq-in-dau, .tq-in-chan, .chan-ng .chi-in, .mt-chi-in { display: none; }
+  .tq-in-dau, .tq-in-chan, .chan-ng .chi-in, .mt-chi-in, .chi-in-dong { display: none; }   /* .chi-in-dong (v3.36): đoạn chữ cùng dòng chỉ có ở bản in (ngày lập ở phụ đề Báo cáo) */
   @media print {
     :root:has(body.in-tq) { font-size: 11.5px; }
     body.in-tq #viewTongQuan { container-type: normal; zoom: .9; }   /* bỏ bố cục hẹp theo khung (@container tq); thu 90% để vừa một trang A4 */
@@ -91,6 +91,8 @@
    sau mọi quy tắc thành phần. */
     .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc, .kl-sap,
     .ray, .tb-panel, .bc-ky, .nut-goi, .khoi-mui, .goi-tq, .ds-them { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề; v3.36: nút "i", mũi tên khối, hộp gợi ý, nút "Xem tất cả" (bản in đủ dòng) */
+    .bc-hang td.so .nut { display: inline-block !important; min-width: 0; height: auto; padding: 0; border: 0; background: none; box-shadow: none; color: #000; font-weight: 700; }   /* v3.36: số trong bảng Báo cáo là nút (bấm để xem việc) — bản in vẫn ghi số (trước đây bị ẩn cùng mọi nút) */
+    .chi-in-dong { display: inline; }
     body { background: #fff; }
     .tq-dai { background: none; border: 1px solid #999; box-shadow: none; color: var(--chu); }   /* v3.36: dải điều hành không in nền màu — chữ màu mực */
     .tq-dai h1, .tq-dai .so-dai, .tq-dai .so-dung, .tq-dai .dai-pham-vi, .tq-dai .vd-chu small { color: var(--chu); }
