@@ -131,6 +131,22 @@ test('cửa vào: hết hẹn mà hiệu ứng hữu hạn còn chạy thì cử
   moCuaVao(el3, { ms: 100 }); t.mock.timers.tick(100); assert.equal(dangVao(el3), false);
 });
 
+test('cửa vào: chỉ còn hiệu ứng CHƯA bắt đầu (trang không được vẽ: cửa sổ bị che, thu nhỏ) thì chờ đúng một nhịp rồi đóng — nội dung không bị giữ ẩn', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const hieuUng = (pending) => ({ playState: 'running', pending, effect: { getComputedTiming: () => ({ endTime: 700 }) } });
+  const el = phanTu(); el.getAnimations = () => [hieuUng(true), hieuUng(true)];
+  moCuaVao(el, { ms: 200 });
+  t.mock.timers.tick(200); assert.equal(dangVao(el), true);    // một nhịp cho nội dung vừa đổ vào ngay trước hẹn
+  t.mock.timers.tick(150); assert.equal(dangVao(el), false);   // vẫn chưa bắt đầu: đóng
+  const el2 = phanTu(); let ds = [hieuUng(true)]; el2.getAnimations = () => ds;   // nhịp sau đã bắt đầu chạy: tiếp tục chờ tới khi xong
+  moCuaVao(el2, { ms: 200 });
+  t.mock.timers.tick(200); ds = [hieuUng(false)];
+  t.mock.timers.tick(150); assert.equal(dangVao(el2), true);
+  t.mock.timers.tick(150); assert.equal(dangVao(el2), true);
+  ds = [];
+  t.mock.timers.tick(150); assert.equal(dangVao(el2), false);
+});
+
 test('truocKhiVe: lần vẽ đầu trong cửa giữ cửa, lần vẽ thứ hai đóng cửa (nội dung mới hiện ngay)', () => {
   const el = phanTu();
   truocKhiVe(el);   // chưa có cửa: không lỗi
