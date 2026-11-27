@@ -1,7 +1,8 @@
-// Thanh lọc Tổng quan (v3.24 — bám đầu trang khi cuộn, bố cục được duyệt 16/10/2026): hàng 1 phạm vi + lọc nhanh + nút "Bộ lọc chi tiết"; hàng 2
-// (mở / gập) 12 ô; hàng 3 chip "Đang áp dụng" (✕ bỏ từng điều kiện), số đang lọc, "Xoá bộ lọc", "Mở danh sách theo bộ lọc này" (ngăn chi tiết dùng
-// chung — không chuyển mục). Ô chọn data-loc="<khoá>" đổi → vẽ lại tại chỗ (index.js). Cùng file: khối "Theo loại văn bản" (xem trong khối 6) và
-// "Theo lãnh đạo VP phụ trách" (khối 9). Chỉ dựng HTML từ số đã tính (lib/kl/tong-quan-them.js, tq-bo-loc.js).
+// Thanh lọc Tổng quan (v3.24 — bám đầu trang khi cuộn). v3.36 (CAU-HOI V-13, số trước, chi tiết bấm mới mở): thanh chỉ còn MỘT hàng mở đầu phần
+// "Phân tích chi tiết" — tên phần, "Toàn Văn phòng / Phạm vi của tôi" (0103, khi có), chip điều kiện đang áp dụng (✕ bỏ từng điều kiện), số đang
+// lọc, "Xem danh sách" (theo bộ lọc, ngăn chi tiết dùng chung), "Xoá bộ lọc", "Mở tất cả" (các khối, khoi-gap.js), nút "Bộ lọc"; phần mở ra
+// (#tqLocLuoi, gập mặc định, không nhớ theo máy): phạm vi việc, lọc nhanh, 12 ô. Ô chọn data-loc="<khoá>" đổi → vẽ lại tại chỗ (index.js). Cùng
+// file: khối "Theo loại văn bản" (xem trong khối văn bản) và "Theo lãnh đạo VP phụ trách" (khối nội bộ). Chỉ dựng HTML từ số đã tính.
 import { escapeHtml } from '../../../lib/dom.js';
 import { tenLoaiVanBan } from '../kl/them-owner.js';
 import { KHONG_VB, CHUA_LDVP } from '../../../lib/kl/tong-quan-them.js';
@@ -35,7 +36,7 @@ export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo
   const nguoi = [ldvp && tc.ldvp.length ? { nhom: 'Lãnh đạo Văn phòng phụ trách', ds: [...tc.ldvp.map((o) => ({ ...o, ma: `LD:${o.ma}` })), { ma: `LD:${CHUA_LDVP}`, ten: 'Chưa có lãnh đạo phụ trách', n: null }] } : null,
     phong && tc.phong.length ? { nhom: 'Đơn vị chủ trì theo dõi', ds: tc.phong.map((o) => ({ ...o, ma: `P:${o.ma}` })) } : null,
     tc.canBo.length ? { nhom: 'Chủ trì theo dõi', ds: tc.canBo.map((o) => ({ ...o, ma: `CB:${o.ma}` })) } : null].filter(Boolean);
-  const luoi = `<div class="tq-luoi-loc" id="tqLocLuoi"${moLuoi ? '' : ' hidden'}>
+  const luoi = `<div class="tq-luoi-loc">
       ${oChon('tqLocMucTieu', 'mucTieu', 'Mục tiêu then chốt', coMucTieu() ? tc.mucTieu : [], loc.mucTieu, 'Mọi mục tiêu')}
       ${oChon('tqLocCachGan', 'cachGan', 'Cách gắn mục tiêu', coMucTieu() ? tc.cachGan || [] : [], loc.cachGan, 'Mọi cách gắn')}
       ${oChon('tqLocKhoi', 'khoi', 'Khối lĩnh vực', tc.khoi, loc.khoi, 'Mọi khối')}
@@ -51,16 +52,16 @@ export function thanhLocHtml({ loc, tc, hien = {}, soHien, soTong, chip = [], mo
       <div class="o-loc"><span>Kỳ tùy chọn (thay kỳ ở đầu trang)</span><div class="hai-o">
         <input type="date" id="tqLocTu" data-loc="tu" min="2000-01-01" max="2100-12-31" value="${escapeHtml(loc.tu || '')}" aria-label="Từ ngày"><input type="date" id="tqLocDen" data-loc="den" min="2000-01-01" max="2100-12-31" value="${escapeHtml(loc.den || '')}" aria-label="Đến ngày"></div></div></div>`;
   const chips = chip.map((c) => `<span class="chip-tq">${escapeHtml(c.ten)}<button type="button" data-action="tqChipBo" data-k="${c.k}" data-v="${escapeHtml(c.v || '')}" aria-label="Bỏ điều kiện: ${escapeHtml(c.ten)}">${ICON_X}</button></span>`).join('');
-  return `<section class="tq-loc2" id="tqLoc" aria-label="Bộ lọc của Tổng quan">
-    <div class="tq-loc-hang">${tb}${pv('phamVi', [['', 'Toàn bộ'], ['toi', phamViNhan]], loc.phamVi || '', 'tqPhamVi', 'Phạm vi')}
-      <span class="nho-tq">Lọc nhanh</span>${nhanh}<span class="tq-day"></span>
-      <button type="button" class="nut nho" id="tqLocChiTietNut" data-action="tqLocChiTiet" aria-expanded="${String(moLuoi)}" aria-controls="tqLocLuoi">${ICON_LOC}Bộ lọc chi tiết</button></div>
-    ${luoi}
-    <div class="tq-loc-hang"><span class="nho-tq">Đang áp dụng</span>${chips || '<span class="nho-tq">chưa chọn bộ lọc nào — mọi khối bên dưới tính trên toàn bộ nhiệm vụ trong phạm vi</span>'}
-      <span class="tq-dang-loc" id="tqDangLoc">${coLoc ? `Đang lọc: <b>${soHien}</b> / ${soTong} nhiệm vụ` : `${soTong} nhiệm vụ ${hien.toanBo ? 'toàn Văn phòng' : 'trong phạm vi'}`}</span>
-      <span class="tq-day"></span>
-      <button type="button" class="nut nho tq-loc-bo" id="tqLocBo" data-action="tqLocBo" ${chip.length ? '' : 'disabled'}>Xoá bộ lọc</button>
-      <button type="button" class="nut nho" id="tqMoTheoLoc" ${mo({ t: 'loc' })}>Mở danh sách theo bộ lọc này</button></div></section>`;
+  return `<section class="tq-loc2" id="tqLoc" aria-label="Phân tích chi tiết và bộ lọc của Tổng quan">
+    <div class="tq-loc-hang"><h2 class="tq-pt-ten">Phân tích chi tiết</h2>${tb}${chips}
+      <span class="tq-dang-loc" id="tqDangLoc">${coLoc ? `Đang lọc: <b>${soHien}</b> / ${soTong} nhiệm vụ` : ''}</span><span class="tq-day"></span>
+      ${coLoc ? `<button type="button" class="nut nho" id="tqMoTheoLoc" ${mo({ t: 'loc' })}>Xem danh sách</button>` : ''}
+      ${chip.length ? '<button type="button" class="nut nho tq-loc-bo" id="tqLocBo" data-action="tqLocBo">Xoá bộ lọc</button>' : ''}
+      <button type="button" class="nut nho" id="tqKhoiTatCa" data-action="tqKhoiTatCa">Mở tất cả</button>
+      <button type="button" class="nut nho" id="tqLocChiTietNut" data-action="tqLocChiTiet" aria-expanded="${String(moLuoi)}" aria-controls="tqLocLuoi">${ICON_LOC}Bộ lọc</button></div>
+    <div class="tq-loc-mo" id="tqLocLuoi"${moLuoi ? '' : ' hidden'}>
+      <div class="tq-loc-hang">${pv('phamVi', [['', 'Toàn bộ'], ['toi', phamViNhan]], loc.phamVi || '', 'tqPhamVi', 'Phạm vi')}<span class="nho-tq">Lọc nhanh</span>${nhanh}</div>
+      ${luoi}</div></section>`;
 }
 
 export function loaiVanBanHtml(ds, locLoai) {
@@ -71,14 +72,14 @@ export function loaiVanBanHtml(ds, locLoai) {
       <small class="chu-phu">${d.xong} hoàn thành · ${d.dangMo} đang làm${d.canhBao ? ` · ${d.canhBao} cảnh báo` : ''}</small></td>
     <td class="so" data-n="Tổng"><button type="button" class="ten-bam" ${mo({ t: 'loai', ma: d.ma, ten: tenLoai(d.ma) })}><b>${d.tong}</b><small>${d.tyLe}%</small></button></td></tr>`;
   return `<div id="tqLoaiVanBan">${ds.length ? `<div class="loai-vb"><div class="vong" data-tong="${tong}" style="background:conic-gradient(${doan.join(', ')})" role="img" aria-label="${tong} nhiệm vụ theo loại văn bản"></div>
-      <table><tbody>${ds.map(dong).join('')}</tbody></table></div><p class="chu-phu tq-chu-nho">Bấm tên loại để lọc cả Tổng quan, bấm số để xem việc.</p>` : '<p class="trong">Chưa có nhiệm vụ trong phạm vi.</p>'}</div>`;
+      <table><tbody>${ds.map(dong).join('')}</tbody></table></div>` : '<p class="trong">Chưa có nhiệm vụ trong phạm vi.</p>'}</div>`;
 }
 
 export function lanhDaoVpHtml(ds, k) {
   const dong = (d) => `<tr><td class="c-ten"><button type="button" class="ten-bam" ${mo({ t: 'nhom', kh: 'ldvp', ma: d.ma, ten: d.ten })}><b>${escapeHtml(d.ten)}</b><small><span class="chi-mt">${d.phong.length ? escapeHtml(d.phong.join(', ')) : d.ma === CHUA_LDVP ? 'ngoài phân công' : 'chỉ kiêm nhiệm'}</span><span class="chi-dt">${d.xong} hoàn thành, ${d.dangMo} đang làm</span></small></button></td>
     <td class="so" data-n="Tổng">${d.tong}</td><td class="so" data-n="Hoàn thành">${d.xong}</td><td class="so" data-n="Đang làm">${d.dangMo}</td>
     <td data-n="Cảnh báo"><span class="canh-tq">${pillCanh(d, 'ldvp')}</span></td><td data-n="Đúng hạn">${thuoc(d.tyLe)}</td></tr>`;
-  return `<article class="the-bd n12" id="tqLanhDaoVp">${dauThe('Theo lãnh đạo Văn phòng phụ trách', `Theo phân công phụ trách phòng, kiêm nhiệm ngành / lĩnh vực đang hiệu lực · hoàn thành, đúng hạn tính ${k.trong}`)}
+  return `<article class="the-bd n12" id="tqLanhDaoVp">${dauThe('Theo lãnh đạo Văn phòng phụ trách', `Theo phân công phụ trách phòng, kiêm nhiệm ngành, lĩnh vực đang hiệu lực; hoàn thành, đúng hạn tính ${k.trong}.`)}
     ${ds.length ? `<div class="cuon-ngang"><table class="bang-tq"><thead><tr><th>Lãnh đạo · phòng phụ trách</th><th class="so">Tổng</th><th class="so">Hoàn thành</th><th class="so">Đang làm</th><th>Cảnh báo</th><th>Đúng hạn</th></tr></thead>
       <tbody>${ds.map(dong).join('')}</tbody></table></div>` : '<p class="trong">Chưa có phân công phụ trách hoặc chưa có nhiệm vụ.</p>'}</article>`;
 }

@@ -34,8 +34,7 @@ const SO_DONG_IN = 5;   // v3.36: "In báo cáo nhanh" một trang A4 — bản 
 export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
   const chon = chonUi && cap.some((c) => c.ma === chonUi) ? chonUi : '';   // cấp đang chọn hết việc (đổi bộ lọc / kỳ) → "Mọi cấp"
   const hien = chon ? ds.filter((r) => (r.cap_quyet_dinh || 'CHUA') === chon) : ds;
-  const phu = ds.length ? `${ds.length} nhiệm vụ quá hạn, quá hạn lâu nhất trước — ai đang chậm, chậm bao nhiêu ngày, sản phẩm còn thiếu, cấp nào cần quyết định.`
-    : 'Không có nhiệm vụ quá hạn.';
+  const phu = ds.length ? `${ds.length} nhiệm vụ quá hạn, việc quá hạn lâu nhất đứng trước.` : '';
   const nut = ds.length ? nhomNut('tqCap', 'cap', [['', `Mọi cấp (${ds.length})`], ...cap.map((c) => [c.ma, `${c.ten} (${c.n})`])], chon, 'Lọc theo cấp cần quyết định') : '';
   if (!ds.length) {
     return `<article class="the-bd n12" id="tqNghen">${dauKhoi(1, 'Điểm nghẽn cần chỉ đạo', phu)}<div class="bao-dong yen" role="note"><span class="bieu-bd" aria-hidden="true">✓</span>
@@ -45,18 +44,17 @@ export function nghenHtml(ds, cap, chonUi, { duocChiDao = false } = {}) {
     const [lop, muc] = mucCuaViec(r); const [dv, cb] = coQuanCanBo(r);
     const vb = [tenLoaiVanBan(r.van_ban_loai), r.so_ket_luan].filter(Boolean).join(' ');
     return `<tr><td data-n="Mức"><span class="muc-tq ${lop}">${muc}</span></td>
-      <td class="c-ten"><button type="button" class="ten-bam" data-action="tqMoViec" data-id="${r.id}"><span class="ma-ng">${escapeHtml(r.ma)}</span><b>${escapeHtml(r.noi_dung)}</b><small>${escapeHtml(vb)}</small></button></td>
+      <td class="c-ten"><button type="button" class="ten-bam" data-action="tqMoViec" data-id="${r.id}"${vb ? ` title="${escapeHtml(vb)}"` : ''}><span class="ma-ng">${escapeHtml(r.ma)}</span><b>${escapeHtml(r.noi_dung)}</b></button></td>
       <td data-n="Cơ quan, đơn vị · cán bộ"><b class="nd-ng">${escapeHtml(dv)}</b><small>${escapeHtml(cb)}</small></td>
       <td class="so" data-n="Trễ"><b class="tre-ng">${r.so_ngay_qua ?? 0}</b><small>ngày</small></td>
-      <td data-n="Sản phẩm còn thiếu"><span class="nd-ng">${escapeHtml(sanPhamThieu(r))}</span><small>${escapeHtml(r.vuong_mac ? `Vướng mắc: ${r.vuong_mac}` : 'Chưa báo vướng mắc')}</small></td>
+      <td data-n="Sản phẩm còn thiếu"><span class="nd-ng">${escapeHtml(sanPhamThieu(r))}</span>${r.vuong_mac ? `<small>${escapeHtml(`Vướng mắc: ${r.vuong_mac}`)}</small>` : ''}</td>
       <td data-n="Cấp cần quyết định"><span class="cap-ng">${escapeHtml(r.cap_quyet_dinh_ten || 'Chưa xác định')}</span></td>
       <td class="c-nut"><button type="button" class="nut nho" data-action="tqChiDao" data-id="${r.id}">${(typeof duocChiDao === 'function' ? duocChiDao(r) : duocChiDao) ? 'Chỉ đạo' : 'Xem'}</button></td></tr>`;
   };
-  const chan = `Đang hiện ${Math.min(SO_DONG_NGHEN, hien.length)} trong ${hien.length} việc${chon ? '' : cap.length > 1 ? ` · ${cap.map((c) => `${c.ten} ${c.n}`).join(' · ')}` : ''}`;
   return `<article class="the-bd n12" id="tqNghen">${dauKhoi(1, 'Điểm nghẽn cần chỉ đạo', phu, nut)}
     <div class="cuon-ngang"><table class="bang-tq bang-ng"><thead><tr><th>Mức</th><th>Nhiệm vụ</th><th>Cơ quan, đơn vị · cán bộ</th><th class="so">Trễ</th><th>Sản phẩm còn thiếu</th><th>Cấp cần quyết định</th><th><span class="sr">Thao tác</span></th></tr></thead>
       <tbody>${hien.slice(0, SO_DONG_NGHEN).map(dong).join('')}</tbody></table></div>
-    <div class="chan-ng"><span class="chi-man">${chan}</span>${hien.length > SO_DONG_IN ? `<span class="chi-in">Bản in ghi ${SO_DONG_IN} việc quá hạn lâu nhất trong ${hien.length} việc; danh sách đầy đủ xem trên hệ thống.</span>` : ''}<button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
+    <div class="chan-ng">${hien.length > SO_DONG_IN ? `<span class="chi-in">Bản in ghi ${SO_DONG_IN} việc quá hạn lâu nhất trong ${hien.length} việc; danh sách đầy đủ xem trên hệ thống.</span>` : ''}<button type="button" class="nut nho" ${mo({ t: 'nghen', cap: chon, ten: chon ? cap.find((c) => c.ma === chon)?.ten : '' })}>Xem danh sách ${hien.length} việc</button></div></article>`;
 }
 
 const pills = (m) => [[m.ddb, 'ddb'], [m.do, 'do'], [m.vang, 'vang']].filter(([n]) => n).map(([n, lop]) => `<span class="muc-tq ${lop}">${n} ${tenMuc(lop)}</span>`).join('')
@@ -127,7 +125,7 @@ export function linhVucHtml(t, mo2, sap, k, { raSoat = false, soNganh = 12, soKh
   const chua = t.chuaNganh ? hangKv(t.chuaNganh, { ten: 'Chưa phân loại — cần rà soát', ct: { t: 'khoi', ma: 'CHUA', ten: 'Chưa có ngành — cần rà soát' }, lop: 'chua' }) : '';
   const nutRs = thieu?.tong && raSoat ? `<p class="chu-phu tq-chu-nho" id="tqLvThieu">${chuThieuNganh(thieu)} — <button type="button" class="ten-bam lien-ket" data-action="moRaSoatMucTieu" data-che="nganh">Rà soát phân loại</button></p>` : '';
   const chuGiai = DOAN.map(([, ten, mau]) => `<span><i style="background:var(${mau})"></i>${ten}</span>`).join('');
-  return `<article class="the-bd n12" id="tqLinhVuc">${dauKhoi(3, 'Thực hiện theo lĩnh vực trọng tâm', `Việc đang mở và việc hoàn thành ${k.trong}, gom ${soNganh} ngành của danh mục thành ${soKhoi} khối như bố cục báo cáo; bấm một khối để mở các ngành.`,
+  return `<article class="the-bd n12" id="tqLinhVuc">${dauKhoi(3, 'Thực hiện theo lĩnh vực trọng tâm', `Việc đang mở và việc hoàn thành ${k.trong}, gom ${soNganh} ngành của danh mục thành ${soKhoi} khối như bố cục báo cáo.`,
     nhomNut('tqLvSap', 'sap', [['qh', 'Nhiều quá hạn trước'], ['dm', 'Theo danh mục']], sap, 'Sắp xếp lĩnh vực'))}
     <div class="kv-bang"><div class="kv-hang kv-dau" aria-hidden="true"><span>Khối, ngành</span><span>Cơ cấu trạng thái</span><span class="kv-so">Tổng</span><span class="kv-so an-dt">Đúng hạn</span><span class="kv-so an-dt">Quá hạn</span></div>
       ${hangKv(t.toan, { ten: 'Toàn bộ', ct: { t: 'khoi', ma: 'TAT', ten: 'Toàn bộ lĩnh vực' }, lop: 'tong' })}${khoi}${khong}${chua}</div>

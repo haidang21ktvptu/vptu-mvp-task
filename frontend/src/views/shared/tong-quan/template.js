@@ -9,11 +9,15 @@ import { cotThangHtml, xepHtml, chuGiaiHtml } from './bieu-do.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
 
 export const mo = (ct) => `data-action="tqMo" data-ct='${escapeHtml(JSON.stringify(ct))}'`;
-export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><div><h2>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
-// v3.24: tiêu đề khối có số thứ tự. v3.28: số do danhSoKhoi đánh lại theo thứ tự các khối đang hiện (khối ẩn — Giải ngân vốn chưa có số liệu, Chất
-// lượng chưa có việc xếp loại — không làm hụt số); `so` truyền vào chỉ là chỗ giữ.
-export const dauKhoi = (so, tieu, phu, phai = '', id = '') => `<div class="dau-bd"><div><h2${id ? ` id="${id}"` : ''}><span class="so-khoi" aria-hidden="true">${so}</span>${tieu}</h2><p>${phu}</p></div>${phai}</div>`;
-export const danhSoKhoi = (html) => { let n = 0; return html.replace(/<span class="so-khoi" aria-hidden="true">\d+<\/span>/g, () => `<span class="so-khoi" aria-hidden="true">${++n}</span>`); };
+// v3.36 (CAU-HOI V-13, DESIGN mục 17 "số trước, chi tiết bấm mới mở"): câu ghi chú của khối (phu: mốc tính, cách xếp) không ghi trên màn hình — thành gợi ý của nút
+// "i" đứng cạnh tên khối (data-goi: rê chuột, đưa tiêu điểm, chạm; index.js hienGoi). Tiêu đề khối phân tích là nút mở / gập khối (tqKhoi, khoi-gap.js):
+// khối gập chỉ còn một dòng tên khối + số chính (.khoi-so, do apKhoi điền); các nút chọn của khối nằm bên phải (.khoi-phai); số thứ tự khối bỏ (tham
+// số `so` giữ chỗ cho lời gọi cũ).
+const ICON_MUI = '<svg class="khoi-mui" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+export const nutGoi = (chu) => (chu ? `<button type="button" class="nut-goi" data-goi="${escapeHtml(chu)}" aria-label="${escapeHtml(`Ghi chú: ${chu}`)}">i</button>` : '');
+const phaiKhoi = (phai) => (phai ? `<div class="khoi-phai">${phai}</div>` : '');
+export const dauThe = (tieu, phu, phai = '') => `<div class="dau-bd"><h2>${tieu}</h2>${nutGoi(phu)}${phaiKhoi(phai)}</div>`;
+export const dauKhoi = (so, tieu, phu, phai = '', id = '') => `<div class="dau-bd"><h2${id ? ` id="${id}"` : ''}><button type="button" class="khoi-mo" data-action="tqKhoi" aria-expanded="true"><span class="khoi-ten">${tieu}</span><span class="khoi-so"></span>${ICON_MUI}</button></h2>${nutGoi(phu)}${phaiKhoi(phai)}</div>`;
 // Nhóm nút chọn một (segmented) — act: hành động; k: tên data-*; ds: [[giá trị, nhãn]].
 export const nhomNut = (act, k, ds, chon, nhan) => `<div class="pham-vi" role="group" aria-label="${nhan}">${ds.map(([v, ten]) => `<button type="button" data-action="${act}" data-${k}="${escapeHtml(v)}" aria-pressed="${String(chon === v)}">${escapeHtml(ten)}</button>`).join('')}</div>`;
 export const KY = ['thang', 'quy', 'nam', 'nhiem-ky'];
@@ -21,7 +25,7 @@ export const KY = ['thang', 'quy', 'nam', 'nhiem-ky'];
 // Khối 5: cột theo tháng (năm hiện tại) + tỷ lệ đúng hạn quý trước / quý này (dungHanQuy).
 export function theThangHtml(thang, nam, quy = []) {
   const dongQuy = quy.map((q) => `<button type="button" class="dong-td dong-bam" ${mo({ t: 'quy', tu: q.tu, den: q.den, ten: q.ten })}><span>Tỷ lệ đúng hạn ${escapeHtml(q.ten)}</span><b>${q.tyLe === null ? '—' : `${q.tyLe}%`}</b></button>`).join('');
-  return `<article class="the-bd n5" id="tqThang">${dauKhoi(5, 'Giao mới và hoàn thành theo tháng', `Số nhiệm vụ, năm ${nam} · bấm một tháng để xem việc`,
+  return `<article class="the-bd n5" id="tqThang">${dauKhoi(5, 'Giao mới và hoàn thành theo tháng', `Số nhiệm vụ giao mới và hoàn thành từng tháng của năm ${nam}`,
     '<div class="chu-giai ngang"><span><i class="s1"></i>Giao mới</span><span><i class="s2"></i>Hoàn thành</span></div>')}${cotThangHtml(thang, (d) => mo({ t: 'thang', th: d.thang }))}
     <div class="quy-tq">${dongQuy}</div></article>`;
 }

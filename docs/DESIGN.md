@@ -209,6 +209,7 @@ Quy tắc:
 - Xưng hô: "đồng chí" trong thông báo gửi tới người dùng ("Đồng chí có 2 việc chờ xác nhận").
 - Lỗi nói rõ việc gì và làm gì tiếp: "Hạn xử lý phải sau hôm nay. Chọn lại ngày."
 - Con số luôn kèm danh từ ("8 nhiệm vụ quá hạn"); tên ô theo bảng Phụ lục (mục 12).
+- Ít chữ: mỗi con số một nhãn ngắn, phần giải thích mở khi cần (mục 17).
 - Không dấu chấm than, không biểu tượng cảm xúc, không tiếng Anh.
 
 ---
@@ -224,6 +225,7 @@ Quy tắc:
 - [ ] Quy tắc mới đặt đúng tệp thành phần (mục 5); bản in (Ctrl+P) không vỡ
 - [ ] Không tính năng CSS mới hơn Chrome 109
 - [ ] Chuyển động (mục 7): tắt hiệu ứng thì nội dung vẫn đủ; số liệu tự cập nhật không chạy lại hiệu ứng; hiệu ứng không đổi bố cục; xem ở cả bốn chế độ màu
+- [ ] Số trước, chi tiết bấm mới mở (mục 17): không dòng chữ phụ dưới con số, không câu "bấm để xem", không lặp một con số bằng chữ; bản in vẫn đủ chữ
 
 ---
 
@@ -231,11 +233,13 @@ Quy tắc:
 
 **Tổng quan** (trang mở đầu của Thường trực, lãnh đạo Văn phòng, Trưởng phòng; v3.36 — ba tầng, CAU-HOI V-1, V-9, V-11; SPEC DB-13). *Tầng 1 vừa một màn hình* (1366×768, cỡ chữ lớn), theo phương án "Dải điều hành" chủ dự án chọn 26/11/2026 (bản đầu của v3.36 — nền phẳng, năm thẻ chữ — không được chấp nhận):
 - **Dải điều hành** `.tq-dai`: nền đặc chuyển sắc theo kiểu giao diện (`--hero-1` → `--hero-3`: lam đậm ở Thanh lịch, đỏ son ở Trang nghiêm, sẫm hơn ở nền tối), chữ trắng, ba lớp núi SVG mờ ở góc phải, vạch son – vàng 4px ở chân; không ảnh. Hàng 1: tên trang (hiện từng chữ; cụm sau hai từ đầu in nghiêng màu `--hero-vong` — mục 3), nút In báo cáo nhanh (nền trong, viền trắng), nút Giao việc (nút chính; ở Trang nghiêm là nút sáng chữ màu dải để không chìm vào nền đỏ). Hàng 2: phạm vi và giờ cập nhật (giờ cập nhật chữ có chân, nghiêng), nhóm nút kỳ `.pham-vi` Tháng · Quý · Năm · Nhiệm kỳ (nút đang chọn nền trắng). Hàng 3: vòng **tỷ lệ hoàn thành đúng hạn** (`--hero-vong`; chỉ vẽ khi đủ dữ liệu, kèm mẫu số) và ba số tổng cách nhau bằng đường kẻ dọc: nhiệm vụ của kỳ (hoàn thành trong kỳ + đang thực hiện), đã hoàn thành, đang thực hiện. Cạnh số nhiệm vụ của kỳ và số đã hoàn thành có **đường xu hướng nhỏ 12 tuần** (giao mới, hoàn thành — cùng số liệu với biểu đồ tuần bên dưới; rê chuột có gợi ý; không vẽ khi cả 12 tuần đều 0); dưới số đang thực hiện có thanh trong hạn – quá hạn. Màu phủ, đường kẻ, chữ phụ trên dải dùng token nền đặc `--ben-*`. Khung chờ có sẵn nút, nhóm kỳ, vòng và ba ô số giữ chỗ: ở màn từ 1280px dải không đổi chiều cao khi số liệu về; màn hẹp hơn dải cao thêm ít (chữ của các ô số xuống dòng).
-- **Bốn thẻ việc cần quan tâm** `.the-so` cùng cỡ, mặt hơi trong (`--the-kinh`), nhấc nhẹ khi rê chuột: số lớn (Lexend, `--chu-so`) và ô biểu tượng ở góc phải, tên thẻ, dòng các phần cộng đủ số thẻ, thanh nhỏ các phần, dòng so với tuần trước ghi bằng chữ (đỏ khi tăng là xấu, lục khi giảm). **Thẻ Quá hạn chưa hoàn thành là thẻ duy nhất có màu nhấn** (nền `--nen-do-mo`, viền `--vien-do`, số `--do-chu`); không có việc quá hạn thì như thẻ thường. Ba thẻ còn lại: Cần lãnh đạo cho ý kiến, Chỉ đạo chờ phản hồi, Đang thực hiện trong hạn.
-- **Câu kết luận** `.tq1-kl` (một câu, không nêu tên cán bộ): nền đỏ nhạt và nút "Xem và chỉ đạo" (mở danh sách việc quá hạn ngay tại chỗ) khi còn việc quá hạn; nền nhạt, không nút khi không còn.
-- **Hàng hai khối**: "Quá hạn theo phòng, đơn vị" (Thường trực: đơn vị chủ trì; Trưởng phòng: cán bộ) — thanh ngang, nhiều việc quá hạn đứng trước, tím = quá hạn từ N ngày, đỏ = dưới N ngày, tối đa 8 dòng (nhiều hơn thì dòng cuối gộp phần còn lại); "Giao mới và hoàn thành theo tuần" — 12 tuần, cột đôi `--du-lieu` / `--du-lieu-2`, trục số tối đa bốn nấc, một câu ghi số của tuần này.
-- **Dòng Nhiệm vụ quý của Ban Thường vụ** nền `--nen-mo`: tên, số nhiệm vụ và số ngày còn lại của quý, thanh cơ cấu theo trạng thái, nút sang Tổng quan quý.
+- **Bốn thẻ việc cần quan tâm** `.the-so` cùng cỡ, mặt hơi trong (`--the-kinh`), nhấc nhẹ khi rê chuột: số lớn (Lexend, `--chu-so`) và ô biểu tượng ở góc phải, tên thẻ, thanh nhỏ các phần, dòng so với tuần trước ghi gọn "tăng 3 trong tuần" / "giảm 2 trong tuần" (đỏ khi tăng là xấu, lục khi giảm; không đổi thì không ghi). Các phần cộng đủ số thẻ và câu so sánh đủ nằm ở gợi ý khi rê chuột, nhãn đọc màn hình và danh sách mở khi bấm (mục 17). **Thẻ Quá hạn chưa hoàn thành là thẻ duy nhất có màu nhấn** (nền `--nen-do-mo`, viền `--vien-do`, số `--do-chu`); không có việc quá hạn thì như thẻ thường. Ba thẻ còn lại: Cần lãnh đạo cho ý kiến, Chỉ đạo chờ phản hồi, Đang thực hiện trong hạn.
+- **Câu kết luận** `.tq1-kl` (không nêu tên cán bộ): màn hình ghi câu gọn, gồm số việc quá hạn và một nơi nhiều nhất ("91 nhiệm vụ quá hạn, nhiều nhất ở Phòng Tổng hợp (38)."); câu đủ chỉ ở bản in báo cáo nhanh; nền đỏ nhạt và nút "Xem và chỉ đạo" (mở danh sách việc quá hạn ngay tại chỗ) khi còn việc quá hạn; nền nhạt, không nút khi không còn.
+- **Hàng hai khối**: "Quá hạn theo phòng, đơn vị" (Thường trực: đơn vị chủ trì; Trưởng phòng: cán bộ) — thanh ngang, nhiều việc quá hạn đứng trước, tím = quá hạn từ N ngày, đỏ = dưới N ngày, tối đa 8 dòng (nhiều hơn thì dòng cuối gộp phần còn lại); "Giao mới và hoàn thành theo tuần" — 12 tuần, cột đôi `--du-lieu` / `--du-lieu-2`, trục số tối đa bốn nấc (số của từng tuần ở gợi ý của cột). Hai khối không có câu phụ dưới tiêu đề.
+- **Dòng Nhiệm vụ quý của Ban Thường vụ** nền `--nen-mo`: tên (số nhiệm vụ và số ngày còn lại của quý ở gợi ý của tên), thanh cơ cấu theo trạng thái, nút sang Tổng quan quý.
 - Mỗi số, thẻ, dòng, cột bấm được → đúng danh sách tạo nên con số. Theo bề rộng vùng Tổng quan (`@container tq`): ≤ 900px vòng đúng hạn một hàng, ba số tổng chia đều hàng dưới, bốn thẻ xếp 2 × 2, hai khối xếp dọc; ≤ 640px nút trên dải chỉ còn biểu tượng, thẻ quá hạn và thẻ trong hạn hết hàng, hai thẻ giữa chỉ số, tên, so sánh. Bản in thường (Ctrl+P) không in nền dải (chữ về màu mực, có khung).
+
+*Phân tích chi tiết (v3.36, CAU-HOI V-13, mục 17)*: sau tầng 1 là một hàng `.tq-loc2` gồm tên phần "Phân tích chi tiết", chip các điều kiện đang lọc, số đang lọc, "Xem danh sách", "Xoá bộ lọc", "Mở tất cả" / "Thu gọn tất cả", nút "Bộ lọc" (mở phần phạm vi việc, lọc nhanh và 12 ô; gập lại mỗi lần vào màn Tổng quan, không nhớ theo máy). Tiếp theo là **danh sách các khối phân tích, mặc định gập**: mỗi khối một dòng gồm tên khối, số chính khi có (ví dụ "11 đơn vị", "91 việc") và mũi tên; bấm tiêu đề để mở / gập; khối đã mở nhớ theo máy; cạnh tên khối đang mở là nút "i" mang ghi chú mốc tính. Khối không còn số thứ tự. Bản in không phụ thuộc trạng thái gập.
 
 *Tầng 2*: ma trận đơn vị theo trạng thái `.bang-mt` (ô có việc tô nền theo mức: tím, đỏ, vàng; đầu cột có ô màu kèm nhãn; tỷ lệ đúng hạn kèm mẫu số, "chưa đủ dữ liệu" khi dưới ngưỡng; ô của dòng Tổng cộng cũng bấm được — mở toàn bộ việc của cột trong phạm vi; vùng ≤ 640px mỗi đơn vị thành một khối, ô 0 ẩn), 10 điểm nghẽn (nội dung tối đa 2 dòng), xếp hạng, rồi các khối phân tích. *Tầng 3*: ngăn chi tiết dùng chung. Mỗi thẻ, ô, cột, dòng bấm được → đúng danh sách tạo nên con số. Phạm vi số liệu do RLS quyết định; frontend chỉ đếm (`lib/kl/tong-quan.js`, `tong-quan-tang.js`).
 
@@ -379,3 +383,18 @@ dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với 
   (Đỏ đặc biệt tím, Đỏ, Vàng, xanh, lục); kết quả / sản phẩm thu gọn một chấm màu một dòng; ≤ 900px mỗi dòng thành thẻ có nhãn ô.
 - **Cập nhật tuần** (nơi làm việc của chủ trì theo dõi): thẻ "Chưa báo cáo tuần này" trước, biểu mẫu mở ngay trên thẻ, ô theo loại kết quả.
 - Ngăn chi tiết `#nqNgan` như ngăn dùng chung (mục 10): khối **Kết quả thực hiện** nền lam nhạt ngay dưới nội dung; hộp lý do như mục 15. Chỉ token sẵn có.
+
+---
+
+## 17. Số trước, chi tiết bấm mới mở (v3.36 — chủ dự án chọn 27/11/2026, CAU-HOI V-13)
+
+Chủ dự án xem bản staging của v3.36: "vẫn hiển thị quá nhiều chữ vào thông tin chi tiết không cần thiết". Đo ở 1366×768: Tổng quan dài gần 12 màn hình, khoảng 2.400 chữ; Cần xử lý hơn 18 màn hình. Chọn phương án 2 trong ba bản mẫu. Quy tắc áp cho mọi màn hình (làm lần lượt: Tổng quan, Cần xử lý, Nhiệm vụ, Cán bộ, Báo cáo, Nhiệm vụ quý):
+
+1. **Mỗi con số một nhãn ngắn.** Không dòng chữ phụ dưới con số. Phần tách của con số (các phần cộng lại, mẫu số, so với kỳ trước) nằm ở ba chỗ: gợi ý khi rê chuột hoặc đưa tiêu điểm (`data-goi`), nhãn đọc màn hình (`aria-label`, hoặc chữ ẩn `.sr` khi phần tử không nhận tiêu điểm), và danh sách mở ra khi bấm vào số (các nhóm của danh sách chính là phần tách).
+2. **Không lặp một con số bằng chữ** trên cùng màn hình (số đã có ở thẻ thì không nhắc lại ở dòng phụ, câu dẫn của khối khác).
+3. **Không câu hướng dẫn thao tác** ("bấm một ô để xem…") và không câu chú thích cách tính đặt sẵn trên màn hình. Ghi chú mốc tính của khối nằm ở nút "i" `.nut-goi` cạnh tên khối (gợi ý `data-goi`); cách tính đầy đủ ở Hướng dẫn sử dụng.
+4. **Khối phân tích gập mặc định**, mỗi khối một dòng: tên, một số chính (khi khối có số phù hợp), mũi tên. Bấm tiêu đề để mở / gập; lựa chọn nhớ theo máy; có "Mở tất cả". Khối gập bằng thuộc tính `data-gap` và CSS chỉ áp trên màn hình; nội dung vẫn dựng đủ, bản in không đổi.
+5. **Bộ lọc sau một nút.** Hàng tiêu đề chỉ hiện chip các điều kiện đang áp dụng (bỏ từng điều kiện bằng ✕) và số đang lọc; các ô lọc mở khi bấm "Bộ lọc", gập lại mỗi lần vào màn, không nhớ theo máy.
+6. **Danh sách**: mỗi dòng tối đa hai dòng chữ; thông tin phụ ở ngăn chi tiết; danh sách dài chỉ hiện các dòng đầu, kèm nút xem tất cả.
+7. **Bản in giữ đủ chữ**: câu kết luận đủ, bảng năm chỉ tiêu, ma trận, điểm nghẽn in như trước dù khối đang gập trên màn hình.
+8. Chú giải màu ngắn (ô màu kèm 1 đến 4 chữ) được giữ: màu không đứng một mình (mục 2).

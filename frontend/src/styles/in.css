@@ -38,6 +38,7 @@
     body.in-tq .tq1-kl { display: block; padding: 0; border: 0; background: none; }
     body.in-tq .tq1-ket-luan { padding: 2mm 3mm; font-size: 10pt; line-height: 1.4; border: 1px solid #999; border-radius: 6px; }
     body.in-tq .tq1-ket-luan b { font-weight: 600; }
+    body.in-tq .tq1-ket-luan .chi-man { display: none; } body.in-tq .tq1-ket-luan .chi-in { display: inline; }   /* bản in ghi câu kết luận đủ */
     body.in-tq .tq1-nvq { display: block; padding: 2mm 3mm; font-size: 10pt; border: 1px solid #999; }
     body.in-tq .tq1-nvq .nvq-ten, body.in-tq .tq1-nvq .nvq-co-cau, body.in-tq .tq1-nvq .nut { display: none !important; }
     body.in-tq .nvq-cau-in { display: block; margin: 0; }
@@ -74,11 +75,11 @@
     body.in-tq .bang-ng .tre-ng { font-size: 10pt; } body.in-tq .bang-ng .cap-ng { padding: 0; border: 0; background: none; font-size: 8.5pt; }
     body.in-tq .chan-ng { font-size: 8.5pt; padding: 1mm 0 0; }
     body.in-tq .bang-ng tbody tr:nth-child(n+6) { display: none; }   /* 5 việc quá hạn lâu nhất (SO_DONG_IN, khoi-lanh-dao.js) */
-    body.in-tq .chan-ng .chi-man { display: none; } body.in-tq .chan-ng .chi-in { display: inline; font-style: italic; }
+    body.in-tq .chan-ng .chi-in { display: inline; font-style: italic; }
     body.in-tq .o-mt { min-width: 0; height: auto; padding: 0 1.5mm; box-shadow: none; }
     body.in-tq .mt-cuon { overflow: visible; margin: 0; padding: 0; }
     body.in-tq .the-bd .dau-bd { margin: 0 0 1mm; } body.in-tq .the-bd .dau-bd h2 { font-size: 11.5pt; }
-    body.in-tq .the-bd .dau-bd p { display: none; }   /* lời dẫn "bấm để xem" không cần trên giấy */
+    body.in-tq .the-bd .khoi-phai { display: none; }   /* nút chọn, chú thích của khối không cần trên giấy */
     body.in-tq .tq-in-chan { display: block; margin-top: 2mm; padding-top: 1mm; border-top: 1px solid #999; font-size: 8.5pt; font-style: italic; color: #333; }
   }
 }
@@ -89,10 +90,10 @@
 /* In / PDF (Báo cáo A1 và mọi màn hình): bỏ dải điều hướng, nút, ô nhập; giữ dải tổng quan và bảng. Trong @layer utilities để đứng
    sau mọi quy tắc thành phần. */
     .dai .phai, .menu, .thanh-duoi, .thanh-khac, .hanh-dong, .o, .thao-tac, .bo-loc, .dau .phai-dau, .nut, #toastContainer, .toast-tin, .md .tim, .kl-loc, .kl-sap,
-    .ray, .tb-panel, .bc-ky { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề */
+    .ray, .tb-panel, .bc-ky, .nut-goi, .khoi-mui { display: none !important; }   /* v3.30: thanh chọn kỳ của Báo cáo không in — kỳ in ở dòng phụ đề; v3.36: nút "i", mũi tên khối */
     body { background: #fff; }
     .tq-dai { background: none; border: 1px solid #999; box-shadow: none; color: var(--chu); }   /* v3.36: dải điều hành không in nền màu — chữ màu mực */
-    .tq-dai h1, .tq-dai .so-dai, .tq-dai .so-dung, .tq-dai .dai-pham-vi, .tq-dai .so-dai .phu-h, .tq-dai .so-dung-chu small, .tq-dai .vd-chu small { color: var(--chu); }
+    .tq-dai h1, .tq-dai .so-dai, .tq-dai .so-dung, .tq-dai .dai-pham-vi, .tq-dai .vd-chu small { color: var(--chu); }
     .tq-dai .dai-nui, .tq-dai .dai-vach, .tq-dai .pham-vi { display: none; } .tq-dai .vd-ranh { stroke: #ddd; } .tq-dai .so-dai { border-left-color: #ccc; }
     .tq-dai h1 .nhan-td, .tq-dai .dn-bao { color: var(--chu); } .tq-dai .p-sang { background: #999; }   /* v3.36 (V-12): cụm nhấn, đường xu hướng nhỏ, thanh trong hạn in màu mực */
     .than { background: none; } .dai::before { display: none; } .dai .ten { color: var(--chu); }   /* v9: dải màu thanh bên không in */

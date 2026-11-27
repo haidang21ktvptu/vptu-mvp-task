@@ -13,24 +13,22 @@ const pillsXh = (d, cach) => [[d.ddb, 'ddb'], [d.do, 'do']].filter(([n]) => n).m
 export function xepHangHtml(ds, cach, k) {
   const cot = cach === 'tt' ? 'Đồng chí Thường trực chỉ đạo' : 'Cơ quan/đơn vị trình';   // v3.27: tên theo cột G bảng Phụ lục
   const ten = (d) => (cach === 'tt' && d.ma !== 'KHONG' ? `Đồng chí ${d.ten}` : d.ten);
-  const dong = (d) => `<tr><td class="c-ten"><button type="button" class="ten-bam" ${mo({ t: 'xh', cach, ma: d.ma, ten: ten(d) })}><b>${escapeHtml(ten(d))}</b><small><span class="chi-mt">${d.giao} giao ${k.trong}</span><span class="chi-dt">${d.xong} hoàn thành, ${d.dangMo} đang làm</span></small></button></td>
+  const dong = (d) => `<tr><td class="c-ten"><button type="button" class="ten-bam" ${mo({ t: 'xh', cach, ma: d.ma, ten: ten(d) })}><b>${escapeHtml(ten(d))}</b><small><span class="chi-dt">${d.xong} hoàn thành, ${d.dangMo} đang làm</span></small></button></td>
     <td class="so" data-n="Tổng">${d.giao}</td><td class="so" data-n="Hoàn thành">${d.xong}</td><td data-n="Đúng hạn">${thuoc(d.tyLe)}</td><td class="so" data-n="Đang làm">${d.dangMo}</td>
     <td data-n="Cảnh báo"><span class="canh-tq">${pillsXh(d, cach)}</span></td></tr>`;
-  return `<article class="the-bd n7" id="tqXepHang">${dauKhoi(4, 'Xếp hạng thực hiện', `Nhiều việc quá hạn trước; giao, hoàn thành và đúng hạn tính ${k.trong}; đang làm, quá hạn tính đến hôm nay.`,
+  const phu = `Nhiều việc quá hạn trước; giao, hoàn thành và đúng hạn tính ${k.trong}; đang làm, quá hạn tính đến hôm nay.${cach === 'dv' ? ' Xếp theo cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ; việc không ghi cơ quan, đơn vị trình tính cho Văn phòng Tỉnh ủy.' : ''}`;
+  return `<article class="the-bd n7" id="tqXepHang">${dauKhoi(4, 'Xếp hạng thực hiện', phu,
     nhomNut('tqXh', 'cach', [['dv', 'Theo cơ quan/đơn vị trình'], ['tt', 'Theo đồng chí Thường trực chỉ đạo']], cach, 'Xếp hạng theo'))}
     ${ds.length ? `<div class="cuon-ngang"><table class="bang-tq"><thead><tr><th>${cot}</th><th class="so">Giao</th><th class="so">Hoàn thành</th><th>Đúng hạn</th><th class="so">Đang làm</th><th>Quá hạn</th></tr></thead>
-      <tbody>${ds.map(dong).join('')}</tbody></table></div>` : '<p class="trong">Chưa có nhiệm vụ trong kỳ.</p>'}
-    ${cach === 'dv' ? '<p class="chu-phu tq-chu-nho">Theo cơ quan, đơn vị đã trình nội dung dẫn tới nhiệm vụ (cột "Cơ quan/đơn vị trình"); việc không ghi cơ quan/đơn vị trình tính cho Văn phòng Tỉnh ủy.</p>' : ''}</article>`;
+      <tbody>${ds.map(dong).join('')}</tbody></table></div>` : '<p class="trong">Chưa có nhiệm vụ trong kỳ.</p>'}</article>`;
 }
 
-// than: HTML các bảng (KPI theo cán bộ, theo lãnh đạo VP phụ trách, theo phòng / cán bộ); moKhoi: đang mở; phong: góc nhìn phòng (Trưởng phòng).
-export function noiBoHtml(than, moKhoi, phong = false) {   // số khối: danhSoKhoi (v3.28) đánh theo các khối đang hiện
-  if (!than) return '';   // v3.36: bảng theo cán bộ của Trưởng phòng thành ma trận tầng 2 — phòng không còn bảng nào trong khối này
-  const phu = phong ? 'Theo cán bộ của phòng — hoàn thành, đúng hạn trong kỳ; đang làm, cảnh báo đến hôm nay.'
-    : 'KPI theo phòng, cán bộ chủ trì và theo lãnh đạo Văn phòng phụ trách — gập mặc định, mở khi cần.';
-  const nut = `<button type="button" class="nut nho" id="tqNoiBoNut" data-action="tqNoiBo" aria-expanded="${String(moKhoi)}" aria-controls="tqNoiBoThan">${moKhoi ? 'Thu gọn' : 'Mở khối này'}</button>`;
-  return `<section class="the-bd n12 khoi-noi-bo" id="tqNoiBo" aria-labelledby="tqNoiBoTieu">${dauKhoi(9, phong ? 'Quản lý nội bộ của phòng' : 'Quản lý nội bộ Văn phòng', phu, nut, 'tqNoiBoTieu')}
-    <div class="luoi-tq noi-bo-than" id="tqNoiBoThan"${moKhoi ? '' : ' hidden'}>${than}</div></section>`;
+// than: HTML các bảng (KPI theo cán bộ, theo lãnh đạo VP phụ trách). v3.36: Trưởng phòng không còn bảng nào trong khối này (bảng theo cán bộ thành
+// ma trận) nên than rỗng → không vẽ; V-13: khối mở / gập bằng tiêu đề như mọi khối phân tích (khoi-gap.js), bỏ nút "Mở khối này" riêng.
+export function noiBoHtml(than) {
+  if (!than) return '';
+  return `<section class="the-bd n12 khoi-noi-bo" id="tqNoiBo" aria-labelledby="tqNoiBoTieu">${dauKhoi(9, 'Quản lý nội bộ Văn phòng', 'KPI theo phòng, cán bộ chủ trì và theo lãnh đạo Văn phòng phụ trách.', '', 'tqNoiBoTieu')}
+    <div class="luoi-tq noi-bo-than" id="tqNoiBoThan">${than}</div></section>`;
 }
 
 // c: chatLuongDuLieu(rows); coMt: có hiện mục tiêu then chốt (v3.27: tạm ẩn → không nhắc phần mục tiêu). Không thiếu gì → không vẽ.
@@ -41,6 +39,6 @@ export function duLieuHtml(c, coMt = true) {
     x ? `${x} nhiệm vụ hoàn thành chưa có ngày hoàn thành (tính theo ngày giao, chưa xét được đúng hạn)` : ''].filter(Boolean).join('; ');
   const khoi = [a ? 'mục tiêu then chốt' : '', b ? 'lĩnh vực trọng tâm' : '', x ? 'tỷ lệ đúng hạn' : ''].filter(Boolean).join(', ');   // v3.28: tên khối, không ghi số (số khối đổi theo khối đang hiện)
   return `<div class="dl-tq n12" role="note" id="tqDuLieu"><svg class="dl-bieu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-    <span><b>Chất lượng dữ liệu:</b> ${phan} — số liệu ${khoi} chưa đầy đủ.</span><span class="tq-day"></span>
+    <span data-goi="Số liệu ${khoi} chưa đầy đủ."><b>Chất lượng dữ liệu:</b> ${phan}.<span class="sr"> Số liệu ${khoi} chưa đầy đủ.</span></span><span class="tq-day"></span>
     <button type="button" class="nut nho" ${mo({ t: 'cldl' })}>Xem các việc này</button></div>`;
 }

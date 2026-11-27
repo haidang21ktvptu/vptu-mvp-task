@@ -66,7 +66,7 @@ export function giaiNganHtml(d, { rows = [], tatCa = [], homNay, user, ui = {}, 
       ${th.nguon.length ? bangHtml(th.nguon, { th, homNay }) : '<p class="chu-phu">Kỳ này chưa nhập bảng theo nguồn vốn.</p>'}</section>
     <section class="gn-phan" aria-labelledby="tqGnCdt"><h3 id="tqGnCdt">Theo chủ đầu tư, đơn vị <span class="chu-phu">tỷ lệ thấp trước; tô nền: dưới mức chung của tỉnh (${ptVN(m.pt)})</span></h3>
       ${nCdt ? `${bangHtml(th.chuDauTu, { th, homNay, ptTinh: m.pt, an: du ? 0 : SO_DONG_CDT })}${nutDu}` : '<p class="chu-phu">Kỳ này chưa nhập bảng theo chủ đầu tư.</p>'}</section></div>`;
-  return `<article class="the-bd n12 gn-tq" id="tqGiaiNgan">${dauKhoi(0, tieu, 'Lũy kế đã giải ngân so với kế hoạch vốn năm và tiến độ đều tới mục tiêu — bức tranh toàn tỉnh, rồi từng nhiệm vụ.', phai)}
+  return `<article class="the-bd n12 gn-tq" id="tqGiaiNgan">${dauKhoi(0, tieu, 'Lũy kế đã giải ngân so với kế hoạch vốn năm và tiến độ đều tới mục tiêu.', phai)}
     <div class="gn-tren">${tong}<div class="gn-xu-huong">${xuHuongHtml(th)}</div></div>${canCu}${canhBao}${bang}
     ${viecHtml(viecTheoDoi(rows, d.gan, th, homNay), { daLoc, soNgayMoi: k.ngay_so_lieu })}</article>`;   // v3.30: bỏ dòng "Cách tính" (chủ dự án 23/10/2026)
 }

@@ -91,6 +91,15 @@ export function cauKetLuan(t, cu, { homNay = homNayVN(), nhieuNhat = [], daLoc =
   return `${dau}, ${ve.join('; ')}.`;
 }
 
+// Câu kết luận gọn ghi trên màn hình (v3.36, CAU-HOI V-13 "số trước, chi tiết bấm mới mở"): chỉ số việc quá hạn và nơi nhiều nhất; câu đủ (cauKetLuan)
+// dùng cho bản in "Báo cáo nhanh". Cùng tham số với cauKetLuan.
+export function cauKetLuanGon(t, { nhieuNhat = [], daLoc = false, tong = 1 } = {}) {
+  const noi = nhieuNhat.find(([, n]) => n > 0);
+  const cau = !tong ? 'chưa có nhiệm vụ trong phạm vi theo dõi' : !t.qh.so ? 'không có nhiệm vụ quá hạn'
+    : `${t.qh.so} nhiệm vụ quá hạn${noi ? `, nhiều nhất ở ${noi[0]} (${noi[1]})` : ''}`;
+  return daLoc ? `Theo bộ lọc: ${cau}.` : `${cau.charAt(0).toUpperCase()}${cau.slice(1)}.`;
+}
+
 // 12 tuần gần nhất (thứ Hai đến Chủ nhật), tuần cuối chứa hôm nay.
 const ngayNgan = (s) => { const [, m, d] = s.split('-'); return `${Number(d)}/${Number(m)}`; };
 export function tuanGanDay(homNay, n = 12) {

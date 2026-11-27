@@ -47,12 +47,16 @@ export async function phienMoi(role) {
 
 // Context mới theo kích thước/thiết bị của project hiện tại, đã có phiên riêng của vai trong localStorage.
 // v3.36 (CAU-HOI V-12): mặc định giảm chuyển động (ứng dụng không chạy hiệu ứng); chuyenDong: true → bật chuyển động (chuyen-dong.spec.js).
-export async function contextAs(browser, role, testInfo, { chuyenDong = false } = {}) {
+// v3.36 (CAU-HOI V-13): các khối phân tích của Tổng quan gập mặc định, nhớ theo máy (vptu.tq.khoi). Phiên e2e mở sẵn mọi khối để các kịch bản đọc,
+// bấm trong khối chạy nguyên; tqGap: true → giữ mặc định của người dùng thật (mọi khối gập) cho kịch bản kiểm chính việc mở / gập, bản in, ảnh chụp.
+export const KHOI_TQ = ['tqMaTran', 'tqNghen', 'tqXepHang', 'tqGiaiNgan', 'tqMucTieu', 'tqChuTri', 'tqLinhVuc', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
+export async function contextAs(browser, role, testInfo, { chuyenDong = false, tqGap = false } = {}) {
   const session = await phienMoi(role);
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;
   const context = await browser.newContext({
     viewport, isMobile, hasTouch, baseURL, locale, reducedMotion: chuyenDong ? 'no-preference' : 'reduce',
-    storageState: { cookies: [], origins: [{ origin: new URL(baseURL).origin, localStorage: [{ name: storageKey(), value: JSON.stringify(session) }] }] },
+    storageState: { cookies: [], origins: [{ origin: new URL(baseURL).origin, localStorage: [{ name: storageKey(), value: JSON.stringify(session) },
+      ...(tqGap ? [] : [{ name: 'vptu.tq.khoi', value: JSON.stringify(KHOI_TQ) }])] }] },
   });
   await ganTre(context);   // E2E_TRE_MS (mặc định tắt): độ trễ giả lập để bắt lỗi đua
   return context;
@@ -60,8 +64,8 @@ export async function contextAs(browser, role, testInfo, { chuyenDong = false } 
 
 // v9: lãnh đạo (A0/A1/A2) vào Tổng quan — mở tiếp "Cần xử lý" (#viewDieuHanh) như trang mở đầu cũ để các kịch bản dựa vào nó chạy nguyên;
 // kịch bản cần đứng ở Tổng quan truyền { oTongQuan: true }.
-export async function pageAs(browser, role, testInfo, { oTongQuan = false, chuyenDong = false } = {}) {
-  const context = await contextAs(browser, role, testInfo, { chuyenDong });
+export async function pageAs(browser, role, testInfo, { oTongQuan = false, chuyenDong = false, tqGap = false } = {}) {
+  const context = await contextAs(browser, role, testInfo, { chuyenDong, tqGap });
   const page = await context.newPage();
   await page.goto('./');
   await expectLoggedIn(page, role);

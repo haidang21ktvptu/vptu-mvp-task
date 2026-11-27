@@ -32,6 +32,9 @@
   .bc-o:nth-child(1) { --cd-r: 0; } .bc-o:nth-child(2) { --cd-r: 1; } .bc-o:nth-child(3) { --cd-r: 2; }
   .dang-vao .ba-cau, .dang-vao #klStats, .dang-vao #bcThan { --cd-tre-so: 160ms; }   /* số của ba câu hỏi, dải số Nhiệm vụ, dải tổng quan của Báo cáo lăn sớm hơn */
 
+  /* ---- Tổng quan: khối phân tích vừa được bấm mở (lớp vua-mo, khoi-gap.js) hiện nội dung một lần; vẽ lại sau đó đứng yên ---- */
+  .vua-mo > :not(.dau-bd) { animation: cd-len 280ms var(--cd-em); }
+
   /* ---- Thanh tải việc (Cán bộ, việc của phòng, Tổng quan theo cán bộ, ngăn chi tiết cán bộ) dài ra từ trái, theo thứ tự dòng ---- */
   .dang-vao .tai { animation: cd-quet 700ms var(--cd-em) backwards; animation-delay: calc((var(--cd-tre) + 300ms) * var(--cd-g, 1) * var(--cd-hs) + var(--cd-r, 0) * 30ms); }   /* backwards: chạy xong thì hết cắt, hộp gợi ý của thanh (data-goi) hiện đủ */
 }

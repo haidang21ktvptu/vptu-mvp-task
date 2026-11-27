@@ -3,7 +3,8 @@
 // lại → đóng (không đổi mục, #klChiTiet không trùng id, trả về màn Nhiệm vụ khi đóng); đổi kỳ tại chỗ; sang "Cần xử lý" (ba câu hỏi đầu
 // trang) rồi quay lại; A2 thấy bảng theo cán bộ; A3 không có mục Tổng quan; Trang nghiêm / Nền tối đổi tại chỗ và nhớ theo máy sau khi tải
 // lại. v3.29 (chủ dự án 22/10/2026): mức cảnh báo ghi bằng nghĩa, các phần cộng đủ số của ô. v3.36 (ba tầng): năm thẻ tầng 1 thay dải đầu, ma
-// trận đơn vị (Trưởng phòng: cán bộ) thay bảng theo phòng / cán bộ. Chỉ đọc — không tạo dữ liệu.
+// trận đơn vị (Trưởng phòng: cán bộ) thay bảng theo phòng / cán bộ. v3.36 (CAU-HOI V-13, số trước, chi tiết bấm mới mở): thẻ chỉ còn số và nhãn —
+// phần tách của con số nằm ở gợi ý (data-goi) và nhãn đọc màn hình; câu kết luận gọn trên màn hình, câu đủ ở bản in. Chỉ đọc — không tạo dữ liệu.
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP } from './lib/app.js';
 import { dbAdmin, homNay, cong } from './lib/pr2b.mjs';
@@ -17,15 +18,17 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
     await expect(page.locator('#navTongQuan')).toHaveAttribute('aria-selected', 'true');
     await expect(tq.locator('h1')).toHaveText('Tổng quan thực hiện nhiệm vụ');
     // v3.36 (ba tầng, dải điều hành — CAU-HOI V-11): dải mang ba số tổng, bốn thẻ — các phần của mỗi thẻ cộng đủ số thẻ (ghi bằng nghĩa, DESIGN mục 13);
-    // số của dải cộng đủ; dòng Tổng cộng của ma trận đơn vị khớp thẻ.
+    // số của dải cộng đủ; dòng Tổng cộng của ma trận đơn vị khớp thẻ. V-13: phần tách ở gợi ý của thẻ (data-goi), thẻ không còn dòng chữ phụ.
     const so = await tq.evaluate((el) => {
       const the = (k) => el.querySelector(`#tqSo [data-so="${k}"]`);
       const gia = (k) => Number(the(k).querySelector('.gia').textContent);
       const tong = [...el.querySelectorAll('#tqMaTran tfoot td')].map((td) => Number(td.textContent.replace(/\D/g, '') || 0));
       return { qh: gia('qh'), th: gia('th'), xong: gia('xong'), tongKy: gia('tong'), dangMo: gia('mo'), the: el.querySelectorAll('#tqSo .the-so').length,
-        phuQh: the('qh').querySelector('.phu-h').textContent, phuTh: the('th').querySelector('.phu-h').textContent, tong };
+        phuQh: the('qh').dataset.goi, phuTh: the('th').dataset.goi, nhanQh: the('qh').getAttribute('aria-label'), dongPhu: el.querySelectorAll('#tqSo .phu-h, #tqSo .so-dung-chu small').length, tong };
     });
     expect(so.the, 'bốn thẻ tầng 1').toBe(4);
+    expect(so.dongPhu, 'V-13: dải và thẻ không còn dòng chữ phụ dưới con số').toBe(0);
+    if (so.qh) expect(so.nhanQh, 'nhãn đọc màn hình của thẻ quá hạn có phần tách').toContain(so.phuQh);
     expect(so.dangMo, 'dải: đang thực hiện = quá hạn + trong hạn').toBe(so.qh + so.th);
     expect(so.tongKy, 'dải: nhiệm vụ của kỳ = hoàn thành trong kỳ + đang thực hiện').toBe(so.xong + so.dangMo);
     const qh = so.phuQh.match(/^(\d+) quá hạn dưới \d+ ngày, (\d+) quá hạn từ \d+ ngày trở lên$/);
@@ -143,11 +146,19 @@ test.describe('Tổng quan và kiểu giao diện (v9)', () => {
     test.skip(Boolean(r.error), `Project chưa có migration 0140: ${r.error?.message}`);
     const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
     await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
-    for (const k of ['qh', 'quyet', 'th']) {
-      await expect(page.locator(`#tqSo [data-so="${k}"] .ss-tq`)).toHaveText(/^(?:(?:tăng|giảm) \d+ nhiệm vụ so với tuần trước|không đổi so với tuần trước)$/);
+    // V-13: câu so sánh đủ ở nhãn đọc màn hình của thẻ; trên thẻ chỉ ghi "tăng / giảm N trong tuần" (không đổi thì không ghi), rê chuột hiện câu đủ.
+    for (const k of ['qh', 'quyet', 'th']) {   // đọc nhãn và dòng so sánh trong cùng một lượt JS (realtime có thể vẽ lại giữa hai bước)
+      const kq = await page.locator(`#tqSo [data-so="${k}"]`).evaluate((el) => { const ss = el.querySelector('.ss-tq'); return { nhan: el.getAttribute('aria-label'), ss: ss?.textContent ?? null, goi: ss?.dataset.goi ?? null }; });
+      expect(kq.nhan, `thẻ ${k}: nhãn đọc màn hình có câu so sánh đủ`).toMatch(/(?:(?:tăng|giảm) \d+ nhiệm vụ so với tuần trước|không đổi so với tuần trước)/);
+      if (/không đổi so với tuần trước/.test(kq.nhan)) expect(kq.ss, `thẻ ${k}: không đổi thì không ghi dòng so sánh`).toBeNull();
+      else { expect(kq.ss).toMatch(/^(?:tăng|giảm) \d+ trong tuần$/); expect(kq.goi).toMatch(/^(?:tăng|giảm) \d+ nhiệm vụ so với tuần trước$/); }
     }
-    await expect(page.locator('#tqSo [data-so="xong"] .phu-h')).toHaveText(/^\d+ nhiệm vụ trong 7 ngày qua$/);
-    await expect(page.locator('#tqKetLuan')).toContainText(`Đến ngày ${Number(homNay().slice(8))}/${Number(homNay().slice(5, 7))}/${homNay().slice(0, 4)}`);
+    await expect(page.locator('#tqSo [data-so="xong"]')).toHaveAttribute('data-goi', /^\d+ nhiệm vụ hoàn thành trong 7 ngày qua$/);
+    // Câu kết luận: màn hình ghi câu gọn; câu đủ (bắt đầu bằng ngày hôm nay) chỉ hiện ở bản in.
+    await expect(page.locator('#tqKetLuan .chi-man')).toBeVisible();
+    await expect(page.locator('#tqKetLuan .chi-man')).toHaveText(/^(?:\d+ nhiệm vụ quá hạn(?:, nhiều nhất ở .+ \(\d+\))?|Không có nhiệm vụ quá hạn|Chưa có nhiệm vụ trong phạm vi theo dõi)\.$/);
+    await expect(page.locator('#tqKetLuan .chi-in')).toBeHidden();
+    await expect(page.locator('#tqKetLuan .chi-in')).toContainText(`Đến ngày ${Number(homNay().slice(8))}/${Number(homNay().slice(5, 7))}/${homNay().slice(0, 4)}`);
     const cot = page.locator('#tqXuHuong .tuan-cot');
     await expect(cot).toHaveCount(12);
     await cot.last().click();

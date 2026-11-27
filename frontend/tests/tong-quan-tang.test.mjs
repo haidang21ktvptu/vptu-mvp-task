@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { khoangKy, khoaNhom } from '../src/lib/kl/tong-quan.js';
-import { theTang1, tuanTruoc, soSanh, cauKetLuan, nhieuQuaHanNhat, tuanGanDay, xuHuongTuan, maTran, tyLeDungHan, canYKien } from '../src/lib/kl/tong-quan-tang.js';
+import { theTang1, tuanTruoc, soSanh, cauKetLuan, cauKetLuanGon, nhieuQuaHanNhat, tuanGanDay, xuHuongTuan, maTran, tyLeDungHan, canYKien } from '../src/lib/kl/tong-quan-tang.js';
 import { locChiTieu } from '../src/lib/kl/tong-quan-loc.js';
 import { ghiBoSungNht } from '../src/lib/kl/nhan.js';
 
@@ -133,6 +133,22 @@ describe('cauKetLuan', () => {
     assert.equal(cauKetLuan(t0, { ngay: '2026-11-18', qh: 2 }, { homNay: HOM_NAY, daLoc: true }),
       'Theo bộ lọc đang áp dụng, đến ngày 25/11/2026, không có nhiệm vụ quá hạn chưa hoàn thành (tuần trước có 2 nhiệm vụ); 1 nhiệm vụ cần lãnh đạo cho ý kiến; 5 nhiệm vụ đang thực hiện trong hạn.');
     assert.equal(cauKetLuan(theTang1([], nam, ctx), null, { homNay: HOM_NAY, tong: 0 }), 'Đến ngày 25/11/2026, chưa có nhiệm vụ trong phạm vi theo dõi.');
+  });
+});
+
+// v3.36 (CAU-HOI V-13): câu gọn ghi trên màn hình — số việc quá hạn và một nơi nhiều nhất; câu đủ ở bản in.
+describe('cauKetLuanGon', () => {
+  const t = theTang1(MAU, nam, ctx);
+  test('quá hạn và nơi nhiều nhất; không nêu nơi khi không có danh sách (Trưởng phòng)', () => {
+    assert.equal(cauKetLuanGon(t, { nhieuNhat: [['Phòng Quản trị', 2], ['Phòng Tổng hợp', 1]] }), '3 nhiệm vụ quá hạn, nhiều nhất ở Phòng Quản trị (2).');
+    assert.equal(cauKetLuanGon(t, { nhieuNhat: [] }), '3 nhiệm vụ quá hạn.');
+    assert.equal(cauKetLuanGon(t, { nhieuNhat: [['Phòng Quản trị', 2]], daLoc: true }), 'Theo bộ lọc: 3 nhiệm vụ quá hạn, nhiều nhất ở Phòng Quản trị (2).');
+  });
+  test('không có quá hạn; không có việc', () => {
+    const t0 = theTang1(MAU.filter((r) => !['QUA_HAN'].includes(r.nhom_dem)), nam, { ...ctx, cds: [] });
+    assert.equal(cauKetLuanGon(t0, {}), 'Không có nhiệm vụ quá hạn.');
+    assert.equal(cauKetLuanGon(t0, { daLoc: true }), 'Theo bộ lọc: không có nhiệm vụ quá hạn.');
+    assert.equal(cauKetLuanGon(theTang1([], nam, ctx), { tong: 0 }), 'Chưa có nhiệm vụ trong phạm vi theo dõi.');
   });
 });
 

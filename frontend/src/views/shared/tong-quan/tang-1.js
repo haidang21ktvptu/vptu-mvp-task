@@ -4,6 +4,8 @@
 // Chỉ đạo chờ phản hồi; Đang thực hiện trong hạn) → câu kết luận kèm nút mở danh sách quá hạn → hàng biểu đồ và dòng Nhiệm vụ quý (tang-1-khoi.js).
 // Cách đếm không đổi (CAU-HOI V-9, lib/kl/tong-quan-tang.js): mỗi số, mỗi thẻ là nút mở đúng danh sách tạo nên con số (data-action="tqMo",
 // lib/kl/tong-quan-loc.js). Bản in "Báo cáo nhanh" dùng bảng năm chỉ tiêu .tq1-bang-in (chỉ hiện khi in, in.css). Chỉ dựng chuỗi HTML.
+// v3.36 (CAU-HOI V-13, DESIGN mục 17 "số trước, chi tiết bấm mới mở"): trên màn hình mỗi con số chỉ kèm một nhãn ngắn; phần tách của con số (trước là
+// dòng chữ phụ) chuyển vào gợi ý data-goi (rê chuột, đưa tiêu điểm — index.js hienGoi), nhãn đọc màn hình và danh sách mở khi bấm; bản in giữ đủ chữ.
 import { escapeHtml } from '../../../lib/dom.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
 import { ngayVanBanVN } from '../../../lib/kl/ngay.js';
@@ -27,19 +29,24 @@ const thuongDau = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 // Kỳ ghi sau "nhiệm vụ của …": tháng 11, quý IV, năm 2026, nhiệm kỳ 2025–2030; kỳ tuỳ chọn (từ ngày – đến ngày) ghi "kỳ đã chọn".
 const tenKy = (k) => (k.ky === 'tuy-chon' ? 'kỳ đã chọn' : thuongDau(k.ten || 'kỳ'));
 
-// Dòng so sánh: lop 'xau' khi tăng là xấu (quá hạn, cần ý kiến, chỉ đạo chờ), 'tot' khi giảm; thẻ trong hạn không tô màu.
+const goi = (chu) => (chu ? ` data-goi="${escapeHtml(chu)}"` : '');
+// Dòng so sánh với tuần trước: trên thẻ chỉ ghi "tăng 3 trong tuần" / "giảm 2 trong tuần" (không đổi thì không ghi); câu đủ (chu) ở gợi ý và nhãn đọc
+// màn hình. lop 'xau' khi tăng là xấu (quá hạn, cần ý kiến, chỉ đạo chờ), 'tot' khi giảm; thẻ trong hạn không tô màu. Trả { html, chu } hoặc null.
 function dongSoSanh(nay, cu, tangLaXau = true) {
   const s = soSanh(nay, cu);
-  if (!s) return '';
-  const lop = !tangLaXau || s.d === 0 ? '' : s.d > 0 ? ' xau' : ' tot';
-  return `<span class="ss-tq${lop}">${s.chu}</span>`;
+  if (!s) return null;
+  if (!s.d) return { html: '', chu: s.chu };
+  const lop = !tangLaXau ? '' : s.d > 0 ? ' xau' : ' tot';
+  return { html: `<span class="ss-tq${lop}"${goi(s.chu)}>${s.d > 0 ? 'tăng' : 'giảm'} ${Math.abs(s.d)} trong tuần</span>`, chu: s.chu };
 }
 // Thanh nhỏ dưới thẻ: các phần của con số theo đúng thứ tự dòng phụ. lop viết nguyên văn (p-do, p-ddb, p-vang, p-navy, p-lam, p-xam).
 const thanhNho = (ds) => (ds.some(([n]) => n) ? `<span class="thanh-nho" aria-hidden="true">${ds.filter(([n]) => n).map(([n, lop]) => `<i class="${lop}" style="flex-grow:${n}"></i>`).join('')}</span>` : '');
-function the(khoa, so, ten, phu, { icon, lopIc, thanh = '', ss = '', nhan = false }) {
-  return `<button type="button" class="${nhan ? 'the-so qua-han' : 'the-so'}" data-so="${khoa}" ${mo({ t: khoa })} aria-label="${escapeHtml(`${so} nhiệm vụ ${thuongDau(ten)}, xem danh sách`)}">
+// Thẻ: số, biểu tượng, nhãn, thanh nhỏ, dòng so sánh. phu (phần tách của con số) là gợi ý của thẻ và nằm trong nhãn đọc màn hình.
+function the(khoa, so, ten, phu, { icon, lopIc, thanh = '', ss = null, nhan = false }) {
+  const doc = [`${so} nhiệm vụ ${thuongDau(ten)}`, so ? phu : '', ss?.chu].filter(Boolean).join('; ');
+  return `<button type="button" class="${nhan ? 'the-so qua-han' : 'the-so'}" data-so="${khoa}" ${mo({ t: khoa })}${goi(phu)} aria-label="${escapeHtml(`${doc}, xem danh sách`)}">
     <span class="the-dau-so"><span class="gia">${soLanHtml(so)}</span><span class="${lopIc}" aria-hidden="true">${icon}</span></span>
-    <span class="nhan-so">${escapeHtml(ten)}</span><span class="phu-h">${escapeHtml(phu)}</span>${thanh}${ss}</button>`;
+    <span class="nhan-so">${escapeHtml(ten)}</span>${thanh}${ss?.html || ''}</button>`;
 }
 // Chữ của năm chỉ tiêu (dùng chung cho thẻ trên màn hình và bảng của bản in).
 function chuChiTieu(t, k) {
@@ -51,7 +58,7 @@ function chuChiTieu(t, k) {
     th: phan([[t.th.trongHan, 'trong hạn', true], [t.th.vang, tenMuc('vang'), true], [t.th.khac, 'chưa có hạn hoặc thường xuyên']]),
     dh: x.tyLe !== null ? `${x.dung} trên ${x.xet} nhiệm vụ có đủ hạn và ngày hoàn thành${x.boSung ? `, trong đó ${x.boSung} nhiệm vụ có ngày hoàn thành bổ sung` : ''}`
       : x.so ? `Chưa tính tỷ lệ: ${x.xet}/${x.canXet} nhiệm vụ có hạn đã ghi ngày hoàn thành` : `Chưa có nhiệm vụ hoàn thành ${k.trong}`,
-    tuan: `${x.tuan} nhiệm vụ trong 7 ngày qua`,
+    tuan: `${x.tuan} nhiệm vụ hoàn thành trong 7 ngày qua`,
   };
 }
 
@@ -59,10 +66,10 @@ function chuChiTieu(t, k) {
 export function theSoHtml(t, cu, k) {
   const coCu = Boolean(cu?.ngay); const c = chuChiTieu(t, k);
   return `<div class="tq1-the">${the('qh', t.qh.so, 'Quá hạn chưa hoàn thành', c.qh, { icon: ICON_CANH_BAO, lopIc: 'the-ic do', nhan: t.qh.so > 0,
-    thanh: thanhNho([[t.qh.do, 'p-do'], [t.qh.ddb, 'p-ddb']]), ss: coCu ? dongSoSanh(t.qh.so, cu.qh) : '' })}${the('quyet', t.quyet.so, 'Cần lãnh đạo cho ý kiến', c.quyet, { icon: ICON_Y_KIEN, lopIc: 'the-ic vang',
-    thanh: thanhNho([[t.quyet.vm, 'p-vang'], [t.quyet.cq, 'p-navy']]), ss: coCu ? dongSoSanh(t.quyet.so, cu.quyet) : '' })}${the('cdCho', t.cd.so, 'Chỉ đạo chờ phản hồi', c.cd, { icon: ICON_CHI_DAO, lopIc: 'the-ic lam',
+    thanh: thanhNho([[t.qh.do, 'p-do'], [t.qh.ddb, 'p-ddb']]), ss: coCu ? dongSoSanh(t.qh.so, cu.qh) : null })}${the('quyet', t.quyet.so, 'Cần lãnh đạo cho ý kiến', c.quyet, { icon: ICON_Y_KIEN, lopIc: 'the-ic vang',
+    thanh: thanhNho([[t.quyet.vm, 'p-vang'], [t.quyet.cq, 'p-navy']]), ss: coCu ? dongSoSanh(t.quyet.so, cu.quyet) : null })}${the('cdCho', t.cd.so, 'Chỉ đạo chờ phản hồi', c.cd, { icon: ICON_CHI_DAO, lopIc: 'the-ic lam',
     thanh: thanhNho([[t.cd.quaHan, 'p-do'], [t.cd.trongHan, 'p-lam']]), ss: dongSoSanh(t.cd.so, cu?.cd) })}${the('th', t.th.so, 'Đang thực hiện trong hạn', c.th, { icon: ICON_TRONG_HAN, lopIc: 'the-ic luc',
-    thanh: thanhNho([[t.th.trongHan, 'p-lam'], [t.th.vang, 'p-vang'], [t.th.khac, 'p-xam']]), ss: coCu ? dongSoSanh(t.th.so, cu.th, false) : '' })}</div>`;
+    thanh: thanhNho([[t.th.trongHan, 'p-lam'], [t.th.vang, 'p-vang'], [t.th.khac, 'p-xam']]), ss: coCu ? dongSoSanh(t.th.so, cu.th, false) : null })}</div>`;
 }
 
 // Vòng tỷ lệ hoàn thành đúng hạn (chỉ vẽ phần vòng khi đủ dữ liệu — tyLeDungHan) và ba số tổng của dải. v3.36 (CAU-HOI V-12): số lăn, vòng quét từ 0
@@ -75,15 +82,16 @@ function soDaiHtml(t, k, tuan = []) {
   const vong = `<span class="vong-dai"><svg viewBox="0 0 112 112" aria-hidden="true"><circle class="vd-ranh" cx="56" cy="56" r="${BK}"/>${x.tyLe === null ? ''
     : `<circle class="vd-gia" cx="56" cy="56" r="${BK}" stroke-dasharray="${cung.toFixed(1)} ${CHU_VI.toFixed(1)}" style="--cung:${cung.toFixed(1)}" transform="rotate(-90 56 56)"/>`}</svg>
     <span class="vd-chu"><b>${x.tyLe === null ? '—' : soLanHtml(`${x.tyLe}%`)}</b><small>đúng hạn</small></span></span>`;
-  const so = (khoa, n, ten, phu, ct, nhan, them = '', duoi = '') => `<button type="button" class="so-dai" data-so="${khoa}" ${mo(ct)} aria-label="${escapeHtml(`${nhan}, xem danh sách`)}">
-    <span class="so-hang"><span class="gia">${soLanHtml(n)}</span>${them}</span><span class="nhan-so">${escapeHtml(ten)}</span><span class="phu-h">${escapeHtml(phu)}</span>${duoi}</button>`;
+  const so = (khoa, n, ten, phu, ct, nhan, them = '', duoi = '') => `<button type="button" class="so-dai" data-so="${khoa}" ${mo(ct)}${goi(phu)} aria-label="${escapeHtml(`${nhan}, xem danh sách`)}">
+    <span class="so-hang"><span class="gia">${soLanHtml(n)}</span>${them}</span><span class="nhan-so">${escapeHtml(ten)}</span>${duoi}</button>`;
   const thanhMo = dangMo ? `<span class="thanh-nho tren-dai" aria-hidden="true">${t.th.so ? `<i class="p-sang" style="flex-grow:${t.th.so}"></i>` : ''}${t.qh.so ? `<i class="p-do" style="flex-grow:${t.qh.so}"></i>` : ''}</span>` : '';
-  return `<div class="dai-so"><button type="button" class="so-dung" data-so="dh" ${mo({ t: 'dg' })} aria-label="${escapeHtml(`Hoàn thành đúng hạn${x.tyLe === null ? '' : ` ${x.tyLe}%`}: ${c.dh}, xem danh sách`)}">
-      ${vong}<span class="so-dung-chu"><b>Hoàn thành đúng hạn</b><small>${escapeHtml(c.dh)}</small></span></button>
-    ${so('tong', tong, `nhiệm vụ của ${ky}`, 'tính cả việc đang thực hiện', { t: 'nhom', ma: '*', ten: `Nhiệm vụ của ${ky}` }, `${tong} nhiệm vụ của ${ky}: ${x.so} hoàn thành ${k.trong}, ${dangMo} đang thực hiện`,
+  const tachMo = `${t.th.so} trong hạn, ${t.qh.so} quá hạn`; const tachTong = `${x.so} hoàn thành ${k.trong}, ${dangMo} đang thực hiện`;
+  return `<div class="dai-so"><button type="button" class="so-dung" data-so="dh" ${mo({ t: 'dg' })}${goi(c.dh)} aria-label="${escapeHtml(`Hoàn thành đúng hạn${x.tyLe === null ? '' : ` ${x.tyLe}%`}: ${c.dh}, xem danh sách`)}">
+      ${vong}<span class="so-dung-chu"><b>Hoàn thành đúng hạn</b></span></button>
+    ${so('tong', tong, `nhiệm vụ của ${ky}`, tachTong, { t: 'nhom', ma: '*', ten: `Nhiệm vụ của ${ky}` }, `${tong} nhiệm vụ của ${ky}: ${tachTong}`,
     duongNho(tuan.map((w) => w.giao), 'Giao mới theo tuần, 12 tuần gần đây'))}
-    ${so('xong', x.so, 'đã hoàn thành', c.tuan, { t: 'xong' }, `${x.so} nhiệm vụ đã hoàn thành ${k.trong}`, duongNho(tuan.map((w) => w.xong), 'Hoàn thành theo tuần, 12 tuần gần đây'))}
-    ${so('mo', dangMo, 'đang thực hiện', `${t.th.so} trong hạn, ${t.qh.so} quá hạn`, { t: 'mo' }, `${dangMo} nhiệm vụ đang thực hiện`, '', thanhMo)}</div>`;
+    ${so('xong', x.so, 'đã hoàn thành', c.tuan, { t: 'xong' }, `${x.so} nhiệm vụ đã hoàn thành ${k.trong}, trong đó ${c.tuan}`, duongNho(tuan.map((w) => w.xong), 'Hoàn thành theo tuần, 12 tuần gần đây'))}
+    ${so('mo', dangMo, 'đang thực hiện', tachMo, { t: 'mo' }, `${dangMo} nhiệm vụ đang thực hiện: ${tachMo}`, '', thanhMo)}</div>`;
 }
 
 // Bản in A4 "Báo cáo nhanh": phần đầu theo thể thức Văn phòng (cơ quan, dòng Đảng, ngày), tên báo cáo, phạm vi, kỳ; chân ghi nguồn. Chỉ hiện khi
@@ -102,7 +110,7 @@ function bangInHtml(t, cu, k) {
   const dong = (so, ten, phu, sau) => `<div class="dong-in"><b>${so}</b><span class="ten-in">${escapeHtml(ten)}</span><span>${escapeHtml(phu)}</span><span>${escapeHtml(sau)}</span></div>`;
   return `<div class="tq1-bang-in" aria-hidden="true">${dong(t.qh.so, 'Nhiệm vụ quá hạn chưa hoàn thành', c.qh, coCu ? ss(t.qh.so, cu.qh) : '')}${dong(t.quyet.so, 'Nhiệm vụ cần lãnh đạo cho ý kiến', c.quyet, coCu ? ss(t.quyet.so, cu.quyet) : '')}${
     dong(t.cd.so, 'Nhiệm vụ có chỉ đạo chờ phản hồi', c.cd, ss(t.cd.so, cu?.cd))}${dong(t.th.so, 'Nhiệm vụ đang thực hiện trong hạn', c.th, coCu ? ss(t.th.so, cu.th) : '')}${
-    dong(x.so, `Nhiệm vụ đã hoàn thành ${k.trong}`, x.tyLe !== null ? `Đúng hạn ${x.tyLe}%: ${c.dh}` : c.dh, `${x.tuan} nhiệm vụ hoàn thành trong 7 ngày qua`)}</div>`;
+    dong(x.so, `Nhiệm vụ đã hoàn thành ${k.trong}`, x.tyLe !== null ? `Đúng hạn ${x.tyLe}%: ${c.dh}` : c.dh, c.tuan)}</div>`;
 }
 
 // Nút và nhóm kỳ của dải: dùng chung cho dải thật và khung chờ (khung chờ có đủ hai phần này nên dải cao gần bằng dải thật ở mọi bề rộng; nút In chờ
@@ -116,14 +124,16 @@ const dauDaiHtml = ({ tieuDe, phamVi, capNhat, nut = '', ky = '' }) => `<div cla
 // Tầng 1 đầy đủ. luc: thời điểm đọc số liệu; kyChon null = đang dùng kỳ tuỳ chọn của bộ lọc chi tiết (không nút nào sáng); t, cu, k: số của tầng 1,
 // tuần trước, kỳ; duocChiDao: người xem ra được chỉ đạo (nhãn nút của câu kết luận); hang: hàng biểu đồ; nvq: dòng Nhiệm vụ quý (tang-1-khoi.js); tuan: 12 tuần
 // gần đây (xuHuongTuan) cho đường xu hướng nhỏ trên dải.
-export function tang1Html({ tieuDe, phamVi, luc, ten, kyChon, coGiaoViec, t, cu, k, ketLuan, duocChiDao, hang, nvq, coQuan, tuan }) {
+export function tang1Html({ tieuDe, phamVi, luc, ten, kyChon, coGiaoViec, t, cu, k, ketLuan, ketLuanGon = ketLuan, duocChiDao, hang, nvq, coQuan, tuan }) {
   const capNhat = luc ? `Số liệu cập nhật ${luc.toLocaleTimeString('vi-VN', { ...VN, hour: '2-digit', minute: '2-digit' })} ngày ${luc.toLocaleDateString('vi-VN', VN)}` : 'Đang nạp số liệu…';
   const nut = nutDaiHtml(coGiaoViec); const ky = kyHtml(ten, kyChon);
-  const cauKl = escapeHtml(ketLuan).replace(/(\d+ nhiệm vụ quá hạn chưa hoàn thành)/, '<b>$1</b>');
+  // Màn hình ghi câu gọn (cauKetLuanGon), bản in "Báo cáo nhanh" ghi câu đủ (in.css đổi .chi-man / .chi-in); số việc quá hạn in đậm.
+  const cauIn = escapeHtml(ketLuan).replace(/(\d+ nhiệm vụ quá hạn chưa hoàn thành)/, '<b>$1</b>');
+  const cauGon = escapeHtml(ketLuanGon).replace(/^((?:Theo bộ lọc: )?)(\d+ nhiệm vụ quá hạn)/, '$1<b>$2</b>');
   return `<section class="tq-tang1" id="tqTang1" aria-labelledby="tqTieuDe">${inDauHtml({ coQuan, phamVi, kyTen: k.ten, luc: luc || new Date() })}
     <div class="tq-so" id="tqSo"><div class="tq-dai">${NUI}<div class="dai-than">${dauDaiHtml({ tieuDe, phamVi, capNhat, nut, ky })}${soDaiHtml(t, k, tuan)}</div><div class="dai-vach" aria-hidden="true"></div></div>
       ${theSoHtml(t, cu, k)}</div>${bangInHtml(t, cu, k)}
-    <div class="${t.qh.so ? 'tq1-kl qua-han' : 'tq1-kl'}"><span class="kl-ic" aria-hidden="true">${ICON_CANH_BAO}</span><p class="tq1-ket-luan" id="tqKetLuan">${cauKl}</p>
+    <div class="${t.qh.so ? 'tq1-kl qua-han' : 'tq1-kl'}"><span class="kl-ic" aria-hidden="true">${ICON_CANH_BAO}</span><p class="tq1-ket-luan" id="tqKetLuan"><span class="chi-man">${cauGon}</span><span class="chi-in">${cauIn}</span></p>
       ${t.qh.so ? `<button type="button" class="nut chinh" id="tqXemQuaHan" ${mo({ t: 'do' })}>${duocChiDao ? 'Xem và chỉ đạo' : 'Xem danh sách'}</button>` : ''}</div>
     ${hang}${nvq}</section>`;
 }
@@ -132,9 +142,9 @@ export function tang1Html({ tieuDe, phamVi, luc, ten, kyChon, coGiaoViec, t, cu,
 // khối bên dưới ít xô lệch khi số liệu về; bốn thẻ nhấp nháy; không hiện số 0 gây hiểu nhầm.
 export function khungCho1Html(tieuDe, phamVi, { ten = null, kyChon = null, coGiaoViec = false } = {}) {
   const soCho = `<div class="dai-so cho" aria-hidden="true"><span class="so-dung"><span class="vong-dai"><svg viewBox="0 0 112 112"><circle class="vd-ranh" cx="56" cy="56" r="${BK}"/></svg></span>
-    <span class="so-dung-chu"><span class="xuong" style="width:9rem;height:14px"></span><span class="xuong" style="width:13rem;margin-top:8px"></span></span></span>${
-    '<span class="so-dai"><span class="xuong" style="width:64px;height:30px"></span><span class="xuong" style="width:7rem;margin-top:8px"></span><span class="xuong" style="width:9rem;margin-top:6px"></span></span>'.repeat(3)}</div>`;
-  const o = '<span class="the-so cho" aria-hidden="true"><span class="xuong" style="width:56px;height:30px"></span><span class="xuong" style="width:80%;margin-top:10px"></span><span class="xuong" style="width:60%;margin-top:8px"></span></span>';
+    <span class="so-dung-chu"><span class="xuong" style="width:9rem;height:14px"></span></span></span>${
+    '<span class="so-dai"><span class="xuong" style="width:64px;height:30px"></span><span class="xuong" style="width:7rem;margin-top:8px"></span></span>'.repeat(3)}</div>`;
+  const o = '<span class="the-so cho" aria-hidden="true"><span class="xuong" style="width:56px;height:30px"></span><span class="xuong" style="width:80%;margin-top:10px"></span><span class="xuong" style="width:100%;height:6px;margin-top:12px"></span></span>';
   return `<section class="tq-tang1" aria-busy="true"><div class="tq-so"><div class="tq-dai">${NUI}<div class="dai-than">${dauDaiHtml({ tieuDe, phamVi, capNhat: 'Đang nạp số liệu…', nut: ten ? nutDaiHtml(coGiaoViec, true) : '', ky: ten ? kyHtml(ten, kyChon) : '' }).replace(' id="tqTieuDe"', '')}${soCho}</div>
     <div class="dai-vach" aria-hidden="true"></div></div><div class="tq1-the">${o.repeat(4)}</div></div></section>`;
 }

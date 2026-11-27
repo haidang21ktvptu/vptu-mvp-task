@@ -51,10 +51,15 @@ test('A1: Cần xử lý không còn dải ô số; nội dung việc trong th�
 });
 
 test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, tầng 1, ma trận (6 dòng + Tổng cộng), 5 điểm nghẽn; afterprint trả lại màn hình', async ({ browser }, testInfo) => {
-  const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
+  // V-13: in từ trạng thái mặc định của người dùng thật — mọi khối phân tích đang gập trên màn hình; bản in vẫn có ma trận, điểm nghẽn, câu kết luận đủ.
+  const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true, tqGap: true });
   await expect(page.locator('#viewTongQuan')).toHaveAttribute('data-nap', /./, NAP);
   await expect(page.locator('#tqIn')).toBeVisible();
   await expect(page.locator('#tqTang1 .tq-in-dau')).toBeHidden();
+  await expect(page.locator('#tqMaTran')).toHaveAttribute('data-gap', '');
+  await expect(page.locator('#tqMaTran .bang-mt')).toBeHidden();
+  await expect(page.locator('#tqMaTran .khoi-so')).toBeVisible();
+  await expect(page.locator('#tqKhoiTatCa')).toHaveText('Mở tất cả');
   // Bấm nút thật, hộp in của trình duyệt thay bằng hàm rỗng: nút gắn lớp in-tq và khổ A4 dọc tạm (chỉ cho bản in này), afterprint gỡ cả hai.
   await page.evaluate(() => { globalThis.print = () => {}; });
   await page.locator('#tqIn').click();
@@ -70,7 +75,11 @@ test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, t�
   await expect(page.locator('#tqSo')).toBeHidden();   // dải điều hành và bốn thẻ không in — bản in dùng bảng năm chỉ tiêu
   await expect(page.locator('#tqTang1 .tq1-bang-in .dong-in')).toHaveCount(5);
   await expect(page.locator('#tqTang1 .tq1-bang-in')).toBeVisible();
+  await expect(page.locator('#tqKetLuan .chi-in'), 'bản in ghi câu kết luận đủ').toBeVisible();
+  await expect(page.locator('#tqKetLuan .chi-man')).toBeHidden();
   await expect(page.locator('#tqMaTran')).toBeVisible();
+  await expect(page.locator('#tqMaTran .bang-mt'), 'khối gập trên màn hình vẫn in đủ').toBeVisible();
+  await expect(page.locator('#tqMaTran .khoi-so')).toBeHidden();
   await expect(page.locator('#tqLoc')).toBeHidden();
   await expect(page.locator('#mainHeader')).toBeHidden();
   for (const id of ['#tqXepHang', '#tqThang', '#tqVanBan']) if (await page.locator(id).count()) await expect(page.locator(id)).toBeHidden();
@@ -95,5 +104,6 @@ test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, t�
   await expect(page.locator('#tqInTrang')).toHaveCount(0);
   await expect(dau).toBeHidden();
   await expect(page.locator('#tqLoc')).toBeVisible();
+  await expect(page.locator('#tqMaTran .bang-mt'), 'trở lại màn hình: khối vẫn gập').toBeHidden();
   await page.context().close();
 });

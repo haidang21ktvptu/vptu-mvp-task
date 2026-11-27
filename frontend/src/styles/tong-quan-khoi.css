@@ -4,7 +4,7 @@
   /* ---- Thanh lọc ---- */
   .tq-loc2 { margin-top: 16px; background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); box-shadow: var(--bong-the); }
   .tq-loc-hang { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; }
-  .tq-loc-hang + .tq-loc-hang, .tq-luoi-loc + .tq-loc-hang { border-top: 1px solid var(--vien-nhat); }
+  .tq-loc-hang + .tq-loc-hang { border-top: 1px solid var(--vien-nhat); }
   .nho-tq { font-size: var(--chu-nho); color: var(--chu-phu); }
   .tq-day { flex: 1 1 auto; }
   .nhanh-tq { display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px dashed var(--vien-o); background: var(--the);
@@ -13,7 +13,9 @@
   .nhanh-tq[aria-pressed="true"] { border-style: solid; border-color: var(--navy); background: var(--navy-nhat); color: var(--navy); }
   #tqLocChiTietNut svg { margin-right: 2px; }
   .tq-luoi-loc { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 14px; padding: 14px 14px 16px; border-top: 1px solid var(--vien-nhat); }
-  .tq-luoi-loc[hidden] { display: none; }
+  .tq-loc-mo[hidden] { display: none; }
+  .tq-loc-mo > .tq-loc-hang { border-top: 1px solid var(--vien-nhat); }
+  .tq-pt-ten { margin-right: 4px; font-family: var(--font-tieu-de); font-size: var(--chu-muc); font-weight: 600; line-height: 1.3; color: var(--chu); }
   .o-loc { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: var(--chu-nho); font-weight: 600; color: var(--chu-phu); }
   .o-loc select, .o-loc input { height: 38px; padding: 0 10px; border: 1px solid var(--vien); border-radius: var(--bo-o); background: var(--the); font-size: var(--chu-bang); font-weight: 400;
     color: var(--chu); min-width: 0; width: 100%; }
@@ -30,9 +32,22 @@
   }
   body:has(#thanhHoaToc:not(.hidden)) .tq-loc2 { position: static; }   /* thanh đỏ Hỏa tốc đang dính đầu trang: thanh lọc không dính (khỏi bị che) */
   .tq-loc2:has(#tqLocChiTietNut[aria-expanded="true"]) { position: static; }   /* v3.36: bộ lọc chi tiết đang mở (cao gần cả màn hình) thì không dính, khỏi che ma trận, điểm nghẽn khi cuộn */
-  /* ---- Tiêu đề khối có số ---- */
-  .so-khoi { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--navy-nhat); color: var(--navy);
-    font-family: var(--font-tieu-de); font-size: var(--chu-nho); font-weight: 600; margin-right: 8px; vertical-align: 2px; }
+  /* ---- Khối phân tích mở / gập (v3.36, CAU-HOI V-13; khoi-gap.js đặt data-gap): chỉ áp trên màn hình — bản in vẫn in đủ khối. Mỗi khối một hàng;
+     khối gập còn một dòng (tên khối, số chính, mũi tên), nội dung ẩn; khối hẹp (n4, n5) khi mở giữ bề rộng đọc được. ---- */
+  @media screen {
+    #viewTongQuan > .luoi-tq { gap: 8px; margin-top: 10px; }   /* danh sách các khối: mỗi khối một hàng, khối gập sát nhau */
+    #viewTongQuan > .luoi-tq > .the-bd { grid-column: span 12; }
+    #viewTongQuan > .luoi-tq > .n4 > :not(.dau-bd), #viewTongQuan > .luoi-tq > .n5 > :not(.dau-bd) { width: 100%; max-width: 680px; }
+    #viewTongQuan > .luoi-tq > [data-gap] { padding: 0; background: var(--the); border-color: var(--vien-nhat); box-shadow: none; }
+    #viewTongQuan > .luoi-tq > [data-gap]:hover { border-color: var(--vien-o); }
+    #viewTongQuan > .luoi-tq > [data-gap] > :not(.dau-bd), #viewTongQuan > .luoi-tq > [data-gap] > .dau-bd > :not(h2) { display: none; }
+    #viewTongQuan > .luoi-tq > [data-gap] > .dau-bd { margin: 0; }
+    #viewTongQuan > .luoi-tq > [data-gap] > .dau-bd > h2 { flex: 1 1 auto; }
+    #viewTongQuan > .luoi-tq > [data-gap] .khoi-mo { width: 100%; min-height: 48px; padding: 4px 16px 4px 20px; border-radius: var(--bo-the); }
+    #viewTongQuan > .luoi-tq > [data-gap] .khoi-ten { flex: 1 1 auto; min-width: 0; font-size: var(--chu-than); }
+    #viewTongQuan > .luoi-tq > [data-gap] .khoi-so { display: inline; }
+    #viewTongQuan > .luoi-tq > [data-gap] .khoi-mui { transform: none; }
+  }
   .tq-chu-nho { margin-top: 10px; font-size: var(--chu-nho); }
   .muc-tq.tot { background: var(--luc-nhat); color: var(--luc); }
   span.muc-tq { padding: 0 8px; }
@@ -85,7 +100,6 @@
   #viewTongQuan .dau-bd .pham-vi { flex-wrap: wrap; max-width: 100%; }   /* nhóm nút dài (cấp, nhóm mục tiêu, xếp hạng): xuống dòng, không tràn ngang */
   /* ---- Khối 9 gập, ghi chú chất lượng dữ liệu ---- */
   .noi-bo-than { margin-top: 4px; }
-  .noi-bo-than[hidden] { display: none; }
   .noi-bo-than > .the-bd { box-shadow: none; border-color: var(--vien-nhat); }
   .dl-tq { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 12px 16px; border-radius: 14px; background: var(--vang-nhat); color: var(--vang-chu); font-size: var(--chu-bang); }
   .dl-tq b { font-weight: 700; }
