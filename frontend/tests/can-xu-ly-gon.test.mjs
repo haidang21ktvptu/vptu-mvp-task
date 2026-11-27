@@ -1,6 +1,6 @@
 // v3.36 phần 4 (CAU-HOI V-1): Cần xử lý xếp theo mức khẩn (lib/kl/do-khan.js soSanhKhan, soSanhMuc); nội dung thẻ hai dòng (lib/kl/nd-gon.js) —
 // thoát ký tự, nguyên văn ở title; menu bốn nhóm (views/shell/menu.js). CAU-HOI V-13: nút "Xem tất cả" của danh sách hiện các dòng đầu
-// (components/ds-gon.js), thuộc tính gợi ý và nút "i" (components/goi.js).
+// (components/ds-gon.js), thuộc tính gợi ý và nút "i" (components/goi.js), khối phân tích mở / gập của Tổng quan quý (views/nvq/khoi-gap.js).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { soSanhKhan, soSanhMuc } from '../src/lib/kl/do-khan.js';
@@ -8,6 +8,7 @@ import { ndGonHtml, ndPhuHtml } from '../src/lib/kl/nd-gon.js';
 import { menuCuaVai, QUAN_TRI_NAV } from '../src/views/shell/menu.js';
 import { nutHetHtml } from '../src/components/ds-gon.js';
 import { thuocGoi, nutGoi } from '../src/components/goi.js';
+import { khoiGapNq, dauPhanTichNq, KHOI_PHAN_TICH } from '../src/views/nvq/khoi-gap.js';
 
 const v = (ma, o = {}) => ({ ma, do_khan: 'THUONG', uu_tien: null, muc_canh_bao: 'DO', so_ngay_qua: 1, han_xu_ly: '2026-11-20', ...o });
 
@@ -54,4 +55,15 @@ test('V-13 gợi ý: thuộc tính data-goi và nút "i" thoát ký tự; rỗng
   assert.equal(nutGoi(''), '');
   assert.equal(thuocGoi('5 việc "gấp" & <trễ>'), ' data-goi="5 việc &quot;gấp&quot; &amp; &lt;trễ&gt;"');
   assert.equal(nutGoi('Xếp theo mức khẩn'), '<button type="button" class="nut-goi" data-goi="Xếp theo mức khẩn" aria-label="Ghi chú: Xếp theo mức khẩn">i</button>');
+});
+
+test('V-13 Tổng quan quý: khối phân tích mặc định gập, tên khối là nút mở / gập kèm số chính, ghi chú ở nút "i"', () => {
+  assert.deepEqual(KHOI_PHAN_TICH, ['nqTheoLanhDao', 'nqTheoDonVi', 'nqTheoChuTri', 'nqDienBien']);
+  const h = khoiGapNq('nqTheoDonVi', 'Theo đơn vị <tham mưu>', '5 đơn vị', '<table></table>', 'Ghi chú');
+  assert.match(h, /^<section class="nq-khoi rong nq-gap" id="nqTheoDonVi" data-gap>/);
+  assert.match(h, /<h2><button type="button" class="khoi-mo" data-action="nqKhoi" aria-expanded="false"><span class="khoi-ten">Theo đơn vị &lt;tham mưu&gt;<\/span><span class="khoi-so">5 đơn vị<\/span><svg class="khoi-mui"/);
+  assert.match(h, /<button type="button" class="nut-goi" data-goi="Ghi chú"/);
+  assert.match(h, /<table><\/table><\/section>$/);
+  assert.doesNotMatch(khoiGapNq('nqDienBien', 'Diễn biến', '', ''), /khoi-so|nut-goi/);
+  assert.match(dauPhanTichNq(), /<h2>Phân tích<\/h2><button type="button" class="nut nho" id="nqKhoiTatCa" data-action="nqKhoiTatCa">Mở tất cả<\/button>/);
 });

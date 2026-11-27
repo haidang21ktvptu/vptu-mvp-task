@@ -11,6 +11,7 @@ import { nq, napTatCa } from '../../lib/nvq/du-lieu.js';
 import { batNvqRealtime, tatNvqRealtime } from '../../lib/nvq/thoi-gian-thuc.js';
 import { e } from './khung.js';
 import { veTongQuan } from './tong-quan.js';
+import { HANH_DONG_KHOI_NQ } from './khoi-gap.js';
 import { veDanhMuc, doiLoc, dm, xuatExcel, inDanhMuc } from './danh-muc.js';
 import { veCapNhatTuan, hanhDongTuan } from './cap-nhat-tuan.js';
 import { veBaoCao, hanhDongBaoCao } from './bao-cao.js';
@@ -132,7 +133,7 @@ export function registerNvq() {
     nqBoLoc: () => { dm.loc = {}; return veLai(); },
     nqXuatExcel: () => xuatExcel(),
     nqIn: () => inDanhMuc(),
-    ...HANH_DONG_NGAN, ...HANH_DONG_SUA,
+    ...HANH_DONG_NGAN, ...HANH_DONG_SUA, ...HANH_DONG_KHOI_NQ,
     ...hanhDongTuan(veLai, napLaiSauGhi), ...baoCao,
     ...hanhDongQuanLy(veLai, napLaiSauGhi), ...hanhDongNhap(veLai, napLaiSauGhi), ...hanhDongPhanCong(veLai, napLaiSauGhi), ...hanhDongCuoiQuy(veLai, napLaiSauGhi),
   });

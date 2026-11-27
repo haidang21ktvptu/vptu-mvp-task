@@ -382,6 +382,14 @@ dưới hàng nút, như "Từ chối" / "Trả lại". Nút chỉ hiện với 
   bấm được → 05 chỉ tiêu cơ bản (mục tiêu / thực hiện / thanh % / Đạt – Chưa đạt, ngày và nguồn số liệu) → 6 trục (thanh xếp chồng hoàn thành / đang /
   chậm / chưa) → **Cần lãnh đạo quan tâm** (đơn vị, số ngày chậm so với mốc, kết quả còn thiếu, lãnh đạo phụ trách, vướng mắc / đề xuất) → kết quả mới trong
   tuần, đến mốc trong tháng → bảng theo lãnh đạo phụ trách, đơn vị, chủ trì theo dõi → diễn biến các tuần đã chốt. Mọi số, tên bấm được → Danh mục đã lọc.
+- **Tổng quan quý từ v3.36 (CAU-HOI V-13, mục 17):** không còn câu tóm tắt lặp lại các ô số; số ngày còn lại của quý ở dòng phụ đầu trang, văn bản căn cứ ở
+  nút "i" (bản in vẫn ghi dòng căn cứ); tỉ lệ hoàn thành và số nhiệm vụ đã báo cáo tuần ở gợi ý của ô số. Thẻ chỉ tiêu: tên, mục tiêu / thực hiện, thanh,
+  mức, "số liệu dd/mm" (mô tả và nguồn số liệu ở gợi ý; một mã có nhiều chỉ tiêu thì mô tả vẫn hiện), năm thẻ một hàng từ 1280px. Sáu trục xếp hai cột,
+  tên và số cùng dòng. **Cần lãnh đạo quan tâm** hiện 5 nhiệm vụ đầu (nút "Xem tất cả", bản in đủ), mỗi mục: nội dung tối đa hai dòng, một hàng năm ô
+  (đơn vị, tiến độ, còn thiếu, lãnh đạo phụ trách, chủ trì theo dõi và ngày cập nhật), vướng mắc và đề xuất mỗi mục một dòng (đủ chữ ở `title`, ngăn chi
+  tiết, bản in); số nhiệm vụ ở đầu khối bấm được → Danh mục đã lọc. Hai danh sách kết quả hiện 6 dòng đầu. Phần **Phân tích** (theo lãnh đạo phụ trách, theo
+  đơn vị, theo chủ trì theo dõi, diễn biến các tuần): bốn khối rộng hết hàng, mặc định gập, mỗi khối một dòng có số chính, "Mở tất cả", nhớ theo máy
+  (`vptu.nq.khoi`, `views/nvq/khoi-gap.js`); trong bảng, tỉ lệ đứng cùng dòng với số.
 - **Danh mục** đúng cột bảng Phụ lục (nhóm theo trục → nhóm), thêm Kết quả thực hiện mới nhất (kèm ngày), Trạng thái, Chủ trì theo dõi; mép trái theo mức
   (Đỏ đặc biệt tím, Đỏ, Vàng, xanh, lục); kết quả / sản phẩm thu gọn một chấm màu một dòng; ≤ 900px mỗi dòng thành thẻ có nhãn ô.
 - **Cập nhật tuần** (nơi làm việc của chủ trì theo dõi): thẻ "Chưa báo cáo tuần này" trước, biểu mẫu mở ngay trên thẻ, ô theo loại kết quả.
@@ -404,4 +412,4 @@ Chủ dự án xem bản staging của v3.36: "vẫn hiển thị quá nhiều c
 
 Thành phần dùng chung: hộp gợi ý `#goiChung` gắn vào `<body>` cho mọi phần tử mang `data-goi` ở mọi màn hình, và nút "i" `nutGoi` (`components/goi.js`; bấm chỗ khác thì hộp ẩn, bấm nút "i" thì hộp giữ để đọc trên màn hình chạm); danh sách hiện các dòng đầu (`components/ds-gon.js`; cấu hình `giu` là bộ chọn các dòng không bị ẩn, bảng Báo cáo dùng cho hàng đang mở rộng; khi thu gọn làm trang ngắn lại và nút ra khỏi tầm nhìn thì nút được đưa về giữa màn hình, các dòng đầu ở ngay trên). Chữ ẩn `.sr` đặt trong phần tử có `position` (chữ ẩn nằm trong thanh cuộn ngang mà không có phần tử cha định vị sẽ làm trang tràn ngang).
 
-Đã áp dụng: Tổng quan (27/11, CHANGELOG mục 104), Cần xử lý (27/11, CHANGELOG mục 105; chi tiết ở mục 10), Nhiệm vụ (27/11, CHANGELOG mục 106; chi tiết ở mục 11), Báo cáo và Cán bộ (27/11, CHANGELOG mục 107; chi tiết ở mục 10).
+Đã áp dụng: Tổng quan (27/11, CHANGELOG mục 104), Cần xử lý (27/11, CHANGELOG mục 105; chi tiết ở mục 10), Nhiệm vụ (27/11, CHANGELOG mục 106; chi tiết ở mục 11), Báo cáo và Cán bộ (27/11, CHANGELOG mục 107; chi tiết ở mục 10), Tổng quan nhiệm vụ quý và đầu trang các màn Nhiệm vụ quý (27/11, CHANGELOG mục 108; chi tiết ở mục 16).
