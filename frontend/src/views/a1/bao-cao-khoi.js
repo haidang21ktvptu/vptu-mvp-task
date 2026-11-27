@@ -18,7 +18,7 @@ import { nutGoi, thuocGoi } from '../../components/goi.js';
 import { nutHetHtml } from '../../components/ds-gon.js';
 import { dongViecHtml } from '../shared/ngan-viec.js';
 
-export const SO_CAN_QUYET_DAU = 5; export const SO_VAN_BAN_DAU = 10;   // số dòng đầu của hai danh sách dài (components/ds-gon.js: 'bcCanQuyet', 'bcVanBan')
+export const SO_CAN_QUYET_DAU = 5; export const SO_VAN_BAN_DAU = 10; export const SO_VIEC_DAU = 10;   // số dòng đầu của ba danh sách dài (components/ds-gon.js: 'bcCanQuyet', 'bcVanBan', 'bcViec' — việc dưới hàng mở rộng)
 export const ctx = () => ({ phongCua: Object.fromEntries((state.accounts || []).map((a) => [a.id, a.department])), tenPhong: DEPT_NAMES });
 export const COT = () => cotBaoCao(nguongCanhBao().vang);
 const SO_COT = 7;   // cột tên + sáu cột số
@@ -30,10 +30,11 @@ const DAU_BANG = (ten) => `<thead><tr><th>${ten}</th>${COT().map(([, t]) => `<th
 // Khoá hàng: bảng (b) + nhóm — cùng một phòng ở hai bảng là hai hàng khác nhau (mỗi lúc chỉ một hàng mở rộng, một #bcMoRong).
 export const khoaHangCua = (loc) => JSON.stringify(['b', 'phong', 'canBo', 'nguon', 'ketLuan'].filter((k) => k in loc).map((k) => [k, loc[k]]));
 
-// Hàng mở rộng ngay dưới dòng đang chọn: danh sách việc theo bộ lọc của ô số vừa bấm (hoặc cả dòng).
+// Hàng mở rộng ngay dưới dòng đang chọn: danh sách việc theo bộ lọc của ô số vừa bấm (hoặc cả dòng). Danh sách dài hiện 10 việc đầu, nút "Xem tất cả"
+// ở cuối (một ô 159 việc từng đẩy các bảng sau xuống hơn 10.000px); bản in đủ dòng.
 function hangMoRongHtml(bc, loc) {
   const ds = sapXep(locBaoCao(bc.rowsKy, loc, ctx())); const homNay = homNayVN();
-  return `<tr class="mo-rong" id="bcMoRong"><td colspan="${SO_COT}"><div class="nv-ds">${ds.length ? ds.map((r) => dongViecHtml(r, homNay)).join('') : '<p class="trong-nho">Không có việc nào.</p>'}</div></td></tr>`;
+  return `<tr class="mo-rong" id="bcMoRong"><td colspan="${SO_COT}"><div class="nv-ds">${ds.length ? ds.map((r) => dongViecHtml(r, homNay)).join('') : '<p class="trong-nho">Không có việc nào.</p>'}</div>${nutHetHtml('bcViec', ds.length, SO_VIEC_DAU)}</td></tr>`;
 }
 function dong(bc, ten, phu, loc, rows, lop = '') {
   const d = demCot(rows); const dangMo = bc.hangMo === khoaHangCua(loc);

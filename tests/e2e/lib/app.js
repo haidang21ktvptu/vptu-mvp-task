@@ -53,7 +53,7 @@ export const KHOI_TQ = ['tqMaTran', 'tqNghen', 'tqXepHang', 'tqGiaiNgan', 'tqMuc
 // v3.36 (CAU-HOI V-13): danh sách dài chỉ hiện các dòng đầu, "Xem tất cả" nhớ theo máy (vptu.ds.het — components/ds-gon.js). Phiên e2e mở hết các danh
 // sách dưới đây để kịch bản tìm một việc bất kỳ (#the-<id>, #mcCho-<id>, dòng của #bcCanQuyet) chạy nguyên; dsGon: true → giữ mặc định của người dùng thật
 // (chỉ các dòng đầu).
-export const DS_GON = ['dhThe', 'dhMc', 'bcCanQuyet', 'bcVanBan', 'nqNghen', 'nqMoi', 'nqDenMoc', 'ptChiDao', 'ptDo', 'ptVang'];   // Cần xử lý: thẻ việc, kết quả nộp; Báo cáo: việc cần lãnh đạo quyết định, theo văn bản; Tổng quan quý: cần lãnh đạo quan tâm, kết quả mới, đến mốc; Phòng tôi (Trưởng phòng): chỉ đạo chờ phản hồi, việc quá hạn, việc sắp đến hạn
+export const DS_GON = ['dhThe', 'dhMc', 'bcCanQuyet', 'bcVanBan', 'bcViec', 'nqNghen', 'nqMoi', 'nqDenMoc', 'ptChiDao', 'ptDo', 'ptVang'];   // Cần xử lý: thẻ việc, kết quả nộp; Báo cáo: việc cần lãnh đạo quyết định, theo văn bản, việc dưới hàng mở rộng; Tổng quan quý: cần lãnh đạo quan tâm, kết quả mới, đến mốc; Phòng tôi (Trưởng phòng): chỉ đạo chờ phản hồi, việc quá hạn, việc sắp đến hạn
 export async function contextAs(browser, role, testInfo, { chuyenDong = false, tqGap = false, dsGon = false } = {}) {
   const session = await phienMoi(role);
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;

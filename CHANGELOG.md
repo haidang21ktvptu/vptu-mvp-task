@@ -1079,3 +1079,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Theo văn bản: câu hướng dẫn ở nút "i". Chú giải "Chữ đậm" ghi ngắn, câu đầy đủ ở gợi ý.
 - Sửa điểm sót của mục 106: quy tắc ẩn dòng phụ ở cột thời gian chỉ dành cho màn Nhiệm vụ đã ẩn luôn giờ giao ở cột Thời gian giao của Việc của tôi (màn rộng hơn 1600 px); nay thu hẹp về đúng bảng của màn Nhiệm vụ.
 - e2e: thêm hai kịch bản (Trưởng phòng, chuyên viên) ở `v336-giao-dien`; phiên e2e mở sẵn ba danh sách mới. Unit 418 đạt.
+
+## 110. v3.36.0 (Đợt 1, phần 17) — Số trước, chi tiết bấm mới mở, phần 7: sửa sau khi kiểm bản staging ở cỡ chữ lớn (27/11/2026, CAU-HOI V-13; chỉ giao diện, không migration)
+- Kiểm bản staging bằng tài khoản lãnh đạo (cỡ chữ lớn là mặc định, 1366×768): Nhiệm vụ 5,6 màn hình (trước 8,6), Báo cáo 4,2 (trước 19,2), Cán bộ 2,6, Tổng quan nhiệm vụ quý 2,7; Theo văn bản còn 9,6 màn hình, mỗi dòng 70 đến 191 px.
+- Cán bộ (lỗi có từ trước): dòng số dài ép cột tên còn một chữ mỗi dòng (dòng cao tới 261 px, điện thoại tràn chữ). Nay hai cột: tên, chức danh bên trái; thanh tải và dòng số bên phải; điện thoại xếp dọc. Dòng số ghi "n sắp đến hạn", số ngày ở ghi chú của màn.
+- Theo văn bản: dòng văn bản đang gập còn trích yếu một dòng, người giao tối đa hai dòng, dòng phụ chỉ ghi ngày ban hành, nhãn cảnh báo ghi ngắn (câu đủ ở gợi ý); mở văn bản ra thì hiện như trước. Bản xem thử cục bộ: mỗi dòng còn 70 đến 106 px.
+- Nhiệm vụ: ô số "sắp đến hạn" ghi ngắn (số ngày ở gợi ý, đặt theo cấu hình mỗi lần vẽ); "Thêm bộ lọc" đang gập đứng cùng hàng các ô lọc; tên chủ trì một dòng; cột Văn bản giao rộng thêm, số hiệu văn bản không cắt. Báo cáo: danh sách việc dưới hàng mở rộng hiện 10 việc đầu (một ô 159 việc từng dài hơn 10.000 px). Tổng quan nhiệm vụ quý: hai nhãn ô số ghi ngắn, bảy ô một hàng ở cỡ chữ lớn. Phím Esc ẩn hộp gợi ý.
+- e2e: thêm `v336-gon-chu` (một kịch bản), thêm một kiểm ở `nhiem-vu-quy`; phiên e2e mở sẵn danh sách mới `bcViec`. Unit 418 đạt.

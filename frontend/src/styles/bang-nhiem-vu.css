@@ -91,8 +91,10 @@
   .bnv-chi-in { display: none; }
   @media screen {
     .cot-nv .bnv-c-tg > .bnv-phu, .cot-td .bnv-c-tg > .bnv-phu { display: none; }   /* chỉ bảng của màn Nhiệm vụ: ở Việc của tôi dòng phụ của cột Thời gian giao là giờ giao, phải giữ */
-    /* dòng phụ của ô (ngày ban hành, phòng, "còn N ngày") một dòng, cắt bằng dấu ba chấm; đủ chữ ở title của ô. Cột Tình hình (Việc tôi đã giao) giữ đủ. */
-    .cot-nv .bnv-c > .bnv-phu, .cot-td .bnv-c:not(.bnv-th) > .bnv-phu, .cot-nv .bnv-c.han > span, .cot-td .bnv-c.han > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* dòng phụ của ô (ngày ban hành, phòng, "còn N ngày") một dòng, cắt bằng dấu ba chấm; đủ chữ ở title của ô. Cột Tình hình (Việc tôi đã giao) giữ đủ.
+       Tên chủ trì có dòng phụ đi kèm (.bnv-ten) cũng một dòng — ở cỡ chữ lớn tên dài xuống dòng làm dòng thành ba dòng chữ. Số hiệu văn bản không cắt. */
+    .cot-nv .bnv-c > .bnv-phu, .cot-td .bnv-c:not(.bnv-th) > .bnv-phu, .cot-nv .bnv-c.han > span, .cot-td .bnv-c.han > span,
+    .cot-nv .bnv-c > .bnv-ten, .cot-td .bnv-c > .bnv-ten { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .cot-vct .bnv-c-nv > .bnv-phu:not(.bnv-chi-in) { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* Việc của tôi: dòng "Sản phẩm đầu ra" một dòng (đủ chữ ở title) */
   }
   /* ---- Hàng nhóm, khối dưới dòng, chân bảng ---- */
@@ -125,10 +127,10 @@
     .bnv-dau, .bnv-hang { column-gap: 12px; }
     .bnv .bnv-c-tg { display: none; }
     .bnv .bnv-chi-gon { display: block; }
-    .cot-nv .bnv-dau, .cot-nv .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.15fr) minmax(0, 1.25fr) 112px 140px; }
+    .cot-nv .bnv-dau, .cot-nv .bnv-hang { grid-template-columns: 36px minmax(0, 2.4fr) minmax(0, 1.25fr) minmax(0, 1.25fr) 112px 140px; }   /* v3.36: cột Văn bản giao rộng thêm — số hiệu dài (1650-CV/VPTU) đủ một dòng ở cỡ chữ lớn */
     .cot-td .bnv-dau, .cot-td .bnv-hang { grid-template-columns: 36px minmax(0, 2.5fr) minmax(0, 1.25fr) minmax(0, 1.1fr) 112px 140px minmax(0, 1.5fr); }
     .cot-vct .bnv-dau, .cot-vct .bnv-hang { grid-template-columns: 36px minmax(0, 2.6fr) minmax(0, 1.3fr) 112px 144px 160px; }
-    .cot-vb .bnv-dau, .cot-vb .bnv-hang { grid-template-columns: 36px minmax(0, 2.8fr) 92px minmax(0, 1.1fr) 108px minmax(0, 1.3fr) minmax(0, 1.3fr); }
+    .cot-vb .bnv-dau, .cot-vb .bnv-hang { grid-template-columns: 36px minmax(0, 2.7fr) 92px minmax(0, 1.1fr) 108px minmax(0, 1.1fr) minmax(0, 1.6fr); }   /* v3.36: cột Cảnh báo rộng thêm — mỗi nhãn cảnh báo một dòng ở cỡ chữ lớn */
   }
   @media screen and (max-width: 1200px) {
     /* Thẻ: ≤ 1200px, hoặc ngăn chi tiết đang mở cạnh bảng trên màn hình ≤ 1600px. */

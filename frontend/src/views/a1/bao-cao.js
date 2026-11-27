@@ -28,7 +28,7 @@ import { setActiveNav, showSection } from '../shell/index.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { datNguonDong, khiGhiTrongNgan } from '../shared/ngan-chi-tiet.js';
-import { COT, ctx, khoaHangCua, thanBaoCaoHtml, SO_CAN_QUYET_DAU, SO_VAN_BAN_DAU } from './bao-cao-khoi.js';
+import { COT, ctx, khoaHangCua, thanBaoCaoHtml, SO_CAN_QUYET_DAU, SO_VAN_BAN_DAU, SO_VIEC_DAU } from './bao-cao-khoi.js';
 
 let rowsHienTai = []; let rowsKy = []; let hangMo = null; let hangMoLoc = '{}'; // mọi việc của phạm vi đang xem; việc của kỳ đang xem; hàng đang mở rộng
 let trong = []; let tatCa = []; let bcToanBo = true;   // v3.33: việc trong phạm vi xử lý / mọi việc đọc được; đang chọn Toàn Văn phòng (giữ trong phiên)
@@ -79,7 +79,7 @@ function ve() {
   $('viewBaoCao').dataset.phamVi = toanVP() ? 'toan' : 'toi';   // e2e: phạm vi đang vẽ
   dongBoKy();
   $('bcThan').innerHTML = thanBaoCaoHtml({ rows: rowsHienTai, rowsKy, hangMo, hangMoLoc });
-  apDanhSach('bcCanQuyet'); apDanhSach('bcVanBan');   // hai danh sách dài: chỉ các dòng đầu (bản in đủ dòng)
+  apDanhSach('bcCanQuyet'); apDanhSach('bcVanBan'); apDanhSach('bcViec');   // ba danh sách dài: chỉ các dòng đầu (bản in đủ dòng)
 }
 // Đổi kỳ: nút nhanh xoá hai ô ngày; điền một ô ngày thì tính theo khoảng (trống một đầu: từ đầu dữ liệu / đến hôm nay). Gập hàng đang mở rộng.
 const veDoi = () => { moCuaVao($('viewBaoCao'), { lop: 'dang-doi', ms: 1100 }); ve(); };   // đổi kỳ / phạm vi theo thao tác của người dùng: số lăn lại
@@ -137,4 +137,5 @@ export function registerBaoCao() {
   khiGhiTrongNgan('viewBaoCao', napBaoCao);
   dangKyDanhSach('bcCanQuyet', { vung: () => $('bcCanQuyet'), chon: 'tbody > tr', so: SO_CAN_QUYET_DAU });
   dangKyDanhSach('bcVanBan', { vung: () => $('bcTheoVanBan'), chon: 'tbody > tr.bc-hang', so: SO_VAN_BAN_DAU, donVi: 'văn bản', giu: '.dang' });   // hàng đang mở rộng không bị ẩn
+  dangKyDanhSach('bcViec', { vung: () => $('bcMoRong'), chon: '.nv-ds > .nv-dong', so: SO_VIEC_DAU });   // việc dưới hàng đang mở rộng
 }

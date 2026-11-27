@@ -23,13 +23,13 @@ dangKyDanhSach('nqNghen', { vung: () => document.querySelector('#viewNvq .nq-ngh
 function oSoTongQuan(d) {
   const pt = d.tong ? Math.round((100 * d.HOAN_THANH) / d.tong) : 0;
   return oSo([
-    { khoa: '{}', nhan: 'nhiệm vụ trong danh mục', so: d.tong },
+    { khoa: '{}', nhan: 'nhiệm vụ', so: d.tong },
     { khoa: '{"trangThai":"HOAN_THANH"}', nhan: 'hoàn thành', so: d.HOAN_THANH, lop: 'nq-o-luc', goi: d.tong ? `${pt}% số nhiệm vụ trong danh mục` : '' },
     { khoa: '{"trangThai":"DANG_THUC_HIEN"}', nhan: 'đang thực hiện', so: d.DANG_THUC_HIEN, lop: 'nq-o-lam' },
     { khoa: '{"trangThai":"THUONG_XUYEN"}', nhan: 'thường xuyên', so: d.THUONG_XUYEN, lop: 'nq-o-lam' },
     { khoa: '{"trangThai":"CHAM_TIEN_DO"}', nhan: 'chậm tiến độ', so: d.CHAM_TIEN_DO, lop: 'nq-o-do' },
     { khoa: '{"trangThai":"CHUA_TRIEN_KHAI"}', nhan: 'chưa triển khai', so: d.CHUA_TRIEN_KHAI, lop: 'nq-o-xam' },
-    { khoa: '{"chuaCapNhat":true}', nhan: 'chưa có báo cáo tuần này', so: d.chuaCapNhatTuan, lop: d.chuaCapNhatTuan ? 'nq-o-vang' : '',
+    { khoa: '{"chuaCapNhat":true}', nhan: 'chưa báo cáo tuần', so: d.chuaCapNhatTuan, lop: d.chuaCapNhatTuan ? 'nq-o-vang' : '',
       goi: d.mo ? `Báo cáo tuần này: ${d.daCapNhatTuan}/${d.mo} nhiệm vụ chưa hoàn thành đã được chủ trì theo dõi cập nhật.` : '' },
   ], 'nqLocDanhMuc');
 }

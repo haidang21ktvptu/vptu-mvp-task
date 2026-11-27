@@ -18,6 +18,13 @@
   .tvb-mo-vb:hover .tvb-vb b { text-decoration: underline; text-underline-offset: 3px; }
   .tvb-vb b { font-family: var(--font-tieu-de); font-size: var(--chu-than); font-weight: 600; color: var(--navy); }
   .tvb-trich-yeu { font-size: var(--chu-bang); line-height: 1.4; color: var(--chu); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  /* v3.36 (CAU-HOI V-13 — số trước, chi tiết bấm mới mở): dòng văn bản đang gập gọn lại — trích yếu một dòng, người giao tối đa hai dòng (đủ chữ ở
+     title); mở văn bản ra thì hiện đủ. Chỉ trên màn hình: bản in giữ như trước. Nhãn cảnh báo ghi ngắn, câu đủ ở gợi ý (chữ ẩn .sr nằm trong nhãn). */
+  @media screen {
+    .tvb-goc[data-mo="0"] .tvb-trich-yeu { -webkit-line-clamp: 1; }
+    .tvb-goc[data-mo="0"] .tvb-nguoi { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  }
+  .tvb-goc .bnv-c .trang-thai[data-goi] { position: relative; cursor: help; }
   .tvb-thanh { display: flex; width: 100%; height: 8px; border-radius: 4px; overflow: hidden; background: var(--vien-nhat); }
   .tvb-thanh i { display: block; height: 100%; } .tvb-thanh .luc { background: var(--luc); } .tvb-thanh .do { background: var(--do); } .tvb-thanh .vang { background: var(--vang); }
   .tvb-tien-chu { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }

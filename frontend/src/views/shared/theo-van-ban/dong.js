@@ -6,7 +6,7 @@
 import { escapeHtml } from '../../../lib/dom.js';
 import { state, findAccount } from '../../../lib/state.js';
 import { formatNgay } from '../../../lib/kl/ngay.js';
-import { lopMep, tenMuc, tenSapDenHan } from '../../../lib/kl/nhan.js';
+import { lopMep, nguongCanhBao } from '../../../lib/kl/nhan.js';
 import { hanO, trangThaiO, gioVN, vanBanNgan } from '../../../lib/kl/bang-o.js';
 import { nguoiGiaoVanBan, nguoiGiaoText } from '../../../lib/kl/pham-vi.js';
 import { ownerText, NHAN_CHI_XEM } from '../kl/dong.js';
@@ -32,11 +32,14 @@ export function nhanhHtml(r, cap, { con, mc, mo, homNay }) {
     <div class="tvb-con">${con || ''}</div></div>`;
 }
 
-// Cảnh báo của văn bản: n quá hạn từ 3 ngày trở lên · n quá hạn dưới 3 ngày · n sắp đến hạn (còn ≤ 7 ngày — nhóm xem) · Hoàn thành toàn bộ · Trong hạn
-// (v3.29: ghi bằng nghĩa).
+// Cảnh báo của văn bản: n quá hạn từ 3 ngày · n quá hạn dưới 3 ngày · n sắp đến hạn · Hoàn thành toàn bộ · Trong hạn (v3.29: ghi bằng nghĩa).
+// v3.36 (CAU-HOI V-13): nhãn ghi ngắn như chú giải của bảng; phần còn lại của câu v3.29 ("trở lên", "(còn ≤ 7 ngày)" — nhóm xem) là chữ ẩn cho trình
+// đọc màn hình, câu đủ ở gợi ý data-goi.
+const nhanCb = (lop, n, ngan, them = '') => `<span class="trang-thai ${lop}"${them ? ` data-goi="${escapeHtml(`${n} nhiệm vụ ${ngan}${them}`)}"` : ''}>${n} ${ngan}${them ? `<span class="sr">${escapeHtml(them)}</span>` : ''}</span>`;
 function canhBaoHtml(t) {
-  const ds = [t.ddb ? `<span class="trang-thai tt-ddb">${t.ddb} ${tenMuc('ddb')}</span>` : '', t.quaThuong ? `<span class="trang-thai tt-qua">${t.quaThuong} ${tenMuc('do')}</span>` : '',
-    t.sap ? `<span class="trang-thai tt-cho">${t.sap} ${tenSapDenHan()}</span>` : '', t.n && t.xong === t.n ? '<span class="trang-thai tt-xong">Hoàn thành toàn bộ</span>' : ''].filter(Boolean);
+  const { ddb, sap } = nguongCanhBao();
+  const ds = [t.ddb ? nhanCb('tt-ddb', t.ddb, `quá hạn từ ${ddb} ngày`, ' trở lên') : '', t.quaThuong ? nhanCb('tt-qua', t.quaThuong, `quá hạn dưới ${ddb} ngày`) : '',
+    t.sap ? nhanCb('tt-cho', t.sap, 'sắp đến hạn', ` (còn ≤ ${sap} ngày)`) : '', t.n && t.xong === t.n ? '<span class="trang-thai tt-xong">Hoàn thành toàn bộ</span>' : ''].filter(Boolean);
   return ds.length ? ds.join('') : '<span class="bnv-phu">Trong hạn</span>';
 }
 // Cuối bảng con: + Giao thêm (mọi vai giao được — quyền thật ở giao_viec), Sửa văn bản giao (v3.29 — tài khoản quản trị, van_ban_sua 0126), rà soát +
@@ -55,17 +58,20 @@ function chanConHtml(d, sua) {
 
 // Một văn bản: d = { vb (dòng đại diện), tatCa (mọi việc của văn bản đang xem), t (tongHopVanBan), rs (raSoatVanBan), h (văn bản), x (đã nhập) };
 // o = { stt, mo, nhanh (html), sua }.
+// v3.36 (CAU-HOI V-13): dòng văn bản đang gập gọn lại — trích yếu một dòng, người giao tối đa hai dòng (theo-van-ban.css; mở văn bản ra thì hiện đủ),
+// dòng phụ chỉ còn "ban hành …" ("nhập lên hệ thống …" ở title của ô và bản in); đủ chữ ở title.
 export function vanBanHtml(d, o) {
   const vb = vanBanNgan(d.vb); const id = d.vb.van_ban_id; const t = d.t; const pc = (k) => (t.n ? Math.round((k / t.n) * 100) : 0);
   const ng = nguoiGiaoVanBan(d.tatCa, (x) => findAccount(x)?.full_name); const y = d.h.so_nhiem_vu_du_kien;
-  const nhap = gioVN(d.h.created_at).ngay;
+  const nhap = gioVN(d.h.created_at).ngay; const nguoiGiao = ng.length ? nguoiGiaoText(ng) : 'chưa xác định';
+  const goiVb = [vb.ten, d.h.trich_yeu, vb.phu, nhap ? `nhập lên hệ thống ${nhap}` : ''].filter(Boolean).join('\n');
   return `<section class="tvb-goc bnv-dong ${o.lop}" id="tvbVb-${id}" data-mo="${o.mo ? '1' : '0'}" data-so="${t.n}" data-xong="${t.xong}" data-qua="${t.qua}" data-sap="${t.sap}">
     <div class="bnv-hang">
       <span class="bnv-c bnv-c-stt">${o.stt}</span>
-      <span class="bnv-c bnv-c-nv"><button type="button" class="tvb-mo-vb" data-action="tvbGap" data-khoa="vb-${id}" aria-expanded="${o.mo}"><span class="tvb-vb"><b>${escapeHtml(vb.ten)}</b></span></button>
-        ${d.h.trich_yeu ? `<span class="tvb-trich-yeu">${escapeHtml(d.h.trich_yeu)}</span>` : ''}<span class="bnv-phu">${escapeHtml([vb.phu, nhap ? `nhập lên hệ thống ${nhap}` : ''].filter(Boolean).join(' · '))}</span></span>
+      <span class="bnv-c bnv-c-nv" title="${escapeHtml(goiVb)}"><button type="button" class="tvb-mo-vb" data-action="tvbGap" data-khoa="vb-${id}" aria-expanded="${o.mo}"><span class="tvb-vb"><b>${escapeHtml(vb.ten)}</b></span></button>
+        ${d.h.trich_yeu ? `<span class="tvb-trich-yeu">${escapeHtml(d.h.trich_yeu)}</span>` : ''}<span class="bnv-phu">${escapeHtml(vb.phu)}${nhap ? `<span class="chi-in-dong">${vb.phu ? ' · ' : ''}nhập lên hệ thống ${nhap}</span>` : ''}</span></span>
       <span class="bnv-c" data-nhan="Ngày nhận">${d.h.ngay_nhan ? formatNgay(d.h.ngay_nhan) : '—'}</span>
-      <span class="bnv-c" data-nhan="Người giao"><span data-truong="nguoi-giao">${ng.length ? escapeHtml(nguoiGiaoText(ng)) : 'chưa xác định'}</span></span>
+      <span class="bnv-c" data-nhan="Người giao"><span class="tvb-nguoi" data-truong="nguoi-giao" title="${escapeHtml(nguoiGiao)}">${escapeHtml(nguoiGiao)}</span></span>
       <span class="bnv-c" data-nhan="Nhiệm vụ"><span><b>${d.x}</b>${y !== null && y !== undefined ? ` / dự kiến ${y}` : ''}</span>${d.rs.chu ? `<span class="bnv-nhan canh">${escapeHtml(d.rs.chu)}</span>` : ''}</span>
       <span class="bnv-c" data-nhan="Tiến độ"><span class="tvb-thanh" role="img" aria-label="${t.xong} trên ${t.n} hoàn thành"><i class="luc" style="width:${pc(t.xong)}%"></i><i class="do" style="width:${pc(t.qua)}%"></i><i class="vang" style="width:${pc(t.sap)}%"></i></span>
         <span class="tvb-tien-chu">${t.xong}/${t.n} hoàn thành</span></span>
