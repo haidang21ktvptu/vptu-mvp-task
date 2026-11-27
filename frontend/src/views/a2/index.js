@@ -24,7 +24,7 @@ import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
 import { minhChungChoHtml, apDsMc } from '../shared/dieu-hanh/minh-chung-cho.js';
 import { nutGoi } from '../../components/goi.js';
-import { mucChiDaoChoHtml, mucViecDoHtml, mucSapHanHtml } from './phong-toi.js';
+import { mucChiDaoChoHtml, mucViecDoHtml, mucSapHanHtml, apDsPhong } from './phong-toi.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
 import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
 import { baCauHtml } from '../shared/dieu-hanh/ba-cau.js';
@@ -77,7 +77,7 @@ function ve() {
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
   if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu lúc ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
-  apDsMc();   // V-13: khối kết quả nộp hiện các dòng đầu (sau khi ô đang mở đã được trả lại)
+  apDsMc(); apDsPhong();   // V-13: khối kết quả nộp và ba nhóm việc của phòng hiện các dòng đầu (sau khi ô đang mở đã được trả lại)
 }
 
 async function loadPhongToi() {

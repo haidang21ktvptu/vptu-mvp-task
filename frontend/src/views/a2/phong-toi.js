@@ -1,5 +1,7 @@
 // Ba nhóm mục của "Phòng tôi hôm nay" (A2): chỉ đạo từ Văn phòng chờ phòng phản hồi, việc Đỏ của phòng, sắp đến hạn trong phòng.
 // Mỗi mục là một .muc có mép trái theo mức; hành động một dòng ngay dưới (Nhắc chuyên viên = DON_DOC, Phản hồi thay = chi_dao_phan_hoi).
+// v3.36 (CAU-HOI V-13, DESIGN mục 17 quy tắc 6): mỗi nhóm chỉ hiện các dòng đầu (chỉ đạo 5, việc quá hạn 10, sắp đến hạn 5), nút "Xem tất cả" ở cuối
+// nhóm (components/ds-gon.js — nhớ theo máy, dòng đang mở ô nhập không bị ẩn, bản in đủ dòng).
 import { escapeHtml, formatDateTime } from '../../lib/dom.js';
 import { state, findAccount } from '../../lib/state.js';
 import { formatNgay, ghiChuHan, homNayVN } from '../../lib/kl/ngay.js';
@@ -10,6 +12,13 @@ import { ndGonHtml, ndPhuHtml } from '../../lib/kl/nd-gon.js';
 import { chuTriText } from '../../lib/kl/chu-tri.js';   // v3.31 (0128): chỉ còn chủ trì theo dõi
 import { dh, timRow, viecDo } from '../shared/dieu-hanh/du-lieu.js';
 import { sanPhamThieu } from '../shared/dieu-hanh/the-viec.js';
+import { apDanhSach, dangKyDanhSach, nutHetHtml } from '../../components/ds-gon.js';
+
+const SO_DAU = { ptChiDao: 5, ptDo: 10, ptVang: 5 };   // số dòng hiện sẵn của từng nhóm
+dangKyDanhSach('ptChiDao', { vung: () => document.getElementById('ptMucChiDao'), chon: ':scope > .the-con', so: SO_DAU.ptChiDao, donVi: 'chỉ đạo' });
+dangKyDanhSach('ptDo', { vung: () => document.getElementById('ptMucDo'), chon: ':scope > .the-con', so: SO_DAU.ptDo });
+dangKyDanhSach('ptVang', { vung: () => document.getElementById('ptMucVang'), chon: ':scope > .the-con', so: SO_DAU.ptVang });
+export const apDsPhong = () => Object.keys(SO_DAU).forEach(apDanhSach);   // gọi sau mỗi lần vẽ, khi các ô đang mở đã được trả lại
 
 const oHtml = (id, submit, data, placeholder, nhan) => `<form class="o" id="${id}" data-submit="${submit}" ${data}><input name="noi_dung" required placeholder="${placeholder}" aria-label="${placeholder}">
     <button type="submit" class="nut chinh">${nhan}</button><button type="button" class="nut" data-action="dongO" data-o="${id}">Huỷ</button></form>`;
@@ -26,7 +35,7 @@ export function mucChiDaoChoHtml() {
         <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>
       ${oHtml(`oNhac-${c.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung nhắc chuyên viên', 'Gửi nhắc')}
       ${oHtml(`oThay-${c.id}`, 'phanHoiThe', `data-chi-dao="${c.id}"`, 'Nội dung phản hồi thay phòng', 'Gửi phản hồi')}</div>`;
-  }).join('')}</div>`;
+  }).join('')}${nutHetHtml('ptChiDao', ds.length, SO_DAU.ptChiDao, 'chỉ đạo')}</div>`;
 }
 
 export function mucViecDoHtml() {
@@ -37,7 +46,7 @@ export function mucViecDoHtml() {
       <div class="hanh-dong"><button type="button" class="nut chinh" data-action="moO" data-o="oDo-${r.id}">Đôn đốc</button>
         <button type="button" class="nut" data-action="moChiDaoViec" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Giao lại / Gia hạn</button>
         <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>
-      ${oHtml(`oDo-${r.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung đôn đốc', 'Gửi đôn đốc')}</div>`).join('')}</div>`;
+      ${oHtml(`oDo-${r.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung đôn đốc', 'Gửi đôn đốc')}</div>`).join('')}${nutHetHtml('ptDo', ds.length, SO_DAU.ptDo)}</div>`;
 }
 
 export function mucSapHanHtml() {
@@ -47,5 +56,5 @@ export function mucSapHanHtml() {
   return `<div class="muc vang" id="ptMucVang"><b>Việc ${tenSapDenHan()} trong phòng (${ds.length})</b>${ds.map((r) => `
     <div class="the-con" id="ptVang-${r.id}"><p>${ndGonHtml(r.ma, r.noi_dung)}${ndPhuHtml(`${nhanPhuHtml(r)} hạn ${formatNgay(r.han_xu_ly)} (${ghiChuHan(r.han_xu_ly, homNay).toLowerCase()})${(r.so_minh_chung_hop_le || 0) === 0 ? ', chưa có minh chứng' : ''} · ${escapeHtml(chuTriText(r, ''))}`)}</p>
       <div class="hanh-dong"><button type="button" class="nut" data-action="moO" data-o="oVang-${r.id}">Nhắc</button><button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem</button></div>
-      ${oHtml(`oVang-${r.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung nhắc', 'Gửi nhắc')}</div>`).join('')}</div>`;
+      ${oHtml(`oVang-${r.id}`, 'guiDonDocThe', `data-id="${r.id}" data-ma="${escapeHtml(r.ma)}"`, 'Nội dung nhắc', 'Gửi nhắc')}</div>`).join('')}${nutHetHtml('ptVang', ds.length, SO_DAU.ptVang)}</div>`;
 }

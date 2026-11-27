@@ -3,6 +3,7 @@
 // (data-nap đặt khi nạp xong — e2e chờ). Dòng và bảng con do dong.js vẽ. Lớp viết nguyên văn (Tailwind giữ lớp).
 import { LOAI_VAN_BAN } from '../kl/them-owner.js';
 import { dauBangHtml, CHU_GIAI_VB } from '../bang/khung.js';
+import { nutGoi } from '../../../components/goi.js';
 
 // v3.22.1: chú thích phạm vi trên dòng tóm tắt (Trưởng phòng / chuyên viên chỉ thấy việc trong phạm vi; Thường trực, lãnh đạo VP: không ghi thêm).
 export function nhanPhamViTvb(user, xemPhong = false) {
@@ -15,7 +16,7 @@ export function nhanPhamViTvb(user, xemPhong = false) {
 const COT = [['STT', 'bnv-c-stt'], ['Văn bản'], ['Ngày nhận'], ['Người giao'], ['Nhiệm vụ'], ['Tiến độ'], ['Cảnh báo']];
 
 export const theoVanBanTemplate = `
-  <div class="dau"><h1>Theo văn bản</h1><span>mỗi văn bản một dòng — bấm tên văn bản để xem nhiệm vụ giao từ văn bản và việc giao tiếp xuống; bấm một việc để mở ngăn chi tiết</span></div>
+  <div class="dau"><h1>Theo văn bản</h1><span>${nutGoi('Mỗi văn bản một dòng. Bấm tên văn bản để xem nhiệm vụ giao từ văn bản và việc giao tiếp xuống; bấm một việc để mở ngăn chi tiết.')}</span></div>
   <div id="tvbSo" class="bnv-so" role="group" aria-label="Lọc văn bản theo tình hình"></div>
   <div class="kl-loc tvb-loc">
     <div id="tvbToanBo" class="pham-vi hidden" role="group" aria-label="Phạm vi bảng văn bản">

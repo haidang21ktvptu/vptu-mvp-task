@@ -90,9 +90,10 @@
   .bnv-nd > .bnv-dong1 > .bnv-chu-y { display: inline-block; padding: 0 8px; border-radius: 999px; background: var(--vang-nhat); font-size: var(--chu-nho); font-weight: 600; line-height: 1.5; }
   .bnv-chi-in { display: none; }
   @media screen {
-    .bnv-c-tg > .bnv-phu { display: none; }
+    .cot-nv .bnv-c-tg > .bnv-phu, .cot-td .bnv-c-tg > .bnv-phu { display: none; }   /* chỉ bảng của màn Nhiệm vụ: ở Việc của tôi dòng phụ của cột Thời gian giao là giờ giao, phải giữ */
     /* dòng phụ của ô (ngày ban hành, phòng, "còn N ngày") một dòng, cắt bằng dấu ba chấm; đủ chữ ở title của ô. Cột Tình hình (Việc tôi đã giao) giữ đủ. */
     .cot-nv .bnv-c > .bnv-phu, .cot-td .bnv-c:not(.bnv-th) > .bnv-phu, .cot-nv .bnv-c.han > span, .cot-td .bnv-c.han > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cot-vct .bnv-c-nv > .bnv-phu:not(.bnv-chi-in) { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* Việc của tôi: dòng "Sản phẩm đầu ra" một dòng (đủ chữ ở title) */
   }
   /* ---- Hàng nhóm, khối dưới dòng, chân bảng ---- */
   .bnv-nhom { padding: 10px 16px 8px 20px; background: var(--nen-mo); border-bottom: 1px solid var(--vien-nhat); }

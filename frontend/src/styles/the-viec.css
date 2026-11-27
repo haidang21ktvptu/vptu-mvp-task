@@ -107,7 +107,7 @@
      bản in vẫn đủ dòng; nút "Xem tất cả N …" ở cuối danh sách. */
   .ds-them { padding: 10px 16px 12px; border-top: 1px solid var(--vien-nhat); }
   @media screen {
-    .the.hang[data-sau], .da-gui > [data-sau] { display: none; }
+    .the.hang[data-sau], .da-gui > [data-sau], .muc > .the-con[data-sau] { display: none; }   /* .muc > .the-con: ba nhóm việc của màn Phòng tôi (Trưởng phòng) */
   }
   .cot-phu .viec { margin: 0 12px 12px; padding: 12px 14px; border-left-width: 4px; } .cot-phu .viec h3 { font-size: var(--chu-bang); } .cot-phu .viec .ma { font-size: var(--chu-nho); }
   /* Cột phụ: tải việc từng cán bộ (A2) — v3.25: bỏ "hạn 7 ngày tới", "hướng dẫn nhanh" của A3 (Việc của tôi thành bảng) */
