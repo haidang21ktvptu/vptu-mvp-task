@@ -11,6 +11,7 @@
   .dau { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
   .dau h1 { font-size: var(--chu-trang); color: var(--navy); }
   .dau > span { color: var(--chu-phu); font-size: var(--chu-nho); }
+  .dau > span:empty { display: none; }   /* chỗ đặt nút ghi chú "i" khi không có ghi chú: không chiếm khoảng cách */
   .dau .phai-dau { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .cau { margin-top: 40px; }
   .cau:first-child, .dau + .cau { margin-top: 20px; }

@@ -10,11 +10,15 @@ export const oSoHtml = (ds, so, chon, action, mau = {}) => ds.map(([k, ten]) => 
 export const dauBangHtml = (cot) => cot.map(([ten, lop]) => `<span${lop ? ` class="${lop}"` : ''}>${ten}</span>`).join('');
 // v3.29: chú giải ghi nghĩa trước, tên mức theo Công văn 1400 trong ngoặc; số ngày theo cấu hình (kl_cau_hinh — như nhãn ở lib/kl/nhan.js tenMuc).
 // Mẫu HTML của màn chèn lúc khởi động (trước khi đọc cấu hình) → khối chú giải mang data-chu-giai, veChuGiai() vẽ lại mỗi lần màn vẽ bảng.
-export const chuGiaiMucHtml = () => { const { ddb, vang } = nguongCanhBao(); return `<span><i class="dac-biet"></i>Quá hạn từ ${ddb} ngày trở lên (mức Đỏ đặc biệt)</span>`
-  + `<span><i class="do"></i>Quá hạn dưới ${ddb} ngày (mức Đỏ)</span><span><i class="vang"></i>Sắp đến hạn: còn ≤ ${vang} ngày (mức Vàng)</span><span><i class="lam"></i>Trong hạn</span><span><i class="luc"></i>Hoàn thành</span>`; };
+// v3.36 (CAU-HOI V-13): mỗi mục ô màu kèm 2 đến 4 chữ; câu đầy đủ như trước (ngưỡng ngày, tên mức theo Công văn 1400) ở gợi ý data-goi và chữ ẩn
+// cho trình đọc màn hình.
+const mucCg = (lop, ngan, day = '') => `<span${day ? ` data-goi="${escapeHtml(day)}"` : ''}><i class="${lop}"></i>${ngan}${day ? `<span class="sr">: ${escapeHtml(day)}</span>` : ''}</span>`;
+export const chuGiaiMucHtml = () => { const { ddb, vang } = nguongCanhBao(); return mucCg('dac-biet', `Quá hạn từ ${ddb} ngày`, `Quá hạn từ ${ddb} ngày trở lên (mức Đỏ đặc biệt)`)
+  + mucCg('do', `Quá hạn dưới ${ddb} ngày`, `Quá hạn dưới ${ddb} ngày (mức Đỏ)`) + mucCg('vang', 'Sắp đến hạn', `Sắp đến hạn: còn ≤ ${vang} ngày (mức Vàng)`) + mucCg('lam', 'Trong hạn') + mucCg('luc', 'Hoàn thành'); };
 // Theo văn bản: màu của văn bản theo việc xấu nhất (lib/kl/van-ban-bang.js lopVanBan — "sắp đến hạn" của văn bản là nhóm còn ≤ 7 ngày).
-export const chuGiaiVbHtml = () => { const { ddb, sap } = nguongCanhBao(); return `<span><i class="dac-biet"></i>Có việc quá hạn từ ${ddb} ngày trở lên</span>`
-  + `<span><i class="do"></i>Có việc quá hạn dưới ${ddb} ngày</span><span><i class="vang"></i>Có việc sắp đến hạn (còn ≤ ${sap} ngày)</span><span><i class="lam"></i>Đang thực hiện, trong hạn</span><span><i class="luc"></i>Hoàn thành toàn bộ</span>`; };
+export const chuGiaiVbHtml = () => { const { ddb, sap } = nguongCanhBao(); return mucCg('dac-biet', `Quá hạn từ ${ddb} ngày`, `Có việc quá hạn từ ${ddb} ngày trở lên`)
+  + mucCg('do', `Quá hạn dưới ${ddb} ngày`, `Có việc quá hạn dưới ${ddb} ngày`) + mucCg('vang', 'Sắp đến hạn', `Có việc sắp đến hạn (còn ≤ ${sap} ngày)`)
+  + mucCg('lam', 'Trong hạn', 'Đang thực hiện, trong hạn') + mucCg('luc', 'Hoàn thành', 'Hoàn thành toàn bộ'); };
 const CHU_GIAI = { muc: chuGiaiMucHtml, vb: chuGiaiVbHtml };
 export const CHU_GIAI_MUC = `<span class="cg-muc" data-chu-giai="muc">${chuGiaiMucHtml()}</span>`;
 export const CHU_GIAI_VB = `<span class="cg-muc" data-chu-giai="vb">${chuGiaiVbHtml()}</span>`;

@@ -3,6 +3,10 @@
 // span có data-nhan (nhãn ô khi bảng thành thẻ). Hai bộ cột: 'nv' — STT | Thời gian nhập | Nhiệm vụ | Văn bản giao | Chủ trì | Hạn xử lý | Trạng
 // thái; 'td' (Việc tôi đã giao — v3.31) — STT | Nhiệm vụ | Chủ trì | Văn bản giao | Hạn | Trạng thái | Tình hình. .stt là mép màu 4px theo mức. Các vị
 // từ "ai được làm gì" chỉ để ẩn/hiện nút trong ngăn (policy + hàm DB là chốt).
+// v3.36 (CAU-HOI V-13, DESIGN mục 17): mỗi dòng tối đa hai dòng chữ. Ô Nhiệm vụ: mã, mã theo nguồn, nhãn và điều cần để ý (viên vàng) đứng đầu, nội
+// dung chạy tiếp trong cùng khối hai dòng (nguyên văn ở title và ngăn chi tiết); dòng "nhập lúc … · người nhập" chỉ còn ở bản in (.bnv-chi-in), ở
+// title của ô và ngăn chi tiết; ô Thời gian nhập (màn rộng trên 1600px) còn giờ và ngày. Việc bị từ chối / đang đề nghị từ chối đã có nhãn
+// (nhanPhuHtml) nên không ghi lại điều cần để ý trùng nghĩa.
 import { escapeHtml } from '../../../lib/dom.js';
 import { state } from '../../../lib/state.js';
 import { lopMep, boSoThuTu, nhanChatLuongHtml } from '../../../lib/kl/nhan.js';
@@ -46,7 +50,7 @@ function chuY(r) {
   if (!r.san_pham_loai) return 'chưa định nghĩa sản phẩm';
   return (r.so_minh_chung_hop_le || 0) === 0 && ['VANG', 'DO', 'DO_DAC_BIET'].includes(r.muc_canh_bao) ? `thiếu ${r.san_pham_ten}` : '';
 }
-const o = (nhan, html, lop = '') => `<span class="bnv-c${lop ? ` ${lop}` : ''}" data-nhan="${nhan}">${html}</span>`;
+const o = (nhan, html, lop = '', goi = '') => `<span class="bnv-c${lop ? ` ${lop}` : ''}" data-nhan="${nhan}"${goi ? ` title="${escapeHtml(goi)}"` : ''}>${html}</span>`;
 const phu = (s) => (s ? `<span class="bnv-phu">${escapeHtml(s)}</span>` : '');
 
 // tuyChon: { now, stt (số thứ tự tuyệt đối), cot: 'nv' | 'td' }.
@@ -56,13 +60,14 @@ export function dongHtml(r, homNay, dangChon, { now = Date.now(), stt = '', cot 
   const g = gioVN(r.created_at); const vb = vanBanNgan(r); const han = hanO(r, homNay); const tt = trangThaiO(r, me); const cach = cachNhap(r);
   const nhap = nhanNhap(r.created_at, homNay);
   const cy = cot === 'td' ? '' : chuY(r);   // Việc tôi đã giao: cột Tình hình đã nói điều cần để ý
-  const goi = `${nhap ? `${nhap.replace(/^n/, 'N')}${nguoiNhap ? ` bởi ${nguoiNhap}` : ''} — ` : ''}${chuTriText(r)}${cy ? `, ${cy}` : ''}`;
-  const gon = cot === 'nv' && nhap ? `<span class="nhap-luc">${escapeHtml(nhap)}${nguoiNhap ? ` · ${escapeHtml(nguoiNhap)}` : ''}</span>` : '';   // dòng phụ khi gộp cột thời gian
-  const oNv = `<span class="bnv-c bnv-c-nv" title="${escapeHtml(goi)}"><span class="bnv-dong1"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${laViecMoi(r, now) ? NHAN_MOI : ''}${nhanMucHtml(r)}${nhanPhuHtml(r)}${chiXemVoi(r, state.user) ? NHAN_CHI_XEM : ''}</span>
-      <span class="bnv-nd">${escapeHtml(r.noi_dung)}</span>${gon ? `<span class="bnv-phu bnv-chi-gon">${gon}</span>` : ''}${cy ? `<span class="bnv-phu bnv-chu-y">${escapeHtml(cy)}</span>` : ''}</span>`;
-  const oVb = o('Văn bản giao', `<span class="bnv-vb">${escapeHtml(vb.ten)}</span>${phu(vb.phu)}`);
-  const oChuTri = o('Chủ trì theo dõi', `<span>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`);
-  const oHan = o('Hạn xử lý', `<b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span>`, 'han');
+  const goi = `${r.noi_dung || ''}\n${nhap ? `${nhap.replace(/^n/, 'N')}${nguoiNhap ? ` bởi ${nguoiNhap}` : ''} — ` : ''}${chuTriText(r)}${cy ? `, ${cy}` : ''}`;
+  const gon = cot === 'nv' && nhap ? `<span class="nhap-luc">${escapeHtml(nhap)}${nguoiNhap ? ` · ${escapeHtml(nguoiNhap)}` : ''}</span>` : '';   // chỉ ở bản in (bảng in không có cột thời gian)
+  const oNv = `<span class="bnv-c bnv-c-nv" title="${escapeHtml(goi)}"><span class="bnv-nd"><span class="bnv-dong1"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${laViecMoi(r, now) ? NHAN_MOI : ''}${nhanMucHtml(r)}${nhanPhuHtml(r)}${chiXemVoi(r, state.user) ? NHAN_CHI_XEM : ''}${
+    cy && !r.bi_tu_choi && !r.tu_choi_cho ? `<span class="bnv-chu-y">${escapeHtml(cy)}</span>` : ''}</span> ${escapeHtml(r.noi_dung)}</span>${gon ? `<span class="bnv-phu bnv-chi-in">${gon}</span>` : ''}</span>`;
+  // V-13: dòng phụ của ô chỉ một dòng (CSS cắt bằng dấu ba chấm) — title của ô ghi đủ.
+  const oVb = o('Văn bản giao', `<span class="bnv-vb">${escapeHtml(vb.ten)}</span>${phu(vb.phu)}`, '', vb.phu ? `${vb.ten}, ${vb.phu}` : '');
+  const oChuTri = o('Chủ trì theo dõi', `<span>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`, '', r.owner_tai_khoan_ten ? chuTriText(r) : '');
+  const oHan = o('Hạn xử lý', `<b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span>`, 'han', `${han.ngay}, ${han.chu}`);
   const oTt = o('Trạng thái', `<span class="trang-thai ${tt.lop}">${escapeHtml(tt.chu)}</span>${nhanChatLuongHtml(r.chat_luong)}`, 'bnv-c-tt');
   let cells;
   if (cot === 'td') {

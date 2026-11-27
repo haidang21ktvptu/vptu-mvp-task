@@ -31,6 +31,7 @@ function dsHet({ ds }, el) {
   const mo = !het.has(ds);
   if (mo) het.add(ds); else het.delete(ds);
   try { localStorage.setItem(KHOA, JSON.stringify([...het])); } catch { /* trình duyệt chặn lưu trữ: chỉ nhớ trong phiên */ }
+  if (!mo) el?.focus({ preventScroll: true });   // thu gọn: tiêu điểm về nút trước khi đánh dấu (dòng vừa giữ tiêu điểm không bị giữ lại)
   apDanhSach(ds);
   const ds2 = dong(c);
   if (el) { el.textContent = chuNut(mo, ds2.length, c.so, c.donVi); el.setAttribute('aria-expanded', String(mo)); }

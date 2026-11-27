@@ -1049,3 +1049,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Kết quả nộp: mỗi kết quả hai dòng chữ (mã việc, trạng thái, nội dung việc; người nộp, lúc nộp, trích yếu, "Xem tệp"); số hiệu, cấp nhận, mô tả ở gợi ý của dòng và ngăn chi tiết.
 - Ba câu hỏi và thanh trái chỉ còn tên và số; câu giải thích của các khối và thứ tự xếp của danh sách chuyển vào nút "i". Hộp gợi ý `data-goi` thành thành phần dùng chung cho mọi màn hình (`components/goi.js`, thay hộp riêng của Tổng quan).
 - Nút của thanh trái có `position` để chữ ẩn `.sr` không làm trang tràn ngang trên điện thoại. e2e: phiên kiểm thử mở sẵn các danh sách (`dsGon` giữ mặc định), thêm kịch bản "hiện 10 việc đầu" ở `v336-giao-dien`, sửa `dieu-hanh`; unit `can-xu-ly-gon` thêm hai kiểm thử.
+
+## 106. v3.36.0 (Đợt 1, phần 13) — Số trước, chi tiết bấm mới mở, phần 3: Nhiệm vụ (27/11/2026, CAU-HOI V-13; chỉ giao diện, không migration)
+- Đo trên staging trước khi sửa (demo_cvp, 1366×768): Nhiệm vụ dài 8,6 màn hình, 2.540 chữ, mỗi dòng 94 đến 117 px. Nay mỗi dòng tối đa hai dòng chữ (khoảng 66 px): mã việc, mã theo nguồn, nhãn và điều cần để ý (viên vàng) đứng đầu khối nội dung hai dòng; dòng phụ của các ô khác một dòng (đủ chữ ở `title`); dòng "nhập lúc, người nhập" chỉ còn ở bản in, `title` và ngăn chi tiết.
+- Đầu trang: phụ đề chỉ ghi phạm vi (ghi chú thêm ở nút "i"); bốn nút Xuất Excel, Xuất theo kỳ, Xuất theo mẫu nhập, In / lưu PDF gom sau nút "Xuất, in" (`components/menu-tha.js`; id và hành động của từng nút giữ nguyên).
+- Chú giải màu của các bảng nhiệm vụ ghi ngắn (2 đến 4 chữ mỗi mục), câu đầy đủ theo ngưỡng cấu hình ở gợi ý; bỏ mục "Mới nhập trong 24 giờ" (nhãn "Mới" trên dòng đã có gợi ý).
+- Danh sách hiện các dòng đầu: khi thu gọn, tiêu điểm về nút trước khi đánh dấu dòng (dòng vừa giữ tiêu điểm không bị giữ lại).
+- e2e: `pr3-hien-thi`, `xuat-theo-ky` mở nút "Xuất, in" trước khi chọn; thêm kịch bản màn Nhiệm vụ ở `v336-giao-dien`. Unit không đổi số lượng (417 đạt).

@@ -75,6 +75,17 @@
   .da-gui p b { font-weight: 700; } .da-gui p small { display: block; color: var(--chu-phu); font-size: var(--chu-nho); }
   .da-gui .o { grid-column: 1 / -1; margin-top: 0; }
   /* ---- Toast (thông báo thao tác): giữa dưới, nền tối ---- */
+  /* Nhóm nút gom sau một nút (v3.36, CAU-HOI V-13 — components/menu-tha.js): danh sách hành động thả ngay dưới nút */
+  .menu-tha { position: relative; display: inline-flex; }
+  .menu-tha > button { display: inline-flex; align-items: center; gap: 6px; }
+  .menu-tha > button[aria-expanded="true"] .menu-tha-mui { transform: rotate(180deg); }
+  .menu-tha-ds { position: absolute; right: 0; top: calc(100% + 6px); z-index: 44; min-width: 220px; padding: 6px; background: var(--the); color: var(--chu); border: 1px solid var(--vien);
+    border-radius: 12px; box-shadow: var(--bong-noi); }
+  .menu-tha-ds.trai { left: 0; right: auto; }
+  .menu-tha-ds[hidden] { display: none; }
+  .menu-tha-ds button, .menu-tha-ds a { display: flex; align-items: center; width: 100%; min-height: 36px; padding: 8px 12px; border-radius: 8px; text-align: left; font-size: var(--chu-bang);
+    color: var(--chu); white-space: nowrap; }
+  .menu-tha-ds button:hover, .menu-tha-ds button:focus-visible, .menu-tha-ds a:hover { background: var(--nen-phu); }
   .toast-hop { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; max-width: 90vw; width: max-content; pointer-events: none; }
   .toast { pointer-events: auto; background: var(--nen-toi); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: var(--chu-bang); display: flex; align-items: flex-start; gap: 12px; border-left: 4px solid var(--vang); }
   .toast-thanh-cong { border-left-color: var(--luc); } .toast-loi { border-left-color: var(--do); }

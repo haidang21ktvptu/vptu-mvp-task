@@ -29,6 +29,7 @@
   .bnv-chu-giai i.lam { background: var(--lam); } .bnv-chu-giai i.luc { background: var(--luc); }
   .bnv-chu-giai b { color: var(--chu); }
   .bnv-chu-giai .cg-muc { display: contents; }   /* v3.29: khối chú giải vẽ lại theo ngưỡng cấu hình — các mục vẫn là phần tử của hàng flex */
+  .bnv-chu-giai span[data-goi] { position: relative; cursor: help; }   /* v3.36 (V-13): mục ghi ngắn, nghĩa đầy đủ ở gợi ý; chữ ẩn .sr nằm gọn trong mục */
   /* ---- Khung bảng, hàng tiêu đề, dòng ---- */
   .bnv { margin-top: 12px; background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); overflow: hidden; box-shadow: var(--bong-the); }
   .md .list.bnv { margin-top: 0; }
@@ -82,6 +83,17 @@
   .bnv-c-viec { gap: 6px; }
   .bnv-c-viec .nut { min-height: 36px; padding: 5px 12px; font-size: var(--chu-bang); line-height: 1.25; white-space: normal; text-align: center; }
   .bnv-chi-gon { display: none; }   /* chỉ hiện khi bảng gộp cột thời gian / thành thẻ (bang-nhiem-vu.css) */
+  /* v3.36 (CAU-HOI V-13, DESIGN mục 17): dòng của màn Nhiệm vụ tối đa hai dòng chữ. Ô Nhiệm vụ: mã, mã theo nguồn, nhãn, điều cần để ý (viên vàng)
+     đứng đầu khối nội dung hai dòng; dòng "nhập lúc" (.bnv-chi-in) chỉ in; ô Thời gian nhập còn giờ và ngày (người nhập ở title và ngăn chi tiết). */
+  .bnv-nd > .bnv-dong1 { display: inline; }
+  .bnv-nd > .bnv-dong1 > * { margin: 0 6px 0 0; vertical-align: 1px; }
+  .bnv-nd > .bnv-dong1 > .bnv-chu-y { display: inline-block; padding: 0 8px; border-radius: 999px; background: var(--vang-nhat); font-size: var(--chu-nho); font-weight: 600; line-height: 1.5; }
+  .bnv-chi-in { display: none; }
+  @media screen {
+    .bnv-c-tg > .bnv-phu { display: none; }
+    /* dòng phụ của ô (ngày ban hành, phòng, "còn N ngày") một dòng, cắt bằng dấu ba chấm; đủ chữ ở title của ô. Cột Tình hình (Việc tôi đã giao) giữ đủ. */
+    .cot-nv .bnv-c > .bnv-phu, .cot-td .bnv-c:not(.bnv-th) > .bnv-phu, .cot-nv .bnv-c.han > span, .cot-td .bnv-c.han > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
   /* ---- Hàng nhóm, khối dưới dòng, chân bảng ---- */
   .bnv-nhom { padding: 10px 16px 8px 20px; background: var(--nen-mo); border-bottom: 1px solid var(--vien-nhat); }
   .bnv-nhom > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
@@ -162,6 +174,7 @@
     .bnv-trang { flex-wrap: wrap; }
   }
   @media print {
+    .bnv-chi-in { display: block; }   /* bản in không có cột thời gian: ghi lúc nhập, người nhập dưới nội dung như trước */
     .bnv-so, .bnv-chu-giai, .bnv-trang, .bnv-khoi, .bnv-c-viec { display: none !important; }
     .bnv { box-shadow: none; border-color: #999; overflow: visible; }
     .bnv-hang, .bnv-dong, .tvb-goc { break-inside: avoid; }

@@ -7,6 +7,12 @@ test('A1: Xuất theo kỳ — tháng hiện tại có số đếm, đổi sang 
   const page = await pageAs(browser, 'A1', testInfo);
   await nav(page, 'navKl');
   await expect(page.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+  await page.locator('#klXuatMo').click();   // V-13: các nút xuất, in gom sau nút "Xuất, in"
+  await expect(page.locator('#klIn')).toBeVisible();
+  await page.keyboard.press('Escape');   // Esc đóng danh sách, tiêu điểm về nút
+  await expect(page.locator('#klXuatKy')).toBeHidden();
+  await expect(page.locator('#klXuatMo')).toBeFocused();
+  await page.locator('#klXuatMo').click();
   await page.locator('#klXuatKy').click();
   await expect(page.locator('#xkModal')).toBeVisible();
   await expect(page.locator('#xkKy')).toHaveValue('thang');

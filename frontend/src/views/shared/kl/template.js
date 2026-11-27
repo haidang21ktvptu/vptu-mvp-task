@@ -6,22 +6,25 @@
 // v3.25 (bảng theo cột, mẫu NhiemVu / ViecTheoDoi 16/10/2026): danh sách là bảng (#klBang — bộ cột cot-nv / cot-td, hàng tiêu đề #klDauBang,
 // chân #klSoDong + nút trang #klTrang), chú giải màu mức; ngăn chi tiết chỉ chiếm chỗ khi đang mở một việc (.md.co-ct — chi-tiet.js). Chế độ
 // "Việc tôi đã giao": ô số #klTdSo (theo-doi.js). v3.31 (0128): bỏ ô lọc Người theo dõi và nút quan hệ — chỉ còn chủ trì theo dõi.
+// v3.36 (CAU-HOI V-13): dòng phụ đề chỉ còn phạm vi (ghi chú thêm ở nút "i" #klGhiChu, danh-sach.js); bốn nút xuất / in gom sau nút "Xuất, in"
+// (components/menu-tha.js — id và hành động của từng nút giữ nguyên); chú giải màu ghi ngắn, nghĩa đầy đủ ở gợi ý.
 import { THU_TU_NHOM, NHOM } from '../../../lib/kl/nhan.js';
 import { KY_NHAP, KY_HAN, CAP_GIAO, SAP_XEP } from '../../../lib/kl/loc-them.js';
 import { CHU_GIAI_MUC } from '../bang/khung.js';
+import { menuThaHtml } from '../../../components/menu-tha.js';
 
 const opts = (ds, dau) => `<option value="">${dau}</option>${ds.map(([ma, ten]) => `<option value="${ma}">${ten}</option>`).join('')}`;
 const oNgay = (id, nhan) => `<input type="date" id="${id}" class="hidden" aria-label="${nhan}" title="${nhan}">`;
 const oSo = (ma) => `<button type="button" class="o-so ${NHOM[ma].stat}" data-action="locKlNhom" data-nhom="${ma}" aria-pressed="false"><b id="klSo-${ma}">0</b> ${NHOM[ma].ten.toLowerCase()}</button>`;
 
 export const klTemplate = `
-  <div class="dau"><h1 id="klTieuDe">Nhiệm vụ</h1><span id="klPhuDe">trong phạm vi của đồng chí — bấm một dòng để mở ngăn chi tiết bên phải</span>
+  <div class="dau"><h1 id="klTieuDe">Nhiệm vụ</h1><span id="klPhuDe">trong phạm vi của đồng chí</span><span id="klGhiChu"></span>
     <div class="phai-dau"><span id="klTinhDen" class="chu-phu" aria-live="polite"></span><span id="klKetNoi" class="ket-noi" role="status"></span>
       <button type="button" class="nut nho" data-action="loadKl">Tải lại</button>
-      <button type="button" id="klXuatExcel" class="nut nho" data-action="klXuatExcel" title="Xuất đúng danh sách đang hiện (sau bộ lọc) ra tệp .xlsx">Xuất Excel</button>
-      <button type="button" id="klXuatKy" class="nut nho" data-action="moXuatKy" title="Xuất theo tuần / tháng / quý / năm: tổng hợp theo đơn vị + bốn danh sách của kỳ">Xuất theo kỳ…</button>
-      <button type="button" id="klXuatMau" class="nut nho hidden" data-action="klXuatMau" title="Xuất danh sách đang hiện theo Mẫu nhập chuẩn — sửa trong Excel rồi nhập lại để cập nhật theo mã">Xuất theo mẫu nhập</button>
-      <button type="button" id="klIn" class="nut nho" data-action="klIn">In / lưu PDF</button>
+      ${menuThaHtml('klXuat', 'Xuất, in', `<button type="button" id="klXuatExcel" data-action="klXuatExcel" title="Xuất đúng danh sách đang hiện (sau bộ lọc) ra tệp .xlsx">Xuất Excel</button>
+        <button type="button" id="klXuatKy" data-action="moXuatKy" title="Xuất theo tuần / tháng / quý / năm: tổng hợp theo đơn vị + bốn danh sách của kỳ">Xuất theo kỳ…</button>
+        <button type="button" id="klXuatMau" class="hidden" data-action="klXuatMau" title="Xuất danh sách đang hiện theo Mẫu nhập chuẩn — sửa trong Excel rồi nhập lại để cập nhật theo mã">Xuất theo mẫu nhập</button>
+        <button type="button" id="klIn" data-action="klIn">In / lưu PDF</button>`)}
       <button type="button" id="klRaSoatMt" class="nut nho hidden" data-action="moRaSoatMucTieu" title="Ngành, lĩnh vực và mục tiêu then chốt của các việc đã giao (số liệu các khối mục tiêu then chốt, lĩnh vực trọng tâm của Tổng quan) — hệ thống tự nhận diện, đồng chí kiểm tra rồi chấp nhận; sửa hàng loạt bằng tệp Excel">Rà soát phân loại</button>
       <button type="button" id="klNutThem" class="nut nho chinh hidden" data-action="openGiaoViec">Giao việc</button></div></div>
 
@@ -59,7 +62,7 @@ export const klTemplate = `
     </div></details>
   </div>
   <div id="klChipLoc" class="chip-loc hidden" role="status"></div>
-  <div class="bnv-chu-giai">${CHU_GIAI_MUC}<span><span class="nhan-trung-tinh nhan-moi">Mới</span> nhập trong 24 giờ</span></div>
+  <div class="bnv-chu-giai">${CHU_GIAI_MUC}</div>
 
   <div class="md">
     <div class="list bnv cot-nv" id="klBang">
