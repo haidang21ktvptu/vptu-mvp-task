@@ -7,7 +7,8 @@
 // chân #klSoDong + nút trang #klTrang), chú giải màu mức; ngăn chi tiết chỉ chiếm chỗ khi đang mở một việc (.md.co-ct — chi-tiet.js). Chế độ
 // "Việc tôi đã giao": ô số #klTdSo (theo-doi.js). v3.31 (0128): bỏ ô lọc Người theo dõi và nút quan hệ — chỉ còn chủ trì theo dõi.
 // v3.36 (CAU-HOI V-13): dòng phụ đề chỉ còn phạm vi (ghi chú thêm ở nút "i" #klGhiChu, danh-sach.js); bốn nút xuất / in gom sau nút "Xuất, in"
-// (components/menu-tha.js — id và hành động của từng nút giữ nguyên); chú giải màu ghi ngắn, nghĩa đầy đủ ở gợi ý.
+// (components/menu-tha.js — id và hành động của từng nút giữ nguyên); chú giải màu ghi ngắn, nghĩa đầy đủ ở gợi ý; ô số "sắp đến hạn" ghi ngắn, số ngày
+// ở gợi ý; "Thêm bộ lọc" khi đang gập đứng cùng hàng với các ô lọc (nhiem-vu.css).
 import { THU_TU_NHOM, NHOM } from '../../../lib/kl/nhan.js';
 import { KY_NHAP, KY_HAN, CAP_GIAO, SAP_XEP } from '../../../lib/kl/loc-them.js';
 import { CHU_GIAI_MUC } from '../bang/khung.js';
@@ -15,7 +16,9 @@ import { menuThaHtml } from '../../../components/menu-tha.js';
 
 const opts = (ds, dau) => `<option value="">${dau}</option>${ds.map(([ma, ten]) => `<option value="${ma}">${ten}</option>`).join('')}`;
 const oNgay = (id, nhan) => `<input type="date" id="${id}" class="hidden" aria-label="${nhan}" title="${nhan}">`;
-const oSo = (ma) => `<button type="button" class="o-so ${NHOM[ma].stat}" data-action="locKlNhom" data-nhom="${ma}" aria-pressed="false"><b id="klSo-${ma}">0</b> ${NHOM[ma].ten.toLowerCase()}</button>`;
+// Ô "sắp đến hạn" ghi ngắn: số ngày của nhóm xem (theo cấu hình) ở gợi ý và chữ ẩn #klSapGoi — danh-sach.js đặt mỗi lần vẽ.
+const nhanO = (ma) => (ma === 'SAP_DEN_HAN' ? 'sắp đến hạn<span class="sr" id="klSapGoi"></span>' : NHOM[ma].ten.toLowerCase());
+const oSo = (ma) => `<button type="button" class="o-so ${NHOM[ma].stat}" data-action="locKlNhom" data-nhom="${ma}" aria-pressed="false"><b id="klSo-${ma}">0</b> ${nhanO(ma)}</button>`;
 
 export const klTemplate = `
   <div class="dau"><h1 id="klTieuDe">Nhiệm vụ</h1><span id="klPhuDe">trong phạm vi của đồng chí</span><span id="klGhiChu"></span>

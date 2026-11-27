@@ -42,19 +42,21 @@ function nguoiHtml(a, rows, moiDong = rows) {
   const xong = rows.filter((r) => r.owner_tai_khoan === a.id && !mo(r));   // PR-3: việc đã hoàn thành theo chất lượng nghiệm thu
   const clChu = CHAT_LUONG.map(([m, ten]) => [xong.filter((r) => r.chat_luong === m).length, ten]).filter(([n]) => n).map(([n, ten]) => `${n} ${ten}`).join(', ');
   const soChu = tong === 0 ? (theoDoi ? `${theoDoi} việc giao cho ${donVi}` : 'rảnh, có thể nhận thêm')
-    : [dem.do ? `<b>${dem.do}</b> quá hạn` : '', dem.vang ? `${dem.vang} ${tenMuc('vang')}` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
-  return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}">
-      <div><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc giao cho ${donVi}` : ''}${clChu ? ` · <span data-truong="kpi-chat-luong">hoàn thành: ${clChu}</span>` : ''}</small></div>
+    : [dem.do ? `<b>${dem.do}</b> quá hạn` : '', dem.vang ? `${dem.vang} sắp đến hạn` : '', lam ? `${lam} đang làm` : ''].filter(Boolean).join(', ');
+  const phu = `${a.position_title || ''}${theoDoi ? ` · ${theoDoi} việc giao cho ${donVi}` : ''}${clChu ? ` · hoàn thành: ${clChu}` : ''}`;
+  return `<button type="button" class="nguoi-hang${nguoiDangMo === a.id ? ' dang' : ''}" data-action="moNganNguoi" data-id="${a.id}" aria-pressed="${String(nguoiDangMo === a.id)}" title="${escapeHtml(`${a.full_name}${phu ? ` — ${phu}` : ''}`)}">
+      <div class="nguoi-ten"><b>${escapeHtml(a.full_name)}</b><small>${escapeHtml(a.position_title || '')}${theoDoi ? ` · ${theoDoi} việc giao cho ${donVi}` : ''}${clChu ? ` · <span data-truong="kpi-chat-luong">hoàn thành: ${clChu}</span>` : ''}</small></div>
       <div class="tai"><span class="t-do" style="width:${pct(dem.do)}%"></span><span class="t-vang" style="width:${pct(dem.vang)}%"></span><span class="t-lam" style="width:${pct(lam)}%"></span></div>
       <span class="tai-so">${soChu}</span></button>`;
 }
 
 // v3.36 (CAU-HOI V-13 — số trước, chi tiết bấm mới mở): dòng số của phòng ghi ngắn, cách tính ở gợi ý (và chữ ẩn cho trình đọc màn hình); ghi chú
-// của màn ở nút "i" cạnh tên màn.
+// của màn ở nút "i" cạnh tên màn. Dòng của từng người: tên và chức danh bên trái, thanh tải và dòng số bên phải (can-bo-bao-cao.css); dòng số ghi
+// "n sắp đến hạn" — số ngày của mức ở ghi chú của màn; chức danh dài cắt sau hai dòng, đủ chữ ở title của dòng.
 const GOI_PHONG = 'Việc đang mở: việc cán bộ trong phòng hoặc chính phòng chủ trì theo dõi. Quá hạn: việc quá hạn mà phòng chịu chậm, gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, '
   + 'không gồm việc phòng đã nộp chờ cấp trên nghiệm thu; vì vậy có thể khác số việc đang mở.';
-const GHI_CHU_MAN = 'Tải việc theo người: quá hạn, sắp đến hạn, đang làm; chỉ tính việc đang mở mà cán bộ là chủ trì theo dõi. Bấm một người để xem việc ngay trong trang.';
-function phongHtml(ma, rows) {
+const ghiChuMan = () => `Tải việc theo người: quá hạn, ${tenMuc('vang')}, đang làm; chỉ tính việc đang mở mà cán bộ là chủ trì theo dõi. Bấm một người để xem việc ngay trong trang.`;   // số ngày theo cấu hình: đọc lúc vẽ
+export function phongHtml(ma, rows) {   // dựng HTML thuần (đọc state.accounts), không chạm DOM
   const canBo = state.accounts.filter((a) => a.department === ma && !a.is_system)
     .sort((a, b) => a.role_group.localeCompare(b.role_group) || (b.is_chief ? 1 : 0) - (a.is_chief ? 1 : 0) || a.full_name.localeCompare(b.full_name, 'vi'));
   const cuaPhong = rows.filter((r) => laOwnerPhong(r, ma) || canBo.some((a) => a.id === r.owner_tai_khoan));
@@ -81,7 +83,7 @@ function ve() {
   const phong = danhSachPhong(me, rowsHienTai, ca);
   $('viewCanBo').dataset.phamVi = toan ? 'toan' : 'toi';   // e2e: phạm vi đang vẽ
   $('viewCanBo').innerHTML = `
-    <div class="dau"><h1>${ca ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy' : ''}</span><span>${nutGoi(`${toan ? 'Việc ngoài phạm vi xử lý của đồng chí chỉ xem. ' : ''}${GHI_CHU_MAN}`)}</span>
+    <div class="dau"><h1>${ca ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy' : ''}</span><span>${nutGoi(`${toan ? 'Việc ngoài phạm vi xử lý của đồng chí chỉ xem. ' : ''}${ghiChuMan()}`)}</span>
       <div class="phai-dau">${nutPhamVi()}<button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
     <div class="hai-ngan${nguoiDangMo ? ' mo' : ''}"><div class="cb">${phong.length ? phong.map((p) => phongHtml(p, rowsHienTai)).join('') : '<p class="trong">Không có phòng nào trong phạm vi của đồng chí.</p>'}</div>
       <aside class="ngan-ben${nguoiDangMo ? '' : ' hidden'}" id="cbNgan" aria-label="Chi tiết cán bộ đang chọn"></aside></div>`;

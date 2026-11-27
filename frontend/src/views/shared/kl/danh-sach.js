@@ -12,7 +12,7 @@ import { datSo, veSauNap } from '../../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, danhMucKl, loadPhanCongHieuLuc, xemToanBo, coMucTieu } from '../../../lib/kl/du-lieu.js';
 import { trongPhamVi, locCanBo, tuyChonCanBo, chiXem } from '../../../lib/kl/pham-vi.js';
 import { tongHop, sapXep, locRows, kiemBatBien, CHUA_CO_NGANH, CHUA_CO_NGUON } from '../../../lib/kl/tong-hop.js';
-import { THU_TU_NHOM, tenNhom, boSoThuTu, tenMuc } from '../../../lib/kl/nhan.js';
+import { THU_TU_NHOM, tenNhom, boSoThuTu, tenMuc, nguongCanhBao } from '../../../lib/kl/nhan.js';
 import { homNayVN } from '../../../lib/kl/ngay.js';
 import { giaiLocThem, sapXepMoiNhap, sapXepHan, demLocThem } from '../../../lib/kl/loc-them.js';
 import { THU_TU_DO_KHAN, tenDoKhan } from '../../../lib/kl/do-khan.js';
@@ -144,6 +144,8 @@ function dienBoLoc() {
 export function render(veLaiNgan = false) {
   const traTd = giuTieuDiem($('viewKl'));   // ô số, nút trang, nút quan hệ, dòng đang chọn giữ con trỏ bàn phím qua lần vẽ lại
   veChuGiai();   // chú giải mức theo ngưỡng cấu hình (mẫu HTML chèn trước khi đọc cấu hình)
+  const sapGoi = $('klSapGoi');   // V-13: ô "sắp đến hạn" ghi ngắn — số ngày của nhóm xem (theo cấu hình) ở gợi ý và chữ ẩn
+  if (sapGoi) { const n = nguongCanhBao().sap; sapGoi.textContent = ` (còn ≤ ${n} ngày)`; sapGoi.parentElement.dataset.goi = `Còn ≤ ${n} ngày đến hạn xử lý`; }
   const { nhom, ...nguCanh } = kl.loc;
   const goc = coSo();
   const homNay = homNayVN();

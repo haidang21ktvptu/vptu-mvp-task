@@ -60,6 +60,11 @@ test.describe.serial('Nhiệm vụ quý của Ban Thường vụ (v3.35)', () =>
       await expect(man.locator('.nq-can-cu')).toContainText(/đến hết quý|ngày cuối quý|quý đã kết thúc/);
       await expect(man.locator('.nq-o-so .nq-o[data-goi]')).toHaveCount(2);
       await expect(man.locator('.nq-o-so .nq-o.nq-o-luc')).toHaveAttribute('data-goi', /^\d+% số nhiệm vụ trong danh mục$/);
+      // dải số bảy ô đứng một hàng ở màn 1366px, kể cả cỡ chữ lớn (mặc định của lãnh đạo): nhãn ghi ngắn ("nhiệm vụ", "chưa báo cáo tuần")
+      await page.setViewportSize({ width: 1366, height: 768 });
+      const dinh = await man.locator('.nq-tom-tat > .nq-o-so > .nq-o').evaluateAll((ds) => ds.map((d) => Math.round(d.getBoundingClientRect().top)));
+      expect(new Set(dinh).size, `dải số một hàng (${dinh.join(', ')})`).toBe(1);
+      await page.setViewportSize(testInfo.project.use.viewport);
       await expect(man.locator('.nq-khoi-ten .nut-goi').first()).toHaveAttribute('data-goi', /.+/);
       const khoiLd = man.locator('#nqTheoLanhDao');
       await expect(khoiLd).toHaveAttribute('data-gap', '');

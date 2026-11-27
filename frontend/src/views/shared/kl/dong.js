@@ -64,9 +64,9 @@ export function dongHtml(r, homNay, dangChon, { now = Date.now(), stt = '', cot 
   const gon = cot === 'nv' && nhap ? `<span class="nhap-luc">${escapeHtml(nhap)}${nguoiNhap ? ` · ${escapeHtml(nguoiNhap)}` : ''}</span>` : '';   // chỉ ở bản in (bảng in không có cột thời gian)
   const oNv = `<span class="bnv-c bnv-c-nv" title="${escapeHtml(goi)}"><span class="bnv-nd"><span class="bnv-dong1"><span class="ma">${escapeHtml(r.ma)}</span>${maNguonHtml(r)}${laViecMoi(r, now) ? NHAN_MOI : ''}${nhanMucHtml(r)}${nhanPhuHtml(r)}${chiXemVoi(r, state.user) ? NHAN_CHI_XEM : ''}${
     cy && !r.bi_tu_choi && !r.tu_choi_cho ? `<span class="bnv-chu-y">${escapeHtml(cy)}</span>` : ''}</span> ${escapeHtml(r.noi_dung)}</span>${gon ? `<span class="bnv-phu bnv-chi-in">${gon}</span>` : ''}</span>`;
-  // V-13: dòng phụ của ô chỉ một dòng (CSS cắt bằng dấu ba chấm) — title của ô ghi đủ.
+  // V-13: dòng phụ của ô chỉ một dòng (CSS cắt bằng dấu ba chấm) — title của ô ghi đủ. Tên chủ trì có dòng phụ đi kèm (.bnv-ten) cũng một dòng; số hiệu văn bản không cắt.
   const oVb = o('Văn bản giao', `<span class="bnv-vb">${escapeHtml(vb.ten)}</span>${phu(vb.phu)}`, '', vb.phu ? `${vb.ten}, ${vb.phu}` : '');
-  const oChuTri = o('Chủ trì theo dõi', `<span>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`, '', r.owner_tai_khoan_ten ? chuTriText(r) : '');
+  const oChuTri = o('Chủ trì theo dõi', `<span${r.owner_tai_khoan_ten ? ' class="bnv-ten"' : ''}>${escapeHtml(ownerText(r))}</span>${r.owner_tai_khoan_ten ? phu(boSoThuTu(r.owner_don_vi_ten)) : ''}`, '', r.owner_tai_khoan_ten ? chuTriText(r) : '');
   const oHan = o('Hạn xử lý', `<b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span>`, 'han', `${han.ngay}, ${han.chu}`);
   const oTt = o('Trạng thái', `<span class="trang-thai ${tt.lop}">${escapeHtml(tt.chu)}</span>${nhanChatLuongHtml(r.chat_luong)}`, 'bnv-c-tt');
   let cells;

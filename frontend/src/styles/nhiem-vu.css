@@ -42,6 +42,8 @@
   .kl-tim input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: var(--chu-nho); color: var(--chu); outline: 0; padding: 0; }
   .kl-loc > select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho); max-width: 220px; }
   .kl-them { flex-basis: 100%; font-size: var(--chu-nho); }
+  .kl-them:not([open]) { flex: 0 0 auto; }   /* v3.36 (V-13): đang gập thì đứng cùng hàng với các ô lọc, mở ra mới chiếm trọn một hàng */
+  #klStats .o-so[data-goi] { cursor: pointer; }   /* ô số có gợi ý vẫn là nút lọc */
   .kl-them summary { cursor: pointer; color: var(--do); }
   .kl-them .them-loc { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .kl-them .them-loc select { height: 36px; padding: 0 10px; border: 1px solid var(--vien); border-radius: 8px; background: var(--the); font-size: var(--chu-nho);

@@ -174,7 +174,7 @@ test('A1: Báo cáo, Cán bộ — phụ đề ngắn, ghi chú ở nút "i", ha
   await nav(page, 'navCanBo');
   const cb = page.locator('#viewCanBo');
   await expect(cb.locator('.cb section').first()).toBeVisible(NAP);
-  await expect(cb.locator('.dau .nut-goi')).toHaveAttribute('data-goi', /Tải việc theo người: quá hạn, sắp đến hạn, đang làm/);
+  await expect(cb.locator('.dau .nut-goi')).toHaveAttribute('data-goi', /Tải việc theo người: quá hạn, sắp đến hạn \(còn ≤ \d+ ngày\), đang làm/);
   await expect(cb.locator('.dau')).not.toContainText('bấm một người');
   await expect(cb.locator('.cb .tieu span[data-goi]').first()).toHaveText(/^\d+ cán bộ, \d+ việc đang mở, \d+ quá hạn/, { useInnerText: true });
   await expect(cb.locator('.cb .tieu span[data-goi]').first()).toHaveAttribute('data-goi', /^Việc đang mở: việc cán bộ trong phòng/);

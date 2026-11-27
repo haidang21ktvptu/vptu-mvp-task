@@ -24,7 +24,7 @@ function hienGoi(e) {
 }
 
 // Gọi một lần lúc khởi động. Bấm ra ngoài thì ẩn hộp; bấm phần tử có hành động (mở danh sách, lọc, chuyển màn) cũng ẩn vì màn hình sắp vẽ lại.
-// Nút "i" và phần tử chỉ để đọc (không có hành động) giữ hộp: trên màn hình chạm, chạm vào chính là cách đọc gợi ý.
+// Nút "i" và phần tử chỉ để đọc (không có hành động) giữ hộp: trên màn hình chạm, chạm vào chính là cách đọc gợi ý. Phím Esc ẩn hộp, tiêu điểm giữ nguyên.
 export function mountGoi() {
   document.addEventListener('mouseover', hienGoi);
   document.addEventListener('focusin', hienGoi);
@@ -34,4 +34,5 @@ export function mountGoi() {
     if (!t.closest?.('[data-goi]') || t.closest('[data-action]')) anGoi();
   });
   window.addEventListener('scroll', anGoi, { passive: true, capture: true });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') anGoi(); });
 }
