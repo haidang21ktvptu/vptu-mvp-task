@@ -1034,4 +1034,4 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 ## 103. v3.36.0 (Đợt 1, phần 10) — Cửa vào không chờ hiệu ứng chưa bắt đầu; kiểm staging bằng trình duyệt (27/11/2026, CAU-HOI V-12; chỉ giao diện)
 - Kiểm bản staging `3d085f3` bằng trình duyệt (demo_cvp, 1366px và 375px): màn mở đầu, Tổng quan, Nhiệm vụ, Cần xử lý, Cán bộ, Báo cáo, Nhiệm vụ quý, Theo văn bản, ngăn chi tiết vào lần đầu và vào lại đều kết thúc sạch, số đúng, không lỗi console, không tràn ngang trên điện thoại.
 - Phát hiện khi cửa sổ ứng dụng nằm sau cửa sổ khác (trình duyệt gần như không vẽ khung hình): hiệu ứng chưa bắt đầu nên cửa vào chờ tới trần 1,8 giây, nội dung hiện muộn. Sửa `lib/chuyen-dong.js`: chỉ còn hiệu ứng chưa bắt đầu thì chờ đúng một nhịp rồi đóng; hiệu ứng đang chạy vẫn được chờ như cũ.
-- Unit `chuyen-dong.test.mjs` thêm một kiểm thử; DESIGN mục 7.
+- Unit `chuyen-dong.test.mjs` thêm một kiểm thử; e2e `chuyen-dong.spec.js` thêm kịch bản bật chuyển động cho vai chuyên viên (Việc của tôi) và Trưởng phòng (Cần xử lý của phòng): vào lần đầu và vào lại; DESIGN mục 7.
