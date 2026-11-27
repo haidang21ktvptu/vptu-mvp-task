@@ -1,4 +1,4 @@
-// Thẻ việc Đỏ (v8 đợt 2: một HÀNG): mã (+ "cần X quyết"), nội dung, số ngày trễ; dòng phụ 4 điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết)
+// Thẻ việc Đỏ (v8 đợt 2: một HÀNG): mã (+ "cần X quyết"), nội dung, số ngày trễ; dòng phụ 4 điều (ai chậm · khâu · sản phẩm · cấp cần quyết)
 // + điều thứ 5 "Vướng mắc" khi có (PR-3, v_ngoai_le.vuong_mac);
 // vòng khép kín của chỉ đạo Thường trực (Đã gửi → Văn phòng trả lời (hạn) → Đóng); hành động: Chỉ đạo (A0: một ô + gợi ý, chi_dao_gui
 // CHI_DAO_TT) / Đôn đốc (A1/A2: DON_DOC) và Xem diễn biến (mở ngăn chi tiết ở màn hình Nhiệm vụ). Nút chỉ ẩn/hiện; quyền thật ở hàm DB.
@@ -15,25 +15,20 @@ export const GOI_Y_VP = ['Khẩn trương hoàn thành trong tuần', 'Báo cáo
 const TEN_VAI_QUYET = { A0: 'Thường trực', A1: 'Văn phòng', A2: 'Trưởng phòng' };
 const laA0 = () => state.user?.role_group === 'A0';
 
-// Sản phẩm còn thiếu theo khâu (v_ngoai_le đã cho "chưa định nghĩa" khi thiếu sản phẩm).
+// Sản phẩm còn thiếu theo khâu (v_ngoai_le đã cho "chưa định nghĩa" khi thiếu sản phẩm). v3.36 (CAU-HOI V-13): trên thẻ, điều thứ 3 chỉ ghi TÊN sản
+// phẩm vì tình trạng đã nằm ở tên khâu đứng ngay trước; câu dưới đây còn ở gợi ý (title) của dòng bốn điều và ở màn của Trưởng phòng.
 export function sanPhamThieu(r) {
   if (r.khau === 'BI_TU_CHOI') return 'Việc bị từ chối, chờ giao lại cho người khác';
   if (r.khau === 'CHUA_NHAN') return 'Chưa ai xác nhận đã nhận việc';
   if (r.khau === 'CHO_MINH_CHUNG') return `${r.san_pham_ten} — đã nộp, chờ xác nhận`;
   return r.san_pham_ten;
 }
-// Điều thứ 3 trên dòng phụ: tên sản phẩm kèm "(sản phẩm còn thiếu)"; khâu đã nói rõ tình trạng thì ghi nguyên câu (bị từ chối, chưa nhận, đã nộp chờ
-// xác nhận) hoặc chỉ tên sản phẩm (đã trình chờ cấp trên quyết; chờ xác nhận minh chứng nộp trước v3.20 — sản phẩm đã có).
-const dieuSanPham = (r) => (['BI_TU_CHOI', 'CHUA_NHAN', 'CHO_MINH_CHUNG'].includes(r.khau) ? sanPhamThieu(r)
-  : ['CHO_QUYET', 'CHO_NGHIEM_THU'].includes(r.khau) ? r.san_pham_ten : `${r.san_pham_ten} (sản phẩm còn thiếu)`);
 
-// Vòng khép kín theo chỉ đạo Thường trực mới nhất trên việc (A0: mình gửi; A1: mình nhận); không có → "Chưa chỉ đạo" + chỉ đạo điều hành chờ.
+// Vòng khép kín theo chỉ đạo Thường trực mới nhất trên việc (A0: mình gửi; A1: mình nhận). Chưa có chỉ đạo Thường trực: chỉ ghi số chỉ đạo điều
+// hành đang chờ phản hồi (nếu có) — v3.36 (CAU-HOI V-13): bỏ nhãn trạng thái mặc định "Chưa chỉ đạo" / "Thường trực chưa chỉ đạo" trên mọi thẻ.
 export function vongHtml(r) {
   const tt = ttCuaViec(r.id).sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0];
-  if (!tt) {
-    const cho = r.so_chi_dao_cho_phan_hoi > 0 ? `<em class="dang">${r.so_chi_dao_cho_phan_hoi} chỉ đạo điều hành chờ phản hồi</em>` : '';
-    return `<span class="vong"><em>${laA0() ? 'Chưa chỉ đạo' : 'Thường trực chưa chỉ đạo'}</em>${cho}</span>`;
-  }
+  if (!tt) return r.so_chi_dao_cho_phan_hoi > 0 ? `<span class="vong"><em class="dang">${r.so_chi_dao_cho_phan_hoi} chỉ đạo điều hành chờ phản hồi</em></span>` : '';
   const buoc2 = tt.trang_thai === 'CHO_PHAN_HOI'
     ? `<em class="${tt.qua_han_phan_hoi ? 'qua' : 'dang'}">Văn phòng chưa trả lời, hạn ${formatNgay(tt.han_phan_hoi)}${tt.qua_han_phan_hoi ? ' (quá hạn)' : ''}</em>`
     : '<em class="xong">Đã phản hồi</em>';
@@ -74,9 +69,10 @@ export function oGiaoLaiHtml(r, tienTo = 'oGiaoLai') {
 }
 
 // Hàng việc (v8 đợt 2): chấm trạng thái · mã · nội dung (+ cần X quyết) · số ngày trễ · nút; v3.36: tầng dưới (.the-phu, rộng từ cột nội dung tới mép
-// phải thẻ) gồm hàng nhãn (độ khẩn, Thường trực giao, vòng khép kín) rồi bốn điều (ai chậm · khâu · sản phẩm thiếu · cấp cần quyết, tối đa hai dòng)
-// và vướng mắc — để cỡ chữ lớn trên máy 1280–1366px vẫn đọc đủ bốn điều. Các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau,
-// .vong, .dk, #the-<id>, data-*).
+// phải thẻ) gồm nhãn (độ khẩn, Thường trực giao, vòng khép kín — chỉ khi có) đứng cùng hàng với bốn điều (ai chậm · khâu · sản phẩm · cấp cần quyết,
+// tối đa hai dòng) rồi vướng mắc (một dòng) — để cỡ chữ lớn trên máy 1280–1366px vẫn đọc đủ bốn điều. Bốn trường bắt buộc của SPEC DB-1 luôn hiện:
+// ai chậm, số ngày trễ (ô bên phải), sản phẩm, cấp cần quyết. Các ô một dòng mở bên dưới hàng. Lớp/id giữ nguyên (.the, .ten, .tre, .khau, .vong,
+// .dk, #the-<id>, data-*).
 export function theHtml(r) {
   const quyet = canToiQuyet(r);
   const lop = r.bi_tu_choi && !['DO', 'NGHIEM_THU'].includes(r.nhom) ? 'tu-choi' : r.muc_canh_bao === 'DO_DAC_BIET' ? 'dac-biet' : 'do';
@@ -93,7 +89,7 @@ export function theHtml(r) {
       <div class="the-dau"><span class="stt ${cham}"></span><span class="ma">${escapeHtml(r.ma)}</span>
         <div class="ten"><b><span class="nd" title="${escapeHtml(r.noi_dung)}">${escapeHtml(r.noi_dung)}${quyet ? ` — cần ${TEN_VAI_QUYET[state.user?.role_group]} quyết` : ''}</span></b></div>
         <div class="the-phu"><span class="nhan-cum">${nhanTC}${vongHtml(r)}</span>
-          <span class="bon-dieu" title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(dieuSanPham(r))} · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac" title="${escapeHtml(r.vuong_mac)}"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
+          <span class="bon-dieu" title="${escapeHtml(`${r.owner_tai_khoan_ten || boSoThuTu(r.owner_don_vi_ten) || ''} · ${tenKhau(r.khau)} · ${sanPhamThieu(r)} · cấp cần quyết: ${r.cap_quyet_dinh_ten}`)}">${owner} · <span class="khau">${tenKhau(r.khau)}</span> · ${escapeHtml(r.san_pham_ten)} · cấp cần quyết: ${escapeHtml(r.cap_quyet_dinh_ten)}</span>${r.vuong_mac ? `<span class="the-vuong-mac" data-truong="vuong-mac" title="${escapeHtml(r.vuong_mac)}"><b>Vướng mắc:</b> ${escapeHtml(r.vuong_mac)}</span>` : ''}</div>
         ${tre}
         <div class="hanh-dong">${nutGiaoLai}<button type="button" class="nut chinh" data-action="moO" data-o="oThe-${r.id}">${nutChinh}</button>
           <button type="button" class="nut" data-action="xemDienBien" data-id="${r.id}" data-ma="${escapeHtml(r.ma)}">Xem diễn biến</button></div></div>

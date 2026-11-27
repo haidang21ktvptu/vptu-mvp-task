@@ -32,8 +32,9 @@
   .the.hang, .the.hang.do, .the.hang.dac-biet, .the.hang.tu-choi { border: 0; border-top: 1px solid var(--vien-nhat); border-radius: 0; margin: 0; padding: 12px 16px; background: var(--the); }
   .the.hang:first-child { border-top: 0; }
   /* v3.36 (CAU-HOI V-1): hai tầng. Tầng trên: chấm · mã · nội dung (tối đa hai dòng, nguyên văn ở title, ngăn chi tiết) · số ngày trễ · nút. Tầng dưới
-     (.the-phu) chạy từ cột nội dung tới mép phải thẻ: hàng nhãn (độ khẩn, Thường trực giao, vòng khép kín — mỗi nhãn không gãy dòng), bốn điều tối đa
-     hai dòng, vướng mắc. Trước đây nhãn và bốn điều chung cột nội dung (~250px ở 1280px, cỡ chữ lớn) nên khâu, sản phẩm, cấp cần quyết bị cắt. */
+     (.the-phu) chạy từ cột nội dung tới mép phải thẻ: nhãn (độ khẩn, Thường trực giao, vòng khép kín — mỗi nhãn không gãy dòng; chỉ khi có) đứng cùng
+     hàng với bốn điều (tối đa hai dòng), rồi vướng mắc một dòng (CAU-HOI V-13: thẻ thường còn nội dung và một dòng thông tin). Trước đây nhãn và bốn
+     điều chung cột nội dung (~250px ở 1280px, cỡ chữ lớn) nên khâu, sản phẩm, cấp cần quyết bị cắt. */
   .the.hang .the-dau { display: grid; grid-template-columns: 8px auto minmax(0, 1fr) auto auto; grid-template-areas: "stt ma ten tre nut" ". . phu phu phu";
     column-gap: 12px; row-gap: 6px; align-items: center; }
   .the.hang .the-dau > .stt { grid-area: stt; } .the.hang .the-dau > .ma { grid-area: ma; } .the.hang .the-dau > .ten { grid-area: ten; }
@@ -41,12 +42,14 @@
   .the.hang .ten { min-width: 0; }
   .the.hang .ten b { display: block; font-size: var(--chu-nho); font-weight: 600; line-height: 1.4; min-width: 0; }
   .the.hang .ten b .nd { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
-  .the.hang .the-phu { min-width: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--chu-nho); color: var(--chu-phu); line-height: 1.45; }
-  .the.hang .nhan-cum { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+  .the.hang .the-phu { min-width: 0; display: flex; flex-flow: row wrap; align-items: center; gap: 4px 8px; font-size: var(--chu-nho); color: var(--chu-phu); line-height: 1.45; }
+  .the.hang .nhan-cum { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; max-width: 100%; }
   .the.hang .nhan-cum:empty { display: none; }
   .the.hang .nhan-cum > * { margin: 0; max-width: 100%; white-space: nowrap; }
   .the.hang .bon-dieu, .the.hang .the-phu > .the-vuong-mac { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden;
     overflow-wrap: anywhere; } /* tooltip đủ */
+  .the.hang .bon-dieu { flex: 1 1 300px; min-width: 0; }
+  .the.hang .the-phu > .the-vuong-mac { flex: 1 1 100%; -webkit-line-clamp: 1; line-clamp: 1; }
   .the.hang .khau { font-size: var(--chu-nho); padding: 1px 6px; }
   /* Thẻ hẹp (điện thoại; máy tính 1000–1250px khi danh sách đứng cạnh thanh trái 300px): mã + số ngày trễ, nội dung, tầng dưới, nút xếp dọc — cột nội dung
      không co về vài chục px; bốn điều hiện đủ. Truy vấn theo bề rộng thẻ (container), không theo màn hình. */
@@ -68,6 +71,7 @@
   .muc, .muc.do, .muc.vang, .muc.lam, .muc.luc, .muc.dac-biet { border-left: 0; background: var(--the); padding: 0 0 6px; border-top: 1px solid var(--vien); }
   .muc.vien-vang { border: 1px solid var(--vien-vang); border-radius: var(--bo-the); margin: 8px; }
   .muc > b { display: block; padding: 14px 16px 6px; font-family: var(--font-tieu-de); font-size: var(--chu-than); color: var(--navy); }
+  .muc > b .nut-goi, .tam-dau .nut-goi { vertical-align: middle; align-self: center; }   /* v3.36 (V-13): ghi chú của khối ở nút "i" cạnh tên khối */
   .muc > p { padding: 0 16px 6px; }
   .muc .the-con, .muc .the-con:first-of-type { margin: 0; padding: 10px 16px; border-top: 1px solid var(--vien-nhat); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
   .muc .the-con::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--navy); flex: none; align-self: flex-start; margin-top: .6em; }   /* v3.36: chấm ngang dòng đầu của nội dung */
@@ -87,6 +91,24 @@
   .tam .da-gui { margin: 0; border: 0; border-radius: 0; padding: 0; }
   .tam .da-gui > div { padding: 10px 16px; border-top: 1px solid var(--vien-nhat); }
   .tam .da-gui > div:first-child { border-top: 0; }
+  /* v3.36 (CAU-HOI V-13): kết quả nộp hai dòng chữ — (1) mã việc, trạng thái, nội dung việc; (2) người nộp, lúc nộp, trích yếu và liên kết "Xem tệp";
+     mỗi dòng một hàng, cắt bằng dấu ba chấm (đủ chữ ở title của dòng và ngăn chi tiết của việc). */
+  .da-gui > div > p { min-width: 0; }
+  .da-gui .mc-viec { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--chu-nho); }
+  .da-gui .mc-viec .trang-thai { vertical-align: 1px; }
+  .da-gui p small.mc-nop { display: flex; align-items: baseline; gap: 10px; min-width: 0; margin-top: 2px; }
+  .da-gui .mc-nop > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .da-gui .mc-nop .lien-ket { flex: none; font-size: var(--chu-nho); }
+  @media (max-width: 900px) {   /* màn hẹp: các nút của một kết quả đứng cùng hàng dưới hai dòng chữ (trước mỗi nút một hàng) */
+    #dhMcCho > div:not([data-sau]) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    #dhMcCho > div > p, #dhMcCho > div > .o { flex: 1 1 100%; }
+  }
+  /* v3.36 (CAU-HOI V-13, DESIGN mục 17 quy tắc 6): danh sách dài chỉ hiện các dòng đầu — dòng mang data-sau (components/ds-gon.js) ẩn trên màn hình,
+     bản in vẫn đủ dòng; nút "Xem tất cả N …" ở cuối danh sách. */
+  .ds-them { padding: 10px 16px 12px; border-top: 1px solid var(--vien-nhat); }
+  @media screen {
+    .the.hang[data-sau], .da-gui > [data-sau] { display: none; }
+  }
   .cot-phu .viec { margin: 0 12px 12px; padding: 12px 14px; border-left-width: 4px; } .cot-phu .viec h3 { font-size: var(--chu-bang); } .cot-phu .viec .ma { font-size: var(--chu-nho); }
   /* Cột phụ: tải việc từng cán bộ (A2) — v3.25: bỏ "hạn 7 ngày tới", "hướng dẫn nhanh" của A3 (Việc của tôi thành bảng) */
   .tai-nguoi { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: var(--chu-nho); border-top: 1px solid var(--vien-nhat); }

@@ -1,11 +1,15 @@
 // Phần chung của màn hình điều hành A0/A1: đầu trang (ngày, giờ số liệu, kết nối realtime, Tải lại), thanh trái + danh sách thẻ việc nghẽn.
 // v3.36 (CAU-HOI V-1): bỏ dải 5 ô số (trùng số liệu với Tổng quan) và chế độ Toàn cảnh; lọc bằng ba câu hỏi đầu trang và thanh trái. Mỗi vai truyền
-// phần đầu / giữa / cuối trang riêng.
+// phần đầu / giữa / cuối trang riêng. v3.36 (CAU-HOI V-13, DESIGN mục 17): danh sách việc nghẽn chỉ hiện SO_THE_DAU việc đầu (đã xếp theo mức khẩn),
+// nút cuối danh sách "Xem tất cả N việc" (components/ds-gon.js, danh sách tên "dhThe"); thứ tự xếp ghi ở nút "i" cạnh tiêu đề danh sách, không
+// còn câu phụ đề.
 import { $, setText, formatDateTime, giuONhap } from '../../../lib/dom.js';
 import { dongBoNutDanhGia } from '../chat-luong.js';
 import { registerActions } from '../../../lib/actions.js';
 import { notifyError } from '../../../components/toast.js';
 import { veSauNap } from '../../../lib/chuyen-dong.js';
+import { nutGoi } from '../../../components/goi.js';
+import { apDanhSach, nutHetHtml, dangKyDanhSach } from '../../../components/ds-gon.js';
 import { batKlRealtime, hienKetNoi } from '../../../features/kl-realtime.js';
 import { setActiveNav, showSection, sectionDangHien } from '../../shell/index.js';
 import { dh, napDieuHanh, locThe } from './du-lieu.js';
@@ -23,6 +27,8 @@ export function ngayDaiVN(d = new Date()) {
 
 // Tiêu đề + ngày; `dau` (ba câu hỏi, dải Cần xử lý ngay, khối việc chờ đồng chí); `giua` (A1: hai cột kết quả nộp / chỉ đạo Thường trực); thanh trái
 // 300px + tấm danh sách hàng việc nghẽn.
+// Thứ tự của locThe() (du-lieu.js): độ khẩn, Thường trực giao, mức cảnh báo (Đỏ đặc biệt trước Đỏ), việc cần người xem quyết, số ngày trễ.
+const GHI_CHU_XEP = 'Xếp theo mức khẩn: độ khẩn, việc Thường trực giao, mức cảnh báo, việc cần đồng chí quyết, rồi số ngày trễ.';
 export const khungHtml = (tieuDe, phu, dau = '', cuoi = '', giua = '') => `
   <div class="dau"><h1 id="dhTieuDeTrang">${tieuDe}</h1><span id="dhTinhDen">${phu}</span>
     <div class="phai-dau"><span id="dhKetNoi" class="ket-noi" role="status"></span><button type="button" class="nut nho" data-action="loadDieuHanh">Tải lại</button></div></div>
@@ -30,11 +36,13 @@ export const khungHtml = (tieuDe, phu, dau = '', cuoi = '', giua = '') => `
   ${giua}
   <div class="dieu-hanh">
     <aside class="ray tam" id="dhRay" aria-label="Lọc theo khâu và đơn vị"></aside>
-    <section class="danh-sach tam"><div class="ds-dau tam-dau"><h2 id="dsTieuDe"></h2><span id="dsPhu"></span></div><div id="dsThe"></div></section>
+    <section class="danh-sach tam"><div class="ds-dau tam-dau"><h2 id="dsTieuDe"></h2>${nutGoi(GHI_CHU_XEP)}</div><div id="dsThe"></div></section>
   </div>
   ${cuoi}`;
 
-let cauHinh = { veThem: () => {}, phuDe: () => '' };
+export const SO_THE_DAU = 10;
+
+let cauHinh = { veThem: () => {}, sauVe: () => {} };   // sauVe: chạy sau khi các ô đang mở đã được trả lại
 export function datCauHinhDieuHanh(c) { cauHinh = { ...cauHinh, ...c }; }
 
 export function veDieuHanh() {
@@ -44,12 +52,13 @@ export function veDieuHanh() {
   const traDienBien = giuDienBien($('dsThe')); // khối "Xem diễn biến" đang mở không mất khi danh sách vẽ lại (nạp lại nền / realtime)
   const ds = locThe();
   setText('dsTieuDe', tieuDeDanhSach(ds.length, NHAN_LOC[dh.loc.kpi] || ''));
-  setText('dsPhu', cauHinh.phuDe());
-  $('dsThe').innerHTML = ds.length ? ds.map(theHtml).join('') : '<p class="trong">Không có việc nào ở bộ lọc này.</p>';
+  $('dsThe').innerHTML = ds.length ? ds.map(theHtml).join('') + nutHetHtml('dhThe', ds.length, SO_THE_DAU) : '<p class="trong">Không có việc nào ở bộ lọc này.</p>';
   traDienBien();
   cauHinh.veThem();
   if (dh.luc) setText('dhTinhDen', `${ngayDaiVN(dh.luc)}, số liệu lúc ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
+  apDanhSach('dhThe');   // V-13: sau khi các ô đang mở đã được trả lại (thẻ đang mở ô nhập / diễn biến không bị ẩn)
+  cauHinh.sauVe();
 }
 
 // Lỗi tạm (mạng, staging bận → statement timeout của v_nhiem_vu / v_ngoai_le khi nhiều trang nạp cùng lúc): thử lại MỘT lần sau 800 ms rồi mới báo,
@@ -93,6 +102,7 @@ const boLocDieuHanh = () => { dh.loc = { khau: null, dv: null, kpi: null }; veDi
 export function mountDieuHanh() {
   mountHanhDongDieuHanh();
   registerActions({ locKhau, locDonVi, locKpi, boLocDieuHanh });
+  dangKyDanhSach('dhThe', { vung: () => $('dsThe'), chon: '.the', so: SO_THE_DAU });
 }
 export function dangKyDieuHanhVai() {
   datNapLai(loadDieuHanh);

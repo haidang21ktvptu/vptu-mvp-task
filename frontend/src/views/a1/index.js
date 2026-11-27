@@ -7,7 +7,8 @@ import { moManDau } from '../shell/duong-dan.js';
 import { sectionDangHien } from '../shell/index.js';
 import { openTongQuan } from '../shared/tong-quan/index.js';
 import { khungHtml, datCauHinhDieuHanh, openDieuHanh, ngayDaiVN, dangKyDieuHanhVai } from '../shared/dieu-hanh/man-hinh.js';
-import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
+import { minhChungChoHtml, apDsMc } from '../shared/dieu-hanh/minh-chung-cho.js';
+import { nutGoi } from '../../components/goi.js';
 import { dh, ttCho } from '../shared/dieu-hanh/du-lieu.js';
 import { khoiChiDaoTTHtml } from './chi-dao-tt.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
@@ -19,7 +20,7 @@ import { registerCanBo } from '../shared/can-bo.js';
 // v8 đợt 2 (mockup 03): tầng 2 dải "Cần xử lý ngay" + tấm việc Thường trực giao chờ nhận / đề nghị từ chối cần duyệt / việc mình giao bị từ chối;
 // tiếp là hai cột: kết quả nộp trong 7 ngày (chính — Đợt D: không bắt buộc xử lý) và chỉ đạo Thường trực chờ trả lời (phụ 380px); rồi thanh trái + danh sách việc nghẽn.
 const DAU = '<div id="dhBaCau"></div><div id="dhCanXuLy"></div><section class="tam hidden" id="dhTC"></section>';
-const GIUA = `<div class="hai-cot"><section class="tam" id="dhMcKhoi"><div class="tam-dau"><h2><em class="lam" id="dhMcSo">0</em> kết quả nộp trong 7 ngày</h2><span>Nộp minh chứng là hoàn thành — đánh giá hoặc trả lại nếu chưa đạt (không bắt buộc)</span></div><div id="dhMc"></div></section>
+const GIUA = `<div class="hai-cot"><section class="tam" id="dhMcKhoi"><div class="tam-dau"><h2><em class="lam" id="dhMcSo">0</em> kết quả nộp trong 7 ngày</h2>${nutGoi('Nộp minh chứng là hoàn thành. Đánh giá hoặc trả lại nếu chưa đạt (không bắt buộc).')}</div><div id="dhMc"></div></section>
   <aside class="tam cot-phu" id="dhTT"></aside></div>`;
 
 function veThem() {
@@ -41,10 +42,7 @@ export function registerA1View() {
     init() {
       dangKyDieuHanhVai();
       $('viewDieuHanh').innerHTML = khungHtml('Cần xử lý hôm nay', `${ngayDaiVN()}, đang nạp số liệu…`, DAU, '', GIUA);
-      datCauHinhDieuHanh({
-        phuDe: () => 'xếp theo mức khẩn; mỗi thẻ ghi ai chậm, chậm bao nhiêu ngày, thiếu sản phẩm gì, cấp nào phải quyết',
-        veThem,
-      });
+      datCauHinhDieuHanh({ veThem, sauVe: apDsMc });   // V-13: khối kết quả nộp hiện các dòng đầu
       moManDau(openTongQuan);   // v3.29: mở chức năng theo đường dẫn (nếu thuộc vai), không thì trang đầu
     },
     reload() { if (sectionDangHien('viewTongQuan')) openTongQuan(); else openDieuHanh(); },

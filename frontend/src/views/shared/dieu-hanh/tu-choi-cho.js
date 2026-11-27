@@ -7,6 +7,7 @@ import { formatNgay } from '../../../lib/kl/ngay.js';
 import { tuChoiChoToiDuyet, timRow } from './du-lieu.js';
 import { soSanhKhan } from '../../../lib/kl/do-khan.js';
 import { ndGonHtml, ndPhuHtml } from '../../../lib/kl/nd-gon.js';
+import { nutGoi } from '../../../components/goi.js';
 
 function dongHtml(t) {
   const r = timRow(t.nhiem_vu_id); const a = findAccount(t.nguoi_de_nghi);
@@ -23,7 +24,7 @@ function dongHtml(t) {
 export function tuChoiChoHtml() {
   const ds = tuChoiChoToiDuyet().sort((a, b) => soSanhKhan(timRow(a.nhiem_vu_id), timRow(b.nhiem_vu_id)));   // v3.36: theo mức khẩn của việc
   if (ds.length === 0) return '';
-  return `<div class="muc do vien-vang" id="dhTuChoi"><b>Đề nghị từ chối nhận việc, cần đồng chí duyệt (${ds.length})</b>
-    <p>Đồng ý → việc chờ giao lại cho người khác (cờ tự xoá khi giao lại); không đồng ý → người đề nghị tiếp tục thực hiện. Lý do không ghi vào lịch sử việc.</p>
+  return `<div class="muc do vien-vang" id="dhTuChoi"><b>Đề nghị từ chối nhận việc, cần đồng chí duyệt (${ds.length}) ${
+    nutGoi('Đồng ý: việc chờ giao lại cho người khác (cờ tự xoá khi giao lại). Không đồng ý: người đề nghị tiếp tục thực hiện. Lý do không ghi vào lịch sử việc.')}</b>
     ${ds.map(dongHtml).join('')}</div>`;
 }

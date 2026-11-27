@@ -1,7 +1,7 @@
 // Biểu đồ "Tỷ lệ giải ngân qua các kỳ" của khối Giải ngân vốn (v3.28): trục ngang là năm kế hoạch vốn (1/1 → 31/12, kéo tới mốc / kỳ tháng 1 năm
 // sau nếu có), trục dọc 0–100% kế hoạch vốn; đường liền = lũy kế đã giải ngân theo các kỳ số liệu, đường đứt = tiến độ đều tới mục tiêu (mục tiêu của
 // việc "Số liệu toàn tỉnh"). Đường vẽ bằng SVG co giãn (nét không co — vector-effect), chấm và chữ bằng HTML đặt theo % nên không méo ở mọi độ rộng.
-// Chấm rỗng = số ước tính. Mỗi chấm nhận tiêu điểm bàn phím, có data-goi (gợi ý #tqGoi của Tổng quan). Không thư viện.
+// Chấm rỗng = số ước tính. Mỗi chấm nhận tiêu điểm bàn phím, có data-goi (hộp gợi ý dùng chung). Không thư viện.
 import { escapeHtml } from '../../../lib/dom.js';
 import { soNgay, formatNgay } from '../../../lib/kl/ngay.js';
 import { ptVN, soVN, mocMacDinh } from '../../../lib/kl/giai-ngan.js';

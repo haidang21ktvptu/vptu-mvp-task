@@ -22,7 +22,8 @@ import { dh, napDieuHanh, viecDo } from '../shared/dieu-hanh/du-lieu.js';
 import { dieuHanhTheoSuKien } from '../shared/dieu-hanh/su-kien.js';
 import { datNapLai } from '../shared/dieu-hanh/hanh-dong.js';
 import { ngayDaiVN } from '../shared/dieu-hanh/man-hinh.js';
-import { minhChungChoHtml } from '../shared/dieu-hanh/minh-chung-cho.js';
+import { minhChungChoHtml, apDsMc } from '../shared/dieu-hanh/minh-chung-cho.js';
+import { nutGoi } from '../../components/goi.js';
 import { mucChiDaoChoHtml, mucViecDoHtml, mucSapHanHtml } from './phong-toi.js';
 import { tuChoiChoHtml } from '../shared/dieu-hanh/tu-choi-cho.js';
 import { canXuLyHtml, khoiThuongTrucHtml, khoiBiTuChoiHtml } from '../shared/can-xu-ly.js';
@@ -70,12 +71,13 @@ function ve() {
   const cd = mucChiDaoChoHtml(); $('ptChiDao').innerHTML = cd; show('ptChiDao', Boolean(cd));
   $('ptDo').innerHTML = mucViecDoHtml();
   $('ptVang').innerHTML = mucSapHanHtml();
-  $('ptMc').innerHTML = dh.mcCho.length ? `<div class="muc lam"><b>Kết quả nộp trong 7 ngày (${dh.mcCho.length}) — đánh giá hoặc trả lại nếu chưa đạt, không bắt buộc</b>${minhChungChoHtml()}</div>` : '';
+  $('ptMc').innerHTML = dh.mcCho.length ? `<div class="muc lam"><b>Kết quả nộp trong 7 ngày (${dh.mcCho.length}) ${nutGoi('Nộp minh chứng là hoàn thành. Đánh giá hoặc trả lại nếu chưa đạt (không bắt buộc).')}</b>${minhChungChoHtml()}</div>` : '';
   show('ptMc', dh.mcCho.length > 0);
   $('ptTai').innerHTML = taiViecHtml();
   $('ptCuaToi').innerHTML = viecCuaToiHtml();
   if (dh.luc) setText('dhTinhDen', `${DEPT_NAMES[state.user.department] || 'Phòng'}, ${ngayDaiVN(dh.luc)}, số liệu lúc ${formatDateTime(dh.luc).split(' ')[1]}`);
   traNhap(); dongBoNutDanhGia($('viewDieuHanh'));   // PR-3: nút nghiệm thu theo ô chất lượng đã giữ
+  apDsMc();   // V-13: khối kết quả nộp hiện các dòng đầu (sau khi ô đang mở đã được trả lại)
 }
 
 async function loadPhongToi() {
@@ -113,7 +115,7 @@ export function registerA2View() {
             <section class="tam hidden" id="ptMc"></section>
           </div>
           <aside class="cot-phu">
-            <section class="tam"><div class="tam-dau"><h2>Tải việc từng cán bộ</h2><span>việc đang mở theo chủ trì</span></div><div id="ptTai"></div></section>
+            <section class="tam"><div class="tam-dau"><h2>Tải việc từng cán bộ</h2>${nutGoi('Việc đang mở, tính theo chủ trì theo dõi.')}</div><div id="ptTai"></div></section>
             <section class="tam"><div class="tam-dau"><h2>Việc của Trưởng phòng</h2></div><div class="muc" id="ptCuaToi"></div></section>
           </aside>
         </div>`;

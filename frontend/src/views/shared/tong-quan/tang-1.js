@@ -5,7 +5,7 @@
 // Cách đếm không đổi (CAU-HOI V-9, lib/kl/tong-quan-tang.js): mỗi số, mỗi thẻ là nút mở đúng danh sách tạo nên con số (data-action="tqMo",
 // lib/kl/tong-quan-loc.js). Bản in "Báo cáo nhanh" dùng bảng năm chỉ tiêu .tq1-bang-in (chỉ hiện khi in, in.css). Chỉ dựng chuỗi HTML.
 // v3.36 (CAU-HOI V-13, DESIGN mục 17 "số trước, chi tiết bấm mới mở"): trên màn hình mỗi con số chỉ kèm một nhãn ngắn; phần tách của con số (trước là
-// dòng chữ phụ) chuyển vào gợi ý data-goi (rê chuột, đưa tiêu điểm — index.js hienGoi), nhãn đọc màn hình và danh sách mở khi bấm; bản in giữ đủ chữ.
+// dòng chữ phụ) chuyển vào gợi ý data-goi (rê chuột, đưa tiêu điểm — components/goi.js), nhãn đọc màn hình và danh sách mở khi bấm; bản in giữ đủ chữ.
 import { escapeHtml } from '../../../lib/dom.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
 import { ngayVanBanVN } from '../../../lib/kl/ngay.js';

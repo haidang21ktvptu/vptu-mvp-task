@@ -6,9 +6,8 @@
   .dieu-hanh { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
   .ray { padding: 4px 0 8px; position: sticky; top: 12px; }
   .ray h3 { font-family: var(--font-tieu-de); font-size: var(--chu-than); color: var(--navy); font-weight: 700; padding: 12px 16px 6px; }
-  .ray button { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; text-align: left; padding: 9px 16px; font-size: var(--chu-nho);
-    color: var(--chu); border-left: 3px solid transparent; }
-  .ray button small { display: block; color: var(--chu-phu); font-size: var(--chu-nho); font-weight: 400; }
+  .ray button { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; width: 100%; text-align: left; padding: 9px 16px; font-size: var(--chu-nho);
+    color: var(--chu); border-left: 3px solid transparent; }   /* position: chữ ẩn .sr trong nút nằm gọn trong nút (điện thoại: thanh cuộn ngang, không làm trang tràn ngang) */
   .ray button b { font-size: var(--chu-than); min-width: 22px; text-align: right; }
   .ray button i { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--vien); display: block; overflow: hidden; }
   .ray button i span { display: block; height: 100%; background: var(--cam); }
@@ -16,7 +15,7 @@
   .ray button[aria-pressed="true"] { background: var(--do-nhat); border-left-color: var(--do); font-weight: 600; }
   .ray .tat { padding: 10px 16px; font-size: var(--chu-nho); color: var(--do); display: block; border-left: 0; }
   .danh-sach { min-width: 0; }
-  .ds-dau h2 { font-size: var(--chu-than); } .ds-dau span { color: var(--chu-phu); font-size: var(--chu-nho); }
+  .ds-dau h2 { font-size: var(--chu-than); }
   #dsThe > .trong { border: 0; padding: 12px 16px 16px; text-align: left; }
   /* Nghẽn ở đâu: thanh ngang lớn (A1) */
   .nghen { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 18px; }
@@ -50,7 +49,7 @@
     .ray { position: static; display: flex; overflow-x: auto; padding: 6px; gap: 4px; border-radius: 12px; }
     .ray h3 { display: none; }
     .ray button { white-space: nowrap; border-left: 0; border-radius: 999px; padding: 8px 12px; display: flex; width: auto; }
-    .ray button i, .ray button small { display: none; }
+    .ray button i { display: none; }
     .nghen { grid-template-columns: 1fr; }
     .thanh > div { grid-template-columns: 110px 1fr 32px; }
     .cham > div { grid-template-columns: 1fr 60px; }
@@ -88,9 +87,6 @@
   .bc-cham { background: var(--do-nhat); color: var(--do); } .bc-nghen { background: var(--vang-nhat); color: var(--vang-chu); } .bc-quyet { background: var(--navy-nhat); color: var(--navy); }
   .bc-chinh { font-family: var(--font-tieu-de); font-weight: 600; font-size: var(--chu-khoi); color: var(--chu); margin-top: 4px; line-height: 1.25; }
   .bc-chinh b { font-size: var(--chu-so); font-weight: 600; letter-spacing: -.02em; margin-right: 4px; }
-  .bc-chinh em { display: inline-block; max-width: 100%; font-style: normal; font-family: var(--font-sans); font-size: var(--chu-nho); font-weight: 700; line-height: 1.35;
-    vertical-align: 6px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; }   /* v3.36: một khối (nhãn mức theo nghĩa dài hơn không gãy viên) */
-  .bc-chinh em.ddb { background: var(--f-ddb); color: var(--f-ddb-chu); }
   .bc-phu { font-size: var(--chu-bang); color: var(--chu-phu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (max-width: 900px) {
     .ba-cau { grid-template-columns: minmax(0, 1fr); }

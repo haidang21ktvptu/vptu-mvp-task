@@ -1042,3 +1042,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Thanh lọc còn một hàng "Phân tích chi tiết": chip điều kiện, số đang lọc, "Xem danh sách", "Xoá bộ lọc", "Mở tất cả", nút "Bộ lọc" (các ô lọc mở khi bấm, không nhớ theo máy).
 - Các khối phân tích gập mặc định, mỗi khối một dòng (tên, số chính khi có); bấm tiêu đề để mở, nhớ theo máy (`khoi-gap.js`); ghi chú mốc tính ở nút "i"; bỏ số thứ tự khối, dòng tóm tắt trùng cột, câu chú thích cuối khối.
 - Bản in báo cáo nhanh không đổi (in đủ dù khối đang gập). Sửa e2e `tong-quan`, `tong-quan-lanh-dao`, `v336-giao-dien`, `anh-chup-giao-dien` (phiên e2e mở sẵn các khối, `tqGap` giữ mặc định); unit `tong-quan-tang` thêm hai kiểm thử.
+
+## 105. v3.36.0 (Đợt 1, phần 12) — Số trước, chi tiết bấm mới mở, phần 2: Cần xử lý (27/11/2026, CAU-HOI V-13; chỉ giao diện, không migration)
+- Đo trên staging trước khi sửa (demo_cvp, 1366×768): Cần xử lý dài 18,8 màn hình, 5.983 chữ, 91 thẻ hiện hết. Danh sách việc nghẽn nay hiện 10 việc đầu theo mức khẩn, khối kết quả nộp hiện 5 kết quả mới nhất; nút "Xem tất cả N …" ở cuối danh sách, nhớ theo máy (`components/ds-gon.js`); dòng sau chỉ ẩn trên màn hình, bản in đủ dòng; thẻ đang mở ô nhập hoặc diễn biến không bị ẩn.
+- Thẻ việc: bỏ nhãn mặc định "Thường trực chưa chỉ đạo"; nhãn đứng cùng hàng với bốn điều; điều thứ ba chỉ ghi tên sản phẩm (tình trạng đã ở tên khâu, câu đầy đủ ở gợi ý của dòng); vướng mắc một dòng. Bốn trường bắt buộc của SPEC DB-1 vẫn hiện trên thẻ.
+- Kết quả nộp: mỗi kết quả hai dòng chữ (mã việc, trạng thái, nội dung việc; người nộp, lúc nộp, trích yếu, "Xem tệp"); số hiệu, cấp nhận, mô tả ở gợi ý của dòng và ngăn chi tiết.
+- Ba câu hỏi và thanh trái chỉ còn tên và số; câu giải thích của các khối và thứ tự xếp của danh sách chuyển vào nút "i". Hộp gợi ý `data-goi` thành thành phần dùng chung cho mọi màn hình (`components/goi.js`, thay hộp riêng của Tổng quan).
+- Nút của thanh trái có `position` để chữ ẩn `.sr` không làm trang tràn ngang trên điện thoại. e2e: phiên kiểm thử mở sẵn các danh sách (`dsGon` giữ mặc định), thêm kịch bản "hiện 10 việc đầu" ở `v336-giao-dien`, sửa `dieu-hanh`; unit `can-xu-ly-gon` thêm hai kiểm thử.

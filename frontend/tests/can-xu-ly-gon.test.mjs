@@ -1,10 +1,13 @@
 // v3.36 phần 4 (CAU-HOI V-1): Cần xử lý xếp theo mức khẩn (lib/kl/do-khan.js soSanhKhan, soSanhMuc); nội dung thẻ hai dòng (lib/kl/nd-gon.js) —
-// thoát ký tự, nguyên văn ở title; menu bốn nhóm (views/shell/menu.js).
+// thoát ký tự, nguyên văn ở title; menu bốn nhóm (views/shell/menu.js). CAU-HOI V-13: nút "Xem tất cả" của danh sách hiện các dòng đầu
+// (components/ds-gon.js), thuộc tính gợi ý và nút "i" (components/goi.js).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { soSanhKhan, soSanhMuc } from '../src/lib/kl/do-khan.js';
 import { ndGonHtml, ndPhuHtml } from '../src/lib/kl/nd-gon.js';
 import { menuCuaVai, QUAN_TRI_NAV } from '../src/views/shell/menu.js';
+import { nutHetHtml } from '../src/components/ds-gon.js';
+import { thuocGoi, nutGoi } from '../src/components/goi.js';
 
 const v = (ma, o = {}) => ({ ma, do_khan: 'THUONG', uu_tien: null, muc_canh_bao: 'DO', so_ngay_qua: 1, han_xu_ly: '2026-11-20', ...o });
 
@@ -37,4 +40,18 @@ test('menu bốn nhóm: Điều hành, Nhiệm vụ, Nhiệm vụ quý BTV, Qu�
   assert.deepEqual(nhom({ role_group: 'A1' }), ['Điều hành', 'Nhiệm vụ', 'Nhiệm vụ quý BTV']);
   assert.deepEqual(nhom({ role_group: 'A1', quan_tri_he_thong: true }), ['Điều hành', 'Nhiệm vụ', 'Nhiệm vụ quý BTV', 'Quản trị']);
   assert.equal(QUAN_TRI_NAV.nhom, 'Quản trị');
+});
+
+test('V-13 danh sách hiện các dòng đầu: nút "Xem tất cả" chỉ có khi danh sách dài hơn số dòng đầu', () => {
+  assert.equal(nutHetHtml('dhThe', 10, 10), '');
+  assert.equal(nutHetHtml('dhThe', 0, 10), '');
+  assert.match(nutHetHtml('dhThe', 23, 10), /^<div class="ds-them"><button type="button" class="nut nho" data-action="dsHet" data-ds="dhThe" aria-expanded="false">Xem tất cả 23 việc<\/button><\/div>$/);
+  assert.match(nutHetHtml('dhMc', 8, 5, 'kết quả'), />Xem tất cả 8 kết quả</);
+});
+
+test('V-13 gợi ý: thuộc tính data-goi và nút "i" thoát ký tự; rỗng thì không vẽ', () => {
+  assert.equal(thuocGoi(''), '');
+  assert.equal(nutGoi(''), '');
+  assert.equal(thuocGoi('5 việc "gấp" & <trễ>'), ' data-goi="5 việc &quot;gấp&quot; &amp; &lt;trễ&gt;"');
+  assert.equal(nutGoi('Xếp theo mức khẩn'), '<button type="button" class="nut-goi" data-goi="Xếp theo mức khẩn" aria-label="Ghi chú: Xếp theo mức khẩn">i</button>');
 });
