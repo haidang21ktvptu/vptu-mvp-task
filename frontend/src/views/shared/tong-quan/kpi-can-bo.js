@@ -24,7 +24,7 @@ const dongPhong = (p) => `<tr class="kpi-phong"><td class="c-ten"><button type="
 
 export function kpiCanBoHtml(ds, k) {
   const soCb = ds.reduce((s, p) => s + p.soCanBo, 0);
-  return `<article class="the-bd n12" id="tqKpiCanBo">${dauThe('KPI theo cán bộ', `${soCb} cán bộ chủ trì · tổng, hoàn thành và đúng hạn tính ${k.trong}; đang làm, cảnh báo tính đến hôm nay · thanh Tải: hoàn thành / trong hạn / sắp đến hạn / quá hạn dưới ${nguongCanhBao().ddb} ngày / quá hạn từ ${nguongCanhBao().ddb} ngày trở lên · bấm tên để xem việc`)}
+  return `<article class="the-bd n12" id="tqKpiCanBo">${dauThe('KPI theo cán bộ', `${soCb} cán bộ chủ trì. Tổng, hoàn thành và đúng hạn tính ${k.trong}; đang làm, cảnh báo tính đến hôm nay. Thanh Tải lần lượt: hoàn thành, trong hạn, sắp đến hạn, quá hạn dưới ${nguongCanhBao().ddb} ngày, quá hạn từ ${nguongCanhBao().ddb} ngày trở lên.`)}
     ${ds.length ? `<div class="cuon-ngang"><table class="bang-tq bang-kpi"><thead><tr><th>Phòng / cán bộ</th><th class="so">Tổng</th><th class="so">Hoàn thành</th><th class="so">Đang làm</th><th>Cảnh báo</th><th>Đúng hạn</th><th>Tải</th></tr></thead>
       <tbody>${ds.map((p) => dongPhong(p) + p.canBo.map(dongCanBo).join('')).join('')}</tbody></table></div>` : '<p class="trong">Chưa có nhiệm vụ do cán bộ chủ trì trong phạm vi.</p>'}</article>`;
 }

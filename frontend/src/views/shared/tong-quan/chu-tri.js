@@ -14,7 +14,7 @@ export function chuTriHtml(ds, k) {
       <td class="so" data-n="Tổng">${d.tong}</td><td class="so" data-n="Hoàn thành">${d.xong}</td><td class="so" data-n="Đang thực hiện">${d.dangLam}</td>
       <td class="so" data-n="Quá hạn">${d.qh ? `<button type="button" class="muc-tq ddb" ${mo({ ...ct, m: 'qh' })}>${d.qh}<span class="sr"> việc quá hạn</span></button>` : KHONG_QH}</td>
       <td data-n="Đúng hạn">${d.xetDuoc ? thuoc(d.tyLe) : '<span class="chu-phu">chưa xét được</span>'}</td></tr>`; };
-  return `<article class="the-bd n12" id="tqChuTri">${dauKhoi(2, 'Theo chủ trì theo dõi', `Hoàn thành ${k.trong}; đang thực hiện, quá hạn tính đến hôm nay; tổng = ba cột cộng lại · lọc Kết luận Ban Thường vụ / Thông báo Thường trực ở thanh lọc`)}
+  return `<article class="the-bd n12" id="tqChuTri">${dauKhoi(2, 'Theo chủ trì theo dõi', `Hoàn thành ${k.trong}; đang thực hiện, quá hạn tính đến hôm nay; tổng bằng ba cột cộng lại.`)}
     ${ds.length ? `<div class="cuon-ngang"><table class="bang-tq bang-chu-tri"><thead><tr><th>Chủ trì theo dõi</th><th class="so">Tổng</th><th class="so">Hoàn thành</th>
       <th class="so">Đang thực hiện</th><th class="so">Quá hạn</th><th>Đúng hạn</th></tr></thead>
       <tbody>${ds.map(dong).join('')}</tbody>

@@ -2,6 +2,8 @@
 // nhiều việc quá hạn đứng trước; Trưởng phòng: theo cán bộ) và "Giao mới và hoàn thành theo tuần" (12 tuần, cột đôi có trục số); dòng Nhiệm vụ quý của
 // Ban Thường vụ có thanh cơ cấu. Mỗi dòng đơn vị, mỗi cột tuần là nút mở đúng danh sách (t: 'nhom' m 'qh', t: 'tuan' — lib/kl/tong-quan-loc.js).
 // Chỉ dựng chuỗi HTML từ số đã tính (lib/kl/tong-quan-tang.js maTran, xuHuongTuan; lib/nvq/tinh.js).
+// v3.36 (CAU-HOI V-13, số trước, chi tiết bấm mới mở): bỏ câu phụ dưới tiêu đề khối và câu "Tuần này…" (đã có ở gợi ý của cột); số nhiệm vụ quý và số
+// ngày còn lại chuyển vào gợi ý của tên dòng.
 import { escapeHtml } from '../../../lib/dom.js';
 import { tenMuc } from '../../../lib/kl/nhan.js';
 import { demTheoTrangThai, cauTomTat } from '../../../lib/nvq/tinh.js';
@@ -30,7 +32,7 @@ export function quaHanNhomHtml(dong, vai) {
     return `<button type="button" class="qh-dong" style="--i:${hien.length}" ${mo({ t: 'qh' })} aria-label="${escapeHtml(`${conLai.length} ${nhom} còn lại: ${n} nhiệm vụ quá hạn, xem toàn bộ nhiệm vụ quá hạn`)}">
       <span class="qh-ten">${conLai.length} ${nhom} còn lại</span>${thanh({ ddb: Math.min(g.ddb, lon), do: Math.min(g.do, Math.max(lon - g.ddb, 0)) })}<b class="qh-so">${n}</b></button>`;
   })() : '';
-  return `<article class="tq1-khoi" id="tqQuaHanNhom"><div class="khoi-dau"><h2>${tieu}</h2><p>${tong} nhiệm vụ, ${nhom} nhiều việc quá hạn đứng trước</p></div>
+  return `<article class="tq1-khoi" id="tqQuaHanNhom"><div class="khoi-dau"><h2>${tieu}</h2></div>
     <div class="qh-ds">${hang}${gop}</div>
     <div class="chu-giai-nho"><span><i class="p-ddb"></i>${escapeHtml(hoaDau(tenMuc('ddb')))}</span><span><i class="p-do"></i>${escapeHtml(hoaDau(tenMuc('do')))}</span></div></article>`;
 }
@@ -47,12 +49,10 @@ export function xuHuongHtml(ds) {
       <span class="${w.giao ? 's1' : 's1 s-0'}" style="height:${pt(w.giao)}"></span><span class="${w.xong ? 's2' : 's2 s-0'}" style="height:${pt(w.xong)}"></span></button>`;
   }).join('');
   const nhan = ds.map((w, i) => `<span>${i === ds.length - 1 ? 'Tuần này' : i % 3 === 0 ? escapeHtml(w.nhan.split('–')[0]) : ''}</span>`).join('');
-  const nay = ds[ds.length - 1];
-  const cau = nay ? `Tuần này ${nay.giao ? `có ${nay.giao} nhiệm vụ giao mới` : 'chưa có nhiệm vụ giao mới'}, ${nay.xong ? `${nay.xong} nhiệm vụ hoàn thành` : 'chưa có nhiệm vụ hoàn thành'}.` : '';
-  return `<figure class="tq1-xu-huong" id="tqXuHuong" aria-labelledby="tqXuHuongTieu"><figcaption><div class="khoi-dau"><h2 id="tqXuHuongTieu">Giao mới và hoàn thành theo tuần</h2><p>12 tuần gần đây</p></div>
+  return `<figure class="tq1-xu-huong" id="tqXuHuong" aria-labelledby="tqXuHuongTieu"><figcaption><div class="khoi-dau"><h2 id="tqXuHuongTieu">Giao mới và hoàn thành theo tuần</h2></div>
       <span class="chu-giai-nho"><span><i class="s1"></i>Giao mới</span><span><i class="s2"></i>Hoàn thành</span></span></figcaption>
-    <div class="tuan-ve"><div class="tuan-luoi" aria-hidden="true">${luoi}</div><div class="tuan-cac" role="group" aria-label="Giao mới và hoàn thành theo tuần">${cot}</div></div>
-    <div class="tuan-truc" aria-hidden="true">${nhan}</div><p class="chu-phu tq-chu-nho">${cau}</p></figure>`;
+    <div class="tuan-ve"><div class="tuan-luoi" aria-hidden="true">${luoi}</div><div class="tuan-cac" role="group" aria-label="Giao mới và hoàn thành theo tuần, 12 tuần gần đây">${cot}</div></div>
+    <div class="tuan-truc" aria-hidden="true">${nhan}</div></figure>`;
 }
 
 // Dòng Nhiệm vụ quý của Ban Thường vụ (phân hệ riêng): tên, số nhiệm vụ và số ngày còn lại của quý, thanh cơ cấu theo trạng thái; câu tóm tắt như
@@ -65,8 +65,8 @@ export function nvqHtml(nvq, homNay) {
   const sau = cau.includes('. ') ? cau.slice(cau.indexOf('. ') + 2) : '';   // "Còn 35 ngày đến hết quý."
   const coCau = d.tong ? `<div class="nvq-co-cau"><span class="nvq-thanh" aria-hidden="true">${phan.filter(([n]) => n).map(([n, , lop]) => `<i class="${lop}" style="flex-grow:${n}"></i>`).join('')}</span>
       <span class="chu-giai-nho">${phan.filter(([n, , , luon]) => n || luon).map(([n, ten, lop]) => `<span><i class="${lop}"></i><b>${n}</b> ${ten}</span>`).join('')}</span></div>` : '';
-  return `<div class="tq1-nvq" id="tqNvq"><div class="nvq-ten"><b>Nhiệm vụ quý của Ban Thường vụ, ${escapeHtml(tenKyNgan(nvq.ky))}</b>
-      <small>${d.tong ? `${d.tong} nhiệm vụ. ${escapeHtml(sau)}` : escapeHtml(cau)}</small></div>${coCau}
+  return `<div class="tq1-nvq" id="tqNvq"><div class="nvq-ten" ${goi(d.tong ? `${d.tong} nhiệm vụ. ${sau}` : cau)}><b>Nhiệm vụ quý của Ban Thường vụ, ${escapeHtml(tenKyNgan(nvq.ky))}</b>
+      ${d.tong ? `<span class="sr">${d.tong} nhiệm vụ. ${escapeHtml(sau)}</span>` : `<small>${escapeHtml(cau)}</small>`}</div>${coCau}
     <p class="nvq-cau-in"><b>Nhiệm vụ quý của Ban Thường vụ, ${escapeHtml(tenKyNgan(nvq.ky))}:</b> ${escapeHtml(cau)}</p>
     <button type="button" class="nut" data-action="openNqTongQuan">Xem Tổng quan quý</button></div>`;
 }

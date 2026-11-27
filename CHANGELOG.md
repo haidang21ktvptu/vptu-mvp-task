@@ -1035,3 +1035,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Kiểm bản staging `3d085f3` bằng trình duyệt (demo_cvp, 1366px và 375px): màn mở đầu, Tổng quan, Nhiệm vụ, Cần xử lý, Cán bộ, Báo cáo, Nhiệm vụ quý, Theo văn bản, ngăn chi tiết vào lần đầu và vào lại đều kết thúc sạch, số đúng, không lỗi console, không tràn ngang trên điện thoại.
 - Phát hiện khi cửa sổ ứng dụng nằm sau cửa sổ khác (trình duyệt gần như không vẽ khung hình): hiệu ứng chưa bắt đầu nên cửa vào chờ tới trần 1,8 giây, nội dung hiện muộn. Sửa `lib/chuyen-dong.js`: chỉ còn hiệu ứng chưa bắt đầu thì chờ đúng một nhịp rồi đóng; hiệu ứng đang chạy vẫn được chờ như cũ.
 - Unit `chuyen-dong.test.mjs` thêm một kiểm thử; e2e `chuyen-dong.spec.js` thêm kịch bản bật chuyển động cho vai chuyên viên (Việc của tôi) và Trưởng phòng (Cần xử lý của phòng): vào lần đầu và vào lại; DESIGN mục 7.
+
+## 104. v3.36.0 (Đợt 1, phần 11) — Số trước, chi tiết bấm mới mở, phần 1: Tổng quan (27/11/2026, chủ dự án chọn phương án 2, CAU-HOI V-13; chỉ giao diện, không migration)
+- Chủ dự án: "vẫn hiển thị quá nhiều chữ vào thông tin chi tiết không cần thiết". Đo trên staging: Tổng quan dài gần 12 màn hình, khoảng 2.400 chữ. Quy tắc mới ở DESIGN mục 17, SPEC NF-17.
+- Tầng 1: dải và bốn thẻ chỉ còn số, nhãn, thanh; phần tách của con số chuyển vào gợi ý khi rê chuột, nhãn đọc màn hình và danh sách mở khi bấm; dòng so sánh ghi gọn "tăng 3 trong tuần"; câu kết luận gọn trên màn hình (`cauKetLuanGon`), câu đủ ở bản in; bỏ câu phụ dưới tiêu đề hai biểu đồ.
+- Thanh lọc còn một hàng "Phân tích chi tiết": chip điều kiện, số đang lọc, "Xem danh sách", "Xoá bộ lọc", "Mở tất cả", nút "Bộ lọc" (các ô lọc mở khi bấm, không nhớ theo máy).
+- Các khối phân tích gập mặc định, mỗi khối một dòng (tên, số chính khi có); bấm tiêu đề để mở, nhớ theo máy (`khoi-gap.js`); ghi chú mốc tính ở nút "i"; bỏ số thứ tự khối, dòng tóm tắt trùng cột, câu chú thích cuối khối.
+- Bản in báo cáo nhanh không đổi (in đủ dù khối đang gập). Sửa e2e `tong-quan`, `tong-quan-lanh-dao`, `v336-giao-dien`, `anh-chup-giao-dien` (phiên e2e mở sẵn các khối, `tqGap` giữ mặc định); unit `tong-quan-tang` thêm hai kiểm thử.

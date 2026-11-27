@@ -1,6 +1,7 @@
-// v3.24 — Tổng quan cho lãnh đạo (bố cục 9 khối, chủ dự án duyệt 16/10/2026) và mục tiêu then chốt (0105–0106). (1) Chánh VP: 9 khối đúng thứ tự
-// và số khối; lọc nhanh → chip "Đang áp dụng" → "Mở danh sách theo bộ lọc này" ra đúng số đang lọc → bỏ chip; bộ lọc chi tiết mở / gập, nhớ theo
-// máy sau tải lại (điều kiện lọc không nhớ); khối 3 mở một khối ra các ngành, số "Toàn bộ" = danh sách; khối 9 gập sẵn, mở được, nhớ sau tải lại.
+// v3.24 — Tổng quan cho lãnh đạo (bố cục 9 khối, chủ dự án duyệt 16/10/2026) và mục tiêu then chốt (0105–0106). (1) Chánh VP: các khối đúng thứ
+// tự; mở "Bộ lọc" → lọc nhanh → chip điều kiện → "Xem danh sách" ra đúng số đang lọc → bỏ chip; chọn một trạng thái → chip; tải lại: bộ lọc gập,
+// điều kiện lọc không nhớ; khối lĩnh vực mở một khối ra các ngành, số "Toàn bộ" = danh sách; v3.36 (CAU-HOI V-13): các khối phân tích mở / gập
+// bằng tiêu đề, "Thu gọn tất cả" / "Mở tất cả", khối gập ghi số chính, lựa chọn nhớ theo máy sau tải lại (phiên e2e mở sẵn mọi khối — lib/app.js).
 // (2) Trưởng phòng giao việc từ văn bản mới, chọn mục tiêu của văn bản ở khối 1 (v3.25: ô chọn có gợi ý, "Chọn thêm từ danh mục") → văn bản mang
 // mục tiêu, việc tính theo văn bản; ngăn chi tiết: chip "theo văn bản", bút → gắn riêng cho việc (DB + lịch sử) → "Lưu cho cả văn bản" (mặc định
 // văn bản đổi, việc bỏ gắn riêng); danh sách Nhiệm vụ lọc
@@ -36,18 +37,19 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
   });
   test.afterAll(async () => { if (db) await don(); });
 
-  test('1. Chánh VP: các khối đúng thứ tự (ba tầng v3.36); khối chủ trì; lọc nhanh, chip, danh sách theo bộ lọc; bộ lọc chi tiết nhớ theo máy; lĩnh vực; khối nội bộ gập sẵn', async ({ browser }, testInfo) => {
+  test('1. Chánh VP: các khối đúng thứ tự (ba tầng v3.36); khối chủ trì; bộ lọc mở khi bấm: lọc nhanh, chip, danh sách theo bộ lọc; lĩnh vực; khối mở / gập, nhớ theo máy', async ({ browser }, testInfo) => {
     const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true });
     const tq = page.locator('#viewTongQuan'); const ngan = page.locator('#nganCT'); const viec = ngan.locator('.nct-viec');
     const dong = async () => { await page.keyboard.press('Escape'); await expect(ngan).toBeHidden(); };
     await expect(tq).toHaveAttribute('data-nap', /./, NAP);
     const thuTu = await tq.evaluate((el, ids) => {
       const id = [...el.querySelectorAll(':scope > .luoi-tq > [id]')].map((x) => x.id).filter((x) => ids.includes(x));
-      return { id, so: id.map((x) => el.querySelector(`#${x} .so-khoi`)?.textContent) };
+      return { id, gap: id.filter((x) => el.querySelector(`#${x}`).hasAttribute('data-gap')), soKhoi: el.querySelectorAll('.so-khoi').length };
     }, KHOI);
     const mong = KHOI.filter((x) => !TUY_CHON.includes(x) || thuTu.id.includes(x));
     expect(thuTu.id, 'các khối theo đúng thứ tự bố cục').toEqual(mong);
-    expect(thuTu.so, 'số khối liền nhau').toEqual(mong.map((_, i) => String(i + 1)));
+    expect(thuTu.gap, 'phiên e2e mở sẵn mọi khối').toEqual([]);
+    expect(thuTu.soKhoi, 'V-13: tiêu đề khối không còn số thứ tự').toBe(0);
 
     if (!HIEN_MUC_TIEU) {   // v3.27: khối 2 "Theo chủ trì theo dõi" — tổng = hoàn thành + đang thực hiện + quá hạn; tổng cộng = cộng các dòng; bấm tên → cột Tổng
       const bang = await page.locator('#tqChuTri').evaluate((el) => {
@@ -63,7 +65,12 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
       await dong();
     }
 
-    // Lọc nhanh → chip → danh sách theo bộ lọc đúng số đang lọc → bỏ chip.
+    // V-13: bộ lọc gập mặc định — mở bằng nút "Bộ lọc"; lọc nhanh → chip → "Xem danh sách" theo bộ lọc đúng số đang lọc → bỏ chip.
+    await expect(page.locator('#tqLocLuoi')).toBeHidden();
+    await expect(page.locator('#tqMoTheoLoc'), 'chưa lọc thì không có nút xem danh sách theo bộ lọc').toHaveCount(0);
+    await page.locator('#tqLocChiTietNut').click();
+    await expect(page.locator('#tqLocLuoi')).toBeVisible();
+    await expect(page.locator('#tqLocChiTietNut')).toHaveAttribute('aria-expanded', 'true');
     const nhanh = page.locator('#tqLoc [data-action="tqNhanh"][data-n="qh30"]');
     await nhanh.click();
     await expect(nhanh).toHaveAttribute('aria-pressed', 'true');
@@ -77,20 +84,21 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
     await expect(page.locator('#tqLoc .chip-tq')).toHaveCount(0);
     await expect(page.locator('#tqDangLoc')).not.toContainText('Đang lọc');
 
-    // Bộ lọc chi tiết: mở, chọn một trạng thái → chip; tải lại: lưới vẫn mở (nhớ theo máy), điều kiện lọc không nhớ; gập lại.
-    await page.locator('#tqLocChiTietNut').click();
+    // Bộ lọc (đang mở): chọn một trạng thái → chip; gập / mở lại bằng nút; tải lại: bộ lọc gập (không nhớ theo máy), điều kiện lọc không nhớ.
     await expect(page.locator('#tqLocLuoi')).toBeVisible();
-    await expect(page.locator('#tqLocChiTietNut')).toHaveAttribute('aria-expanded', 'true');
     const tt = await page.locator('#tqLocTrangThai option:not([value=""])').first().getAttribute('value');
     await page.locator('#tqLocTrangThai').selectOption(tt);
     await expect(page.locator('#tqLoc .chip-tq')).toContainText('Trạng thái:');
     await expect(page.locator('#tqLocTrangThai')).toHaveValue(tt);
-    await page.reload();
-    await expect(tq).toHaveAttribute('data-nap', /./, NAP);
-    await expect(page.locator('#tqLocLuoi')).toBeVisible();
-    await expect(page.locator('#tqLocTrangThai')).toHaveValue('');
     await page.locator('#tqLocChiTietNut').click();
     await expect(page.locator('#tqLocLuoi')).toBeHidden();
+    await expect(page.locator('#tqLoc .chip-tq'), 'bộ lọc gập: chip điều kiện vẫn hiện ở hàng tiêu đề').toContainText('Trạng thái:');
+    await page.reload();
+    await expect(tq).toHaveAttribute('data-nap', /./, NAP);
+    await expect(page.locator('#tqLocLuoi')).toBeHidden();
+    await expect(page.locator('#tqLocChiTietNut')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#tqLoc .chip-tq')).toHaveCount(0);
+    await expect(page.locator('#tqLocTrangThai')).toHaveValue('');
 
     // Khối 3: mở một khối ra các ngành; số "Toàn bộ" = danh sách mở ra.
     const kv = page.locator('#tqLinhVuc .kv-mo').first();
@@ -102,17 +110,32 @@ test.describe.serial('Tổng quan cho lãnh đạo và mục tiêu then chốt (
     await expect(viec, 'khối 3 — Toàn bộ').toHaveCount(tong);
     await dong();
 
-    // Khối nội bộ (9, hoặc 8 khi khối Chất lượng ẩn): gập sẵn với lãnh đạo Văn phòng; mở → nhớ sau tải lại; gập lại.
-    const nut = page.locator('#tqNoiBoNut');
-    await expect(nut).toHaveAttribute('aria-expanded', 'false');
+    // V-13: khối phân tích mở / gập. Phiên e2e mở sẵn mọi khối → "Thu gọn tất cả": mọi khối gập, mỗi khối một dòng có số chính; mở một khối bằng
+    // tiêu đề → nhớ sau tải lại (khối khác vẫn gập); gập lại; "Mở tất cả".
+    const het = page.locator('#tqKhoiTatCa'); const nutNb = page.locator('#tqNoiBo .khoi-mo');
+    await expect(het).toHaveText('Thu gọn tất cả');
+    await het.click();
+    await expect(het).toHaveText('Mở tất cả');
+    const conMo = () => page.locator('#viewTongQuan > .luoi-tq > .the-bd[id]').evaluateAll((ds) => ds.filter((a) => !a.hasAttribute('data-gap')).map((a) => a.id));
+    await expect.poll(conMo, 'mọi khối đang có trên trang đều gập').toEqual([]);
     await expect(page.locator('#tqNoiBoThan')).toBeHidden();
-    await nut.click();
+    await expect(page.locator('#tqMaTran .bang-mt')).toBeHidden();
+    await expect(page.locator('#tqMaTran .khoi-so')).toHaveText(/^\d+ đơn vị$/);
+    await expect(page.locator('#tqNghen .khoi-so')).toHaveText(/^(?:\d+ việc|không có)$/);
+    await expect(nutNb).toHaveAttribute('aria-expanded', 'false');
+    await nutNb.click();
+    await expect(nutNb).toHaveAttribute('aria-expanded', 'true');
     await expect(page.locator('#tqNoiBoThan')).toBeVisible();
     await page.reload();
     await expect(tq).toHaveAttribute('data-nap', /./, NAP);
-    await expect(page.locator('#tqNoiBoNut')).toHaveAttribute('aria-expanded', 'true');
-    await page.locator('#tqNoiBoNut').click();
+    await expect(nutNb, 'khối đã mở được nhớ theo máy').toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#tqNoiBoThan')).toBeVisible();
+    await expect(page.locator('#tqMaTran'), 'khối khác vẫn gập sau tải lại').toHaveAttribute('data-gap', '');
+    await nutNb.click();
     await expect(page.locator('#tqNoiBoThan')).toBeHidden();
+    await page.locator('#tqKhoiTatCa').click();
+    await expect(page.locator('#tqKhoiTatCa')).toHaveText('Thu gọn tất cả');
+    await expect(page.locator('#tqMaTran .bang-mt')).toBeVisible();
     await page.context().close();
   });
 

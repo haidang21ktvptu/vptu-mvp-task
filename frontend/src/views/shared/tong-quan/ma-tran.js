@@ -38,5 +38,5 @@ export function maTranHtml(mt, vai, k) {
       <tbody>${mt.dong.map(dong).join('')}</tbody><tfoot>${chan}</tfoot></table></div>${mt.dong.length > SO_DONG_IN
       ? `<p class="chi-in mt-chi-in">Bản in ghi ${SO_DONG_IN} trong ${mt.dong.length} ${cotTen.toLowerCase()} có nhiều việc quá hạn nhất; dòng Tổng cộng tính đủ.</p>` : ''}`
     : '<p class="trong">Chưa có nhiệm vụ trong phạm vi.</p>';
-  return `<article class="the-bd n12" id="tqMaTran">${dauKhoi(1, tieu, `Đang thực hiện tính đến hôm nay; hoàn thành và đúng hạn tính ${k.trong}. Bấm một ô để xem đúng các nhiệm vụ đó.`)}${than}</article>`;
+  return `<article class="the-bd n12" id="tqMaTran">${dauKhoi(1, tieu, `Đang thực hiện tính đến hôm nay; hoàn thành và đúng hạn tính ${k.trong}.`)}${than}</article>`;
 }

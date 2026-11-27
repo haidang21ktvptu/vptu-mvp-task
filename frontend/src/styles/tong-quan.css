@@ -26,10 +26,20 @@
   .luoi-tq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
   .n7 { grid-column: span 7; } .n5 { grid-column: span 5; } .n4 { grid-column: span 4; } .n12 { grid-column: span 12; }
   .the-bd { background: var(--the-kinh); border: 1px solid var(--vien-kinh); border-radius: var(--bo-the); box-shadow: var(--bong-the); padding: 20px 22px 22px; min-width: 0; display: flex; flex-direction: column; }
-  .dau-bd { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 16px; }
-  .dau-bd h2 { font-size: var(--chu-muc); color: var(--chu); }
-  .dau-bd p { margin-top: 3px; color: var(--chu-phu); font-size: var(--chu-bang); }
+  .dau-bd { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .dau-bd h2 { min-width: 0; font-size: var(--chu-muc); color: var(--chu); }
   .dau-bd .chu-giai { margin-top: 0; }
+  /* v3.36 (CAU-HOI V-13, DESIGN mục 17 "số trước, chi tiết bấm mới mở"): tiêu đề khối là nút mở / gập (.khoi-mo: tên, số chính khi gập, mũi tên);
+     cạnh tên là nút "i" mang chú thích cách tính (gợi ý data-goi); các nút chọn của khối dồn về bên phải (.khoi-phai). Quy tắc gập ở tong-quan-khoi.css. */
+  .khoi-phai { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; min-width: 0; margin-left: auto; }
+  .khoi-mo { display: flex; align-items: center; gap: 10px; max-width: 100%; border-radius: 8px; text-align: left; color: inherit; }
+  .khoi-mo:hover .khoi-ten { text-decoration: underline; text-underline-offset: 3px; }
+  .khoi-so { display: none; font-family: var(--font-sans); font-size: var(--chu-bang); font-weight: 400; color: var(--chu-phu); white-space: nowrap; }
+  .khoi-mui { flex: none; color: var(--chu-mo); transform: rotate(90deg); }
+  .nut-goi { position: relative; flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--vien-o); border-radius: 999px; background: var(--the);
+    color: var(--chu-phu); font-family: var(--font-van-ban); font-size: var(--chu-nho); font-style: italic; font-weight: 700; line-height: 1; cursor: help; }
+  .nut-goi::after { content: ''; position: absolute; inset: -8px; }   /* vùng chạm 40px, hình vẫn 24px */
+  .nut-goi:hover, .nut-goi:focus-visible { border-color: var(--navy); color: var(--navy); }
   .chu-giai i.s1 { background: var(--du-lieu); } .chu-giai i.s2 { background: var(--du-lieu-2); }
   .lien-ket { font-size: var(--chu-bang); font-weight: 600; color: var(--chu); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
   .lien-ket:hover { color: var(--lam); }
