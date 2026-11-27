@@ -1064,3 +1064,11 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - Cán bộ: ghi chú của màn ở nút "i"; dòng số của phòng ghi ngắn, cách tính ở gợi ý; số quá hạn của từng người đứng cùng dòng với nhãn.
 - `components/ds-gon.js`: cấu hình `giu` (dòng không bị ẩn); thu gọn thì nút về giữa màn hình khi ra khỏi tầm nhìn.
 - e2e: thêm kịch bản Báo cáo, Cán bộ ở `v336-giao-dien`; phiên e2e mở sẵn hai danh sách mới. Unit 417 đạt.
+
+## 108. v3.36.0 (Đợt 1, phần 15) — Số trước, chi tiết bấm mới mở, phần 5: Tổng quan nhiệm vụ quý (27/11/2026, CAU-HOI V-13; chỉ giao diện, không migration)
+- Bản xem thử cục bộ bằng khuôn thật (96 nhiệm vụ giả, 1366×768): từ 7.597 px (9,9 màn hình), 3.143 chữ xuống 2.680 px (3,5 màn hình), 1.161 chữ.
+- Đầu trang mọi màn Nhiệm vụ quý: văn bản căn cứ ở nút "i" (bản in vẫn ghi). Tổng quan quý: bỏ câu tóm tắt lặp lại ô số, "còn N ngày đến hết quý" lên dòng phụ; tỉ lệ hoàn thành và số đã báo cáo tuần ở gợi ý của ô số; ghi chú của khối ở nút "i".
+- Thẻ chỉ tiêu gọn (mô tả, nguồn số liệu ở gợi ý), năm thẻ một hàng; sáu trục xếp hai cột, hết ô trống nửa hàng.
+- "Cần lãnh đạo quan tâm" hiện 5 nhiệm vụ đầu, vẫn đủ các ô của CV 1400 CN-5.2, vướng mắc và đề xuất mỗi mục một dòng; hai danh sách kết quả hiện 6 dòng đầu (bỏ giới hạn 12 và 15 dòng, bản in đủ).
+- Ba bảng theo nhóm và biểu đồ diễn biến thành khối gập mặc định (`views/nvq/khoi-gap.js`, nhớ theo máy, "Mở tất cả"), rộng hết hàng: sửa cột tên bị ép hẹp, mỗi dòng bảng còn một dòng chữ.
+- e2e `nhiem-vu-quy` cập nhật theo giao diện mới; unit thêm 1 (418 đạt).

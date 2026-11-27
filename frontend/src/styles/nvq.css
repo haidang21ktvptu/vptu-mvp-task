@@ -53,11 +53,11 @@
 .nq-khoi > p + p, .nq-khoi > p + form, .nq-khoi > .nq-ds + form { margin-top: 10px; }
 
 /* 05 chỉ tiêu cơ bản */
-.nq-ct-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.nq-ct-luoi { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }   /* v3.36: thẻ gọn hơn — năm chỉ tiêu vừa một hàng từ 1280px */
 .nq-ct { display: grid; gap: 6px; align-content: start; padding: 12px 14px; text-align: left; border: 1px solid var(--vien); border-radius: 12px; background: var(--nen-mo); }
 button.nq-ct:hover { border-color: var(--vien-o); background: var(--the); }
 .nq-ct > b { font-size: var(--chu-than); color: var(--navy); }
-.nq-ct-mt { font-size: var(--chu-bang); color: var(--chu-phu); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.nq-ct-mt { font-size: var(--chu-bang); color: var(--chu-phu); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .nq-ct-so { display: flex; gap: 4px 14px; flex-wrap: wrap; font-size: var(--chu-bang); } .nq-ct-so b { font-size: var(--chu-o); font-variant-numeric: tabular-nums; }
 .nq-ct-thanh { display: block; height: 6px; border-radius: 999px; background: var(--du-lieu-nhat); overflow: hidden; }
 .nq-ct-thanh span { display: block; height: 100%; background: var(--du-lieu); }
@@ -85,6 +85,41 @@ button.nq-ct:hover { border-color: var(--vien-o); background: var(--the); }
 .nq-nghen-dau { font-size: var(--chu-than); line-height: 1.45; }
 .nq-nghen dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px 14px; margin: 8px 0 4px; }
 .nq-nghen dt, .nq-tt dt { font-size: var(--chu-nho); color: var(--chu-phu); } .nq-nghen dd, .nq-tt dd { font-size: var(--chu-bang); margin: 0; }
+
+/* v3.36 (CAU-HOI V-13, DESIGN mục 17 — số trước, chi tiết bấm mới mở): nút "i" cạnh dòng phụ đầu trang và cạnh tên khối; ô số, thẻ chỉ tiêu là mốc cho
+   chữ ẩn .sr; sáu trục xếp hai cột, tên và số cùng dòng, thanh ở dòng dưới; mục "Cần lãnh đạo quan tâm": nội dung và "Còn thiếu" tối đa hai dòng, vướng
+   mắc và đề xuất một dòng (đủ chữ ở title, ngăn chi tiết, bản in); danh sách hiện các dòng đầu (components/ds-gon.js): dòng mang data-sau ẩn trên màn
+   hình; tỉ lệ trong bảng nhóm đứng cùng dòng với số. */
+.nq-can-cu .nut-goi { margin-left: 8px; vertical-align: middle; }
+.nq-khoi-ten { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 24px; }
+.nq-o, .nq-ct { position: relative; }
+.nq-tom-tat > .nq-o-so:first-child { margin-top: 0; }
+.nq-ct-chan { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; }
+.nq-truc-luoi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.nq-truc { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "ten so" "thanh thanh"; align-items: baseline; column-gap: 12px; }
+.nq-truc-ten { grid-area: ten; } .nq-truc-so { grid-area: so; white-space: nowrap; } .nq-truc .nq-thanh { grid-area: thanh; }
+.nq-truc-luoi > .nq-truc:nth-child(2) { border-top: 0; }
+.nq-nghen-dau, .nq-nghen dd { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nq-nghen { grid-template-columns: minmax(0, 1fr); } .nq-nghen > li { min-width: 0; }   /* để dòng không xuống hàng (vướng mắc, đề xuất) không đẩy rộng danh sách */
+.nq-nghen .nq-vm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nq-khoi > .ds-them { padding: 10px 0 0; border-top: 0; }
+.nq-khoi .nq-bang-nho td small { display: inline; margin: 0 0 0 4px; }
+@media screen { .nq-nghen > li[data-sau], .nq-ds > li[data-sau] { display: none; } }
+/* Khối phân tích mở / gập (views/nvq/khoi-gap.js đặt data-gap; tên khối là nút .khoi-mo như Tổng quan — tong-quan.css): chỉ áp trên màn hình, bản in đủ
+   khối. Khối gập là một hàng: tên, số chính, mũi tên. */
+.nq-pt-dau { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.nq-pt-dau h2 { font-size: var(--chu-muc); color: var(--chu); }
+@media screen {
+  .nq-khoi[data-gap] { padding: 0; box-shadow: none; border-color: var(--vien-nhat); }
+  .nq-khoi[data-gap]:hover { border-color: var(--vien-o); }
+  .nq-khoi[data-gap] > :not(.nq-khoi-dau), .nq-khoi[data-gap] .nut-goi { display: none; }
+  .nq-khoi[data-gap] > .nq-khoi-dau { margin: 0; }
+  .nq-khoi[data-gap] .nq-khoi-ten, .nq-khoi[data-gap] .nq-khoi-ten > h2 { flex: 1 1 auto; }
+  .nq-khoi[data-gap] .khoi-mo { width: 100%; min-height: 48px; padding: 4px 16px 4px 18px; border-radius: var(--bo-the); }
+  .nq-khoi[data-gap] .khoi-ten { flex: 1 1 auto; min-width: 0; font-size: var(--chu-than); }
+  .nq-khoi[data-gap] .khoi-so { display: inline; }
+  .nq-khoi[data-gap] .khoi-mui { transform: none; }
+}
 
 /* Diễn biến các tuần */
 .nq-xh { display: flex; align-items: flex-end; gap: 8px; height: 170px; padding-top: 8px; overflow-x: auto; }
@@ -243,6 +278,7 @@ button.nq-ct:hover { border-color: var(--vien-o); background: var(--the); }
   .nq-dong.nq-mep-lam { border-left-color: var(--lam); } .nq-dong.nq-mep-luc { border-left-color: var(--luc); }
   .nq-tt { grid-template-columns: minmax(0, 1fr); }
   .nq-o-form.ngang { grid-template-columns: minmax(0, 1fr); }
+  .nq-truc-luoi { grid-template-columns: minmax(0, 1fr); } .nq-truc-luoi > .nq-truc:nth-child(2) { border-top: 1px solid var(--vien-nhat); }
 }
 @media (max-width: 600px) {
   .nq-dau h1 { font-size: var(--chu-khoi); }
@@ -257,4 +293,5 @@ button.nq-ct:hover { border-color: var(--vien-o); background: var(--the); }
   .nq-bang th { position: static; }
   .nq-bang tr { break-inside: avoid; }
   .nq-khoi, .nq-tom-tat { box-shadow: none; break-inside: avoid; }
+  .nq-nghen-dau, .nq-nghen dd { display: block; overflow: visible; -webkit-line-clamp: unset; } .nq-nghen .nq-vm { white-space: normal; overflow: visible; }   /* v3.36: bản in ghi đủ chữ */
 }

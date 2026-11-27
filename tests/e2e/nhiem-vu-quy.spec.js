@@ -1,6 +1,6 @@
 // v3.35 (chủ dự án 13/11/2026): phân hệ Nhiệm vụ quý của Ban Thường vụ trên giao diện thật. Dữ liệu: Quý IV năm 2025 (quý đã qua — không đụng quý
 // thật), Chánh Văn phòng (quản lý danh mục) tạo quý và nhập hai nhiệm vụ do demo_e2e_nv chủ trì theo dõi.
-// 1. Chánh VP: nhóm menu "Nhiệm vụ quý BTV" đủ 5 mục; Tổng quan quý (ô số, 05 chỉ tiêu cơ bản, 6 trục); bấm ô số → Danh mục đúng 2 dòng; bấm dòng →
+// 1. Chánh VP: nhóm menu "Nhiệm vụ quý BTV" đủ 5 mục; Tổng quan quý (ô số có gợi ý, 05 chỉ tiêu cơ bản, 6 trục, khối phân tích gập — v3.36); bấm ô số → Danh mục đúng 2 dòng; bấm dòng →
 //    ngăn chi tiết, đường dẫn "/Danh-muc-quy/NQ-<số>"; gửi ý kiến chỉ đạo → chủ trì nhận tin.
 // 2. Chủ trì theo dõi (demo_e2e_nv): không có "Quản lý danh mục quý"; "Cập nhật tuần" → mở biểu mẫu ngay trên thẻ → văn bản "Đã ban hành" kèm số, số
 //    liệu chỉ tiêu, kết quả thực hiện → CSDL ghi đúng; Tổng quan quý hiện kết quả mới.
@@ -54,7 +54,32 @@ test.describe.serial('Nhiệm vụ quý của Ban Thường vụ (v3.35)', () =>
     await voiPhien(browser, 'A1', testInfo, async (page) => {
       for (const id of ['navNqTongQuan', 'navNqDanhMuc', 'navNqCapNhat', 'navNqBaoCao', 'navNqQuanLy']) await expect(page.locator(`#${id}`)).toHaveCount(1);
       const man = await moMan(page, 'navNqTongQuan', 'Tổng quan nhiệm vụ quý');
-      await expect(man.locator('.nq-cau')).toBeVisible();
+      // v3.36 (CAU-HOI V-13 — số trước, chi tiết bấm mới mở): không còn câu tóm tắt lặp lại các ô số; số ngày của quý ở dòng phụ đầu trang, văn bản căn cứ ở
+      // nút "i"; phần giải thích của ô số ở gợi ý; ba bảng theo nhóm và biểu đồ diễn biến là khối gập (mặc định gập, bấm tên khối để mở, nhớ theo máy).
+      await expect(man.locator('.nq-cau')).toHaveCount(0);
+      await expect(man.locator('.nq-can-cu')).toContainText(/đến hết quý|ngày cuối quý|quý đã kết thúc/);
+      await expect(man.locator('.nq-o-so .nq-o[data-goi]')).toHaveCount(2);
+      await expect(man.locator('.nq-o-so .nq-o.nq-o-luc')).toHaveAttribute('data-goi', /^\d+% số nhiệm vụ trong danh mục$/);
+      await expect(man.locator('.nq-khoi-ten .nut-goi').first()).toHaveAttribute('data-goi', /.+/);
+      const khoiLd = man.locator('#nqTheoLanhDao');
+      await expect(khoiLd).toHaveAttribute('data-gap', '');
+      await expect(khoiLd.locator('.nq-bang-nho')).toBeHidden();
+      await expect(khoiLd.locator('.khoi-mo')).toContainText('Theo lãnh đạo phụ trách');
+      await expect(man.locator('#nqTheoDonVi .khoi-so')).toHaveText(/^\d+ đơn vị$/);   // số chính của khối gập
+      await khoiLd.locator('.khoi-mo').click();
+      await expect(khoiLd.locator('.nq-bang-nho')).toBeVisible();
+      await expect(khoiLd.locator('.khoi-mo')).toHaveAttribute('aria-expanded', 'true');
+      await expect(man.locator('#nqKhoiTatCa')).toHaveText('Mở tất cả');
+      await man.locator('#nqKhoiTatCa').click();
+      await expect(man.locator('.nq-gap[data-gap]')).toHaveCount(0);
+      await expect(man.locator('#nqKhoiTatCa')).toHaveText('Thu gọn tất cả');
+      await expect(man.locator('#nqDienBien .nq-xh')).toBeVisible();
+      await page.emulateMedia({ media: 'print' });   // bản in: đủ khối dù đang gập trên màn hình, có dòng căn cứ
+      await man.locator('#nqKhoiTatCa').evaluate((n) => n.click());
+      await expect(man.locator('.nq-gap[data-gap]')).toHaveCount(4);
+      await expect(khoiLd.locator('.nq-bang-nho'), 'bản in đủ khối').toBeVisible();
+      await page.emulateMedia({ media: 'screen' });
+      await expect(khoiLd.locator('.nq-bang-nho')).toBeHidden();
       const o = man.locator('.nq-o-so .nq-o').first();
       await expect(o.locator('b')).toHaveText('2');
       await expect(man.locator('.nq-ct-luoi')).toContainText('Tốc độ tăng trưởng GRDP');

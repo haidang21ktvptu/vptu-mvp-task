@@ -1,5 +1,7 @@
 // Phân hệ Nhiệm vụ quý BTV (v3.35): phần dùng chung của các màn — đầu trang (tên màn, chọn quý, dòng căn cứ và tuần báo cáo), tên người / phòng /
 // đơn vị / lãnh đạo, nhãn trạng thái, ô số, dải "có thay đổi mới". Tên lớp viết nguyên văn (Tailwind cắt lớp ghép chuỗi).
+// v3.36 (CAU-HOI V-13, DESIGN mục 17 — số trước, chi tiết bấm mới mở): văn bản căn cứ của quý ở nút "i" cạnh dòng phụ (bản in vẫn ghi — .chi-in-dong);
+// ô số nhận thêm gợi ý (goi); khối của Tổng quan quý dựng bằng khoiNq — ghi chú mốc tính ở nút "i" cạnh tên khối.
 import { escapeHtml } from '../../lib/dom.js';
 import { soLanHtml } from '../../lib/chuyen-dong.js';   // v3.36 (V-12): số của ô số lăn khi vào trang
 import { state } from '../../lib/state.js';
@@ -8,6 +10,7 @@ import { homNayVN } from '../../lib/kl/ngay.js';
 import { nq } from '../../lib/nvq/du-lieu.js';
 import { tenKy, tenTrangThai, lopTrangThai, ghiMoc, VAI_TRO_DON_VI } from '../../lib/nvq/nhan.js';
 import { tuanCua } from '../../lib/nvq/tinh.js';
+import { nutGoi, thuocGoi } from '../../components/goi.js';
 
 export const e = escapeHtml;
 export const vn = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
@@ -25,27 +28,33 @@ export const laCuaToi = (r) => Boolean(state.user) && (r.chu_tri_theo_doi === st
   || (r.phong_theo_doi && r.phong_theo_doi === state.user.department));
 export const tuanNay = () => tuanCua(nq.tuans, homNayVN());
 
-// Đầu trang: tiêu đề + chọn quý; dòng phụ: kế hoạch, văn bản điều chỉnh, tuần báo cáo hiện tại và hạn 11h00 thứ Năm.
-export function dauTrang(tieuDe, { nut = '' } = {}) {
+// Đầu trang: tiêu đề + chọn quý; dòng phụ: tuần báo cáo hiện tại và hạn 11h00 thứ Năm, phần riêng của màn (them); kế hoạch, văn bản điều chỉnh ở nút "i".
+export function dauTrang(tieuDe, { nut = '', them = '' } = {}) {
   const k = nq.ky;
   const chon = nq.kys.length > 1
     ? `<label class="nq-chon-ky"><span class="sr">Chọn quý</span><select class="o-nhap nho" data-nq-chon-ky>${nq.kys.map((x) => `<option value="${x.id}"${x.id === k?.id ? ' selected' : ''}>${e(tenKy(x))}</option>`).join('')}</select></label>`
     : '';
   const vb = nq.vanBan.map((v) => `${v.loai === 'KE_HOACH' ? 'Kế hoạch' : v.loai === 'DIEU_CHINH' ? 'điều chỉnh theo' : ''} ${v.so_ky_hieu}${v.ngay ? ` ngày ${vn(v.ngay)}` : ''}`.trim());
   const w = tuanNay();
-  const phu = k ? [vb.length ? `Căn cứ: ${vb.join('; ')}` : '', w ? `Tuần ${w.so} (${vnNgan(w.tu_ngay)} – ${vn(w.den_ngay)}) · hạn báo cáo 11h00 thứ Năm ${vnNgan(w.den_ngay)}${w.trang_thai === 'DA_CHOT' ? ' · đã chốt' : ''}` : '',
+  const canCu = k && vb.length ? `Căn cứ: ${vb.join('; ')}` : '';
+  const phu = k ? [w ? `Tuần ${w.so} (${vnNgan(w.tu_ngay)} – ${vn(w.den_ngay)}) · hạn báo cáo 11h00 thứ Năm ${vnNgan(w.den_ngay)}${w.trang_thai === 'DA_CHOT' ? ' · đã chốt' : ''}` : '', them,
     k.trang_thai === 'DA_CHOT' ? 'Quý đã chốt — chỉ xem' : ''].filter(Boolean).join(' · ') : '';
-  return `<div class="dau nq-dau"><div><h1>${e(tieuDe)}${k ? ` <span class="nq-ten-ky">${e(tenKy(k))}</span>` : ''}</h1>${phu ? `<p class="chu-phu nq-can-cu">${e(phu)}</p>` : ''}</div>`
+  const dongPhu = phu || canCu ? `<p class="chu-phu nq-can-cu">${canCu ? `<span class="chi-in-dong">${e(canCu)}${phu ? ' · ' : ''}</span>` : ''}${e(phu)}${nutGoi(canCu)}</p>` : '';
+  return `<div class="dau nq-dau"><div><h1>${e(tieuDe)}${k ? ` <span class="nq-ten-ky">${e(tenKy(k))}</span>` : ''}</h1>${dongPhu}</div>`
     + `<div class="nq-dau-nut">${chon}${nut}</div></div><div id="nqCoMoi" class="nq-co-moi hidden" role="status">Có cập nhật mới của các đồng chí chủ trì theo dõi. <button type="button" class="nut nho" data-action="nqNapLai">Nạp lại</button></div>`;
 }
 export const chuaCoKy = (laQuanLy) => `<div class="trong nq-trong"><p>Chưa có quý nào được tạo trong phân hệ Nhiệm vụ quý của Ban Thường vụ.</p>${laQuanLy
   ? '<button type="button" class="nut chinh" data-action="openNqQuanLy">Tạo quý và nhập danh mục</button>' : '<p class="chu-phu">Đầu mối tổng hợp của Văn phòng sẽ tạo quý và nhập danh mục.</p>'}</div>`;
 
-// Ô số (một hàng, bấm được): [{ khoa, nhan, so, lop }] → nút có data-action.
+// Ô số (một hàng, bấm được): [{ khoa, nhan, so, lop, goi }] → nút có data-action; goi: phần giải thích của con số (gợi ý khi rê chuột / đưa tiêu
+// điểm, chữ ẩn cho trình đọc màn hình).
 export function oSo(ds, action, dangChon = '') {
-  return `<div class="nq-o-so" role="group">${ds.map((x) => `<button type="button" class="nq-o ${x.lop || ''}${dangChon === x.khoa ? ' chon' : ''}" data-action="${action}" data-loc="${e(x.khoa)}" aria-pressed="${dangChon === x.khoa}">`
-    + `<b>${soLanHtml(x.so)}</b><span>${e(x.nhan)}</span></button>`).join('')}</div>`;
+  return `<div class="nq-o-so" role="group">${ds.map((x) => `<button type="button" class="nq-o ${x.lop || ''}${dangChon === x.khoa ? ' chon' : ''}" data-action="${action}" data-loc="${e(x.khoa)}" aria-pressed="${dangChon === x.khoa}"${thuocGoi(x.goi)}>`
+    + `<b>${soLanHtml(x.so)}</b><span>${e(x.nhan)}</span>${x.goi ? `<span class="sr">. ${e(x.goi)}</span>` : ''}</button>`).join('')}</div>`;
 }
+// Khối của Tổng quan quý: tên khối, nút "i" (ghi chú mốc tính), phần phải của đầu khối (phu: số lượng, khoảng ngày — HTML), thân.
+export const khoiNq = (tieuDe, phu, than, lop = '', ghiChu = '') => `<section class="nq-khoi ${lop}"><div class="nq-khoi-dau"><div class="nq-khoi-ten"><h2>${e(tieuDe)}</h2>${nutGoi(ghiChu)}</div>`
+  + `${phu ? `<span class="chu-phu">${phu}</span>` : ''}</div>${than}</section>`;
 // Thanh tiến độ xếp chồng: [{ so, lop, nhan }] trên tổng.
 export function thanh(phan, tong) {
   if (!tong) return '<div class="nq-thanh"></div>';
