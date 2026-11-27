@@ -2,6 +2,8 @@
 // làm, rồi khối thao tác dưới dòng (khoi-viec.js, ẩn tới khi mở). Dòng #vct-<id> mang data-nhiem-vu (phanHoiThe tìm việc qua thuộc tính này),
 // data-viec (việc cần làm), data-kieu (nhóm ưu tiên — tu-choi | moi | chi-dao | minh-chung | dang-lam | theo-doi | xong | xem), data-muc,
 // data-nhom, data-de-nghi khi đã đề nghị từ chối. Bấm nội dung → ngăn chi tiết dùng chung. Tên lớp viết nguyên văn (Tailwind giữ lớp).
+// v3.36 (CAU-HOI V-13): mã việc và các nhãn đứng đầu khối nội dung hai dòng (như màn Nhiệm vụ; nguyên văn ở title của nút); dòng "Sản phẩm đầu ra" một
+// dòng (đủ chữ ở title, ngăn chi tiết); dòng "Giao giờ, ngày" chỉ còn ở bản in (.bnv-chi-in) — giờ giao có ở cột Thời gian giao (màn rộng) và ngăn chi tiết.
 import { escapeHtml } from '../../lib/dom.js';
 import { findAccount } from '../../lib/state.js';
 import { lopMep } from '../../lib/kl/nhan.js';
@@ -44,9 +46,9 @@ export function dongViecHtml(r, o) {
   return `<div class="bnv-dong ${lop}" id="vct-${r.id}" data-nhiem-vu="${r.id}" data-viec="${v.ma}" data-kieu="${escapeHtml(o.kieu || '')}" data-muc="${escapeHtml(r.muc_canh_bao || '')}" data-nhom="${escapeHtml(r.nhom_dem || '')}"${deNghiCuaToi(r.id) ? ' data-de-nghi="1"' : ''}${ro ? ' data-chi-xem="1"' : ''}>
     <div class="bnv-hang">
       <span class="bnv-c bnv-c-stt">${o.stt}</span>
-      <div class="bnv-c bnv-c-nv"><span class="bnv-dong1">${dau}</span>
-        <button type="button" class="bnv-nd${chuaNhan(r, me) ? ' dam' : ''}" data-action="nganMoViec" data-id="${r.id}" title="Bấm để xem chi tiết">${escapeHtml(r.noi_dung)}</button>
-        ${sp ? `<span class="bnv-phu">Sản phẩm đầu ra: ${escapeHtml(sp)}</span>` : ''}<span class="bnv-phu bnv-chi-gon">Giao ${g.gio} ${g.ngay}</span></div>
+      <div class="bnv-c bnv-c-nv">
+        <button type="button" class="bnv-nd${chuaNhan(r, me) ? ' dam' : ''}" data-action="nganMoViec" data-id="${r.id}" title="${escapeHtml(r.noi_dung)}"><span class="bnv-dong1">${dau}</span> ${escapeHtml(r.noi_dung)}</button>
+        ${sp ? `<span class="bnv-phu" title="${escapeHtml(sp)}">Sản phẩm đầu ra: ${escapeHtml(sp)}</span>` : ''}<span class="bnv-phu bnv-chi-in">Giao ${g.gio} ${g.ngay}</span></div>
       <div class="bnv-c" data-nhan="Văn bản giao"><span class="bnv-vb">${escapeHtml(vb.ten)}</span>${nguoiGiao ? `<span class="bnv-phu">${escapeHtml(nguoiGiao)} giao</span>` : ''}</div>
       <div class="bnv-c bnv-c-tg" data-nhan="Thời gian giao"><span>${g.ngay}</span><span class="bnv-phu">${g.gio}</span></div>
       <div class="bnv-c han" data-nhan="Hạn xử lý"><b>${escapeHtml(han.ngay)}</b><span>${escapeHtml(han.chu)}</span></div>

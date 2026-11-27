@@ -63,7 +63,7 @@ export function veBangViec() {
   if (vct.pham === 'toan' && !coToanVP()) vct.pham = 'toi';
   const c = ctx(); const homNay = homNayVN(); const now = Date.now();
   const tom = demO(cuaToi(), c);
-  setText('vctTom', `${tom.can} việc cần làm ngay · ${tom.mo} việc đang thực hiện của đồng chí`);
+  setText('vctTom', `${tom.can} việc cần làm ngay, ${tom.mo} việc đang thực hiện`);   // v3.36 (V-13): ghi ngắn
   const goc = daLoc(); const so = demO(goc, c);
   $('vctSo').innerHTML = oSoHtml(O_SO, so, vct.loc, 'vctLoc', MAU); veChuGiai();   // chú giải theo ngưỡng cấu hình
   veLoc();

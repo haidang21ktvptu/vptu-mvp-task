@@ -1072,3 +1072,10 @@ Yêu cầu gốc: tách rõ thông báo Nhắn tin khỏi thông báo Chỉ đ�
 - "Cần lãnh đạo quan tâm" hiện 5 nhiệm vụ đầu, vẫn đủ các ô của CV 1400 CN-5.2, vướng mắc và đề xuất mỗi mục một dòng; hai danh sách kết quả hiện 6 dòng đầu (bỏ giới hạn 12 và 15 dòng, bản in đủ).
 - Ba bảng theo nhóm và biểu đồ diễn biến thành khối gập mặc định (`views/nvq/khoi-gap.js`, nhớ theo máy, "Mở tất cả"), rộng hết hàng: sửa cột tên bị ép hẹp, mỗi dòng bảng còn một dòng chữ.
 - e2e `nhiem-vu-quy` cập nhật theo giao diện mới; unit thêm 1 (418 đạt).
+
+## 109. v3.36.0 (Đợt 1, phần 16) — Số trước, chi tiết bấm mới mở, phần 6: Phòng tôi, Việc của tôi, Theo văn bản (27/11/2026, CAU-HOI V-13; chỉ giao diện, không migration)
+- Phòng tôi (Cần xử lý của Trưởng phòng): ba nhóm việc chỉ hiện các dòng đầu (chỉ đạo chờ phản hồi 5, việc quá hạn 10, việc sắp đến hạn 5), nút "Xem tất cả" ở cuối nhóm; bản in đủ dòng.
+- Việc của tôi (chuyên viên): câu hướng dẫn của màn ở nút "i"; dòng tóm tắt ngắn; mã việc và nhãn đứng đầu khối nội dung hai dòng; "Sản phẩm đầu ra" một dòng; dòng "Giao giờ, ngày" chỉ ở bản in. Bản xem thử cục bộ: mỗi dòng từ khoảng 126 px còn 85 px.
+- Theo văn bản: câu hướng dẫn ở nút "i". Chú giải "Chữ đậm" ghi ngắn, câu đầy đủ ở gợi ý.
+- Sửa điểm sót của mục 106: quy tắc ẩn dòng phụ ở cột thời gian chỉ dành cho màn Nhiệm vụ đã ẩn luôn giờ giao ở cột Thời gian giao của Việc của tôi (màn rộng hơn 1600 px); nay thu hẹp về đúng bảng của màn Nhiệm vụ.
+- e2e: thêm hai kịch bản (Trưởng phòng, chuyên viên) ở `v336-giao-dien`; phiên e2e mở sẵn ba danh sách mới. Unit 418 đạt.
