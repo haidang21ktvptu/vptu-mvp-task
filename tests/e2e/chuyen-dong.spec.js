@@ -5,6 +5,7 @@
 // Phần 2 (các màn khác): bản dựng thật giữ đủ khai báo @keyframes (Tailwind không cắt) và hiệu ứng thật sự chạy khi vào mục; Nhiệm vụ, Cần xử lý,
 // Nhiệm vụ quý, ngăn chi tiết: vào lần đầu và vào lại (nội dung lượt trước đang hiện, số liệu mới về sau) đều kết thúc sạch — không còn lớp tạm,
 // không còn nội dung bị giữ yên (cd-tinh), số là chữ số thật, số dòng khớp.
+// Vai chuyên viên và Trưởng phòng (mã riêng của từng vai ở views/a3, views/a2): Việc của tôi, Cần xử lý của phòng vào lần đầu và vào lại.
 import { test, expect } from '@playwright/test';
 import { pageAs, nav, NAP } from './lib/app.js';
 
@@ -169,5 +170,40 @@ test.describe('Chuyển động giao diện (v3.36)', () => {
     }
     expect(await soTinh()).toBe(0);
     await page.context().close();
+  });
+
+  test('A3 và A2: Việc của tôi, Cần xử lý của phòng vào lần đầu và vào lại (chuyển động bật) kết thúc sạch, không còn lớp tạm', async ({ browser }, testInfo) => {
+    const lopTam = (page) => page.evaluate(() => globalThis.document.querySelectorAll('.cd-tinh, .cd-sau, .dang-ra, .dang-vao, .dang-doi').length);
+
+    // Chuyên viên: mở đầu ở Việc của tôi; sang Theo văn bản rồi quay lại — bảng của lượt trước hiện ngay, lượt nạp nền vẽ lại sau (data-nap đổi)
+    const cv = await pageAs(browser, 'A3', testInfo, { chuyenDong: true });
+    const dhCv = cv.locator('#viewDieuHanh'); const bang = cv.locator('#vctBang');
+    await expect(bang).toHaveAttribute('data-nap', /./, NAP);
+    await expect(dhCv).not.toHaveClass(/dang-vao/, XONG);
+    expect(await lopTam(cv)).toBe(0);
+    const nap1 = await bang.getAttribute('data-nap');
+    await nav(cv, 'navTheoVanBan');
+    await expect(cv.locator('#viewTheoVanBan')).toBeVisible();
+    await nav(cv, 'navDieuHanh');
+    await expect(dhCv).toBeVisible();
+    await expect(bang).not.toHaveAttribute('data-nap', nap1, NAP);
+    await expect(dhCv).not.toHaveClass(/dang-vao/, XONG);
+    expect(await lopTam(cv)).toBe(0);
+    await cv.context().close();
+
+    // Trưởng phòng: Cần xử lý của phòng (pageAs mở tiếp mục này); sang Nhiệm vụ rồi quay lại
+    const tp = await pageAs(browser, 'A2', testInfo, { chuyenDong: true });
+    const dhTp = tp.locator('#viewDieuHanh');
+    await expect(dhTp.locator('#dhBaCau .ba-cau')).toBeVisible(NAP);
+    await expect(dhTp).not.toHaveClass(/dang-vao/, XONG);
+    expect(await lopTam(tp)).toBe(0);
+    await nav(tp, 'navKl');
+    await expect(tp.locator('#klBody')).toHaveAttribute('data-nap', /./, NAP);
+    await nav(tp, 'navDieuHanh');
+    await expect(dhTp.locator('#dhBaCau .ba-cau')).toBeVisible();
+    await expect(dhTp).not.toHaveClass(/dang-vao/, XONG);
+    for (const x of await dhTp.locator('#dhBaCau .bc-chinh b').allTextContents()) expect(x).toMatch(/^\d+$/);
+    expect(await lopTam(tp)).toBe(0);
+    await tp.context().close();
   });
 });

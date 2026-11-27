@@ -34,14 +34,22 @@ const MS_CHO_TOI_DA = 1800;  // trần chờ thêm
 // Dòng "đang tải…" / "không có…", khung chờ: không tính là nội dung thật. Màn mới có dòng chờ kiểu khác thì gắn data-cd-cho cho dòng đó.
 const TAM = '.trong, .trong-nho, .bnv-trong, .nq-dang-tai, .xuong, [data-cd-cho]';
 
-// Còn hiệu ứng hữu hạn đang chạy trong vùng (hiệu ứng lặp vô hạn không tính).
-function conChay(el) {
-  try { return el.getAnimations({ subtree: true }).some((a) => a.playState === 'running' && Number.isFinite(a.effect?.getComputedTiming().endTime)); } catch { return false; }
+// Hiệu ứng hữu hạn trong vùng (hiệu ứng lặp vô hạn không tính): 'chay' — có hiệu ứng đã bắt đầu, chưa xong; 'cho' — chỉ có hiệu ứng chưa bắt đầu
+// (từ lúc tạo trình duyệt chưa vẽ khung hình nào: cửa sổ đang bị che, thu nhỏ, hoặc nội dung vừa đổ vào ngay trước hẹn); '' — không còn.
+function hieuUng(el) {
+  try {
+    const ds = el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && Number.isFinite(a.effect?.getComputedTiming().endTime));
+    if (!ds.length) return '';
+    return ds.some((a) => !a.pending) ? 'chay' : 'cho';
+  } catch { return ''; }
 }
-function henDong(el, ms, daCho = 0) {
+// Hết hẹn: còn hiệu ứng đang chạy thì chờ thêm từng nhịp (không cắt ngang). Chỉ còn hiệu ứng chưa bắt đầu thì chờ đúng một nhịp; vẫn chưa bắt đầu
+// nghĩa là trang không được vẽ — đóng cửa để nội dung hiện, không giữ nội dung ở trạng thái ẩn của khung hình đầu.
+function henDong(el, ms, daCho = 0, daChoVe = false) {
   return setTimeout(() => {
-    const c = CUA.get(el);
-    if (c && daCho < MS_CHO_TOI_DA && conChay(el)) c.hen = henDong(el, MS_CHO_THEM, daCho + MS_CHO_THEM); else dongCuaVao(el);
+    const tt = CUA.has(el) ? hieuUng(el) : '';
+    if (daCho < MS_CHO_TOI_DA && (tt === 'chay' || (tt === 'cho' && !daChoVe))) CUA.get(el).hen = henDong(el, MS_CHO_THEM, daCho + MS_CHO_THEM, tt === 'cho');
+    else dongCuaVao(el);
   }, ms);
 }
 
