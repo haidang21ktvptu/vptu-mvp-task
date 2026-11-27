@@ -2,14 +2,15 @@
 // dòng, số dòng đầu); danh sách vẫn dựng ĐỦ dòng, dòng thứ `so` trở đi mang data-sau và chỉ bị ẩn trên màn hình (CSS trong @media screen — bản in
 // đủ dòng). Nút cuối danh sách "Xem tất cả N …" / "Chỉ hiện N … đầu" đổi tại chỗ, không vẽ lại danh sách; lựa chọn nhớ theo máy (localStorage
 // vptu.ds.het = mảng tên danh sách đang mở hết; trình duyệt chặn lưu trữ thì nhớ trong phiên). Dòng đang mở ô nhập, đang mở diễn biến hoặc đang
-// giữ tiêu điểm không bị ẩn: danh sách vẽ lại theo realtime (thứ tự đổi) không làm mất ô đang gõ.
+// giữ tiêu điểm không bị ẩn: danh sách vẽ lại theo realtime (thứ tự đổi) không làm mất ô đang gõ. Cấu hình `giu` (bộ chọn, không bắt buộc): dòng khớp cũng
+// không bị ẩn — bảng Báo cáo dùng cho hàng đang mở rộng (danh sách việc nằm ở hàng kế bên).
 import { registerActions } from '../lib/actions.js';
 
 const KHOA = 'vptu.ds.het';
 const het = (() => {
   try { const x = JSON.parse(localStorage.getItem(KHOA) || '[]'); return new Set(Array.isArray(x) ? x.filter((i) => typeof i === 'string') : []); } catch { return new Set(); }
 })();
-const danhSach = new Map();   // tên → { vung: () => phần tử chứa, chon: bộ chọn dòng, so: số dòng đầu, donVi: 'việc' }
+const danhSach = new Map();   // tên → { vung: () => phần tử chứa, chon: bộ chọn dòng, so: số dòng đầu, donVi: 'việc', giu?: bộ chọn dòng không ẩn }
 
 export const dangKyDanhSach = (ten, cauHinh) => danhSach.set(ten, { donVi: 'việc', ...cauHinh });
 const dong = (c) => [...(c.vung()?.querySelectorAll(c.chon) || [])];
@@ -19,13 +20,14 @@ const chuNut = (mo, tong, so, donVi) => (mo ? `Chỉ hiện ${so} ${donVi} đầ
 export function apDanhSach(ten) {
   const c = danhSach.get(ten); if (!c) return;
   const mo = het.has(ten);
-  dong(c).forEach((d, i) => d.toggleAttribute('data-sau', !mo && i >= c.so && !d.querySelector('form.o.mo, [id^="db-"]') && !d.contains(document.activeElement)));
+  dong(c).forEach((d, i) => d.toggleAttribute('data-sau', !mo && i >= c.so && !(c.giu && d.matches(c.giu)) && !d.querySelector('form.o.mo, [id^="db-"]') && !d.contains(document.activeElement)));
 }
 
 export const nutHetHtml = (ten, tong, so, donVi = 'việc') => (tong > so
   ? `<div class="ds-them"><button type="button" class="nut nho" data-action="dsHet" data-ds="${ten}" aria-expanded="${String(het.has(ten))}">${chuNut(het.has(ten), tong, so, donVi)}</button></div>` : '');
 
-// Bấm nút: mở hết thì tiêu điểm chuyển tới dòng đầu tiên vừa hiện (đứng đúng chỗ nút vừa bấm); thu gọn thì nút vẫn trong tầm nhìn.
+// Bấm nút: mở hết thì tiêu điểm chuyển tới dòng đầu tiên vừa hiện (đứng đúng chỗ nút vừa bấm); thu gọn thì nút về giữa màn hình khi trang ngắn lại
+// đẩy nút ra khỏi tầm nhìn — người dùng thấy các dòng đầu ngay trên nút.
 function dsHet({ ds }, el) {
   const c = danhSach.get(ds); if (!c) return;
   const mo = !het.has(ds);
@@ -36,7 +38,7 @@ function dsHet({ ds }, el) {
   const ds2 = dong(c);
   if (el) { el.textContent = chuNut(mo, ds2.length, c.so, c.donVi); el.setAttribute('aria-expanded', String(mo)); }
   if (mo) ds2[c.so]?.querySelector('button, a[href], [tabindex]')?.focus({ preventScroll: true });
-  else el?.scrollIntoView({ block: 'nearest' });
+  else if (el) { const r = el.getBoundingClientRect(); if (r.top < 96 || r.bottom > window.innerHeight) el.scrollIntoView({ block: 'center' }); }   // nút ra khỏi tầm nhìn (trang ngắn lại): đưa về giữa màn hình, các dòng đầu ở ngay trên
 }
 
 export function mountDsGon() { registerActions({ dsHet }); }

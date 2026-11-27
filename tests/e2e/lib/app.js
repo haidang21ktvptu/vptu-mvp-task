@@ -51,8 +51,9 @@ export async function phienMoi(role) {
 // bấm trong khối chạy nguyên; tqGap: true → giữ mặc định của người dùng thật (mọi khối gập) cho kịch bản kiểm chính việc mở / gập, bản in, ảnh chụp.
 export const KHOI_TQ = ['tqMaTran', 'tqNghen', 'tqXepHang', 'tqGiaiNgan', 'tqMucTieu', 'tqChuTri', 'tqLinhVuc', 'tqThang', 'tqVanBan', 'tqChiDao', 'tqChatLuong', 'tqNoiBo'];
 // v3.36 (CAU-HOI V-13): danh sách dài chỉ hiện các dòng đầu, "Xem tất cả" nhớ theo máy (vptu.ds.het — components/ds-gon.js). Phiên e2e mở hết các danh
-// sách dưới đây để kịch bản tìm một việc bất kỳ (#the-<id>, #mcCho-<id>) chạy nguyên; dsGon: true → giữ mặc định của người dùng thật (chỉ các dòng đầu).
-export const DS_GON = ['dhThe', 'dhMc'];
+// sách dưới đây để kịch bản tìm một việc bất kỳ (#the-<id>, #mcCho-<id>, dòng của #bcCanQuyet) chạy nguyên; dsGon: true → giữ mặc định của người dùng thật
+// (chỉ các dòng đầu).
+export const DS_GON = ['dhThe', 'dhMc', 'bcCanQuyet', 'bcVanBan'];   // Cần xử lý: thẻ việc, kết quả nộp; Báo cáo: việc cần lãnh đạo quyết định, theo văn bản
 export async function contextAs(browser, role, testInfo, { chuyenDong = false, tqGap = false, dsGon = false } = {}) {
   const session = await phienMoi(role);
   const { viewport, isMobile, hasTouch, baseURL, locale } = testInfo.project.use;

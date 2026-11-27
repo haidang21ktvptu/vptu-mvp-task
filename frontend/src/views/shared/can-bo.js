@@ -9,6 +9,7 @@ import { DEPT_NAMES } from '../../lib/constants.js';
 import { state } from '../../lib/state.js';
 import { registerActions } from '../../lib/actions.js';
 import { notifyError } from '../../components/toast.js';
+import { nutGoi, thuocGoi } from '../../components/goi.js';
 import { veSauNap } from '../../lib/chuyen-dong.js';
 import { loadDanhMucKl, loadCauHinhKl, loadKlRows, xemToanBo } from '../../lib/kl/du-lieu.js';
 import { calculateGroupKPI, laOwnerPhong } from './kpi.js';
@@ -48,13 +49,18 @@ function nguoiHtml(a, rows, moiDong = rows) {
       <span class="tai-so">${soChu}</span></button>`;
 }
 
+// v3.36 (CAU-HOI V-13 — số trước, chi tiết bấm mới mở): dòng số của phòng ghi ngắn, cách tính ở gợi ý (và chữ ẩn cho trình đọc màn hình); ghi chú
+// của màn ở nút "i" cạnh tên màn.
+const GOI_PHONG = 'Việc đang mở: việc cán bộ trong phòng hoặc chính phòng chủ trì theo dõi. Quá hạn: việc quá hạn mà phòng chịu chậm, gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, '
+  + 'không gồm việc phòng đã nộp chờ cấp trên nghiệm thu; vì vậy có thể khác số việc đang mở.';
+const GHI_CHU_MAN = 'Tải việc theo người: quá hạn, sắp đến hạn, đang làm; chỉ tính việc đang mở mà cán bộ là chủ trì theo dõi. Bấm một người để xem việc ngay trong trang.';
 function phongHtml(ma, rows) {
   const canBo = state.accounts.filter((a) => a.department === ma && !a.is_system)
     .sort((a, b) => a.role_group.localeCompare(b.role_group) || (b.is_chief ? 1 : 0) - (a.is_chief ? 1 : 0) || a.full_name.localeCompare(b.full_name, 'vi'));
   const cuaPhong = rows.filter((r) => laOwnerPhong(r, ma) || canBo.some((a) => a.id === r.owner_tai_khoan));
   const k = calculateGroupKPI(canBo.map((a) => a.id), rows, ma);
   const phongOwner = rows.filter((r) => laOwnerPhong(r, ma) && mo(r)).length;
-  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span title="Việc chủ trì theo dõi: việc cán bộ trong phòng hoặc chính phòng chủ trì theo dõi. Quá hạn: việc quá hạn mà phòng chịu chậm (hệ thống tính — gồm cả việc quá hạn ở bước nghiệm thu chờ lãnh đạo phòng, không gồm việc phòng đã nộp chờ cấp trên nghiệm thu), nên có thể khác số việc chủ trì theo dõi.">${canBo.length} cán bộ, ${k.dangMo} việc chủ trì theo dõi đang mở · ${k.quaHan} quá hạn (phòng chịu chậm)${phongOwner ? `, ${phongOwner} việc phòng là chủ trì theo dõi` : ''}</span></div>
+  return `<section id="cb-${escapeHtml(ma)}"><div class="tieu"><b>${escapeHtml(DEPT_NAMES[ma] || ma)}</b><span${thuocGoi(GOI_PHONG)}>${canBo.length} cán bộ, ${k.dangMo} việc đang mở, ${k.quaHan} quá hạn${phongOwner ? `, ${phongOwner} việc giao cho phòng` : ''}<span class="sr">. ${GOI_PHONG}</span></span></div>
     ${canBo.map((a) => nguoiHtml(a, cuaPhong, rows)).join('') || '<p class="trong-nho">Phòng chưa có cán bộ trong danh bạ.</p>'}</section>`;
 }
 
@@ -75,7 +81,7 @@ function ve() {
   const phong = danhSachPhong(me, rowsHienTai, ca);
   $('viewCanBo').dataset.phamVi = toan ? 'toan' : 'toi';   // e2e: phạm vi đang vẽ
   $('viewCanBo').innerHTML = `
-    <div class="dau"><h1>${ca ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy — việc ngoài phạm vi xử lý của đồng chí chỉ xem; ' : ''}tải việc theo người: quá hạn / sắp đến hạn / đang làm — chỉ việc đang mở cán bộ là chủ trì theo dõi; bấm một người để xem việc ngay trong trang</span>
+    <div class="dau"><h1>${ca ? 'Cán bộ' : TIEU_DE[me.role_group] || 'Cán bộ thuộc quyền'}</h1><span>${toan ? 'toàn Văn phòng Tỉnh ủy' : ''}</span><span>${nutGoi(`${toan ? 'Việc ngoài phạm vi xử lý của đồng chí chỉ xem. ' : ''}${GHI_CHU_MAN}`)}</span>
       <div class="phai-dau">${nutPhamVi()}<button type="button" class="nut nho" data-action="openCanBo">Tải lại</button></div></div>
     <div class="hai-ngan${nguoiDangMo ? ' mo' : ''}"><div class="cb">${phong.length ? phong.map((p) => phongHtml(p, rowsHienTai)).join('') : '<p class="trong">Không có phòng nào trong phạm vi của đồng chí.</p>'}</div>
       <aside class="ngan-ben${nguoiDangMo ? '' : ' hidden'}" id="cbNgan" aria-label="Chi tiết cán bộ đang chọn"></aside></div>`;

@@ -120,6 +120,67 @@ test('A1: Nhiệm vụ — dòng hai dòng chữ, phụ đề ngắn, chú giả
   await page.context().close();
 });
 
+// v3.36 (CAU-HOI V-13, DESIGN mục 17): Báo cáo — phụ đề chỉ ghi kỳ và phạm vi (ngày lập chỉ ở bản in); dải số nhãn ngắn, phần giải thích ở gợi ý; ghi chú
+// của khối ở nút "i"; "Việc cần lãnh đạo quyết định" hiện 5 dòng đầu, "Theo kết luận, văn bản giao việc" hiện 10 dòng đầu (hàng đang mở rộng không bị
+// ẩn); bản in đủ dòng và ghi lại số trong bảng. Cán bộ: ghi chú của màn ở nút "i", dòng số của phòng ghi ngắn, cách tính ở gợi ý. Chỉ đọc; số dòng đọc
+// tại chỗ (worker kia có thể thêm việc, realtime vẽ lại) nên chỉ so theo mẫu, không so số tuyệt đối.
+test('A1: Báo cáo, Cán bộ — phụ đề ngắn, ghi chú ở nút "i", hai danh sách dài hiện các dòng đầu, bản in đủ dòng và có số', async ({ browser }, testInfo) => {
+  const page = await pageAs(browser, 'A1', testInfo, { dsGon: true });
+  await nav(page, 'navBaoCao');
+  const bc = page.locator('#viewBaoCao');
+  await expect(bc.locator('#bcTheoPhong tbody tr.bc-hang').first()).toBeVisible(NAP);
+  await expect(bc.locator('#bcKyMoTa')).toHaveText(/^Năm \d{4} \(1\/1\/\d{4} – 31\/12\/\d{4}\) · (toàn Văn phòng Tỉnh ủy|phạm vi phụ trách của đồng chí)$/, { useInnerText: true });
+  await expect(bc.locator('#bcKyMoTa .chi-in-dong')).toBeHidden();
+  const o = bc.locator('.tq .o-so');
+  await expect(o).toHaveCount(7);
+  await expect(o.nth(2)).toHaveAttribute('data-goi', /^Còn ≤ \d+ ngày \(mức Vàng\)$/);
+  await expect(o.nth(6)).toHaveAttribute('data-goi', /^Nộp minh chứng trước hạn xử lý: \d+ trên \d+ nhiệm vụ được đánh giá/);
+  await expect(bc.locator('#bcTheoPhong .bang-ten .nut-goi')).toHaveAttribute('data-goi', /^Tính theo phòng của cán bộ chủ trì theo dõi/);
+  await expect(bc.locator('#bcCanQuyet .bang-ten .nut-goi')).toHaveAttribute('data-goi', /^Việc đang mở có vướng mắc/);
+  const coNut = {};
+  for (const [vung, chon, ten, so, dv] of [['#bcCanQuyet', 'tbody > tr', 'bcCanQuyet', 5, 'việc'], ['#bcTheoVanBan', 'tbody > tr.bc-hang', 'bcVanBan', 10, 'văn bản']]) {
+    const dong = bc.locator(`${vung} ${chon}`); const nut = bc.locator(`[data-action="dsHet"][data-ds="${ten}"]`);
+    coNut[ten] = await dong.count() > so;
+    if (!coNut[ten]) { await expect(nut).toHaveCount(0); continue; }   // ít dòng: không có nút, mọi dòng hiện
+    await expect(nut).toHaveText(new RegExp(`^Xem tất cả \\d+ ${dv}$`));
+    await expect(dong.nth(so - 1)).toBeVisible();
+    await expect(dong.nth(so)).toBeHidden();
+    await nut.click();
+    await expect(nut).toHaveText(`Chỉ hiện ${so} ${dv} đầu`);
+    await expect(dong.nth(so)).toBeVisible();
+    if (ten === 'bcVanBan') {   // hàng đang mở rộng (danh sách việc ngay dưới) không bị ẩn khi thu gọn
+      await dong.nth(so).locator('td.so button').first().click();
+      await expect(bc.locator('#bcTheoVanBan #bcMoRong')).toBeVisible();
+      await nut.click();
+      await expect(nut).toHaveText(new RegExp(`^Xem tất cả \\d+ ${dv}$`));
+      await expect(bc.locator('#bcTheoVanBan tr.bc-hang.dang')).toBeVisible();
+      await expect(bc.locator('#bcTheoVanBan #bcMoRong')).toBeVisible();
+      await bc.locator('#bcTheoVanBan tr.bc-hang.dang td.so button').first().click();   // gập hàng: trở về đúng các dòng đầu
+      await expect(bc.locator('#bcMoRong')).toHaveCount(0);
+      await expect(bc.locator('#bcTheoVanBan tbody > tr.bc-hang:not([data-sau])')).toHaveCount(so);
+    } else {
+      await nut.click();
+      await expect(dong.nth(so)).toBeHidden();
+    }
+  }
+  await page.emulateMedia({ media: 'print' });
+  await expect(bc.locator('#bcKyMoTa .chi-in-dong'), 'bản in ghi ngày lập').toBeVisible();
+  await expect(bc.locator('#bcTheoPhong td.so .nut').first(), 'bản in ghi số trong bảng').toBeVisible();
+  if (coNut.bcCanQuyet) await expect(bc.locator('#bcCanQuyet tbody > tr').nth(5), 'bản in đủ dòng').toBeVisible();
+  if (coNut.bcVanBan) await expect(bc.locator('#bcTheoVanBan tbody > tr.bc-hang').nth(10), 'bản in đủ dòng').toBeVisible();
+  await expect(bc.locator('.nut-goi').first()).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+
+  await nav(page, 'navCanBo');
+  const cb = page.locator('#viewCanBo');
+  await expect(cb.locator('.cb section').first()).toBeVisible(NAP);
+  await expect(cb.locator('.dau .nut-goi')).toHaveAttribute('data-goi', /Tải việc theo người: quá hạn, sắp đến hạn, đang làm/);
+  await expect(cb.locator('.dau')).not.toContainText('bấm một người');
+  await expect(cb.locator('.cb .tieu span[data-goi]').first()).toHaveText(/^\d+ cán bộ, \d+ việc đang mở, \d+ quá hạn/, { useInnerText: true });
+  await expect(cb.locator('.cb .tieu span[data-goi]').first()).toHaveAttribute('data-goi', /^Việc đang mở: việc cán bộ trong phòng/);
+  await page.context().close();
+});
+
 test('A1: In báo cáo nhanh — bấm nút: phần đầu theo thể thức, tầng 1, ma trận (6 dòng + Tổng cộng), 5 điểm nghẽn; afterprint trả lại màn hình', async ({ browser }, testInfo) => {
   // V-13: in từ trạng thái mặc định của người dùng thật — mọi khối phân tích đang gập trên màn hình; bản in vẫn có ma trận, điểm nghẽn, câu kết luận đủ.
   const page = await pageAs(browser, 'A1', testInfo, { oTongQuan: true, tqGap: true });

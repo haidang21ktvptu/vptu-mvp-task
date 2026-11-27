@@ -13,7 +13,7 @@
   .tai { display: flex; height: 8px; width: 120px; border-radius: 4px; overflow: hidden; background: var(--vien); }
   .tai span { display: block; height: 100%; }
   .tai .t-do { background: var(--do); } .tai .t-vang { background: var(--vang); } .tai .t-lam { background: var(--lam); }
-  .tai-so { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; } .tai-so b { color: var(--do); }
+  .tai-so { font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; } .tai-so b { display: inline; font-size: inherit; color: var(--do); }   /* v3.36: số quá hạn đứng cùng dòng với nhãn (trước đây .nguoi-hang b đẩy số lên một dòng riêng) */
   .nguoi-hang.dang { background: var(--lam-nhat); }
   /* ---- Ngăn bên phải trong trang (Cán bộ, Báo cáo — GĐ21, không rời mục) ---- */
   .hai-ngan { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
@@ -40,6 +40,18 @@
   .bc-ky label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--chu-nho); color: var(--chu-phu); white-space: nowrap; }
   .bc-ky-trong { display: contents; }   /* v3.33: khối kỳ (#bcKy) chung hàng với nhóm phạm vi Toàn Văn phòng / Phạm vi của tôi */
   .mo-rong > td { background: var(--nen-phu); padding: 6px 12px 10px; }
+  /* v3.36 (CAU-HOI V-13, DESIGN mục 17 — số trước, chi tiết bấm mới mở): tên khối và nút "i" đứng cạnh nhau; dòng phụ của tên dòng ("6 cán bộ",
+     "ban hành …") cùng dòng với tên; nhãn có gợi ý (dải số của Báo cáo, dòng số của phòng ở Cán bộ) là mốc cho chữ ẩn .sr; khối có danh sách hiện
+     các dòng đầu (.co-them, components/ds-gon.js): dòng mang data-sau ẩn trên màn hình (bản in đủ dòng), một đường kẻ giữa dòng cuối và nút. */
+  .bang-ten { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 24px; }   /* min-height: khối có nút "i" và khối không có cao bằng nhau */
+  .bc-hang .tieude small { display: inline; margin-left: 8px; white-space: nowrap; }
+  .tq .o-so[data-goi], .cb .tieu span[data-goi] { position: relative; cursor: help; }
+  .bang.co-them > .ds-them { border-top: 0; }
+  @media (min-width: 901px) { .bang.co-them tbody tr:last-child > td { border-bottom: 1px solid var(--vien); } }
+  @media screen { .bang tr[data-sau] { display: none; } }
+  @media (max-width: 900px) {   /* màn hẹp và bản in khổ dọc (bảng xếp thành khối — bang.css): sáu số của một dòng đứng cùng hàng, mỗi số kèm nhãn ngắn (data-nhan) */
+    .bc-hang td.so { display: inline-flex; align-items: center; gap: 4px; margin: 4px 14px 0 0; white-space: nowrap; }
+  }
   /* ---- Báo cáo ---- */
   .bc-khoi { background: var(--the); border: 1px solid var(--vien); border-radius: var(--bo-the); padding: 16px 20px; margin-top: 14px; }
   .bc-khoi h3 { font-size: var(--chu-than); margin-bottom: 8px; }
